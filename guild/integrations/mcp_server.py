@@ -10,6 +10,7 @@ Exposed tools:
   - guild_publish:  Publish a pack or feedback artifact
   - guild_feedback: Generate feedback draft after pack execution
   - guild_suggest:  Auto-suggest pack based on frustration signals
+  - guild_observe:  Silent observation: structural guidance at task start
   - guild_convert:  Convert SKILL.md / CLAUDE.md / .cursorrules to pack
 
 Zero imports from tools.* or guild_mcp.* — uses only guild.core.* and guild.integrations.*
@@ -268,6 +269,28 @@ TOOLS: List[Dict[str, Any]] = [
                 },
             },
             "required": ["context"],
+        },
+    },
+    {
+        "name": "guild_observe",
+        "description": (
+            "Silent observation: analyzes the current task and returns structural guidance from proven approaches. "
+            "Call this at the start of any task to get battle-tested strategies. "
+            "Returns specific phase-by-phase guidance if a relevant pack exists, or general best practices if not."
+        ),
+        "inputSchema": {
+            "type": "object",
+            "properties": {
+                "task": {
+                    "type": "string",
+                    "description": "Task description — what you're about to work on.",
+                },
+                "context": {
+                    "type": "string",
+                    "description": "Optional additional context (environment, language, constraints).",
+                },
+            },
+            "required": ["task"],
         },
     },
     {
@@ -832,6 +855,112 @@ def guild_suggest(
         return json.dumps({"success": False, "error": str(e), "type": type(e).__name__})
 
 
+def guild_observe(task: str = "", context: str = "") -> str:
+    """Silent observation: return structural guidance for a task if a relevant pack exists.
+
+    Calls guild_search internally with the task description. If a relevant pack
+    is found (score above threshold), returns a concise phase-by-phase guide.
+    If no pack is found, returns empty/null to avoid spamming the agent.
+
+    This is NOT the full pack — it's a condensed one-page guide that fits
+    naturally in the agent's context. The agent follows the structure because
+    it's in its context window, no explicit 'apply pack' step needed.
+
+    Args:
+        task: Task description (required).
+        context: Optional additional context (environment, language, constraints).
+
+    Returns:
+        A concise structural guide string, or empty string if no relevant pack found.
+    """
+    try:
+        if not task:
+            return ""
+
+        # Build search query from task + context
+        search_query = task
+        if context:
+            search_query = f"{task} {context}"
+
+        # Call guild_search internally
+        search_result = guild_search(query=search_query, mode="hybrid")
+
+        try:
+            parsed = json.loads(search_result)
+        except (json.JSONDecodeError, TypeError):
+            return ""
+
+        if not parsed.get("success"):
+            return ""
+
+        matches = parsed.get("matches", [])
+        if not matches:
+            return ""
+
+        # Score threshold: relevance_score >= 0.5 for semantic/hybrid, or tier != "none" for text
+        # Pick the top match that meets threshold
+        best_match = None
+        mode = parsed.get("mode", "text")
+
+        for match in matches:
+            relevance_score = match.get("relevance_score", 0.0)
+            tier = match.get("tier", "unknown")
+            name = match.get("name", "")
+
+            if mode in ("semantic", "hybrid") and relevance_score >= 0.5:
+                best_match = match
+                break
+            elif mode == "text" and tier not in ("none", ""):
+                # For text mode, prefer any match and take the first one
+                if best_match is None:
+                    best_match = match
+
+        if best_match is None:
+            return ""
+
+        pack_name = best_match.get("name", best_match.get("id", ""))
+        problem_class = best_match.get("problem_class", "")
+        phases_data = best_match.get("phases", [])
+        anti_patterns = best_match.get("anti_patterns", [])
+        checkpoint = best_match.get("checkpoint", "")
+
+        # Build condensed guide
+        lines = []
+        lines.append(f"For this type of task, proven approach: {pack_name}")
+
+        if phases_data:
+            lines.append("Phases:")
+            if isinstance(phases_data, list):
+                for i, phase in enumerate(phases_data, 1):
+                    if isinstance(phase, dict):
+                        phase_name = phase.get("name", f"phase-{i}")
+                        phase_desc = phase.get("description", "")
+                        lines.append(f"  Phase {i}: {phase_name} — {phase_desc}")
+                    elif isinstance(phase, str):
+                        lines.append(f"  Phase {i}: {phase}")
+            elif isinstance(phases_data, int):
+                # Just a count, no phase details available
+                pass
+
+        if anti_patterns:
+            if isinstance(anti_patterns, list):
+                anti_str = "; ".join(str(a) for a in anti_patterns)
+            else:
+                anti_str = str(anti_patterns)
+            lines.append(f"Key anti-patterns to avoid: {anti_str}")
+
+        if checkpoint:
+            lines.append(f"Checkpoint before fixing: {checkpoint}")
+
+        return "\n".join(lines)
+
+    except (KeyboardInterrupt, SystemExit):
+        raise
+    except Exception:
+        # Fail silently — guild_observe should never break an agent's flow
+        return ""
+
+
 def guild_convert(path: str = "", format: str = "auto") -> str:
     """Convert a SKILL.md, CLAUDE.md, or .cursorrules file into a workflow pack.
 
@@ -979,6 +1108,12 @@ def _call_tool_impl(name: str, arguments: Dict[str, Any]) -> str:
         return guild_convert(
             path=arguments.get("path", ""),
             format=arguments.get("format", "auto"),
+        )
+
+    elif name == "guild_observe":
+        return guild_observe(
+            task=arguments.get("task", ""),
+            context=arguments.get("context", ""),
         )
 
     else:
