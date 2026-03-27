@@ -80,10 +80,16 @@ class TestResolveGuildUri:
         with pytest.raises(ValueError, match="Unsupported URI scheme"):
             resolve_guild_uri("file:///etc/passwd")
 
-    def test_invalid_guild_uri_missing_pack_name(self):
-        """guild:// with no pack name after domain raises ValueError."""
+    def test_invalid_guild_uri_empty_path(self):
+        """guild:// with nothing after it raises ValueError."""
         with pytest.raises(ValueError, match="Invalid guild URI"):
-            resolve_guild_uri("guild://bensargotest-sys")
+            resolve_guild_uri("guild://")
+
+    def test_guild_uri_shorthand_no_domain(self):
+        """guild://pack-name resolves as shorthand (no domain required)."""
+        url = resolve_guild_uri("guild://systematic-debugging")
+        assert "systematic-debugging.workflow.yaml" in url
+        assert "raw.githubusercontent.com" in url
 
 
 # ---------------------------------------------------------------------------

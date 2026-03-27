@@ -64,10 +64,13 @@ def resolve_guild_uri(uri: str) -> str:
 
     if uri.startswith("guild://"):
         path_part = uri[len("guild://"):]
-        parts = path_part.split("/", 1)
-        if len(parts) < 2:
+        if not path_part:
             raise ValueError(f"Invalid guild URI: {uri}")
-        _domain, name = parts
+        parts = path_part.split("/", 1)
+        if len(parts) == 2:
+            _domain, name = parts
+        else:
+            name = parts[0]  # guild://pack-name shorthand (no domain)
         return (
             f"https://raw.githubusercontent.com/{DEFAULT_REPO}/{DEFAULT_BRANCH}"
             f"/packs/{name}.workflow.yaml"
