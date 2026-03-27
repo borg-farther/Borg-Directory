@@ -20,7 +20,7 @@ guildpacks pull guild://systematic-debugging
 }
 ```
 
-Full guide: https://github.com/bensargotest-sys/guild-packs/blob/v2/docs/EXTERNAL_TESTER_GUIDE.md
+Full guide: https://github.com/bensargotest-sys/guild-tools/blob/v2/docs/EXTERNAL_TESTER_GUIDE.md
 
 **What we need from you:**
 - Commands that worked / commands that broke (exact output helps)
