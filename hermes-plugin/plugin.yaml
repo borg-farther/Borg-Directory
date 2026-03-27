@@ -1,0 +1,15 @@
+name: guild-autosuggest
+version: "1.0.0"
+description: >
+  Bridge between Hermes agent loop and Guild v2 auto-suggest.
+  Uses guild_v2's agent_hook functions to:
+    - Call guild_on_failure() after consecutive tool errors (2+)
+    - Call guild_on_task_start() to proactively suggest packs
+  Requires guild_v2 to be installed in the same Python environment.
+author: Guild v2
+provides_hooks:
+  - on_consecutive_failure
+  - on_task_start
+requires_env: []
+provides_tools:
+  - guild_v2_autosuggest
