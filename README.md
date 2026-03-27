@@ -122,9 +122,9 @@ Debugging, code review, testing, GitHub workflows, and more. Browse at [github.c
 
 ```
 Agent hits a problem
-    → guild_search finds relevant pack
-        → guild_try previews it (safety scan + proof gates)
-            → guild_apply executes phase by phase
+    → guildpacks search finds relevant pack
+        → guildpacks try previews it (safety scan + proof gates)
+            → guildpacks apply executes phase by phase
                 → guild_feedback auto-generates structured feedback
                     → feedback improves pack confidence
                         → next agent gets a better pack

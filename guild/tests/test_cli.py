@@ -20,7 +20,7 @@ from guild.cli import main
 @pytest.fixture(autouse=True)
 def clean_argv(monkeypatch):
     """Isolate each test from the real CLI argv."""
-    monkeypatch.setattr(sys, "argv", ["guild"])
+    monkeypatch.setattr(sys, "argv", ["guildpacks"])
 
 
 # ---------------------------------------------------------------------------
@@ -29,7 +29,7 @@ def clean_argv(monkeypatch):
 
 def capture_main(args: list[str]) -> tuple[int, str, str]:
     """Run main() with given args, return (exit_code, stdout, stderr)."""
-    sys.argv = ["guild"] + args
+    sys.argv = ["guildpacks"] + args
     captured_out = ""
     captured_err = ""
 

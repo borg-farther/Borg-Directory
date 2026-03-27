@@ -2,7 +2,7 @@
 
 Guild-packs are **proven AI agent workflows** — execution-tested, safety-scanned, and feedback-improving. This guide gets you from zero to running your first pack in under 2 minutes.
 
-**guild-packs 2.0.0** | GitHub: `bensargotest-sys/guild-packs` | CLI: `guild` | MCP: `guild-mcp`
+**guild-packs 2.0.0** | GitHub: `bensargotest-sys/guild-packs` | CLI: `guildpacks` | MCP: `guild-mcp`
 
 ---
 
@@ -19,11 +19,11 @@ pip install --user guild-packs             # user-local
 
 **Verify installation:**
 ```bash
-guild version
-# Expected output: guild 2.0.0
+guildpacks version
+# Expected output: guildpacks 2.0.0
 ```
 
-If `guild: command not found`, your pipx/bin directory may not be in PATH. Add it:
+If `guildpacks: command not found`, your pipx/bin directory may not be in PATH. Add it:
 ```bash
 export PATH="$HOME/.local/bin:$PATH"      # Linux/macOS
 # or find it: python3 -c "import sysconfig; print(sysconfig.get_path('scripts'))"
@@ -102,7 +102,7 @@ After restarting, guild tools are available in Cursor's AI context.
 ### Step 1: Search for packs
 
 ```bash
-guild search debugging
+guildpacks search debugging
 ```
 
 Example output:
@@ -124,7 +124,7 @@ Example output:
 ### Step 2: Preview without saving (try)
 
 ```bash
-guild try guild://hermes/systematic-debugging
+guildpacks try guild://hermes/systematic-debugging
 ```
 
 This shows:
@@ -137,17 +137,17 @@ This shows:
 ### Step 3: Pull to local storage
 
 ```bash
-guild pull guild://hermes/systematic-debugging
+guildpacks pull guild://hermes/systematic-debugging
 ```
 
 Packs are saved to `~/.hermes/guild/<pack-name>/pack.yaml`.
 
-> **Note:** Some packs may fail the safety scan (false positives on code/markdown patterns). This is a known issue — the safety scanner is overly strict on certain content. You can still use `guild try` to preview any pack.
+> **Note:** Some packs may fail the safety scan (false positives on code/markdown patterns). This is a known issue — the safety scanner is overly strict on certain content. You can still use `guildpacks try` to preview any pack.
 
 ### Step 4: Apply to your task
 
 ```bash
-guild apply systematic-debugging --task "Fix login bug where users get 401 after OAuth redirect"
+guildpacks apply systematic-debugging --task "Fix login bug where users get 401 after OAuth redirect"
 ```
 
 The apply command:
@@ -158,7 +158,7 @@ The apply command:
 ### List your local packs
 
 ```bash
-guild list
+guildpacks list
 ```
 
 ---
@@ -169,7 +169,7 @@ After applying a pack, generate feedback to improve it:
 
 ```bash
 # After completing a pack execution, note the session_id from apply output
-guild feedback <session_id>
+guildpacks feedback <session_id>
 ```
 
 Feedback helps:
@@ -184,25 +184,25 @@ Feedback helps:
 ### Convert a CLAUDE.md
 
 ```bash
-guild convert ./CLAUDE.md
+guildpacks convert ./CLAUDE.md
 ```
 
 ### Convert a SKILL.md
 
 ```bash
-guild convert ./my-skill/SKILL.md --format skill
+guildpacks convert ./my-skill/SKILL.md --format skill
 ```
 
 ### Convert a .cursorrules file
 
 ```bash
-guild convert ./.cursorrules --format cursorrules
+guildpacks convert ./.cursorrules --format cursorrules
 ```
 
 ### Convert automatically (auto-detects format)
 
 ```bash
-guild convert ./path/to/CLAUDE.md --format auto
+guildpacks convert ./path/to/CLAUDE.md --format auto
 ```
 
 The converter outputs a `pack.yaml` — review it, edit the phases, then publish.
@@ -218,7 +218,7 @@ The converter outputs a `pack.yaml` — review it, edit the phases, then publish
 ### Publish
 
 ```bash
-guild publish ~/.hermes/guild/my-pack/pack.yaml
+guildpacks publish ~/.hermes/guild/my-pack/pack.yaml
 ```
 
 This creates a GitHub PR to `bensargotest-sys/guild-packs` with:
@@ -235,7 +235,7 @@ This creates a GitHub PR to `bensargotest-sys/guild-packs` with:
 
 ## 8. TROUBLESHOOTING
 
-### `guild: command not found`
+### `guildpacks: command not found`
 
 ```bash
 # Check if pipx is installed and in PATH
@@ -243,7 +243,7 @@ which pipx || echo "pipx not installed"
 pipx ensurepath   # adds ~/.local/bin to PATH
 
 # Or use full path
-~/.local/bin/guild version
+~/.local/bin/guildpacks version
 ```
 
 ### `guild-mcp` not found in Claude Code / Cursor
@@ -271,11 +271,11 @@ Use the absolute path in your MCP config:
 
 ### Safety scan blocks a pack (false positive)
 
-**Symptom:** `guild pull` or `guild apply` returns `"Safety threats detected: Prompt injection detected"`
+**Symptom:** `guildpacks pull` or `guildpacks apply` returns `"Safety threats detected: Prompt injection detected"`
 
 **Cause:** The safety scanner is overly strict on code blocks and markdown patterns. Many legitimate packs trigger this.
 
-**Workaround:** Use `guild try <uri>` to preview any pack — `try` still performs the safety scan but doesn't block you from seeing the content. The `pull` and `apply` commands are affected by this known issue.
+**Workaround:** Use `guildpacks try <uri>` to preview any pack — `try` still performs the safety scan but doesn't block you from seeing the content. The `pull` and `apply` commands are affected by this known issue.
 
 ### MCP server doesn't respond
 
@@ -293,10 +293,10 @@ guild-mcp  # Should output JSON-RPC responses on stdio
 
 ### Python path issues with guild module
 
-If you see `ModuleNotFoundError: No module named 'guild'` when using the CLI directly, this is a pipx/pip installation quirk. Using `guild` via the installed bin wrapper should work. If not:
+If you see `ModuleNotFoundError: No module named 'guild'` when using the CLI directly, this is a pipx/pip installation quirk. Using `guildpacks` via the installed bin wrapper should work. If not:
 
 ```bash
-pipx run guild version   # runs in isolated venv
+pipx run guildpacks version   # runs in isolated venv
 # or
 python3 -m guild.cli version
 ```
@@ -304,7 +304,7 @@ python3 -m guild.cli version
 ### Search returns no matches
 
 ```bash
-guild search ""    # List ALL available packs
+guildpacks search ""    # List ALL available packs
 ```
 
 The index is fetched from GitHub on first use. If you have network issues, you may see fewer packs.
@@ -367,13 +367,13 @@ Download, validate, save to `~/.hermes/guild/`.
 ## Quick Reference Card
 
 ```
-guild search <query>              Search packs
-guild try <uri>                   Preview without saving
-guild pull <uri>                  Download pack
-guild list                        Show local packs
-guild apply <pack> --task <task>  Execute pack
-guild feedback <session_id>       Generate feedback
-guild convert <path> [--format]   Convert CLAUDE.md / SKILL.md / .cursorrules
-guild publish <path>              Share on GitHub
-guild version                     Show version
+guildpacks search <query>              Search packs
+guildpacks try <uri>                   Preview without saving
+guildpacks pull <uri>                  Download pack
+guildpacks list                        Show local packs
+guildpacks apply <pack> --task <task>  Execute pack
+guildpacks feedback <session_id>       Generate feedback
+guildpacks convert <path> [--format]   Convert CLAUDE.md / SKILL.md / .cursorrules
+guildpacks publish <path>              Share on GitHub
+guildpacks version                     Show version
 ```

@@ -1,16 +1,16 @@
 """
-Guild CLI — shell commands wrapping the core engine.
+Guildpacks CLI — shell commands wrapping the core engine.
 
 Usage:
-    guild search <query>        — search for packs
-    guild pull <uri>           — fetch and save pack locally
-    guild try <uri>            — preview pack without saving
-    guild init <name>          — create pack scaffold or convert from skill
-    guild apply <pack> --task  — start applying a pack
-    guild publish <path>       — publish pack to GitHub
-    guild feedback <session_id> — generate feedback from session
-    guild list                 — list local packs
-    guild version              — show version
+    guildpacks search <query>        — search for packs
+    guildpacks pull <uri>           — fetch and save pack locally
+    guildpacks try <uri>            — preview pack without saving
+    guildpacks init <name>          — create pack scaffold or convert from skill
+    guildpacks apply <pack> --task  — start applying a pack
+    guildpacks publish <path>       — publish pack to GitHub
+    guildpacks feedback <session_id> — generate feedback from session
+    guildpacks list                 — list local packs
+    guildpacks version              — show version
 """
 
 from __future__ import annotations
@@ -208,7 +208,7 @@ def _cmd_list(args: argparse.Namespace) -> int:
 
 def _cmd_version(args: argparse.Namespace) -> int:
     """Show version."""
-    print(f"guild {__version__}")
+    print(f"guildpacks {__version__}")
     return 0
 
 
@@ -218,8 +218,8 @@ def _cmd_version(args: argparse.Namespace) -> int:
 
 def main() -> int:
     parser = argparse.ArgumentParser(
-        prog="guild",
-        description="Guild — Semantic reasoning cache for AI agents.",
+        prog="guildpacks",
+        description="Guildpacks — Semantic reasoning cache for AI agents.",
     )
     sub = parser.add_subparsers(dest="command", required=True)
 
