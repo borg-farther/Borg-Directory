@@ -1,6 +1,6 @@
 """Guild — Semantic reasoning cache for AI agents."""
 
-__version__ = "2.0.6"
+__version__ = "2.0.7"
 
 # Core modules (M1 complete)
 from guild.core.safety import scan_pack_safety, scan_privacy

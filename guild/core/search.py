@@ -264,15 +264,19 @@ def guild_pull(uri: str) -> str:
     try:
         resolved = resolve_guild_uri(uri)
 
-        # Fetch content
+        # Fetch content — try .workflow.yaml first, fall back to .yaml
         if resolved.startswith("http://") or resolved.startswith("https://"):
             try:
                 content, fetch_err = fetch_with_retry(resolved)
+                if fetch_err and ".workflow.yaml" in resolved:
+                    # Fallback: try without .workflow suffix
+                    fallback_url = resolved.replace(".workflow.yaml", ".yaml")
+                    content, fetch_err = fetch_with_retry(fallback_url)
                 if fetch_err:
                     raise ValueError(f"Failed to fetch: {fetch_err}")
             except Exception as e:
                 error_msg = str(e)
-                if "HTTP Error 404" in error_msg or "404" in error_msg:
+                if "HTTP Error 404" in error_msg or "404" in error_msg or "Failed to fetch" in error_msg:
                     suggestions = fuzzy_match_pack(uri)
                     return json.dumps({
                         "success": False,
@@ -395,6 +399,9 @@ def guild_try(uri: str, task_id: Optional[str] = None) -> str:
         resolved = resolve_guild_uri(uri)
         if resolved.startswith(("http://", "https://")):
             content, fetch_err = fetch_with_retry(resolved)
+            if fetch_err and ".workflow.yaml" in resolved:
+                fallback_url = resolved.replace(".workflow.yaml", ".yaml")
+                content, fetch_err = fetch_with_retry(fallback_url)
             if fetch_err:
                 raise ValueError(f"Failed to fetch: {fetch_err}")
         else:

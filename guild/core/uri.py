@@ -71,6 +71,8 @@ def resolve_guild_uri(uri: str) -> str:
             _domain, name = parts
         else:
             name = parts[0]  # guild://pack-name shorthand (no domain)
+        # Try .workflow.yaml first, fall back to .yaml
+        # Store both URLs so fetch_with_retry can try the fallback
         return (
             f"https://raw.githubusercontent.com/{DEFAULT_REPO}/{DEFAULT_BRANCH}"
             f"/packs/{name}.workflow.yaml"
