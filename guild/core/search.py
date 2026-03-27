@@ -140,19 +140,36 @@ def guild_search(query: str, mode: str = "text") -> str:
                 pack["tier"] = compute_pack_tier_from_index(pack)
 
         # Deduplicate by pack id/name before searching
+        # Prefer local copies (higher confidence) over remote when duplicates exist
         seen_ids: set = set()
         seen_names: set = set()
         unique_packs: List[Dict[str, Any]] = []
         for pack in all_packs:
             pack_id = pack.get("id", "")
             pack_name = pack.get("name", "")
+            is_local = pack.get("source") == "local"
             # Deduplicate by id first, then by name as fallback
             if pack_id and pack_id not in seen_ids:
                 seen_ids.add(pack_id)
                 unique_packs.append(pack)
+            elif pack_id and pack_id in seen_ids:
+                # Duplicate id found - prefer local over remote
+                if is_local:
+                    # Find and replace the existing remote entry with this local one
+                    for i, existing in enumerate(unique_packs):
+                        if existing.get("id") == pack_id and existing.get("source") != "local":
+                            unique_packs[i] = pack
+                            break
             elif pack_name and pack_name not in seen_names:
                 seen_names.add(pack_name)
                 unique_packs.append(pack)
+            elif pack_name and pack_name in seen_names:
+                # Duplicate name found - prefer local over remote
+                if is_local:
+                    for i, existing in enumerate(unique_packs):
+                        if existing.get("name") == pack_name and existing.get("source") != "local":
+                            unique_packs[i] = pack
+                            break
         all_packs = unique_packs
 
         query_lower = query.lower().strip()

@@ -94,8 +94,9 @@ def _validate_workflow_pack_gates(pack: dict) -> List[str]:
         return errors
 
     # ---- Core provenance fields ----
-    if not provenance.get("author"):
-        errors.append("Missing provenance.author")
+    # Accept either 'author' or 'author_agent' field
+    if not provenance.get("author") and not provenance.get("author_agent"):
+        errors.append("Missing provenance.author or provenance.author_agent")
 
     if not provenance.get("created"):
         errors.append("Missing provenance.created")
