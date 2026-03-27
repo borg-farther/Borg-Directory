@@ -1,6 +1,6 @@
 """Guild — Semantic reasoning cache for AI agents."""
 
-__version__ = "2.0.0"
+__version__ = "2.0.1"
 
 # Core modules (M1 complete)
 from guild.core.safety import scan_pack_safety, scan_privacy
@@ -11,7 +11,20 @@ from guild.core.privacy import privacy_scan_text, privacy_scan_artifact, privacy
 from guild.core.session import save_session, load_session, log_event, compute_log_hash
 from guild.core.publish import action_publish, check_rate_limit
 from guild.core.apply import apply_handler, action_start, action_checkpoint, action_complete
-from guild.core.search import guild_search, guild_pull, guild_try, guild_init, generate_feedback
+from guild.core.search import (
+    guild_search,
+    guild_pull,
+    guild_try,
+    guild_init,
+    generate_feedback,
+    check_for_suggestion,
+)
+from guild.core.convert import (
+    convert_auto,
+    convert_skill,
+    convert_claude_md,
+    convert_cursorrules,
+)
 
 
 def check(context: str, constraints: dict = None, top_k: int = 3) -> list:

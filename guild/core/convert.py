@@ -129,6 +129,7 @@ def convert_auto(path: str) -> dict:
 
     Args:
         path: Path to a file. Detects SKILL.md, CLAUDE.md, or .cursorrules.
+              Handles both bare filenames and full paths (e.g. /path/to/SKILL.md).
 
     Returns:
         A dict representing a guild workflow pack.
@@ -137,12 +138,13 @@ def convert_auto(path: str) -> dict:
         ValueError: If the file format cannot be determined.
     """
     basename = os.path.basename(path)
+    basename_lower = basename.lower()
 
-    if basename.lower() == "skill.md":
+    if basename_lower == "skill.md" or basename_lower.endswith("/skill.md"):
         return convert_skill(path)
-    elif basename.lower() == "claude.md":
+    elif basename_lower == "claude.md" or basename_lower.endswith("/claude.md"):
         return convert_claude_md(path)
-    elif ".cursorrules" in basename.lower():
+    elif ".cursorrules" in basename_lower:
         return convert_cursorrules(path)
     else:
         raise ValueError(

@@ -182,11 +182,12 @@ class TestScanPackSafety:
         assert len(threats) >= 1
         assert any("injection" in t.lower() for t in threats)
 
-    def test_shell_backtick_substitution(self):
+    def test_shell_dollar_paren_substitution(self):
         pack = clean_pack()
-        pack["phases"][0]["prompts"] = ["Result is `ls /tmp`"]
+        pack["phases"][0]["prompts"] = ["Result is $(ls /tmp)"]
         threats = scan_pack_safety(pack)
         assert len(threats) >= 1
+        assert any("injection" in t.lower() for t in threats)
 
     def test_eval_or_exec(self):
         pack = clean_pack()

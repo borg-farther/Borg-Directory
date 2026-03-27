@@ -44,6 +44,11 @@ try:
 except ImportError:
     EmbeddingEngine = None
 
+try:
+    from guild.db.store import GuildStore
+except ImportError:
+    GuildStore = None
+
 SKILLS_DIR = Path(os.getenv("HERMES_HOME", Path.home() / ".hermes")) / "skills"
 from guild.core.schema import parse_workflow_pack, validate_pack
 from guild.core.schema import parse_skill_frontmatter, sections_to_phases
@@ -133,6 +138,22 @@ def guild_search(query: str, mode: str = "text") -> str:
         for pack in all_packs:
             if "tier" not in pack:
                 pack["tier"] = compute_pack_tier_from_index(pack)
+
+        # Deduplicate by pack id/name before searching
+        seen_ids: set = set()
+        seen_names: set = set()
+        unique_packs: List[Dict[str, Any]] = []
+        for pack in all_packs:
+            pack_id = pack.get("id", "")
+            pack_name = pack.get("name", "")
+            # Deduplicate by id first, then by name as fallback
+            if pack_id and pack_id not in seen_ids:
+                seen_ids.add(pack_id)
+                unique_packs.append(pack)
+            elif pack_name and pack_name not in seen_names:
+                seen_names.add(pack_name)
+                unique_packs.append(pack)
+        all_packs = unique_packs
 
         query_lower = query.lower().strip()
         mode_lower = mode.lower() if mode else "text"
@@ -288,6 +309,20 @@ def guild_pull(uri: str) -> str:
         pack_file.write_text(content, encoding="utf-8")
 
         decay_status = check_confidence_decay(pack)
+
+        # Log pull to reputation store (optional — store may not exist)
+        if GuildStore is not None:
+            try:
+                _store = GuildStore()
+                provenance = pack.get("provenance", {})
+                _store.update_pack(
+                    pack_id=pack_id,
+                    pulled_at=datetime.now(timezone.utc).isoformat(),
+                )
+                _store.close()
+            except Exception:
+                pass  # Store is optional — never break core flow
+
         result = {
             "success": True,
             "name": pack_name,

@@ -501,3 +501,80 @@ class TestSafetyScanning:
         artifact = minimal_pack()
         threats = safety_module.scan_pack_safety(artifact)
         assert threats == []
+
+
+# ============================================================================
+# Reputation store logging tests (mocked)
+# ============================================================================
+
+
+class TestPublishReputationLogging:
+    """Tests that action_publish logs publish events to the store."""
+
+    @patch("guild.core.publish.create_github_pr")
+    @patch("guild.core.publish.validate_proof_gates", return_value=[])
+    def test_publish_success_calls_record_publish_on_store(
+        self, mock_gates, mock_pr, tmp_guild, tmp_path, monkeypatch
+    ):
+        """action_publish calls store.record_publish() after successful PR."""
+        mock_pr.return_value = {"success": True, "pr_url": "https://github.com/test/pull/1"}
+
+        mock_store = MagicMock()
+        monkeypatch.setattr(publish_module, "GuildStore", lambda: mock_store)
+
+        pack_dir = tmp_guild["guild_dir"] / "pub-test"
+        pack_dir.mkdir()
+        (pack_dir / "pack.yaml").write_text(
+            yaml.dump(minimal_pack({"id": "pub-test", "provenance": {"author_agent": "agent://test", "confidence": "tested"}}))
+        )
+
+        result = json.loads(publish_module.action_publish(path=str(pack_dir / "pack.yaml")))
+        assert result["success"] is True
+        assert result["published"] is True
+
+        mock_store.record_publish.assert_called_once()
+        call_kwargs = mock_store.record_publish.call_args.kwargs
+        assert call_kwargs["pack_id"] == "pub-test"
+        assert call_kwargs["author_agent"] == "agent://test"
+        assert call_kwargs["confidence"] == "tested"
+        assert call_kwargs["outcome"] == "published"
+        mock_store.close.assert_called_once()
+
+    @patch("guild.core.publish.create_github_pr")
+    def test_publish_store_failure_does_not_break_flow(
+        self, mock_pr, tmp_guild, tmp_path, monkeypatch
+    ):
+        """If store.record_publish raises, action_publish still returns success."""
+        mock_pr.return_value = {"success": True, "pr_url": "https://github.com/test/pull/1"}
+
+        mock_store = MagicMock()
+        mock_store.record_publish.side_effect = Exception("DB unavailable")
+        monkeypatch.setattr(publish_module, "GuildStore", lambda: mock_store)
+
+        pack_dir = tmp_guild["guild_dir"] / "pub-test"
+        pack_dir.mkdir()
+        (pack_dir / "pack.yaml").write_text(
+            yaml.dump(minimal_pack({"id": "pub-test"}))
+        )
+
+        result = json.loads(publish_module.action_publish(path=str(pack_dir / "pack.yaml")))
+        assert result["success"] is True
+        assert result["published"] is True
+
+    @patch("guild.core.publish.create_github_pr")
+    def test_publish_works_when_guildstore_is_none(
+        self, mock_pr, tmp_guild, tmp_path, monkeypatch
+    ):
+        """action_publish works when GuildStore import fails (store unavailable)."""
+        mock_pr.return_value = {"success": True, "pr_url": "https://github.com/test/pull/1"}
+        monkeypatch.setattr(publish_module, "GuildStore", None)
+
+        pack_dir = tmp_guild["guild_dir"] / "pub-test"
+        pack_dir.mkdir()
+        (pack_dir / "pack.yaml").write_text(
+            yaml.dump(minimal_pack({"id": "pub-test"}))
+        )
+
+        result = json.loads(publish_module.action_publish(path=str(pack_dir / "pack.yaml")))
+        assert result["success"] is True
+        assert result["published"] is True

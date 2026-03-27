@@ -20,6 +20,7 @@ from __future__ import annotations
 import json
 import logging
 import os
+import signal
 import sys
 from pathlib import Path
 from typing import Any, Dict, List, Optional
@@ -875,77 +876,113 @@ def guild_convert(path: str = "", format: str = "auto") -> str:
 
 
 # -------------------------------------------------------------------------
+# Timeout configuration (seconds)
+# -------------------------------------------------------------------------
+
+TOOL_TIMEOUT_SEC = 30
+
+
+def _timeout_handler(signum, frame):
+    """Called when a tool call exceeds TOOL_TIMEOUT_SEC."""
+    raise TimeoutError(f"Tool call exceeded {TOOL_TIMEOUT_SEC}s timeout")
+
+
+# -------------------------------------------------------------------------
 # Tool dispatch
 # -------------------------------------------------------------------------
 
 def call_tool(name: str, arguments: Dict[str, Any]) -> str:
-    """Dispatch a tool call to the appropriate guild function. Returns JSON string."""
+    """Dispatch a tool call to the appropriate guild function. Returns JSON string.
+    
+    All code paths return a JSON string (never raises). Tool execution is
+    protected by a timeout to prevent hangs.
+    """
     try:
-        if name == "guild_search":
-            return guild_search(query=arguments.get("query", ""))
+        # Install timeout alarm (Unix only)
+        if hasattr(signal, "SIGALRM"):
+            old_handler = signal.signal(signal.SIGALRM, _timeout_handler)
+            signal.alarm(TOOL_TIMEOUT_SEC)
 
-        elif name == "guild_pull":
-            return guild_pull(uri=arguments.get("uri", ""))
+        try:
+            result = _call_tool_impl(name, arguments)
+        finally:
+            # Cancel alarm and restore handler
+            if hasattr(signal, "SIGALRM"):
+                signal.alarm(0)
+                signal.signal(signal.SIGALRM, old_handler)
 
-        elif name == "guild_try":
-            return guild_try(uri=arguments.get("uri", ""))
+        return result
 
-        elif name == "guild_init":
-            return guild_init(
-                pack_name=arguments.get("pack_name", ""),
-                problem_class=arguments.get("problem_class", "general"),
-                mental_model=arguments.get("mental_model", "fast-thinker"),
-            )
-
-        elif name == "guild_apply":
-            return guild_apply(
-                action=arguments.get("action", ""),
-                pack_name=arguments.get("pack_name", ""),
-                task=arguments.get("task", ""),
-                session_id=arguments.get("session_id", ""),
-                phase_name=arguments.get("phase_name", ""),
-                status=arguments.get("status", ""),
-                evidence=arguments.get("evidence", ""),
-                outcome=arguments.get("outcome", ""),
-            )
-
-        elif name == "guild_publish":
-            return guild_publish(
-                action=arguments.get("action", "publish"),
-                path=arguments.get("path", ""),
-                pack_name=arguments.get("pack_name", ""),
-                feedback_name=arguments.get("feedback_name", ""),
-                repo=arguments.get("repo", ""),
-            )
-
-        elif name == "guild_feedback":
-            return guild_feedback(
-                session_id=arguments.get("session_id", ""),
-                what_changed=arguments.get("what_changed", ""),
-                where_to_reuse=arguments.get("where_to_reuse", ""),
-            )
-
-        elif name == "guild_suggest":
-            return guild_suggest(
-                context=arguments.get("context", ""),
-                failure_count=arguments.get("failure_count", 0),
-                task_type_hint=arguments.get("task_type_hint", ""),
-                tried_packs=arguments.get("tried_packs"),
-            )
-
-        elif name == "guild_convert":
-            return guild_convert(
-                path=arguments.get("path", ""),
-                format=arguments.get("format", "auto"),
-            )
-
-        else:
-            return json.dumps({"success": False, "error": f"Unknown tool: {name}"})
-
+    except TimeoutError as e:
+        return json.dumps({"success": False, "error": str(e), "type": "TimeoutError"})
     except (KeyboardInterrupt, SystemExit):
         raise
-    except (ValueError, KeyError, OSError, json.JSONDecodeError) as e:
+    except Exception as e:
         return json.dumps({"success": False, "error": str(e), "type": type(e).__name__})
+
+
+def _call_tool_impl(name: str, arguments: Dict[str, Any]) -> str:
+    """Inner implementation of call_tool — may raise exceptions (caught by call_tool)."""
+    if name == "guild_search":
+        return guild_search(query=arguments.get("query", ""))
+
+    elif name == "guild_pull":
+        return guild_pull(uri=arguments.get("uri", ""))
+
+    elif name == "guild_try":
+        return guild_try(uri=arguments.get("uri", ""))
+
+    elif name == "guild_init":
+        return guild_init(
+            pack_name=arguments.get("pack_name", ""),
+            problem_class=arguments.get("problem_class", "general"),
+            mental_model=arguments.get("mental_model", "fast-thinker"),
+        )
+
+    elif name == "guild_apply":
+        return guild_apply(
+            action=arguments.get("action", ""),
+            pack_name=arguments.get("pack_name", ""),
+            task=arguments.get("task", ""),
+            session_id=arguments.get("session_id", ""),
+            phase_name=arguments.get("phase_name", ""),
+            status=arguments.get("status", ""),
+            evidence=arguments.get("evidence", ""),
+            outcome=arguments.get("outcome", ""),
+        )
+
+    elif name == "guild_publish":
+        return guild_publish(
+            action=arguments.get("action", "publish"),
+            path=arguments.get("path", ""),
+            pack_name=arguments.get("pack_name", ""),
+            feedback_name=arguments.get("feedback_name", ""),
+            repo=arguments.get("repo", ""),
+        )
+
+    elif name == "guild_feedback":
+        return guild_feedback(
+            session_id=arguments.get("session_id", ""),
+            what_changed=arguments.get("what_changed", ""),
+            where_to_reuse=arguments.get("where_to_reuse", ""),
+        )
+
+    elif name == "guild_suggest":
+        return guild_suggest(
+            context=arguments.get("context", ""),
+            failure_count=arguments.get("failure_count", 0),
+            task_type_hint=arguments.get("task_type_hint", ""),
+            tried_packs=arguments.get("tried_packs"),
+        )
+
+    elif name == "guild_convert":
+        return guild_convert(
+            path=arguments.get("path", ""),
+            format=arguments.get("format", "auto"),
+        )
+
+    else:
+        return json.dumps({"success": False, "error": f"Unknown tool: {name}"})
 
 
 # ---------------------------------------------------------------------------

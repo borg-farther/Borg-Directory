@@ -18,6 +18,7 @@ import pytest
 
 from guild.core import apply as apply_mod
 from guild.core import session as sess_mod
+from unittest.mock import MagicMock
 
 
 # ---------------------------------------------------------------------------
@@ -601,3 +602,73 @@ class TestApplyHandler:
 
         assert data["success"] is False
         assert "Unknown action" in data["error"]
+
+
+# --------------------------------------------------------------------------
+# Tests: reputation store logging (mocked)
+# --------------------------------------------------------------------------
+
+
+class TestReputationLogging:
+    """Tests that action_complete logs execution events to the store."""
+
+    def test_complete_calls_record_execution_on_store(self, tmp_guild_dir, monkeypatch):
+        """action_complete calls store.record_execution() after success."""
+        mock_store = MagicMock()
+        monkeypatch.setattr(apply_mod, "GuildStore", lambda: mock_store)
+
+        # Start + approve + phase checkpoint
+        start_result = apply_mod.action_start("test-pack", "Task", guild_dir=tmp_guild_dir)
+        session_id = parse_result(start_result)["session_id"]
+
+        apply_mod.action_checkpoint(
+            session_id, "__approval__", "passed", guild_dir=tmp_guild_dir
+        )
+
+        # Complete the session
+        comp_result = apply_mod.action_complete(session_id, guild_dir=tmp_guild_dir)
+        data = parse_result(comp_result)
+        assert data["success"] is True
+
+        # Verify record_execution was called
+        mock_store.record_execution.assert_called_once()
+        call_kwargs = mock_store.record_execution.call_args.kwargs
+        assert call_kwargs["pack_id"] == "test-pack-v1"
+        assert call_kwargs["session_id"] == session_id
+        assert call_kwargs["status"] == "completed"
+        mock_store.close.assert_called_once()
+
+    def test_complete_store_failure_does_not_break_flow(self, tmp_guild_dir, monkeypatch):
+        """If store.record_execution raises, action_complete still returns success."""
+        mock_store = MagicMock()
+        mock_store.record_execution.side_effect = Exception("DB unavailable")
+        monkeypatch.setattr(apply_mod, "GuildStore", lambda: mock_store)
+
+        # Start + approve + phase checkpoint
+        start_result = apply_mod.action_start("test-pack", "Task", guild_dir=tmp_guild_dir)
+        session_id = parse_result(start_result)["session_id"]
+
+        apply_mod.action_checkpoint(
+            session_id, "__approval__", "passed", guild_dir=tmp_guild_dir
+        )
+
+        # Complete should still succeed despite store failure
+        comp_result = apply_mod.action_complete(session_id, guild_dir=tmp_guild_dir)
+        data = parse_result(comp_result)
+        assert data["success"] is True
+
+    def test_complete_works_when_guildstore_is_none(self, tmp_guild_dir, monkeypatch):
+        """action_complete works when GuildStore import fails (store unavailable)."""
+        monkeypatch.setattr(apply_mod, "GuildStore", None)
+
+        # Start + approve + phase checkpoint
+        start_result = apply_mod.action_start("test-pack", "Task", guild_dir=tmp_guild_dir)
+        session_id = parse_result(start_result)["session_id"]
+
+        apply_mod.action_checkpoint(
+            session_id, "__approval__", "passed", guild_dir=tmp_guild_dir
+        )
+
+        comp_result = apply_mod.action_complete(session_id, guild_dir=tmp_guild_dir)
+        data = parse_result(comp_result)
+        assert data["success"] is True

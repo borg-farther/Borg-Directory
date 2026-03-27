@@ -1006,6 +1006,70 @@ class GuildStore:
             "metadata": _parse_json(row["metadata"]),
         }
 
+    # --- Execution aliases for compatibility ---
+
+    def add_execution(self, **kwargs) -> dict:
+        """Alias for record_execution() — logs a pack execution to the store.
+
+        Args (same as record_execution):
+            execution_id: Unique execution identifier
+            session_id: Session identifier
+            pack_id: Pack being executed
+            agent_id: Agent executing
+            task: Task description
+            status: Execution status
+            phases_completed: Number of phases completed
+            phases_failed: Number of phases failed
+            started_at: Start timestamp
+            completed_at: Completion timestamp
+            log_hash: Hash of execution log
+            metadata: Additional metadata
+
+        Returns:
+            The recorded execution dict
+        """
+        return self.record_execution(**kwargs)
+
+    def record_publish(
+        self,
+        pack_id: str,
+        author_agent: str,
+        confidence: str,
+        outcome: str = "published",
+        author_operator: Optional[str] = None,
+        created_at: Optional[str] = None,
+        metadata: Optional[dict] = None,
+    ) -> dict:
+        """Record a pack publish event to the store.
+
+        Args:
+            pack_id: Pack that was published
+            author_agent: Agent that authored the pack
+            confidence: Confidence level at time of publish
+            outcome: Publish outcome (default: published)
+            author_operator: Operator that approved the publish
+            created_at: Publish timestamp
+            metadata: Additional metadata
+
+        Returns:
+            The recorded execution dict
+        """
+        import uuid
+        execution_id = f"publish-{pack_id}-{uuid.uuid4().hex[:8]}"
+        return self.record_execution(
+            execution_id=execution_id,
+            session_id="",  # publish events don't have sessions
+            pack_id=pack_id,
+            agent_id=author_agent,
+            task="publish",
+            status=outcome,
+            phases_completed=0,
+            phases_failed=0,
+            started_at=created_at or datetime.now(timezone.utc).isoformat(),
+            completed_at=created_at or datetime.now(timezone.utc).isoformat(),
+            metadata=metadata,
+        )
+
     # --- Utility methods ---
 
     def get_schema_version(self) -> int:

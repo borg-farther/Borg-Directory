@@ -33,6 +33,11 @@ from guild.core.uri import resolve_guild_uri, fetch_with_retry
 from guild.core.privacy import privacy_redact
 from guild.core.proof_gates import check_confidence_decay
 
+try:
+    from guild.db.store import GuildStore
+except ImportError:
+    GuildStore = None
+
 logger = logging.getLogger(__name__)
 
 # ---------------------------------------------------------------------------
@@ -673,6 +678,27 @@ def action_complete(session_id: str, outcome: str = "", *, guild_dir: Optional[P
         "execution_log_hash": log_hash,
         "phase_results": session["phase_results"],
     }
+
+    # Log execution to reputation store (optional — store may not exist)
+    if GuildStore is not None:
+        try:
+            _store = GuildStore()
+            _store.record_execution(
+                execution_id=f"{session['pack_id']}-{session_id}",
+                session_id=session_id,
+                pack_id=session["pack_id"],
+                agent_id="guild-v2",  # agent_id not available in session context
+                task=session.get("task"),
+                status="completed",
+                phases_completed=phases_passed,
+                phases_failed=phases_failed,
+                started_at=session.get("created_at"),
+                completed_at=ended.isoformat(),
+                log_hash=log_hash,
+            )
+            _store.close()
+        except Exception:
+            pass  # Store is optional — never break core flow
 
     # Clean up
     _active_apply_state.pop(session_id, None)

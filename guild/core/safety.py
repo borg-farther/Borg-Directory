@@ -27,7 +27,6 @@ _INJECTION_PATTERNS = [
     re.compile(r"forget\s+previous", re.IGNORECASE),
     # Shell / code injection
     re.compile(r"\$\("),                                     # $(...) command substitution
-    re.compile(r"`[^`]+`"),                                  # backtick command substitution
     re.compile(r"\b(eval|exec)\s*\(", re.IGNORECASE),        # eval()/exec()
     re.compile(r"\brm\s+(-[rf]+\s+)?/", re.IGNORECASE),       # rm -rf /
     re.compile(r"\bsudo\s+", re.IGNORECASE),                 # sudo

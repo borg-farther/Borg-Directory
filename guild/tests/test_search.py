@@ -1229,3 +1229,92 @@ provenance:
         assert result["success"] is True
         assert result["confidence_status"]["decayed"] is False
         assert "decay_note" not in result
+
+
+# --------------------------------------------------------------------------
+# Tests: reputation store logging (mocked)
+# --------------------------------------------------------------------------
+
+
+class TestGuildPullReputationLogging:
+    """Tests that guild_pull logs pull events to the store."""
+
+    def test_pull_success_calls_update_pack_on_store(self, tmp_path, monkeypatch):
+        """guild_pull calls store.update_pack(pulled_at=...) after successful pull."""
+        import guild.core.search as search_module
+
+        fake_guild = tmp_path / "guild"
+        fake_guild.mkdir()
+        monkeypatch.setattr(search_module, "GUILD_DIR", fake_guild)
+
+        mock_store = MagicMock()
+        monkeypatch.setattr(search_module, "GuildStore", lambda: mock_store)
+
+        resolved_url = (
+            "https://raw.githubusercontent.com/bensargotest-sys/guild-packs/main"
+            "/packs/my-pack.workflow.yaml"
+        )
+
+        with patch("guild.core.search.resolve_guild_uri", return_value=resolved_url):
+            with patch(
+                "guild.core.search.fetch_with_retry",
+                return_value=(_MINIMAL_PACK_YAML, ""),
+            ):
+                result = json.loads(guild_pull("guild://hermes/my-pack"))
+
+        assert result["success"] is True
+
+        mock_store.update_pack.assert_called_once()
+        call_kwargs = mock_store.update_pack.call_args.kwargs
+        assert call_kwargs["pack_id"] == "guild://test/my-pack"
+        assert call_kwargs["pulled_at"] is not None
+        mock_store.close.assert_called_once()
+
+    def test_pull_store_failure_does_not_break_flow(self, tmp_path, monkeypatch):
+        """If store.update_pack raises, guild_pull still returns success."""
+        import guild.core.search as search_module
+
+        fake_guild = tmp_path / "guild"
+        fake_guild.mkdir()
+        monkeypatch.setattr(search_module, "GUILD_DIR", fake_guild)
+
+        mock_store = MagicMock()
+        mock_store.update_pack.side_effect = Exception("DB unavailable")
+        monkeypatch.setattr(search_module, "GuildStore", lambda: mock_store)
+
+        resolved_url = (
+            "https://raw.githubusercontent.com/bensargotest-sys/guild-packs/main"
+            "/packs/my-pack.workflow.yaml"
+        )
+
+        with patch("guild.core.search.resolve_guild_uri", return_value=resolved_url):
+            with patch(
+                "guild.core.search.fetch_with_retry",
+                return_value=(_MINIMAL_PACK_YAML, ""),
+            ):
+                result = json.loads(guild_pull("guild://hermes/my-pack"))
+
+        assert result["success"] is True
+
+    def test_pull_works_when_guildstore_is_none(self, tmp_path, monkeypatch):
+        """guild_pull works when GuildStore import fails (store unavailable)."""
+        import guild.core.search as search_module
+
+        fake_guild = tmp_path / "guild"
+        fake_guild.mkdir()
+        monkeypatch.setattr(search_module, "GUILD_DIR", fake_guild)
+        monkeypatch.setattr(search_module, "GuildStore", None)
+
+        resolved_url = (
+            "https://raw.githubusercontent.com/bensargotest-sys/guild-packs/main"
+            "/packs/my-pack.workflow.yaml"
+        )
+
+        with patch("guild.core.search.resolve_guild_uri", return_value=resolved_url):
+            with patch(
+                "guild.core.search.fetch_with_retry",
+                return_value=(_MINIMAL_PACK_YAML, ""),
+            ):
+                result = json.loads(guild_pull("guild://hermes/my-pack"))
+
+        assert result["success"] is True

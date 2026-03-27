@@ -77,6 +77,11 @@ except ImportError:
         """Fallback: no-op artifact scanner."""
         return artifact, []
 
+try:
+    from guild.db.store import GuildStore
+except ImportError:
+    GuildStore = None
+
 
 # ============================================================================
 # Rate limiting
@@ -453,6 +458,23 @@ def action_publish(
             status="published",
             pr_url=pr_result["pr_url"],
         )
+
+        # Log publish to reputation store (optional — store may not exist)
+        if GuildStore is not None:
+            try:
+                _store = GuildStore()
+                provenance = sanitized_artifact.get("provenance", {})
+                _store.record_publish(
+                    pack_id=str(artifact_id),
+                    author_agent=provenance.get("author_agent", "unknown"),
+                    confidence=provenance.get("confidence", "unknown"),
+                    outcome="published",
+                    metadata={"pr_url": pr_result["pr_url"], "artifact_type": artifact_type},
+                )
+                _store.close()
+            except Exception:
+                pass  # Store is optional — never break core flow
+
         return json.dumps({
             "success": True,
             "published": True,
