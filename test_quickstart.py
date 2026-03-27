@@ -12,7 +12,7 @@ def run_guild_cmd(cmd_args):
         [sys.executable, '-c', f'''
 import sys
 sys.path.insert(0, '/root/hermes-workspace/guild-v2')
-from guild.cli import main
+from borg.cli import main
 sys.argv = ['guild'] + {cmd_args!r}
 main()
 '''],
@@ -47,7 +47,7 @@ mcp_proc = subprocess.Popen(
     [sys.executable, '-c', f'''
 import sys
 sys.path.insert(0, '/root/hermes-workspace/guild-v2')
-from guild.integrations.mcp_server import main
+from borg.integrations.mcp_server import main
 main()
 '''],
     stdin=subprocess.PIPE, stdout=subprocess.PIPE, stderr=subprocess.PIPE

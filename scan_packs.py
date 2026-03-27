@@ -1,8 +1,8 @@
 #!/usr/bin/env python3
 import yaml
 from pathlib import Path
-from guild.core.safety import scan_pack_safety
-from guild.core.schema import validate_pack
+from borg.core.safety import scan_pack_safety
+from borg.core.schema import validate_pack
 
 packs_dir = Path('/root/hermes-workspace/guild-packs/packs')
 results = []

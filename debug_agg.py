@@ -1,7 +1,7 @@
 import json
 import tempfile
 from pathlib import Path
-from guild.core.aggregator import PackAggregator
+from borg.core.aggregator import PackAggregator
 
 def make_exec(phase_results, session_id="s"):
     lines = []

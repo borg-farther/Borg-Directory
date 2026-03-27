@@ -15,7 +15,7 @@ print(f"hermes-plugin/plugin.yaml: {data['name']} v{data['version']} YAML OK")
 
 # Check agent_hook imports
 sys.path.insert(0, ".")
-from guild.integrations import agent_hook
+from borg.integrations import agent_hook
 print(f"guild_on_failure: {agent_hook.guild_on_failure.__doc__.strip().split(chr(10))[0]}")
 print(f"guild_on_task_start: {agent_hook.guild_on_task_start.__doc__.strip().split(chr(10))[0]}")
 

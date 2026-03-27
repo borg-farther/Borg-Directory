@@ -3,8 +3,8 @@ import json
 import sys
 sys.path.insert(0, '.')
 
-from guild.core.search import guild_search, guild_try, guild_pull, check_for_suggestion
-from guild.core.apply import apply_handler
+from borg.core.search import guild_search, guild_try, guild_pull, check_for_suggestion
+from borg.core.apply import apply_handler
 
 print("=== 1. SEARCH ===")
 result = guild_search("debugging")
@@ -16,7 +16,7 @@ if data.get('matches'):
         print(f"  - {m.get('name', m.get('id', '?'))}: {m.get('confidence', '?')} ({m.get('tier', '?')})")
 
 print("\n=== 2. TRY ===")
-result = guild_try("guild://systematic-debugging")
+result = guild_try("borg://systematic-debugging")
 data = json.loads(result)
 print(f"Success: {data.get('success')}")
 if data.get('error'):
@@ -37,7 +37,7 @@ if data.get('suggestions'):
         print(f"  - {s.get('pack_name')}: {s.get('why_relevant', '?')}")
 
 print("\n=== 4. CONVERT ===")
-from guild.core.convert import convert_skill
+from borg.core.convert import convert_skill
 import tempfile, os
 # Create a sample SKILL.md
 skill_content = '''---

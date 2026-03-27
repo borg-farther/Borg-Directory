@@ -6,7 +6,7 @@ Tests the complete flow:
   2. apply_handler(action='start', ...)
   3. apply_handler(action='checkpoint', ...) for each phase
   4. apply_handler(action='complete', ...)
-  5. generate_feedback() from guild.core.search
+  5. generate_feedback() from borg.core.search
   6. Verify execution log JSONL was written
   7. Verify session was cleaned up
 
@@ -26,11 +26,11 @@ from pathlib import Path
 
 import pytest
 
-from guild.core import apply as apply_mod
-from guild.core import session as sess_mod
-from guild.core import search as search_mod
-from guild.core import uri as uri_mod
-from guild.core.uri import GUILD_DIR
+from borg.core import apply as apply_mod
+from borg.core import session as sess_mod
+from borg.core import search as search_mod
+from borg.core import uri as uri_mod
+from borg.core.uri import BORG_DIR
 
 
 # --------------------------------------------------------------------------  #
@@ -43,58 +43,58 @@ def parse_result(raw: str) -> dict:
 
 
 # --------------------------------------------------------------------------  #
-# Fixture: isolated temp GUILD_DIR
+# Fixture: isolated temp BORG_DIR
 # --------------------------------------------------------------------------  #
 
 @pytest.fixture
-def tmp_guild_dir():
-    """Create an isolated temp GUILD_DIR patched into all relevant modules.
+def tmp_agent_dir():
+    """Create an isolated temp BORG_DIR patched into all relevant modules.
 
     Also sets HERMES_HOME env var so that resolve_guild_uri (which uses
-    GUILD_DIR from uri.py) and any other module-level GUILD_DIR references
+    BORG_DIR from uri.py) and any other module-level BORG_DIR references
     resolve to the same temp directory.
     """
-    original_guild_dir = apply_mod.GUILD_DIR
-    original_sess_guild_dir = sess_mod.GUILD_DIR
-    original_search_guild_dir = search_mod.GUILD_DIR
-    original_uri_guild_dir = uri_mod.GUILD_DIR
+    original_agent_dir = apply_mod.BORG_DIR
+    original_sess_agent_dir = sess_mod.BORG_DIR
+    original_search_agent_dir = search_mod.BORG_DIR
+    original_uri_agent_dir = uri_mod.BORG_DIR
     original_hermes_home = apply_mod.HERMES_HOME
 
     tmp = tempfile.mkdtemp(prefix="guild_e2e_")
-    guild_dir = Path(tmp) / "guild"
-    (guild_dir / "sessions").mkdir(parents=True)
-    (guild_dir / "executions").mkdir(parents=True)
+    agent_dir = Path(tmp) / "guild"
+    (agent_dir / "sessions").mkdir(parents=True)
+    (agent_dir / "executions").mkdir(parents=True)
 
-    # Set HERMES_HOME env var so GUILD_DIR resolves via Path(os.getenv(...))
+    # Set HERMES_HOME env var so BORG_DIR resolves via Path(os.getenv(...))
     # in all modules (uri.py, apply.py, search.py, session.py)
     fake_hermes = Path(tmp)
     os.environ["HERMES_HOME"] = str(fake_hermes)
 
     # Patch all module globals
-    apply_mod.GUILD_DIR = guild_dir
+    apply_mod.BORG_DIR = agent_dir
     apply_mod.HERMES_HOME = fake_hermes
-    apply_mod.EXECUTIONS_DIR = guild_dir / "executions"
+    apply_mod.EXECUTIONS_DIR = agent_dir / "executions"
 
-    sess_mod.GUILD_DIR = guild_dir
+    sess_mod.BORG_DIR = agent_dir
     sess_mod.HERMES_HOME = fake_hermes
-    sess_mod.EXECUTIONS_DIR = guild_dir / "executions"
+    sess_mod.EXECUTIONS_DIR = agent_dir / "executions"
 
-    search_mod.GUILD_DIR = guild_dir
+    search_mod.BORG_DIR = agent_dir
 
-    uri_mod.GUILD_DIR = guild_dir  # critical: resolve_guild_uri uses uri.GUILD_DIR
+    uri_mod.BORG_DIR = agent_dir  # critical: resolve_guild_uri uses uri.BORG_DIR
 
-    yield guild_dir
+    yield agent_dir
 
     # Restore
     os.environ.pop("HERMES_HOME", None)
-    apply_mod.GUILD_DIR = original_guild_dir
+    apply_mod.BORG_DIR = original_agent_dir
     apply_mod.HERMES_HOME = original_hermes_home
-    apply_mod.EXECUTIONS_DIR = original_guild_dir / "executions"
-    sess_mod.GUILD_DIR = original_sess_guild_dir
-    sess_mod.HERMES_HOME = original_sess_guild_dir
-    sess_mod.EXECUTIONS_DIR = original_sess_guild_dir
-    search_mod.GUILD_DIR = original_search_guild_dir
-    uri_mod.GUILD_DIR = original_uri_guild_dir
+    apply_mod.EXECUTIONS_DIR = original_agent_dir / "executions"
+    sess_mod.BORG_DIR = original_sess_agent_dir
+    sess_mod.HERMES_HOME = original_sess_agent_dir
+    sess_mod.EXECUTIONS_DIR = original_sess_agent_dir
+    search_mod.BORG_DIR = original_search_agent_dir
+    uri_mod.BORG_DIR = original_uri_agent_dir
 
     shutil.rmtree(tmp, ignore_errors=True)
 
@@ -171,15 +171,15 @@ provenance:
 
 
 # --------------------------------------------------------------------------  #
-# Helper: set up systematic-debugging pack in tmp_guild_dir
+# Helper: set up systematic-debugging pack in tmp_agent_dir
 # --------------------------------------------------------------------------  #
 
-def setup_pack(guild_dir: Path, pack_name: str = "systematic-debugging") -> dict:
-    """Write a valid systematic-debugging pack directly into the temp guild_dir.
+def setup_pack(agent_dir: Path, pack_name: str = "systematic-debugging") -> dict:
+    """Write a valid systematic-debugging pack directly into the temp agent_dir.
 
     Returns the same dict shape as guild_pull would.
     """
-    pack_dir = guild_dir / pack_name
+    pack_dir = agent_dir / pack_name
     pack_dir.mkdir(parents=True, exist_ok=True)
     pack_file = pack_dir / "pack.yaml"
     pack_file.write_text(SYSTEMATIC_DEBUGGING_PACK_YAML, encoding="utf-8")
@@ -205,7 +205,7 @@ def setup_pack(guild_dir: Path, pack_name: str = "systematic-debugging") -> dict
 class TestFullCycleHappyPath:
     """End-to-end tests for the complete apply→checkpoint→complete→feedback cycle."""
 
-    def test_full_cycle_with_systematic_debugging_pack(self, tmp_guild_dir):
+    def test_full_cycle_with_systematic_debugging_pack(self, tmp_agent_dir):
         """
         FULL CYCLE TEST:
         1. Pull systematic-debugging pack
@@ -217,7 +217,7 @@ class TestFullCycleHappyPath:
         7. Verify session was cleaned up
         """
         # ── Step 1: Set up pack ─────────────────────────────────────────────
-        pull_data = setup_pack(tmp_guild_dir)
+        pull_data = setup_pack(tmp_agent_dir)
         assert pull_data["success"] is True
         assert pull_data["name"] == "systematic-debugging"
         pack_path = Path(pull_data["path"])
@@ -228,7 +228,7 @@ class TestFullCycleHappyPath:
             action="start",
             pack_name="systematic-debugging",
             task="Fix TypeError in test_utils.py",
-            guild_dir=tmp_guild_dir,
+            agent_dir=tmp_agent_dir,
         )
         start_data = parse_result(start_result)
         assert start_data["success"] is True, f"start failed: {start_data.get('error')}"
@@ -246,7 +246,7 @@ class TestFullCycleHappyPath:
             session_id=session_id,
             phase_name="__approval__",
             status="passed",
-            guild_dir=tmp_guild_dir,
+            agent_dir=tmp_agent_dir,
         )
         approval_data = parse_result(approval_result)
         assert approval_data["success"] is True
@@ -260,7 +260,7 @@ class TestFullCycleHappyPath:
                 phase_name=phase_name,
                 status="passed",
                 evidence="Tested and confirmed",
-                guild_dir=tmp_guild_dir,
+                agent_dir=tmp_agent_dir,
             )
             cp_data = parse_result(cp_result)
             assert cp_data["success"] is True, \
@@ -272,7 +272,7 @@ class TestFullCycleHappyPath:
         complete_result = apply_mod.apply_handler(
             action="complete",
             session_id=session_id,
-            guild_dir=tmp_guild_dir,
+            agent_dir=tmp_agent_dir,
         )
         complete_data = parse_result(complete_result)
         assert complete_data["success"] is True, \
@@ -326,7 +326,7 @@ class TestFullCycleHappyPath:
         status_result = apply_mod.apply_handler(
             action="status",
             session_id=session_id,
-            guild_dir=tmp_guild_dir,
+            agent_dir=tmp_agent_dir,
         )
         status_data = parse_result(status_result)
         assert status_data["success"] is False, \
@@ -334,22 +334,22 @@ class TestFullCycleHappyPath:
         assert "No active session" in status_data.get("error", "")
 
         # Session file should not exist on disk
-        session_file = tmp_guild_dir / "sessions" / f"{session_id}.json"
+        session_file = tmp_agent_dir / "sessions" / f"{session_id}.json"
         assert not session_file.exists(), \
             f"Session file should have been deleted: {session_file}"
 
-    def test_generate_feedback_standalone(self, tmp_guild_dir):
+    def test_generate_feedback_standalone(self, tmp_agent_dir):
         """
-        Verify generate_feedback() from guild.core.search produces all spec fields.
+        Verify generate_feedback() from borg.core.search produces all spec fields.
         """
         # Pull pack and run a mini cycle to get real execution data
-        setup_pack(tmp_guild_dir)
+        setup_pack(tmp_agent_dir)
 
         start_result = apply_mod.apply_handler(
             action="start",
             pack_name="systematic-debugging",
             task="Verify feedback spec fields",
-            guild_dir=tmp_guild_dir,
+            agent_dir=tmp_agent_dir,
         )
         start_data = parse_result(start_result)
         session_id = start_data["session_id"]
@@ -360,7 +360,7 @@ class TestFullCycleHappyPath:
             session_id=session_id,
             phase_name="__approval__",
             status="passed",
-            guild_dir=tmp_guild_dir,
+            agent_dir=tmp_agent_dir,
         )
 
         # Get the phase list
@@ -375,7 +375,7 @@ class TestFullCycleHappyPath:
                 phase_name=phase_name,
                 status="passed",
                 evidence="Verified step",
-                guild_dir=tmp_guild_dir,
+                agent_dir=tmp_agent_dir,
             )
 
         # Get the session's phase_results
@@ -385,7 +385,7 @@ class TestFullCycleHappyPath:
 
         # Call generate_feedback from search module
         feedback = search_mod.generate_feedback(
-            pack_id="guild://converted/systematic-debugging",
+            pack_id="borg://converted/systematic-debugging",
             pack_version="1.0.0",
             execution_log=phase_results,
             task_description="Verify feedback spec fields",
@@ -423,20 +423,20 @@ class TestFullCycleHappyPath:
 class TestSadPaths:
     """Sad-path tests: failures, retries, status checks, resume errors."""
 
-    def test_checkpoint_fail_on_phase_2_triggers_retry(self, tmp_guild_dir):
+    def test_checkpoint_fail_on_phase_2_triggers_retry(self, tmp_agent_dir):
         """
         Start apply, checkpoint FAIL on phase 2, verify retry logic.
         First failure should return next_action='retry'.
         Second failure should return next_action='skip'.
         """
-        setup_pack(tmp_guild_dir)
+        setup_pack(tmp_agent_dir)
 
         # Start
         start_result = apply_mod.apply_handler(
             action="start",
             pack_name="systematic-debugging",
             task="Test retry logic",
-            guild_dir=tmp_guild_dir,
+            agent_dir=tmp_agent_dir,
         )
         start_data = parse_result(start_result)
         session_id = start_data["session_id"]
@@ -450,7 +450,7 @@ class TestSadPaths:
             session_id=session_id,
             phase_name="__approval__",
             status="passed",
-            guild_dir=tmp_guild_dir,
+            agent_dir=tmp_agent_dir,
         )
 
         # Pass phase 1
@@ -460,7 +460,7 @@ class TestSadPaths:
             phase_name=phase_names[0],
             status="passed",
             evidence="Phase 1 passed",
-            guild_dir=tmp_guild_dir,
+            agent_dir=tmp_agent_dir,
         )
 
         # ── FAIL phase 2 (first attempt → retry) ─────────────────────────
@@ -470,7 +470,7 @@ class TestSadPaths:
             phase_name=phase_2,
             status="failed",
             evidence="Not ready yet",
-            guild_dir=tmp_guild_dir,
+            agent_dir=tmp_agent_dir,
         )
         fail1_data = parse_result(fail1_result)
         assert fail1_data["success"] is True
@@ -487,7 +487,7 @@ class TestSadPaths:
             phase_name=phase_2,
             status="failed",
             evidence="Still not ready",
-            guild_dir=tmp_guild_dir,
+            agent_dir=tmp_agent_dir,
         )
         fail2_data = parse_result(fail2_result)
         assert fail2_data["success"] is True
@@ -505,23 +505,23 @@ class TestSadPaths:
                     phase_name=remaining_phase,
                     status="passed",
                     evidence="Continuing despite earlier skip",
-                    guild_dir=tmp_guild_dir,
+                    agent_dir=tmp_agent_dir,
                 )
                 cp_data = parse_result(cp_result)
                 assert cp_data["success"] is True
 
-    def test_status_check_returns_session_state(self, tmp_guild_dir):
+    def test_status_check_returns_session_state(self, tmp_agent_dir):
         """
         Start apply, then check status. Verify status returns correct state.
         """
-        setup_pack(tmp_guild_dir)
+        setup_pack(tmp_agent_dir)
 
         # Start
         start_result = apply_mod.apply_handler(
             action="start",
             pack_name="systematic-debugging",
             task="Check status test",
-            guild_dir=tmp_guild_dir,
+            agent_dir=tmp_agent_dir,
         )
         start_data = parse_result(start_result)
         session_id = start_data["session_id"]
@@ -530,7 +530,7 @@ class TestSadPaths:
         status_result = apply_mod.apply_handler(
             action="status",
             session_id=session_id,
-            guild_dir=tmp_guild_dir,
+            agent_dir=tmp_agent_dir,
         )
         status_data = parse_result(status_result)
         assert status_data["success"] is True
@@ -545,41 +545,41 @@ class TestSadPaths:
             session_id=session_id,
             phase_name="__approval__",
             status="passed",
-            guild_dir=tmp_guild_dir,
+            agent_dir=tmp_agent_dir,
         )
 
         status_after_result = apply_mod.apply_handler(
             action="status",
             session_id=session_id,
-            guild_dir=tmp_guild_dir,
+            agent_dir=tmp_agent_dir,
         )
         status_after_data = parse_result(status_after_result)
         assert status_after_data["approved"] is True, \
             "Session should be approved after __approval__ checkpoint"
 
-    def test_status_unknown_session_returns_error(self, tmp_guild_dir):
+    def test_status_unknown_session_returns_error(self, tmp_agent_dir):
         """Status for unknown session should return clear error."""
         status_result = apply_mod.apply_handler(
             action="status",
             session_id="nonexistent-session-12345",
-            guild_dir=tmp_guild_dir,
+            agent_dir=tmp_agent_dir,
         )
         status_data = parse_result(status_result)
         assert status_data["success"] is False
         assert "No active session" in status_data["error"]
 
-    def test_resume_completed_session_returns_clear_error(self, tmp_guild_dir):
+    def test_resume_completed_session_returns_clear_error(self, tmp_agent_dir):
         """
         Start apply, complete it, then try to resume → clear error.
         """
-        setup_pack(tmp_guild_dir)
+        setup_pack(tmp_agent_dir)
 
         # Start and complete
         start_result = apply_mod.apply_handler(
             action="start",
             pack_name="systematic-debugging",
             task="Resume completed session test",
-            guild_dir=tmp_guild_dir,
+            agent_dir=tmp_agent_dir,
         )
         start_data = parse_result(start_result)
         session_id = start_data["session_id"]
@@ -591,7 +591,7 @@ class TestSadPaths:
             session_id=session_id,
             phase_name="__approval__",
             status="passed",
-            guild_dir=tmp_guild_dir,
+            agent_dir=tmp_agent_dir,
         )
 
         # Pass all phases
@@ -602,14 +602,14 @@ class TestSadPaths:
                 phase_name=phase_name,
                 status="passed",
                 evidence="Done",
-                guild_dir=tmp_guild_dir,
+                agent_dir=tmp_agent_dir,
             )
 
         # Complete
         complete_result = apply_mod.apply_handler(
             action="complete",
             session_id=session_id,
-            guild_dir=tmp_guild_dir,
+            agent_dir=tmp_agent_dir,
         )
         complete_data = parse_result(complete_result)
         assert complete_data["success"] is True
@@ -619,7 +619,7 @@ class TestSadPaths:
             action="resume",
             pack_name="systematic-debugging",
             task="Resume completed session test",
-            guild_dir=tmp_guild_dir,
+            agent_dir=tmp_agent_dir,
         )
         resume_data = parse_result(resume_result)
 
@@ -631,18 +631,18 @@ class TestSadPaths:
         assert ("completed" in error_msg) or ("already" in error_msg), \
             f"Expected clear 'already completed' error, got: {resume_data.get('error')}"
 
-    def test_complete_with_partial_failure(self, tmp_guild_dir):
+    def test_complete_with_partial_failure(self, tmp_agent_dir):
         """
         Start apply, fail one phase (after retry), pass others, complete.
         Verify feedback draft reflects partial failure correctly.
         """
-        setup_pack(tmp_guild_dir)
+        setup_pack(tmp_agent_dir)
 
         start_result = apply_mod.apply_handler(
             action="start",
             pack_name="systematic-debugging",
             task="Partial failure test",
-            guild_dir=tmp_guild_dir,
+            agent_dir=tmp_agent_dir,
         )
         start_data = parse_result(start_result)
         session_id = start_data["session_id"]
@@ -654,7 +654,7 @@ class TestSadPaths:
             session_id=session_id,
             phase_name="__approval__",
             status="passed",
-            guild_dir=tmp_guild_dir,
+            agent_dir=tmp_agent_dir,
         )
 
         # Pass phase 1, fail phase 2 (retry exhaust), pass rest
@@ -664,7 +664,7 @@ class TestSadPaths:
             phase_name=phase_names[0],
             status="passed",
             evidence="Phase 1 OK",
-            guild_dir=tmp_guild_dir,
+            agent_dir=tmp_agent_dir,
         )
 
         # Fail phase 2 twice → skipped
@@ -674,7 +674,7 @@ class TestSadPaths:
             phase_name=phase_names[1],
             status="failed",
             evidence="Intentional failure",
-            guild_dir=tmp_guild_dir,
+            agent_dir=tmp_agent_dir,
         )
         apply_mod.apply_handler(
             action="checkpoint",
@@ -682,7 +682,7 @@ class TestSadPaths:
             phase_name=phase_names[1],
             status="failed",
             evidence="Still failing",
-            guild_dir=tmp_guild_dir,
+            agent_dir=tmp_agent_dir,
         )
 
         # Pass remaining phases
@@ -693,14 +693,14 @@ class TestSadPaths:
                 phase_name=phase_name,
                 status="passed",
                 evidence="Recovered",
-                guild_dir=tmp_guild_dir,
+                agent_dir=tmp_agent_dir,
             )
 
         # Complete
         complete_result = apply_mod.apply_handler(
             action="complete",
             session_id=session_id,
-            guild_dir=tmp_guild_dir,
+            agent_dir=tmp_agent_dir,
         )
         complete_data = parse_result(complete_result)
         assert complete_data["success"] is True
@@ -723,9 +723,9 @@ class TestSadPaths:
 class TestGuildPull:
     """Tests for guild_pull as used in the full cycle."""
 
-    def test_pull_systematic_debugging_pack(self, tmp_guild_dir):
-        """guild_pull('guild://systematic-debugging') should succeed."""
-        result = search_mod.guild_pull("guild://systematic-debugging")
+    def test_pull_systematic_debugging_pack(self, tmp_agent_dir):
+        """guild_pull('borg://systematic-debugging') should succeed."""
+        result = search_mod.guild_pull("borg://systematic-debugging")
         data = parse_result(result)
 
         assert data["success"] is True, f"guild_pull failed: {data.get('error')}"
@@ -743,9 +743,9 @@ class TestGuildPull:
         assert "validation_errors" in pg
         assert "confidence" in pg
 
-    def test_pull_nonexistent_pack_returns_clear_error(self, tmp_guild_dir):
+    def test_pull_nonexistent_pack_returns_clear_error(self, tmp_agent_dir):
         """guild_pull for nonexistent pack should suggest alternatives."""
-        result = search_mod.guild_pull("guild://nonexistent-pack-xyz")
+        result = search_mod.guild_pull("borg://nonexistent-pack-xyz")
         data = parse_result(result)
 
         assert data["success"] is False

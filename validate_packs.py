@@ -4,7 +4,7 @@ import sys, os
 sys.path.insert(0, '/root/hermes-workspace/guild-v2')
 
 import yaml
-from guild.core.schema import validate_pack
+from borg.core.schema import validate_pack
 
 packs_dir = '/root/hermes-workspace/guild-packs/packs'
 for fname in sorted(os.listdir(packs_dir)):

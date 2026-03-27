@@ -15,7 +15,7 @@ Installation (one of two ways):
 What this plugin does:
   - Registers ``guild_v2_autosuggest`` as a callable tool (toolset: skills).
   - Patches ``tools.guild_autosuggest.check_for_suggestion`` to delegate to
-    ``guild.integrations.agent_hook`` so existing autosuggest callers
+    ``borg.integrations.agent_hook`` so existing autosuggest callers
     (including run_agent.py's _maybe_inject_guild_suggestion) automatically
     get guild-v2 suggestions.
   - Registers ``on_consecutive_failure`` and ``on_task_start`` hooks that
@@ -59,13 +59,13 @@ _V2_BRIDGE_ENABLED = True  # flipped False by register() if config says so
 def _patch_guild_autosuggest() -> bool:
     """
     Monkey-patch ``tools.guild_autosuggest.check_for_suggestion`` so it
-    delegates to ``guild.integrations.agent_hook.guild_on_failure``.
+    delegates to ``borg.integrations.agent_hook.guild_on_failure``.
 
     Returns True if patching succeeded, False otherwise.
     """
     try:
         from tools import guild_autosuggest as original
-        from guild.integrations import agent_hook
+        from borg.integrations import agent_hook
 
         _original_check = original.check_for_suggestion
 
@@ -107,7 +107,7 @@ def _patch_guild_autosuggest() -> bool:
 def _register_lifecycle_hooks(manager) -> None:
     """Register on_consecutive_failure and on_task_start hooks if supported."""
     try:
-        from guild.integrations import agent_hook
+        from borg.integrations import agent_hook
 
         def on_consecutive_failure_hook(
             task_description: str = "",
@@ -154,7 +154,7 @@ def _make_guild_v2_autosuggest_tool():
 
     This tool wraps guild_on_failure and guild_on_task_start for direct LLM use.
     """
-    from guild.integrations import agent_hook
+    from borg.integrations import agent_hook
 
     schema = {
         "name": "guild_v2_autosuggest",

@@ -9,7 +9,7 @@ from pathlib import Path
 # Add guild-v2 to path
 sys.path.insert(0, '/root/hermes-workspace/guild-v2')
 
-from guild.cli import main
+from borg.cli import main
 
 def test_setup_claude():
     with tempfile.TemporaryDirectory() as tmpdir:
