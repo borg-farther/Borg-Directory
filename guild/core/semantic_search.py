@@ -35,7 +35,7 @@ class EmbeddingEngineProtocol(Protocol):
     custom implementations.
     """
     
-    def encode(self, text: str) -> np.ndarray:
+    def encode(self, text: str) -> Any:
         """Encode a single text into an embedding vector.
         
         Args:
@@ -47,7 +47,7 @@ class EmbeddingEngineProtocol(Protocol):
         ...
     
     def search_similar(
-        self, query_embedding: np.ndarray, top_k: int
+        self, query_embedding: Any, top_k: int
     ) -> List[Tuple[str, float]]:
         """Search for similar packs using a query embedding.
         
@@ -76,7 +76,7 @@ class MockEmbeddingEngine:
         """
         self.dimension = dimension
     
-    def encode(self, text: str) -> np.ndarray:
+    def encode(self, text: str) -> Any:
         """Encode text using a simple hash-based approach.
         
         Creates deterministic embeddings based on text hash
@@ -94,7 +94,7 @@ class MockEmbeddingEngine:
         return embedding
     
     def search_similar(
-        self, query_embedding: np.ndarray, top_k: int
+        self, query_embedding: Any, top_k: int
     ) -> List[Tuple[str, float]]:
         """Search similar (not implemented for mock, use semantic_search)."""
         raise NotImplementedError(
