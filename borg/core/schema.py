@@ -23,6 +23,13 @@ import yaml
 
 VALID_CONFIDENCE = {"guessed", "inferred", "tested", "validated"}
 
+# Fields that may appear on individual phases (conditional phase extension)
+_PHASE_OPTIONAL_FIELDS = frozenset({
+    "skip_if",
+    "inject_if",
+    "context_prompts",
+})
+
 # Fields required for workflow_pack type
 _WORKFLOW_PACK_REQUIRED_FIELDS = frozenset({
     "type",
@@ -201,6 +208,12 @@ def collect_text_fields(pack: dict) -> List[str]:
                 texts.append(str(prompt))
             for ap in phase.get("anti_patterns", []) or []:
                 texts.append(str(ap))
+            # Conditional phase extension: collect context_prompt text
+            for cp in phase.get("context_prompts", []) or []:
+                if isinstance(cp, dict):
+                    texts.append(str(cp.get("prompt", "")))
+                else:
+                    texts.append(str(cp))
 
     for rule in pack.get("escalation_rules", []) or []:
         texts.append(str(rule))

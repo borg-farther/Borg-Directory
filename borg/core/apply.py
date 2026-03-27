@@ -108,7 +108,7 @@ def _generate_feedback(
 # Action: start
 # ---------------------------------------------------------------------------
 
-def action_start(pack_name: str, task: str, *, agent_dir: Optional[Path] = None) -> str:
+def action_start(pack_name: str, task: str, context_dict: dict = None, *, agent_dir: Optional[Path] = None) -> str:
     """Load a pulled pack, safety-scan it, and create an execution session.
 
     Returns JSON with session_id and approval_summary.
@@ -175,11 +175,18 @@ def action_start(pack_name: str, task: str, *, agent_dir: Optional[Path] = None)
     log_filename = f"{safe_id}-{ts.strftime('%Y%m%dT%H%M%S')}.jsonl"
     log_path = (base / "executions" / log_filename)
 
-    # Build phase plan
+    # Normalize context for condition evaluation
+    eval_context = context_dict or {}
+
+    # Build phase plan, filtering out skipped phases based on context
     phases = pack.get("phases", [])
+    from borg.core.conditions import evaluate_skip_conditions
     phase_plan = []
     for i, phase in enumerate(phases):
         if not isinstance(phase, dict):
+            continue
+        should_skip, _ = evaluate_skip_conditions(phase, eval_context)
+        if should_skip:
             continue
         phase_plan.append({
             "index": i,
@@ -188,6 +195,9 @@ def action_start(pack_name: str, task: str, *, agent_dir: Optional[Path] = None)
             "checkpoint": phase.get("checkpoint", ""),
             "anti_patterns": phase.get("anti_patterns", []),
             "prompts": phase.get("prompts", []),
+            "skip_if": phase.get("skip_if", []),
+            "inject_if": phase.get("inject_if", []),
+            "context_prompts": phase.get("context_prompts", []),
             "status": "pending",
         })
 
@@ -210,6 +220,7 @@ def action_start(pack_name: str, task: str, *, agent_dir: Optional[Path] = None)
         "phase_results": [],
         "retries": {},
         "approved": False,
+        "eval_context": eval_context,
     }
 
     # Persist via session.py
@@ -279,6 +290,7 @@ def action_checkpoint(
     status: str,
     evidence: str = "",
     attempt: int = 1,
+    context_dict: dict = None,
     *,
     agent_dir: Optional[Path] = None,
 ) -> str:
@@ -299,6 +311,14 @@ def action_checkpoint(
                 "success": False,
                 "error": f"No active session: {session_id}",
             })
+
+    # Merge provided context_dict with session's stored eval_context
+    stored_context = session.get("eval_context", {})
+    call_context = context_dict or {}
+    eval_context = {**stored_context, **call_context}
+
+    # Update session's eval_context with new context
+    session["eval_context"] = eval_context
 
     # Get apply-specific state
     apply_state = _active_apply_state.get(session_id, {})
@@ -427,14 +447,25 @@ def action_checkpoint(
     # Persist updated session
     _session_mod.save_session(session, agent_dir=base)
 
-    # Find next phase
+    # Find next phase and evaluate its inject_if conditions for guidance
     next_phase = None
+    inject_messages = []
     if next_action in ("continue", "skip"):
         current_idx = phase_match["index"]
         for p in session["phases"]:
             if p["index"] > current_idx and p["status"] == "pending":
                 next_phase = p
+                # Evaluate inject_if conditions for the next phase
+                from borg.core.conditions import evaluate_inject_conditions
+                inject_messages = evaluate_inject_conditions(p, eval_context)
                 break
+
+    # Clear previous inject messages from session
+    session.pop("_inject_messages", None)
+    # Persist inject messages for this checkpoint
+    if inject_messages:
+        session["_inject_messages"] = inject_messages
+        _session_mod.save_session(session, agent_dir=base)
 
     return json.dumps({
         "success": True,
@@ -447,6 +478,7 @@ def action_checkpoint(
             1 for p in session["phases"] if p["status"] != "pending"
         ),
         "phases_total": len(session["phases"]),
+        "inject_messages": inject_messages,
     }, ensure_ascii=False)
 
 
@@ -870,6 +902,9 @@ def action_resume(pack_name: str, task: str = "", *, agent_dir: Optional[Path] =
             "checkpoint": phase.get("checkpoint", ""),
             "anti_patterns": phase.get("anti_patterns", []),
             "prompts": phase.get("prompts", []),
+            "skip_if": phase.get("skip_if", []),
+            "inject_if": phase.get("inject_if", []),
+            "context_prompts": phase.get("context_prompts", []),
             "status": ph_status,
         })
 
@@ -972,6 +1007,7 @@ def apply_handler(
     status: str = "",
     evidence: str = "",
     outcome: str = "",
+    context_dict: dict = None,
     *,
     agent_dir: Optional[Path] = None,
 ) -> str:
@@ -986,7 +1022,7 @@ def apply_handler(
                 return json.dumps({"success": False, "error": "pack_name is required for action='start'"})
             if not task:
                 return json.dumps({"success": False, "error": "task is required for action='start'"})
-            return action_start(pack_name, task, agent_dir=agent_dir)
+            return action_start(pack_name, task, context_dict=context_dict, agent_dir=agent_dir)
 
         elif action == "checkpoint":
             if not session_id:
@@ -995,7 +1031,7 @@ def apply_handler(
                 return json.dumps({"success": False, "error": "phase_name is required for action='checkpoint'"})
             if not status:
                 return json.dumps({"success": False, "error": "status is required for action='checkpoint'"})
-            return action_checkpoint(session_id, phase_name, status, evidence, agent_dir=agent_dir)
+            return action_checkpoint(session_id, phase_name, status, evidence, context_dict=context_dict, agent_dir=agent_dir)
 
         elif action == "complete":
             if not session_id:

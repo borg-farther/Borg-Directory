@@ -276,7 +276,9 @@ TOOLS: List[Dict[str, Any]] = [
         "description": (
             "Silent observation: analyzes the current task and returns structural guidance from proven approaches. "
             "Call this at the start of any task to get battle-tested strategies. "
-            "Returns specific phase-by-phase guidance if a relevant pack exists, or general best practices if not."
+            "Returns specific phase-by-phase guidance if a relevant pack exists, or general best practices if not. "
+            "Supports conditional phases: when context includes error_message, error_type, attempts, "
+            "has_recent_changes, or error_in_test, skip_if/inject_if/context_prompts conditions are evaluated."
         ),
         "inputSchema": {
             "type": "object",
@@ -288,6 +290,21 @@ TOOLS: List[Dict[str, Any]] = [
                 "context": {
                     "type": "string",
                     "description": "Optional additional context (environment, language, constraints).",
+                },
+                "context_dict": {
+                    "type": "object",
+                    "description": (
+                        "Optional runtime context for conditional phase evaluation. "
+                        "Keys: error_message (str), error_type (str), attempts (int), "
+                        "has_recent_changes (bool), error_in_test (bool)."
+                    ),
+                    "properties": {
+                        "error_message": {"type": "string"},
+                        "error_type": {"type": "string"},
+                        "attempts": {"type": "integer"},
+                        "has_recent_changes": {"type": "boolean"},
+                        "error_in_test": {"type": "boolean"},
+                    },
                 },
             },
             "required": ["task"],
@@ -604,6 +621,17 @@ def borg_apply(
                 if not session:
                     return json.dumps({"success": False, "error": f"Session not found: {session_id}"})
 
+            # Evaluate inject_if conditions for this phase
+            inject_messages = []
+            phases = session.get("phases", [])
+            for p in phases:
+                if isinstance(p, dict) and p.get("name") == phase_name:
+                    from borg.core.conditions import evaluate_inject_conditions
+                    # Build eval_context from the session's stored context if available
+                    eval_context = session.get("eval_context", {})
+                    inject_messages = evaluate_inject_conditions(p, eval_context)
+                    break
+
             # Log event
             session_module.log_event(session_id, {
                 "type": "checkpoint",
@@ -613,9 +641,8 @@ def borg_apply(
             })
 
             # Update phase status in session
-            phases = session.get("phases", [])
             for p in phases:
-                if p.get("name") == phase_name:
+                if isinstance(p, dict) and p.get("name") == phase_name:
                     p["status"] = status
                     break
 
@@ -628,13 +655,16 @@ def borg_apply(
                 session["approved"] = True
                 session_module.save_session(session)
 
-            return json.dumps({
+            response = {
                 "success": True,
                 "session_id": session_id,
                 "phase_name": phase_name,
                 "status": status,
                 "approved": approved,
-            })
+            }
+            if inject_messages:
+                response["inject_messages"] = inject_messages
+            return json.dumps(response)
 
         elif action == "complete":
             if not session_id:
@@ -855,7 +885,7 @@ def borg_suggest(
         return json.dumps({"success": False, "error": str(e), "type": type(e).__name__})
 
 
-def borg_observe(task: str = "", context: str = "") -> str:
+def borg_observe(task: str = "", context: str = "", context_dict: dict = None) -> str:
     """Silent observation: return structural guidance for a task if a relevant pack exists.
 
     Uses classify_task to extract keywords from the task description, then searches
@@ -865,6 +895,9 @@ def borg_observe(task: str = "", context: str = "") -> str:
     Args:
         task: Task description (required).
         context: Optional additional context (environment, language, constraints).
+        context_dict: Optional runtime context dict for conditional phase evaluation.
+            Keys: error_message (str), error_type (str), attempts (int),
+            has_recent_changes (bool), error_in_test (bool).
 
     Returns:
         A concise structural guide string, or empty string if no relevant pack found.
@@ -872,6 +905,9 @@ def borg_observe(task: str = "", context: str = "") -> str:
     try:
         if not task:
             return ""
+
+        # Normalize context_dict
+        eval_context = context_dict or {}
 
         # Import classify_task here to avoid circular imports and to allow
         # the function to work even if the search module changes
@@ -933,15 +969,32 @@ def borg_observe(task: str = "", context: str = "") -> str:
         phases_data = best_match.get("phases", [])
         anti_patterns = best_match.get("anti_patterns", [])
         checkpoint = best_match.get("checkpoint", "")
+        start_signals = best_match.get("start_signals", [])
 
         # Build condensed guide with human-visible attribution
         confidence = best_match.get("confidence", "unknown")
         lines = []
         lines.append(f"🧠 Borg found a proven approach: **{pack_name}** (confidence: {confidence})")
-        lines.append(f"This approach has been tested across multiple agents. Telling the user:"  )
+        lines.append(f"This approach has been tested across multiple agents. Telling the user:")
         lines.append(f"\"Using a community-proven {confidence} approach for this type of task.\"")
         lines.append("")
         lines.append(f"For this type of task, follow this structure:")
+
+        # Check for matching start signals based on error context
+        if start_signals and context:
+            from borg.core.signals import match_start_signal
+            matched_signal = match_start_signal(start_signals, context)
+            if matched_signal:
+                start_here = matched_signal.get("start_here", [])
+                avoid = matched_signal.get("avoid", [])
+                reasoning = matched_signal.get("reasoning", "")
+                if start_here:
+                    lines.append("")
+                    lines.append(f"🎯 Start here: {', '.join(start_here)}")
+                if avoid:
+                    lines.append(f"⚠️ Avoid: {', '.join(avoid)}")
+                if reasoning:
+                    lines.append(f"Why: {reasoning}")
 
         if phases_data:
             lines.append("Phases:")
@@ -950,7 +1003,30 @@ def borg_observe(task: str = "", context: str = "") -> str:
                     if isinstance(phase, dict):
                         phase_name = phase.get("name", f"phase-{i}")
                         phase_desc = phase.get("description", "")
+
+                        # Evaluate skip_if conditions
+                        from borg.core.conditions import (
+                            evaluate_skip_conditions,
+                            evaluate_inject_conditions,
+                            evaluate_context_prompts,
+                        )
+
+                        should_skip, skip_reason = evaluate_skip_conditions(phase, eval_context)
+                        if should_skip:
+                            lines.append(f"  Phase {i}: {phase_name} — SKIPPED ({skip_reason})")
+                            continue
+
                         lines.append(f"  Phase {i}: {phase_name} — {phase_desc}")
+
+                        # Evaluate inject_if and append messages
+                        inject_messages = evaluate_inject_conditions(phase, eval_context)
+                        for msg in inject_messages:
+                            lines.append(f"    → {msg}")
+
+                        # Evaluate context_prompts and append prompts
+                        context_prompts = evaluate_context_prompts(phase, eval_context)
+                        for cp in context_prompts:
+                            lines.append(f"    📌 {cp}")
                     elif isinstance(phase, str):
                         lines.append(f"  Phase {i}: {phase}")
             elif isinstance(phases_data, int):
