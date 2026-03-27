@@ -156,6 +156,30 @@ def _cmd_feedback(args: argparse.Namespace) -> int:
     return 0
 
 
+def _cmd_convert(args: argparse.Namespace) -> int:
+    """Convert a SKILL.md, CLAUDE.md, or .cursorrules file to a workflow pack."""
+    import yaml
+
+    try:
+        if args.format == "auto":
+            pack = convert_auto(args.path)
+        elif args.format == "skill":
+            pack = convert_skill(args.path)
+        elif args.format == "claude":
+            pack = convert_claude_md(args.path)
+        elif args.format == "cursorrules":
+            pack = convert_cursorrules(args.path)
+        else:
+            print(f"Error: Unknown format '{args.format}'. Use: auto, skill, claude, cursorrules", file=sys.stderr)
+            return 1
+
+        print(yaml.safe_dump(pack, default_flow_style=False, sort_keys=False))
+        return 0
+    except Exception as e:
+        print(f"Error: {e}", file=sys.stderr)
+        return 1
+
+
 def _cmd_list(args: argparse.Namespace) -> int:
     """List local packs."""
     raw = action_list()
@@ -240,6 +264,17 @@ def main() -> int:
     p = sub.add_parser("feedback", help="Generate feedback from session")
     p.add_argument("session_id", help="Session ID")
     p.set_defaults(func=_cmd_feedback)
+
+    # guild convert <path> [--format auto|skill|claude|cursorrules]
+    p = sub.add_parser("convert", help="Convert SKILL.md / CLAUDE.md / .cursorrules to workflow pack")
+    p.add_argument("path", help="Path to source file (SKILL.md, CLAUDE.md, or .cursorrules)")
+    p.add_argument(
+        "--format",
+        choices=["auto", "skill", "claude", "cursorrules"],
+        default="auto",
+        help="Source format (default: auto-detect from filename)",
+    )
+    p.set_defaults(func=_cmd_convert)
 
     # guild list
     p = sub.add_parser("list", help="List local packs")

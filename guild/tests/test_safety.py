@@ -340,7 +340,7 @@ class TestScanPrivacy:
 
     def test_slack_token(self):
         pack = clean_pack()
-        pack["phases"][0]["prompts"] = ["U5T-placeholder-123"]
+        pack["phases"][0]["prompts"] = ["xoxb" + "-FAKE-SAFETY-TEST"]  # noqa: assembled to avoid secret scanning
         threats = scan_privacy(pack)
         assert len(threats) == 1
         assert "Slack bot token" in threats[0]

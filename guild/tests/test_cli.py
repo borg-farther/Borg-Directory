@@ -149,7 +149,7 @@ def test_list_dispatches_to_action_list(mock_list):
 def test_help_text_shows_all_commands():
     code, out, err = capture_main(["--help"])
     assert code == 0
-    for cmd in ["search", "pull", "try", "init", "apply", "publish", "feedback", "list", "version"]:
+    for cmd in ["search", "pull", "try", "init", "apply", "publish", "feedback", "convert", "list", "version"]:
         assert cmd in out, f"'{cmd}' not found in help output"
 
 
@@ -205,3 +205,21 @@ def test_apply_requires_task():
     code, out, err = capture_main(["apply", "mypack"])
     # Should fail due to missing required --task
     assert code == 2
+
+
+@patch("guild.cli.convert_auto")
+def test_convert_dispatches_to_convert_auto(mock_convert):
+    mock_convert.return_value = {"type": "workflow_pack", "version": "1.0"}
+    code, out, err = capture_main(["convert", "/path/to/myfile.md"])
+    assert code == 0
+    mock_convert.assert_called_once_with("/path/to/myfile.md")
+    assert "workflow_pack" in out
+
+
+@patch("guild.cli.convert_skill")
+def test_convert_with_explicit_format_dispatches_correctly(mock_convert):
+    mock_convert.return_value = {"type": "workflow_pack", "version": "1.0", "id": "test"}
+    code, out, err = capture_main(["convert", "/path/to/SKILL.md", "--format", "skill"])
+    assert code == 0
+    mock_convert.assert_called_once_with("/path/to/SKILL.md")
+    assert "workflow_pack" in out

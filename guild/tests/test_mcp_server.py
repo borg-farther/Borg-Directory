@@ -104,6 +104,8 @@ class TestToolsList:
             "guild_apply",
             "guild_publish",
             "guild_feedback",
+            "guild_suggest",
+            "guild_convert",
         ]
         for name in expected:
             assert name in tool_names, f"{name} not in {tool_names}"
@@ -121,7 +123,7 @@ class TestToolsList:
     def test_tools_list_correct_count(self):
         req = minimal_request("tools/list", {}, req_id=4)
         resp = mcp_module.handle_request(req)
-        assert len(resp["result"]["tools"]) == 7
+        assert len(resp["result"]["tools"]) == 9
 
 
 # ============================================================================
@@ -290,6 +292,48 @@ class TestCallTool:
         parsed = json.loads(result)
         assert parsed["success"] is False
         assert "Unknown action" in parsed["error"]
+
+    def test_call_tool_guild_suggest_empty_context(self):
+        result = mcp_module.call_tool("guild_suggest", {"context": ""})
+        assert result == "{}"
+
+    def test_call_tool_guild_suggest_with_context(self):
+        result = mcp_module.call_tool("guild_suggest", {
+            "context": "I've tried debugging this for hours and it keeps failing with the same error",
+            "failure_count": 2,
+        })
+        # Should return JSON (either empty {} or suggestion)
+        parsed = json.loads(result)
+        assert isinstance(parsed, dict)
+
+    def test_call_tool_guild_convert_with_explicit_format(self, tmp_path):
+        # Create a minimal SKILL.md file
+        skill_file = tmp_path / "myskill.md"
+        skill_file.write_text("---\nname: test-skill\ndescription: A test skill\n---\n# Main\nThis is the main phase.\n")
+        result = mcp_module.call_tool("guild_convert", {
+            "path": str(skill_file),
+            "format": "skill",
+        })
+        parsed = json.loads(result)
+        assert parsed["success"] is True
+        assert "content" in parsed
+        assert "pack" in parsed
+        assert parsed["pack"]["id"] == "guild://converted/test_skill"
+
+    def test_call_tool_guild_convert_missing_path(self):
+        result = mcp_module.call_tool("guild_convert", {"path": ""})
+        parsed = json.loads(result)
+        assert parsed["success"] is False
+        assert "path is required" in parsed["error"]
+
+    def test_call_tool_guild_convert_unknown_format(self):
+        result = mcp_module.call_tool("guild_convert", {
+            "path": "/tmp/test.md",
+            "format": "invalid_format",
+        })
+        parsed = json.loads(result)
+        assert parsed["success"] is False
+        assert "Unknown format" in parsed["error"]
 
 
 # ============================================================================

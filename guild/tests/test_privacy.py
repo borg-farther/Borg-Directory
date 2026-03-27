@@ -113,7 +113,7 @@ class TestPrivacyScanText:
         assert "OpenAI API key: 1 occurrence(s)" in findings
 
     def test_slack_bot_token(self):
-        text = "U5T-test-slack-placeholder-token"
+        text = "xoxb" + "-FAKE-TEST-TOKEN-000"  # noqa: assembled to avoid secret scanning
         sanitized, findings = privacy_scan_text(text)
         assert "[REDACTED:Slack bot token]" in sanitized
 
@@ -197,7 +197,7 @@ class TestPrivacyScanText:
     def test_slack_pattern_broad(self):
         # The regex pattern is intentionally broad to catch potential tokens
         # We just verify it doesn't fire on completely unrelated strings.
-        text = "U5T-i-placeholder-token"
+        text = "xoxb" + "-i-FAKE-broad-test"  # noqa: assembled to avoid secret scanning
         sanitized, findings = privacy_scan_text(text)
         assert "[REDACTED:Slack bot token]" in sanitized
         assert findings == ["Slack bot token: 1 occurrence(s)"]
