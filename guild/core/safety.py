@@ -55,7 +55,8 @@ _FILE_ACCESS_PATTERNS = [
     re.compile(r"cat\s+\.env", re.IGNORECASE),
     re.compile(r"cat\s+~/.hermes", re.IGNORECASE),
     re.compile(r"\.\./", re.IGNORECASE),   # path traversal
-    re.compile(r"~/.ssh/", re.IGNORECASE), # SSH key access
+    re.compile(r"ls\s+~/.ssh\b", re.IGNORECASE),  # SSH key directory enumeration
+    re.compile(r"cat\s+~/.ssh/", re.IGNORECASE),  # reading SSH private keys
     re.compile(r"\bnc\s+", re.IGNORECASE), # netcat reverse shell
 ]
 

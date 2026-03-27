@@ -23,13 +23,31 @@ import yaml
 
 VALID_CONFIDENCE = {"guessed", "inferred", "tested", "validated"}
 
-REQUIRED_PACK_FIELDS = frozenset({
+# Fields required for workflow_pack type
+_WORKFLOW_PACK_REQUIRED_FIELDS = frozenset({
     "type",
     "version",
     "id",
     "problem_class",
     "mental_model",
     "phases",
+    "provenance",
+})
+
+# Fields required for critique_rubric type
+_CRITIQUE_RUBRIC_REQUIRED_FIELDS = frozenset({
+    "type",
+    "version",
+    "id",
+    "criteria",
+    "provenance",
+})
+
+# Required fields are type-dependent
+_REQUIRED_PACK_FIELDS = frozenset({
+    "type",
+    "version",
+    "id",
     "provenance",
 })
 
@@ -58,7 +76,16 @@ def parse_workflow_pack(yaml_text: str) -> dict:
     if not isinstance(data, dict):
         raise ValueError("Invalid YAML: expected a mapping at top level")
 
-    missing = REQUIRED_PACK_FIELDS - set(data.keys())
+    # Select type-specific required fields
+    pack_type = data.get("type", "")
+    if pack_type == "workflow_pack":
+        required_fields = _WORKFLOW_PACK_REQUIRED_FIELDS
+    elif pack_type == "critique_rubric":
+        required_fields = _CRITIQUE_RUBRIC_REQUIRED_FIELDS
+    else:
+        required_fields = _REQUIRED_PACK_FIELDS
+
+    missing = required_fields - set(data.keys())
     if missing:
         raise ValueError(f"Missing required fields: {', '.join(sorted(missing))}")
 
@@ -113,27 +140,32 @@ def validate_pack(pack: dict) -> List[str]:
             "proof gate requires known failure cases"
         )
 
-    required_inputs = pack.get("required_inputs")
-    if (
-        not required_inputs
-        or not isinstance(required_inputs, list)
-        or len(required_inputs) < 1
-    ):
-        errors.append(
-            "Missing or empty required_inputs — "
-            "at least 1 required input must be specified"
-        )
+    # required_inputs and escalation_rules only apply to workflow_pack types.
+    # critique_rubric packs use 'criteria' instead of 'phases' and have no
+    # required_inputs/escalation_rules.
+    pack_type = pack.get("type", "")
+    if pack_type == "workflow_pack":
+        required_inputs = pack.get("required_inputs")
+        if (
+            not required_inputs
+            or not isinstance(required_inputs, list)
+            or len(required_inputs) < 1
+        ):
+            errors.append(
+                "Missing or empty required_inputs — "
+                "at least 1 required input must be specified"
+            )
 
-    escalation_rules = pack.get("escalation_rules")
-    if (
-        not escalation_rules
-        or not isinstance(escalation_rules, list)
-        or len(escalation_rules) < 1
-    ):
-        errors.append(
-            "Missing or empty escalation_rules — "
-            "at least 1 escalation rule must be specified"
-        )
+        escalation_rules = pack.get("escalation_rules")
+        if (
+            not escalation_rules
+            or not isinstance(escalation_rules, list)
+            or len(escalation_rules) < 1
+        ):
+            errors.append(
+                "Missing or empty escalation_rules — "
+                "at least 1 escalation rule must be specified"
+            )
 
     return errors
 

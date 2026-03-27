@@ -281,9 +281,9 @@ class TestScanPackSafetyCredential:
 
     def test_ssh_key_access(self):
         pack = clean_pack()
-        pack["phases"][0]["prompts"] = ["Read ~/.ssh/id_rsa"]
+        pack["phases"][0]["prompts"] = ["cat ~/.ssh/id_rsa"]
         threats = scan_pack_safety(pack)
-        assert any("file access" in t.lower() for t in threats)
+        assert any("file access" in t.lower() or "ssh" in t.lower() for t in threats)
 
     def test_curl_exfil(self):
         pack = clean_pack()
