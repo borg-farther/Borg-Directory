@@ -705,14 +705,17 @@ class TestFormatSuggestion:
 class TestCheckForSuggestion:
     """Tests for check_for_suggestion()."""
 
-    def test_empty_context_returns_empty_json(self):
-        """Empty conversation context returns '{}' immediately."""
-        assert check_for_suggestion("") == "{}"
-        assert check_for_suggestion("   ") == "{}"
+    def test_empty_context_returns_has_suggestion_false(self):
+        """Empty conversation context returns has_suggestion=False."""
+        result = json.loads(check_for_suggestion(""))
+        assert result == {"has_suggestion": False}
+        result2 = json.loads(check_for_suggestion("   "))
+        assert result2 == {"has_suggestion": False}
 
-    def test_low_failure_count_no_frustration_returns_empty(self):
-        """failure_count < 2 with no frustration signals returns '{}'."""
-        assert check_for_suggestion("I need to write a test", failure_count=1) == "{}"
+    def test_low_failure_count_no_frustration_returns_has_suggestion_false(self):
+        """failure_count < 2 with no frustration signals returns has_suggestion=False."""
+        result = json.loads(check_for_suggestion("I need to write a test", failure_count=1))
+        assert result == {"has_suggestion": False}
 
     def test_frustration_signal_triggers_suggestion(self):
         """Frustration signals trigger suggestion even at low failure_count."""
@@ -738,6 +741,7 @@ class TestCheckForSuggestion:
                     )
                 )
 
+        assert result["has_suggestion"] is True
         assert "suggestion" in result
         assert "systematic-debugging" in result["suggestion"]
 
@@ -762,6 +766,7 @@ class TestCheckForSuggestion:
                     check_for_suggestion("writing some code here", failure_count=2)
                 )
 
+        assert result["has_suggestion"] is True
         assert "suggestion" in result
         assert result["pack_name"] == "debug-pack"
 
@@ -794,8 +799,8 @@ class TestCheckForSuggestion:
         assert "search_terms" in result
         assert result["search_terms"][0] == "debug"
 
-    def test_no_matching_packs_returns_empty_json(self):
-        """No matching packs return '{}'."""
+    def test_no_matching_packs_returns_has_suggestion_false(self):
+        """No matching packs return has_suggestion=False."""
         with patch(
             "guild.core.search._fetch_index",
             return_value={"packs": []},
@@ -806,7 +811,7 @@ class TestCheckForSuggestion:
                     failure_count=2,
                 )
 
-        assert result == "{}"
+        assert json.loads(result) == {"has_suggestion": False}
 
     def test_tried_packs_are_filtered_out(self):
         """Already-tried packs are excluded from suggestions."""
@@ -845,6 +850,7 @@ class TestCheckForSuggestion:
                 )
 
         # debug-pack is filtered out, should return test-pack
+        assert result["has_suggestion"] is True
         assert result["pack_name"] == "test-pack"
         assert "debug-pack" not in [s["pack_name"] for s in result.get("suggestions", [])]
 

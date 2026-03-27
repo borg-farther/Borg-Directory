@@ -854,14 +854,14 @@ def check_for_suggestion(
 
     # Fast path — no suggestion needed
     if not conversation_context.strip():
-        return "{}"
+        return json.dumps({"has_suggestion": False})
 
     # Trigger on failure_count >= 2 OR frustration signals
     should_suggest = (
         failure_count >= 2 or _has_frustration_signals(conversation_context)
     )
     if not should_suggest:
-        return "{}"
+        return json.dumps({"has_suggestion": False})
 
     # Classify the task from context
     search_terms = classify_task(conversation_context)
@@ -888,7 +888,7 @@ def check_for_suggestion(
             logger.debug("Guild search failed for term '%s': %s", term, e)
 
     if not all_matches:
-        return "{}"
+        return json.dumps({"has_suggestion": False})
 
     # Deduplicate by name and filter out tried packs
     seen_names: set = set()
@@ -900,7 +900,7 @@ def check_for_suggestion(
             unique_matches.append(match)
 
     if not unique_matches:
-        return "{}"
+        return json.dumps({"has_suggestion": False})
 
     # Build top 3 suggestions with rich metadata
     top_matches = unique_matches[:3]
@@ -918,6 +918,7 @@ def check_for_suggestion(
     suggestion_text = _format_suggestion(top_matches, conversation_context)
 
     return json.dumps({
+        "has_suggestion": True,
         "suggestion": suggestion_text,
         "suggestions": suggestions_list,
         "pack_name": top_matches[0].get("name", ""),

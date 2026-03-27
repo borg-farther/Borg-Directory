@@ -61,7 +61,26 @@ def _require_success(raw: str, ctx: str = "") -> bool:
 def _cmd_search(args: argparse.Namespace) -> int:
     """Search for packs matching a query."""
     raw = guild_search(args.query, mode=args.mode)
-    _print_json(raw)
+    if args.json:
+        _print_json(raw)
+        return 0
+    data = json.loads(raw)
+    if not data.get("success"):
+        print(f"Error: {data.get('error', 'Unknown')}", file=sys.stderr)
+        return 1
+    matches = data.get("matches", [])
+    if not matches:
+        print("No packs found.")
+        return 0
+    print(f"{'Name':<35} {'Confidence':<12} {'Tier':<8} {'Problem Class'}")
+    print("-" * 90)
+    for p in matches:
+        name = p.get("name", "?")
+        conf = p.get("confidence", "?")
+        tier = p.get("tier", "?")
+        problem_class = (p.get("problem_class") or "")[:60]
+        print(f"{name:<35} {conf:<12} {tier:<8} {problem_class}")
+    print(f"\nTotal: {len(matches)} pack(s)")
     return 0
 
 
@@ -80,8 +99,29 @@ def _cmd_pull(args: argparse.Namespace) -> int:
 def _cmd_try(args: argparse.Namespace) -> int:
     """Preview a pack without saving."""
     raw = guild_try(args.uri)
-    if _require_success(raw, ctx=" (pack not found or invalid)"):
+    if args.json:
         _print_json(raw)
+        return 0 if json.loads(raw).get("success") else 1
+    if _require_success(raw, ctx=" (pack not found or invalid)"):
+        data = json.loads(raw)
+        phases = data.get("phases", [])
+        phase_names = ", ".join(p.get("name", "?") for p in phases) if phases else "none"
+        verdict = data.get("verdict", "unknown")
+        verdict_symbol = "✓" if verdict == "safe" else "✗"
+        print(f"Pack: {data.get('id', '?')} ({data.get('problem_class', '?')})")
+        print(f"Confidence: {data.get('confidence', '?')}")
+        print(f"Phases ({len(phases)}): {phase_names}")
+        print(f"Verdict: {verdict_symbol} {verdict}")
+        errors = data.get("validation_errors", [])
+        if errors:
+            print(f"Validation errors ({len(errors)}):")
+            for e in errors:
+                print(f"  - {e}")
+        threats = data.get("safety_threats", [])
+        if threats:
+            print(f"Safety threats ({len(threats)}):")
+            for t in threats:
+                print(f"  - {t}")
     else:
         _print_json(raw)
         return 1
@@ -116,8 +156,17 @@ def _cmd_apply(args: argparse.Namespace) -> int:
         pack_name=args.pack,
         task=args.task,
     )
-    if _require_success(raw, ctx=" (pack not found)"):
+    if args.json:
         _print_json(raw)
+        return 0 if json.loads(raw).get("success") else 1
+    if _require_success(raw, ctx=" (pack not found)"):
+        data = json.loads(raw)
+        session_id = data.get("session_id", "?")
+        phases = data.get("phases", [])
+        phase_names = ", ".join(p.get("name", "?") for p in phases) if phases else "none"
+        print(f"Session ID: {session_id}")
+        print(f"Phases ({len(phases)}): {phase_names}")
+        print("Awaiting approval")
     else:
         _print_json(raw)
         return 1
@@ -232,6 +281,11 @@ def main() -> int:
         default="text",
         help="Search mode (default: text)",
     )
+    p.add_argument(
+        "--json",
+        action="store_true",
+        help="Output raw JSON for programmatic use",
+    )
     p.set_defaults(func=_cmd_search)
 
     # guild pull <uri>
@@ -242,6 +296,11 @@ def main() -> int:
     # guild try <uri>
     p = sub.add_parser("try", help="Preview pack without saving")
     p.add_argument("uri", help="Pack URI")
+    p.add_argument(
+        "--json",
+        action="store_true",
+        help="Output raw JSON for programmatic use",
+    )
     p.set_defaults(func=_cmd_try)
 
     # guild init <name>
@@ -253,6 +312,11 @@ def main() -> int:
     p = sub.add_parser("apply", help="Start applying a pack")
     p.add_argument("pack", help="Pack name")
     p.add_argument("--task", required=True, help="Task description")
+    p.add_argument(
+        "--json",
+        action="store_true",
+        help="Output raw JSON for programmatic use",
+    )
     p.set_defaults(func=_cmd_apply)
 
     # guild publish <path>

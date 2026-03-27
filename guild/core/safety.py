@@ -5,7 +5,7 @@ and privacy leaks. Zero imports from tools.* — stdlib + yaml only.
 
 import re
 from pathlib import Path
-from typing import Any, Dict, List, Tuple
+from typing import Any, Dict, List, Tuple, Literal
 
 import yaml
 
@@ -29,12 +29,17 @@ _INJECTION_PATTERNS = [
     re.compile(r"\$\("),                                     # $(...) command substitution
     re.compile(r"\b(eval|exec)\s*\(", re.IGNORECASE),        # eval()/exec()
     re.compile(r"\brm\s+(-[rf]+\s+)?/", re.IGNORECASE),       # rm -rf /
-    re.compile(r"\bsudo\s+", re.IGNORECASE),                 # sudo
     re.compile(r"\bmkfifo\b", re.IGNORECASE),                # named pipe (reverse shell)
     re.compile(r"/dev/(tcp|udp)/", re.IGNORECASE),            # bash net redirect
     re.compile(r"__import__\s*\(", re.IGNORECASE),            # Python dynamic import
     re.compile(r"\bos\.system\s*\(", re.IGNORECASE),         # os.system()
     re.compile(r"\bsubprocess\.(run|call|Popen)\s*\(", re.IGNORECASE),  # subprocess
+]
+
+# Privilege escalation patterns — produces WARNINGS, not blocks
+# These are security concerns but not direct injection vectors
+_PRIVILEGE_ESCALATION_PATTERNS = [
+    re.compile(r"\bsudo\s+", re.IGNORECASE),                 # sudo
 ]
 
 _CREDENTIAL_PATTERNS = [
@@ -51,9 +56,14 @@ _FILE_ACCESS_PATTERNS = [
     re.compile(r"cat\s+~/.hermes", re.IGNORECASE),
     re.compile(r"\.\./", re.IGNORECASE),   # path traversal
     re.compile(r"~/.ssh/", re.IGNORECASE), # SSH key access
+    re.compile(r"\bnc\s+", re.IGNORECASE), # netcat reverse shell
+]
+
+# File access patterns that are only flagged in STRICT mode or in prompts/anti_patterns
+# NOT flagged in descriptions (instructional text) in NORMAL mode
+_FILE_ACCESS_WARNINGS = [
     re.compile(r"curl\s+", re.IGNORECASE), # curl exfiltration
     re.compile(r"wget\s+", re.IGNORECASE), # wget exfiltration
-    re.compile(r"\bnc\s+", re.IGNORECASE), # netcat reverse shell
 ]
 
 _PATH_TRAVERSAL_PATTERNS = [
@@ -109,49 +119,153 @@ def collect_text_fields(obj: Any) -> List[str]:
     return strings
 
 
-def scan_pack_safety(pack: dict) -> List[str]:
+def scan_pack_safety(pack: dict, mode: Literal["normal", "strict"] = "normal") -> List[str]:
     """Scan pack for prompt injection, credential access, and file exfiltration.
 
     Args:
         pack: A parsed guild pack dictionary.
+        mode: "normal" (default) — only flags dangerous patterns in prompts/anti_patterns,
+              "strict" — flags patterns in all text fields.
+              In normal mode, curl/wget and $(command substitution) in descriptions are
+              treated as instructional text (allowed), not threats.
 
     Returns:
         A list of threat description strings. Empty list means the pack is clean.
     """
     threats: List[str] = []
-    # Use recursive collector to catch ALL text in the pack (including prompts, steps, etc)
-    texts = collect_text_fields(pack)
-    combined = "\n".join(texts)
+    warnings: List[str] = []
 
-    # Check injection patterns
-    for pattern in _INJECTION_PATTERNS:
-        if pattern.search(combined):
-            threats.append(
-                f"Prompt injection detected: pattern '{pattern.pattern}' found in pack text"
-            )
+    if mode == "normal":
+        # NORMAL mode: separate text into command contexts vs instructional contexts
+        command_texts: List[str] = []  # prompts, anti_patterns, required_inputs, escalation_rules — higher risk
+        instruction_texts: List[str] = []  # descriptions, mental_model — lower risk
 
-    # Check credential references
-    for pattern in _CREDENTIAL_PATTERNS:
-        if pattern.search(combined):
-            threats.append(
-                f"Credential reference detected: pattern '{pattern.pattern}' found in pack text"
-            )
+        # Collect prompts and anti_patterns (higher risk — agent executes these)
+        for phase in pack.get("phases", []):
+            if isinstance(phase, dict):
+                for prompt in phase.get("prompts", []) or []:
+                    command_texts.append(str(prompt))
+                for ap in phase.get("anti_patterns", []) or []:
+                    command_texts.append(str(ap))
+                # Descriptions are instructional — lower risk
+                if phase.get("description"):
+                    instruction_texts.append(str(phase["description"]))
 
-    # Check file access patterns
-    for pattern in _FILE_ACCESS_PATTERNS:
-        if pattern.search(combined):
-            threats.append(
-                f"Suspicious file access detected: pattern '{pattern.pattern}' found in pack text"
-            )
+        # mental_model is instructional
+        if pack.get("mental_model"):
+            instruction_texts.append(str(pack["mental_model"]))
 
-    # Check path traversal patterns
-    for pattern in _PATH_TRAVERSAL_PATTERNS:
-        if pattern.search(combined):
-            threats.append(
-                f"Path traversal detected: pattern '{pattern.pattern}' found in pack text"
-            )
+        # required_inputs and escalation_rules are agent-authored content — scan as commands
+        for inp in pack.get("required_inputs", []) or []:
+            command_texts.append(str(inp))
+        for rule in pack.get("escalation_rules", []) or []:
+            command_texts.append(str(rule))
 
-    return threats
+        # Also scan top-level "prompt" field if present (edge case for simple artifacts)
+        if pack.get("prompt") and isinstance(pack.get("prompt"), str):
+            command_texts.append(str(pack["prompt"]))
+
+        command_combined = "\n".join(command_texts)
+        instruction_combined = "\n".join(instruction_texts)
+
+        # Check injection patterns — $(...) only in command contexts
+        for pattern in _INJECTION_PATTERNS:
+            if pattern.pattern == r"\$\(":
+                # $(...) is only dangerous in command contexts
+                if pattern.search(command_combined):
+                    threats.append(
+                        f"Prompt injection detected: pattern '{pattern.pattern}' found in pack prompts/anti_patterns"
+                    )
+            else:
+                # Other injection patterns check all text
+                if pattern.search(command_combined) or pattern.search(instruction_combined):
+                    threats.append(
+                        f"Prompt injection detected: pattern '{pattern.pattern}' found in pack text"
+                    )
+
+        # Check privilege escalation patterns — warnings only
+        for pattern in _PRIVILEGE_ESCALATION_PATTERNS:
+            if pattern.search(command_combined):
+                warnings.append(
+                    f"Privilege escalation warning: pattern '{pattern.pattern}' found in pack prompts"
+                )
+
+        # Check credential patterns — all text
+        for pattern in _CREDENTIAL_PATTERNS:
+            if pattern.search(command_combined) or pattern.search(instruction_combined):
+                threats.append(
+                    f"Credential reference detected: pattern '{pattern.pattern}' found in pack text"
+                )
+
+        # Check file access patterns — always blocking
+        for pattern in _FILE_ACCESS_PATTERNS:
+            if pattern.search(command_combined) or pattern.search(instruction_combined):
+                threats.append(
+                    f"Suspicious file access detected: pattern '{pattern.pattern}' found in pack text"
+                )
+
+        # Check curl/wget patterns — only blocking in command contexts (prompts/anti_patterns)
+        for pattern in _FILE_ACCESS_WARNINGS:
+            if pattern.search(command_combined):
+                threats.append(
+                    f"Suspicious file access detected: pattern '{pattern.pattern}' found in pack prompts/anti_patterns"
+                )
+            elif pattern.search(instruction_combined):
+                warnings.append(
+                    f"File access warning: pattern '{pattern.pattern}' found in pack descriptions (informational only)"
+                )
+
+        # Check path traversal patterns — all text
+        for pattern in _PATH_TRAVERSAL_PATTERNS:
+            if pattern.search(command_combined) or pattern.search(instruction_combined):
+                threats.append(
+                    f"Path traversal detected: pattern '{pattern.pattern}' found in pack text"
+                )
+
+        return threats + warnings
+
+    else:
+        # STRICT mode: scan all text for everything (legacy behavior)
+        texts = collect_text_fields(pack)
+        combined = "\n".join(texts)
+
+        for pattern in _INJECTION_PATTERNS:
+            if pattern.search(combined):
+                threats.append(
+                    f"Prompt injection detected: pattern '{pattern.pattern}' found in pack text"
+                )
+
+        for pattern in _PRIVILEGE_ESCALATION_PATTERNS:
+            if pattern.search(combined):
+                threats.append(
+                    f"Privilege escalation detected: pattern '{pattern.pattern}' found in pack text"
+                )
+
+        for pattern in _CREDENTIAL_PATTERNS:
+            if pattern.search(combined):
+                threats.append(
+                    f"Credential reference detected: pattern '{pattern.pattern}' found in pack text"
+                )
+
+        for pattern in _FILE_ACCESS_PATTERNS:
+            if pattern.search(combined):
+                threats.append(
+                    f"Suspicious file access detected: pattern '{pattern.pattern}' found in pack text"
+                )
+
+        for pattern in _FILE_ACCESS_WARNINGS:
+            if pattern.search(combined):
+                threats.append(
+                    f"Suspicious file access detected: pattern '{pattern.pattern}' found in pack text"
+                )
+
+        for pattern in _PATH_TRAVERSAL_PATTERNS:
+            if pattern.search(combined):
+                threats.append(
+                    f"Path traversal detected: pattern '{pattern.pattern}' found in pack text"
+                )
+
+        return threats
 
 
 def scan_privacy(pack: dict) -> List[str]:
