@@ -10,6 +10,7 @@ Usage:
     guildpacks publish <path>       — publish pack to GitHub
     guildpacks feedback <session_id> — generate feedback from session
     guildpacks list                 — list local packs
+    guildpacks autopilot            — zero-config setup (install MCP + skill + auto-suggest)
     guildpacks version              — show version
 """
 
@@ -262,6 +263,193 @@ def _cmd_version(args: argparse.Namespace) -> int:
 
 
 # ---------------------------------------------------------------------------
+# Zero-config autopilot
+# ---------------------------------------------------------------------------
+
+HERMES_SKILL_TEMPLATE = """\
+# Guild Autopilot — Zero-Config Guild Experience
+
+## Purpose
+
+Guild Autopilot is a **self-configuring skill** that makes guild-packs work automatically,
+without any user setup or CLAUDE.md editing. A Hermes user only needs guild-packs installed
+and the MCP server configured — this skill tells the agent **when** and **how** to use it.
+
+## Trigger Conditions
+
+Apply this skill automatically when ANY of these conditions are met:
+
+### 1. Debug / Test / Review Detection (on task start)
+When the task description contains keywords like:
+- `debug`, `debugging`, `fix`, `crash`, `error`, `exception`, `stack trace`, `segfault`
+- `test`, `testing`, `unit test`, `integration test`, `pytest`, `jest`
+- `review`, `code review`, `pr review`, `pull request`, `audit`
+- `performance`, `profiling`, `benchmark`, `optimize`, `slow`
+- `security`, `vulnerability`, `CVE`, `exploit`
+
+**Action:** Call `guild_on_task_start(task_description)` and include the result
+in your reasoning. If a pack is suggested, mention it proactively to the user.
+
+### 2. Failure Detection (after 2+ consecutive failures)
+When the agent has failed 2 or more consecutive times on the same task:
+- Call `guild_on_failure(context=recent_conversation, failure_count=N)`
+- Inject the returned suggestion into your context as a **system message**
+
+### 3. Phase-by-Phase Pack Application
+When applying a guild pack, follow this strict sequence:
+1. **Before applying:** Run `guildpacks try <pack_uri>` to preview phases and validate safety
+2. **Start:** Run `guildpacks apply <pack> --task "<task description>"`
+3. **Per phase:** Read the phase description, complete the work, then advance
+4. **Track progress:** Log each completed phase in your context
+5. **On completion:** Generate feedback with `guildpacks feedback <session_id>`
+
+### 4. Completion Feedback
+After a pack session completes (success or failure):
+- Call `guildpacks feedback <session_id>` to get structured feedback
+- Present the feedback to the user in a clear summary
+
+## Available Commands
+
+```bash
+guildpacks try <uri>     # Preview a pack (always do this first)
+guildpacks apply <pack> --task "<task description>"  # Start applying
+guildpacks feedback <session_id>  # Get session feedback
+guildpacks search <query>  # Search for relevant packs
+```
+
+## Python API
+
+```python
+from guild.integrations.agent_hook import guild_on_failure, guild_on_task_start
+
+# On task start — proactive suggestion
+suggestion = guild_on_task_start("fixing pytest failures")
+# Returns: "You might find this useful: systematic-debugging [tested]..."
+
+# After 2+ failures — reactive injection
+suggestion = guild_on_failure(context="...", failure_count=2)
+# Returns: "Guild pack available: systematic-debugging..."
+```
+
+## Agent Behavior Rules
+
+1. **Always check guild first** for debug/test/review tasks
+2. **Never apply a pack without previewing** with `guildpacks try` first
+3. **Apply packs phase by phase** — don't skip steps
+4. **Generate feedback** after every pack session
+5. **Respect tried_packs** — don't suggest the same failed pack twice
+6. **Safety first** — if `guildpacks try` shows safety threats, warn before proceeding
+"""
+
+
+HERMES_MCP_CONFIG_TEMPLATE = """\
+mcp_servers:
+  guild:
+    enabled: true
+    command: python
+    args:
+      - "-m"
+      - "guild.integrations.mcp_server"
+    env:
+      PYTHONPATH: {python_path}
+"""
+
+
+def _cmd_autopilot(args: argparse.Namespace) -> int:
+    """Zero-config autopilot: install MCP server config, skill file, and auto-suggest.
+
+    This single command sets up everything needed for guild to work automatically
+    in Hermes — no manual CLAUDE.md editing required.
+    """
+    import os
+    import yaml
+    from pathlib import Path
+
+    home = Path.home()
+    hermes_dir = home / ".hermes"
+    hermes_config = hermes_dir / "config.yaml"
+    skill_dir = hermes_dir / "skills" / "guild-autopilot"
+    skill_file = skill_dir / "SKILL.md"
+
+    python_path = str(Path(__file__).parent.parent.parent.resolve())
+
+    changes: list[str] = []
+
+    # 1. Ensure ~/.hermes directory exists
+    hermes_dir.mkdir(parents=True, exist_ok=True)
+
+    # 2. Install skill file
+    skill_dir.mkdir(parents=True, exist_ok=True)
+    existing_content = ""
+    if skill_file.exists():
+        existing_content = skill_file.read_text()
+
+    if existing_content == HERMES_SKILL_TEMPLATE:
+        print("[autopilot] Skill already installed — skipping SKILL.md")
+    else:
+        skill_file.write_text(HERMES_SKILL_TEMPLATE)
+        changes.append(f"  • SKILL.md → {skill_file}")
+
+    # 3. Install or update MCP server config
+    if hermes_config.exists():
+        config_text = hermes_config.read_text()
+        try:
+            config = yaml.safe_load(config_text) or {}
+        except yaml.YAMLError:
+            config = {}
+    else:
+        config = {}
+
+    mcp_entry = {
+        "enabled": True,
+        "command": "python",
+        "args": ["-m", "guild.integrations.mcp_server"],
+        "env": {"PYTHONPATH": python_path},
+    }
+
+    mcp_servers = config.get("mcp_servers", {})
+    guild_entry = mcp_servers.get("guild", {})
+
+    # Only update if different
+    if guild_entry == mcp_entry:
+        print("[autopilot] MCP server already configured — skipping config.yaml")
+    else:
+        mcp_servers["guild"] = mcp_entry
+        config["mcp_servers"] = mcp_servers
+
+        # Preserve existing content structure as much as possible
+        try:
+            new_text = yaml.safe_dump(config, default_flow_style=False, sort_keys=False)
+            hermes_config.write_text(new_text)
+        except yaml.YAMLError as e:
+            print(f"[autopilot] Warning: could not preserve config.yaml formatting: {e}")
+            # Fall back: just rewrite entirely
+            hermes_config.write_text(
+                f"mcp_servers:\n  guild:\n    enabled: true\n    command: python\n    args:\n      - -m\n      - guild.integrations.mcp_server\n    env:\n      PYTHONPATH: {python_path}\n"
+            )
+        changes.append(f"  • config.yaml → {hermes_config}")
+
+    if not changes:
+        print("[autopilot] Everything already set up! Guild is ready to use.")
+        return 0
+
+    print("[autopilot] Zero-config guild setup complete!")
+    print()
+    print("What was configured:")
+    for c in changes:
+        print(c)
+    print()
+    print("Hermes will now:")
+    print("  1. Auto-detect debug/test/review tasks and suggest guild packs")
+    print("  2. Suggest packs after 2+ consecutive failures")
+    print("  3. Apply packs phase-by-phase with feedback on completion")
+    print()
+    print("No CLAUDE.md editing needed — the SKILL.md handles everything.")
+
+    return 0
+
+
+# ---------------------------------------------------------------------------
 # Main entry point
 # ---------------------------------------------------------------------------
 
@@ -347,6 +535,10 @@ def main() -> int:
     # guild version
     p = sub.add_parser("version", help="Show version")
     p.set_defaults(func=_cmd_version)
+
+    # guild autopilot
+    p = sub.add_parser("autopilot", help="Zero-config setup: install MCP + skill + auto-suggest")
+    p.set_defaults(func=_cmd_autopilot)
 
     args = parser.parse_args()
 

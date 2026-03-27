@@ -107,7 +107,8 @@ def _build_pack_list() -> List[tuple]:
 
         pid = fname_to_id.get(fname.name, "")
         entry = id_to_entry.get(pid, {})
-        pack_name = entry.get("name", fname.stem)  # fallback to filename stem
+        fallback_name = fname.stem.replace(".workflow", "").replace(".rubric", "")
+        pack_name = entry.get("name", fallback_name)  # fallback to filename stem sans suffix
         uri = pid or f"guild://hermes/{pack_name}"
         result.append((pack_name, fname.name, uri))
 

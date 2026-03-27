@@ -149,7 +149,7 @@ def test_list_dispatches_to_action_list(mock_list):
 def test_help_text_shows_all_commands():
     code, out, err = capture_main(["--help"])
     assert code == 0
-    for cmd in ["search", "pull", "try", "init", "apply", "publish", "feedback", "convert", "list", "version"]:
+    for cmd in ["search", "pull", "try", "init", "apply", "publish", "feedback", "convert", "list", "autopilot", "version"]:
         assert cmd in out, f"'{cmd}' not found in help output"
 
 
