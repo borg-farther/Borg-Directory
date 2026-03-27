@@ -858,13 +858,9 @@ def guild_suggest(
 def guild_observe(task: str = "", context: str = "") -> str:
     """Silent observation: return structural guidance for a task if a relevant pack exists.
 
-    Calls guild_search internally with the task description. If a relevant pack
-    is found (score above threshold), returns a concise phase-by-phase guide.
-    If no pack is found, returns empty/null to avoid spamming the agent.
-
-    This is NOT the full pack — it's a condensed one-page guide that fits
-    naturally in the agent's context. The agent follows the structure because
-    it's in its context window, no explicit 'apply pack' step needed.
+    Uses classify_task to extract keywords from the task description, then searches
+    guild packs using text mode (no embeddings needed). Returns a concise phase-by-phase
+    guide when a relevant pack is found. Returns empty string if no relevant pack found.
 
     Args:
         task: Task description (required).
@@ -877,43 +873,57 @@ def guild_observe(task: str = "", context: str = "") -> str:
         if not task:
             return ""
 
-        # Build search query from task + context
-        search_query = task
-        if context:
-            search_query = f"{task} {context}"
-
-        # Call guild_search internally
-        search_result = guild_search(query=search_query, mode="hybrid")
-
+        # Import classify_task here to avoid circular imports and to allow
+        # the function to work even if the search module changes
         try:
-            parsed = json.loads(search_result)
-        except (json.JSONDecodeError, TypeError):
+            from guild.core.search import classify_task, guild_search as _core_search
+        except ImportError:
             return ""
 
-        if not parsed.get("success"):
+        # Extract search keywords from task description
+        # e.g. "fix TypeError in auth module" -> ["debug"]
+        # e.g. "pytest tests failing" -> ["test"]
+        search_terms = classify_task(task)
+        if not search_terms:
+            # Fallback keywords for common task types
+            search_terms = ["debug"]
+
+        # Search with extracted keywords using text mode (no embeddings needed)
+        all_matches = []
+        for term in search_terms:
+            search_result = _core_search(term, mode="text")
+            try:
+                parsed = json.loads(search_result)
+                if parsed.get("success") and parsed.get("matches"):
+                    all_matches.extend(parsed["matches"])
+            except (json.JSONDecodeError, TypeError):
+                continue
+
+        if not all_matches:
             return ""
 
-        matches = parsed.get("matches", [])
-        if not matches:
-            return ""
-
-        # Score threshold: relevance_score >= 0.5 for semantic/hybrid, or tier != "none" for text
-        # Pick the top match that meets threshold
-        best_match = None
-        mode = parsed.get("mode", "text")
-
-        for match in matches:
-            relevance_score = match.get("relevance_score", 0.0)
-            tier = match.get("tier", "unknown")
+        # Deduplicate by name, preferring higher confidence
+        seen_names: set = set()
+        unique_matches: list = []
+        for match in all_matches:
             name = match.get("name", "")
+            if name and name not in seen_names:
+                seen_names.add(name)
+                unique_matches.append(match)
 
-            if mode in ("semantic", "hybrid") and relevance_score >= 0.5:
+        if not unique_matches:
+            return ""
+
+        # Pick the best match (prefer "tested" confidence, then any non-none tier)
+        best_match = None
+        for match in unique_matches:
+            tier = match.get("tier", "unknown")
+            confidence = match.get("confidence", "")
+            if tier not in ("none", "") and best_match is None:
                 best_match = match
-                break
-            elif mode == "text" and tier not in ("none", ""):
-                # For text mode, prefer any match and take the first one
-                if best_match is None:
-                    best_match = match
+            if confidence == "tested" and best_match is not match:
+                # Prefer tested packs
+                best_match = match
 
         if best_match is None:
             return ""
@@ -939,8 +949,13 @@ def guild_observe(task: str = "", context: str = "") -> str:
                     elif isinstance(phase, str):
                         lines.append(f"  Phase {i}: {phase}")
             elif isinstance(phases_data, int):
-                # Just a count, no phase details available
-                pass
+                # Just a count — show phase names if available
+                phase_names = best_match.get("phase_names", [])
+                if phase_names:
+                    for i, name in enumerate(phase_names[:8], 1):  # Limit to 8 phases
+                        lines.append(f"  Phase {i}: {name}")
+                else:
+                    lines.append(f"  ({phases_data} phases — run guild_try for full details)")
 
         if anti_patterns:
             if isinstance(anti_patterns, list):

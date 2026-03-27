@@ -11,6 +11,8 @@ Usage:
     guildpacks feedback <session_id> — generate feedback from session
     guildpacks list                 — list local packs
     guildpacks autopilot            — zero-config setup (install MCP + skill + auto-suggest)
+    guildpacks setup-claude         — configure guild MCP for Claude Code
+    guildpacks setup-cursor         — configure guild MCP for Cursor
     guildpacks version              — show version
 """
 
@@ -259,6 +261,290 @@ def _cmd_list(args: argparse.Namespace) -> int:
 def _cmd_version(args: argparse.Namespace) -> int:
     """Show version."""
     print(f"guildpacks {__version__}")
+    return 0
+
+
+# ---------------------------------------------------------------------------
+# Borg setup helpers (shared logic for Claude Code and Cursor)
+# ---------------------------------------------------------------------------
+
+import shutil
+import yaml
+
+# Path to this file's parent (guild/)
+GUILD_PACKAGE_DIR = Path(__file__).parent.resolve()
+# Path to guild-v2 root (one level up from guild/)
+GUILD_ROOT_DIR = GUILD_PACKAGE_DIR.parent
+
+
+def _get_python_path() -> str:
+    """Return the PYTHONPATH to use in MCP config."""
+    return str(GUILD_ROOT_DIR)
+
+
+def _guild_mcp_server_entry(python_path: str) -> dict:
+    """Return the mcpServers entry for the guild MCP server (camelCase for Claude/Cursor)."""
+    return {
+        "mcpServers": {
+            "guild": {
+                "enabled": True,
+                "command": "python",
+                "args": ["-m", "guild.integrations.mcp_server"],
+                "env": {"PYTHONPATH": python_path},
+            }
+        }
+    }
+
+
+# ---------------------------------------------------------------------------
+# CLAUDE.md instructions template (for Claude Code)
+# ---------------------------------------------------------------------------
+
+CLAUDE_MD_TEMPLATE = """\
+
+## Guild Workflow Packs (borg)
+
+This project uses **Guild Workflow Packs** — battle-tested phase-by-phase approaches
+stored as versioned YAML packs. When you hit a wall or start a complex task, guild helps.
+
+### Available Commands
+
+```bash
+# Search for a relevant pack
+guildpacks search <query>
+
+# Preview a pack before adopting it
+guildpacks try <pack-uri>
+
+# Pull and apply a pack to your task
+guildpacks apply <pack-name> --task "<task description>"
+
+# Get structured feedback after completing a pack
+guildpacks feedback <session-id>
+```
+
+### MCP Tools (for Claude Code agent)
+
+If Claude Code has the guild MCP server configured, these tools are available:
+
+- `guild_observe` — call at task start for structural guidance
+- `guild_search` — search for relevant packs by keyword
+- `guild_suggest` — auto-suggest after 2+ consecutive failures
+
+### Setup
+
+If the guild MCP server isn't configured yet, run:
+```bash
+guildpacks setup-claude
+```
+"""
+
+
+# ---------------------------------------------------------------------------
+# .cursorrules instructions template (for Cursor)
+# ---------------------------------------------------------------------------
+
+CURSOR_RULES_TEMPLATE = """\
+
+## Guild Workflow Packs (borg)
+
+This project uses **Guild Workflow Packs** — battle-tested phase-by-phase approaches
+stored as versioned YAML packs. When you hit a wall or start a complex task, guild helps.
+
+### Available Commands
+
+```bash
+# Search for a relevant pack
+guildpacks search <query>
+
+# Preview a pack before adopting it
+guildpacks try <pack-uri>
+
+# Pull and apply a pack to your task
+guildpacks apply <pack-name> --task "<task description>"
+
+# Get structured feedback after completing a pack
+guildpacks feedback <session-id>
+```
+
+### MCP Tools (for Cursor agent)
+
+If Cursor has the guild MCP server configured, these tools are available:
+
+- `guild_observe` — call at task start for structural guidance
+- `guild_search` — search for relevant packs by keyword
+- `guild_suggest` — auto-suggest after 2+ consecutive failures
+
+### Setup
+
+If the guild MCP server isn't configured yet, run:
+```bash
+guildpacks setup-cursor
+```
+"""
+
+
+# ---------------------------------------------------------------------------
+# setup-claude: configure guild MCP for Claude Code
+# ---------------------------------------------------------------------------
+
+def _cmd_setup_claude(args: argparse.Namespace) -> int:
+    """Configure guild MCP server for Claude Code.
+
+    Creates (or updates) ~/.config/claude/claude_desktop_config.json with the guild
+    MCP server entry, and appends borg instructions to ./CLAUDE.md in the current
+    directory.
+    """
+    home = Path.home()
+    claude_config_dir = home / ".config" / "claude"
+    claude_config_file = claude_config_dir / "claude_desktop_config.json"
+
+    python_path = _get_python_path()
+    new_entry = _guild_mcp_server_entry(python_path)
+    changes: list[str] = []
+
+    # 1. Install Claude Code MCP config
+    claude_config_dir.mkdir(parents=True, exist_ok=True)
+
+    if claude_config_file.exists():
+        try:
+            config = json.loads(claude_config_file.read_text())
+        except (json.JSONDecodeError, OSError) as e:
+            print(f"[setup-claude] Warning: could not read existing config: {e}")
+            config = {}
+    else:
+        config = {}
+
+    existing_servers = config.get("mcpServers", {})
+    guild_entry = new_entry["mcpServers"]["guild"]
+    entry_changed = existing_servers.get("guild") != guild_entry
+
+    if entry_changed:
+        config["mcpServers"] = {**existing_servers, "guild": guild_entry}
+        claude_config_file.write_text(json.dumps(config, indent=2) + "\n")
+        changes.append(f"  • claude_desktop_config.json → {claude_config_file}")
+    else:
+        print("[setup-claude] MCP server already configured in claude_desktop_config.json")
+
+    # 2. Install CLAUDE.md in current directory
+    claude_md = Path.cwd() / "CLAUDE.md"
+    instructions = CLAUDE_MD_TEMPLATE.lstrip("\n")
+
+    if claude_md.exists():
+        existing = claude_md.read_text()
+        if instructions in existing:
+            print("[setup-claude] CLAUDE.md already contains guild instructions — skipping")
+        elif "# Guild" in existing or "## Guild" in existing:
+            # Guild section exists but content differs — replace the whole section
+            import re
+            # Remove any existing Guild Workflow Packs section (handles leading newline optional)
+            pattern = r"(\n)?## Guild Workflow Packs.*?(?=\n## |\Z)"
+            new_content = re.sub(pattern, "\n" + instructions, existing, flags=re.DOTALL)
+            if new_content == existing:
+                # Pattern didn't match (e.g. it's at the end without another header) — just append
+                new_content = existing.rstrip() + "\n" + instructions + "\n"
+            claude_md.write_text(new_content)
+            changes.append(f"  • CLAUDE.md (updated guild section) → {claude_md.resolve()}")
+        else:
+            claude_md.write_text(existing.rstrip() + "\n" + instructions + "\n")
+            changes.append(f"  • CLAUDE.md (appended) → {claude_md.resolve()}")
+    else:
+        claude_md.write_text("# Project CLAUDE.md\n" + instructions + "\n")
+        changes.append(f"  • CLAUDE.md (created) → {claude_md.resolve()}")
+
+    if not changes:
+        print("[setup-claude] Everything already set up! Guild is ready.")
+        return 0
+
+    print("[setup-claude] Claude Code setup complete!")
+    for c in changes:
+        print(c)
+    print()
+    print("Next steps:")
+    print("  1. Restart Claude Code (or reload the MCP server config)")
+    print("  2. Guild MCP tools (guild_observe, guild_search, guild_suggest) will be available")
+    print("  3. Run 'guildpacks search <query>' to find relevant packs")
+    return 0
+
+
+# ---------------------------------------------------------------------------
+# setup-cursor: configure guild MCP for Cursor
+# ---------------------------------------------------------------------------
+
+def _cmd_setup_cursor(args: argparse.Namespace) -> int:
+    """Configure guild MCP server for Cursor.
+
+    Creates (or updates) .cursor/mcp.json with the guild MCP server entry,
+    and appends borg instructions to .cursorrules in the current directory.
+    """
+    cursor_dir = Path.cwd() / ".cursor"
+    cursor_mcp_file = cursor_dir / "mcp.json"
+
+    python_path = _get_python_path()
+    new_entry = _guild_mcp_server_entry(python_path)
+    changes: list[str] = []
+
+    # 1. Install Cursor MCP config
+    cursor_dir.mkdir(parents=True, exist_ok=True)
+
+    if cursor_mcp_file.exists():
+        try:
+            config = json.loads(cursor_mcp_file.read_text())
+        except (json.JSONDecodeError, OSError) as e:
+            print(f"[setup-cursor] Warning: could not read existing config: {e}")
+            config = {}
+    else:
+        config = {}
+
+    existing_servers = config.get("mcpServers", {})
+    guild_entry = new_entry["mcpServers"]["guild"]
+    entry_changed = existing_servers.get("guild") != guild_entry
+
+    if entry_changed:
+        config["mcpServers"] = {**existing_servers, "guild": guild_entry}
+        cursor_mcp_file.write_text(json.dumps(config, indent=2) + "\n")
+        changes.append(f"  • mcp.json → {cursor_mcp_file}")
+    else:
+        print("[setup-cursor] MCP server already configured in .cursor/mcp.json")
+
+    # 2. Install .cursorrules in current directory
+    cursor_rules = Path.cwd() / ".cursorrules"
+    instructions = CURSOR_RULES_TEMPLATE.lstrip("\n")
+
+    if cursor_rules.exists():
+        existing = cursor_rules.read_text()
+        if instructions in existing:
+            print("[setup-cursor] .cursorrules already contains guild instructions — skipping")
+        elif "# Guild" in existing or "## Guild" in existing:
+            # Guild section exists but content differs — replace the whole section
+            import re
+            # Remove any existing Guild Workflow Packs section (handles leading newline optional)
+            pattern = r"(\n)?## Guild Workflow Packs.*?(?=\n## |\Z)"
+            new_content = re.sub(pattern, "\n" + instructions, existing, flags=re.DOTALL)
+            if new_content == existing:
+                # Pattern didn't match (e.g. it's at the end without another header) — just append
+                new_content = existing.rstrip() + "\n" + instructions + "\n"
+            cursor_rules.write_text(new_content)
+            changes.append(f"  • .cursorrules (updated guild section) → {cursor_rules.resolve()}")
+        else:
+            cursor_rules.write_text(existing.rstrip() + "\n" + instructions + "\n")
+            changes.append(f"  • .cursorrules (appended) → {cursor_rules.resolve()}")
+    else:
+        cursor_rules.write_text(instructions + "\n")
+        changes.append(f"  • .cursorrules (created) → {cursor_rules.resolve()}")
+
+    if not changes:
+        print("[setup-cursor] Everything already set up! Guild is ready.")
+        return 0
+
+    print("[setup-cursor] Cursor setup complete!")
+    for c in changes:
+        print(c)
+    print()
+    print("Next steps:")
+    print("  1. Restart Cursor (or reload the MCP server config)")
+    print("  2. Guild MCP tools (guild_observe, guild_search, guild_suggest) will be available")
+    print("  3. Run 'guildpacks search <query>' to find relevant packs")
     return 0
 
 
@@ -539,6 +825,14 @@ def main() -> int:
     # guild autopilot
     p = sub.add_parser("autopilot", help="Zero-config setup: install MCP + skill + auto-suggest")
     p.set_defaults(func=_cmd_autopilot)
+
+    # guild setup-claude
+    p = sub.add_parser("setup-claude", help="Configure guild MCP server for Claude Code")
+    p.set_defaults(func=_cmd_setup_claude)
+
+    # guild setup-cursor
+    p = sub.add_parser("setup-cursor", help="Configure guild MCP server for Cursor")
+    p.set_defaults(func=_cmd_setup_cursor)
 
     args = parser.parse_args()
 

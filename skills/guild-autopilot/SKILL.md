@@ -58,19 +58,61 @@ guildpacks feedback <session_id>
 guildpacks search <query>
 ```
 
-## Python API (for agent frameworks)
+## MCP Tools (How to Actually Call Guild from Hermes)
 
-```python
-from guild.integrations.agent_hook import guild_on_failure, guild_on_task_start
+The skill uses MCP tools — NOT Python imports. Here's what you call:
 
-# On task start — proactive suggestion
-suggestion = guild_on_task_start("fixing a pytest failure in test_auth.py")
-# Returns: "You might find this useful: systematic-debugging [tested] (Debugging workflow)"
+### When you detect a debug/test/failure task at task start:
 
-# After 2+ failures — reactive injection
-suggestion = guild_on_failure(context="...", failure_count=2)
-# Returns: "Guild pack available: systematic-debugging (Debugging workflow). Try: guild://hermes/systematic-debugging"
+**Step 1: Call `guild_observe` first** (preferred — returns structural guidance)
 ```
+Tool: guild_observe
+Args: task="<what you're about to work on>", context="<optional environment context>"
+```
+- If it returns non-empty guidance → follow the phases in your reasoning
+- If it returns empty → proceed to Step 2
+
+**Step 2: Call `guild_search` for simple keyword search**
+```
+Tool: guild_search
+Args: query="debug"  (use simple keywords: "debug", "test", "review", "deploy")
+```
+- Search is text-based: short keywords work better than long sentences
+- Look for packs with tier != "none" and high confidence
+
+**Step 3: If you see 2+ consecutive failures, call `guild_suggest`**
+```
+Tool: guild_suggest
+Args: context="<recent conversation>", failure_count=<number>
+```
+- Returns pack suggestions formatted as actionable text
+
+### Example tool calls for this scenario:
+
+User says: "I have a TypeError in my auth module, tests are failing"
+
+```
+Tool: guild_observe
+Args: task="fix TypeError in auth module", context="Python, pytest"
+
+Tool: guild_search  
+Args: query="debug"
+
+Tool: guild_suggest
+Args: context="I have a TypeError in my auth module, tests are failing", failure_count=1
+```
+
+### Quick reference — available MCP tools:
+
+| Tool | When to use | Key args |
+|------|-------------|----------|
+| `guild_observe` | Task start (proactive) | `task`, `context` |
+| `guild_search` | Any time you want to find packs | `query` (simple keywords) |
+| `guild_suggest` | After 2+ failures | `context`, `failure_count` |
+| `guild_try` | Preview a pack before using | `uri` |
+| `guild_pull` | Download a pack locally | `uri` |
+| `guild_apply` | Execute a pack (start/checkpoint/complete) | `action`, `pack_name`, `task` |
+| `guild_feedback` | After pack completes | `session_id` |
 
 ## Agent Behavior Rules
 

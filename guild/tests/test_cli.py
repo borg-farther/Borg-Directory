@@ -223,3 +223,302 @@ def test_convert_with_explicit_format_dispatches_correctly(mock_convert):
     assert code == 0
     mock_convert.assert_called_once_with("/path/to/SKILL.md")
     assert "workflow_pack" in out
+
+
+# ---------------------------------------------------------------------------
+# setup-claude tests
+# ---------------------------------------------------------------------------
+
+from pathlib import Path
+from unittest.mock import MagicMock, patch
+import json
+import tempfile
+import os
+
+
+@patch("guild.cli.Path.home")
+def test_setup_claude_creates_config_and_claude_md(mock_home, tmp_path, monkeypatch):
+    """setup-claude creates claude_desktop_config.json and CLAUDE.md."""
+    # Use a temp home directory
+    fake_home = tmp_path / "home"
+    fake_home.mkdir()
+    mock_home.return_value = fake_home
+
+    # Use a temp cwd
+    project_dir = tmp_path / "myproject"
+    project_dir.mkdir()
+    monkeypatch.chdir(project_dir)
+
+    code, out, err = capture_main(["setup-claude"])
+    assert code == 0
+
+    # Check config was created
+    config_file = fake_home / ".config" / "claude" / "claude_desktop_config.json"
+    assert config_file.exists(), f"Expected config at {config_file}, got: {list((fake_home / '.config' / 'claude').iterdir()) if (fake_home / '.config' / 'claude').exists() else 'dir not found'}"
+
+    config = json.loads(config_file.read_text())
+    assert "mcpServers" in config
+    assert "guild" in config["mcpServers"]
+    guild_entry = config["mcpServers"]["guild"]
+    assert guild_entry["command"] == "python"
+    assert guild_entry["args"] == ["-m", "guild.integrations.mcp_server"]
+
+    # Check CLAUDE.md was created
+    claude_md = project_dir / "CLAUDE.md"
+    assert claude_md.exists()
+    content = claude_md.read_text()
+    assert "Guild Workflow Packs" in content
+    assert "guildpacks search" in content
+
+    # Check success message
+    assert "[setup-claude]" in out or "setup-claude" in out.lower()
+
+
+@patch("guild.cli.Path.home")
+def test_setup_claude_idempotent_no_reinstall(mock_home, tmp_path, monkeypatch):
+    """setup-claude does nothing if already configured correctly."""
+    fake_home = tmp_path / "home"
+    fake_home.mkdir()
+    mock_home.return_value = fake_home
+
+    project_dir = tmp_path / "myproject"
+    project_dir.mkdir()
+    monkeypatch.chdir(project_dir)
+
+    # Pre-create a correctly-configured CLAUDE.md
+    claude_md = project_dir / "CLAUDE.md"
+    from guild.cli import CLAUDE_MD_TEMPLATE
+    instructions = CLAUDE_MD_TEMPLATE.lstrip("\n")
+    claude_md.write_text("# Project CLAUDE.md\n" + instructions + "\n")
+
+    code, out, err = capture_main(["setup-claude"])
+    assert code == 0
+    # Should not change anything
+    assert "already" in out.lower() or "Everything already" in out
+
+
+@patch("guild.cli.Path.home")
+def test_setup_claude_appends_to_existing_claude_md(mock_home, tmp_path, monkeypatch):
+    """setup-claude appends to CLAUDE.md if guild section not present."""
+    fake_home = tmp_path / "home"
+    fake_home.mkdir()
+    mock_home.return_value = fake_home
+
+    project_dir = tmp_path / "myproject"
+    project_dir.mkdir()
+    monkeypatch.chdir(project_dir)
+
+    # Pre-create a CLAUDE.md without guild section
+    claude_md = project_dir / "CLAUDE.md"
+    claude_md.write_text("# Project CLAUDE.md\n\nSome existing content.\n")
+
+    code, out, err = capture_main(["setup-claude"])
+    assert code == 0
+
+    content = claude_md.read_text()
+    assert "Guild Workflow Packs" in content
+    assert "Some existing content" in content
+
+
+@patch("guild.cli.Path.home")
+def test_setup_claude_updates_existing_guild_section(mock_home, tmp_path, monkeypatch):
+    """setup-claude replaces existing guild section in CLAUDE.md."""
+    fake_home = tmp_path / "home"
+    fake_home.mkdir()
+    mock_home.return_value = fake_home
+
+    project_dir = tmp_path / "myproject"
+    project_dir.mkdir()
+    monkeypatch.chdir(project_dir)
+
+    # Pre-create a CLAUDE.md with a different guild section
+    claude_md = project_dir / "CLAUDE.md"
+    claude_md.write_text("# Project CLAUDE.md\n\n## Guild Workflow Packs\n\nOld guild content here.\n\n## Other Section\n\nMore stuff.\n")
+
+    code, out, err = capture_main(["setup-claude"])
+    assert code == 0
+
+    content = claude_md.read_text()
+    assert "Guild Workflow Packs" in content
+    assert "Old guild content" not in content
+    assert "More stuff" in content
+
+
+# ---------------------------------------------------------------------------
+# setup-cursor tests
+# ---------------------------------------------------------------------------
+
+@patch("guild.cli.Path.home")
+def test_setup_cursor_creates_mcp_json_and_cursorrules(mock_home, tmp_path, monkeypatch):
+    """setup-cursor creates .cursor/mcp.json and .cursorrules."""
+    fake_home = tmp_path / "home"
+    fake_home.mkdir()
+    mock_home.return_value = fake_home
+
+    project_dir = tmp_path / "myproject"
+    project_dir.mkdir()
+    monkeypatch.chdir(project_dir)
+
+    code, out, err = capture_main(["setup-cursor"])
+    assert code == 0
+
+    # Check .cursor/mcp.json was created
+    mcp_file = project_dir / ".cursor" / "mcp.json"
+    assert mcp_file.exists(), f"Expected mcp.json at {mcp_file}"
+
+    config = json.loads(mcp_file.read_text())
+    assert "mcpServers" in config
+    assert "guild" in config["mcpServers"]
+    guild_entry = config["mcpServers"]["guild"]
+    assert guild_entry["command"] == "python"
+    assert guild_entry["args"] == ["-m", "guild.integrations.mcp_server"]
+
+    # Check .cursorrules was created
+    cursor_rules = project_dir / ".cursorrules"
+    assert cursor_rules.exists()
+    content = cursor_rules.read_text()
+    assert "Guild Workflow Packs" in content
+    assert "guildpacks search" in content
+
+
+@patch("guild.cli.Path.home")
+def test_setup_cursor_idempotent_no_reinstall(mock_home, tmp_path, monkeypatch):
+    """setup-cursor does nothing if already configured correctly."""
+    fake_home = tmp_path / "home"
+    fake_home.mkdir()
+    mock_home.return_value = fake_home
+
+    project_dir = tmp_path / "myproject"
+    project_dir.mkdir()
+    monkeypatch.chdir(project_dir)
+
+    # Pre-create a correctly-configured .cursorrules
+    cursor_rules = project_dir / ".cursorrules"
+    from guild.cli import CURSOR_RULES_TEMPLATE
+    instructions = CURSOR_RULES_TEMPLATE.lstrip("\n")
+    cursor_rules.write_text(instructions + "\n")
+
+    code, out, err = capture_main(["setup-cursor"])
+    assert code == 0
+    assert "already" in out.lower() or "Everything already" in out
+
+
+@patch("guild.cli.Path.home")
+def test_setup_cursor_appends_to_existing_cursorrules(mock_home, tmp_path, monkeypatch):
+    """setup-cursor appends to .cursorrules if guild section not present."""
+    fake_home = tmp_path / "home"
+    fake_home.mkdir()
+    mock_home.return_value = fake_home
+
+    project_dir = tmp_path / "myproject"
+    project_dir.mkdir()
+    monkeypatch.chdir(project_dir)
+
+    # Pre-create .cursorrules without guild section
+    cursor_rules = project_dir / ".cursorrules"
+    cursor_rules.write_text("Some existing rules.\n")
+
+    code, out, err = capture_main(["setup-cursor"])
+    assert code == 0
+
+    content = cursor_rules.read_text()
+    assert "Guild Workflow Packs" in content
+    assert "Some existing rules" in content
+
+
+@patch("guild.cli.Path.home")
+def test_setup_cursor_updates_existing_guild_section(mock_home, tmp_path, monkeypatch):
+    """setup-cursor replaces existing guild section in .cursorrules."""
+    fake_home = tmp_path / "home"
+    fake_home.mkdir()
+    mock_home.return_value = fake_home
+
+    project_dir = tmp_path / "myproject"
+    project_dir.mkdir()
+    monkeypatch.chdir(project_dir)
+
+    # Pre-create .cursorrules with a different guild section
+    cursor_rules = project_dir / ".cursorrules"
+    cursor_rules.write_text("## Guild Workflow Packs\n\nOld guild content here.\n\n## Other Section\n\nMore stuff.\n")
+
+    code, out, err = capture_main(["setup-cursor"])
+    assert code == 0
+
+    content = cursor_rules.read_text()
+    assert "Guild Workflow Packs" in content
+    assert "Old guild content" not in content
+    assert "More stuff" in content
+
+
+@patch("guild.cli.Path.home")
+def test_setup_cursor_merges_with_existing_other_mcp_servers(mock_home, tmp_path, monkeypatch):
+    """setup-cursor preserves existing mcpServers entries."""
+    fake_home = tmp_path / "home"
+    fake_home.mkdir()
+    mock_home.return_value = fake_home
+
+    project_dir = tmp_path / "myproject"
+    project_dir.mkdir()
+    monkeypatch.chdir(project_dir)
+
+    # Pre-create .cursor/mcp.json with other servers
+    mcp_dir = project_dir / ".cursor"
+    mcp_dir.mkdir()
+    mcp_file = mcp_dir / "mcp.json"
+    mcp_file.write_text(json.dumps({
+        "mcpServers": {
+            "some-other-server": {
+                "command": "node",
+                "args": ["/some/path"]
+            }
+        }
+    }))
+
+    code, out, err = capture_main(["setup-cursor"])
+    assert code == 0
+
+    config = json.loads(mcp_file.read_text())
+    assert "some-other-server" in config["mcpServers"]
+    assert "guild" in config["mcpServers"]
+    assert config["mcpServers"]["some-other-server"]["command"] == "node"
+
+
+@patch("guild.cli.Path.home")
+def test_setup_claude_merges_with_existing_other_mcp_servers(mock_home, tmp_path, monkeypatch):
+    """setup-claude preserves existing mcpServers entries."""
+    fake_home = tmp_path / "home"
+    fake_home.mkdir()
+    mock_home.return_value = fake_home
+
+    project_dir = tmp_path / "myproject"
+    project_dir.mkdir()
+    monkeypatch.chdir(project_dir)
+
+    # Pre-create claude_desktop_config.json with other servers
+    config_dir = fake_home / ".config" / "claude"
+    config_dir.mkdir(parents=True)
+    config_file = config_dir / "claude_desktop_config.json"
+    config_file.write_text(json.dumps({
+        "mcpServers": {
+            "some-other-server": {
+                "command": "node",
+                "args": ["/some/path"]
+            }
+        }
+    }))
+
+    code, out, err = capture_main(["setup-claude"])
+    assert code == 0
+
+    config = json.loads(config_file.read_text())
+    assert "some-other-server" in config["mcpServers"]
+    assert "guild" in config["mcpServers"]
+    assert config["mcpServers"]["some-other-server"]["command"] == "node"
+
+
+def test_help_text_shows_setup_commands():
+    """Help text includes the new setup-claude and setup-cursor commands."""
+    code, out, err = capture_main(["--help"])
+    assert code == 0
+    assert "setup-claude" in out
+    assert "setup-cursor" in out

@@ -332,13 +332,14 @@ class TestCallTool:
         assert result == ""
 
     def test_call_tool_guild_observe_no_match_returns_empty(self):
-        # Mock guild_search to return no matches
-        with patch.object(mcp_module, "guild_search", return_value='{"success": true, "matches": [], "mode": "text"}'):
-            result = mcp_module.call_tool("guild_observe", {"task": "xyzzy-nonexistent-task-12345"})
-            assert result == ""
+        # Mock the core search function that guild_observe imports directly
+        with patch("guild.core.search.guild_search", return_value='{"success": true, "matches": [], "mode": "text"}'):
+            with patch("guild.core.search.classify_task", return_value=["xyzzy-nonexistent-task-12345"]):
+                result = mcp_module.call_tool("guild_observe", {"task": "xyzzy-nonexistent-task-12345"})
+                assert result == ""
 
     def test_call_tool_guild_observe_with_match_returns_guide(self):
-        # Mock guild_search to return a matching pack with phases
+        # Mock the core search function that guild_observe imports directly
         mock_search_result = json.dumps({
             "success": True,
             "matches": [
@@ -357,25 +358,25 @@ class TestCallTool:
             ],
             "mode": "text",
         })
-        with patch.object(mcp_module, "guild_search", return_value=mock_search_result):
-            result = mcp_module.call_tool("guild_observe", {"task": "extract data from text"})
-            assert "proven approach: test-pack" in result
-            assert "Phase 1: parse" in result
-            assert "Phase 2: extract" in result
-            assert "anti-patterns" in result.lower()
-            assert "checkpoint" in result.lower()
+        with patch("guild.core.search.guild_search", return_value=mock_search_result):
+            with patch("guild.core.search.classify_task", return_value=["extract"]):
+                result = mcp_module.call_tool("guild_observe", {"task": "extract data from text"})
+                assert "proven approach: test-pack" in result
+                assert "Phase 1: parse" in result
+                assert "Phase 2: extract" in result
+                assert "anti-patterns" in result.lower()
+                assert "checkpoint" in result.lower()
 
     def test_call_tool_guild_observe_uses_context(self):
-        # Verify context is concatenated into search query
-        with patch.object(mcp_module, "guild_search", return_value='{"success": true, "matches": [], "mode": "hybrid"}') as mock_search:
-            mcp_module.call_tool("guild_observe", {
-                "task": "fix bug",
-                "context": "python, django",
-            })
-            # Check that guild_search was called with combined query
-            mock_search.assert_called_once()
-            call_args = mock_search.call_args
-            assert "fix bug" in call_args[1]["query"] or "fix bug" in call_args[0][0]
+        # Verify context parameter is accepted (context is stored but not used in new implementation)
+        # The new implementation uses classify_task to extract keywords from task only
+        with patch("guild.core.search.guild_search", return_value='{"success": true, "matches": [], "mode": "text"}'):
+            with patch("guild.core.search.classify_task", return_value=["debug"]) as mock_classify:
+                mcp_module.call_tool("guild_observe", {
+                    "task": "fix bug",
+                    "context": "python, django",
+                })
+                mock_classify.assert_called_once_with("fix bug")
 
 
 class TestGuildObserveUnit:
@@ -390,32 +391,35 @@ class TestGuildObserveUnit:
         assert result == ""
 
     def test_guild_observe_no_matching_packs_returns_empty(self):
-        with patch.object(mcp_module, "guild_search", return_value='{"success": true, "matches": [], "mode": "text"}'):
-            result = mcp_module.guild_observe(task="totally obscure task xyz123")
-            assert result == ""
+        with patch("guild.core.search.guild_search", return_value='{"success": true, "matches": [], "mode": "text"}'):
+            with patch("guild.core.search.classify_task", return_value=["totally-obscure-task-xyz123"]):
+                result = mcp_module.guild_observe(task="totally obscure task xyz123")
+                assert result == ""
 
     def test_guild_observe_low_score_returns_empty(self):
-        # Semantic search with low relevance score should return empty
-        with patch.object(mcp_module, "guild_search", return_value=json.dumps({
+        # Low relevance score with tier "none" returns empty (new impl filters out tier "none")
+        with patch("guild.core.search.guild_search", return_value=json.dumps({
             "success": True,
-            "matches": [{"name": "some-pack", "relevance_score": 0.2, "tier": "unknown"}],
+            "matches": [{"name": "some-pack", "relevance_score": 0.2, "tier": "none"}],
             "mode": "hybrid",
         })):
-            result = mcp_module.guild_observe(task="some task")
-            assert result == ""
+            with patch("guild.core.search.classify_task", return_value=["task"]):
+                result = mcp_module.guild_observe(task="some task")
+                assert result == ""
 
     def test_guild_observe_text_mode_returns_match_without_score_threshold(self):
-        # Text mode falls back to tier-based filtering
-        with patch.object(mcp_module, "guild_search", return_value=json.dumps({
+        # Text mode falls back to tier-based filtering (any non-"none" tier is accepted)
+        with patch("guild.core.search.guild_search", return_value=json.dumps({
             "success": True,
             "matches": [{"name": "my-pack", "tier": "experimental", "phases": [], "anti_patterns": []}],
             "mode": "text",
         })):
-            result = mcp_module.guild_observe(task="some task")
-            assert "my-pack" in result
+            with patch("guild.core.search.classify_task", return_value=["some-task"]):
+                result = mcp_module.guild_observe(task="some task")
+                assert "my-pack" in result
 
     def test_guild_observe_includes_phases(self):
-        with patch.object(mcp_module, "guild_search", return_value=json.dumps({
+        with patch("guild.core.search.guild_search", return_value=json.dumps({
             "success": True,
             "matches": [{
                 "name": "guide-pack",
@@ -428,13 +432,14 @@ class TestGuildObserveUnit:
             }],
             "mode": "text",
         })):
-            result = mcp_module.guild_observe(task="complex task")
-            assert "Phase 1: plan" in result
-            assert "Phase 2: execute" in result
-            assert "Phase 3: verify" in result
+            with patch("guild.core.search.classify_task", return_value=["complex-task"]):
+                result = mcp_module.guild_observe(task="complex task")
+                assert "Phase 1: plan" in result
+                assert "Phase 2: execute" in result
+                assert "Phase 3: verify" in result
 
     def test_guild_observe_includes_anti_patterns(self):
-        with patch.object(mcp_module, "guild_search", return_value=json.dumps({
+        with patch("guild.core.search.guild_search", return_value=json.dumps({
             "success": True,
             "matches": [{
                 "name": "smart-pack",
@@ -443,13 +448,14 @@ class TestGuildObserveUnit:
             }],
             "mode": "text",
         })):
-            result = mcp_module.guild_observe(task="task")
-            assert "anti-patterns" in result.lower()
-            assert "copy-paste" in result
-            assert "skip tests" in result
+            with patch("guild.core.search.classify_task", return_value=["task"]):
+                result = mcp_module.guild_observe(task="task")
+                assert "anti-patterns" in result.lower()
+                assert "copy-paste" in result
+                assert "skip tests" in result
 
     def test_guild_observe_includes_checkpoint(self):
-        with patch.object(mcp_module, "guild_search", return_value=json.dumps({
+        with patch("guild.core.search.guild_search", return_value=json.dumps({
             "success": True,
             "matches": [{
                 "name": "safe-pack",
@@ -459,34 +465,32 @@ class TestGuildObserveUnit:
             }],
             "mode": "text",
         })):
-            result = mcp_module.guild_observe(task="task")
-            assert "checkpoint" in result.lower()
-            assert "review before merging" in result
+            with patch("guild.core.search.classify_task", return_value=["task"]):
+                result = mcp_module.guild_observe(task="task")
+                assert "checkpoint" in result.lower()
+                assert "review before merging" in result
 
     def test_guild_observe_handles_search_error_gracefully(self):
-        with patch.object(mcp_module, "guild_search", return_value='{"success": false, "error": "search failed"}'):
-            result = mcp_module.guild_observe(task="task")
-            assert result == ""
+        with patch("guild.core.search.guild_search", return_value='{"success": false, "error": "search failed"}'):
+            with patch("guild.core.search.classify_task", return_value=["task"]):
+                result = mcp_module.guild_observe(task="task")
+                assert result == ""
 
     def test_guild_observe_handles_invalid_json_gracefully(self):
-        with patch.object(mcp_module, "guild_search", return_value="not json at all"):
-            result = mcp_module.guild_observe(task="task")
-            assert result == ""
+        with patch("guild.core.search.guild_search", return_value="not json at all"):
+            with patch("guild.core.search.classify_task", return_value=["task"]):
+                result = mcp_module.guild_observe(task="task")
+                assert result == ""
 
     def test_guild_observe_handles_exception_gracefully(self):
-        # guild_observe internally calls guild_search; if guild_search raises, it must not propagate
-        # We simulate this by having guild_search raise after the return, via the mock's side_effect
-        original_search = mcp_module.guild_search
-
+        # guild_observe internally calls classify_task and guild_search; if they raise, it must not propagate
         def raise_once(*args, **kwargs):
             raise RuntimeError("guild_search temporarily unavailable")
 
-        try:
-            mcp_module.guild_search = raise_once
-            result = mcp_module.guild_observe(task="task")
-            assert result == ""  # Should fail silently, not raise
-        finally:
-            mcp_module.guild_search = original_search
+        with patch("guild.core.search.guild_search", side_effect=raise_once):
+            with patch("guild.core.search.classify_task", return_value=["task"]):
+                result = mcp_module.guild_observe(task="task")
+                assert result == ""  # Should fail silently, not raise
 
     def test_call_tool_guild_convert_unknown_format(self):
         result = mcp_module.call_tool("guild_convert", {
