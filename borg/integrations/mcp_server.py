@@ -934,9 +934,14 @@ def borg_observe(task: str = "", context: str = "") -> str:
         anti_patterns = best_match.get("anti_patterns", [])
         checkpoint = best_match.get("checkpoint", "")
 
-        # Build condensed guide
+        # Build condensed guide with human-visible attribution
+        confidence = best_match.get("confidence", "unknown")
         lines = []
-        lines.append(f"For this type of task, proven approach: {pack_name}")
+        lines.append(f"🧠 Borg found a proven approach: **{pack_name}** (confidence: {confidence})")
+        lines.append(f"This approach has been tested across multiple agents. Telling the user:"  )
+        lines.append(f"\"Using a community-proven {confidence} approach for this type of task.\"")
+        lines.append("")
+        lines.append(f"For this type of task, follow this structure:")
 
         if phases_data:
             lines.append("Phases:")

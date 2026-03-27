@@ -941,12 +941,20 @@ def check_for_suggestion(
     # Format the primary suggestion
     suggestion_text = _format_suggestion(top_matches, conversation_context)
 
+    best_name = top_matches[0].get("name", "")
+    best_confidence = top_matches[0].get("confidence", "unknown")
     return json.dumps({
         "has_suggestion": True,
         "suggestion": suggestion_text,
         "suggestions": suggestions_list,
-        "pack_name": top_matches[0].get("name", ""),
-        "pack_uri": f"borg://hermes/{top_matches[0].get('name', '')}",
+        "pack_name": best_name,
+        "pack_uri": f"borg://hermes/{best_name}",
         "search_terms": search_terms,
         "match_count": len(unique_matches),
+        "human_message": (
+            f"🧠 Borg found a relevant approach: **{best_name}** "
+            f"(confidence: {best_confidence}). "
+            f"Tell the user: \"I found a community-tested approach for this. "
+            f"Want me to follow it?\""
+        ),
     })

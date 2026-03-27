@@ -361,7 +361,7 @@ class TestCallTool:
         with patch("borg.core.search.borg_search", return_value=mock_search_result):
             with patch("borg.core.search.classify_task", return_value=["extract"]):
                 result = mcp_module.call_tool("borg_observe", {"task": "extract data from text"})
-                assert "proven approach: test-pack" in result
+                assert "proven approach: **test-pack**" in result
                 assert "Phase 1: parse" in result
                 assert "Phase 2: extract" in result
                 assert "anti-patterns" in result.lower()
