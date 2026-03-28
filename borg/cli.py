@@ -29,6 +29,10 @@ from borg.core.search import generate_feedback as _core_generate_feedback
 from borg.core.apply import apply_handler
 from borg.core.publish import action_publish, action_list
 from borg.core.convert import convert_auto, convert_skill, convert_claude_md, convert_cursorrules
+from borg.core.dirs import get_borg_dir
+from borg.core.session import load_persisted_sessions, _active_sessions
+from borg.db.reputation import ReputationEngine
+from borg.db.store import AgentStore
 
 
 # ---------------------------------------------------------------------------
@@ -736,6 +740,79 @@ def _cmd_autopilot(args: argparse.Namespace) -> int:
 
 
 # ---------------------------------------------------------------------------
+# reputation: show agent reputation profile
+# ---------------------------------------------------------------------------
+
+def _cmd_reputation(args: argparse.Namespace) -> int:
+    """Show reputation profile for an agent."""
+    store = AgentStore()
+    engine = ReputationEngine(store)
+    profile = engine.build_profile(args.agent_id)
+
+    if profile.last_active_at:
+        last_active = profile.last_active_at.strftime("%Y-%m-%d %H:%M UTC")
+    else:
+        last_active = "never"
+
+    print(f"Reputation Profile for Agent: {args.agent_id}")
+    print("=" * 50)
+    print(f"  Contribution Score:  {profile.contribution_score:.2f}")
+    print(f"  Access Tier:         {profile.access_tier.value}")
+    print(f"  Free-Rider Status:    {profile.free_rider_status.value}")
+    print(f"  Packs Published:      {profile.packs_published}")
+    print(f"  Packs Consumed:       {profile.packs_consumed}")
+    print(f"  Last Active:         {last_active}")
+    return 0
+
+
+# ---------------------------------------------------------------------------
+# status: show borg system status
+# ---------------------------------------------------------------------------
+
+def _cmd_status(args: argparse.Namespace) -> int:
+    """Show borg system status."""
+    borg_dir = get_borg_dir()
+    db_path = borg_dir / "guild.db"
+
+    # Load persisted sessions to get accurate count
+    sessions = load_persisted_sessions()
+
+    # Count active (running) sessions
+    active_sessions = [s for s in sessions if s.get("status") == "running"]
+    active_from_memory = [s for s in _active_sessions.values() if s.get("status") == "running"]
+    all_running = {s["session_id"]: s for s in active_sessions + active_from_memory}.values()
+
+    # Count packs in store
+    store = AgentStore()
+    packs = store.list_packs(limit=10000)
+    pack_count = len(packs)
+
+    # Count agents
+    agents = store.list_agents(limit=10000)
+    agent_count = len(agents)
+
+    print(f"Borg System Status")
+    print("=" * 50)
+    print(f"  BORG_DIR:             {borg_dir}")
+    print(f"  Database:             {db_path}")
+    print(f"  Packs in Store:       {pack_count}")
+    print(f"  Active Sessions:      {len(list(all_running))}")
+    print(f"  Agent Count:          {agent_count}")
+
+    running = list(all_running)
+    if running:
+        print()
+        print("  Running Sessions:")
+        for s in running:
+            session_id = s.get("session_id", "?")
+            pack_name = s.get("pack_name", "?")
+            status = s.get("status", "?")
+            print(f"    • {session_id}  [{status}]  ({pack_name})")
+
+    return 0
+
+
+# ---------------------------------------------------------------------------
 # Main entry point
 # ---------------------------------------------------------------------------
 
@@ -833,6 +910,15 @@ def main() -> int:
     # guild setup-cursor
     p = sub.add_parser("setup-cursor", help="Configure guild MCP server for Cursor")
     p.set_defaults(func=_cmd_setup_cursor)
+
+    # guild reputation <agent_id>
+    p = sub.add_parser("reputation", help="Show reputation profile for an agent")
+    p.add_argument("agent_id", help="Agent ID")
+    p.set_defaults(func=_cmd_reputation)
+
+    # guild status
+    p = sub.add_parser("status", help="Show borg system status")
+    p.set_defaults(func=_cmd_status)
 
     args = parser.parse_args()
 

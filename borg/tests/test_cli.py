@@ -522,3 +522,152 @@ def test_help_text_shows_setup_commands():
     assert code == 0
     assert "setup-claude" in out
     assert "setup-cursor" in out
+
+
+# ---------------------------------------------------------------------------
+# reputation tests
+# ---------------------------------------------------------------------------
+
+from unittest.mock import MagicMock, patch
+from datetime import datetime, timezone
+from borg.db.reputation import ReputationProfile, AccessTier, FreeRiderStatus
+
+
+@patch("borg.cli.AgentStore")
+@patch("borg.cli.ReputationEngine")
+def test_reputation_calls_build_profile(mock_engine_cls, mock_store_cls):
+    """reputation command calls ReputationEngine.build_profile with agent_id."""
+    mock_engine = MagicMock()
+    mock_engine_cls.return_value = mock_engine
+    mock_engine.build_profile.return_value = ReputationProfile(
+        agent_id="agent-42",
+        contribution_score=0.0,
+        access_tier=AccessTier.COMMUNITY,
+        free_rider_status=FreeRiderStatus.OK,
+        packs_published=0,
+        packs_consumed=0,
+        last_active_at=None,
+    )
+
+    code, out, err = capture_main(["reputation", "agent-42"])
+
+    assert code == 0
+    mock_engine.build_profile.assert_called_once_with("agent-42")
+    assert "agent-42" in out
+    assert "Contribution Score" in out
+
+
+@patch("borg.cli.AgentStore")
+@patch("borg.cli.ReputationEngine")
+def test_reputation_shows_all_profile_fields(mock_engine_cls, mock_store_cls):
+    """reputation command displays contribution score, tier, free-rider, packs, last active."""
+    mock_engine = MagicMock()
+    mock_engine_cls.return_value = mock_engine
+    mock_engine.build_profile.return_value = ReputationProfile(
+        agent_id="agent-99",
+        contribution_score=25.5,
+        access_tier=AccessTier.VALIDATED,
+        free_rider_status=FreeRiderStatus.FLAGGED,
+        packs_published=3,
+        packs_consumed=7,
+        last_active_at=datetime(2025, 6, 15, 12, 0, tzinfo=timezone.utc),
+    )
+
+    code, out, err = capture_main(["reputation", "agent-99"])
+
+    assert code == 0
+    assert "25.50" in out
+    assert "validated" in out
+    assert "flagged" in out
+    assert "3" in out
+    assert "7" in out
+    assert "2025-06-15" in out
+
+
+# ---------------------------------------------------------------------------
+# status tests
+# ---------------------------------------------------------------------------
+
+@patch("borg.cli.AgentStore")
+@patch("borg.cli.load_persisted_sessions")
+@patch("borg.cli.get_borg_dir")
+def test_status_shows_borg_dir_and_db(mock_get_borg_dir, mock_load_sessions, mock_store_cls):
+    """status command displays BORG_DIR and database path."""
+    mock_get_borg_dir.return_value.__str__ = MagicMock(return_value="/fake/guild")
+    mock_get_borg_dir.return_value.__truediv__ = lambda self, x: f"/fake/guild/{x}"
+    mock_load_sessions.return_value = []
+    mock_store = MagicMock()
+    mock_store.list_packs.return_value = []
+    mock_store.list_agents.return_value = []
+    mock_store_cls.return_value = mock_store
+
+    code, out, err = capture_main(["status"])
+
+    assert code == 0
+    assert "/fake/guild" in out
+    assert "guild.db" in out
+
+
+@patch("borg.cli.AgentStore")
+@patch("borg.cli.load_persisted_sessions")
+@patch("borg.cli.get_borg_dir")
+@patch("borg.cli._active_sessions", {})
+def test_status_shows_pack_and_agent_counts(mock_get_borg_dir, mock_load_sessions, mock_store_cls):
+    """status command shows number of packs and agents."""
+    mock_get_borg_dir.return_value.__str__ = MagicMock(return_value="/fake/guild")
+    mock_get_borg_dir.return_value.__truediv__ = lambda self, x: f"/fake/guild/{x}"
+    mock_load_sessions.return_value = []
+    mock_store = MagicMock()
+    mock_store.list_packs.return_value = [{"id": "p1"}, {"id": "p2"}, {"id": "p3"}]
+    mock_store.list_agents.return_value = [{"agent_id": "a1"}, {"agent_id": "a2"}]
+    mock_store_cls.return_value = mock_store
+
+    code, out, err = capture_main(["status"])
+
+    assert code == 0
+    assert "3" in out  # pack count
+    assert "2" in out  # agent count
+
+
+@patch("borg.cli.AgentStore")
+@patch("borg.cli.load_persisted_sessions")
+@patch("borg.cli.get_borg_dir")
+def test_status_shows_running_sessions(mock_get_borg_dir, mock_load_sessions, mock_store_cls):
+    """status command lists running sessions with their state."""
+    mock_get_borg_dir.return_value.__str__ = MagicMock(return_value="/fake/guild")
+    mock_get_borg_dir.return_value.__truediv__ = lambda self, x: f"/fake/guild/{x}"
+
+    running_session = {
+        "session_id": "sess-abc",
+        "pack_name": "debug-pack",
+        "status": "running",
+    }
+    mock_load_sessions.return_value = [running_session]
+    mock_store = MagicMock()
+    mock_store.list_packs.return_value = []
+    mock_store.list_agents.return_value = []
+    mock_store_cls.return_value = mock_store
+
+    code, out, err = capture_main(["status"])
+
+    assert code == 0
+    assert "sess-abc" in out
+    assert "debug-pack" in out
+    assert "running" in out
+
+
+@patch("borg.cli.AgentStore")
+@patch("borg.cli.load_persisted_sessions")
+@patch("borg.cli.get_borg_dir")
+def test_status_dispatches_to_subcommand(mock_get_borg_dir, mock_load_sessions, mock_store_cls):
+    """status command is registered and callable."""
+    mock_get_borg_dir.return_value.__str__ = MagicMock(return_value="/fake/guild")
+    mock_get_borg_dir.return_value.__truediv__ = lambda self, x: f"/fake/guild/{x}"
+    mock_load_sessions.return_value = []
+    mock_store = MagicMock()
+    mock_store.list_packs.return_value = []
+    mock_store.list_agents.return_value = []
+    mock_store_cls.return_value = mock_store
+
+    code, out, err = capture_main(["status"])
+    assert code == 0
