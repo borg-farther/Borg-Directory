@@ -1,6 +1,6 @@
 """Borg — Semantic reasoning cache for AI agents."""
 
-__version__ = "2.3.0"
+__version__ = "2.3.1"
 
 # Core modules (M1 complete)
 from borg.core.safety import scan_pack_safety, scan_privacy

@@ -306,6 +306,13 @@ TOOLS: List[Dict[str, Any]] = [
                         "error_in_test": {"type": "boolean"},
                     },
                 },
+                "project_path": {
+                    "type": "string",
+                    "description": (
+                        "Optional path to the project directory for change awareness. "
+                        "If provided, cross-references the error with recently changed files."
+                    ),
+                },
             },
             "required": ["task"],
         },
@@ -331,6 +338,48 @@ TOOLS: List[Dict[str, Any]] = [
                 },
             },
             "required": ["path"],
+        },
+    },
+    {
+        "name": "borg_context",
+        "description": (
+            "Detect recent git changes in a project directory. Returns recently changed files, "
+            "uncommitted changes, and recent commit messages. Use this to understand what changed "
+            "in the codebase recently when debugging errors."
+        ),
+        "inputSchema": {
+            "type": "object",
+            "properties": {
+                "project_path": {
+                    "type": "string",
+                    "description": "Path to the git repository. Defaults to '.' (current directory).",
+                    "default": ".",
+                },
+                "hours": {
+                    "type": "integer",
+                    "description": "Look for changes in the last N hours. Defaults to 24.",
+                    "default": 24,
+                },
+            },
+            "required": ["project_path"],
+        },
+    },
+    {
+        "name": "borg_recall",
+        "description": (
+            "Recall collective failure memory for an error. Returns approaches that other agents "
+            "tried and failed, as well as approaches that succeeded. Use this before attempting "
+            "a fix to avoid known wrong paths."
+        ),
+        "inputSchema": {
+            "type": "object",
+            "properties": {
+                "error_message": {
+                    "type": "string",
+                    "description": "The error message to look up in failure memory.",
+                },
+            },
+            "required": ["error_message"],
         },
     },
 ]
@@ -885,7 +934,7 @@ def borg_suggest(
         return json.dumps({"success": False, "error": str(e), "type": type(e).__name__})
 
 
-def borg_observe(task: str = "", context: str = "", context_dict: dict = None) -> str:
+def borg_observe(task: str = "", context: str = "", context_dict: dict = None, project_path: str = None) -> str:
     """Silent observation: return structural guidance for a task if a relevant pack exists.
 
     Uses classify_task to extract keywords from the task description, then searches
@@ -898,6 +947,9 @@ def borg_observe(task: str = "", context: str = "", context_dict: dict = None) -
         context_dict: Optional runtime context dict for conditional phase evaluation.
             Keys: error_message (str), error_type (str), attempts (int),
             has_recent_changes (bool), error_in_test (bool).
+        project_path: Optional path to the project for change awareness.
+            If provided and context contains an error, cross-references the error
+            with recently changed files.
 
     Returns:
         A concise structural guide string, or empty string if no relevant pack found.
@@ -965,14 +1017,74 @@ def borg_observe(task: str = "", context: str = "", context_dict: dict = None) -
             return ""
 
         pack_name = best_match.get("name", best_match.get("id", ""))
-        problem_class = best_match.get("problem_class", "")
-        phases_data = best_match.get("phases", [])
-        anti_patterns = best_match.get("anti_patterns", [])
-        checkpoint = best_match.get("checkpoint", "")
-        start_signals = best_match.get("start_signals", [])
+
+        # ---------------------------------------------------------------------
+        # 1. FIND THE BEST LOCAL PACK: Scan ALL local packs for the richest
+        # match. Prefer packs with start_signals and conditions over plain ones.
+        # This overrides the search result if a better local pack exists.
+        # ---------------------------------------------------------------------
+        import yaml
+        HERMES_HOME = Path(os.getenv("HERMES_HOME", Path.home() / ".hermes"))
+        guild_dir = HERMES_HOME / "guild"
+        pack_name = best_match.get("name", "")
+        
+        full_pack = None
+        best_pack_score = -1
+        if guild_dir.exists():
+            for pack_yaml in guild_dir.glob("*/pack.yaml"):
+                try:
+                    candidate = yaml.safe_load(pack_yaml.read_text(encoding="utf-8"))
+                    if not isinstance(candidate, dict):
+                        continue
+                    candidate_id = candidate.get("id", "")
+                    candidate_name = candidate_id.split("/")[-1]
+                    problem_class_str = str(candidate.get("problem_class", "")).lower()
+                    dir_name = pack_yaml.parent.name.lower()
+                    
+                    # Score: does this pack match the search terms?
+                    score = 0
+                    matched = False
+                    for term in search_terms:
+                        term_l = term.lower()
+                        if term_l in candidate_name or term_l in dir_name or term_l in problem_class_str:
+                            matched = True
+                            score += 10
+                    
+                    # Bonus: packs with start_signals and conditions are richer
+                    if candidate.get("start_signals"):
+                        score += 20  # strongly prefer packs with signals
+                    if any(p.get("skip_if") for p in candidate.get("phases", []) if isinstance(p, dict)):
+                        score += 10
+                    # Prefer clean dir names
+                    if "guild:--" not in dir_name and "converted" not in dir_name:
+                        score += 5
+                    
+                    if matched and score > best_pack_score:
+                        full_pack = candidate
+                        best_pack_score = score
+                        pack_name = candidate_name or pack_yaml.parent.name
+                except Exception:
+                    continue
+
+        # Use local pack data if available, otherwise fall back to search metadata
+        if full_pack and isinstance(full_pack, dict):
+            problem_class = full_pack.get("problem_class", best_match.get("problem_class", ""))
+            phases_data = full_pack.get("phases", best_match.get("phases", []))
+            anti_patterns = full_pack.get("anti_patterns", best_match.get("anti_patterns", []))
+            checkpoint = full_pack.get("checkpoint", best_match.get("checkpoint", ""))
+            start_signals = full_pack.get("start_signals", [])
+            # Prefer local pack confidence if available
+            local_confidence = full_pack.get("provenance", {}).get("confidence") if full_pack.get("provenance") else None
+            confidence = local_confidence or best_match.get("confidence", "unknown")
+        else:
+            problem_class = best_match.get("problem_class", "")
+            phases_data = best_match.get("phases", [])
+            anti_patterns = best_match.get("anti_patterns", [])
+            checkpoint = best_match.get("checkpoint", "")
+            start_signals = best_match.get("start_signals", [])
+            confidence = best_match.get("confidence", "unknown")
 
         # Build condensed guide with human-visible attribution
-        confidence = best_match.get("confidence", "unknown")
         lines = []
         lines.append(f"🧠 Borg found a proven approach: **{pack_name}** (confidence: {confidence})")
         lines.append(f"This approach has been tested across multiple agents. Telling the user:")
@@ -995,6 +1107,33 @@ def borg_observe(task: str = "", context: str = "", context_dict: dict = None) -
                     lines.append(f"⚠️ Avoid: {', '.join(avoid)}")
                 if reasoning:
                     lines.append(f"Why: {reasoning}")
+
+        # Check failure memory and add collective intelligence warnings
+        if context:
+            try:
+                from borg.core.failure_memory import FailureMemory
+                fm = FailureMemory()
+                memory = fm.recall(context)
+                if memory and (memory.get("wrong_approaches") or memory.get("correct_approaches")):
+                    lines.append("")
+                    wrong = memory.get("wrong_approaches", [])
+                    correct = memory.get("correct_approaches", [])
+                    if wrong:
+                        top_wrong = wrong[0]
+                        lines.append(
+                            f"⚠️ Other agents tried: {top_wrong.get('approach', 'unknown')} "
+                            f"and failed ({top_wrong.get('failure_count', 0)} times). "
+                            f"Try a different approach."
+                        )
+                    if correct:
+                        top_correct = correct[0]
+                        lines.append(
+                            f"✅ Instead, try: {top_correct.get('approach', 'unknown')} "
+                            f"(succeeded {top_correct.get('success_count', 0)} times)."
+                        )
+            except Exception:
+                # Never let failure memory break observe
+                pass
 
         if phases_data:
             lines.append("Phases:")
@@ -1048,6 +1187,19 @@ def borg_observe(task: str = "", context: str = "", context_dict: dict = None) -
         if checkpoint:
             lines.append(f"Checkpoint before fixing: {checkpoint}")
 
+        # Change awareness: cross-reference error with recent changes
+        if project_path and context:
+            try:
+                from borg.core.changes import detect_recent_changes, cross_reference_error
+                changes = detect_recent_changes(project_path=project_path, hours=24)
+                if changes.get('is_git_repo'):
+                    note = cross_reference_error(changes, context)
+                    if note:
+                        lines.append(f"\n📝 Note: {note}")
+            except Exception:
+                # Don't fail on change awareness errors
+                pass
+
         return "\n".join(lines)
 
     except (KeyboardInterrupt, SystemExit):
@@ -1055,6 +1207,75 @@ def borg_observe(task: str = "", context: str = "", context_dict: dict = None) -
     except Exception:
         # Fail silently — guild_observe should never break an agent's flow
         return ""
+
+
+def borg_context(project_path: str = ".", hours: int = 24) -> str:
+    """Detect recent git changes in a project directory.
+
+    Args:
+        project_path: Path to the git repository. Defaults to '.'.
+        hours: Look for changes in the last N hours. Defaults to 24.
+
+    Returns:
+        JSON string with recent files, uncommitted changes, and last commits.
+    """
+    try:
+        from borg.core.changes import detect_recent_changes
+
+        result = detect_recent_changes(project_path=project_path, hours=hours)
+        return json.dumps({
+            "success": True,
+            **result,
+        })
+    except (KeyboardInterrupt, SystemExit):
+        raise
+    except (ValueError, KeyError, OSError, json.JSONDecodeError) as e:
+        return json.dumps({"success": False, "error": str(e), "type": type(e).__name__})
+
+
+def borg_recall(error_message: str = "") -> str:
+    """Recall collective failure memory for an error.
+
+    Returns approaches that other agents tried and failed, as well as
+    approaches that succeeded. If no matching memory is found, returns null.
+
+    Args:
+        error_message: The error message to look up in failure memory.
+
+    Returns:
+        JSON string with wrong_approaches (sorted by frequency) and
+        correct_approaches (sorted by frequency), or null if no match.
+    """
+    try:
+        from borg.core.failure_memory import FailureMemory
+
+        if not error_message:
+            return json.dumps({"success": False, "error": "error_message is required"})
+
+        fm = FailureMemory()
+        result = fm.recall(error_message)
+
+        if result is None:
+            return json.dumps({
+                "success": True,
+                "found": False,
+                "wrong_approaches": [],
+                "correct_approaches": [],
+                "total_sessions": 0,
+            })
+
+        return json.dumps({
+            "success": True,
+            "found": True,
+            "error_pattern": result.get("error_pattern", ""),
+            "wrong_approaches": result.get("wrong_approaches", []),
+            "correct_approaches": result.get("correct_approaches", []),
+            "total_sessions": result.get("total_sessions", 0),
+        })
+    except (KeyboardInterrupt, SystemExit):
+        raise
+    except (ValueError, KeyError, OSError, json.JSONDecodeError) as e:
+        return json.dumps({"success": False, "error": str(e), "type": type(e).__name__})
 
 
 def borg_convert(path: str = "", format: str = "auto") -> str:
@@ -1206,10 +1427,22 @@ def _call_tool_impl(name: str, arguments: Dict[str, Any]) -> str:
             format=arguments.get("format", "auto"),
         )
 
+    elif name == "borg_context":
+        return borg_context(
+            project_path=arguments.get("project_path", "."),
+            hours=arguments.get("hours", 24),
+        )
+
+    elif name == "borg_recall":
+        return borg_recall(
+            error_message=arguments.get("error_message", ""),
+        )
+
     elif name == "borg_observe":
         return borg_observe(
             task=arguments.get("task", ""),
             context=arguments.get("context", ""),
+            context_dict=arguments.get("context_dict"),
         )
 
     else:

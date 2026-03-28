@@ -40,6 +40,50 @@ except ImportError:
 
 logger = logging.getLogger(__name__)
 
+
+# ---------------------------------------------------------------------------
+# Failure memory helper
+# ---------------------------------------------------------------------------
+
+def _record_to_failure_memory(
+    pack_id: str,
+    phase: str,
+    eval_context: dict,
+    approach: str,
+    outcome: str,
+) -> None:
+    """Record a checkpoint result to failure memory.
+
+    Args:
+        pack_id: The pack being executed.
+        phase: The phase name.
+        eval_context: Evaluation context (may contain error_message, error_type).
+        approach: What the agent tried (checkpoint text or evidence).
+        outcome: 'passed' or 'failed'.
+    """
+    try:
+        from borg.core.failure_memory import FailureMemory
+
+        # Extract error pattern from eval_context if available
+        error_pattern = ""
+        if eval_context:
+            error_pattern = eval_context.get("error_message", "") or eval_context.get("error_type", "")
+
+        if not error_pattern or not approach:
+            return  # Nothing meaningful to record
+
+        fm = FailureMemory()
+        fm.record_failure(
+            error_pattern=error_pattern,
+            pack_id=pack_id,
+            phase=phase,
+            approach=approach,
+            outcome=outcome,
+        )
+    except Exception:
+        # Never let failure memory break the core apply flow
+        pass
+
 # ---------------------------------------------------------------------------
 # Constants (mirror PRD §4.3)
 # ---------------------------------------------------------------------------
@@ -443,6 +487,15 @@ def action_checkpoint(
             "duration_s": 0,
             "checkpoint_result": sanitized_evidence,
         })
+
+        # Record to failure memory (skip on retry — we only record final outcomes)
+        _record_to_failure_memory(
+            pack_id=session.get("pack_id", session.get("pack_name", "")),
+            phase=phase_name,
+            eval_context=eval_context,
+            approach=sanitized_evidence or phase_match.get("checkpoint", ""),
+            outcome=status,
+        )
 
     # Persist updated session
     _session_mod.save_session(session, agent_dir=base)

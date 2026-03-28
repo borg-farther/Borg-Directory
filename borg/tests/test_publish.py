@@ -118,7 +118,8 @@ class TestCheckRateLimit:
     def test_denies_at_limit(self, tmp_guild, monkeypatch):
         monkeypatch.setattr(publish_module, "MAX_PUBLISHES_PER_DAY", 1)
         # Pre-populate log with one published entry today
-        today = "2026-03-27"
+        from datetime import datetime, timezone
+        today = datetime.now(timezone.utc).strftime("%Y-%m-%d")
         log_line = json.dumps({
             "date": today,
             "status": "published",
