@@ -30,6 +30,7 @@ from borg.core.search import generate_feedback as _core_generate_feedback
 from borg.core.apply import apply_handler
 from borg.core.publish import action_publish, action_list
 from borg.core.convert import convert_auto, convert_skill, convert_claude_md, convert_cursorrules
+from borg.core.generate import generate_rules, generate_all, load_pack
 from borg.core.dirs import get_borg_dir
 from borg.core.session import load_persisted_sessions, _active_sessions
 from borg.db.reputation import ReputationEngine
@@ -329,6 +330,62 @@ def _cmd_convert(args: argparse.Namespace) -> int:
     except Exception as e:
         print(f"Error: {e}", file=sys.stderr)
         return 1
+
+
+def _cmd_generate(args: argparse.Namespace) -> int:
+    """Generate platform-specific rules file from a workflow pack."""
+    try:
+        pack = load_pack(args.pack)
+    except FileNotFoundError as e:
+        print(f"Error: {e}", file=sys.stderr)
+        return 1
+
+    try:
+        if args.format == "all":
+            results = generate_all(pack)
+            output_dir = Path(args.output) if args.output else Path.cwd()
+
+            if args.output and len(results) > 1:
+                # Write each format to the output directory with appropriate filename
+                output_dir.mkdir(parents=True, exist_ok=True)
+                for fmt, content in results.items():
+                    filename = _format_to_filename(fmt)
+                    out_path = output_dir / filename
+                    out_path.write_text(content, encoding="utf-8")
+                    print(f"  {filename}")
+                print(f"  → {output_dir}")
+            else:
+                # Output to stdout as JSON
+                import json
+                print(json.dumps(results, indent=2))
+            return 0
+
+        content = generate_rules(pack, args.format)
+        if args.output:
+            out_path = Path(args.output)
+            out_path.parent.mkdir(parents=True, exist_ok=True)
+            out_path.write_text(content, encoding="utf-8")
+            print(f"  → {out_path}")
+        else:
+            print(content)
+        return 0
+    except ValueError as e:
+        print(f"Error: {e}", file=sys.stderr)
+        return 1
+    except Exception as e:
+        print(f"Error: {e}", file=sys.stderr)
+        return 1
+
+
+def _format_to_filename(fmt: str) -> str:
+    """Map format name to expected filename."""
+    mapping = {
+        "cursorrules": ".cursorrules",
+        "clinerules": ".clinerules",
+        "claude-md": "CLAUDE.md",
+        "windsurfrules": ".windsurfrules",
+    }
+    return mapping.get(fmt, fmt)
 
 
 def _cmd_list(args: argparse.Namespace) -> int:
@@ -998,6 +1055,25 @@ def main() -> int:
     # guild list
     p = sub.add_parser("list", help="List local packs")
     p.set_defaults(func=_cmd_list)
+
+    # guild generate --format=cursorrules --pack=systematic-debugging --output .cursorrules
+    p = sub.add_parser("generate", help="Generate platform-specific rules file from a workflow pack")
+    p.add_argument(
+        "--format",
+        choices=["cursorrules", "clinerules", "claude-md", "windsurfrules", "all"],
+        default="cursorrules",
+        help="Output format (default: cursorrules)",
+    )
+    p.add_argument(
+        "--pack",
+        required=True,
+        help="Pack name (e.g. systematic-debugging) or path to pack YAML",
+    )
+    p.add_argument(
+        "--output",
+        help="Output file path or directory (for --format=all, use a directory)",
+    )
+    p.set_defaults(func=_cmd_generate)
 
     # guild version
     p = sub.add_parser("version", help="Show version")

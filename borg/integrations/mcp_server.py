@@ -346,6 +346,39 @@ TOOLS: List[Dict[str, Any]] = [
         },
     },
     {
+        "name": "borg_generate",
+        "description": (
+            "Generate platform-specific rules files from a borg workflow pack. "
+            "Takes a pack name or pack data and outputs rules in the specified format "
+            "native to each AI IDE platform (Cursor, Cline, Claude Code, Windsurf)."
+        ),
+        "inputSchema": {
+            "type": "object",
+            "properties": {
+                "pack": {
+                    "type": "string",
+                    "description": (
+                        "Pack name (e.g. 'systematic-debugging') or pack identifier. "
+                        "The pack must be available in the local registry."
+                    ),
+                },
+                "format": {
+                    "type": "string",
+                    "enum": ["cursorrules", "clinerules", "claude-md", "windsurfrules", "all"],
+                    "description": (
+                        "Output format. 'cursorrules' → .cursorrules (Cursor), "
+                        "'clinerules' → .clinerules (Cline), "
+                        "'claude-md' → CLAUDE.md (Claude Code), "
+                        "'windsurfrules' → .windsurfrules (Windsurf), "
+                        "'all' → all four formats at once."
+                    ),
+                    "default": "cursorrules",
+                },
+            },
+            "required": ["pack", "format"],
+        },
+    },
+    {
         "name": "borg_context",
         "description": (
             "Detect recent git changes in a project directory. Returns recently changed files, "
@@ -1515,6 +1548,54 @@ def borg_convert(path: str = "", format: str = "auto", output_dir: str = None) -
         return json.dumps({"success": False, "error": str(e), "type": type(e).__name__})
 
 
+def borg_generate(pack: str = "", format: str = "cursorrules") -> str:
+    """Generate platform-specific rules files from a borg workflow pack.
+
+    Args:
+        pack: Pack name (e.g. 'systematic-debugging') or path to pack YAML file.
+        format: Output format - 'cursorrules', 'clinerules', 'claude-md', 'windsurfrules', or 'all'.
+
+    Returns:
+        JSON string with generated rules content.
+    """
+    try:
+        from borg.core.generate import generate_rules, generate_all, load_pack
+
+        if not pack:
+            return json.dumps({"success": False, "error": "pack is required"})
+
+        pack_data = load_pack(pack)
+
+        if format == "all":
+            results = generate_all(pack_data)
+            return json.dumps({
+                "success": True,
+                "formats": results,
+            })
+        else:
+            content = generate_rules(pack_data, format)
+            filename_map = {
+                "cursorrules": ".cursorrules",
+                "clinerules": ".clinerules",
+                "claude-md": "CLAUDE.md",
+                "windsurfrules": ".windsurfrules",
+            }
+            filename = filename_map.get(format, format)
+            return json.dumps({
+                "success": True,
+                "content": content,
+                "filename": filename,
+            })
+    except FileNotFoundError as e:
+        return json.dumps({"success": False, "error": str(e)})
+    except (KeyboardInterrupt, SystemExit):
+        raise
+    except ValueError as e:
+        return json.dumps({"success": False, "error": str(e)})
+    except Exception as e:
+        return json.dumps({"success": False, "error": str(e), "type": type(e).__name__})
+
+
 # -------------------------------------------------------------------------
 # Timeout configuration (seconds)
 # -------------------------------------------------------------------------
@@ -1645,6 +1726,12 @@ def _call_tool_impl(name: str, arguments: Dict[str, Any]) -> str:
             task=arguments.get("task", ""),
             context=arguments.get("context", ""),
             context_dict=arguments.get("context_dict"),
+        )
+
+    elif name == "borg_generate":
+        return borg_generate(
+            pack=arguments.get("pack", ""),
+            format=arguments.get("format", "cursorrules"),
         )
 
     else:
