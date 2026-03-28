@@ -1,0 +1,114 @@
+id: 010
+name: debug_production_stack_trace
+description: >
+  Debug a production error from a stack trace. The error is a KeyError occurring
+  in a payment processing webhook handler when processing Stripe events.
+
+setup_code: |
+  import os
+  os.makedirs("src", exist_ok=True)
+
+  stack_trace = """========================================
+  PRODUCTION ERROR - 2024-03-20 14:32:01 UTC
+  ========================================
+  Traceback (most recent call last):
+    File "/app/webhooks/stripe_handler.py", line 89, in handle_payment_intent
+      payment_data = extract_payment_info(event)
+    File "/app/webhooks/stripe_handler.py", line 45, in extract_payment_info
+      amount = event["data"]["object"]["amount"] / 100
+  KeyError: 'amount'
+
+  Request ID: req_abc123xyz
+  Event Type: payment_intent.created
+  Environment: production
+  ========================================
+  """
+
+  with open("production_error.log", "w") as f:
+      f.write(stack_trace)
+
+  source_code = '''from typing import Dict, Any, Optional
+  import logging
+
+  logger = logging.getLogger(__name__)
+
+  def extract_payment_info(event: Dict[str, Any]) -> Dict[str, Any]:
+      """
+      Extract payment information from Stripe event.
+      BUG: This assumes all payment_intent events have 'amount',
+      but 'payment_intent.created' events don't have 'amount' yet.
+      """
+      # This line fails for payment_intent.created events
+      amount = event["data"]["object"]["amount"] / 100
+
+      return {
+          "amount": amount,
+          "currency": event["data"]["object"]["currency"],
+          "payment_intent_id": event["data"]["object"]["id"],
+          "status": event["data"]["object"]["status"]
+      }
+
+  def handle_payment_intent(event: Dict[str, Any]) -> bool:
+      try:
+          payment_data = extract_payment_info(event)
+          logger.info(f"Processing payment: {payment_data["payment_intent_id"]}")
+
+          if payment_data["status"] == "succeeded":
+              logger.info("Payment succeeded - order fulfilled")
+          return True
+      except KeyError as e:
+          logger.error(f"Missing expected field in event: {e}")
+          raise
+      except Exception as e:
+          logger.error(f"Error processing payment: {e}")
+          raise
+
+  def process_event(event: Dict[str, Any]) -> bool:
+      event_type = event.get("type", "")
+
+      if event_type.startswith("payment_intent"):
+          return handle_payment_intent(event)
+      elif event_type.startswith("customer"):
+          return handle_customer_event(event)
+      else:
+          logger.warning(f"Unhandled event type: {event_type}")
+          return False
+  '''
+
+  with open("src/stripe_handler.py", "w") as f:
+      f.write(source_code)
+
+  test_event = """{
+    "id": "evt_test123",
+    "type": "payment_intent.created",
+    "data": {
+      "object": {
+        "id": "pi_test123",
+        "currency": "usd",
+        "status": "requires_payment_method"
+      }
+    }
+  }
+  """
+
+  with open("test_event.json", "w") as f:
+      f.write(test_event)
+
+expected_outcome: >
+  The agent:
+  1. Analyzes the stack trace to understand the root cause
+  2. Identifies that 'payment_intent.created' events don't have 'amount' field
+  3. Fixes the code to check event type before extracting amount
+  4. Handles different event types appropriately
+  5. Adds proper error handling and logging
+  6. Verifies fix works for the problematic event type
+
+  The fix should check the event type/status before assuming 'amount' exists.
+
+max_iterations: 5
+relevant_pack: guild://hermes/systematic-debugging
+
+scoring:
+  iterations_taken: null
+  tokens_used: null
+  correct_fix: false

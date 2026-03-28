@@ -1,0 +1,36 @@
+id: 007
+name: refactor_long_function
+description: >
+  Refactor a 150-line function that handles user registration into smaller,
+  focused functions with clear responsibilities. The function handles validation,
+  database operations, email sending, and logging all in one place.
+
+setup_code: |
+  import os
+
+  user_reg = "import re\nfrom datetime import datetime\nfrom typing import Optional, Dict, Any\n\ndef register_user(email: str, password: str, username: str,\n                  first_name: str, last_name: str, phone: str,\n                  date_of_birth: str, address: str, city: str,\n                  country: str, postal_code: str, newsletter: bool,\n                  terms_accepted: bool) -> Dict[str, Any]:\n    result = {\"success\": False, \"user_id\": None, \"errors\": []}\n\n    if not email:\n        result[\"errors\"].append(\"Email is required\")\n    elif not re.match(r\"^[a-zA-Z0-9._%+-]+@[a-zA-Z0-9.-]+\\.[a-zA-Z]{2,}$\", email):\n        result[\"errors\"].append(\"Invalid email format\")\n    elif len(email) > 255:\n        result[\"errors\"].append(\"Email too long (max 255)\")\n\n    if not username:\n        result[\"errors\"].append(\"Username is required\")\n    elif len(username) < 3:\n        result[\"errors\"].append(\"Username must be at least 3 characters\")\n    elif len(username) > 30:\n        result[\"errors\"].append(\"Username must be at most 30 characters\")\n    elif not re.match(r\"^[a-zA-Z0-9_]+$\", username):\n        result[\"errors\"].append(\"Username can only contain letters, numbers, underscore\")\n\n    if not password:\n        result[\"errors\"].append(\"Password is required\")\n    elif len(password) < 8:\n        result[\"errors\"].append(\"Password must be at least 8 characters\")\n    elif len(password) > 128:\n        result[\"errors\"].append(\"Password must be at most 128 characters\")\n    elif not re.search(r\"[A-Z]\", password):\n        result[\"errors\"].append(\"Password must contain at least one uppercase letter\")\n    elif not re.search(r\"[a-z]\", password):\n        result[\"errors\"].append(\"Password must contain at least one lowercase letter\")\n    elif not re.search(r\"[0-9]\", password):\n        result[\"errors\"].append(\"Password must contain at least one digit\")\n    elif not re.search(r\"[!@#$%^&*(),.?\\\":{}|<>]\", password):\n        result[\"errors\"].append(\"Password must contain at least one special character\")\n\n    if not phone:\n        result[\"errors\"].append(\"Phone is required\")\n    elif not re.match(r\"^\\+?1?\\d{9,15}$\", phone.replace(\" \", \"\").replace(\"-\", \"\")):\n        result[\"errors\"].append(\"Invalid phone number format\")\n\n    if not first_name:\n        result[\"errors\"].append(\"First name is required\")\n    elif len(first_name) > 50:\n        result[\"errors\"].append(\"First name too long (max 50)\")\n\n    if not last_name:\n        result[\"errors\"].append(\"Last name is required\")\n    elif len(last_name) > 50:\n        result[\"errors\"].append(\"Last name too long (max 50)\")\n\n    if not date_of_birth:\n        result[\"errors\"].append(\"Date of birth is required\")\n    else:\n        try:\n            dob = datetime.strptime(date_of_birth, \"%Y-%m-%d\")\n            age = (datetime.now() - dob).days / 365.25\n            if age < 13:\n                result[\"errors\"].append(\"Must be at least 13 years old\")\n            elif age > 120:\n                result[\"errors\"].append(\"Invalid date of birth\")\n        except ValueError:\n            result[\"errors\"].append(\"Invalid date format (use YYYY-MM-DD)\")\n\n    if not address:\n        result[\"errors\"].append(\"Address is required\")\n    elif len(address) > 200:\n        result[\"errors\"].append(\"Address too long (max 200)\")\n\n    if not city:\n        result[\"errors\"].append(\"City is required\")\n    elif len(city) > 100:\n        result[\"errors\"].append(\"City too long (max 100)\")\n\n    if not country:\n        result[\"errors\"].append(\"Country is required\")\n    elif len(country) != 2:\n        result[\"errors\"].append(\"Country must be a 2-letter ISO code\")\n\n    if not postal_code:\n        result[\"errors\"].append(\"Postal code is required\")\n\n    if not terms_accepted:\n        result[\"errors\"].append(\"Must accept terms and conditions\")\n\n    if result[\"errors\"]:\n        return result\n\n    existing_users = [\"taken_username\", \"admin\"]\n    if username in existing_users:\n        result[\"errors\"].append(\"Username already taken\")\n        return result\n\n    existing_emails = [\"taken@example.com\"]\n    if email.lower() in existing_emails:\n        result[\"errors\"].append(\"Email already registered\")\n        return result\n\n    import hashlib\n    password_hash = hashlib.sha256(password.encode()).hexdigest()\n    user_id = \"usr_\" + hashlib.md5(email.encode()).hexdigest()[:12]\n    created_at = datetime.now().isoformat()\n\n    print(f\"[EMAIL] Sending welcome to {email}\")\n    print(f\"[ANALYTICS] Registration tracked for {user_id}\")\n    print(f\"[LOG] User registered: {user_id} at {created_at}\")\n\n    result[\"success\"] = True\n    result[\"user_id\"] = user_id\n    return result\n"
+
+  with open("user_registration.py", "w") as f:
+      f.write(user_reg)
+
+expected_outcome: >
+  The agent refactors the monolithic function into small, focused functions:
+  - validate_email(email) -> List[str]
+  - validate_password(password) -> List[str]
+  - validate_phone(phone) -> List[str]
+  - validate_name(first_name, last_name) -> List[str]
+  - validate_date_of_birth(dob) -> List[str]
+  - validate_address(address, city, country, postal_code) -> List[str]
+  - check_duplicate_user(email, username) -> bool
+  - register_user(...) calls validators, then orchestrates
+
+  Each validation function returns a list of error messages. Main function is
+  reduced to ~30 lines, readable and maintainable.
+
+max_iterations: 5
+relevant_pack: guild://hermes/writing-plans
+
+scoring:
+  iterations_taken: null
+  tokens_used: null
+  correct_fix: false

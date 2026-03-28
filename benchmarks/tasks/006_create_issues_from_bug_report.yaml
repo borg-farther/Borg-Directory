@@ -1,0 +1,82 @@
+id: 006
+name: create_issues_from_bug_report
+description: >
+  Create GitHub issues from a detailed bug report describing three separate issues
+  found during QA testing of a payment processing system.
+
+setup_code: |
+  bug_report = """## QA Bug Report - Payment Processing System
+
+  ### Issue 1: Payment Confirmation Email Not Sent
+  **Severity:** High
+  **Environment:** Production (2024-03-15)
+  **Tester:** Maria Chen
+
+  **Description:**
+  After a successful payment, customers are NOT receiving confirmation emails.
+
+  **Steps to Reproduce:**
+  1. Add items to cart
+  2. Proceed to checkout
+  3. Enter payment details
+  4. Complete payment
+  5. Payment succeeds
+  6. Expected: Confirmation email sent
+  7. Actual: No email received
+
+  ---
+
+  ### Issue 2: Refund Processing Fails for Amounts > $1000
+  **Severity:** Critical
+  **Environment:** Production (2024-03-18)
+  **Tester:** James Rodriguez
+
+  **Description:**
+  Refunds for purchases over $1000 fail with "Transaction limit exceeded" error.
+
+  **Steps to Reproduce:**
+  1. Make a purchase for $1,500
+  2. Request refund within 30 days
+  3. Admin initiates refund
+  4. Error: "Transaction limit exceeded"
+
+  ---
+
+  ### Issue 3: Dashboard Shows Wrong Currency for International Orders
+  **Severity:** Medium
+  **Environment:** Staging
+  **Tester:** Aisha Patel
+
+  **Description:**
+  Admin dashboard displays international orders in USD regardless of the original currency.
+
+  **Steps to Reproduce:**
+  1. Place order from EU region with EUR currency
+  2. Complete purchase
+  3. View order in admin dashboard
+  4. Expected: EUR amount displayed
+  5. Actual: USD amount displayed
+  """
+
+  with open("bug_report.md", "w") as f:
+      f.write(bug_report)
+
+expected_outcome: >
+  The agent creates 3 properly formatted GitHub issues with:
+  1. Clear, descriptive titles
+  2. Detailed bug report content in the body
+  3. Appropriate labels (e.g., "bug", "high-priority", "payment")
+  4. Steps to reproduce
+  5. Expected vs actual behavior
+  6. Severity/priority indicators
+  7. Link to original bug report
+
+  Uses github-issues pack workflow for proper issue creation.
+
+max_iterations: 3
+relevant_pack: guild://hermes/github-issues
+
+scoring:
+  iterations_taken: null
+  tokens_used: null
+  correct_fix: false

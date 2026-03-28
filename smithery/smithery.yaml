@@ -1,0 +1,198 @@
+# Smithery.ai MCP Server Submission - Draft for agent-borg
+# ===========================================================
+# 
+# WHAT IS SMITHERY.AI:
+# - The largest open marketplace of MCP (Model Context Protocol) servers
+# - Website: https://smithery.ai
+# - CLI tool: npm install -g @smithery/cli
+# 
+# HOW TO SUBMIT/LIST:
+# - Submit by entering your server's public HTTPS URL at smithery.ai
+# - Smithery scans the URL for server-card.json and MCP capabilities
+# - Alternative: Use the web dashboard at https://smithery.ai/dashboard
+#
+# SUBMISSION URLS:
+# - Publish page: https://smithery.ai/dashboard/servers/new
+# - API endpoint: https://smithery.ai/api/v1/servers (REST API available)
+# - Smithery CLI: smithery mcp add <url> --id <name>
+#
+# REQUIRED METADATA FOR SUBMISSION:
+# ===========================================================
+
+# Server identification
+name: "agent-borg"
+displayName: "Agent Borg"
+namespace: "borg"
+slug: ""
+
+# Description (required - shown in marketplace)
+description: |
+  Stop your agent burning tokens on problems someone else already solved.
+  Agent Borg is an MCP server that provides access to a knowledge base of 
+  pre-solved problems, helping AI agents avoid redundant work by referencing 
+  solutions that have already been discovered.
+
+# Detailed description for the server card
+longDescription: |
+  Agent Borg is an MCP server for AI agents that helps them stop wasting time 
+  on problems that have already been solved. It exposes tools for searching 
+  a knowledge base of pre-solved problems, retrieving solution patterns, and 
+  learning from previous agent experiences.
+  
+  Features:
+  - 13 built-in tools for problem-solving efficiency
+  - Search previously solved problems
+  - Retrieve solution patterns and approaches
+  - Reduce token waste by avoiding redundant work
+
+# Icon/logo URL (optional - will use default if not provided)
+iconUrl: ""
+
+# Category/tags for discovery
+tags:
+  - "agent"
+  - "knowledge-base"
+  - "efficiency"
+  - "problem-solving"
+  - "ai-tools"
+
+category: "developer-tools"
+
+# Homepage/GitHub URL
+homepage: "https://github.com/punkrocker/agent-borg"
+url: "https://github.com/punkrocker/agent-borg"
+
+# Author information
+authorName: "punkrocker"
+authorAvatarUrl: ""
+
+# Server connection details
+# ===========================================================
+# The MCP server command to run
+serverCommand: "python"
+serverArgs:
+  - "-m"
+  - "borg.integrations.mcp_server"
+
+# Environment variables (if needed - leave empty for borg)
+serverEnv: {}
+# Example:
+#   BORG_API_KEY: "your-api-key-here"
+
+# MCP server configuration for clients (JSON format)
+# This is what users will copy into their MCP client config
+serverConfig: |
+  {
+    "mcpServers": {
+      "borg": {
+        "command": "python",
+        "args": [
+          "-m",
+          "borg.integrations.mcp_server"
+        ]
+      }
+    }
+  }
+
+# Server parameters (for templated configs)
+serverParams: |
+  {}
+
+# Transport type - Smithery supports:
+# - stdio (default for local servers)
+# - streamable-http (for remote servers with HTTPS)
+transportType: "stdio"
+
+# Whether server requires authentication
+requiresAuth: false
+
+# Server Info (from mcp_server.py)
+serverInfo: |
+  {
+    "name": "borg-mcp-server",
+    "version": "1.0.0"
+  }
+
+# Tools exposed by this MCP server (13 total):
+# - borg_search: Search the knowledge base
+# - borg_pull: Pull solutions
+# - borg_try: Try a solution
+# - borg_init: Initialize
+# - borg_apply: Apply a solution
+# - borg_publish: Publish to the knowledge base
+# - borg_feedback: Give feedback
+# - borg_suggest: Suggest improvements
+# - borg_observe: Observe agent behavior
+# - borg_convert: Convert between formats
+# - borg_context: Get context
+# - borg_recall: Recall past solutions
+# - borg_reputation: Check reputation
+
+# OAuth configuration (if requiresAuth is true)
+# oauthConfig: |
+#   {
+#     "clientId": "...",
+#     "scopes": ["..."]
+#   }
+
+# Deployment status
+isDeployed: false  # Set to true if hosted on Smithery's infrastructure
+remote: true       # Set to true for remote/HTTP servers
+
+# Server capabilities (auto-detected from MCP handshake, but can specify)
+# These will be auto-detected from the MCP protocol handshake
+
+# Server card JSON (auto-discovered at /.well-known/mcp/server-card.json)
+# The server should expose this endpoint with serverInfo, tools, resources, etc.
+
+# Smithery-specific metadata
+# ===========================================================
+verified: false  # Set to true after verification
+isOfficial: false  # Set to true if official/verified server
+useCount: 0     # Usage count (populated by Smithery after listing)
+score: null      # Smithery score/ranking
+
+# Additional metadata
+metadata: |
+  {
+    "language": "Python",
+    "license": "MIT",
+    "mcpTools": 13,
+    "description": "Stop your agent burning tokens on problems someone else already solved"
+  }
+
+# ===========================================================
+# OTHER MCP REGISTRIES TO CONSIDER:
+# ===========================================================
+#
+# 1. MCP.SO (https://mcp.so)
+#    - Large collection of MCP servers
+#    - Submission via GitHub repo or direct API
+#    - Similar metadata requirements
+#
+# 2. GLAMA.AI (https://glama.ai/mcp-servers)
+#    - MCP server registry
+#    - Browse at https://glama.ai/mcp-servers
+#
+# 3. OFFICIAL MCP SERVER REPO
+#    - https://github.com/modelcontextprotocol/servers
+#    - Submit PR to add your server to official list
+#
+# ===========================================================
+# SUBMISSION NOTES:
+# ===========================================================
+#
+# For Smithery specifically:
+# 1. Your server MUST expose a valid MCP handshake via the transport
+# 2. For stdio transport: command must be executable
+# 3. For HTTP transport: must be streamable HTTP with proper MCP framing
+# 4. Server card JSON at /.well-known/mcp/server-card.json is auto-discovered
+#
+# To test locally with Smithery CLI:
+#   smithery mcp add "python -m borg.integrations.mcp_server" --id borg
+#
+# To publish:
+#   1. Login at https://smithery.ai/dashboard
+#   2. Go to Publish -> MCP Servers
+#   3. Enter your server URL (must be HTTPS for remote servers)
+#   4. Complete the publishing flow

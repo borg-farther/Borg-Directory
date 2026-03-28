@@ -1,0 +1,73 @@
+id: 003
+name: code_review_pr
+description: >
+  Review a PR that contains 3 bugs: an SQL injection vulnerability, a resource leak
+  (unclosed file handle), and a logic error in business logic (discount calculation).
+
+setup_code: |
+  import os
+  os.makedirs(".git/refs/heads", exist_ok=True)
+
+  pr_code = '''# Order processing module - contains 3 bugs for code review.
+  import sqlite3
+  from dataclasses import dataclass
+  from typing import Optional
+  from datetime import datetime
+
+  @dataclass
+  class Order:
+      order_id: str
+      customer_id: str
+      amount: float
+      discount_code: Optional[str] = None
+
+  def get_user_orders_sql(customer_id: str) -> list:
+      # BUG 1: SQL Injection vulnerability
+      conn = sqlite3.connect("shop.db")
+      cursor = conn.cursor()
+      query = f"SELECT * FROM orders WHERE customer_id = \\'{customer_id}\\'"
+      cursor.execute(query)
+      results = cursor.fetchall()
+      conn.close()
+      return results
+
+  def calculate_discount(amount: float, discount_percent: float) -> float:
+      # BUG 3: Logic error - applies discount twice
+      discount = amount * (discount_percent / 100)
+      if discount_percent > 10:
+          discount = discount + (amount * 0.1)
+      return amount - discount
+
+  def process_order_file(order: Order, receipt_path: str) -> bool:
+      # BUG 2: File handle may not be properly flushed
+      try:
+          with open(receipt_path, "w") as f:
+              f.write(f"Order: {order.order_id}\\n")
+              f.write(f"Customer: {order.customer_id}\\n")
+              f.write(f"Total: ${order.amount}\\n")
+          return True
+      except IOError:
+          return False
+  '''
+
+  with open("order_processor.py", "w") as f:
+      f.write(pr_code)
+
+  with open(".git/HEAD", "w") as f:
+      f.write("ref: refs/heads/main\n")
+
+expected_outcome: >
+  The agent produces a structured code review identifying all 3 bugs:
+  1. SQL injection vulnerability in get_user_orders_sql (Critical)
+  2. Resource leak concern in process_order_file (Warning)
+  3. Logic error in calculate_discount double-discounting (Critical)
+
+  Review follows the structured format with severity levels and specific fix suggestions.
+
+max_iterations: 4
+relevant_pack: guild://hermes/github-code-review
+
+scoring:
+  iterations_taken: null
+  tokens_used: null
+  correct_fix: false

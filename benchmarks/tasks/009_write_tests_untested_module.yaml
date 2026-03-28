@@ -1,0 +1,109 @@
+id: 009
+name: write_tests_untested_module
+description: >
+  Write comprehensive tests for a data validation module that has zero test coverage.
+  The module validates user input for registration forms.
+
+setup_code: |
+  import os
+  os.makedirs("src", exist_ok=True)
+  os.makedirs("tests", exist_ok=True)
+
+  validator_code = '''import re
+  from datetime import datetime
+  from typing import List, Optional, Dict, Any
+
+  class ValidationError(Exception):
+      """Raised when validation fails."""
+      pass
+
+  def validate_email(email: str) -> str:
+      if not email:
+          raise ValidationError("Email is required")
+      email = email.strip().lower()
+      if not re.match(r"^[a-zA-Z0-9._%+-]+@[a-zA-Z0-9.-]+\\.[a-zA-Z]{2,}$", email):
+          raise ValidationError("Invalid email format")
+      if len(email) > 255:
+          raise ValidationError("Email too long (max 255)")
+      return email
+
+  def validate_password(password: str) -> str:
+      if not password:
+          raise ValidationError("Password is required")
+      if len(password) < 8:
+          raise ValidationError("Password must be at least 8 characters")
+      if len(password) > 128:
+          raise ValidationError("Password must be at most 128 characters")
+      if not re.search(r"[A-Z]", password):
+          raise ValidationError("Password must contain at least one uppercase letter")
+      if not re.search(r"[a-z]", password):
+          raise ValidationError("Password must contain at least one lowercase letter")
+      if not re.search(r"[0-9]", password):
+          raise ValidationError("Password must contain at least one digit")
+      if not re.search(r"[!@#$%^&*(),.?\\":{}|<>]", password):
+          raise ValidationError("Password must contain at least one special character")
+      return password
+
+  def validate_username(username: str) -> str:
+      if not username:
+          raise ValidationError("Username is required")
+      username = username.strip()
+      if len(username) < 3:
+          raise ValidationError("Username must be at least 3 characters")
+      if len(username) > 30:
+          raise ValidationError("Username must be at most 30 characters")
+      if not re.match(r"^[a-zA-Z0-9_]+$", username):
+          raise ValidationError("Username can only contain letters, numbers, underscore")
+      return username
+
+  def validate_date_of_birth(dob_str: str) -> datetime:
+      if not dob_str:
+          raise ValidationError("Date of birth is required")
+      try:
+          dob = datetime.strptime(dob_str, "%Y-%m-%d")
+      except ValueError:
+          raise ValidationError("Invalid date format (use YYYY-MM-DD)")
+      age = (datetime.now() - dob).days / 365.25
+      if age < 13:
+          raise ValidationError("Must be at least 13 years old")
+      if age > 120:
+          raise ValidationError("Invalid date of birth")
+      return dob
+
+  def validate_url(url: str) -> str:
+      if not url:
+          raise ValidationError("URL is required")
+      url = url.strip()
+      if not re.match(r"^https?://", url):
+          url = "https://" + url
+      if not re.match(r"^https?://[a-zA-Z0-9.-]+\\.[a-zA-Z]{2,}(/.*)?$", url):
+          raise ValidationError("Invalid URL format")
+      return url
+  '''
+
+  with open("src/validators.py", "w") as f:
+      f.write(validator_code)
+
+  with open("tests/test_validators.py", "w") as f:
+      f.write("# TODO: Write tests for validators module\\n")
+
+  with open("pytest.ini", "w") as f:
+      f.write("[pytest]\\ntestpaths = tests\\n")
+
+expected_outcome: >
+  The agent writes comprehensive tests using TDD approach:
+  - Test each validator with valid inputs (should pass)
+  - Test each validator with invalid inputs (should raise ValidationError)
+  - Test edge cases (empty strings, boundary values)
+  - Tests are well-structured with descriptive names
+  - Follows pytest conventions
+
+  Final test count should be 15+ tests covering all validators.
+
+max_iterations: 5
+relevant_pack: guild://hermes/test-driven-development
+
+scoring:
+  iterations_taken: null
+  tokens_used: null
+  correct_fix: false

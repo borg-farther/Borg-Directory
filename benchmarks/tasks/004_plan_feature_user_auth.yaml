@@ -1,0 +1,73 @@
+id: 004
+name: plan_feature_user_auth
+description: >
+  Create a detailed implementation plan for adding user authentication to an existing
+  web application. Requirements include registration, login, logout, JWT tokens,
+  password hashing, and protected routes.
+
+setup_code: |
+  import os
+  os.makedirs("src", exist_ok=True)
+  os.makedirs("tests", exist_ok=True)
+
+  web_app = '''from flask import Flask, request, jsonify
+
+  app = Flask(__name__)
+
+  @app.route("/api/data")
+  def get_data():
+      return jsonify({"data": "sensitive information"})
+
+  @app.route("/api/users", methods=["GET"])
+  def list_users():
+      return jsonify({"users": []})
+
+  if __name__ == "__main__":
+      app.run(debug=True)
+  '''
+
+  with open("src/app.py", "w") as f:
+      f.write(web_app)
+
+  with open("requirements.txt", "w") as f:
+      f.write("flask==3.0.0\n")
+
+  readme = '''# Web Application
+
+  A simple Flask application that needs authentication.
+
+  ## Current State
+  - No user authentication
+  - All routes are public
+  - No password handling
+
+  ## Needed
+  - User registration with email/password
+  - Login/logout functionality
+  - JWT-based session management
+  - Password hashing (bcrypt)
+  - Protected route decorators
+  - User model with database schema
+  '''
+
+  with open("README.md", "w") as f:
+      f.write(readme)
+
+expected_outcome: >
+  The agent produces a comprehensive implementation plan with:
+  - Bite-sized tasks (2-5 minutes each)
+  - Exact file paths for all changes
+  - TDD approach with failing tests first
+  - Step-by-step verification commands
+  - Architecture decisions documented
+  - Tech stack choices justified
+
+  Plan follows the writing-plans pack format exactly.
+
+max_iterations: 3
+relevant_pack: guild://hermes/writing-plans
+
+scoring:
+  iterations_taken: null
+  tokens_used: null
+  correct_fix: false

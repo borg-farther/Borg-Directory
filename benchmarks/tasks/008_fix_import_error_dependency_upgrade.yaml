@@ -1,0 +1,72 @@
+id: 008
+name: fix_import_error_dependency_upgrade
+description: >
+  Fix an import error that occurs after upgrading a dependency. The project
+  upgraded from requests 2.28 to requests 2.31 and now import errors appear
+  because a submodule was moved.
+
+setup_code: |
+  import os
+  os.makedirs("src", exist_ok=True)
+
+  api_client = '''import requests
+
+  # BUG: requests.packages.urllib3 was moved to just urllib3 in newer versions
+  from requests.packages.urllib3.exceptions import HTTPWarning
+
+  def fetch_data(url: str) -> dict:
+      """Fetch JSON data from API."""
+      response = requests.get(url)
+      response.raise_for_status()
+      return response.json()
+
+  def get_with_retry(url: str, max_retries: int = 3) -> dict:
+      """Fetch with automatic retry."""
+      import time
+      for attempt in range(max_retries):
+          try:
+              return fetch_data(url)
+          except requests.exceptions.RequestException as e:
+              if attempt == max_retries - 1:
+                  raise
+              time.sleep(2 ** attempt)
+  '''
+
+  with open("src/api_client.py", "w") as f:
+      f.write(api_client)
+
+  req_file = """# requirements.txt - UPDATED
+  requests==2.31.0  # Upgraded from 2.28.0
+  # Note: requests.packages.urllib3 no longer exists
+  """
+
+  with open("requirements.txt", "w") as f:
+      f.write(req_file)
+
+  pyproject = """[project]
+  name = "api-client"
+  version = "1.0.0"
+  requires-python = ">=3.9"
+  dependencies = ["requests>=2.31.0"]
+
+  [project.optional-dependencies]
+  dev = ["pytest>=7.0"]
+  """
+
+  with open("pyproject.toml", "w") as f:
+      f.write(pyproject)
+
+expected_outcome: >
+  The agent identifies the import error caused by the moved submodule and fixes it:
+  - Changes: from requests.packages.urllib3.exceptions import HTTPWarning
+  - To: from urllib3.exceptions import HTTPWarning
+
+  The code runs without ImportError after the fix.
+
+max_iterations: 3
+relevant_pack: guild://hermes/systematic-debugging
+
+scoring:
+  iterations_taken: null
+  tokens_used: null
+  correct_fix: false

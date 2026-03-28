@@ -1,0 +1,50 @@
+id: 001
+name: debug_typeerror
+description: >
+  Debug a Python TypeError caused by passing arguments in the wrong order to a function.
+  The error occurs in a data processing pipeline where `calculate_stats` receives
+  `data` and `normalize` arguments but they're swapped at call site.
+
+setup_code: |
+  code = '''from typing import List
+
+  def calculate_stats(data: List[float], normalize: bool = False) -> dict:
+      """Calculate statistics from data, optionally normalizing."""
+      if normalize:
+          min_val, max_val = min(data), max(data)
+          data = [(x - min_val) / (max_val - min_val) for x in data]
+      return {
+          'mean': sum(data) / len(data),
+          'sum': sum(data),
+          'count': len(data),
+          'min': min(data),
+          'max': max(data)
+      }
+
+  def process_sensor_readings(readings: List[float], threshold: float = 0.5) -> dict:
+      """Process sensor data and flag anomalies."""
+      stats = calculate_stats(readings, normalize=True)  # Bug: should pass readings first
+      anomalies = [r for r in readings if abs(r - stats['mean']) > threshold * stats['std']]
+      return {'stats': stats, 'anomaly_count': len(anomalies)}
+
+  if __name__ == '__main__':
+      sensor_data = [0.1, 0.2, 0.85, 0.15, 0.9, 0.3]
+      result = process_sensor_readings(sensor_data)
+      print(f"Processed {result['anomaly_count']} anomalies")
+  '''
+
+  with open("data_processor.py", "w") as f:
+      f.write(code)
+
+expected_outcome: >
+  The agent correctly identifies the TypeError and fixes the argument order in the
+  `calculate_stats` call within `process_sensor_readings`. The code runs without error
+  and produces expected statistical output.
+
+max_iterations: 5
+relevant_pack: guild://hermes/systematic-debugging
+
+scoring:
+  iterations_taken: null
+  tokens_used: null
+  correct_fix: false

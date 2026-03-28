@@ -1,0 +1,84 @@
+id: 005
+name: setup_github_actions_ci
+description: >
+  Set up GitHub Actions CI for a Python project. Create a workflow that runs tests,
+  checks code quality with linting, and ensures the project is properly configured.
+
+setup_code: |
+  #!/usr/bin/env python3
+  """Create a Python project that needs CI setup."""
+  import os
+  os.makedirs(".github/workflows", exist_ok=True)
+
+  # Create pyproject.toml
+  PYPROJECT = '''
+  [project]
+  name = "my-project"
+  version = "0.1.0"
+  requires-python = ">=3.9"
+
+  [project.optional-dependencies]
+  dev = [
+      "pytest>=7.0",
+      "pytest-cov>=4.0",
+      "ruff>=0.1.0",
+  ]
+
+  [build-system]
+  requires = ["setuptools>=61.0"]
+  build-backend = "setuptools.build_meta"
+
+  [tool.pytest.ini_options]
+  testpaths = ["tests"]
+  python_files = ["test_*.py"]
+
+  [tool.ruff]
+  line-length = 100
+  select = ["E", "F", "I"]
+  '''
+
+  with open("pyproject.toml", "w") as f:
+      f.write(PYPROJECT)
+
+  # Create a simple test
+  os.makedirs("tests", exist_ok=True)
+  TEST_FILE = '''
+  def test_basic():
+      assert 1 + 1 == 2
+
+  def test_string():
+      assert "hello".upper() == "HELLO"
+  '''
+
+  with open("tests/test_basic.py", "w") as f:
+      f.write(TEST_FILE)
+
+  # Create source file
+  os.makedirs("src", exist_ok=True)
+  SRC_FILE = '''
+  def add(a, b):
+      return a + b
+
+  def subtract(a, b):
+      return a - b
+  '''
+
+  with open("src/math.py", "w") as f:
+      f.write(SRC_FILE)
+
+expected_outcome: >
+  The agent creates a complete GitHub Actions workflow at `.github/workflows/ci.yml` that:
+  - Runs on push and PR events
+  - Sets up Python environment
+  - Installs dependencies including dev dependencies
+  - Runs pytest with coverage
+  - Runs ruff linter
+  - The workflow is properly structured YAML
+
+max_iterations: 4
+relevant_pack: guild://hermes/github-pr-workflow
+
+scoring:
+  iterations_taken: null
+  tokens_used: null
+  correct_fix: false

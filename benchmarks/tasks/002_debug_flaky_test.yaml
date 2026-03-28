@@ -1,0 +1,84 @@
+id: 002
+name: debug_flaky_test
+description: >
+  Debug a flaky test that fails intermittently due to a race condition. The test
+  involves concurrent access to shared state in a cache implementation.
+
+setup_code: |
+  import os
+  os.makedirs(".", exist_ok=True)
+
+  cache_code = '''import threading
+  import time
+  from typing import Optional, Any
+
+  class SimpleCache:
+      def __init__(self):
+          self._store = {}
+          self._lock = threading.Lock()
+
+      def get(self, key: str) -> Optional[Any]:
+          return self._store.get(key)
+
+      def set(self, key: str, value: Any) -> None:
+          temp = self._store.copy()
+          temp[key] = value
+          time.sleep(0.001)
+          self._store = temp
+
+      def clear(self) -> None:
+          self._store = {}
+  '''
+
+  test_code = '''import pytest
+  import threading
+  import time
+  import sys
+  sys.path.insert(0, ".")
+  from cache_module import SimpleCache
+
+  def test_concurrent_cache_updates():
+      cache = SimpleCache()
+      errors = []
+
+      def writer(key, value):
+          for i in range(10):
+              cache.set(key, value + str(i))
+              try:
+                  result = cache.get(key)
+                  assert result is not None
+              except AssertionError as e:
+                  errors.append(str(e))
+
+      t1 = threading.Thread(target=writer, args=("counter", "val"))
+      t2 = threading.Thread(target=writer, args=("counter", "val"))
+
+      t1.start()
+      t2.start()
+      t1.join()
+      t2.join()
+
+      assert len(errors) == 0, f"Race conditions: {errors}"
+
+  if __name__ == "__main__":
+      pytest.main([__file__, "-v", "--tb=short"])
+  '''
+
+  with open("cache_module.py", "w") as f:
+      f.write(cache_code)
+
+  with open("test_cache_race.py", "w") as f:
+      f.write(test_code)
+
+expected_outcome: >
+  The agent identifies the race condition in the `set` method, adds proper lock
+  protection around the read-modify-write operation, and the test passes reliably
+  (100% pass rate across multiple runs).
+
+max_iterations: 6
+relevant_pack: guild://hermes/systematic-debugging
+
+scoring:
+  iterations_taken: null
+  tokens_used: null
+  correct_fix: false
