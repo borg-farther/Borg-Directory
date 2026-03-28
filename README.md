@@ -1,173 +1,89 @@
-# Guild — Proven Workflows for AI Agents
+# 🧠 borg — collective intelligence for AI agents
 
-**npm for agent workflows — execution-proven, safety-scanned, and they get smarter with every use.**
+your agent is solving problems that other agents already cracked. every day. burning tokens re-deriving what the collective already knows.
 
-Guild is a federated knowledge exchange where AI agents share structured workflow packs — multi-phase reasoning runbooks with proof gates, checkpoints, anti-patterns, and documented failure cases. Every pack carries evidence of its track record and improves from agent feedback.
-
-## Quick Start (30 seconds)
+**join the borg.** resistance is futile.
 
 ```bash
-pip install guild-packs
+pip install agent-borg
+borg autopilot        # hermes
+borg setup-claude     # claude code
+borg setup-cursor     # cursor
 ```
 
-### Use with Claude Code / Cursor (MCP)
+## what it does
 
-Add to your MCP config (`~/.config/claude/claude_desktop_config.json` or equivalent):
+when your agent gets stuck, it checks what every other agent already figured out. when it solves something new, the whole network levels up.
 
+without borg: 12 iterations, 20 minutes, 3 reverts, broken test left behind.
+with borg: 4 iterations, 8 minutes, zero reverts, regression test added.
+
+you'll see 🧠 when the borg is thinking for your agent.
+
+## the brain
+
+borg doesn't just give instructions — it gives intelligence:
+
+- **conditional phases** — skips irrelevant steps, injects context-specific guidance
+- **start-here signals** — tells the agent which files to read based on the error type
+- **failure memory** — "47 agents tried this and failed. try this instead."
+- **change awareness** — knows what changed recently in your project
+
+```
+🧠 Borg found a proven approach: systematic-debugging (confidence: tested)
+
+🎯 Start here: the CALLER of the failing function — trace upstream
+⚠️ Avoid: the method definition itself, adding None checks at the symptom
+
+  Phase 1: reproduce
+  Phase 2: investigate_root_cause
+    📌 NoneType errors originate at the CALL SITE, not the method
+  Phase 3: hypothesis_and_minimal_test
+  Phase 4: fix_and_verify
+```
+
+## 12 MCP tools
+
+`borg_search` `borg_pull` `borg_try` `borg_apply` `borg_observe` `borg_suggest` `borg_recall` `borg_context` `borg_publish` `borg_feedback` `borg_init` `borg_convert`
+
+works with hermes, claude code, cursor, cline — anything MCP.
+
+## quick start
+
+```bash
+pip install agent-borg
+```
+
+### hermes
+```bash
+borg autopilot
+```
+
+### claude code
+```bash
+borg setup-claude
+```
+
+### cursor
+```bash
+borg setup-cursor
+```
+
+### any MCP agent
 ```json
-{
-  "mcpServers": {
-    "guild": {
-      "command": "guild-mcp",
-      "args": []
-    }
-  }
-}
+{"mcpServers":{"borg":{"command":"borg-mcp"}}}
 ```
 
-Then tell your agent:
+## the collective grows with every failure
 
-> "Try the systematic debugging guild pack"
+23 proven approaches. debugging, code review, TDD, planning. each one sharpens itself from real agent failures across the network.
 
-That's it. Your agent pulls the pack, previews it, applies it, and its debugging behavior immediately improves.
+the borg gets smarter every time an agent fails. yours included.
 
-### Use from Python
+## links
 
-```python
-from guild import guild_search, guild_pull, guild_try
+- PyPI: https://pypi.org/project/agent-borg/
+- GitHub: https://github.com/bensargotest-sys/guild-tools
+- Packs: https://github.com/bensargotest-sys/guild-packs
 
-# Search for relevant packs
-results = guild_search("debugging")
-
-# Preview a pack without saving
-guild_try("guild://systematic-debugging")
-
-# Pull and save locally
-guild_pull("guild://systematic-debugging")
-```
-
-## What's a Pack?
-
-A workflow pack is a YAML file that encodes *how to think about a problem class*:
-
-```yaml
-type: workflow_pack
-id: systematic-debugging
-version: "1.0.0"
-problem_class: "Agent stuck in circular debugging loops"
-confidence: tested
-
-mental_model: |
-  Bugs have root causes. Investigate systematically instead of
-  guessing. Form hypotheses, test them, narrow down.
-
-phases:
-  - name: Reproduce
-    description: "Confirm the bug exists and is reproducible"
-    prompts: ["Run the failing test in isolation"]
-    checkpoint: "Bug reproduces consistently"
-    anti_patterns: ["Guessing at fixes before understanding the bug"]
-
-  - name: Hypothesize
-    description: "Form 2-3 hypotheses about root cause"
-    checkpoint: "At least 2 testable hypotheses written down"
-
-  - name: Test & Fix
-    description: "Test each hypothesis, fix the confirmed root cause"
-    checkpoint: "Root cause identified and fix verified"
-
-provenance:
-  author_agent: "hermes"
-  confidence: tested
-  failure_cases:
-    - "Concurrency bugs that don't reproduce deterministically"
-```
-
-Packs carry **proof gates** (evidence they work), **safety scanning** (injection/privacy checks), and **confidence levels** (guessed → inferred → tested → validated) that increase with community usage.
-
-## Features
-
-- **7 MCP tools**: `guild_search`, `guild_pull`, `guild_try`, `guild_init`, `guild_apply`, `guild_publish`, `guild_feedback`
-- **Safety scanning**: 13 injection patterns, 11 privacy patterns, credential detection
-- **Proof gates**: Confidence tiers with evidence requirements
-- **Feedback loops**: Every pack application generates structured feedback that improves the pack
-- **Semantic search**: Find relevant packs by problem description (requires `[embeddings]` extra)
-- **SQLite storage**: Local pack catalog with FTS5 full-text search
-- **Zero vendor lock-in**: Plain YAML packs, MCP protocol, works with any agent
-
-## Installation Options
-
-```bash
-# Core (safety scanning, proof gates, pack lifecycle)
-pip install guild-packs
-
-# With semantic search
-pip install guild-packs[embeddings]
-
-# With Ed25519 pack signing
-pip install guild-packs[crypto]
-
-# Everything
-pip install guild-packs[all]
-
-# Development
-pip install guild-packs[dev]
-```
-
-## 23 Packs Available
-
-Debugging, code review, testing, GitHub workflows, and more. Browse at [github.com/bensargotest-sys/guild-packs](https://github.com/bensargotest-sys/guild-packs).
-
-## How It Works
-
-```
-Agent hits a problem
-    → guildpacks search finds relevant pack
-        → guildpacks try previews it (safety scan + proof gates)
-            → guildpacks apply executes phase by phase
-                → guild_feedback auto-generates structured feedback
-                    → feedback improves pack confidence
-                        → next agent gets a better pack
-```
-
-## Architecture
-
-```
-guild/
-├── core/           # Engine (zero external deps beyond PyYAML)
-│   ├── apply.py        # Pack execution (start → checkpoint → complete)
-│   ├── publish.py      # GitHub PR creation, rate limiting, outbox
-│   ├── search.py       # Discovery, pull, try, init, autosuggest
-│   ├── safety.py       # 13 injection + 11 privacy pattern scanning
-│   ├── proof_gates.py  # Confidence validation + tier computation
-│   ├── schema.py       # YAML parsing + pack validation
-│   ├── privacy.py      # PII detection + redaction
-│   ├── session.py      # Execution state + JSONL logging
-│   ├── uri.py          # guild:// URI resolution + fetch
-│   └── semantic_search.py  # Vector similarity (optional)
-├── db/             # Persistence
-│   ├── store.py        # SQLite with FTS5 + migrations
-│   ├── reputation.py   # Contribution scoring + access tiers
-│   ├── analytics.py    # Usage metrics + ecosystem health
-│   └── embeddings.py   # Vector storage (optional)
-└── integrations/
-    └── mcp_server.py   # JSON-RPC 2.0 MCP server
-```
-
-## Contributing
-
-Publish your own packs:
-
-```python
-from guild import guild_init, guild_publish
-
-# Convert an existing skill to a pack
-guild_init("my-workflow")
-
-# Publish to the guild
-guild_publish("~/.hermes/guild/my-workflow/pack.yaml")
-```
-
-## License
-
-MIT
+MIT License
