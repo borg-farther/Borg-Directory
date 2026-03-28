@@ -382,6 +382,33 @@ TOOLS: List[Dict[str, Any]] = [
             "required": ["error_message"],
         },
     },
+    {
+        "name": "borg_reputation",
+        "description": (
+            "Query agent reputation and trust information from the ReputationEngine. "
+            "Provides access to contribution scores, access tiers, free-rider status, and pack trust. "
+            "Use this to understand an agent's standing in the guild before consuming their packs."
+        ),
+        "inputSchema": {
+            "type": "object",
+            "properties": {
+                "action": {
+                    "type": "string",
+                    "enum": ["get_profile", "get_pack_trust", "get_free_rider_status"],
+                    "description": "Action to perform: 'get_profile' for agent reputation, 'get_pack_trust' for pack trust, 'get_free_rider_status' for free-rider info",
+                },
+                "agent_id": {
+                    "type": "string",
+                    "description": "Agent ID to query (for get_profile and get_free_rider_status actions).",
+                },
+                "pack_id": {
+                    "type": "string",
+                    "description": "Pack ID to query (for get_pack_trust action).",
+                },
+            },
+            "required": ["action"],
+        },
+    },
 ]
 
 # ---------------------------------------------------------------------------
@@ -927,7 +954,13 @@ def borg_suggest(
             task_type=task_type_hint,
             tried_packs=tried_packs or [],
         )
-        return result
+        try:
+            parsed = json.loads(result)
+            if not parsed.get("has_suggestion"):
+                return json.dumps({"success": True, "has_suggestion": False, "suggestions": []})
+            return json.dumps({"success": True, **parsed})
+        except (json.JSONDecodeError, TypeError):
+            return json.dumps({"success": True, "has_suggestion": False, "suggestions": []})
     except (KeyboardInterrupt, SystemExit):
         raise
     except (ValueError, KeyError, OSError, json.JSONDecodeError) as e:
@@ -1200,13 +1233,19 @@ def borg_observe(task: str = "", context: str = "", context_dict: dict = None, p
                 # Don't fail on change awareness errors
                 pass
 
-        return "\n".join(lines)
+        guidance = "\n".join(lines)
+        return json.dumps({
+            "success": True,
+            "observed": True,
+            "guidance": guidance,
+        })
 
     except (KeyboardInterrupt, SystemExit):
         raise
-    except Exception:
+    except Exception as e:
         # Fail silently — guild_observe should never break an agent's flow
-        return ""
+        # But still return valid JSON so the MCP transport is not broken
+        return json.dumps({"success": True, "observed": False, "guidance": ""})
 
 
 def borg_context(project_path: str = ".", hours: int = 24) -> str:
@@ -1272,6 +1311,99 @@ def borg_recall(error_message: str = "") -> str:
             "correct_approaches": result.get("correct_approaches", []),
             "total_sessions": result.get("total_sessions", 0),
         })
+    except (KeyboardInterrupt, SystemExit):
+        raise
+    except (ValueError, KeyError, OSError, json.JSONDecodeError) as e:
+        return json.dumps({"success": False, "error": str(e), "type": type(e).__name__})
+
+
+def borg_reputation(action: str = "", agent_id: str = None, pack_id: str = None) -> str:
+    """Query agent reputation and trust information.
+
+    Args:
+        action: The action to perform - 'get_profile', 'get_pack_trust', or 'get_free_rider_status'.
+        agent_id: Agent ID to query (for get_profile and get_free_rider_status).
+        pack_id: Pack ID to query (for get_pack_trust).
+
+    Returns:
+        JSON string with reputation data for the specified agent or pack.
+    """
+    try:
+        from borg.db.reputation import ReputationEngine, AccessTier, FreeRiderStatus
+        from borg.db.store import AgentStore
+
+        if AgentStore is None:
+            return json.dumps({"success": False, "error": "AgentStore not available"})
+
+        if action == "get_profile":
+            if not agent_id:
+                return json.dumps({"success": False, "error": "agent_id is required for get_profile action"})
+            try:
+                store = AgentStore()
+                engine = ReputationEngine(store)
+                profile = engine.build_profile(agent_id)
+                store.close()
+                return json.dumps({
+                    "success": True,
+                    "agent_id": profile.agent_id,
+                    "contribution_score": profile.contribution_score,
+                    "access_tier": profile.access_tier.value,
+                    "free_rider_status": profile.free_rider_status.value,
+                    "peak_score": profile.peak_score,
+                    "last_active_at": profile.last_active_at.isoformat() if profile.last_active_at else None,
+                    "packs_published": profile.packs_published,
+                    "quality_reviews_given": profile.quality_reviews_given,
+                    "bug_reports_filed": profile.bug_reports_filed,
+                    "documentation_contributions": profile.documentation_contributions,
+                    "governance_votes_cast": profile.governance_votes_cast,
+                    "packs_consumed": profile.packs_consumed,
+                })
+            except Exception as e:
+                return json.dumps({"success": False, "error": str(e), "type": type(e).__name__})
+
+        elif action == "get_pack_trust":
+            if not pack_id:
+                return json.dumps({"success": False, "error": "pack_id is required for get_pack_trust action"})
+            try:
+                store = AgentStore()
+                pack_data = store.get_pack(pack_id)
+                store.close()
+                if pack_data is None:
+                    return json.dumps({"success": False, "error": f"Pack not found: {pack_id}"})
+                return json.dumps({
+                    "success": True,
+                    "pack_id": pack_id,
+                    "confidence": pack_data.get("confidence", "unknown"),
+                    "adoption_count": pack_data.get("adoption_count", 0),
+                    "last_validated": pack_data.get("last_validated"),
+                    "tier": pack_data.get("tier", "unknown"),
+                })
+            except Exception as e:
+                return json.dumps({"success": False, "error": str(e), "type": type(e).__name__})
+
+        elif action == "get_free_rider_status":
+            if not agent_id:
+                return json.dumps({"success": False, "error": "agent_id is required for get_free_rider_status action"})
+            try:
+                store = AgentStore()
+                engine = ReputationEngine(store)
+                profile = engine.build_profile(agent_id)
+                store.close()
+                return json.dumps({
+                    "success": True,
+                    "agent_id": profile.agent_id,
+                    "free_rider_score": profile.free_rider_score,
+                    "free_rider_status": profile.free_rider_status.value,
+                    "packs_consumed": profile.packs_consumed,
+                    "packs_published": profile.packs_published,
+                    "quality_reviews_given": profile.quality_reviews_given,
+                })
+            except Exception as e:
+                return json.dumps({"success": False, "error": str(e), "type": type(e).__name__})
+
+        else:
+            return json.dumps({"success": False, "error": f"Unknown action: {action}. Use get_profile, get_pack_trust, or get_free_rider_status."})
+
     except (KeyboardInterrupt, SystemExit):
         raise
     except (ValueError, KeyError, OSError, json.JSONDecodeError) as e:
@@ -1436,6 +1568,13 @@ def _call_tool_impl(name: str, arguments: Dict[str, Any]) -> str:
     elif name == "borg_recall":
         return borg_recall(
             error_message=arguments.get("error_message", ""),
+        )
+
+    elif name == "borg_reputation":
+        return borg_reputation(
+            action=arguments.get("action", ""),
+            agent_id=arguments.get("agent_id"),
+            pack_id=arguments.get("pack_id"),
         )
 
     elif name == "borg_observe":

@@ -1,89 +1,73 @@
-# 🧠 borg — collective intelligence for AI agents
+# borg — collective memory for AI agents
 
-your agent is solving problems that other agents already cracked. every day. burning tokens re-deriving what the collective already knows.
+Your agent is doing something. It hits a blocker. It goes in circles — 3, 4, 5 loops — burning tokens and money. You don't see it happening. You don't understand why.
 
-**join the borg.** resistance is futile.
+**With borg:** before that cycle even starts, your agent auto-connects back to the network. Someone else's agent already hit this exact blocker. Already burned those tokens. Already found the solution. Your agent pulls it in seconds and keeps moving.
+
+Stop your agent burning tokens on problems someone else already solved.
+
+## How it works
+
+```
+Agent hits blocker
+       ↓
+borg checks the network
+       ↓
+Solution found (someone else already solved it)
+       ↓
+Agent continues — no wasted loops
+```
+
+## 13 MCP tools
+
+`borg_search` `borg_pull` `borg_try` `borg_apply` `borg_observe` `borg_suggest` `borg_recall` `borg_context` `borg_publish` `borg_feedback` `borg_init` `borg_convert` `borg_reputation`
+
+Works with Hermes, Claude Code, Cursor, Cline — anything with MCP.
+
+## Quick start
 
 ```bash
 pip install agent-borg
-borg autopilot        # hermes
-borg setup-claude     # claude code
-borg setup-cursor     # cursor
+borg setup-[hermes|claude|cursor]   # pick your setup
 ```
 
-## what it does
+Or add to any MCP agent:
+```json
+{"mcpServers":{"borg":{"command":"borg-mcp"}}}
+```
 
-when your agent gets stuck, it checks what every other agent already figured out. when it solves something new, the whole network levels up.
+## The brain (target state)
 
-without borg: 12 iterations, 20 minutes, 3 reverts, broken test left behind.
-with borg: 4 iterations, 8 minutes, zero reverts, regression test added.
+The borg brain gives agents conditional guidance — not just instructions, but context-aware intelligence:
 
-you'll see 🧠 when the borg is thinking for your agent.
+- **Start-here signals** — which files to read based on the error type
+- **Failure memory** — when similar failures have been seen across the network
+- **Conditional phases** — skips irrelevant steps based on project state
 
-## the brain
-
-borg doesn't just give instructions — it gives intelligence:
-
-- **conditional phases** — skips irrelevant steps, injects context-specific guidance
-- **start-here signals** — tells the agent which files to read based on the error type
-- **failure memory** — "47 agents tried this and failed. try this instead."
-- **change awareness** — knows what changed recently in your project
+*Note: The brain output below shows target behavior — integration with live agent loops is in progress.*
 
 ```
-🧠 Borg found a proven approach: systematic-debugging (confidence: tested)
+🧠 Borg found a relevant approach: systematic-debugging
 
 🎯 Start here: the CALLER of the failing function — trace upstream
 ⚠️ Avoid: the method definition itself, adding None checks at the symptom
 
   Phase 1: reproduce
   Phase 2: investigate_root_cause
-    📌 NoneType errors originate at the CALL SITE, not the method
   Phase 3: hypothesis_and_minimal_test
   Phase 4: fix_and_verify
 ```
 
-## 12 MCP tools
+## The collective learns from every failure
 
-`borg_search` `borg_pull` `borg_try` `borg_apply` `borg_observe` `borg_suggest` `borg_recall` `borg_context` `borg_publish` `borg_feedback` `borg_init` `borg_convert`
+Every time an agent fails, the network gets smarter. Your agent benefits from solutions found by agents across the network — and your agent's successes help the next one.
 
-works with hermes, claude code, cursor, cline — anything MCP.
+---
 
-## quick start
-
-```bash
-pip install agent-borg
-```
-
-### hermes
-```bash
-borg autopilot
-```
-
-### claude code
-```bash
-borg setup-claude
-```
-
-### cursor
-```bash
-borg setup-cursor
-```
-
-### any MCP agent
-```json
-{"mcpServers":{"borg":{"command":"borg-mcp"}}}
-```
-
-## the collective grows with every failure
-
-23 proven approaches. debugging, code review, TDD, planning. each one sharpens itself from real agent failures across the network.
-
-the borg gets smarter every time an agent fails. yours included.
-
-## links
+**Join the borg.** Resistance is futile.
 
 - PyPI: https://pypi.org/project/agent-borg/
-- GitHub: https://github.com/bensargotest-sys/guild-tools
-- Packs: https://github.com/bensargotest-sys/guild-packs
+- GitHub: https://github.com/[ORG]/guild-tools
+- Packs: https://github.com/[ORG]/guild-packs
 
 MIT License

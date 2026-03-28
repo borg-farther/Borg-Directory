@@ -126,7 +126,7 @@ class TestToolsList:
     def test_tools_list_correct_count(self):
         req = minimal_request("tools/list", {}, req_id=4)
         resp = mcp_module.handle_request(req)
-        assert len(resp["result"]["tools"]) == 12
+        assert len(resp["result"]["tools"]) == 13
 
 
 # ============================================================================
@@ -493,7 +493,9 @@ class TestBorgObserveUnit:
         with patch("borg.core.search.borg_search", side_effect=raise_once):
             with patch("borg.core.search.classify_task", return_value=["task"]):
                 result = mcp_module.borg_observe(task="task")
-                assert result == ""  # Should fail silently, not raise
+                result_data = json.loads(result)
+                assert result_data["success"] is True  # Should fail silently, not raise
+                assert result_data["observed"] is False
 
     def test_call_tool_borg_convert_unknown_format(self):
         result = mcp_module.call_tool("borg_convert", {

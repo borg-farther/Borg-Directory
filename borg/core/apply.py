@@ -38,6 +38,8 @@ try:
 except ImportError:
     AgentStore = None
 
+from borg.db.reputation import ReputationEngine, AccessTier
+
 logger = logging.getLogger(__name__)
 
 
@@ -266,6 +268,9 @@ def action_start(pack_name: str, task: str, context_dict: dict = None, *, agent_
         "approved": False,
         "eval_context": eval_context,
     }
+
+    # Add agent_id to session from eval_context (for reputation tracking)
+    session["agent_id"] = eval_context.get("agent_id") if eval_context else "guild-v2"
 
     # Persist via session.py
     _session_mod.save_session(session, agent_dir=base)
@@ -773,6 +778,12 @@ def action_complete(session_id: str, outcome: str = "", *, agent_dir: Optional[P
     }
 
     # Log execution to reputation store (optional — store may not exist)
+    # Resolve agent_id: prefer eval_context, then session, fallback to "guild-v2"
+    eval_context = session.get("eval_context", {})
+    agent_id = eval_context.get("agent_id") if eval_context else None
+    if not agent_id:
+        agent_id = session.get("agent_id") or "guild-v2"
+
     if AgentStore is not None:
         try:
             _store = AgentStore()
@@ -780,7 +791,7 @@ def action_complete(session_id: str, outcome: str = "", *, agent_dir: Optional[P
                 execution_id=f"{session['pack_id']}-{session_id}",
                 session_id=session_id,
                 pack_id=session["pack_id"],
-                agent_id="guild-v2",  # agent_id not available in session context
+                agent_id=agent_id,
                 task=session.get("task"),
                 status="completed",
                 phases_completed=phases_passed,
@@ -792,6 +803,47 @@ def action_complete(session_id: str, outcome: str = "", *, agent_dir: Optional[P
             _store.close()
         except Exception:
             pass  # Store is optional — never break core flow
+
+    # Update ReputationEngine: record pack consumption (execution)
+    if AgentStore is not None and agent_id != "guild-v2":
+        try:
+            _store = AgentStore()
+            _engine = ReputationEngine(_store)
+            _engine.apply_pack_consumed(agent_id, session["pack_id"])
+            _store.close()
+        except Exception:
+            pass  # Reputation is optional — never break core flow
+
+    # Apply failure penalty if any phases failed
+    if AgentStore is not None and agent_id != "guild-v2" and phases_failed > 0:
+        try:
+            _store = AgentStore()
+            _engine = ReputationEngine(_store)
+            _engine.apply_pack_failure(agent_id, session["pack_id"])
+            _store.close()
+        except Exception:
+            pass  # Reputation is optional — never break core flow
+
+    # Record quality review in ReputationEngine based on execution outcome
+    if AgentStore is not None and agent_id != "guild-v2":
+        try:
+            _store = AgentStore()
+            _engine = ReputationEngine(_store)
+            # Determine quality score from execution outcome
+            if phases_failed == 0:
+                quality = 5  # All phases passed = highest quality
+            elif phases_failed < phases_total / 2:
+                quality = 4  # Mostly passed
+            elif phases_failed < phases_total:
+                quality = 3  # Partial
+            else:
+                quality = 2  # Mostly failed
+
+            feedback_id = feedback_draft.get("id", f"{session['pack_id']}/feedback/{ended.strftime('%Y%m%dT%H%M%S')}")
+            _engine.apply_quality_review(agent_id, feedback_id, quality)
+            _store.close()
+        except Exception:
+            pass  # Reputation is optional — never break core flow
 
     # Clean up
     _active_apply_state.pop(session_id, None)

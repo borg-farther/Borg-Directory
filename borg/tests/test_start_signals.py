@@ -358,9 +358,13 @@ class TestBorgObserveWithStartSignals:
         )
 
         assert result is not None
-        assert "🧠 Borg found" in result
+        # borg_observe now returns JSON; check parsed content
+        import json as _json
+        result_data = _json.loads(result)
+        assert result_data["success"] is True
+        assert "🧠 Borg found" in result_data.get("guidance", "")
         # Should not crash or produce start_here
-        assert "🎯 Start here:" not in result
+        assert "🎯 Start here:" not in result_data.get("guidance", "")
 
 
 # ---------------------------------------------------------------------------

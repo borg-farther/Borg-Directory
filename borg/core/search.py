@@ -49,6 +49,12 @@ try:
 except ImportError:
     AgentStore = None
 
+try:
+    from borg.db.reputation import ReputationEngine, AccessTier
+except ImportError:
+    ReputationEngine = None
+    AccessTier = None
+
 SKILLS_DIR = Path(os.getenv("HERMES_HOME", Path.home() / ".hermes")) / "skills"
 from borg.core.schema import parse_workflow_pack, validate_pack
 from borg.core.schema import parse_skill_frontmatter, sections_to_phases
@@ -73,7 +79,7 @@ MAX_DOWNLOAD_SIZE = 5 * 1024 * 1024  # 5 MB
 # Guild search
 # ---------------------------------------------------------------------------
 
-def borg_search(query: str, mode: str = "text") -> str:
+def borg_search(query: str, mode: str = "text", requesting_agent_id: str = None) -> str:
     """Search guild packs by keyword or semantic similarity.
 
     Searches across pack names, problem_class, id, and phase names
@@ -89,6 +95,9 @@ def borg_search(query: str, mode: str = "text") -> str:
             Defaults to 'text' for backwards compatibility.
             Note: 'semantic' and 'hybrid' require SemanticSearchEngine
             to be available and will fall back to 'text' search if not.
+        requesting_agent_id: Optional agent ID for reputation-aware ranking.
+            When provided, packs from higher-tier authors are ranked higher.
+            Defaults to None (no reputation weighting).
 
     Returns:
         JSON string with keys: success (bool), matches (list), query (str),
@@ -172,6 +181,46 @@ def borg_search(query: str, mode: str = "text") -> str:
                             break
         all_packs = unique_packs
 
+        # Inject author reputation scores into pack metadata
+        if AgentStore is not None and requesting_agent_id and ReputationEngine is not None:
+            try:
+                _store = AgentStore()
+                _engine = ReputationEngine(_store)
+
+                # Batch-fetch profiles for all unique authors encountered
+                author_ids = list({
+                    p.get("provenance", {}).get("author_agent", "")
+                    for p in all_packs
+                    if p.get("provenance", {}).get("author_agent")
+                })
+                author_profiles = {}
+                for aid in author_ids:
+                    try:
+                        author_profiles[aid] = _engine.build_profile(aid)
+                    except Exception:
+                        author_profiles[aid] = None
+
+                # Attach reputation data to each pack
+                for pack in all_packs:
+                    author = pack.get("provenance", {}).get("author_agent", "")
+                    profile = author_profiles.get(author)
+                    if profile:
+                        pack["author_reputation"] = {
+                            "contribution_score": profile.contribution_score,
+                            "access_tier": profile.access_tier.value,
+                            "free_rider_status": profile.free_rider_status.value,
+                        }
+                        # Also promote tier to pack tier if author is core/governance
+                        if profile.access_tier in (AccessTier.CORE, AccessTier.GOVERNANCE):
+                            if pack.get("tier") == "community":
+                                pack["tier"] = "author-validated"
+                    else:
+                        pack["author_reputation"] = None
+
+                _store.close()
+            except Exception:
+                pass  # Reputation is optional — never break search
+
         query_lower = query.lower().strip()
         mode_lower = mode.lower() if mode else "text"
 
@@ -187,7 +236,6 @@ def borg_search(query: str, mode: str = "text") -> str:
         # Try semantic search if requested and SemanticSearchEngine is available
         if mode_lower in ("semantic", "hybrid") and SemanticSearchEngine is not None:
             try:
-                from borg.db.store import AgentStore
                 store = AgentStore()
                 search_engine = SemanticSearchEngine(store)
                 semantic_matches = search_engine.search(query, top_k=50, mode=mode_lower)
@@ -230,6 +278,56 @@ def borg_search(query: str, mode: str = "text") -> str:
 
             if query_lower in searchable:
                 matches.append(pack)
+
+        # Apply reputation-weighted re-ranking for text mode
+        if requesting_agent_id and matches and AgentStore is not None and ReputationEngine is not None:
+            try:
+                _store = AgentStore()
+                _engine = ReputationEngine(_store)
+                requester_profile = _engine.build_profile(requesting_agent_id)
+                _store.close()
+
+                # Reciprocal Rank Fusion: combine text score + reputation score
+                # Normalize reputation score to 0-1 range (tier-based)
+                tier_normalized = {
+                    AccessTier.COMMUNITY: 0.0,
+                    AccessTier.VALIDATED: 0.25,
+                    AccessTier.CORE: 0.6,
+                    AccessTier.GOVERNANCE: 1.0,
+                }
+                requester_tier_val = tier_normalized.get(requester_profile.access_tier, 0.0)
+
+                # Boost: authors with higher tier than requester get boosted
+                reranked = []
+                for pack in matches:
+                    author_rep = pack.get("author_reputation") or {}
+                    author_tier_str = author_rep.get("access_tier", "community")
+                    try:
+                        author_tier = AccessTier(author_tier_str)
+                    except ValueError:
+                        author_tier = AccessTier.COMMUNITY
+
+                    author_tier_val = tier_normalized.get(author_tier, 0.0)
+
+                    # Tier differential boost: if author is higher tier than requester,
+                    # this pack comes from a more experienced agent
+                    tier_boost = max(0, author_tier_val - requester_tier_val) * 0.3
+
+                    # Base adoption/validation signal
+                    adoption_boost = 0.0
+                    if pack.get("adoption_count"):
+                        adoption_boost = min(0.2, int(pack.get("adoption_count", 0)) * 0.01)
+
+                    pack["reputation_boost"] = tier_boost + adoption_boost
+                    reranked.append(pack)
+
+                # Sort by (base_order, -reputation_boost) — re-rank within text-score groups
+                # Text matches are returned in insertion order (sorted by dedupe),
+                # so we apply a stable secondary sort
+                reranked.sort(key=lambda p: -p.get("reputation_boost", 0.0))
+                matches = reranked
+            except Exception:
+                pass  # Reputation is optional — keep text order
 
         return json.dumps({
             "success": True,

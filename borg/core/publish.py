@@ -82,6 +82,12 @@ try:
 except ImportError:
     AgentStore = None
 
+try:
+    from borg.db.reputation import ReputationEngine, AccessTier
+except ImportError:
+    ReputationEngine = None
+    AccessTier = None
+
 
 # ============================================================================
 # Rate limiting
@@ -337,6 +343,35 @@ def action_list() -> str:
 
 
 # ============================================================================
+# Publishing access gate
+# ============================================================================
+
+def _check_publish_access(agent_id: str) -> tuple[bool, str]:
+    """Check if agent has VALIDATED or higher tier to publish.
+
+    Returns (allowed, error_message).
+    """
+    if AgentStore is None:
+        return True, ""  # No store = allow (degraded mode)
+
+    try:
+        store = AgentStore()
+        engine = ReputationEngine(store)
+        profile = engine.build_profile(agent_id)
+        store.close()
+
+        if profile.access_tier == AccessTier.COMMUNITY:
+            return False, (
+                f"Agent '{agent_id}' is at COMMUNITY tier (score={profile.contribution_score:.1f}). "
+                f"Publish requires VALIDATED tier (score >= 10). "
+                f"Publish a quality pack or contribute to the guild to raise your score."
+            )
+        return True, ""
+    except Exception:
+        return True, ""  # Fail open — reputation check is advisory
+
+
+# ============================================================================
 # Action: publish
 # ============================================================================
 
@@ -404,6 +439,20 @@ def action_publish(
             "hint": "Try again tomorrow or adjust MAX_PUBLISHES_PER_DAY.",
         })
 
+    # Reputation gating: check access tier
+    provenance = artifact.get("provenance", {})
+    author_agent = provenance.get("author_agent", "unknown")
+    if author_agent and author_agent != "unknown":
+        allowed, error_msg = _check_publish_access(author_agent)
+        if not allowed:
+            return json.dumps({
+                "success": False,
+                "error": "Publish access denied",
+                "reason": error_msg,
+                "hint": "Raise your contribution score by publishing feedback, "
+                        "filing bug reports, or contributing documentation.",
+            })
+
     # Proof gate validation (from sibling module)
     gate_errors = validate_proof_gates(artifact)
     if gate_errors:
@@ -459,21 +508,34 @@ def action_publish(
             pr_url=pr_result["pr_url"],
         )
 
-        # Log publish to reputation store (optional — store may not exist)
+        # Always log to store
+        provenance = sanitized_artifact.get("provenance", {})
+        author_agent = provenance.get("author_agent", "unknown")
+        confidence = provenance.get("confidence", "unknown")
+
         if AgentStore is not None:
             try:
                 _store = AgentStore()
-                provenance = sanitized_artifact.get("provenance", {})
                 _store.record_publish(
                     pack_id=str(artifact_id),
-                    author_agent=provenance.get("author_agent", "unknown"),
-                    confidence=provenance.get("confidence", "unknown"),
+                    author_agent=author_agent,
+                    confidence=confidence,
                     outcome="published",
                     metadata={"pr_url": pr_result["pr_url"], "artifact_type": artifact_type},
                 )
                 _store.close()
             except Exception:
                 pass  # Store is optional — never break core flow
+
+        # Update ReputationEngine: record pack publication for the author
+        if AgentStore is not None and author_agent and author_agent != "unknown":
+            try:
+                _store = AgentStore()
+                _engine = ReputationEngine(_store)
+                _engine.apply_pack_published(author_agent, str(artifact_id), confidence)
+                _store.close()
+            except Exception:
+                pass  # Reputation is optional — never break core flow
 
         return json.dumps({
             "success": True,

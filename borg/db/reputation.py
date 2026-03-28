@@ -460,3 +460,17 @@ class ReputationEngine:
                 last_active_at=datetime.now(timezone.utc).isoformat(),
             )
         return self.build_profile(agent_id)
+
+    def apply_pack_failure(self, agent_id: str, pack_id: str) -> ReputationProfile:
+        """Record a pack execution failure and apply reputation penalty."""
+        delta = self.delta_pack_failure()  # -2
+        agent = self.store.get_agent(agent_id)
+        if agent:
+            current_score = float(agent.get("contribution_score") or 0)
+            new_score = max(0, current_score + delta)
+            self.store.update_agent_stats(
+                agent_id,
+                contribution_score=new_score,
+                last_active_at=datetime.now(timezone.utc).isoformat(),
+            )
+        return self.build_profile(agent_id)
