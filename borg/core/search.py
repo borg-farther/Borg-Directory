@@ -31,6 +31,7 @@ from borg.core.uri import (
     _fetch_index,
 )
 from borg.core.dirs import get_borg_dir, BORG_DIR
+from borg.core.telemetry import track_event
 
 # Optional: SemanticSearchEngine (graceful fallback if unavailable)
 try:
@@ -226,6 +227,7 @@ def borg_search(query: str, mode: str = "text", requesting_agent_id: str = None)
         mode_lower = mode.lower() if mode else "text"
 
         if not query_lower:
+            _track_search(query, len(all_packs))
             return json.dumps({
                 "success": True,
                 "matches": all_packs,
@@ -256,6 +258,7 @@ def borg_search(query: str, mode: str = "text", requesting_agent_id: str = None)
                             "match_type": pack.get("match_type", mode_lower),
                         }
                         matches.append(match_entry)
+                    _track_search(query, len(matches))
                     return json.dumps({
                         "success": True,
                         "matches": matches,
@@ -330,6 +333,7 @@ def borg_search(query: str, mode: str = "text", requesting_agent_id: str = None)
             except Exception:
                 pass  # Reputation is optional — keep text order
 
+        _track_search(query, len(matches))
         return json.dumps({
             "success": True,
             "matches": matches,
@@ -340,6 +344,21 @@ def borg_search(query: str, mode: str = "text", requesting_agent_id: str = None)
 
     except Exception as e:
         return json.dumps({"success": False, "error": str(e)})
+
+
+def _track_search(query: str, result_count: int) -> None:
+    """Track a search event if telemetry is enabled.
+
+    Graceful no-op if telemetry is disabled or write fails.
+    """
+    try:
+        track_event("search", {
+            "query_length": len(query) if query else 0,
+            "result_count": result_count,
+            "success": True,
+        })
+    except Exception:
+        pass  # Never break the main flow
 
 
 # ---------------------------------------------------------------------------
@@ -458,6 +477,10 @@ def borg_pull(uri: str) -> str:
         }
         if decay_status.get("decayed"):
             result["decay_note"] = decay_status["warning"]
+        try:
+            track_event("pull", {"pack_id": pack_id, "success": True})
+        except Exception:
+            pass
         return json.dumps(result)
 
     except (ValueError, Exception) as e:

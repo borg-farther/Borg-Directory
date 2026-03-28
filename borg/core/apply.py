@@ -33,6 +33,7 @@ from borg.core.dirs import get_borg_dir
 from borg.core.uri import resolve_guild_uri, fetch_with_retry
 from borg.core.privacy import privacy_redact
 from borg.core.proof_gates import check_confidence_decay
+from borg.core.telemetry import track_event
 
 try:
     from borg.db.store import AgentStore
@@ -299,6 +300,10 @@ def action_start(pack_name: str, task: str, context_dict: dict = None, *, agent_
     if decay_status.get("decayed"):
         approval_summary["decay_warning"] = decay_status["warning"]
 
+    try:
+        track_event("apply_start", {"pack_id": session["pack_id"], "session_id": session_id, "success": True})
+    except Exception:
+        pass
     return json.dumps({
         "success": True,
         "session_id": session_id,
@@ -849,6 +854,15 @@ def action_complete(session_id: str, outcome: str = "", *, agent_dir: Optional[P
     # Clean up
     _active_apply_state.pop(session_id, None)
     _session_mod.delete_session(session_id, agent_dir=base)
+
+    try:
+        track_event("apply_complete" if phases_failed == 0 else "apply_fail", {
+            "pack_id": session["pack_id"],
+            "session_id": session_id,
+            "success": phases_failed == 0,
+        })
+    except Exception:
+        pass
 
     return json.dumps({
         "success": True,
