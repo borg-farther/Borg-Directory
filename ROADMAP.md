@@ -47,11 +47,11 @@
 
 ---
 
-### R005: OpenClaw Integration Research
+### R005: OpenClaw Integration
 **Added:** 2026-03-28
-**Status:** BLOCKED — web search down, need manual research
-**Priority:** P0 (AB says must work 100%)
-**Summary:** OpenClaw is a target integration platform but we have zero information about its architecture, MCP support, or plugin model. Need AB to share links or do manual research.
+**Status:** RESEARCHED — integration path identified
+**Priority:** P1
+**Summary:** OpenClaw (github.com/openclaw/openclaw) — 339k stars, TypeScript personal AI assistant. Uses SKILL.md format (same as Hermes). NO MCP support. Has ClawHub skill registry (clawhub.com). Integration paths: (1) borg pack → SKILL.md converter for OpenClaw workspace skills, (2) publish borg packs to ClawHub registry, (3) lobby for MCP support (unlikely). Best bet: build a borg_convert --format=openclaw that outputs SKILL.md files compatible with ~/.openclaw/workspace/skills/. This gives 339k potential users access to borg packs without OpenClaw needing to change anything.
 
 ---
 
