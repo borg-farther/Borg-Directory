@@ -321,23 +321,28 @@ TOOLS: List[Dict[str, Any]] = [
         "name": "borg_convert",
         "description": (
             "Convert a SKILL.md, CLAUDE.md, or .cursorrules file into a borg workflow pack. "
-            "Auto-detects format from filename or allows explicit format specification."
+            "Auto-detects format from filename or allows explicit format specification. "
+            "Use format='openclaw' to convert the entire pack registry to OpenClaw skill format."
         ),
         "inputSchema": {
             "type": "object",
             "properties": {
                 "path": {
                     "type": "string",
-                    "description": "Path to the source file (SKILL.md, CLAUDE.md, or .cursorrules).",
+                    "description": "Path to the source file (SKILL.md, CLAUDE.md, or .cursorrules). Not needed for format='openclaw'.",
                 },
                 "format": {
                     "type": "string",
-                    "enum": ["auto", "skill", "claude", "cursorrules"],
-                    "description": "Format of the source file. 'auto' detects from filename.",
+                    "enum": ["auto", "skill", "claude", "cursorrules", "openclaw"],
+                    "description": "Format of the source file. 'auto' detects from filename. 'openclaw' converts entire registry.",
                     "default": "auto",
                 },
+                "output_dir": {
+                    "type": "string",
+                    "description": "Output directory for OpenClaw conversion (default: ./openclaw-skills/). Only used when format='openclaw'.",
+                },
             },
-            "required": ["path"],
+            "required": ["format"],
         },
     },
     {
@@ -1410,19 +1415,76 @@ def borg_reputation(action: str = "", agent_id: str = None, pack_id: str = None)
         return json.dumps({"success": False, "error": str(e), "type": type(e).__name__})
 
 
-def borg_convert(path: str = "", format: str = "auto") -> str:
+def borg_convert(path: str = "", format: str = "auto", output_dir: str = None) -> str:
     """Convert a SKILL.md, CLAUDE.md, or .cursorrules file into a workflow pack.
 
     Args:
         path: Path to the source file.
-        format: Source format - 'auto' (detect from filename), 'skill', 'claude', 'cursorrules'.
+        format: Source format - 'auto' (detect from filename), 'skill', 'claude', 'cursorrules', or 'openclaw'.
+        output_dir: Output directory for OpenClaw conversion.
     """
     try:
         import yaml
+        import pathlib
         from borg.core import convert as convert_module
 
+        # Handle OpenClaw format (registry-wide conversion)
+        if format == "openclaw":
+            from borg.core.convert import convert_registry_to_openclaw
+
+            # Collect all packs from the registry
+            packs = []
+
+            # Try to load from local guild dir
+            HERMES_HOME = pathlib.Path(os.getenv("HERMES_HOME", pathlib.Path.home() / ".hermes"))
+            guild_dir = HERMES_HOME / "guild"
+
+            if guild_dir.exists():
+                for pack_yaml in guild_dir.glob("*/pack.yaml"):
+                    try:
+                        pack_data = yaml.safe_load(pack_yaml.read_text(encoding="utf-8"))
+                        if isinstance(pack_data, dict):
+                            packs.append(pack_data)
+                    except Exception:
+                        continue
+
+            # Also try to load from the guild-packs directory
+            guild_packs_dir = pathlib.Path("/root/hermes-workspace/guild-packs/packs")
+            if guild_packs_dir.exists():
+                for pack_file in guild_packs_dir.glob("*.yaml"):
+                    try:
+                        pack_data = yaml.safe_load(pack_file.read_text(encoding="utf-8"))
+                        if isinstance(pack_data, dict):
+                            # Avoid duplicates
+                            pack_id = pack_data.get("id", "")
+                            if not any(p.get("id") == pack_id for p in packs):
+                                packs.append(pack_data)
+                    except Exception:
+                        continue
+
+            # Fallback: return error if no packs found
+            if not packs:
+                return json.dumps({
+                    "success": False,
+                    "error": "No packs found in registry. Ensure packs are installed in ~/.hermes/guild/ or /root/hermes-workspace/guild-packs/packs/"
+                })
+
+            # Convert to OpenClaw
+            out_dir = output_dir or "./openclaw-skills"
+            result = convert_registry_to_openclaw(packs, out_dir)
+
+            return json.dumps({
+                "success": True,
+                "pack_count": result["pack_count"],
+                "output_dir": result["output_dir"],
+                "files_written": result["files_written"],
+                "skill_md_lines": result["skill_md_lines"],
+                "pack_slugs": result["pack_slugs"],
+            })
+
+        # Handle individual file conversion
         if not path:
-            return json.dumps({"success": False, "error": "path is required"})
+            return json.dumps({"success": False, "error": "path is required for non-openclaw formats"})
 
         # Call the appropriate converter based on format
         if format == "auto":
@@ -1436,7 +1498,7 @@ def borg_convert(path: str = "", format: str = "auto") -> str:
         else:
             return json.dumps({
                 "success": False,
-                "error": f"Unknown format: {format}. Use: auto, skill, claude, cursorrules"
+                "error": f"Unknown format: {format}. Use: auto, skill, claude, cursorrules, openclaw"
             })
 
         # Dump pack to YAML
@@ -1557,6 +1619,7 @@ def _call_tool_impl(name: str, arguments: Dict[str, Any]) -> str:
         return borg_convert(
             path=arguments.get("path", ""),
             format=arguments.get("format", "auto"),
+            output_dir=arguments.get("output_dir"),
         )
 
     elif name == "borg_context":

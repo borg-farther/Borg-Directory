@@ -20,6 +20,7 @@ from __future__ import annotations
 
 import argparse
 import json
+import os
 import sys
 from pathlib import Path
 
@@ -46,6 +47,29 @@ def _print_json(raw: str) -> None:
         print(json.dumps(data, indent=2, ensure_ascii=False))
     except Exception:
         print(raw)
+
+
+def _load_builtin_packs() -> list:
+    """Load packs from the built-in guild-packs directory.
+    
+    This provides a fallback when no local packs are available.
+    """
+    import pathlib
+    import yaml
+    
+    packs = []
+    guild_packs_dir = pathlib.Path("/root/hermes-workspace/guild-packs/packs")
+    
+    if guild_packs_dir.exists():
+        for pack_file in guild_packs_dir.glob("*.yaml"):
+            try:
+                pack_data = yaml.safe_load(pack_file.read_text(encoding="utf-8"))
+                if isinstance(pack_data, dict) and pack_data.get("type") == "workflow_pack":
+                    packs.append(pack_data)
+            except Exception:
+                continue
+    
+    return packs
 
 
 def _require_success(raw: str, ctx: str = "") -> bool:
@@ -213,10 +237,81 @@ def _cmd_feedback(args: argparse.Namespace) -> int:
 
 
 def _cmd_convert(args: argparse.Namespace) -> int:
-    """Convert a SKILL.md, CLAUDE.md, or .cursorrules file to a workflow pack."""
+    """Convert a SKILL.md, CLAUDE.md, or .cursorrules file to a workflow pack.
+    
+    Also supports --format=openclaw to convert the entire pack registry
+    to an OpenClaw skill directory.
+    """
     import yaml
 
     try:
+        # Handle OpenClaw format (registry-wide conversion)
+        if args.format == "openclaw":
+            from borg.core.uri import get_available_pack_names
+            import pathlib
+            
+            # Collect all packs
+            packs = []
+            seen_ids: set = set()
+            
+            def _add_pack(pack_data):
+                """Add pack if not duplicate."""
+                if isinstance(pack_data, dict):
+                    pack_id = pack_data.get("id", "")
+                    if pack_id and pack_id not in seen_ids:
+                        seen_ids.add(pack_id)
+                        packs.append(pack_data)
+            
+            if args.all:
+                # Load all packs from local guild dir
+                pack_names = get_available_pack_names()
+                
+                HERMES_HOME = pathlib.Path(os.getenv("HERMES_HOME", pathlib.Path.home() / ".hermes"))
+                guild_dir = HERMES_HOME / "guild"
+                
+                for pack_name in pack_names:
+                    pack_yaml = guild_dir / pack_name / "pack.yaml"
+                    if pack_yaml.exists():
+                        try:
+                            pack_data = yaml.safe_load(pack_yaml.read_text(encoding="utf-8"))
+                            _add_pack(pack_data)
+                        except Exception:
+                            continue
+                
+                # Also load ALL packs from the guild-packs directory
+                guild_packs_dir = pathlib.Path("/root/hermes-workspace/guild-packs/packs")
+                if guild_packs_dir.exists():
+                    for pack_file in guild_packs_dir.glob("*.yaml"):
+                        try:
+                            pack_data = yaml.safe_load(pack_file.read_text(encoding="utf-8"))
+                            _add_pack(pack_data)
+                        except Exception:
+                            continue
+                
+                # Fallback: use the borg core registry if no packs found
+                if not packs:
+                    packs = _load_builtin_packs()
+            
+            if not packs:
+                print("Error: No packs found to convert", file=sys.stderr)
+                return 1
+            
+            # Convert to OpenClaw
+            from borg.core.convert import convert_registry_to_openclaw
+            output_dir = args.output or "./openclaw-skills"
+            result = convert_registry_to_openclaw(packs, output_dir)
+            
+            print(f"Converted {result['pack_count']} packs to OpenClaw skill format")
+            print(f"Output directory: {result['output_dir']}")
+            print(f"Files written: {result['files_written']}")
+            print(f"SKILL.md lines: {result['skill_md_lines']}")
+            
+            if result.get('pack_slugs'):
+                print(f"\nPack slugs: {', '.join(result['pack_slugs'])}")
+            
+            return 0
+        
+        # Handle individual file conversion
         if args.format == "auto":
             pack = convert_auto(args.path)
         elif args.format == "skill":
@@ -226,7 +321,7 @@ def _cmd_convert(args: argparse.Namespace) -> int:
         elif args.format == "cursorrules":
             pack = convert_cursorrules(args.path)
         else:
-            print(f"Error: Unknown format '{args.format}'. Use: auto, skill, claude, cursorrules", file=sys.stderr)
+            print(f"Error: Unknown format '{args.format}'. Use: auto, skill, claude, cursorrules, openclaw", file=sys.stderr)
             return 1
 
         print(yaml.safe_dump(pack, default_flow_style=False, sort_keys=False))
@@ -880,14 +975,23 @@ def main() -> int:
     p.add_argument("session_id", help="Session ID")
     p.set_defaults(func=_cmd_feedback)
 
-    # guild convert <path> [--format auto|skill|claude|cursorrules]
+    # guild convert <path> [--format auto|skill|claude|cursorrules|openclaw]
     p = sub.add_parser("convert", help="Convert SKILL.md / CLAUDE.md / .cursorrules to workflow pack")
-    p.add_argument("path", help="Path to source file (SKILL.md, CLAUDE.md, or .cursorrules)")
+    p.add_argument("path", nargs="?", help="Path to source file (SKILL.md, CLAUDE.md, or .cursorrules). Not needed with --format=openclaw --all")
     p.add_argument(
         "--format",
-        choices=["auto", "skill", "claude", "cursorrules"],
+        choices=["auto", "skill", "claude", "cursorrules", "openclaw"],
         default="auto",
-        help="Source format (default: auto-detect from filename)",
+        help="Source format (default: auto-detect from filename). Use 'openclaw' for registry-wide conversion.",
+    )
+    p.add_argument(
+        "--all",
+        action="store_true",
+        help="Convert all packs in the registry (use with --format=openclaw)",
+    )
+    p.add_argument(
+        "--output",
+        help="Output directory for OpenClaw conversion (default: ./openclaw-skills/)",
     )
     p.set_defaults(func=_cmd_convert)
 
