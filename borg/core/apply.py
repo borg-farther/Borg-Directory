@@ -29,6 +29,7 @@ import yaml
 from borg.core import safety as _safety_mod
 from borg.core import schema as _schema_mod
 from borg.core import session as _session_mod
+from borg.core.dirs import get_borg_dir
 from borg.core.uri import resolve_guild_uri, fetch_with_retry
 from borg.core.privacy import privacy_redact
 from borg.core.proof_gates import check_confidence_decay
@@ -91,7 +92,7 @@ def _record_to_failure_memory(
 # ---------------------------------------------------------------------------
 
 HERMES_HOME = Path(os.getenv("HERMES_HOME", Path.home() / ".hermes"))
-BORG_DIR = HERMES_HOME / "guild"
+BORG_DIR = get_borg_dir()
 EXECUTIONS_DIR = BORG_DIR / "executions"
 
 MAX_PHASES = 20

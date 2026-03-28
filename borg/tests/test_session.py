@@ -418,3 +418,153 @@ def test_full_lifecycle(tmp_agent_dir: Path):
     loaded = sess_mod.load_session("lifecycle-001", agent_dir=tmp_agent_dir)
     assert loaded is not None
     assert len(loaded["events"]) == 2
+
+
+# ---------------------------------------------------------------------------
+# Tests: load_persisted_sessions (restart survival)
+# ---------------------------------------------------------------------------
+
+def test_load_persisted_sessions_loads_all(tmp_agent_dir: Path):
+    """Multiple sessions on disk are all loaded and registered."""
+    for i in range(3):
+        session = make_minimal_session(
+            f"persist-{i}",
+            execution_log_path=tmp_agent_dir / "executions" / f"persist-{i}.jsonl",
+        )
+        sess_mod.save_session(session, agent_dir=tmp_agent_dir)
+
+    # Ensure no sessions are in memory yet
+    sess_mod.clear_test_sessions()
+
+    loaded = sess_mod.load_persisted_sessions(agent_dir=tmp_agent_dir)
+    assert len(loaded) == 3
+    ids = {s["session_id"] for s in loaded}
+    assert ids == {"persist-0", "persist-1", "persist-2"}
+
+
+def test_load_persisted_sessions_empty_dir(tmp_agent_dir: Path):
+    """No sessions on disk returns empty list."""
+    sess_mod.clear_test_sessions()
+    loaded = sess_mod.load_persisted_sessions(agent_dir=tmp_agent_dir)
+    assert loaded == []
+
+
+def test_load_persisted_sessions_nonexistent_dir():
+    """Sessions dir doesn't exist returns empty list."""
+    sess_mod.clear_test_sessions()
+    loaded = sess_mod.load_persisted_sessions(agent_dir=Path("/tmp/nonexistent-xyz"))
+    assert loaded == []
+
+
+def test_load_persisted_sessions_registers_in_memory(tmp_agent_dir: Path):
+    """Loaded sessions are registered in the active store."""
+    session = make_minimal_session(
+        "restart-test",
+        execution_log_path=tmp_agent_dir / "executions" / "restart-test.jsonl",
+    )
+    sess_mod.save_session(session, agent_dir=tmp_agent_dir)
+    sess_mod.clear_test_sessions()
+
+    sess_mod.load_persisted_sessions(agent_dir=tmp_agent_dir)
+
+    # Now retrievable via get_active_session
+    retrieved = sess_mod.get_active_session("restart-test")
+    assert retrieved is not None
+    assert retrieved["session_id"] == "restart-test"
+
+
+# ---------------------------------------------------------------------------
+# Tests: cleanup_orphan_sessions
+# ---------------------------------------------------------------------------
+
+def test_cleanup_orphan_sessions_deletes_old_completed(tmp_agent_dir: Path, monkeypatch):
+    """Old completed sessions are deleted."""
+    import time
+
+    session = make_minimal_session(
+        "orphan-old",
+        status="completed",
+        execution_log_path=tmp_agent_dir / "executions" / "orphan-old.jsonl",
+    )
+    sess_mod.save_session(session, agent_dir=tmp_agent_dir)
+
+    # Backdate the file's mtime to 25 hours ago
+    old_file = tmp_agent_dir / "sessions" / "orphan-old.json"
+    old_file.touch()
+    import os
+    os.utime(old_file, (time.time() - 25 * 3600, time.time() - 25 * 3600))
+
+    deleted = sess_mod.cleanup_orphan_sessions(max_age_hours=24, agent_dir=tmp_agent_dir)
+    assert deleted == 1
+    assert not old_file.exists()
+
+
+def test_cleanup_orphan_sessions_preserves_recent(tmp_agent_dir: Path):
+    """Recent sessions (even completed) are not deleted."""
+    session = make_minimal_session(
+        "recent-complete",
+        status="completed",
+        execution_log_path=tmp_agent_dir / "executions" / "recent-complete.jsonl",
+    )
+    sess_mod.save_session(session, agent_dir=tmp_agent_dir)
+
+    deleted = sess_mod.cleanup_orphan_sessions(max_age_hours=24, agent_dir=tmp_agent_dir)
+    assert deleted == 0
+    assert (tmp_agent_dir / "sessions" / "recent-complete.json").exists()
+
+
+def test_cleanup_orphan_sessions_preserves_running(tmp_agent_dir: Path):
+    """Running sessions are never deleted regardless of age."""
+    import time
+
+    session = make_minimal_session(
+        "running-old",
+        status="running",
+        execution_log_path=tmp_agent_dir / "executions" / "running-old.jsonl",
+    )
+    sess_mod.save_session(session, agent_dir=tmp_agent_dir)
+
+    # Backdate the file
+    old_file = tmp_agent_dir / "sessions" / "running-old.json"
+    old_file.touch()
+    import os
+    os.utime(old_file, (time.time() - 100 * 3600, time.time() - 100 * 3600))
+
+    deleted = sess_mod.cleanup_orphan_sessions(max_age_hours=24, agent_dir=tmp_agent_dir)
+    assert deleted == 0
+    assert old_file.exists()
+
+
+def test_cleanup_orphan_sessions_custom_max_age(tmp_agent_dir: Path):
+    """Custom max_age_hours is respected."""
+    import time
+
+    session = make_minimal_session(
+        "mid-age",
+        status="completed",
+        execution_log_path=tmp_agent_dir / "executions" / "mid-age.jsonl",
+    )
+    sess_mod.save_session(session, agent_dir=tmp_agent_dir)
+
+    # Backdate to 5 hours ago
+    old_file = tmp_agent_dir / "sessions" / "mid-age.json"
+    old_file.touch()
+    import os
+    os.utime(old_file, (time.time() - 5 * 3600, time.time() - 5 * 3600))
+
+    # With max_age=4, this should be deleted
+    deleted = sess_mod.cleanup_orphan_sessions(max_age_hours=4, agent_dir=tmp_agent_dir)
+    assert deleted == 1
+
+    # With max_age=6, nothing to delete
+    # (Re-create the file first)
+    old_file.write_text("{}", encoding="utf-8")
+    os.utime(old_file, (time.time() - 5 * 3600, time.time() - 5 * 3600))
+    deleted2 = sess_mod.cleanup_orphan_sessions(max_age_hours=6, agent_dir=tmp_agent_dir)
+    assert deleted2 == 0
+
+
+def test_cleanup_orphan_sessions_nonexistent_dir():
+    """Nonexistent sessions dir returns 0 deleted."""
+    deleted = sess_mod.cleanup_orphan_sessions(agent_dir=Path("/tmp/nonexistent-xyz"))
+    assert deleted == 0

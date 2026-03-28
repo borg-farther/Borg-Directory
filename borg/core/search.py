@@ -29,8 +29,8 @@ from borg.core.uri import (
     get_available_pack_names,
     fuzzy_match_pack,
     _fetch_index,
-    BORG_DIR,
 )
+from borg.core.dirs import get_borg_dir, BORG_DIR
 
 # Optional: SemanticSearchEngine (graceful fallback if unavailable)
 try:
@@ -109,11 +109,12 @@ def borg_search(query: str, mode: str = "text", requesting_agent_id: str = None)
 
         # Collect local packs not yet in the index
         local_names_in_index = {p.get("name", "") for p in all_packs}
-        if BORG_DIR.exists():
+        borg_dir = get_borg_dir()
+        if borg_dir.exists():
             local_yamls: List[tuple] = []
-            for pack_yaml in BORG_DIR.glob("*/pack.yaml"):
+            for pack_yaml in borg_dir.glob("*/pack.yaml"):
                 local_yamls.append((pack_yaml.parent.name, pack_yaml))
-            packs_dir = BORG_DIR / "packs"
+            packs_dir = borg_dir / "packs"
             if packs_dir.exists():
                 for pack_yaml in packs_dir.glob("*.yaml"):
                     local_yamls.append((pack_yaml.stem, pack_yaml))
@@ -417,12 +418,13 @@ def borg_pull(uri: str) -> str:
         pack_name = Path(pack_name).name
 
         # Verify resolved path is still under BORG_DIR
-        resolved_path = (BORG_DIR / pack_name).resolve()
-        if not str(resolved_path).startswith(str(BORG_DIR.resolve())):
+        borg_dir = get_borg_dir()
+        resolved_path = (borg_dir / pack_name).resolve()
+        if not str(resolved_path).startswith(str(borg_dir.resolve())):
             return json.dumps({"success": False, "error": "Path traversal detected in pack id"})
 
         # Store in guild dir
-        pack_dir = BORG_DIR / pack_name
+        pack_dir = borg_dir / pack_name
         pack_dir.mkdir(parents=True, exist_ok=True)
         pack_file = pack_dir / "pack.yaml"
         pack_file.write_text(content, encoding="utf-8")

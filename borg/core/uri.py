@@ -22,6 +22,8 @@ from urllib.request import urlopen
 
 import yaml
 
+from borg.core.dirs import get_borg_dir
+
 logger = logging.getLogger(__name__)
 
 # ---------------------------------------------------------------------------
@@ -30,7 +32,7 @@ logger = logging.getLogger(__name__)
 
 DEFAULT_REPO = "bensargotest-sys/guild-packs"
 DEFAULT_BRANCH = "main"
-BORG_DIR = Path(os.getenv("HERMES_HOME", Path.home() / ".hermes")) / "guild"
+BORG_DIR = get_borg_dir()
 INDEX_URL = f"https://raw.githubusercontent.com/{DEFAULT_REPO}/{DEFAULT_BRANCH}/index.json"
 
 _CACHE_TTL = 300  # 5 minutes

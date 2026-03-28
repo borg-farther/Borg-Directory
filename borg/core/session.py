@@ -25,14 +25,16 @@ from datetime import datetime, timezone
 from pathlib import Path
 from typing import Any, Dict, List, Optional
 
+from borg.core.dirs import get_borg_dir
+
 logger = logging.getLogger(__name__)
 
 # ---------------------------------------------------------------------------
-# Default paths — can be overridden via HERMES_HOME env var
+# Default paths — can be overridden via BORG_DIR env var
 # ---------------------------------------------------------------------------
 
 HERMES_HOME = Path(os.getenv("HERMES_HOME", Path.home() / ".hermes"))
-BORG_DIR = HERMES_HOME / "guild"
+BORG_DIR = get_borg_dir()
 EXECUTIONS_DIR = BORG_DIR / "executions"
 
 # Size limits (PRD §4.3)
@@ -321,3 +323,83 @@ def get_active_session(session_id: str) -> Optional[Dict[str, Any]]:
 def register_session(session: Dict[str, Any]) -> None:
     """Register a session in the in-memory store."""
     _active_sessions[session["session_id"]] = session
+
+
+# ---------------------------------------------------------------------------
+# Startup persistence — survive process restart
+# ---------------------------------------------------------------------------
+
+ORPHAN_SESSION_MAX_AGE_HOURS = 24
+
+
+def load_persisted_sessions(*, agent_dir: Optional[Path] = None) -> List[Dict[str, Any]]:
+    """
+    Load all persisted sessions from disk and register them in the active store.
+
+    This is called at startup so that sessions started in a previous process
+    life are immediately available.
+
+    Returns a list of all loaded sessions.
+    """
+    base = agent_dir if agent_dir is not None else get_borg_dir()
+    sessions_dir = base / "sessions"
+    if not sessions_dir.exists():
+        return []
+
+    loaded: List[Dict[str, Any]] = []
+    for session_file_path in sessions_dir.glob("*.json"):
+        session_id = session_file_path.stem
+        session = load_session(session_id, agent_dir=base)
+        if session is not None:
+            loaded.append(session)
+    return loaded
+
+
+def cleanup_orphan_sessions(
+    max_age_hours: float = ORPHAN_SESSION_MAX_AGE_HOURS,
+    *,
+    agent_dir: Optional[Path] = None,
+) -> int:
+    """
+    Remove orphaned sessions older than max_age_hours with no recent activity.
+
+    An orphan is a session whose JSON file has not been modified in the
+    specified duration and whose status is not "running".  Sessions that are
+    currently marked "running" are always preserved.
+
+    Returns the number of sessions deleted.
+    """
+    base = agent_dir if agent_dir is not None else get_borg_dir()
+    sessions_dir = base / "sessions"
+    if not sessions_dir.exists():
+        return 0
+
+    import time
+
+    now = time.time()
+    cutoff = now - (max_age_hours * 3600)
+    deleted = 0
+
+    for session_file_path in sessions_dir.glob("*.json"):
+        try:
+            mtime = session_file_path.stat().st_mtime
+        except OSError:
+            continue
+
+        if mtime < cutoff:
+            # Try to read status from the JSON file without fully loading
+            # the session through load_session (which would register it).
+            try:
+                meta = json.loads(session_file_path.read_text(encoding="utf-8"))
+            except (OSError, json.JSONDecodeError):
+                continue
+
+            status = meta.get("status", "unknown")
+            if status in ("running", "pending"):
+                continue
+
+            session_id = session_file_path.stem
+            delete_session(session_id, agent_dir=base)
+            deleted += 1
+
+    return deleted

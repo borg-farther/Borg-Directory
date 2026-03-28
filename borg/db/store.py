@@ -4,12 +4,50 @@ import json
 import os
 import sqlite3
 import threading
+import time
 from contextlib import contextmanager
 from datetime import datetime, timezone
 from pathlib import Path
 from typing import Any, Generator, List, Optional
 
 from .migrations import migrate, get_current_version
+from borg.core.dirs import get_borg_dir
+
+# SQLITE_BUSY retry configuration
+BUSY_RETRIES = 3
+BUSY_DELAYS_MS = [100, 200, 400]  # Exponential backoff: 100ms, 200ms, 400ms
+BUSY_TIMEOUT_MS = 5000  # 5 second busy timeout
+
+
+def _retry_on_busy(operation, retries=BUSY_RETRIES, delays_ms=BUSY_DELAYS_MS):
+    """Execute an operation with exponential backoff retry on SQLITE_BUSY.
+    
+    Args:
+        operation: Callable to execute
+        retries: Number of retries (default: 3)
+        delays_ms: List of delay times in ms for each retry
+        
+    Returns:
+        Result of the operation
+        
+    Raises:
+        Last sqlite3.OperationalError if all retries fail
+    """
+    last_error = None
+    for attempt in range(retries + 1):
+        try:
+            return operation()
+        except sqlite3.OperationalError as e:
+            if "database is locked" in str(e) or e.code == 5:  # SQLITE_BUSY
+                last_error = e
+                if attempt < retries:
+                    delay_s = delays_ms[attempt] / 1000.0
+                    time.sleep(delay_s)
+                else:
+                    raise
+            else:
+                raise
+    raise last_error
 
 
 def _json_default(obj):
@@ -64,7 +102,7 @@ class AgentStore:
                 (has encode() and store_embedding() methods).
         """
         if db_path is None:
-            db_path = os.path.expanduser("~/.hermes/guild/guild.db")
+            db_path = str(get_borg_dir() / "guild.db")
         self.db_path = db_path
         self.embedding_engine = embedding_engine
         self._local = threading.local()
@@ -75,7 +113,7 @@ class AgentStore:
         Path(self.db_path).parent.mkdir(parents=True, exist_ok=True)
 
     def _get_connection(self) -> sqlite3.Connection:
-        """Get a thread-local database connection."""
+        """Get a thread-local database connection with hardened settings."""
         if not hasattr(self._local, 'connection') or self._local.connection is None:
             self._local.connection = sqlite3.connect(
                 self.db_path,
@@ -83,11 +121,38 @@ class AgentStore:
                 isolation_level=None,
             )
             self._local.connection.row_factory = sqlite3.Row
+            # Enable WAL mode for better concurrency
+            self._local.connection.execute("PRAGMA journal_mode = WAL")
+            # Set busy timeout to 5 seconds
+            self._local.connection.execute(f"PRAGMA busy_timeout = {BUSY_TIMEOUT_MS}")
             # Enable foreign keys
             self._local.connection.execute("PRAGMA foreign_keys = ON")
+            # Synchronous mode for durability without full locking (NORMAL is good balance)
+            self._local.connection.execute("PRAGMA synchronous = NORMAL")
             # Auto-migrate on first connection
             migrate(self._local.connection)
         return self._local.connection
+
+    def _execute_with_retry(self, conn: sqlite3.Connection, sql: str, params: tuple = None) -> sqlite3.Cursor:
+        """Execute SQL with retry on SQLITE_BUSY using exponential backoff.
+        
+        Args:
+            conn: Database connection
+            sql: SQL statement
+            params: SQL parameters
+            
+        Returns:
+            Cursor from the executed statement
+        """
+        def _do_execute():
+            if params is not None:
+                cursor = conn.execute(sql, params)
+            else:
+                cursor = conn.execute(sql)
+            conn.commit()
+            return cursor
+        
+        return _retry_on_busy(_do_execute)
 
     def close(self):
         """Close the thread-local database connection."""
@@ -153,7 +218,8 @@ class AgentStore:
         created_at = _ensure_iso8601(created_at)
         updated_at = _ensure_iso8601(updated_at)
         
-        conn.execute(
+        self._execute_with_retry(
+            conn,
             """
             INSERT INTO packs (
                 id, version, yaml_content, confidence, tier, author_agent,
@@ -179,7 +245,6 @@ class AgentStore:
                 _json_dumps(metadata),
             ),
         )
-        conn.commit()
 
         # Auto-generate embedding if embedding_engine is available
         if self.embedding_engine is not None:
@@ -339,11 +404,11 @@ class AgentStore:
             params.append(datetime.now(timezone.utc).isoformat())
             params.append(pack_id)
             
-            conn.execute(
+            self._execute_with_retry(
+                conn,
                 f"UPDATE packs SET {', '.join(updates)} WHERE id = ?",
                 params,
             )
-            conn.commit()
         
         return self.get_pack(pack_id)
 
@@ -426,8 +491,9 @@ class AgentStore:
             True if deleted, False if not found
         """
         conn = self._get_connection()
-        cursor = conn.execute("DELETE FROM packs WHERE id = ?", (pack_id,))
-        conn.commit()
+        cursor = self._execute_with_retry(
+            conn, "DELETE FROM packs WHERE id = ?", (pack_id,)
+        )
         return cursor.rowcount > 0
 
     def _row_to_pack(self, row: sqlite3.Row) -> dict:
@@ -490,7 +556,8 @@ class AgentStore:
         conn = self._get_connection()
         created_at = _ensure_iso8601(created_at)
         
-        conn.execute(
+        self._execute_with_retry(
+            conn,
             """
             INSERT INTO feedback (
                 id, pack_id, author_agent, author_operator, confidence,
@@ -512,7 +579,6 @@ class AgentStore:
                 _json_dumps(metadata),
             ),
         )
-        conn.commit()
         return self.get_feedback(feedback_id)
 
     def get_feedback(self, feedback_id: str) -> Optional[dict]:
@@ -584,8 +650,9 @@ class AgentStore:
             True if deleted, False if not found
         """
         conn = self._get_connection()
-        cursor = conn.execute("DELETE FROM feedback WHERE id = ?", (feedback_id,))
-        conn.commit()
+        cursor = self._execute_with_retry(
+            conn, "DELETE FROM feedback WHERE id = ?", (feedback_id,)
+        )
         return cursor.rowcount > 0
 
     def _row_to_feedback(self, row: sqlite3.Row) -> dict:
@@ -634,7 +701,8 @@ class AgentStore:
         conn = self._get_connection()
         registered_at = _ensure_iso8601(registered_at)
         
-        conn.execute(
+        self._execute_with_retry(
+            conn,
             """
             INSERT INTO agents (
                 agent_id, operator, display_name, access_tier,
@@ -650,7 +718,6 @@ class AgentStore:
                 _json_dumps(metadata),
             ),
         )
-        conn.commit()
         return self.get_agent(agent_id)
 
     def get_agent(self, agent_id: str) -> Optional[dict]:
@@ -739,11 +806,11 @@ class AgentStore:
         
         if updates:
             params.append(agent_id)
-            conn.execute(
+            self._execute_with_retry(
+                conn,
                 f"UPDATE agents SET {', '.join(updates)} WHERE agent_id = ?",
                 params,
             )
-            conn.commit()
         
         return self.get_agent(agent_id)
 
@@ -838,7 +905,8 @@ class AgentStore:
         conn = self._get_connection()
         started_at = _ensure_iso8601(started_at)
         
-        conn.execute(
+        self._execute_with_retry(
+            conn,
             """
             INSERT INTO executions (
                 id, session_id, pack_id, agent_id, task, status,
@@ -861,7 +929,6 @@ class AgentStore:
                 _json_dumps(metadata),
             ),
         )
-        conn.commit()
         return self.get_execution(execution_id)
 
     def get_execution(self, execution_id: str) -> Optional[dict]:
@@ -935,11 +1002,11 @@ class AgentStore:
         
         if updates:
             params.append(execution_id)
-            conn.execute(
+            self._execute_with_retry(
+                conn,
                 f"UPDATE executions SET {', '.join(updates)} WHERE id = ?",
                 params,
             )
-            conn.commit()
         
         return self.get_execution(execution_id)
 
