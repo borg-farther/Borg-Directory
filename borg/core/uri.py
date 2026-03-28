@@ -177,12 +177,21 @@ def get_available_pack_names() -> List[str]:
                 names.add(pack_yaml.stem)
 
     # Remote packs from index (best-effort)
+    # Handle both index formats:
+    # - Old format: {"packs": [...]}  (each pack has a "name" field)
+    # - New format: {URI: pack_data, ...}  (pack names extracted from URI path)
     try:
         index = _fetch_index()
-        for pack in index.get("packs", []):
-            name = pack.get("name", "")
-            if name:
-                names.add(name)
+        if "packs" in index:
+            for pack in index.get("packs", []):
+                name = pack.get("name", "")
+                if name:
+                    names.add(name)
+        else:
+            # New format: top-level keys are URIs
+            for uri in index.keys():
+                pack_name = uri.split("/")[-1] if "/" in uri else uri
+                names.add(pack_name)
     except Exception:
         pass
 

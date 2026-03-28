@@ -106,7 +106,23 @@ def borg_search(query: str, mode: str = "text", requesting_agent_id: str = None)
     """
     try:
         index = _fetch_index()
-        all_packs = list(index.get("packs", []))
+
+        # Handle both index formats:
+        # - Old format: {"packs": [...]}  (each pack has a "name" field)
+        # - New format: {URI: pack_data, ...}  (pack names extracted from URI path)
+        if "packs" in index:
+            all_packs = list(index["packs"])
+        else:
+            # New format: top-level keys are URIs (e.g. "guild://hermes/ascii-art")
+            all_packs = []
+            for uri, pack_data in index.items():
+                if isinstance(pack_data, dict):
+                    pack_name = uri.split("/")[-1] if "/" in uri else uri
+                    pack_entry = dict(pack_data)  # copy to avoid mutation
+                    pack_entry["name"] = pack_name
+                    pack_entry["id"] = pack_data.get("id", uri)
+                    pack_entry["source"] = "remote"
+                    all_packs.append(pack_entry)
 
         # Collect local packs not yet in the index
         local_names_in_index = {p.get("name", "") for p in all_packs}
@@ -118,7 +134,12 @@ def borg_search(query: str, mode: str = "text", requesting_agent_id: str = None)
             packs_dir = borg_dir / "packs"
             if packs_dir.exists():
                 for pack_yaml in packs_dir.glob("*.yaml"):
-                    local_yamls.append((pack_yaml.stem, pack_yaml))
+                    stem = pack_yaml.stem
+                    # Strip .workflow and .rubric suffixes to get canonical name
+                    for suffix in (".workflow", ".rubric"):
+                        if stem.endswith(suffix):
+                            stem = stem[:-len(suffix)]
+                    local_yamls.append((stem, pack_yaml))
 
             for local_name, pack_yaml in local_yamls:
                 if local_name not in local_names_in_index:

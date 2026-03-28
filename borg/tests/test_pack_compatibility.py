@@ -121,6 +121,7 @@ _PACK_LIST = _build_pack_list()
 PACK_INFO: Dict[str, tuple] = {item[0]: (item[1], item[2]) for item in _PACK_LIST}
 ALL_PACK_FILES: List[str] = [item[1] for item in _PACK_LIST]  # filenames
 ALL_PACK_NAMES: List[str] = [item[0] for item in _PACK_LIST]  # pack names (with dups)
+UNIQUE_PACK_NAMES: List[str] = list(dict.fromkeys(ALL_PACK_NAMES))  # deduped, preserves order
 
 
 def get_pack_file_path(pack_name: str) -> Path:
@@ -198,11 +199,14 @@ class TestBorgSearchFindsPacks:
     """borg_search locates every pack by name (text search)."""
 
     @pytest.mark.network
-    @pytest.mark.parametrize("pack_name", ALL_PACK_NAMES)
+    @pytest.mark.parametrize("pack_name", UNIQUE_PACK_NAMES)
     def test_search_finds_pack(self, pack_name: str):
         fake_index = _load_index()
         with patch("borg.core.search._fetch_index", return_value=fake_index):
-            with patch("borg.core.search.BORG_DIR", Path("/nonexistent")):
+            # Use the packs parent dir as BORG_DIR so local packs can be found.
+            # The local discovery code looks for BORG_DIR/packs/*.yaml, but some
+            # packs (like agent-a-debugging) only exist locally, not in the remote index.
+            with patch("borg.core.search.BORG_DIR", PACKS_DIR.parent):
                 result = json.loads(borg_search(pack_name))
 
         assert result["success"] is True, f"borg_search failed: {result.get('error')}"
