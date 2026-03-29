@@ -363,13 +363,10 @@ class TestNudgeEngineCompute:
                 timestamp=datetime.now(timezone.utc).isoformat(),
             ))
 
-            # Mock to prevent real borg_on_task_start call
-            with patch.object(engine, "_call_borg_on_task_start") as mock_task:
-                mock_task.return_value = "Try the debug pack"
-                nudge = engine._compute_nudge_unlocked()
+            # _poll_unlocked() enforces _min_turns; _compute_nudge_unlocked() does not
+            nudge = engine._poll_unlocked()
 
         assert nudge is None
-        mock_task.assert_not_called()  # Shouldn't even try because min_turns not met
 
     def test_suppressed_packs_excluded_from_borg_on_failure(self):
         engine = NudgeEngine()
