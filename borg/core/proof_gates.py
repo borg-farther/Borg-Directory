@@ -39,8 +39,14 @@ _CONFIDENCE_DOWNGRADE = {
     "guessed": "expired",
 }
 
-# Required top-level fields on a workflow_pack artifact
-_REQUIRED_PACK_FIELDS = {"type", "version", "id", "problem_class", "mental_model", "phases", "provenance"}
+# Required top-level fields on a workflow_pack artifact.
+# Accepts either V1 ``phases`` or V2 ``structure`` (mutually exclusive).
+_REQUIRED_PACK_FIELDS_COMMON = {"type", "version", "id", "problem_class", "mental_model", "provenance"}
+_REQUIRED_PACK_FIELDS_V1 = _REQUIRED_PACK_FIELDS_COMMON | {"phases"}
+_REQUIRED_PACK_FIELDS_V2 = _REQUIRED_PACK_FIELDS_COMMON | {"structure"}
+
+# Backward-compatibility alias (tests import this name directly)
+_REQUIRED_PACK_FIELDS = _REQUIRED_PACK_FIELDS_V1
 
 
 # ---------------------------------------------------------------------------
@@ -196,7 +202,12 @@ def _validate_workflow_pack_gates(pack: dict) -> List[str]:
             )
 
     # ---- Required top-level fields ----
-    missing = _REQUIRED_PACK_FIELDS - set(pack.keys())
+    # V2 packs use structure[], V1 packs use phases[]
+    if "structure" in pack and "phases" not in pack:
+        required_fields = _REQUIRED_PACK_FIELDS_V2
+    else:
+        required_fields = _REQUIRED_PACK_FIELDS_V1
+    missing = required_fields - set(pack.keys())
     if missing:
         errors.append(f"Missing required fields: {', '.join(sorted(missing))}")
 

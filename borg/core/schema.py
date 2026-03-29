@@ -23,21 +23,24 @@ import yaml
 
 VALID_CONFIDENCE = {"guessed", "inferred", "tested", "validated"}
 
-# Fields that may appear on individual phases (conditional phase extension)
-_PHASE_OPTIONAL_FIELDS = frozenset({
-    "skip_if",
-    "inject_if",
-    "context_prompts",
-})
-
 # Fields required for workflow_pack type
-_WORKFLOW_PACK_REQUIRED_FIELDS = frozenset({
+_WORKFLOW_PACK_REQUIRED_FIELDS_V1 = frozenset({
     "type",
     "version",
     "id",
     "problem_class",
     "mental_model",
     "phases",
+    "provenance",
+})
+
+_WORKFLOW_PACK_REQUIRED_FIELDS_V2 = frozenset({
+    "type",
+    "version",
+    "id",
+    "problem_class",
+    "mental_model",
+    "structure",
     "provenance",
 })
 
@@ -83,10 +86,13 @@ def parse_workflow_pack(yaml_text: str) -> dict:
     if not isinstance(data, dict):
         raise ValueError("Invalid YAML: expected a mapping at top level")
 
-    # Select type-specific required fields
+    # Select type-specific required fields; V2 packs use structure[] instead of phases[]
     pack_type = data.get("type", "")
     if pack_type == "workflow_pack":
-        required_fields = _WORKFLOW_PACK_REQUIRED_FIELDS
+        if "structure" in data and "phases" not in data:
+            required_fields = _WORKFLOW_PACK_REQUIRED_FIELDS_V2
+        else:
+            required_fields = _WORKFLOW_PACK_REQUIRED_FIELDS_V1
     elif pack_type == "critique_rubric":
         required_fields = _CRITIQUE_RUBRIC_REQUIRED_FIELDS
     else:
@@ -208,12 +214,6 @@ def collect_text_fields(pack: dict) -> List[str]:
                 texts.append(str(prompt))
             for ap in phase.get("anti_patterns", []) or []:
                 texts.append(str(ap))
-            # Conditional phase extension: collect context_prompt text
-            for cp in phase.get("context_prompts", []) or []:
-                if isinstance(cp, dict):
-                    texts.append(str(cp.get("prompt", "")))
-                else:
-                    texts.append(str(cp))
 
     for rule in pack.get("escalation_rules", []) or []:
         texts.append(str(rule))

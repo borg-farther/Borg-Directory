@@ -8,8 +8,8 @@ Multi-action handler:
   action="resume"      — Resume an interrupted execution from the last completed phase
   action="status"      — Check current session state
 
-Session persistence: {BORG_DIR}/sessions/{session_id}.json
-Execution logs:      {BORG_DIR}/executions/{session_id}.jsonl
+Session persistence: {GUILD_DIR}/sessions/{session_id}.json
+Execution logs:      {GUILD_DIR}/executions/{session_id}.jsonl
 
 Zero imports from tools.* or guild_mcp.* — uses borg.core.* sibling modules.
 """
@@ -34,65 +34,19 @@ from borg.core.privacy import privacy_redact
 from borg.core.proof_gates import check_confidence_decay
 
 try:
-    from borg.db.store import AgentStore
+    from borg.db.store import GuildStore
 except ImportError:
-    AgentStore = None
-
-from borg.db.reputation import ReputationEngine, AccessTier
+    GuildStore = None
 
 logger = logging.getLogger(__name__)
-
-
-# ---------------------------------------------------------------------------
-# Failure memory helper
-# ---------------------------------------------------------------------------
-
-def _record_to_failure_memory(
-    pack_id: str,
-    phase: str,
-    eval_context: dict,
-    approach: str,
-    outcome: str,
-) -> None:
-    """Record a checkpoint result to failure memory.
-
-    Args:
-        pack_id: The pack being executed.
-        phase: The phase name.
-        eval_context: Evaluation context (may contain error_message, error_type).
-        approach: What the agent tried (checkpoint text or evidence).
-        outcome: 'passed' or 'failed'.
-    """
-    try:
-        from borg.core.failure_memory import FailureMemory
-
-        # Extract error pattern from eval_context if available
-        error_pattern = ""
-        if eval_context:
-            error_pattern = eval_context.get("error_message", "") or eval_context.get("error_type", "")
-
-        if not error_pattern or not approach:
-            return  # Nothing meaningful to record
-
-        fm = FailureMemory()
-        fm.record_failure(
-            error_pattern=error_pattern,
-            pack_id=pack_id,
-            phase=phase,
-            approach=approach,
-            outcome=outcome,
-        )
-    except Exception:
-        # Never let failure memory break the core apply flow
-        pass
 
 # ---------------------------------------------------------------------------
 # Constants (mirror PRD §4.3)
 # ---------------------------------------------------------------------------
 
 HERMES_HOME = Path(os.getenv("HERMES_HOME", Path.home() / ".hermes"))
-BORG_DIR = HERMES_HOME / "guild"
-EXECUTIONS_DIR = BORG_DIR / "executions"
+GUILD_DIR = HERMES_HOME / "guild"
+EXECUTIONS_DIR = GUILD_DIR / "executions"
 
 MAX_PHASES = 20
 MAX_PACK_SIZE_BYTES = 500 * 1024  # 500 KB
@@ -101,9 +55,52 @@ MAX_FIELD_SIZE_BYTES = 10 * 1024  # 10 KB
 # In-memory overlay for apply-specific session fields not stored in core session
 _active_apply_state: Dict[str, Dict[str, Any]] = {}
 
-# --------------------------------------------------------------------------
+# ---------------------------------------------------------------------------
+# V1/V2 pack normalization
+# ---------------------------------------------------------------------------
+
+def _normalize_phases(pack: dict) -> List[dict]:
+    """Normalize V1 (phases[]) or V2 (structure[]) to a phases list.
+
+    V2 packs use ``structure: [{phase_name, description, guidance,
+    checkpoint, anti_patterns}]`` instead of V1's
+    ``phases: [{name, description, checkpoint, anti_patterns, prompts}]``.
+
+    This function converts V2 ``structure`` entries to the V1 ``phase``
+    format so the rest of the apply engine works unchanged.
+    """
+    # V2: structure[] without phases[]
+    if "structure" in pack and "phases" not in pack:
+        result: List[dict] = []
+        for i, p in enumerate(pack.get("structure", [])):
+            if not isinstance(p, dict):
+                continue
+            # guidance in V2 may be a string or list; normalise to list
+            guidance = p.get("guidance", "")
+            prompts: List[str]
+            if isinstance(guidance, list):
+                prompts = guidance
+            elif guidance:
+                prompts = [guidance]
+            else:
+                prompts = []
+
+            result.append({
+                "name": p.get("phase_name", p.get("name", f"phase_{i}")),
+                "description": p.get("description", ""),
+                "checkpoint": p.get("checkpoint", ""),
+                "anti_patterns": p.get("anti_patterns", []),
+                "prompts": prompts,
+                "status": "pending",
+            })
+        return result
+    # V1: phases[]
+    return pack.get("phases", [])
+
+
+# ---------------------------------------------------------------------------
 # Feedback generation (inline minimal implementation)
-# --------------------------------------------------------------------------
+# ---------------------------------------------------------------------------
 
 def _generate_feedback(
     pack_id: str,
@@ -154,13 +151,13 @@ def _generate_feedback(
 # Action: start
 # ---------------------------------------------------------------------------
 
-def action_start(pack_name: str, task: str, context_dict: dict = None, *, agent_dir: Optional[Path] = None) -> str:
+def action_start(pack_name: str, task: str, *, guild_dir: Optional[Path] = None) -> str:
     """Load a pulled pack, safety-scan it, and create an execution session.
 
     Returns JSON with session_id and approval_summary.
     Does NOT log execution_started until operator approves via __approval__ checkpoint.
     """
-    base = agent_dir if agent_dir is not None else BORG_DIR
+    base = guild_dir if guild_dir is not None else GUILD_DIR
 
     # Find the pack
     pack_file = base / pack_name / "pack.yaml"
@@ -172,7 +169,7 @@ def action_start(pack_name: str, task: str, context_dict: dict = None, *, agent_
         else:
             return json.dumps({
                 "success": False,
-                "error": f"Pack not found: {pack_name}. Pull it first with guild_pull.",
+                "error": f"Pack not found: {pack_name}. Pull it first with borg_pull.",
                 "available": [c.parent.name for c in candidates],
             })
 
@@ -221,18 +218,11 @@ def action_start(pack_name: str, task: str, context_dict: dict = None, *, agent_
     log_filename = f"{safe_id}-{ts.strftime('%Y%m%dT%H%M%S')}.jsonl"
     log_path = (base / "executions" / log_filename)
 
-    # Normalize context for condition evaluation
-    eval_context = context_dict or {}
-
-    # Build phase plan, filtering out skipped phases based on context
-    phases = pack.get("phases", [])
-    from borg.core.conditions import evaluate_skip_conditions
+    # Build phase plan (handles both V1 phases[] and V2 structure[])
+    phases = _normalize_phases(pack)
     phase_plan = []
     for i, phase in enumerate(phases):
         if not isinstance(phase, dict):
-            continue
-        should_skip, _ = evaluate_skip_conditions(phase, eval_context)
-        if should_skip:
             continue
         phase_plan.append({
             "index": i,
@@ -241,9 +231,6 @@ def action_start(pack_name: str, task: str, context_dict: dict = None, *, agent_
             "checkpoint": phase.get("checkpoint", ""),
             "anti_patterns": phase.get("anti_patterns", []),
             "prompts": phase.get("prompts", []),
-            "skip_if": phase.get("skip_if", []),
-            "inject_if": phase.get("inject_if", []),
-            "context_prompts": phase.get("context_prompts", []),
             "status": "pending",
         })
 
@@ -266,14 +253,10 @@ def action_start(pack_name: str, task: str, context_dict: dict = None, *, agent_
         "phase_results": [],
         "retries": {},
         "approved": False,
-        "eval_context": eval_context,
     }
 
-    # Add agent_id to session from eval_context (for reputation tracking)
-    session["agent_id"] = eval_context.get("agent_id") if eval_context else "guild-v2"
-
     # Persist via session.py
-    _session_mod.save_session(session, agent_dir=base)
+    _session_mod.save_session(session, guild_dir=base)
     _session_mod.register_session(session)
 
     # Track apply-specific state (approved flag)
@@ -308,16 +291,8 @@ def action_start(pack_name: str, task: str, context_dict: dict = None, *, agent_
             {"name": p["name"], "checkpoint": p["checkpoint"], "status": p["status"]}
             for p in phase_plan
         ],
-        "human_message": (
-            f"🧠 Using a community-proven approach: **{pack_name}** "
-            f"(confidence: {provenance.get('confidence', 'unknown')}, "
-            f"{len(phase_plan)} phases). "
-            f"This approach has been tested across multiple agents and "
-            f"reduces typical debugging from ~12 iterations to ~4."
-        ),
         "instructions": (
-            "IMPORTANT: Show the human_message to the user FIRST so they know "
-            "borg is helping. Then present the approval_summary. "
+            "Present the approval_summary to the operator. "
             "To approve, call apply_handler(action='checkpoint', session_id=..., "
             "phase_name='__approval__', status='passed'). "
             "After approval, execute each phase in order. After completing each phase, "
@@ -339,9 +314,8 @@ def action_checkpoint(
     status: str,
     evidence: str = "",
     attempt: int = 1,
-    context_dict: dict = None,
     *,
-    agent_dir: Optional[Path] = None,
+    guild_dir: Optional[Path] = None,
 ) -> str:
     """Log a phase checkpoint result.
 
@@ -349,25 +323,17 @@ def action_checkpoint(
     Special phase_name '__approval__' with status='passed' approves execution.
     Returns guidance on next step (retry, continue, or skip).
     """
-    base = agent_dir if agent_dir is not None else BORG_DIR
+    base = guild_dir if guild_dir is not None else GUILD_DIR
 
     # Try in-memory first, then load from disk via session.py
     session = _session_mod.get_active_session(session_id)
     if not session:
-        session = _session_mod.load_session(session_id, agent_dir=base)
+        session = _session_mod.load_session(session_id, guild_dir=base)
         if not session:
             return json.dumps({
                 "success": False,
                 "error": f"No active session: {session_id}",
             })
-
-    # Merge provided context_dict with session's stored eval_context
-    stored_context = session.get("eval_context", {})
-    call_context = context_dict or {}
-    eval_context = {**stored_context, **call_context}
-
-    # Update session's eval_context with new context
-    session["eval_context"] = eval_context
 
     # Get apply-specific state
     apply_state = _active_apply_state.get(session_id, {})
@@ -385,8 +351,8 @@ def action_checkpoint(
                 "artifact": session["pack_id"],
                 "task": session["task"],
                 "phase_count": len(session["phases"]),
-            }, agent_dir=base)
-            _session_mod.save_session(session, agent_dir=base)
+            }, guild_dir=base)
+            _session_mod.save_session(session, guild_dir=base)
 
             return json.dumps({
                 "success": True,
@@ -401,7 +367,7 @@ def action_checkpoint(
         else:
             # Rejected — clean up
             _active_apply_state.pop(session_id, None)
-            _session_mod.delete_session(session_id, agent_dir=base)
+            _session_mod.delete_session(session_id, guild_dir=base)
             return json.dumps({
                 "success": True,
                 "phase": "__approval__",
@@ -480,7 +446,7 @@ def action_checkpoint(
         "evidence": sanitized_evidence,
         "attempt": current_retries + 1,
         "reason": sanitized_evidence if status == "failed" else "",
-    }, agent_dir=base)
+    }, guild_dir=base)
 
     # Record phase result
     if next_action != "retry":
@@ -493,37 +459,17 @@ def action_checkpoint(
             "checkpoint_result": sanitized_evidence,
         })
 
-        # Record to failure memory (skip on retry — we only record final outcomes)
-        _record_to_failure_memory(
-            pack_id=session.get("pack_id", session.get("pack_name", "")),
-            phase=phase_name,
-            eval_context=eval_context,
-            approach=sanitized_evidence or phase_match.get("checkpoint", ""),
-            outcome=status,
-        )
-
     # Persist updated session
-    _session_mod.save_session(session, agent_dir=base)
+    _session_mod.save_session(session, guild_dir=base)
 
-    # Find next phase and evaluate its inject_if conditions for guidance
+    # Find next phase
     next_phase = None
-    inject_messages = []
     if next_action in ("continue", "skip"):
         current_idx = phase_match["index"]
         for p in session["phases"]:
             if p["index"] > current_idx and p["status"] == "pending":
                 next_phase = p
-                # Evaluate inject_if conditions for the next phase
-                from borg.core.conditions import evaluate_inject_conditions
-                inject_messages = evaluate_inject_conditions(p, eval_context)
                 break
-
-    # Clear previous inject messages from session
-    session.pop("_inject_messages", None)
-    # Persist inject messages for this checkpoint
-    if inject_messages:
-        session["_inject_messages"] = inject_messages
-        _session_mod.save_session(session, agent_dir=base)
 
     return json.dumps({
         "success": True,
@@ -536,7 +482,6 @@ def action_checkpoint(
             1 for p in session["phases"] if p["status"] != "pending"
         ),
         "phases_total": len(session["phases"]),
-        "inject_messages": inject_messages,
     }, ensure_ascii=False)
 
 
@@ -544,16 +489,16 @@ def action_checkpoint(
 # Action: complete
 # ---------------------------------------------------------------------------
 
-def action_complete(session_id: str, outcome: str = "", *, agent_dir: Optional[Path] = None) -> str:
+def action_complete(session_id: str, outcome: str = "", *, guild_dir: Optional[Path] = None) -> str:
     """Finalize execution session. Write summary and generate feedback draft.
 
     Returns the execution summary + auto-generated PRD-compliant feedback draft.
     """
-    base = agent_dir if agent_dir is not None else BORG_DIR
+    base = guild_dir if guild_dir is not None else GUILD_DIR
 
     session = _session_mod.get_active_session(session_id)
     if not session:
-        session = _session_mod.load_session(session_id, agent_dir=base)
+        session = _session_mod.load_session(session_id, guild_dir=base)
         if not session:
             return json.dumps({
                 "success": False,
@@ -585,7 +530,7 @@ def action_complete(session_id: str, outcome: str = "", *, agent_dir: Optional[P
         "phases_total": phases_total,
         "duration_seconds": duration_seconds,
         "outcome": outcome,
-    }, agent_dir=base)
+    }, guild_dir=base)
 
     # Compute log hash
     log_path = session.get("execution_log_path") or session.get("log_path", Path(base) / "executions" / f"{session_id}.jsonl")
@@ -778,20 +723,14 @@ def action_complete(session_id: str, outcome: str = "", *, agent_dir: Optional[P
     }
 
     # Log execution to reputation store (optional — store may not exist)
-    # Resolve agent_id: prefer eval_context, then session, fallback to "guild-v2"
-    eval_context = session.get("eval_context", {})
-    agent_id = eval_context.get("agent_id") if eval_context else None
-    if not agent_id:
-        agent_id = session.get("agent_id") or "guild-v2"
-
-    if AgentStore is not None:
+    if GuildStore is not None:
         try:
-            _store = AgentStore()
+            _store = GuildStore()
             _store.record_execution(
                 execution_id=f"{session['pack_id']}-{session_id}",
                 session_id=session_id,
                 pack_id=session["pack_id"],
-                agent_id=agent_id,
+                agent_id="guild-v2",  # agent_id not available in session context
                 task=session.get("task"),
                 status="completed",
                 phases_completed=phases_passed,
@@ -804,50 +743,9 @@ def action_complete(session_id: str, outcome: str = "", *, agent_dir: Optional[P
         except Exception:
             pass  # Store is optional — never break core flow
 
-    # Update ReputationEngine: record pack consumption (execution)
-    if AgentStore is not None and agent_id != "guild-v2":
-        try:
-            _store = AgentStore()
-            _engine = ReputationEngine(_store)
-            _engine.apply_pack_consumed(agent_id, session["pack_id"])
-            _store.close()
-        except Exception:
-            pass  # Reputation is optional — never break core flow
-
-    # Apply failure penalty if any phases failed
-    if AgentStore is not None and agent_id != "guild-v2" and phases_failed > 0:
-        try:
-            _store = AgentStore()
-            _engine = ReputationEngine(_store)
-            _engine.apply_pack_failure(agent_id, session["pack_id"])
-            _store.close()
-        except Exception:
-            pass  # Reputation is optional — never break core flow
-
-    # Record quality review in ReputationEngine based on execution outcome
-    if AgentStore is not None and agent_id != "guild-v2":
-        try:
-            _store = AgentStore()
-            _engine = ReputationEngine(_store)
-            # Determine quality score from execution outcome
-            if phases_failed == 0:
-                quality = 5  # All phases passed = highest quality
-            elif phases_failed < phases_total / 2:
-                quality = 4  # Mostly passed
-            elif phases_failed < phases_total:
-                quality = 3  # Partial
-            else:
-                quality = 2  # Mostly failed
-
-            feedback_id = feedback_draft.get("id", f"{session['pack_id']}/feedback/{ended.strftime('%Y%m%dT%H%M%S')}")
-            _engine.apply_quality_review(agent_id, feedback_id, quality)
-            _store.close()
-        except Exception:
-            pass  # Reputation is optional — never break core flow
-
     # Clean up
     _active_apply_state.pop(session_id, None)
-    _session_mod.delete_session(session_id, agent_dir=base)
+    _session_mod.delete_session(session_id, guild_dir=base)
 
     return json.dumps({
         "success": True,
@@ -866,13 +764,13 @@ def action_complete(session_id: str, outcome: str = "", *, agent_dir: Optional[P
 # Action: resume
 # ---------------------------------------------------------------------------
 
-def action_resume(pack_name: str, task: str = "", *, agent_dir: Optional[Path] = None) -> str:
+def action_resume(pack_name: str, task: str = "", *, guild_dir: Optional[Path] = None) -> str:
     """Resume an interrupted execution from the last completed phase.
 
     Reads the most recent JSONL log for the pack, rebuilds session state,
     and returns remaining phases.
     """
-    base = agent_dir if agent_dir is not None else BORG_DIR
+    base = guild_dir if guild_dir is not None else GUILD_DIR
 
     # Check for persisted sessions matching the pack name
     sessions_dir = base / "sessions"
@@ -882,7 +780,7 @@ def action_resume(pack_name: str, task: str = "", *, agent_dir: Optional[Path] =
                 meta = json.loads(sf.read_text(encoding="utf-8"))
                 sid = meta.get("session_id", "")
                 if sid and sid not in _session_mod._active_sessions:
-                    restored = _session_mod.load_session(sid, agent_dir=base)
+                    restored = _session_mod.load_session(sid, guild_dir=base)
                     if restored:
                         remaining = [p for p in restored["phases"] if p["status"] == "pending"]
                         completed_count = sum(1 for p in restored["phases"] if p["status"] != "pending")
@@ -917,7 +815,7 @@ def action_resume(pack_name: str, task: str = "", *, agent_dir: Optional[Path] =
         else:
             return json.dumps({
                 "success": False,
-                "error": f"Pack not found: {pack_name}. Pull it first with guild_pull.",
+                "error": f"Pack not found: {pack_name}. Pull it first with borg_pull.",
             })
 
     try:
@@ -992,8 +890,8 @@ def action_resume(pack_name: str, task: str = "", *, agent_dir: Optional[Path] =
                     "checkpoint_result": ev.get("evidence", ""),
                 })
 
-    # Build phase plan from pack
-    phases = pack.get("phases", [])
+    # Build phase plan from pack (handles both V1 phases[] and V2 structure[])
+    phases = _normalize_phases(pack)
     phase_plan = []
     for i, phase in enumerate(phases):
         if not isinstance(phase, dict):
@@ -1007,9 +905,6 @@ def action_resume(pack_name: str, task: str = "", *, agent_dir: Optional[Path] =
             "checkpoint": phase.get("checkpoint", ""),
             "anti_patterns": phase.get("anti_patterns", []),
             "prompts": phase.get("prompts", []),
-            "skip_if": phase.get("skip_if", []),
-            "inject_if": phase.get("inject_if", []),
-            "context_prompts": phase.get("context_prompts", []),
             "status": ph_status,
         })
 
@@ -1045,7 +940,7 @@ def action_resume(pack_name: str, task: str = "", *, agent_dir: Optional[Path] =
         "approved": True,
     }
 
-    _session_mod.save_session(session, agent_dir=base)
+    _session_mod.save_session(session, guild_dir=base)
     _session_mod.register_session(session)
     _active_apply_state[session_id] = {"approved": True}
 
@@ -1070,13 +965,13 @@ def action_resume(pack_name: str, task: str = "", *, agent_dir: Optional[Path] =
 # Action: status
 # ---------------------------------------------------------------------------
 
-def action_status(session_id: str, *, agent_dir: Optional[Path] = None) -> str:
+def action_status(session_id: str, *, guild_dir: Optional[Path] = None) -> str:
     """Check current execution session state."""
-    base = agent_dir if agent_dir is not None else BORG_DIR
+    base = guild_dir if guild_dir is not None else GUILD_DIR
 
     session = _session_mod.get_active_session(session_id)
     if not session:
-        session = _session_mod.load_session(session_id, agent_dir=base)
+        session = _session_mod.load_session(session_id, guild_dir=base)
         if not session:
             return json.dumps({
                 "success": False,
@@ -1112,9 +1007,8 @@ def apply_handler(
     status: str = "",
     evidence: str = "",
     outcome: str = "",
-    context_dict: dict = None,
     *,
-    agent_dir: Optional[Path] = None,
+    guild_dir: Optional[Path] = None,
 ) -> str:
     """Main entry point for guild apply.
 
@@ -1127,7 +1021,7 @@ def apply_handler(
                 return json.dumps({"success": False, "error": "pack_name is required for action='start'"})
             if not task:
                 return json.dumps({"success": False, "error": "task is required for action='start'"})
-            return action_start(pack_name, task, context_dict=context_dict, agent_dir=agent_dir)
+            return action_start(pack_name, task, guild_dir=guild_dir)
 
         elif action == "checkpoint":
             if not session_id:
@@ -1136,22 +1030,22 @@ def apply_handler(
                 return json.dumps({"success": False, "error": "phase_name is required for action='checkpoint'"})
             if not status:
                 return json.dumps({"success": False, "error": "status is required for action='checkpoint'"})
-            return action_checkpoint(session_id, phase_name, status, evidence, context_dict=context_dict, agent_dir=agent_dir)
+            return action_checkpoint(session_id, phase_name, status, evidence, guild_dir=guild_dir)
 
         elif action == "complete":
             if not session_id:
                 return json.dumps({"success": False, "error": "session_id is required for action='complete'"})
-            return action_complete(session_id, outcome, agent_dir=agent_dir)
+            return action_complete(session_id, outcome, guild_dir=guild_dir)
 
         elif action == "resume":
             if not pack_name:
                 return json.dumps({"success": False, "error": "pack_name is required for action='resume'"})
-            return action_resume(pack_name, task, agent_dir=agent_dir)
+            return action_resume(pack_name, task, guild_dir=guild_dir)
 
         elif action == "status":
             if not session_id:
                 return json.dumps({"success": False, "error": "session_id is required for action='status'"})
-            return action_status(session_id, agent_dir=agent_dir)
+            return action_status(session_id, guild_dir=guild_dir)
 
         else:
             return json.dumps({
