@@ -1,26 +1,26 @@
-# Guild-v2 Tester Onboarding
+# Borg Tester Onboarding
 
-**Install:** `pip install guild-packs`
+**Install:** `pip install agent-borg`
 
 **Try these 3 commands now:**
 ```bash
-guildpacks search debugging
-guildpacks try guild://systematic-debugging
-guildpacks pull guild://systematic-debugging
+borg search debugging
+borg try borg://systematic-debugging
+borg pull borg://systematic-debugging
 ```
 
 **MCP setup for Claude Code** — add to `~/.config/claude/claude_desktop_config.json`:
 ```json
 {
   "mcpServers": {
-    "guild-packs": {
-      "command": "guild-mcp"
+    "borg": {
+      "command": "borg-mcp"
     }
   }
 }
 ```
 
-Full guide: https://github.com/bensargotest-sys/guild-tools/blob/v2/docs/EXTERNAL_TESTER_GUIDE.md
+Full guide: https://github.com/agent-borg/agent-borg/blob/main/docs/EXTERNAL_TESTER_GUIDE.md
 
 **What we need from you:**
 - Commands that worked / commands that broke (exact output helps)

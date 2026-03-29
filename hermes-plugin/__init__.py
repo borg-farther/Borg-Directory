@@ -1,36 +1,34 @@
 """
-Hermes Plugin — Guild v2 Auto-Suggest Bridge
-=============================================
+Hermes Plugin — Borg Auto-Suggest Bridge
+========================================
 
-Installs guild-v2 auto-suggest into the Hermes agent loop without touching
+Installs borg auto-suggest into the Hermes agent loop without touching
 run_agent.py. This plugin is fully opt-in.
 
 Installation (one of two ways):
 
   1. Symlink into ~/.hermes/plugins/ (recommended for dev):
-       ln -s /root/hermes-workspace/guild-v2/hermes-plugin ~/.hermes/plugins/guild-v2
+       ln -s /root/hermes-workspace/borg/hermes-plugin ~/.hermes/plugins/borg
 
-  2. pip install the whole guild-v2 package (it registers via entry-points).
+  2. pip install the whole agent-borg package (it registers via entry-points).
 
 What this plugin does:
-  - Registers ``guild_v2_autosuggest`` as a callable tool (toolset: skills).
-  - Patches ``tools.guild_autosuggest.check_for_suggestion`` to delegate to
-    ``guild.integrations.agent_hook`` so existing autosuggest callers
-    (including run_agent.py's _maybe_inject_guild_suggestion) automatically
-    get guild-v2 suggestions.
+  - Registers ``borg_autosuggest`` as a callable tool (toolset: skills).
+  - Patches ``tools.borg_autosuggest.check_for_suggestion`` to delegate to
+    ``borg.integrations.agent_hook`` so existing autosuggest callers
+    automatically get borg suggestions.
   - Registers ``on_consecutive_failure`` and ``on_task_start`` hooks that
-    log guild-v2 pack suggestions at the right moments.
+    log borg pack suggestions at the right moments.
 
 Config options (in ~/.hermes/config.yaml → agent section):
 
-    guild:
+    borg:
       autosuggest_enabled: true       # master switch (default: true)
       error_threshold: 3              # consecutive failures before triggering
-      proactive_suggest: true        # also call guild_on_task_start on new tasks
-      v2_bridge_enabled: true        # use guild-v2 engine (default: true)
+      proactive_suggest: true        # also call borg_on_task_start on new tasks
 
-Only the ``guild.v2_bridge_enabled`` key is new; all others existed before.
-When ``v2_bridge_enabled`` is false the plugin is a no-op (safe to keep installed).
+Only the ``borg.autosuggest_enabled`` key is new; all others existed before.
+When ``autosuggest_enabled`` is false the plugin is a no-op (safe to keep installed).
 """
 
 from __future__ import annotations
@@ -39,33 +37,33 @@ import logging
 import os
 import sys
 
-logger = logging.getLogger("guild.hermes_plugin")
+logger = logging.getLogger("borg.hermes_plugin")
 
 # -----------------------------------------------------------------------------
-# Guard — honour HERMES_GUILD_V2_ENABLED without touching any existing logic
+# Guard — honour HERMES_BORG_ENABLED without touching any existing logic
 # -----------------------------------------------------------------------------
 
-_GUILD_V2_ENABLED = os.getenv("HERMES_GUILD_V2_ENABLED", "true").lower() in (
+_BORG_ENABLED = os.getenv("HERMES_BORG_ENABLED", "true").lower() in (
     "1", "true", "yes", "on",
 )
 
-_V2_BRIDGE_ENABLED = True  # flipped False by register() if config says so
+_AUTOSUGGEST_ENABLED = True  # flipped False by register() if config says so
 
 # -----------------------------------------------------------------------------
-# Imports — lazy so we don't break the agent if guild-v2 isn't installed
+# Imports — lazy so we don't break the agent if agent-borg isn't installed
 # -----------------------------------------------------------------------------
 
 
-def _patch_guild_autosuggest() -> bool:
+def _patch_borg_autosuggest() -> bool:
     """
-    Monkey-patch ``tools.guild_autosuggest.check_for_suggestion`` so it
-    delegates to ``guild.integrations.agent_hook.guild_on_failure``.
+    Monkey-patch ``tools.borg_autosuggest.check_for_suggestion`` so it
+    delegates to ``borg.integrations.agent_hook.borg_on_failure``.
 
     Returns True if patching succeeded, False otherwise.
     """
     try:
-        from tools import guild_autosuggest as original
-        from guild.integrations import agent_hook
+        from tools import borg_autosuggest as original
+        from borg.integrations import agent_hook
 
         _original_check = original.check_for_suggestion
 
@@ -75,9 +73,9 @@ def _patch_guild_autosuggest() -> bool:
             task_type: str = "",
             tried_packs=None,
         ):
-            # Translate set/list type差异
+            # Translate set/list type
             tried = list(tried_packs) if tried_packs else None
-            result = agent_hook.guild_on_failure(
+            result = agent_hook.borg_on_failure(
                 context=conversation_context,
                 failure_count=failure_count,
                 tried_packs=tried,
@@ -89,11 +87,11 @@ def _patch_guild_autosuggest() -> bool:
 
         # Swap the function in place
         original.check_for_suggestion = _delegating_check
-        logger.info("Patched tools.guild_autosuggest.check_for_suggestion → guild_v2")
+        logger.info("Patched tools.borg_autosuggest.check_for_suggestion → borg")
         return True
 
     except Exception as exc:
-        logger.warning("Could not patch guild_autosuggest (guild-v2 may not be installed): %s", exc)
+        logger.warning("Could not patch borg_autosuggest (agent-borg may not be installed): %s", exc)
         return False
 
 
@@ -107,7 +105,7 @@ def _patch_guild_autosuggest() -> bool:
 def _register_lifecycle_hooks(manager) -> None:
     """Register on_consecutive_failure and on_task_start hooks if supported."""
     try:
-        from guild.integrations import agent_hook
+        from borg.integrations import agent_hook
 
         def on_consecutive_failure_hook(
             task_description: str = "",
@@ -115,32 +113,32 @@ def _register_lifecycle_hooks(manager) -> None:
             failure_count: int = 0,
             **kwargs,
         ) -> None:
-            suggestion = agent_hook.guild_on_failure(
+            suggestion = agent_hook.borg_on_failure(
                 context=error_context or task_description,
                 failure_count=failure_count,
                 tried_packs=None,
             )
             if suggestion:
                 logger.info(
-                    "[Guild v2 on_consecutive_failure] %s",
+                    "[Borg on_consecutive_failure] %s",
                     suggestion,
                 )
 
         def on_task_start_hook(task_description: str = "", **kwargs) -> None:
-            if not _V2_BRIDGE_ENABLED:
+            if not _AUTOSUGGEST_ENABLED:
                 return
-            suggestion = agent_hook.guild_on_task_start(task_description)
+            suggestion = agent_hook.borg_on_task_start(task_description)
             if suggestion:
                 logger.info(
-                    "[Guild v2 on_task_start] %s",
+                    "[Borg on_task_start] %s",
                     suggestion,
                 )
 
         manager.register_hook("on_consecutive_failure", on_consecutive_failure_hook)
         manager.register_hook("on_task_start", on_task_start_hook)
-        logger.info("Registered guild-v2 lifecycle hooks")
+        logger.info("Registered borg lifecycle hooks")
     except Exception as exc:
-        logger.debug("Lifecycle hooks not registered (guild-v2 may not be fully installed): %s", exc)
+        logger.debug("Lifecycle hooks not registered (agent-borg may not be fully installed): %s", exc)
 
 
 # -----------------------------------------------------------------------------
@@ -148,18 +146,18 @@ def _register_lifecycle_hooks(manager) -> None:
 # -----------------------------------------------------------------------------
 
 
-def _make_guild_v2_autosuggest_tool():
+def _make_borg_autosuggest_tool():
     """
-    Build the guild_v2_autosuggest tool schema and handler.
+    Build the borg_autosuggest tool schema and handler.
 
-    This tool wraps guild_on_failure and guild_on_task_start for direct LLM use.
+    This tool wraps borg_on_failure and borg_on_task_start for direct LLM use.
     """
-    from guild.integrations import agent_hook
+    from borg.integrations import agent_hook
 
     schema = {
-        "name": "guild_v2_autosuggest",
+        "name": "borg_autosuggest",
         "description": (
-            "Ask Guild v2 for an auto-suggested pack. "
+            "Ask Borg for an auto-suggested pack. "
             "Use when the agent has failed 2+ times on the same problem, "
             "or at the start of a complex task to proactively discover packs. "
             "Returns a formatted suggestion string or None."
@@ -204,16 +202,16 @@ def _make_guild_v2_autosuggest_tool():
         tried_packs = args.get("tried_packs")
 
         if mode == "task_start":
-            result = agent_hook.guild_on_task_start(task_description or context)
+            result = agent_hook.borg_on_task_start(task_description or context)
         else:
-            result = agent_hook.guild_on_failure(
+            result = agent_hook.borg_on_failure(
                 context=context,
                 failure_count=failure_count,
                 tried_packs=tried_packs,
             )
 
         if result is None:
-            return "No guild-v2 suggestion available."
+            return "No borg suggestion available."
         return result
 
     return schema, handler
@@ -231,9 +229,9 @@ def register(ctx) -> None:
     Args:
         ctx: PluginContext instance from hermes_cli.plugins.
     """
-    global _V2_BRIDGE_ENABLED
+    global _AUTOSUGGEST_ENABLED
 
-    # Check config for v2_bridge_enabled (only if config is available)
+    # Check config for autosuggest_enabled (only if config is available)
     try:
         import yaml
         config_path = os.path.expanduser("~/.hermes/config.yaml")
@@ -241,24 +239,24 @@ def register(ctx) -> None:
             with open(config_path) as f:
                 config = yaml.safe_load(f) or {}
             agent_cfg = config.get("agent", {})
-            guild_cfg = agent_cfg.get("guild", {})
-            if not guild_cfg.get("v2_bridge_enabled", True):
-                _V2_BRIDGE_ENABLED = False
-                logger.info("Guild v2 bridge disabled by config — plugin is a no-op")
+            borg_cfg = agent_cfg.get("borg", {})
+            if not borg_cfg.get("autosuggest_enabled", True):
+                _AUTOSUGGEST_ENABLED = False
+                logger.info("Borg autosuggest disabled by config — plugin is a no-op")
                 return
     except Exception as exc:
         logger.debug("Could not read config.yaml (using defaults): %s", exc)
 
-    if not _GUILD_V2_ENABLED:
-        logger.info("HERMES_GUILD_V2_ENABLED=false — plugin is a no-op")
+    if not _BORG_ENABLED:
+        logger.info("HERMES_BORG_ENABLED=false — plugin is a no-op")
         return
 
-    # Step 1: Patch the built-in autosuggest to use guild-v2
-    _patch_guild_autosuggest()
+    # Step 1: Patch the built-in autosuggest to use borg
+    _patch_borg_autosuggest()
 
-    # Step 2: Register the guild_v2_autosuggest tool
+    # Step 2: Register the borg_autosuggest tool
     try:
-        schema, handler = _make_guild_v2_autosuggest_tool()
+        schema, handler = _make_borg_autosuggest_tool()
         ctx.register_tool(
             name=schema["name"],
             toolset="skills",
@@ -268,7 +266,7 @@ def register(ctx) -> None:
             emoji="💡",
         )
     except Exception as exc:
-        logger.warning("Could not register guild_v2_autosuggest tool: %s", exc)
+        logger.warning("Could not register borg_autosuggest tool: %s", exc)
 
     # Step 3: Register lifecycle hooks (informational — see note above)
     try:
@@ -276,4 +274,4 @@ def register(ctx) -> None:
     except Exception as exc:
         logger.debug("Could not register lifecycle hooks: %s", exc)
 
-    logger.info("Guild v2 plugin loaded successfully")
+    logger.info("Borg plugin loaded successfully")

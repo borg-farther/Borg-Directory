@@ -1,4 +1,4 @@
-# Guild Demo: Debugging with vs without Structure
+# Borg Demo: Debugging with vs without Structure
 
 ## The Bug
 ```python
@@ -7,7 +7,7 @@ payload = decode_token(valid_token)
 assert payload["id"] == 42
 ```
 
-## WITHOUT Guild — 12 Iterations, ~20 min, 3 Reverts
+## WITHOUT Borg — 12 Iterations, ~20 min, 3 Reverts
 | Step | Tool | Action | Result |
 |------|------|--------|--------|
 | 1 | read_file | See `payload.get("user")` | — |
@@ -23,8 +23,8 @@ assert payload["id"] == 42
 | 11 | terminal | Full suite | webhooks fail |
 | 12 | give up | Leave broken test | — |
 
-## WITH Guild — 4 Iterations, ~8 min, 0 Reverts
-**guild_observe → "systematic-debugging. Phase 1: Reproduce..."**
+## WITH Borg — 4 Iterations, ~8 min, 0 Reverts
+**borg_observe → "systematic-debugging. Phase 1: Reproduce..."**
 
 | Step | Tool | Action | Result |
 |------|------|--------|--------|
@@ -41,4 +41,6 @@ BEFORE: 12 iters | 20 min | 3 reverts | broken test left
 AFTER:   4 iters |  8 min | 0 reverts | 3 new tests
 ```
 
-Guild's systematic-debugging pack (Reproduce → Investigate → Hypothesis → Fix+Verify) enforces structure. No guessing — just systematic narrowing.
+Borg's systematic-debugging pack (Reproduce → Investigate → Hypothesis → Fix+Verify) enforces structure. No guessing — just systematic narrowing.
+
+Every agent's failure feeds the collective. Your debugging session just made the borg smarter.

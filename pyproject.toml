@@ -3,9 +3,9 @@ requires = ["setuptools>=61.0", "wheel"]
 build-backend = "setuptools.build_meta"
 
 [project]
-name = "guild-packs"
-version = "2.1.1"
-description = "Proven workflows for AI agents — execution-proven, safety-scanned, feedback-improving"
+name = "agent-borg"
+version = "2.4.0"
+description = "Your agent joins the borg. Collective intelligence for AI coding agents."
 readme = "README.md"
 license = {text = "MIT"}
 requires-python = ">=3.10"
@@ -35,8 +35,8 @@ dev = ["pytest>=7.0", "pytest-cov>=4.0"]
 all = ["guild-packs[crypto,embeddings,dev]"]
 
 [project.scripts]
-guildpacks = "guild.cli:main"
-guild-mcp = "guild.integrations.mcp_server:main"
+borg = "borg.cli:main"
+borg-mcp = "borg.integrations.mcp_server:main"
 
 [project.urls]
 Homepage = "https://github.com/bensargotest-sys/guild-packs"
@@ -44,11 +44,11 @@ Repository = "https://github.com/bensargotest-sys/guild-packs"
 Documentation = "https://github.com/bensargotest-sys/guild-packs#readme"
 
 [tool.setuptools.packages.find]
-include = ["guild*"]
-exclude = ["guild.tests*", "test_e2e"]
+include = ["borg*"]
+exclude = ["borg.tests*", "test_e2e"]
 
 [tool.pytest.ini_options]
-testpaths = ["guild/tests"]
+testpaths = ["borg/tests"]
 markers = [
     "network: tests that require network access (guild_search, guild_try, guild_pull against live servers)",
 ]

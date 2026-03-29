@@ -1,4 +1,4 @@
-# Guild-Packs MCP Setup Guide
+# Borg MCP Setup Guide
 
 This guide provides exact copy-paste MCP configurations for Claude Code, Cursor, and generic MCP clients.
 
@@ -10,13 +10,13 @@ This guide provides exact copy-paste MCP configurations for Claude Code, Cursor,
 
 > Note: Claude Code stores MCP settings in a JSON file. The default location is `~/.config/claude/claude_desktop_config.json` on Linux/macOS.
 
-### Single guild-packs server
+### Single borg server
 
 ```json
 {
   "mcpServers": {
-    "guild-packs": {
-      "command": "guild-mcp",
+    "borg": {
+      "command": "borg-mcp",
       "args": []
     }
   }
@@ -25,13 +25,13 @@ This guide provides exact copy-paste MCP configurations for Claude Code, Cursor,
 
 ### Multiple MCP servers (merge existing)
 
-If you already have other MCP servers configured, merge the guild-packs entry:
+If you already have other MCP servers configured, merge the borg entry:
 
 ```json
 {
   "mcpServers": {
-    "guild-packs": {
-      "command": "guild-mcp",
+    "borg": {
+      "command": "borg-mcp",
       "args": []
     },
     "your-other-server": {
@@ -42,32 +42,32 @@ If you already have other MCP servers configured, merge the guild-packs entry:
 }
 ```
 
-### Using absolute path (if `guild-mcp` not in PATH)
+### Using absolute path (if `borg-mcp` not in PATH)
 
 ```json
 {
   "mcpServers": {
-    "guild-packs": {
-      "command": "/home/YOUR_USER/.local/bin/guild-mcp",
+    "borg": {
+      "command": "/home/YOUR_USER/.local/bin/borg-mcp",
       "args": []
     }
   }
 }
 ```
 
-Find your guild-mcp path with:
+Find your borg-mcp path with:
 ```bash
-which guild-mcp
+which borg-mcp
 # or
-find ~ -name "guild-mcp" -type f 2>/dev/null
+find ~ -name "borg-mcp" -type f 2>/dev/null
 ```
 
-### Verify Claude Code sees guild-packs
+### Verify Claude Code sees borg
 
 After restarting Claude Code, ask:
-> "What MCP tools do you have available from guild-packs?"
+> "What MCP tools do you have available from borg?"
 
-You should see tools like `guild_search`, `guild_pull`, `guild_try`, `guild_apply`, etc.
+You should see tools like `borg_search`, `borg_pull`, `borg_try`, `borg_apply`, etc.
 
 ---
 
@@ -80,8 +80,8 @@ Create the file if it doesn't exist:
 ```json
 {
   "mcpServers": {
-    "guild-packs": {
-      "command": "guild-mcp",
+    "borg": {
+      "command": "borg-mcp",
       "args": []
     }
   }
@@ -93,8 +93,8 @@ Create the file if it doesn't exist:
 ```json
 {
   "mcpServers": {
-    "guild-packs": {
-      "command": "guild-mcp",
+    "borg": {
+      "command": "borg-mcp",
       "args": []
     },
     "filesystem": {
@@ -110,32 +110,32 @@ Create the file if it doesn't exist:
 ```json
 {
   "mcpServers": {
-    "guild-packs": {
-      "command": "/Users/YOUR_USER/.local/bin/guild-mcp",
+    "borg": {
+      "command": "/Users/YOUR_USER/.local/bin/borg-mcp",
       "args": []
     }
   }
 }
 ```
 
-### Verify Cursor sees guild-packs
+### Verify Cursor sees borg
 
 In Cursor, try asking:
-> "Search guild packs for a code review workflow"
+> "Search borg for a code review workflow"
 
 ---
 
 ## Generic MCP Client
 
-Any MCP client that supports stdio-based servers can use guild-packs.
+Any MCP client that supports stdio-based servers can use borg.
 
 ### Basic stdio configuration
 
 ```json
 {
   "mcpServers": {
-    "guild-packs": {
-      "command": "guild-mcp",
+    "borg": {
+      "command": "borg-mcp",
       "args": []
     }
   }
@@ -149,9 +149,9 @@ Some clients need the Python interpreter specified:
 ```json
 {
   "mcpServers": {
-    "guild-packs": {
+    "borg": {
       "command": "python3",
-      "args": ["-m", "guild.integrations.mcp_server"]
+      "args": ["-m", "borg.integrations.mcp_server"]
     }
   }
 }
@@ -161,9 +161,9 @@ Or with explicit path:
 ```json
 {
   "mcpServers": {
-    "guild-packs": {
+    "borg": {
       "command": "python3",
-      "args": ["-c", "import sys; sys.path.insert(0, '/path/to/guild-v2'); from guild.integrations.mcp_server import main; main()"]
+      "args": ["-c", "import sys; sys.path.insert(0, '/path/to/agent-borg'); from borg.integrations.mcp_server import main; main()"]
     }
   }
 }
@@ -171,17 +171,17 @@ Or with explicit path:
 
 ### Manual JSON-RPC 2.0 over stdio
 
-guild-mcp speaks JSON-RPC 2.0 over stdin/stdout. You can test it manually:
+borg-mcp speaks JSON-RPC 2.0 over stdin/stdout. You can test it manually:
 
 ```bash
 # Initialize
-echo '{"jsonrpc":"2.0","id":1,"method":"initialize","params":{"protocolVersion":"2024-11-05","capabilities":{},"clientInfo":{"name":"test","version":"1.0"}}}' | guild-mcp
+echo '{"jsonrpc":"2.0","id":1,"method":"initialize","params":{"protocolVersion":"2024-11-05","capabilities":{},"clientInfo":{"name":"test","version":"1.0"}}}' | borg-mcp
 
 # List tools
-echo '{"jsonrpc":"2.0","id":2,"method":"tools/list","params":{}}' | guild-mcp
+echo '{"jsonrpc":"2.0","id":2,"method":"tools/list","params":{}}' | borg-mcp
 
-# Call guild_search
-echo '{"jsonrpc":"2.0","id":3,"method":"tools/call","params":{"name":"guild_search","arguments":{"query":"debugging"}}}' | guild-mcp
+# Call borg_search
+echo '{"jsonrpc":"2.0","id":3,"method":"tools/call","params":{"name":"borg_search","arguments":{"query":"debugging"}}}' | borg-mcp
 ```
 
 ---
@@ -190,22 +190,22 @@ echo '{"jsonrpc":"2.0","id":3,"method":"tools/call","params":{"name":"guild_sear
 
 - **Protocol version:** 2024-11-05
 - **Transport:** stdio (stdin/stdout JSON-RPC 2.0)
-- **Server name:** guild-mcp-server
+- **Server name:** borg-mcp-server
 - **Server version:** 1.0.0
 
 ### Available Tools
 
 | Tool | Description |
 |------|-------------|
-| `guild_search` | Search packs by keyword or semantic similarity |
-| `guild_try` | Preview pack without saving |
-| `guild_pull` | Download and save pack locally |
-| `guild_init` | Scaffold a new pack |
-| `guild_apply` | Execute pack (start/checkpoint/complete) |
-| `guild_feedback` | Generate feedback from session |
-| `guild_publish` | Publish pack or feedback to GitHub |
-| `guild_convert` | Convert SKILL.md/CLAUDE.md/.cursorrules |
-| `guild_suggest` | Auto-suggest pack from frustration signals |
+| `borg_search` | Search packs by keyword or semantic similarity |
+| `borg_try` | Preview pack without saving |
+| `borg_pull` | Download and save pack locally |
+| `borg_init` | Scaffold a new pack |
+| `borg_apply` | Execute pack (start/checkpoint/complete) |
+| `borg_feedback` | Generate feedback from session |
+| `borg_publish` | Publish pack or feedback to GitHub |
+| `borg_convert` | Convert SKILL.md/CLAUDE.md/.cursorrules |
+| `borg_suggest` | Auto-suggest pack from frustration signals |
 
 ---
 
@@ -213,44 +213,44 @@ echo '{"jsonrpc":"2.0","id":3,"method":"tools/call","params":{"name":"guild_sear
 
 ### "command not found" or server not responding
 
-1. Verify guild-mcp is installed:
+1. Verify borg-mcp is installed:
 ```bash
-which guild-mcp
-guild-mcp --version 2>&1 || echo "guild-mcp not in PATH"
+which borg-mcp
+borg-mcp --version 2>&1 || echo "borg-mcp not in PATH"
 ```
 
 2. Find the correct path:
 ```bash
-pip show guild-packs | grep Location
-# guild-mcp is at: <Location>/../../../bin/guild-mcp
+pip show agent-borg | grep Location
+# borg-mcp is at: <Location>/../../../bin/borg-mcp
 ```
 
 3. Use absolute path in config.
 
-### macOS: "guild-mcp cannot be opened because the developer is not verified"
+### macOS: "borg-mcp cannot be opened because the developer is not verified"
 
-Go to System Preferences → Security & Privacy → General → allow "guild-mcp" (or use `xattr -d com.apple.quarantine /path/to/guild-mcp`).
+Go to System Preferences → Security & Privacy → General → allow "borg-mcp" (or use `xattr -d com.apple.quarantine /path/to/borg-mcp`).
 
-### Windows: guild-mcp closes immediately
+### Windows: borg-mcp closes immediately
 
 On Windows, you may need to specify python explicitly:
 ```json
 {
   "mcpServers": {
-    "guild-packs": {
+    "borg": {
       "command": "python",
-      "args": ["-m", "guild.integrations.mcp_server"]
+      "args": ["-m", "borg.integrations.mcp_server"]
     }
   }
 }
 ```
 
-### Claude Code / Cursor don't show guild tools after setup
+### Claude Code / Cursor don't show borg tools after setup
 
 1. Restart the IDE completely (not just the chat)
 2. Check the IDE's MCP logs (usually in dev tools or console)
 3. Verify JSON syntax is valid in config file
-4. Try with absolute path to guild-mcp
+4. Try with absolute path to borg-mcp
 
 ### Linux: ~/.config directory doesn't exist
 

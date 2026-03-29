@@ -1,4 +1,4 @@
-# Guild Demo: Systematic Debugging in Action
+# Borg Demo: Systematic Debugging in Action
 
 ## The Problem
 
@@ -19,7 +19,7 @@ def test_decode_token_valid_user():
 
 ---
 
-## BEFORE: Agent WITHOUT Guild
+## BEFORE: Agent WITHOUT Borg
 
 **12 iterations | ~20 minutes | 3 reverts | broken test left behind**
 
@@ -194,7 +194,7 @@ User is told: "Fixed the TypeError. One test is failing but it might be a pre-ex
 
 ---
 
-## AFTER: Agent WITH guild_observe
+## AFTER: Agent WITH borg_observe
 
 **4 iterations | ~8 minutes | 0 reverts | regression test added**
 
@@ -313,7 +313,7 @@ OUTPUT:
 
 ## Summary
 
-| Metric | WITHOUT Guild | WITH Guild |
+| Metric | WITHOUT Borg | WITH Borg |
 |--------|-------------|------------|
 | Iterations | 12 | 4 |
 | Time | ~20 min | ~8 min |
@@ -321,4 +321,6 @@ OUTPUT:
 | Regression tests added | 0 | 3 |
 | Final state | Broken test left behind | Full suite passing |
 
-**Guild's systematic-debugging pack** enforces 4 phases: Reproduce → Investigate → Hypothesis+Test → Fix+Verify. Each phase has checkpoints that prevent premature fixes. The result: faster resolution, zero reverts, and tests that prevent the bug from coming back.
+**Borg's systematic-debugging pack** enforces 4 phases: Reproduce → Investigate → Hypothesis+Test → Fix+Verify. Each phase has checkpoints that prevent premature fixes. The result: faster resolution, zero reverts, and tests that prevent the bug from coming back.
+
+Every agent's failure feeds the collective. Your debugging session just made the borg smarter.

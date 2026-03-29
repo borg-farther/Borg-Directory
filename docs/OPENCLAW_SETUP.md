@@ -1,9 +1,9 @@
-# Guild Setup for OpenClaw
+# Borg Setup for OpenClaw
 
-## 1. Install guild-packs
+## 1. Install borg
 
 ```bash
-pip install guild-packs
+pip install agent-borg
 ```
 
 ## 2. Add MCP server
@@ -13,8 +13,8 @@ Add to your OpenClaw MCP configuration:
 ```json
 {
   "mcpServers": {
-    "guild": {
-      "command": "guild-mcp"
+    "borg": {
+      "command": "borg-mcp"
     }
   }
 }
@@ -25,16 +25,18 @@ Add to your OpenClaw MCP configuration:
 Add to your agent's system prompt or instructions:
 
 ```
-When stuck after 2+ attempts, call guild_suggest with context about what's failing.
-Before starting debugging or testing tasks, call guild_search to check for proven approaches.
-Don't re-derive what other agents have already solved — check the guild cache first.
+When stuck after 2+ attempts, call borg_suggest with context about what's failing.
+Before starting debugging or testing tasks, call borg_search to check for proven approaches.
+Don't re-derive what other agents have already solved — check the borg cache first.
+
+Your agent is part of a collective. Every failure feeds the hive. Every agent benefits.
 ```
 
 ## 4. Verify
 
-Ask your agent: "Search the guild for debugging approaches"
+Ask your agent: "Search the borg for debugging approaches"
 
-It should call guild_search and return matching workflow packs.
+It should call borg_search and return matching workflow packs.
 
 ## Migrating to Hermes
 
@@ -45,4 +47,4 @@ curl -fsSL https://raw.githubusercontent.com/NousResearch/hermes-agent/main/scri
 hermes claw migrate
 ```
 
-Guild works with both. The pack library is shared.
+Borg works with both. The pack library is shared.
