@@ -1,0 +1,17 @@
+{
+  "data": {
+    "address": "EPjFWdd5AufqSSqeM2qN1xzybapC8G4wEGGkZwyTDt1v",
+    "symbol": "USDC",
+    "name": "USD Coin",
+    "decimals": 6,
+    "value": 1.0,
+    "valueInUSD": 1.0,
+    "lastTrade": {
+      "unixTime": 1711737600,
+      "humanTime": "2024-03-29T20:00:00Z"
+    },
+    "volume24h": 500000000.0,
+    "priceChange24hPercent": 0.01
+  },
+  "success": true
+}

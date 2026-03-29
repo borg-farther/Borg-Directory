@@ -1,0 +1,33 @@
+{
+  "signature": "3xZkDJpCLnbH2ogxK3L5YL4Tz3wvB3Jv6qG7yJ7e9XhF4Yv8qR5nM6sT7uV8wX9Y",
+  "slot": 245500000,
+  "timestamp": 1711737600,
+  "fee": 5000,
+  "status": "success",
+  "type": "SWAP",
+  "source": "raydium",
+  "tokenTransfers": [
+    {
+      "fromUserAccount": "4ZkDJpCLnbH2ogxK3L5YL4Tz3wvB3Jv6qG7yJ7e9XhF4",
+      "toUserAccount": "5aL5YL4Tz3wvB3Jv6qG7yJ7e9XhF4Yv8qR5nM6sT",
+      "mint": "So11111111111111111111111111111111111111112",
+      "mintSymbol": "SOL",
+      "amount": 25000000000,
+      "amountUSD": 2500000.0
+    },
+    {
+      "fromUserAccount": "5aL5YL4Tz3wvB3Jv6qG7yJ7e9XhF4Yv8qR5nM6sT",
+      "toUserAccount": "4ZkDJpCLnbH2ogxK3L5YL4Tz3wvB3Jv6qG7yJ7e9XhF4",
+      "mint": "EPjFWdd5AufqSSqeM2qN1xzybapC8G4wEGGkZwyTDt1v",
+      "mintSymbol": "USDC",
+      "amount": 245000000,
+      "amountUSD": 245000.0
+    }
+  ],
+  "nativeTransfers": [],
+  "accountKeys": [
+    "4ZkDJpCLnbH2ogxK3L5YL4Tz3wvB3Jv6qG7yJ7e9XhF4",
+    "5aL5YL4Tz3wvB3Jv6qG7yJ7e9XhF4Yv8qR5nM6sT",
+    "7mYv8qR5nM6sT7uV8wX9Yv8qR5nM6sT7uV8wX9Yv"
+  ]
+}
