@@ -272,6 +272,10 @@ _META_PATTERNS = frozenset({
     "pitfalls",
     "known_issues",
     "references",
+    "required_inputs",
+    "escalation",
+    "examples",
+    "provenance",
 })
 
 
