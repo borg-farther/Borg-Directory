@@ -111,6 +111,7 @@ class TestToolsList:
             "borg_recall",
             "borg_reputation",
             "borg_analytics",
+            "borg_dojo",
         ]
         for name in expected:
             assert name in tool_names, f"{name} not in {tool_names}"
@@ -128,7 +129,7 @@ class TestToolsList:
     def test_tools_list_correct_count(self):
         req = minimal_request("tools/list", {}, req_id=4)
         resp = mcp_module.handle_request(req)
-        assert len(resp["result"]["tools"]) == 14
+        assert len(resp["result"]["tools"]) == 15
 
 
 # ============================================================================
@@ -618,3 +619,238 @@ class TestToolsConstant:
     def test_borg_publish_enum_action(self):
         pub_tool = next(t for t in mcp_module.TOOLS if t["name"] == "borg_publish")
         assert pub_tool["inputSchema"]["properties"]["action"]["enum"] == ["list", "publish"]
+
+
+class TestBorgDojo:
+    """Tests for borg_dojo tool (analyze, report, history, status actions)."""
+
+    def test_borg_dojo_tool_exists_in_tools_list(self):
+        """Verify borg_dojo is present in TOOLS with correct schema."""
+        tool = next((t for t in mcp_module.TOOLS if t["name"] == "borg_dojo"), None)
+        assert tool is not None
+        props = tool["inputSchema"]["properties"]
+        assert "action" in props
+        assert props["action"]["enum"] == ["analyze", "report", "history", "status"]
+        assert "days" in props
+        assert "report_format" in props
+
+    def test_borg_dojo_unknown_action_returns_error(self):
+        result = mcp_module.call_tool("borg_dojo", {"action": "fly_to_the_moon"})
+        parsed = json.loads(result)
+        assert parsed["success"] is False
+        assert "Unknown action" in parsed["error"]
+
+    def test_borg_dojo_analyze_with_mock(self):
+        """Test action=analyze returns structured analysis data."""
+        mock_analysis = MagicMock()
+        mock_analysis.schema_version = 1
+        mock_analysis.sessions_analyzed = 42
+        mock_analysis.total_tool_calls = 300
+        mock_analysis.total_errors = 15
+        mock_analysis.overall_success_rate = 95.0
+        mock_analysis.user_corrections = 3
+        mock_analysis.skill_gaps = []
+        mock_analysis.weakest_tools = []
+        mock_analysis.failure_reports = []
+
+        with patch("borg.dojo.pipeline.analyze_recent_sessions", return_value=mock_analysis) as mock_analyze:
+            result = mcp_module.call_tool("borg_dojo", {"action": "analyze", "days": 7})
+            mock_analyze.assert_called_once_with(days=7)
+            parsed = json.loads(result)
+            assert parsed["success"] is True
+            assert parsed["action"] == "analyze"
+            assert parsed["sessions_analyzed"] == 42
+            assert parsed["total_tool_calls"] == 300
+            assert parsed["total_errors"] == 15
+            assert parsed["overall_success_rate"] == 95.0
+
+    def test_borg_dojo_analyze_file_not_found(self):
+        """Test action=analyze handles missing state.db gracefully."""
+        with patch("borg.dojo.pipeline.analyze_recent_sessions", side_effect=FileNotFoundError("state.db not found")):
+            result = mcp_module.call_tool("borg_dojo", {"action": "analyze"})
+            parsed = json.loads(result)
+            assert parsed["success"] is False
+            assert "state.db" in parsed["error"]
+
+    def test_borg_dojo_report_with_mock(self):
+        """Test action=report returns formatted report string."""
+        mock_pipeline = MagicMock()
+        mock_pipeline.run.return_value = "Dojo Report — 5 sessions analyzed, 2 improvements made."
+
+        with patch("borg.dojo.pipeline.DojoPipeline", return_value=mock_pipeline):
+            result = mcp_module.call_tool("borg_dojo", {"action": "report", "report_format": "telegram"})
+            mock_pipeline.run.assert_called_once_with(days=7, auto_fix=False, report_fmt="telegram")
+            parsed = json.loads(result)
+            assert parsed["success"] is True
+            assert parsed["action"] == "report"
+            assert "Dojo Report" in parsed["report"]
+
+    def test_borg_dojo_report_cli_format(self):
+        """Test action=report with cli format."""
+        mock_pipeline = MagicMock()
+        mock_pipeline.run.return_value = "CLI REPORT LINE 1\nCLI REPORT LINE 2"
+
+        with patch("borg.dojo.pipeline.DojoPipeline", return_value=mock_pipeline):
+            result = mcp_module.call_tool("borg_dojo", {"action": "report", "report_format": "cli"})
+            parsed = json.loads(result)
+            assert parsed["success"] is True
+            assert parsed["format"] == "cli"
+
+    def test_borg_dojo_history_with_mock(self):
+        """Test action=history returns learning curve snapshots."""
+        mock_snapshot = MagicMock()
+        mock_snapshot.to_dict.return_value = {
+            "timestamp": 1700000000.0,
+            "date": "2024-01-01 00:00",
+            "sessions_analyzed": 10,
+            "total_tool_calls": 100,
+            "overall_success_rate": 92.0,
+            "total_errors": 8,
+            "user_corrections": 2,
+            "skill_gaps_count": 1,
+            "retry_pattern_count": 0,
+            "weakest_tools": [],
+            "improvements_made": [],
+            "schema_version": 1,
+        }
+        mock_tracker = MagicMock()
+        mock_tracker.load_history.return_value = [mock_snapshot]
+
+        with patch("borg.dojo.learning_curve.LearningCurveTracker", return_value=mock_tracker):
+            result = mcp_module.call_tool("borg_dojo", {"action": "history"})
+            parsed = json.loads(result)
+            assert parsed["success"] is True
+            assert parsed["action"] == "history"
+            assert parsed["snapshot_count"] == 1
+            assert len(parsed["snapshots"]) == 1
+            assert parsed["snapshots"][0]["sessions_analyzed"] == 10
+
+    def test_borg_dojo_history_empty_returns_empty_list(self):
+        """Test action=history handles empty history gracefully."""
+        mock_tracker = MagicMock()
+        mock_tracker.load_history.return_value = []
+
+        with patch("borg.dojo.learning_curve.LearningCurveTracker", return_value=mock_tracker):
+            result = mcp_module.call_tool("borg_dojo", {"action": "history"})
+            parsed = json.loads(result)
+            assert parsed["success"] is True
+            assert parsed["snapshot_count"] == 0
+            assert parsed["snapshots"] == []
+
+    def test_borg_dojo_status_with_cached_analysis(self):
+        """Test action=status returns health summary from cached analysis."""
+        mock_analysis = MagicMock()
+        mock_analysis.overall_success_rate = 85.0
+        mock_analysis.sessions_analyzed = 20
+        mock_analysis.total_tool_calls = 150
+        mock_analysis.total_errors = 12
+        mock_analysis.user_corrections = 1
+        mock_analysis.skill_gaps = []
+        mock_analysis.weakest_tools = [
+            MagicMock(tool_name="borg_search", failed_calls=5),
+            MagicMock(tool_name="borg_pull", failed_calls=3),
+        ]
+
+        with patch("borg.dojo.pipeline.get_cached_analysis", return_value=mock_analysis):
+            result = mcp_module.call_tool("borg_dojo", {"action": "status"})
+            parsed = json.loads(result)
+            assert parsed["success"] is True
+            assert parsed["action"] == "status"
+            assert parsed["health"] == "healthy"
+            assert parsed["sessions_analyzed"] == 20
+            assert parsed["overall_success_rate"] == 85.0
+            assert len(parsed["weakest_tools"]) == 2
+
+    def test_borg_dojo_status_degraded_health(self):
+        """Test action=status returns 'degraded' when success rate < 70."""
+        mock_analysis = MagicMock()
+        mock_analysis.overall_success_rate = 65.0
+        mock_analysis.sessions_analyzed = 10
+        mock_analysis.total_tool_calls = 50
+        mock_analysis.total_errors = 17
+        mock_analysis.user_corrections = 0
+        mock_analysis.skill_gaps = []
+        mock_analysis.weakest_tools = []
+
+        with patch("borg.dojo.pipeline.get_cached_analysis", return_value=mock_analysis):
+            result = mcp_module.call_tool("borg_dojo", {"action": "status"})
+            parsed = json.loads(result)
+            assert parsed["health"] == "degraded"
+
+    def test_borg_dojo_status_unhealthy_health(self):
+        """Test action=status returns 'unhealthy' when success rate < 50."""
+        mock_analysis = MagicMock()
+        mock_analysis.overall_success_rate = 40.0
+        mock_analysis.sessions_analyzed = 5
+        mock_analysis.total_tool_calls = 20
+        mock_analysis.total_errors = 12
+        mock_analysis.user_corrections = 0
+        mock_analysis.skill_gaps = []
+        mock_analysis.weakest_tools = []
+
+        with patch("borg.dojo.pipeline.get_cached_analysis", return_value=mock_analysis):
+            result = mcp_module.call_tool("borg_dojo", {"action": "status"})
+            parsed = json.loads(result)
+            assert parsed["health"] == "unhealthy"
+
+    def test_borg_dojo_status_no_cache_runs_analysis(self):
+        """Test action=status runs analysis when no cached result exists."""
+        mock_analysis = MagicMock()
+        mock_analysis.overall_success_rate = 90.0
+        mock_analysis.sessions_analyzed = 8
+        mock_analysis.total_tool_calls = 60
+        mock_analysis.total_errors = 6
+        mock_analysis.user_corrections = 0
+        mock_analysis.skill_gaps = []
+        mock_analysis.weakest_tools = []
+
+        with patch("borg.dojo.pipeline.get_cached_analysis", return_value=None):
+            with patch("borg.dojo.pipeline.analyze_recent_sessions", return_value=mock_analysis) as mock_analyze:
+                result = mcp_module.call_tool("borg_dojo", {"action": "status", "days": 5})
+                mock_analyze.assert_called_once_with(days=5)
+                parsed = json.loads(result)
+                assert parsed["success"] is True
+                assert parsed["health"] == "healthy"
+
+    def test_borg_dojo_analyze_passes_days_parameter(self):
+        """Verify action=analyze respects the days parameter."""
+        mock_analysis = MagicMock()
+        mock_analysis.schema_version = 1
+        mock_analysis.sessions_analyzed = 5
+        mock_analysis.total_tool_calls = 30
+        mock_analysis.total_errors = 2
+        mock_analysis.overall_success_rate = 93.3
+        mock_analysis.user_corrections = 0
+        mock_analysis.skill_gaps = []
+        mock_analysis.weakest_tools = []
+        mock_analysis.failure_reports = []
+
+        with patch("borg.dojo.pipeline.analyze_recent_sessions", return_value=mock_analysis) as mock_analyze:
+            mcp_module.call_tool("borg_dojo", {"action": "analyze", "days": 30})
+            mock_analyze.assert_called_once_with(days=30)
+
+    def test_borg_dojo_dispatch_via_handle_request(self):
+        """Test borg_dojo dispatch through handle_request (tools/call flow)."""
+        req = minimal_request("tools/call", {
+            "name": "borg_dojo",
+            "arguments": {"action": "analyze", "days": 7}
+        }, req_id=99)
+        mock_analysis = MagicMock()
+        mock_analysis.schema_version = 1
+        mock_analysis.sessions_analyzed = 3
+        mock_analysis.total_tool_calls = 20
+        mock_analysis.total_errors = 1
+        mock_analysis.overall_success_rate = 95.0
+        mock_analysis.user_corrections = 0
+        mock_analysis.skill_gaps = []
+        mock_analysis.weakest_tools = []
+        mock_analysis.failure_reports = []
+
+        with patch("borg.dojo.pipeline.analyze_recent_sessions", return_value=mock_analysis):
+            resp = mcp_module.handle_request(req)
+            assert resp is not None
+            assert resp["id"] == 99
+            content_text = resp["result"]["content"][0]["text"]
+            parsed = json.loads(content_text)
+            assert parsed["success"] is True
+            assert parsed["action"] == "analyze"

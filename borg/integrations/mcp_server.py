@@ -444,6 +444,39 @@ TOOLS: List[Dict[str, Any]] = [
             "required": ["action"],
         },
     },
+    {
+        "name": "borg_dojo",
+        "description": (
+            "Borg Dojo — training improvement pipeline. Run session analysis, view learning curves, "
+            "generate reports, and check system health. Actions: "
+            "'analyze' runs session analysis over the last N days; "
+            "'report' generates a formatted improvement report (cli, telegram, or discord format); "
+            "'history' shows the learning curve with historical snapshots; "
+            "'status' returns a quick health summary with error rates and weakest tools."
+        ),
+        "inputSchema": {
+            "type": "object",
+            "properties": {
+                "action": {
+                    "type": "string",
+                    "enum": ["analyze", "report", "history", "status"],
+                    "description": "Action to perform: 'analyze' runs session analysis, 'report' generates formatted report, 'history' shows learning curve, 'status' returns health summary.",
+                },
+                "days": {
+                    "type": "integer",
+                    "description": "Number of days to look back for analysis (default: 7).",
+                    "default": 7,
+                },
+                "report_format": {
+                    "type": "string",
+                    "enum": ["cli", "telegram", "discord"],
+                    "description": "Report format for 'report' action: 'cli', 'telegram', or 'discord'. Defaults to 'telegram'.",
+                    "default": "telegram",
+                },
+            },
+            "required": ["action"],
+        },
+    },
 ]
 
 # ---------------------------------------------------------------------------
@@ -1577,6 +1610,142 @@ def borg_analytics(
         return json.dumps({"success": False, "error": str(e), "type": type(e).__name__})
 
 
+def borg_dojo(action: str = "", days: int = 7, report_format: str = "telegram") -> str:
+    """Borg Dojo — training improvement pipeline via MCP.
+
+    Args:
+        action: The action to perform - 'analyze', 'report', 'history', or 'status'.
+        days: Number of days to look back for analysis (default: 7).
+        report_format: Format for 'report' action - 'cli', 'telegram', or 'discord'.
+
+    Returns:
+        JSON string with analysis results, report, history, or health status.
+    """
+    try:
+        import time as _time
+        from borg.dojo.pipeline import DojoPipeline, analyze_recent_sessions, get_cached_analysis
+        from borg.dojo.learning_curve import LearningCurveTracker
+
+        if action == "analyze":
+            try:
+                analysis = analyze_recent_sessions(days=days)
+                return json.dumps({
+                    "success": True,
+                    "action": "analyze",
+                    "days": days,
+                    "schema_version": analysis.schema_version,
+                    "sessions_analyzed": analysis.sessions_analyzed,
+                    "total_tool_calls": analysis.total_tool_calls,
+                    "total_errors": analysis.total_errors,
+                    "overall_success_rate": analysis.overall_success_rate,
+                    "user_corrections": analysis.user_corrections,
+                    "skill_gaps_count": len(analysis.skill_gaps),
+                    "weakest_tools": [
+                        {
+                            "tool_name": t.tool_name,
+                            "failed_calls": t.failed_calls,
+                            "success_rate": t.success_rate,
+                            "top_error_category": t.top_error_category,
+                        }
+                        for t in (analysis.weakest_tools or [])[:5]
+                    ],
+                    "failure_reports": [
+                        {
+                            "tool_name": f.tool_name,
+                            "error_category": f.error_category,
+                            "error_snippet": f.error_snippet,
+                            "session_id": f.session_id,
+                            "timestamp": f.timestamp,
+                            "confidence": f.confidence,
+                        }
+                        for f in (analysis.failure_reports or [])[:10]
+                    ],
+                })
+            except FileNotFoundError:
+                return json.dumps({"success": False, "error": "state.db not found. Is hermes running?"})
+            except Exception as e:
+                return json.dumps({"success": False, "error": str(e), "type": type(e).__name__})
+
+        elif action == "report":
+            try:
+                pipeline = DojoPipeline()
+                report = pipeline.run(days=days, auto_fix=False, report_fmt=report_format)
+                return json.dumps({
+                    "success": True,
+                    "action": "report",
+                    "format": report_format,
+                    "report": report,
+                })
+            except FileNotFoundError:
+                return json.dumps({"success": False, "error": "state.db not found. Is hermes running?"})
+            except Exception as e:
+                return json.dumps({"success": False, "error": str(e), "type": type(e).__name__})
+
+        elif action == "history":
+            try:
+                tracker = LearningCurveTracker()
+                snapshots = tracker.load_history()
+                return json.dumps({
+                    "success": True,
+                    "action": "history",
+                    "snapshot_count": len(snapshots),
+                    "snapshots": [s.to_dict() for s in (snapshots or [])[-30:]],
+                })
+            except Exception as e:
+                return json.dumps({"success": False, "error": str(e), "type": type(e).__name__})
+
+        elif action == "status":
+            try:
+                analysis = get_cached_analysis()
+                if analysis is None:
+                    try:
+                        analysis = analyze_recent_sessions(days=min(days, 7))
+                    except FileNotFoundError:
+                        return json.dumps({"success": False, "error": "state.db not found. Is hermes running?"})
+                    except Exception:
+                        pass
+
+                if analysis is None:
+                    return json.dumps({
+                        "success": True,
+                        "action": "status",
+                        "health": "unknown",
+                        "message": "No analysis available. Run 'analyze' first.",
+                    })
+
+                health = "healthy"
+                if analysis.overall_success_rate < 70:
+                    health = "degraded"
+                if analysis.overall_success_rate < 50:
+                    health = "unhealthy"
+
+                return json.dumps({
+                    "success": True,
+                    "action": "status",
+                    "health": health,
+                    "sessions_analyzed": analysis.sessions_analyzed,
+                    "total_tool_calls": analysis.total_tool_calls,
+                    "total_errors": analysis.total_errors,
+                    "overall_success_rate": analysis.overall_success_rate,
+                    "user_corrections": analysis.user_corrections,
+                    "skill_gaps_count": len(analysis.skill_gaps),
+                    "weakest_tools": [
+                        {"tool_name": t.tool_name, "failed_calls": t.failed_calls}
+                        for t in (analysis.weakest_tools or [])[:3]
+                    ],
+                })
+            except Exception as e:
+                return json.dumps({"success": False, "error": str(e), "type": type(e).__name__})
+
+        else:
+            return json.dumps({"success": False, "error": f"Unknown action: {action}. Use: analyze, report, history, status."})
+
+    except (KeyboardInterrupt, SystemExit):
+        raise
+    except (ValueError, KeyError, OSError, json.JSONDecodeError) as e:
+        return json.dumps({"success": False, "error": str(e), "type": type(e).__name__})
+
+
 def borg_convert(path: str = "", format: str = "auto") -> str:
     """Convert a SKILL.md, CLAUDE.md, or .cursorrules file into a workflow pack.
 
@@ -1751,6 +1920,13 @@ def _call_tool_impl(name: str, arguments: Dict[str, Any]) -> str:
             metric=arguments.get("metric"),
             period=arguments.get("period", "daily"),
             days=arguments.get("days", 30),
+        )
+
+    elif name == "borg_dojo":
+        return borg_dojo(
+            action=arguments.get("action", ""),
+            days=arguments.get("days", 7),
+            report_format=arguments.get("report_format", "telegram"),
         )
 
     elif name == "borg_observe":

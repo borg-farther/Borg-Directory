@@ -182,6 +182,20 @@ class NudgeEngine:
                     timestamp=datetime.now(timezone.utc).isoformat(),
                 ))
 
+            # Add dojo correction detection
+            try:
+                from borg.dojo.failure_classifier import detect_corrections
+                corrections = detect_corrections([(user_message, time.time())])
+                for c in corrections:
+                    self._signals.append(NudgeSignal(
+                        signal_type="correction",
+                        value=c.pattern,
+                        turn_index=turn_index,
+                        timestamp=datetime.now(timezone.utc).isoformat(),
+                    ))
+            except ImportError:
+                pass  # Dojo not installed — skip gracefully
+
             # Track tried packs for suppression
             if tried_packs:
                 self._suppressed_packs.update(tried_packs)

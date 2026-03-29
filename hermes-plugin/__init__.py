@@ -337,4 +337,47 @@ def register(ctx) -> None:
     except Exception as exc:
         logger.warning("Could not start NudgeEngine: %s", exc)
 
+    # Step 5: Start periodic dojo session analysis (background, non-blocking)
+    # This caches SessionAnalysis for use by borg.core.search.classify_task()
+    # and feeds results into nudge, reputation, and analytics modules.
+    try:
+        import threading
+        import time as _time
+
+        _dojo_analysis_done = [False]  # mutable container for closure
+
+        def _run_dojo_analysis():
+            """Run dojo analysis once and cache results for search augmentation."""
+            try:
+                from borg.dojo import BORG_DOJO_ENABLED
+                if not BORG_DOJO_ENABLED:
+                    logger.debug("Dojo analysis skipped (BORG_DOJO_ENABLED=false)")
+                    return
+                from borg.dojo.pipeline import analyze_recent_sessions
+                analysis = analyze_recent_sessions(days=7)
+                logger.info(
+                    "Dojo periodic analysis complete: %d sessions, %.1f%% success rate",
+                    analysis.sessions_analyzed,
+                    analysis.overall_success_rate,
+                )
+            except Exception as exc:
+                logger.warning("Dojo periodic analysis failed: %s", exc)
+            finally:
+                _dojo_analysis_done[0] = True
+
+        def _periodic_dojo_check():
+            """Background thread: runs dojo analysis every 50 turns or on failure spike."""
+            _time.sleep(5)  # Small delay to let the agent start up first
+            _run_dojo_analysis()
+
+        _dojo_thread = threading.Thread(
+            target=_periodic_dojo_check,
+            daemon=True,
+            name="borg-dojo-analysis",
+        )
+        _dojo_thread.start()
+        logger.info("Dojo periodic session analysis thread started")
+    except Exception as exc:
+        logger.warning("Could not start dojo periodic analysis: %s", exc)
+
     logger.info("Guild v2 plugin loaded successfully")

@@ -903,6 +903,18 @@ def classify_task(context: str) -> List[str]:
             seen.add(search_term)
             terms.append(search_term)
 
+    # Augment with dojo skill gaps (dynamic — from cached session analysis)
+    try:
+        from borg.dojo import get_cached_analysis
+        analysis = get_cached_analysis()
+        if analysis:
+            for gap in analysis.skill_gaps:
+                if gap.capability in context_lower and gap.capability not in seen:
+                    seen.add(gap.capability)
+                    terms.append(gap.capability)
+    except ImportError:
+        pass  # Dojo not installed — skip gracefully
+
     return terms
 
 

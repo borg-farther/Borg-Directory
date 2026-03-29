@@ -8,12 +8,15 @@ and time-series aggregations.
 from __future__ import annotations
 
 import json
+import logging
 from collections import defaultdict
 from dataclasses import dataclass, field
 from datetime import datetime, timezone
 from typing import Optional, Sequence
 
 from borg.db.store import AgentStore
+
+logger = logging.getLogger(__name__)
 
 
 # ---------------------------------------------------------------------------
@@ -498,3 +501,110 @@ class AnalyticsEngine:
             return self.timeseries_active_agents(period, days)
         else:
             return TimeSeriesResult(metric=metric, period=period, points=[])
+
+    # -------------------------------------------------------------------------
+    # Dojo learning curve integration
+    # -------------------------------------------------------------------------
+
+    def timeseries_dojo_metrics(
+        self,
+        period: str = "daily",
+        days: int = 30,
+    ) -> TimeSeriesResult:
+        """Time series of dojo learning curve metrics.
+
+        Returns success rate, error count, user corrections, and skill gap
+        trends from the dojo learning curve tracker.
+
+        Args:
+            period: "daily", "weekly", or "monthly".
+            days: Number of days to look back.
+
+        Returns:
+            TimeSeriesResult with dojo learning curve data points.
+        """
+        try:
+            from borg.dojo.learning_curve import LearningCurveTracker
+
+            tracker = LearningCurveTracker()
+            history = tracker.load_history()
+
+            if not history:
+                return TimeSeriesResult(
+                    metric="dojo_learning_curve",
+                    period=period,
+                    points=[],
+                )
+
+            # Filter history to requested time range
+            now = datetime.now(timezone.utc)
+            cutoff = now.timestamp() - (days * 24 * 3600)
+
+            filtered: list = []
+            for snap in history:
+                ts = getattr(snap, "timestamp", 0)
+                if ts >= cutoff:
+                    filtered.append(snap)
+
+            if not filtered:
+                return TimeSeriesResult(
+                    metric="dojo_learning_curve",
+                    period=period,
+                    points=[],
+                )
+
+            # Build a bucket key for each snapshot based on period
+            def bucket_key(snap) -> str:
+                ts = getattr(snap, "timestamp", 0)
+                dt = datetime.fromtimestamp(ts, tz=timezone.utc)
+                if period == "daily":
+                    return dt.strftime("%Y-%m-%d")
+                elif period == "weekly":
+                    return f"{dt.year}-W{dt.strftime('%W')}"
+                else:
+                    return dt.strftime("%Y-%m")
+
+            # Group by bucket and average
+            buckets: dict = defaultdict(list)
+            for snap in filtered:
+                key = bucket_key(snap)
+                buckets[key].append(snap)
+
+            points = []
+            for key in sorted(buckets.keys()):
+                snaps = buckets[key]
+                n = len(snaps)
+                avg_success = sum(getattr(s, "overall_success_rate", 0) for s in snaps) / n
+                total_errors = sum(getattr(s, "total_errors", 0) for s in snaps)
+                total_corrections = sum(getattr(s, "user_corrections", 0) for s in snaps)
+                skill_gaps = sum(getattr(s, "skill_gaps_count", 0) for s in snaps)
+
+                points.append(
+                    TimeSeriesPoint(
+                        timestamp=key,
+                        period=period,
+                        metric="dojo_success_rate",
+                        value=avg_success,
+                        label=f"errors={total_errors}, corrections={total_corrections}, gaps={skill_gaps}",
+                    )
+                )
+
+            return TimeSeriesResult(
+                metric="dojo_learning_curve",
+                period=period,
+                points=points,
+            )
+        except ImportError:
+            # Dojo not installed — return empty result
+            return TimeSeriesResult(
+                metric="dojo_learning_curve",
+                period=period,
+                points=[],
+            )
+        except Exception as e:
+            logger.warning("timeseries_dojo_metrics failed: %s", e)
+            return TimeSeriesResult(
+                metric="dojo_learning_curve",
+                period=period,
+                points=[],
+            )

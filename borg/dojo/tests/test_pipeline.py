@@ -171,6 +171,9 @@ class TestFeatureFlag:
         pipeline = p.DojoPipeline(db_path=REAL_DB)
         result = pipeline.run(days=7, auto_fix=False, report_fmt="cli")
         assert "disabled" in result.lower() or "skipped" in result.lower()
+        # Reload again with enabled=True to restore module state for subsequent tests
+        monkeypatch.setenv("BORG_DOJO_ENABLED", "true")
+        importlib.reload(p)
 
 
 # ============================================================================
@@ -248,13 +251,15 @@ class TestBorgIntegration:
 @pytest.mark.skipif(not real_db_available(), reason="state.db not available")
 class TestCachedAnalysis:
     def test_cached_after_run(self):
-        import borg.dojo.pipeline as p
-        p._cached_analysis = None
+        import borg.dojo.pipeline as pipeline_module
+        pipeline_module._cached_analysis = None
         pipeline = DojoPipeline(db_path=REAL_DB)
-        p.run(days=3, auto_fix=False, report_fmt="cli")
+        result = pipeline.run(days=3, auto_fix=False, report_fmt="cli")
+        # run() populates the module-level _cached_analysis
         cached = get_cached_analysis()
         assert cached is not None
-        assert cached.sessions_analyzed == p.analysis.sessions_analyzed
+        assert cached.sessions_analyzed == pipeline.analysis.sessions_analyzed
+        assert result is not None and len(result) > 0
 
 
 # ============================================================================
