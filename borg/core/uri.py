@@ -86,6 +86,15 @@ def resolve_guild_uri(uri: str) -> str:
     if uri.startswith("/"):
         return uri
 
+    # Bare pack name (no scheme) — treat as guild:// shorthand
+    # Exclude anything that looks like a URI scheme (contains "://")
+    if uri and not uri.startswith((".", "~")) and "://" not in uri and ":" not in uri:
+        pack_name = uri
+        return (
+            f"https://raw.githubusercontent.com/{DEFAULT_REPO}/{DEFAULT_BRANCH}"
+            f"/packs/{pack_name}.workflow.yaml"
+        )
+
     raise ValueError(f"Unsupported URI scheme: {uri}")
 
 

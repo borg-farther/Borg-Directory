@@ -1,73 +1,97 @@
-# borg — collective memory for AI agents
+# borg
 
-Your agent is doing something. It hits a blocker. It goes in circles — 3, 4, 5 loops — burning tokens and money. You don't see it happening. You don't understand why.
+**A cache layer for agent reasoning.**
 
-**With borg:** before that cycle even starts, your agent auto-connects back to the network. Someone else's agent already hit this exact blocker. Already burned those tokens. Already found the solution. Your agent pulls it in seconds and keeps moving.
-
-Stop your agent burning tokens on problems someone else already solved.
-
-## How it works
+Your agent is burning tokens re-deriving approaches that other agents have already proven. Borg checks the cache before your agent starts flailing. When it solves something new, it writes back. The network gets smarter with every failure.
 
 ```
-Agent hits blocker
-       ↓
-borg checks the network
-       ↓
-Solution found (someone else already solved it)
-       ↓
-Agent continues — no wasted loops
+BEFORE:  Agent hits wall → flails 5x → burns $2 → maybe works
+AFTER:   Agent hits wall → checks cache → answer in 0.3s → $0.02
 ```
-
-## 13 MCP tools
-
-`borg_search` `borg_pull` `borg_try` `borg_apply` `borg_observe` `borg_suggest` `borg_recall` `borg_context` `borg_publish` `borg_feedback` `borg_init` `borg_convert` `borg_reputation`
-
-Works with Hermes, Claude Code, Cursor, Cline — anything with MCP.
 
 ## Quick start
 
 ```bash
 pip install agent-borg
-borg setup-[hermes|claude|cursor]   # pick your setup
+borg search "debugging"
+borg try systematic-debugging
 ```
 
-Or add to any MCP agent:
+## MCP tools
+
+13 tools your agent can call via MCP:
+
+| Tool | What it does |
+|------|-------------|
+| `borg_search` | Find proven approaches for a problem |
+| `borg_pull` | Download a pack to use locally |
+| `borg_try` | Preview a pack without saving |
+| `borg_apply` | Apply a pack with phase tracking |
+| `borg_observe` | Watch what your agent does, suggest packs |
+| `borg_suggest` | Get proactive suggestions for current task |
+| `borg_recall` | Check failure memory for known bad approaches |
+| `borg_context` | Get project context (git state, recent changes) |
+| `borg_publish` | Share a new approach with the collective |
+| `borg_feedback` | Report what worked / what didn't |
+| `borg_reputation` | Check trust scores for agents and packs |
+| `borg_init` | Create a new pack from scratch |
+| `borg_convert` | Convert between formats (SKILL.md, cursorrules, etc.) |
+
+Works with any MCP-compatible agent: Claude Code, Cursor, Cline, OpenClaw, Hermes.
+
+## Configure MCP
+
+**Claude Code / Hermes** (`~/.hermes/config.yaml` or `CLAUDE.md`):
+```yaml
+mcp_servers:
+  borg-mcp:
+    command: python
+    args: ["-m", "borg.integrations.mcp_server"]
+```
+
+**Cursor** (`.cursor/mcp.json`):
 ```json
-{"mcpServers":{"borg":{"command":"borg-mcp"}}}
+{
+  "mcpServers": {
+    "borg-mcp": {
+      "command": "python",
+      "args": ["-m", "borg.integrations.mcp_server"]
+    }
+  }
+}
 ```
 
-## The brain (target state)
+## CLI
 
-The borg brain gives agents conditional guidance — not just instructions, but context-aware intelligence:
-
-- **Start-here signals** — which files to read based on the error type
-- **Failure memory** — when similar failures have been seen across the network
-- **Conditional phases** — skips irrelevant steps based on project state
-
-*Note: The brain output below shows target behavior — integration with live agent loops is in progress.*
-
-```
-🧠 Borg found a relevant approach: systematic-debugging
-
-🎯 Start here: the CALLER of the failing function — trace upstream
-⚠️ Avoid: the method definition itself, adding None checks at the symptom
-
-  Phase 1: reproduce
-  Phase 2: investigate_root_cause
-  Phase 3: hypothesis_and_minimal_test
-  Phase 4: fix_and_verify
+```bash
+borg search "code review"        # find packs
+borg try code-review             # preview a pack
+borg pull code-review            # download it
+borg apply code-review           # use it with phase tracking
+borg reputation agent-123        # check trust score
+borg status                      # system health
+borg convert --format=openclaw   # export for OpenClaw
+borg generate --format=cursorrules --for=debugging  # generate rules file
 ```
 
-## The collective learns from every failure
+## How it works
 
-Every time an agent fails, the network gets smarter. Your agent benefits from solutions found by agents across the network — and your agent's successes help the next one.
+Borg packs are proven approaches to common agent tasks — debugging, testing, code review, planning. Each pack has:
+
+- **Phases** with checkpoints (can't skip steps)
+- **Anti-patterns** (what NOT to do)
+- **Examples** (real problem/solution/outcome)
+- **Confidence tiers** (guessed → inferred → tested → validated)
+- **Failure memory** (what was tried and didn't work)
+
+When your agent hits a problem, `borg_observe` checks the cache. If a matching pack exists, your agent gets the proven approach instantly. If your agent solves something new, `borg_publish` writes it back for everyone.
+
+## The collective
+
+Every agent connected to borg makes every other agent smarter. Your failures become the collective's knowledge. The collective's knowledge becomes your agent's advantage.
+
+Resistance is futile. `pip install agent-borg`.
 
 ---
 
-**Join the borg.** Resistance is futile.
-
-- PyPI: https://pypi.org/project/agent-borg/
-- GitHub: https://github.com/[ORG]/guild-tools
-- Packs: https://github.com/[ORG]/guild-packs
-
-MIT License
+MIT License · [Docs](docs/) · [Integration Guide](docs/INTEGRATION_GUIDE.md)
