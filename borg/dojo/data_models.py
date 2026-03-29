@@ -208,3 +208,98 @@ class SessionAnalysis:
 
     # Supported schema version — update when schema changes
     SUPPORTED_SCHEMA_VERSION: int = 1
+
+
+@dataclass
+class FixAction:
+    """A proposed fix with rollback capability.
+
+    Attributes:
+        action: Type of fix — "patch" | "create" | "evolve" | "log".
+        target_skill: Name/path of the skill being modified.
+        priority: Priority score (higher = more important).
+        reason: Human-readable explanation for this fix.
+        fix_content: The patch text or new skill content.
+        backup_content: Original content before patch (for rollback).
+        applied: Whether the fix was applied.
+        success: Whether the fix succeeded.
+        rollback_path: Path to backup file for rollback.
+    """
+
+    action: str
+    target_skill: str
+    priority: float
+    reason: str
+    fix_content: str = ""
+    backup_content: Optional[str] = None
+    applied: bool = False
+    success: bool = False
+    rollback_path: Optional[str] = None
+
+
+@dataclass
+class MetricSnapshot:
+    """A point-in-time measurement of agent performance.
+
+    Attributes:
+        timestamp: Unix timestamp of the snapshot.
+        date: Human-readable date string (YYYY-MM-DD HH:MM).
+        sessions_analyzed: Number of sessions in this analysis cycle.
+        total_tool_calls: Total tool invocations observed.
+        overall_success_rate: Success rate as percentage 0.0-100.0.
+        total_errors: Total errors detected.
+        user_corrections: User correction signals detected.
+        skill_gaps_count: Number of skill gaps identified.
+        retry_pattern_count: Number of retry loops detected.
+        weakest_tools: Top 5 tools by error count.
+        improvements_made: Fixes applied this cycle.
+        schema_version: Snapshot schema version (default: 1).
+    """
+
+    timestamp: float
+    date: str
+    sessions_analyzed: int
+    total_tool_calls: int
+    overall_success_rate: float
+    total_errors: int
+    user_corrections: int
+    skill_gaps_count: int
+    retry_pattern_count: int
+    weakest_tools: List[Dict] = field(default_factory=list)
+    improvements_made: List[Dict] = field(default_factory=list)
+    schema_version: int = 1
+
+    def to_dict(self) -> Dict:
+        """Convert snapshot to dictionary for JSON serialization."""
+        return {
+            "timestamp": self.timestamp,
+            "date": self.date,
+            "sessions_analyzed": self.sessions_analyzed,
+            "total_tool_calls": self.total_tool_calls,
+            "overall_success_rate": self.overall_success_rate,
+            "total_errors": self.total_errors,
+            "user_corrections": self.user_corrections,
+            "skill_gaps_count": self.skill_gaps_count,
+            "retry_pattern_count": self.retry_pattern_count,
+            "weakest_tools": self.weakest_tools,
+            "improvements_made": self.improvements_made,
+            "schema_version": self.schema_version,
+        }
+
+    @classmethod
+    def from_dict(cls, d: Dict) -> "MetricSnapshot":
+        """Create a MetricSnapshot from a dictionary."""
+        return cls(
+            timestamp=d["timestamp"],
+            date=d["date"],
+            sessions_analyzed=d["sessions_analyzed"],
+            total_tool_calls=d["total_tool_calls"],
+            overall_success_rate=d["overall_success_rate"],
+            total_errors=d["total_errors"],
+            user_corrections=d["user_corrections"],
+            skill_gaps_count=d["skill_gaps_count"],
+            retry_pattern_count=d["retry_pattern_count"],
+            weakest_tools=d.get("weakest_tools", []),
+            improvements_made=d.get("improvements_made", []),
+            schema_version=d.get("schema_version", 1),
+        )
