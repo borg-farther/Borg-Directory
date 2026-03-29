@@ -83,10 +83,11 @@ except ImportError:
     AgentStore = None
 
 try:
-    from borg.db.reputation import ReputationEngine, AccessTier
+    from borg.db.reputation import ReputationEngine, AccessTier, FreeRiderStatus
 except ImportError:
     ReputationEngine = None
     AccessTier = None
+    FreeRiderStatus = None
 
 
 # ============================================================================
@@ -350,6 +351,10 @@ def _check_publish_access(agent_id: str) -> tuple[bool, str]:
     """Check if agent has VALIDATED or higher tier to publish.
 
     Returns (allowed, error_message).
+    
+    Sybil resistance checks:
+    - COMMUNITY tier (score < 10) is rejected outright
+    - FREE_RIDER throttled/restricted agents are flagged and published with warning
     """
     if AgentStore is None:
         return True, ""  # No store = allow (degraded mode)
@@ -360,12 +365,26 @@ def _check_publish_access(agent_id: str) -> tuple[bool, str]:
         profile = engine.build_profile(agent_id)
         store.close()
 
+        # Primary gate: COMMUNITY tier cannot publish
         if profile.access_tier == AccessTier.COMMUNITY:
             return False, (
                 f"Agent '{agent_id}' is at COMMUNITY tier (score={profile.contribution_score:.1f}). "
                 f"Publish requires VALIDATED tier (score >= 10). "
                 f"Publish a quality pack or contribute to the guild to raise your score."
             )
+        
+        # Sybil resistance: flag or warn on free-rider status
+        if FreeRiderStatus is not None and profile.free_rider_status in (
+            FreeRiderStatus.THROTTLED,
+            FreeRiderStatus.RESTRICTED,
+        ):
+            return False, (
+                f"Agent '{agent_id}' has free-rider status: {profile.free_rider_status.value} "
+                f"(score={profile.free_rider_score:.1f}). "
+                f"Publishing requires a balanced contribute/consume ratio. "
+                f"Contribute quality packs or reviews before publishing again."
+            )
+        
         return True, ""
     except Exception:
         return True, ""  # Fail open — reputation check is advisory

@@ -109,6 +109,8 @@ class TestToolsList:
             "borg_convert",
             "borg_context",
             "borg_recall",
+            "borg_reputation",
+            "borg_analytics",
         ]
         for name in expected:
             assert name in tool_names, f"{name} not in {tool_names}"
@@ -126,7 +128,7 @@ class TestToolsList:
     def test_tools_list_correct_count(self):
         req = minimal_request("tools/list", {}, req_id=4)
         resp = mcp_module.handle_request(req)
-        assert len(resp["result"]["tools"]) == 13
+        assert len(resp["result"]["tools"]) == 14
 
 
 # ============================================================================

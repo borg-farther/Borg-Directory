@@ -954,6 +954,7 @@ def check_for_suggestion(
     failure_count: int = 0,
     task_type: str = "",
     tried_packs: Optional[List[str]] = None,
+    requesting_agent_id: Optional[str] = None,
 ) -> str:
     """Check if a guild pack suggestion is warranted and return it.
 
@@ -966,6 +967,7 @@ def check_for_suggestion(
         failure_count: Number of consecutive failed attempts.
         task_type: Optional explicit task type hint.
         tried_packs: Optional list of pack names already tried (excluded).
+        requesting_agent_id: Optional agent ID for reputation-aware ranking.
 
     Returns:
         JSON string with suggestion details, or '{}' if no suggestion warranted.
@@ -1003,7 +1005,7 @@ def check_for_suggestion(
     all_matches: List[dict] = []
     for term in search_terms:
         try:
-            result = json.loads(borg_search(term))
+            result = json.loads(borg_search(term, requesting_agent_id=requesting_agent_id))
             if result.get("success") and result.get("matches"):
                 all_matches.extend(result["matches"])
         except Exception as e:
@@ -1034,6 +1036,7 @@ def check_for_suggestion(
             "problem_class": pack.get("problem_class", ""),
             "tier": pack.get("tier", "unknown"),
             "why_relevant": _build_why_relevant(pack, search_terms),
+            "author_reputation": pack.get("author_reputation"),
         })
 
     # Format the primary suggestion

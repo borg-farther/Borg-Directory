@@ -409,6 +409,41 @@ TOOLS: List[Dict[str, Any]] = [
             "required": ["action"],
         },
     },
+    {
+        "name": "borg_analytics",
+        "description": (
+            "Query ecosystem health metrics and analytics from the AnalyticsEngine. "
+            "Returns ecosystem-wide health, pack usage statistics, adoption metrics, and time-series data. "
+            "Use this to understand the overall state of the guild ecosystem."
+        ),
+        "inputSchema": {
+            "type": "object",
+            "properties": {
+                "action": {
+                    "type": "string",
+                    "enum": ["ecosystem_health", "pack_usage", "adoption", "timeseries"],
+                    "description": "Action: 'ecosystem_health' for overall ecosystem metrics, 'pack_usage' for a specific pack's stats, 'adoption' for adoption metrics, 'timeseries' for time-series data.",
+                },
+                "pack_id": {
+                    "type": "string",
+                    "description": "Pack ID to query (for pack_usage and adoption actions).",
+                },
+                "metric": {
+                    "type": "string",
+                    "description": "Metric name for timeseries action: 'pack_publishes', 'executions', 'avg_quality_score', or 'active_agents'.",
+                },
+                "period": {
+                    "type": "string",
+                    "description": "Time period for timeseries: 'daily', 'weekly', or 'monthly'. Defaults to 'daily'.",
+                },
+                "days": {
+                    "type": "integer",
+                    "description": "Number of days to look back for timeseries. Defaults to 30.",
+                },
+            },
+            "required": ["action"],
+        },
+    },
 ]
 
 # ---------------------------------------------------------------------------
@@ -1410,6 +1445,138 @@ def borg_reputation(action: str = "", agent_id: str = None, pack_id: str = None)
         return json.dumps({"success": False, "error": str(e), "type": type(e).__name__})
 
 
+def borg_analytics(
+    action: str = "",
+    pack_id: str = None,
+    metric: str = None,
+    period: str = "daily",
+    days: int = 30,
+) -> str:
+    """Query ecosystem health metrics and analytics from the AnalyticsEngine.
+
+    Args:
+        action: The action to perform - 'ecosystem_health', 'pack_usage', 'adoption', or 'timeseries'.
+        pack_id: Pack ID to query (for pack_usage and adoption actions).
+        metric: Metric name for timeseries action: 'pack_publishes', 'executions', 'avg_quality_score', or 'active_agents'.
+        period: Time period for timeseries: 'daily', 'weekly', or 'monthly'. Defaults to 'daily'.
+        days: Number of days to look back for timeseries. Defaults to 30.
+
+    Returns:
+        JSON string with analytics data for the specified action.
+    """
+    try:
+        from borg.db.analytics import AnalyticsEngine
+        from borg.db.store import AgentStore
+
+        if AgentStore is None:
+            return json.dumps({"success": False, "error": "AgentStore not available"})
+
+        if action == "ecosystem_health":
+            try:
+                store = AgentStore()
+                engine = AnalyticsEngine(store)
+                health = engine.ecosystem_health()
+                store.close()
+                return json.dumps({
+                    "success": True,
+                    "total_agents": health.total_agents,
+                    "active_contributors": health.active_contributors,
+                    "active_consumers": health.active_consumers,
+                    "contributor_ratio": health.contributor_ratio,
+                    "avg_quality_score": health.avg_quality_score,
+                    "avg_quality_trend": health.avg_quality_trend,
+                    "domain_coverage": health.domain_coverage,
+                    "total_packs": health.total_packs,
+                    "tier_distribution": health.tier_distribution,
+                })
+            except Exception as e:
+                return json.dumps({"success": False, "error": str(e), "type": type(e).__name__})
+
+        elif action == "pack_usage":
+            if not pack_id:
+                return json.dumps({"success": False, "error": "pack_id is required for pack_usage action"})
+            try:
+                store = AgentStore()
+                engine = AnalyticsEngine(store)
+                stats = engine.pack_usage_stats(pack_id)
+                store.close()
+                return json.dumps({
+                    "success": True,
+                    "pack_id": stats.pack_id,
+                    "pull_count": stats.pull_count,
+                    "apply_count": stats.apply_count,
+                    "success_count": stats.success_count,
+                    "failure_count": stats.failure_count,
+                    "completion_rate": stats.completion_rate,
+                })
+            except Exception as e:
+                return json.dumps({"success": False, "error": str(e), "type": type(e).__name__})
+
+        elif action == "adoption":
+            if not pack_id:
+                try:
+                    store = AgentStore()
+                    engine = AnalyticsEngine(store)
+                    metrics = engine.ecosystem_adoption()
+                    store.close()
+                    return json.dumps({
+                        "success": True,
+                        "pack_id": None,
+                        "unique_agents": metrics.unique_agents,
+                        "unique_operators": metrics.unique_operators,
+                    })
+                except Exception as e:
+                    return json.dumps({"success": False, "error": str(e), "type": type(e).__name__})
+            else:
+                try:
+                    store = AgentStore()
+                    engine = AnalyticsEngine(store)
+                    metrics = engine.adoption_metrics(pack_id)
+                    store.close()
+                    return json.dumps({
+                        "success": True,
+                        "pack_id": metrics.pack_id,
+                        "unique_agents": metrics.unique_agents,
+                        "unique_operators": metrics.unique_operators,
+                    })
+                except Exception as e:
+                    return json.dumps({"success": False, "error": str(e), "type": type(e).__name__})
+
+        elif action == "timeseries":
+            if not metric:
+                return json.dumps({"success": False, "error": "metric is required for timeseries action"})
+            try:
+                store = AgentStore()
+                engine = AnalyticsEngine(store)
+                result = engine.timeseries(metric, period=period, days=days)
+                store.close()
+                return json.dumps({
+                    "success": True,
+                    "metric": result.metric,
+                    "period": result.period,
+                    "points": [
+                        {
+                            "timestamp": p.timestamp,
+                            "period": p.period,
+                            "metric": p.metric,
+                            "value": p.value,
+                            "label": p.label,
+                        }
+                        for p in result.points
+                    ],
+                })
+            except Exception as e:
+                return json.dumps({"success": False, "error": str(e), "type": type(e).__name__})
+
+        else:
+            return json.dumps({"success": False, "error": f"Unknown action: {action}. Use ecosystem_health, pack_usage, adoption, or timeseries."})
+
+    except (KeyboardInterrupt, SystemExit):
+        raise
+    except (ValueError, KeyError, OSError, json.JSONDecodeError) as e:
+        return json.dumps({"success": False, "error": str(e), "type": type(e).__name__})
+
+
 def borg_convert(path: str = "", format: str = "auto") -> str:
     """Convert a SKILL.md, CLAUDE.md, or .cursorrules file into a workflow pack.
 
@@ -1575,6 +1742,15 @@ def _call_tool_impl(name: str, arguments: Dict[str, Any]) -> str:
             action=arguments.get("action", ""),
             agent_id=arguments.get("agent_id"),
             pack_id=arguments.get("pack_id"),
+        )
+
+    elif name == "borg_analytics":
+        return borg_analytics(
+            action=arguments.get("action", ""),
+            pack_id=arguments.get("pack_id"),
+            metric=arguments.get("metric"),
+            period=arguments.get("period", "daily"),
+            days=arguments.get("days", 30),
         )
 
     elif name == "borg_observe":

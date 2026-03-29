@@ -35,8 +35,10 @@ from borg.core.proof_gates import check_confidence_decay
 
 try:
     from borg.db.store import GuildStore
+    AgentStore = GuildStore  # Alias for backwards compatibility
 except ImportError:
     GuildStore = None
+    AgentStore = None
 
 logger = logging.getLogger(__name__)
 
@@ -46,6 +48,7 @@ logger = logging.getLogger(__name__)
 
 HERMES_HOME = Path(os.getenv("HERMES_HOME", Path.home() / ".hermes"))
 GUILD_DIR = HERMES_HOME / "guild"
+BORG_DIR = GUILD_DIR  # Alias for backwards compatibility
 EXECUTIONS_DIR = GUILD_DIR / "executions"
 
 MAX_PHASES = 20
@@ -151,14 +154,14 @@ def _generate_feedback(
 # Action: start
 # ---------------------------------------------------------------------------
 
-def action_start(pack_name: str, task: str, *, guild_dir: Optional[Path] = None) -> str:
+def action_start(pack_name: str, task: str, *, agent_dir: Optional[Path] = None) -> str:
     """Load a pulled pack, safety-scan it, and create an execution session.
 
     Returns JSON with session_id and approval_summary.
+
     Does NOT log execution_started until operator approves via __approval__ checkpoint.
     """
-    base = guild_dir if guild_dir is not None else GUILD_DIR
-
+    base = agent_dir if agent_dir is not None else GUILD_DIR
     # Find the pack
     pack_file = base / pack_name / "pack.yaml"
     if not pack_file.exists():
@@ -256,7 +259,7 @@ def action_start(pack_name: str, task: str, *, guild_dir: Optional[Path] = None)
     }
 
     # Persist via session.py
-    _session_mod.save_session(session, guild_dir=base)
+    _session_mod.save_session(session, agent_dir=base)
     _session_mod.register_session(session)
 
     # Track apply-specific state (approved flag)
@@ -315,7 +318,7 @@ def action_checkpoint(
     evidence: str = "",
     attempt: int = 1,
     *,
-    guild_dir: Optional[Path] = None,
+    agent_dir: Optional[Path] = None,
 ) -> str:
     """Log a phase checkpoint result.
 
@@ -323,12 +326,12 @@ def action_checkpoint(
     Special phase_name '__approval__' with status='passed' approves execution.
     Returns guidance on next step (retry, continue, or skip).
     """
-    base = guild_dir if guild_dir is not None else GUILD_DIR
+    base = agent_dir if agent_dir is not None else GUILD_DIR
 
     # Try in-memory first, then load from disk via session.py
     session = _session_mod.get_active_session(session_id)
     if not session:
-        session = _session_mod.load_session(session_id, guild_dir=base)
+        session = _session_mod.load_session(session_id, agent_dir=base)
         if not session:
             return json.dumps({
                 "success": False,
@@ -351,8 +354,8 @@ def action_checkpoint(
                 "artifact": session["pack_id"],
                 "task": session["task"],
                 "phase_count": len(session["phases"]),
-            }, guild_dir=base)
-            _session_mod.save_session(session, guild_dir=base)
+            }, agent_dir=base)
+            _session_mod.save_session(session, agent_dir=base)
 
             return json.dumps({
                 "success": True,
@@ -367,7 +370,7 @@ def action_checkpoint(
         else:
             # Rejected — clean up
             _active_apply_state.pop(session_id, None)
-            _session_mod.delete_session(session_id, guild_dir=base)
+            _session_mod.delete_session(session_id, agent_dir=base)
             return json.dumps({
                 "success": True,
                 "phase": "__approval__",
@@ -446,7 +449,7 @@ def action_checkpoint(
         "evidence": sanitized_evidence,
         "attempt": current_retries + 1,
         "reason": sanitized_evidence if status == "failed" else "",
-    }, guild_dir=base)
+    }, agent_dir=base)
 
     # Record phase result
     if next_action != "retry":
@@ -460,7 +463,7 @@ def action_checkpoint(
         })
 
     # Persist updated session
-    _session_mod.save_session(session, guild_dir=base)
+    _session_mod.save_session(session, agent_dir=base)
 
     # Find next phase
     next_phase = None
@@ -489,16 +492,16 @@ def action_checkpoint(
 # Action: complete
 # ---------------------------------------------------------------------------
 
-def action_complete(session_id: str, outcome: str = "", *, guild_dir: Optional[Path] = None) -> str:
+def action_complete(session_id: str, outcome: str = "", *, agent_dir: Optional[Path] = None) -> str:
     """Finalize execution session. Write summary and generate feedback draft.
 
     Returns the execution summary + auto-generated PRD-compliant feedback draft.
     """
-    base = guild_dir if guild_dir is not None else GUILD_DIR
+    base = agent_dir if agent_dir is not None else GUILD_DIR
 
     session = _session_mod.get_active_session(session_id)
     if not session:
-        session = _session_mod.load_session(session_id, guild_dir=base)
+        session = _session_mod.load_session(session_id, agent_dir=base)
         if not session:
             return json.dumps({
                 "success": False,
@@ -530,7 +533,7 @@ def action_complete(session_id: str, outcome: str = "", *, guild_dir: Optional[P
         "phases_total": phases_total,
         "duration_seconds": duration_seconds,
         "outcome": outcome,
-    }, guild_dir=base)
+    }, agent_dir=base)
 
     # Compute log hash
     log_path = session.get("execution_log_path") or session.get("log_path", Path(base) / "executions" / f"{session_id}.jsonl")
@@ -723,9 +726,9 @@ def action_complete(session_id: str, outcome: str = "", *, guild_dir: Optional[P
     }
 
     # Log execution to reputation store (optional — store may not exist)
-    if GuildStore is not None:
+    if AgentStore is not None:
         try:
-            _store = GuildStore()
+            _store = AgentStore()
             _store.record_execution(
                 execution_id=f"{session['pack_id']}-{session_id}",
                 session_id=session_id,
@@ -745,7 +748,7 @@ def action_complete(session_id: str, outcome: str = "", *, guild_dir: Optional[P
 
     # Clean up
     _active_apply_state.pop(session_id, None)
-    _session_mod.delete_session(session_id, guild_dir=base)
+    _session_mod.delete_session(session_id, agent_dir=base)
 
     return json.dumps({
         "success": True,
@@ -764,13 +767,13 @@ def action_complete(session_id: str, outcome: str = "", *, guild_dir: Optional[P
 # Action: resume
 # ---------------------------------------------------------------------------
 
-def action_resume(pack_name: str, task: str = "", *, guild_dir: Optional[Path] = None) -> str:
+def action_resume(pack_name: str, task: str = "", *, agent_dir: Optional[Path] = None) -> str:
     """Resume an interrupted execution from the last completed phase.
 
     Reads the most recent JSONL log for the pack, rebuilds session state,
     and returns remaining phases.
     """
-    base = guild_dir if guild_dir is not None else GUILD_DIR
+    base = agent_dir if agent_dir is not None else GUILD_DIR
 
     # Check for persisted sessions matching the pack name
     sessions_dir = base / "sessions"
@@ -780,7 +783,7 @@ def action_resume(pack_name: str, task: str = "", *, guild_dir: Optional[Path] =
                 meta = json.loads(sf.read_text(encoding="utf-8"))
                 sid = meta.get("session_id", "")
                 if sid and sid not in _session_mod._active_sessions:
-                    restored = _session_mod.load_session(sid, guild_dir=base)
+                    restored = _session_mod.load_session(sid, agent_dir=base)
                     if restored:
                         remaining = [p for p in restored["phases"] if p["status"] == "pending"]
                         completed_count = sum(1 for p in restored["phases"] if p["status"] != "pending")
@@ -940,7 +943,7 @@ def action_resume(pack_name: str, task: str = "", *, guild_dir: Optional[Path] =
         "approved": True,
     }
 
-    _session_mod.save_session(session, guild_dir=base)
+    _session_mod.save_session(session, agent_dir=base)
     _session_mod.register_session(session)
     _active_apply_state[session_id] = {"approved": True}
 
@@ -965,13 +968,13 @@ def action_resume(pack_name: str, task: str = "", *, guild_dir: Optional[Path] =
 # Action: status
 # ---------------------------------------------------------------------------
 
-def action_status(session_id: str, *, guild_dir: Optional[Path] = None) -> str:
+def action_status(session_id: str, *, agent_dir: Optional[Path] = None) -> str:
     """Check current execution session state."""
-    base = guild_dir if guild_dir is not None else GUILD_DIR
+    base = agent_dir if agent_dir is not None else GUILD_DIR
 
     session = _session_mod.get_active_session(session_id)
     if not session:
-        session = _session_mod.load_session(session_id, guild_dir=base)
+        session = _session_mod.load_session(session_id, agent_dir=base)
         if not session:
             return json.dumps({
                 "success": False,
@@ -1008,7 +1011,7 @@ def apply_handler(
     evidence: str = "",
     outcome: str = "",
     *,
-    guild_dir: Optional[Path] = None,
+    agent_dir: Optional[Path] = None,
 ) -> str:
     """Main entry point for guild apply.
 
@@ -1021,7 +1024,7 @@ def apply_handler(
                 return json.dumps({"success": False, "error": "pack_name is required for action='start'"})
             if not task:
                 return json.dumps({"success": False, "error": "task is required for action='start'"})
-            return action_start(pack_name, task, guild_dir=guild_dir)
+            return action_start(pack_name, task, agent_dir=agent_dir)
 
         elif action == "checkpoint":
             if not session_id:
@@ -1030,22 +1033,22 @@ def apply_handler(
                 return json.dumps({"success": False, "error": "phase_name is required for action='checkpoint'"})
             if not status:
                 return json.dumps({"success": False, "error": "status is required for action='checkpoint'"})
-            return action_checkpoint(session_id, phase_name, status, evidence, guild_dir=guild_dir)
+            return action_checkpoint(session_id, phase_name, status, evidence, agent_dir=agent_dir)
 
         elif action == "complete":
             if not session_id:
                 return json.dumps({"success": False, "error": "session_id is required for action='complete'"})
-            return action_complete(session_id, outcome, guild_dir=guild_dir)
+            return action_complete(session_id, outcome, agent_dir=agent_dir)
 
         elif action == "resume":
             if not pack_name:
                 return json.dumps({"success": False, "error": "pack_name is required for action='resume'"})
-            return action_resume(pack_name, task, guild_dir=guild_dir)
+            return action_resume(pack_name, task, agent_dir=agent_dir)
 
         elif action == "status":
             if not session_id:
                 return json.dumps({"success": False, "error": "session_id is required for action='status'"})
-            return action_status(session_id, guild_dir=guild_dir)
+            return action_status(session_id, agent_dir=agent_dir)
 
         else:
             return json.dumps({

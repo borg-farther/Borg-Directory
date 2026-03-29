@@ -7,7 +7,7 @@ name = "agent-borg"
 version = "2.4.0"
 description = "Proven workflows for AI agents — execution-proven, safety-scanned, feedback-improving"
 readme = "README.md"
-license = {text = "MIT"}
+license = "MIT"
 requires-python = ">=3.10"
 authors = [
     {name = "Hermes Team", email = "aleshbrown@gmail.com"},
@@ -26,6 +26,9 @@ classifiers = [
 ]
 dependencies = [
     "pyyaml>=6.0",
+    "fastapi>=0.100.0",
+    "uvicorn[standard]>=0.23.0",
+    "sse-starlette>=1.6.0",
 ]
 
 [project.optional-dependencies]
@@ -37,6 +40,7 @@ all = ["agent-borg[crypto,embeddings,dev]"]
 [project.scripts]
 borg = "borg.cli:main"
 borg-mcp = "borg.integrations.mcp_server:main"
+borg-http = "borg.integrations.http_server:main"
 
 [project.urls]
 Homepage = "https://github.com/bensargotest-sys/guild-packs"
