@@ -83,6 +83,8 @@ _LAZY_IMPORTS = {
     # MEV
     "JitoClient": ("borg.defi.mev.jito", "JitoClient"),
     "FlashbotsClient": ("borg.defi.mev.flashbots", "FlashbotsClient"),
+    # Strategy
+    "StrategySelector": ("borg.defi.strategy_selector", "StrategySelector"),
     # Cron
     "CronState": ("borg.defi.cron.state", "CronState"),
     "deliver_alerts": ("borg.defi.cron.delivery", "deliver_alerts"),
