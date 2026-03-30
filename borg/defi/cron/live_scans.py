@@ -14,7 +14,6 @@ from __future__ import annotations
 
 import asyncio
 import logging
-import time
 from datetime import datetime, timezone
 from typing import List, Optional
 
@@ -32,19 +31,60 @@ DEXSCREENER_BOOSTED = "https://api.dexscreener.com/token-boosts/latest/v1"
 TIMEOUT = aiohttp.ClientTimeout(total=20)
 
 
-async def _fetch_json(url: str, session: Optional[aiohttp.ClientSession] = None) -> dict:
-    """Fetch JSON from URL with error handling."""
+_TRANSITORIES = (
+    aiohttp.ClientConnectorError,
+    aiohttp.ServerTimeoutError,
+    aiohttp.ClientTimeout,
+    asyncio.TimeoutError,
+)
+
+
+async def _fetch_json(url: str, session: Optional[aiohttp.ClientSession] = None, retries: int = 2) -> dict:
+    """Fetch JSON from URL with retry on transient failures.
+
+    Args:
+        url: The URL to fetch.
+        session: Optional existing session ( caller manages lifecycle ).
+        retries: Number of retry attempts on connection/timeout errors.
+
+    Raises:
+        aiohttp.ClientResponseError: On HTTP 4xx/5xx after exhausting retries.
+        aiohttp.ClientError: On unresolved connection errors.
+    """
     close_session = False
     if session is None:
         session = aiohttp.ClientSession(timeout=TIMEOUT)
         close_session = True
-    try:
-        async with session.get(url) as resp:
-            resp.raise_for_status()
-            return await resp.json()
-    finally:
-        if close_session:
-            await session.close()
+    last_error: BaseException | None = None
+    for attempt in range(retries + 1):
+        try:
+            async with session.get(url) as resp:
+                resp.raise_for_status()
+                return await resp.json()
+        except Exception as e:
+            # Only retry transient errors (connection/timeouts); re-raise HTTP errors immediately
+            if attempt < retries and _is_transient(e):
+                last_error = e
+                await asyncio.sleep(0.5 * (attempt + 1))
+                continue
+            # Either out of retries or a non-transient error — re-raise
+            if isinstance(e, aiohttp.ClientError):
+                raise
+            # Other exceptions (ValueError from bad JSON, etc.) — wrap and raise
+            raise aiohttp.ClientError(str(e)) from e
+    # Retries exhausted (should not reach here if we raise above)
+    raise last_error or RuntimeError(f"Failed to fetch {url} after {retries} retries")
+
+
+def _is_transient(e: BaseException) -> bool:
+    """Return True if this exception is a transient network error worth retrying."""
+    return (
+        isinstance(e, _TRANSITORIES)
+        or (
+            isinstance(e, aiohttp.ClientError)
+            and not isinstance(e, aiohttp.ClientResponseError)
+        )
+    )
 
 
 # ---------------------------------------------------------------------------
@@ -64,12 +104,15 @@ async def yield_hunter(
     """
     try:
         data = await _fetch_json(DEFILLAMA_YIELDS)
-        pools = data.get("data", [])
+        pools = data.get("data", []) if isinstance(data, dict) else []
+        if not isinstance(pools, list):
+            pools = []
 
         # Filter: real TVL, positive APY, not stablecoin-only boring stuff
         filtered = [
             p for p in pools
-            if (p.get("tvlUsd") or 0) >= min_tvl
+            if isinstance(p, dict)
+            and (p.get("tvlUsd") or 0) >= min_tvl
             and (p.get("apy") or 0) >= min_apy
             and p.get("project")
             and p.get("symbol")
@@ -152,8 +195,11 @@ async def token_radar(max_results: int = 10) -> str:
         now = datetime.now(timezone.utc).strftime("%H:%M UTC")
         lines = [f"🔭 TOKEN RADAR — {now}\n"]
 
-        # Latest tokens
-        if isinstance(latest_data, list):
+        # Latest tokens — if latest endpoint fails, log and show boosted only
+        if isinstance(latest_data, Exception):
+            logger.warning("token_radar: latest endpoint failed: %s", latest_data)
+            latest = []
+        elif isinstance(latest_data, list):
             latest = latest_data[:max_results]
         elif isinstance(latest_data, dict):
             latest = latest_data.get("data", latest_data.get("tokens", []))[:max_results]
@@ -164,6 +210,8 @@ async def token_radar(max_results: int = 10) -> str:
             lines.append("🆕 LATEST TOKENS:")
             seen_chains = {}
             for t in latest:
+                if not isinstance(t, dict):
+                    continue
                 chain = t.get("chainId", "?")
                 addr = t.get("tokenAddress", "?")
                 url = t.get("url", "")
@@ -211,9 +259,11 @@ async def tvl_pulse(max_results: int = 20) -> str:
         data = await _fetch_json(DEFILLAMA_PROTOCOLS)
 
         # Filter to real protocols with TVL
+        raw_protocols = data if isinstance(data, list) else data.get("data", [])
         protocols = [
-            p for p in data
-            if (p.get("tvl") or 0) > 10_000_000
+            p for p in raw_protocols
+            if isinstance(p, dict)
+            and (p.get("tvl") or 0) > 10_000_000
             and p.get("name")
         ]
 
@@ -266,16 +316,18 @@ async def tvl_pulse(max_results: int = 20) -> str:
             for p in gainers:
                 tvl = p.get("tvl", 0) or 0
                 change = p.get("change_7d", 0) or 0
+                name = p.get("name", "?")
                 tvl_str = f"${tvl/1e6:.0f}M" if tvl < 1e9 else f"${tvl/1e9:.1f}B"
-                lines.append(f"    🟢 {p['name']:20s} | {tvl_str:>8s} | {change:+.1f}%")
+                lines.append(f"    🟢 {name:20s} | {tvl_str:>8s} | {change:+.1f}%")
 
         if losers:
             lines.append("  📉 LOSERS:")
             for p in losers:
                 tvl = p.get("tvl", 0) or 0
                 change = p.get("change_7d", 0) or 0
+                name = p.get("name", "?")
                 tvl_str = f"${tvl/1e6:.0f}M" if tvl < 1e9 else f"${tvl/1e9:.1f}B"
-                lines.append(f"    🔴 {p['name']:20s} | {tvl_str:>8s} | {change:+.1f}%")
+                lines.append(f"    🔴 {name:20s} | {tvl_str:>8s} | {change:+.1f}%")
 
         total_tvl = sum(p.get("tvl", 0) or 0 for p in protocols)
         lines.append(f"\n💰 Total DeFi TVL: ${total_tvl/1e9:.1f}B across {len(protocols)} protocols")
@@ -303,12 +355,13 @@ async def stablecoin_watch(
     """
     try:
         data = await _fetch_json(DEFILLAMA_STABLECOINS)
-        stables = data.get("peggedAssets", [])
+        stables = data.get("peggedAssets", []) if isinstance(data, dict) else []
 
         # Sort by circulating supply
         stables_sorted = sorted(
-            stables,
-            key=lambda x: (x.get("circulating", {}).get("peggedUSD", 0) or 0),
+            [s for s in stables if isinstance(s, dict)],
+            key=lambda x: (x.get("circulating", {}).get("peggedUSD", 0) or 0)
+            if isinstance(x.get("circulating"), dict) else 0,
             reverse=True,
         )[:top_n]
 
@@ -319,9 +372,12 @@ async def stablecoin_watch(
         depeg_alerts = []
 
         for s in stables_sorted:
+            if not isinstance(s, dict):
+                continue
             name = s.get("name", "?")
             symbol = s.get("symbol", "?")
-            supply = s.get("circulating", {}).get("peggedUSD", 0) or 0
+            circulating = s.get("circulating", {})
+            supply = circulating.get("peggedUSD", 0) or 0 if isinstance(circulating, dict) else 0
             price = s.get("price", None)
             total_supply += supply
 
