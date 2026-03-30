@@ -1,0 +1,84 @@
+"""
+Whale Cron — Scheduled whale activity scanning.
+
+Wraps WhaleTracker to scan all chains (Solana via Helius, EVM via Alchemy)
+for whale activity and returns formatted Telegram-ready alert strings.
+
+Usage:
+    alerts = await run_whale_scan()
+"""
+
+import logging
+from typing import Any, Dict, List, Optional
+
+from borg.defi.whale_tracker import WhaleTracker
+
+logger = logging.getLogger(__name__)
+
+
+async def run_whale_scan(
+    tracked_wallets: Optional[Dict[str, str]] = None,
+    min_usd_threshold: float = 50_000.0,
+    alert_cooldown: int = 300,
+    helius_client: Optional[Any] = None,
+    alchemy_clients: Optional[Dict[str, Any]] = None,
+) -> List[str]:
+    """
+    Scan all chains for whale activity and return formatted alerts.
+
+    Args:
+        tracked_wallets: Dict of wallet address -> label for tracking.
+                         If None, uses an empty tracker (no alerts will fire).
+        min_usd_threshold: Minimum USD value to trigger an alert (default $50K).
+        alert_cooldown: Seconds between alerts for the same wallet (default 300).
+        helius_client: Helius API client for Solana scanning.
+                       If None, scanning will return empty results.
+        alchemy_clients: Dict of chain name -> Alchemy client for EVM scanning.
+                         Keys: 'ethereum', 'base', 'arbitrum', etc.
+                         If None, EVM scanning is skipped.
+
+    Returns:
+        List of formatted Telegram message strings, one per whale alert.
+        Returns empty list if no alerts generated.
+    """
+    # Instantiate tracker
+    tracker = WhaleTracker(
+        tracked_wallets=tracked_wallets or {},
+        min_usd_threshold=min_usd_threshold,
+        alert_cooldown=alert_cooldown,
+    )
+
+    alerts: List[str] = []
+
+    try:
+        # Scan Solana if helius_client provided
+        if helius_client is not None:
+            solana_alerts = await tracker.scan_solana(helius_client)
+            for alert in solana_alerts:
+                formatted = tracker.format_telegram(alert)
+                alerts.append(formatted)
+                logger.debug(f"Whale alert: {alert.wallet} {alert.action} ${alert.amount_usd:,.0f}")
+
+        # Scan EVM chains if alchemy_clients provided
+        if alchemy_clients is not None:
+            for chain, client in alchemy_clients.items():
+                evm_alerts = await tracker.scan_evm(client, chain)
+                for alert in evm_alerts:
+                    formatted = tracker.format_telegram(alert)
+                    alerts.append(formatted)
+                    logger.debug(f"Whale alert: {alert.wallet} {alert.action} ${alert.amount_usd:,.0f}")
+
+        # Also support scanning all at once
+        if helius_client is not None and alchemy_clients is not None:
+            all_alerts = await tracker.scan_all(helius_client, alchemy_clients)
+            # Avoid double-adding if we already scanned above
+            if not alerts:
+                for alert in all_alerts:
+                    formatted = tracker.format_telegram(alert)
+                    alerts.append(formatted)
+
+    except Exception as e:
+        logger.error(f"Whale scan error: {e}")
+
+    logger.info(f"Whale scan complete: {len(alerts)} alerts")
+    return alerts
