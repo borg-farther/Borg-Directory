@@ -14,6 +14,7 @@ Think of it as connective brain tissue for agents: not a magic oracle, but a sha
 pip install agent-borg                    # core only
 pip install agent-borg[embeddings]        # semantic search
 pip install agent-borg[crypto]            # Ed25519 pack signing
+pip install agent-borg[defi]             # DeFi scanner: yields, whales, TVL, stablecoins
 pip install agent-borg[all]              # everything
 pipx install agent-borg                  # recommended — isolated
 ```
@@ -95,7 +96,95 @@ This is a cache, not a magic box. Packs encode what worked before. They get bett
 
 ---
 
-## Architecture
+## DeFi — On-Chain Intelligence
+
+Borg DeFi turns your agent into an on-chain operator: whale tracking, yield scanning, portfolio monitoring, and alpha signals. Free tier gets you started; paid API keys unlock the full stack.
+
+### Installation
+
+```bash
+pip install agent-borg[defi]          # yields + whales + TVL + stablecoins
+```
+
+### Quick Start — CLI
+
+```bash
+# Top yield opportunities (DeFiLlama — free, no key)
+borg-defi yields --min-apy 10 --min-tvl 100000
+
+# All-in-one: yields + tokens + TVL + stablecoins
+borg-defi scan-all
+
+# Token radar (DexScreener — free)
+borg-defi tokens --limit 20
+
+# TVL pulse (DeFiLlama — free)
+borg-defi tvl --limit 10
+
+# Stablecoin depeg watcher
+borg-defi stablecoins --depeg-threshold 0.98 --top 20
+```
+
+### API Overview
+
+| API | Free? | Key Env Var | What It Powers |
+|-----|-------|-------------|----------------|
+| DeFiLlama | YES | — | Yields, TVL |
+| DexScreener | YES | — | Token prices, pairs |
+| GoPlus | YES | GOPLUS_API_KEY | Token security (free tier) |
+| Helius | NO | HELIUS_API_KEY | Solana whale txns |
+| Birdeye | NO | BIRDEYE_API_KEY | Token prices (Solana) |
+| Alchemy | NO | ALCHEMY_API_KEY | ETH/Base whale txns |
+| Arkham | NO | ARKHAM_API_KEY | Smart money labels |
+
+### Cron Jobs
+
+```bash
+# Run yield scan every 15 min, alert on APY > 20%
+*/15 * * * * borg-defi yields --min-apy 20 --min-tvl 500000 | mail -s "Yield Alpha" degen@example.com
+
+# Hourly whale scan
+0 * * * * borg-defi scan-all > ~/.borg/defi/snapshots/$(date +\%Y\%m\%d\%H).json
+
+# Daily portfolio snapshot
+0 0 * * * borg-defi tvl --limit 50 >> ~/.borg/defi/tvl_history.csv
+```
+
+### Architecture
+
+```
+HERMES AGENT
+    │
+    ▼
+┌─────────────────────────────────────────────────────────┐
+│  BORG DEFI LAYER                                         │
+│                                                          │
+│  whale_tracker     yield_scanner     portfolio_monitor  │
+│  liquidation_w     alpha_signal      lp_manager         │
+│  risk_engine       swap_executor                          │
+│                                                          │
+│  ┌─────────────────────────────────────────────────────┐ │
+│  │  API CLIENTS                                         │ │
+│  │  Helius (Solana)  Alchemy (EVM)  DeFiLlama (yields) │ │
+│  │  DexScreener      Birdeye         GoPlus (security)  │ │
+│  │  Arkham (smart $) Jito (MEV)      Flashbots (MEV)   │ │
+│  └─────────────────────────────────────────────────────┘ │
+│                                                          │
+│  ┌─────────────────────────────────────────────────────┐ │
+│  │  DOJO — learning from every trade                    │ │
+│  │  Session reader → Win/loss classify → Strategy patch │ │
+│  └─────────────────────────────────────────────────────┘ │
+└─────────────────────────────────────────────────────────┘
+    │
+    ▼
+ON-CHAIN (Solana, Ethereum, Base, Arbitrum)
+```
+
+Full spec: [docs/BORG_DEFI_SPEC.md](docs/BORG_DEFI_SPEC.md)
+
+---
+
+## Architecture (Core)
 
 ```
 borg/
