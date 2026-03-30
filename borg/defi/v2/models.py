@@ -167,8 +167,8 @@ class DeFiStrategyPack:
                 "protocol_age_days": self.risk.protocol_age_days if self.risk else 0,
                 "audit_status": self.risk.audit_status if self.risk else "",
             } if self.risk else {},
-            "updated_at": self.updated_at.isoformat() if self.updated_at else None,
-            "created_at": self.created_at.isoformat() if self.created_at else None,
+            "updated_at": self.updated_at.isoformat() if hasattr(self.updated_at, 'isoformat') else self.updated_at,
+            "created_at": self.created_at.isoformat() if hasattr(self.created_at, 'isoformat') else self.created_at,
         }
 
     @classmethod
