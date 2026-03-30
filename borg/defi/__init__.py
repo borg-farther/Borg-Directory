@@ -1,153 +1,121 @@
 """
 Borg DeFi — DeFi skill packs for the Hermes+Borg agent ecosystem.
 
-Modules:
-    - data_models: Dataclasses for DeFi data (WhaleAlert, YieldOpportunity, Position, etc)
-    - api_clients: Async API clients for DeFi data providers
-        - defillama: DeFiLlama yields API (free, no auth)
-        - dexscreener: DexScreener pairs API (free, no auth)
-        - helius: Helius Solana RPC (API key required)
-        - birdeye: Birdeye token prices (API key required)
-    - liquidation_watcher: Aave V3 / Compound V3 liquidation opportunity detection
-    - whale_tracker: Whale wallet monitoring across chains (Phase 1)
-    - yield_scanner: DeFiLlama yield opportunity scanning (Phase 1)
-    - portfolio_monitor: Cross-chain portfolio tracking with P&L (Phase 2)
-    - liquidation_watcher: Aave V3 / Compound V3 liquidation detection (Phase 2)
-    - alpha_signal: Smart money, volume spikes, new pairs, bridge flows (Phase 3)
-    - risk_engine: Correlation, protocol risk, concentration, drawdown (Phase 3)
-    - strategy_backtester: Historical backtesting for DeFi strategies (Phase 3)
-    - cron: Scheduled task entry points for all signal types (Phase 3)
+Optional dependency: pip install agent-borg[defi]
+
+All imports are lazy — this module can be imported without aiohttp/cryptography
+installed, but will raise ImportError with a helpful message when you try to
+use any DeFi class.
 """
+from __future__ import annotations
 
-from borg.defi.data_models import (
-    WhaleAlert,
-    YieldOpportunity,
-    Position,
-    DeFiPackMetadata,
-    TokenPrice,
-    OHLCV,
-    Transaction,
-    DexPair,
-)
+import importlib
+from typing import TYPE_CHECKING
 
-from borg.defi.api_clients.defillama import DeFiLlamaClient
-from borg.defi.api_clients.dexscreener import DexScreenerClient
-from borg.defi.api_clients.helius import HeliusClient
-from borg.defi.api_clients.birdeye import BirdeyeClient
-from borg.defi.api_clients.goplus import GoPlusClient
-from borg.defi.api_clients.alchemy import AlchemyClient
+if TYPE_CHECKING:
+    # Static analysis / IDE support — these imports are never executed at runtime
+    from borg.defi.data_models import (
+        WhaleAlert, YieldOpportunity, Position, DeFiPackMetadata,
+        TokenPrice, OHLCV, Transaction, DexPair,
+    )
+    from borg.defi.api_clients.defillama import DeFiLlamaClient
+    from borg.defi.api_clients.dexscreener import DexScreenerClient
+    from borg.defi.api_clients.helius import HeliusClient
+    from borg.defi.api_clients.birdeye import BirdeyeClient
+    from borg.defi.api_clients.goplus import GoPlusClient
+    from borg.defi.api_clients.alchemy import AlchemyClient
+    from borg.defi.api_clients.arkham import ArkhamClient
+    from borg.defi.whale_tracker import WhaleTracker
+    from borg.defi.yield_scanner import YieldScanner
+    from borg.defi.portfolio_monitor import PortfolioMonitor
+    from borg.defi.swap_executor import SwapExecutor
+    from borg.defi.lp_manager import LPManager
+    from borg.defi.alpha_signal import AlphaSignalEngine
+    from borg.defi.risk_engine import RiskEngine
+    from borg.defi.strategy_backtester import StrategyBacktester
+    from borg.defi.dojo_bridge import DojoBridge
+    from borg.defi.mev.jito import JitoClient
+    from borg.defi.mev.flashbots import FlashbotsClient
+    from borg.defi.cron.state import CronState
+    from borg.defi.cron.delivery import deliver_alerts
 
-from borg.defi.liquidation_watcher import (
-    LiquidationTarget,
-    scan_aave_positions,
-    scan_compound_positions,
-    scan_all_positions,
-    estimate_liquidation_profit,
-    format_alert,
-    generate_cron_entry,
-    run_watcher,
-    Protocol,
-    LIQUIDATION_THRESHOLD,
-)
 
-# Phase 3 modules
-from borg.defi.alpha_signal import (
-    AlphaSignalEngine,
-    SmartMoneyFlow,
-    VolumeSpike,
-    NewPairAlert,
-    BridgeFlow,
-)
+def _check_defi_deps():
+    """Check that defi optional dependencies are installed."""
+    try:
+        import aiohttp  # noqa: F401
+    except ImportError:
+        raise ImportError(
+            "Borg DeFi requires the 'defi' extra. Install with:\n"
+            "  pip install agent-borg[defi]"
+        ) from None
 
-from borg.defi.risk_engine import (
-    RiskEngine,
-    CorrelationResult,
-    ProtocolRiskResult,
-    ConcentrationRiskResult,
-    DrawdownResult,
-)
 
-from borg.defi.strategy_backtester import (
-    StrategyBacktester,
-    BacktestTrade,
-    BacktestResult,
-    WhaleReplayResult,
-    LPSimulationResult,
-    PerformanceMetrics,
-)
+# Lazy attribute map: name -> (module_path, attr_name)
+_LAZY_IMPORTS = {
+    # Data models (no external deps, always available)
+    "WhaleAlert": ("borg.defi.data_models", "WhaleAlert"),
+    "YieldOpportunity": ("borg.defi.data_models", "YieldOpportunity"),
+    "Position": ("borg.defi.data_models", "Position"),
+    "DeFiPackMetadata": ("borg.defi.data_models", "DeFiPackMetadata"),
+    "TokenPrice": ("borg.defi.data_models", "TokenPrice"),
+    "OHLCV": ("borg.defi.data_models", "OHLCV"),
+    "Transaction": ("borg.defi.data_models", "Transaction"),
+    "DexPair": ("borg.defi.data_models", "DexPair"),
+    # API clients (need aiohttp)
+    "DeFiLlamaClient": ("borg.defi.api_clients.defillama", "DeFiLlamaClient"),
+    "DexScreenerClient": ("borg.defi.api_clients.dexscreener", "DexScreenerClient"),
+    "HeliusClient": ("borg.defi.api_clients.helius", "HeliusClient"),
+    "BirdeyeClient": ("borg.defi.api_clients.birdeye", "BirdeyeClient"),
+    "GoPlusClient": ("borg.defi.api_clients.goplus", "GoPlusClient"),
+    "AlchemyClient": ("borg.defi.api_clients.alchemy", "AlchemyClient"),
+    "ArkhamClient": ("borg.defi.api_clients.arkham", "ArkhamClient"),
+    # Core modules
+    "WhaleTracker": ("borg.defi.whale_tracker", "WhaleTracker"),
+    "YieldScanner": ("borg.defi.yield_scanner", "YieldScanner"),
+    "PortfolioMonitor": ("borg.defi.portfolio_monitor", "PortfolioMonitor"),
+    "SwapExecutor": ("borg.defi.swap_executor", "SwapExecutor"),
+    "LPManager": ("borg.defi.lp_manager", "LPManager"),
+    "AlphaSignalEngine": ("borg.defi.alpha_signal", "AlphaSignalEngine"),
+    "RiskEngine": ("borg.defi.risk_engine", "RiskEngine"),
+    "StrategyBacktester": ("borg.defi.strategy_backtester", "StrategyBacktester"),
+    "DojoBridge": ("borg.defi.dojo_bridge", "DojoBridge"),
+    # MEV
+    "JitoClient": ("borg.defi.mev.jito", "JitoClient"),
+    "FlashbotsClient": ("borg.defi.mev.flashbots", "FlashbotsClient"),
+    # Cron
+    "CronState": ("borg.defi.cron.state", "CronState"),
+    "deliver_alerts": ("borg.defi.cron.delivery", "deliver_alerts"),
+    "run_whale_scan": ("borg.defi.cron.whale_cron", "run_whale_scan"),
+    "run_yield_scan": ("borg.defi.cron.yield_cron", "run_yield_scan"),
+    "run_alpha_scan": ("borg.defi.cron.alpha_cron", "run_alpha_scan"),
+    "run_portfolio_report": ("borg.defi.cron.portfolio_cron", "run_portfolio_report"),
+    "run_liquidation_scan": ("borg.defi.cron.liquidation_cron", "run_liquidation_scan"),
+    "run_risk_check": ("borg.defi.cron.risk_cron", "run_risk_check"),
+    # Liquidation watcher top-level functions
+    "LiquidationTarget": ("borg.defi.liquidation_watcher", "LiquidationTarget"),
+    "scan_aave_positions": ("borg.defi.liquidation_watcher", "scan_aave_positions"),
+    "scan_compound_positions": ("borg.defi.liquidation_watcher", "scan_compound_positions"),
+    "scan_all_positions": ("borg.defi.liquidation_watcher", "scan_all_positions"),
+    "run_watcher": ("borg.defi.liquidation_watcher", "run_watcher"),
+    "Protocol": ("borg.defi.liquidation_watcher", "Protocol"),
+}
 
-# Cron entry points
-from borg.defi.cron import (
-    run_whale_scan,
-    run_yield_scan,
-    run_alpha_scan,
-    run_portfolio_report,
-    run_liquidation_scan,
-    run_risk_check,
-)
-from borg.defi.cron.state import CronState
-from borg.defi.cron.delivery import deliver_alerts
+# Data model names that don't need aiohttp
+_NO_DEPS_NEEDED = {
+    "WhaleAlert", "YieldOpportunity", "Position", "DeFiPackMetadata",
+    "TokenPrice", "OHLCV", "Transaction", "DexPair",
+}
 
-# Dojo Bridge
-from borg.defi.dojo_bridge import DojoBridge
 
-__all__ = [
-    # Data models
-    "WhaleAlert",
-    "YieldOpportunity",
-    "Position",
-    "DeFiPackMetadata",
-    "TokenPrice",
-    "OHLCV",
-    "Transaction",
-    "DexPair",
-    # API clients
-    "DeFiLlamaClient",
-    "DexScreenerClient",
-    "HeliusClient",
-    "BirdeyeClient",
-    "GoPlusClient",
-    "AlchemyClient",
-    # Liquidation watcher (Phase 2)
-    "LiquidationTarget",
-    "scan_aave_positions",
-    "scan_compound_positions",
-    "scan_all_positions",
-    "estimate_liquidation_profit",
-    "format_alert",
-    "generate_cron_entry",
-    "run_watcher",
-    "Protocol",
-    "LIQUIDATION_THRESHOLD",
-    # Alpha Signal Engine (Phase 3)
-    "AlphaSignalEngine",
-    "SmartMoneyFlow",
-    "VolumeSpike",
-    "NewPairAlert",
-    "BridgeFlow",
-    # Risk Engine (Phase 3)
-    "RiskEngine",
-    "CorrelationResult",
-    "ProtocolRiskResult",
-    "ConcentrationRiskResult",
-    "DrawdownResult",
-    # Strategy Backtester (Phase 3)
-    "StrategyBacktester",
-    "BacktestTrade",
-    "BacktestResult",
-    "WhaleReplayResult",
-    "LPSimulationResult",
-    "PerformanceMetrics",
-    # Cron entry points (Phase 3)
-    "run_whale_scan",
-    "run_yield_scan",
-    "run_alpha_scan",
-    "run_portfolio_report",
-    "run_liquidation_scan",
-    "run_risk_check",
-    # Cron state and delivery
-    "CronState",
-    "deliver_alerts",
-    # Dojo Bridge
-    "DojoBridge",
-]
+def __getattr__(name: str):
+    if name in _LAZY_IMPORTS:
+        if name not in _NO_DEPS_NEEDED:
+            _check_defi_deps()
+        module_path, attr_name = _LAZY_IMPORTS[name]
+        module = importlib.import_module(module_path)
+        return getattr(module, attr_name)
+    raise AttributeError(f"module {__name__!r} has no attribute {name!r}")
+
+
+__all__ = list(_LAZY_IMPORTS.keys())
