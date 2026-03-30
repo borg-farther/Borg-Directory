@@ -1,0 +1,19 @@
+{
+  "token_approvals": [
+    {
+      "contract_address": "0x1234567890123456789012345678901234567890",
+      "token_symbol": "TEST",
+      "approved_amount": "115792089237316195423570985008687907853269984665640564039457584007913129639935",
+      "is_spam": "false",
+      "risk_level": "low"
+    },
+    {
+      "contract_address": "0xabcdefabcdefabcdefabcdefabcdefabcdefabcd",
+      "token_symbol": "SPAM",
+      "approved_amount": "1000000000000000000",
+      "is_spam": "true",
+      "risk_level": "high"
+    }
+  ],
+  "code": "Ok"
+}

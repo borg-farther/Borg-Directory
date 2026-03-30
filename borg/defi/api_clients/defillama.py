@@ -16,7 +16,9 @@ logger = logging.getLogger(__name__)
 
 # DeFiLlama API endpoints
 DEFI_LLAMA_BASE = "https://yields.llama.fi"
+DEFI_LLAMA_BRIDGES_BASE = "https://bridges.llama.fi"
 POOLS_ENDPOINT = "/pools"
+BRIDGE_VOLUME_ENDPOINT = "/bridgevolume"
 
 
 class DeFiLlamaClient(BaseAPIClient):
@@ -167,3 +169,43 @@ class DeFiLlamaClient(BaseAPIClient):
 
         # IL risk already factored in separately
         return max(0.0, min(1.0, risk))
+
+    async def get_bridge_volumes(
+        self,
+        bridge: Optional[str] = None,
+    ) -> Optional[Dict[str, Any]]:
+        """
+        Fetch bridge volume data from DeFiLlama.
+
+        Endpoint: GET https://bridges.llama.fi/bridgevolume
+
+        Args:
+            bridge: Optional specific bridge name to filter
+
+        Returns:
+            Raw JSON response with bridge volume data or None on error.
+
+        Response structure:
+            - data: List of bridge volume records with:
+                - bridgeName: str
+                - chain: str
+                - chains: List[str] (source and destination chains)
+                - totalVolumeUsd: float
+                - volume24h: float
+                - tokenSymbol: str
+                - contractAddress: str
+        """
+        url = f"{DEFI_LLAMA_BRIDGES_BASE}{BRIDGE_VOLUME_ENDPOINT}"
+        if bridge:
+            url = f"{url}?bridge={bridge}"
+
+        try:
+            data = await self.get(url)
+            if data and "data" in data:
+                logger.info(f"Fetched {len(data.get('data', []))} bridge volume records")
+                return data
+            logger.warning("DeFiLlama bridge API returned no data")
+            return None
+        except Exception as e:
+            logger.error(f"Failed to fetch bridge volumes: {e}")
+            return None

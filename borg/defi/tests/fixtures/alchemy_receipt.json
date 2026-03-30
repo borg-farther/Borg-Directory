@@ -1,0 +1,15 @@
+{
+  "blockHash": "0xabcdefabcdefabcdefabcdefabcdefabcdefabcdefabcdefabcdefabcdefabcdef",
+  "blockNumber": "0x1234567",
+  "confirmations": "100",
+  "contractAddress": "0xA0b86991c6218b36c1d19D4a2e9Eb0cE3606eB48",
+  "cumulativeGasUsed": "0x12345",
+  "effectiveGasPrice": "0x123456789",
+  "from": "0x1234567890123456789012345678901234567890",
+  "gas": "0x12345",
+  "gasUsed": "0x12345",
+  "hash": "0xabc123def456abc123def456abc123def456abc123def456abc123def456abc1",
+  "status": "0x1",
+  "to": "0xabcdefabcdefabcdefabcdefabcdefabcdefabcd",
+  "transactionIndex": "0x1"
+}

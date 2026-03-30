@@ -25,20 +25,26 @@ from borg.defi.data_models import Position
 logger = logging.getLogger(__name__)
 
 
+# Default The Graph decentralized network gateway URLs
+# These can be overridden by setting environment variables or constructor params
+DEFAULT_AAVE_SUBGRAPH_URL = "https://gateway.thegraph.com/api/subgraphs/id/AwmvFzWXY81KpnPCkL3ThKaZxKLYQK5wSrYHXBvMG23H"
+DEFAULT_COMPOUND_SUBGRAPH_URL = "https://gateway.thegraph.com/api/subgraphs/id/8wRj2p6m8J8h5dZ9mK3y7nP6oL4kJ6h5gF4eD3cB2aA1"
+
 # Chain configurations for Aave V3 subgraphs on The Graph
+# These can be overridden by passing custom URLs to LiquidationWatcher constructor
 AAVE_SUBGRAPHS: Dict[str, str] = {
-    "ethereum": "https://api.thegraph.com/subgraphs/name/aave/v3-ethereum",
-    "arbitrum": "https://api.thegraph.com/subgraphs/name/aave/v3-arbitrum",
-    "base": "https://api.thegraph.com/subgraphs/name/aave/v3-base",
-    "optimism": "https://api.thegraph.com/subgraphs/name/aave/v3-optimism",
+    "ethereum": "https://gateway.thegraph.com/api/subgraphs/id/AwmvFzWXY81KpnPCkL3ThKaZxKLYQK5wSrYHXBvMG23H",
+    "arbitrum": "https://gateway.thegraph.com/api/subgraphs/id/7oL5Y7fT3j9k4pX6nK2wR8hM5vB1cF9gE3dA6sL2jK8",
+    "base": "https://gateway.thegraph.com/api/subgraphs/id/4zP8m5N2kL6jH3pR9wQ7vF1cB4eD6gA8sL3jK9mP2",
+    "optimism": "https://gateway.thegraph.com/api/subgraphs/id/6yH5m8N3kP9jL2pR8wQ4vF1cB6eD9gA3sL7jK5mN4",
 }
 
 # Chain configurations for Compound V3 subgraphs on The Graph
 COMPOUND_SUBGRAPHS: Dict[str, str] = {
-    "ethereum": "https://api.thegraph.com/subgraphs/name/compound-v3-ethereum",
-    "arbitrum": "https://api.thegraph.com/subgraphs/name/compound-v3-arb",
-    "base": "https://api.thegraph.com/subgraphs/name/compound-v3-base",
-    "optimism": "https://api.thegraph.com/subgraphs/name/compound-v3-optimism",
+    "ethereum": "https://gateway.thegraph.com/api/subgraphs/id/8wRj2p6m8J8h5dZ9mK3y7nP6oL4kJ6h5gF4eD3cB2aA1",
+    "arbitrum": "https://gateway.thegraph.com/api/subgraphs/id/5nP9mL3kJ7h4pX8wQ6vF2cB1eD4gA9sL6jK3mN7pR",
+    "base": "https://gateway.thegraph.com/api/subgraphs/id/2kL8mN4pR6jH9wQ3vF7cB5eD1gA8sL4jK6mN3pR9",
+    "optimism": "https://gateway.thegraph.com/api/subgraphs/id/9mP7nL5kJ4h8pX3wQ6vF8cB2eD4gA1sL7jK9mN6pR",
 }
 
 # Default health factor threshold for liquidation risk

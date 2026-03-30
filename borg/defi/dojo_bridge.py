@@ -685,7 +685,7 @@ class DojoBridge:
 
         # Use timestamp-based filename for uniqueness
         timestamp = datetime.now(timezone.utc).strftime("%Y%m%d_%H%M%S")
-        safe_token = warning["token"][:16].replace("/", "_").replace(":", "_")
+        safe_token = warning.get("token", "unknown").replace("/", "_").replace(":", "_")
         warning_path = collective_dir / f"warning_{safe_token}_{timestamp}.yaml"
 
         warning_path.write_text(

@@ -1,0 +1,20 @@
+{
+  "transfers": [
+    {
+      "hash": "0xabc123def456abc123def456abc123def456abc123def456abc123def456abc1",
+      "blockNum": "0x1234567",
+      "from": "0x1234567890123456789012345678901234567890",
+      "to": "0xabcdefabcdefabcdefabcdefabcdefabcdefabcd",
+      "value": "1000000000000000000",
+      "tokenId": null
+    },
+    {
+      "hash": "0xdef456abc123def456abc123def456abc123def456abc123def456abc123def4",
+      "blockNum": "0x1234568",
+      "from": "0xabcdefabcdefabcdefabcdefabcdefabcdefabcd",
+      "to": "0x1234567890123456789012345678901234567890",
+      "value": "500000000000000000",
+      "tokenId": null
+    }
+  ]
+}

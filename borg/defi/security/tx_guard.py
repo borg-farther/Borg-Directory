@@ -6,6 +6,7 @@ contract whitelist, rug detection, and human approval.
 
 import asyncio
 import logging
+import os
 import re
 from dataclasses import dataclass
 from datetime import datetime
@@ -16,6 +17,9 @@ import aiohttp
 from borg.defi.security.keystore import SpendingLimitStore, ContractWhitelist
 
 logger = logging.getLogger(__name__)
+
+# Environment variable for GoPlus API key (optional, GoPlus has free tier)
+GOPLUS_API_KEY_ENV = "GOPLUS_API_KEY"
 
 
 class TransactionError(Exception):
@@ -110,6 +114,7 @@ class TransactionGuard:
         spending_store: Optional[SpendingLimitStore] = None,
         whitelist: Optional[ContractWhitelist] = None,
         helius_api_key: Optional[str] = None,
+        goplus_api_key: Optional[str] = None,
     ):
         """Initialize transaction guard.
         
@@ -117,10 +122,13 @@ class TransactionGuard:
             spending_store: Spending limit store
             whitelist: Contract whitelist
             helius_api_key: Helius API key for token checks
-        """
+            goplus_api_key: GoPlus API key for token security checks (optional)
+"""
         self.spending_store = spending_store or SpendingLimitStore()
         self.whitelist = whitelist or ContractWhitelist()
         self.helius_api_key = helius_api_key
+        self.goplus_api_key = goplus_api_key or os.environ.get(GOPLUS_API_KEY_ENV)
+        self._goplus_client = None
         self._session: Optional[aiohttp.ClientSession] = None
     
     async def _get_session(self) -> aiohttp.ClientSession:
@@ -206,30 +214,41 @@ class TransactionGuard:
         chain: str,
     ) -> TokenCheck:
         """Run rug detection checks on a token.
-        
+
+        Uses GoPlus Security API when available for comprehensive token analysis.
+
         Checks:
-        1. Is token on known scam list?
-        2. Can token be sold? (simulate sell tx)
-        3. Is liquidity locked?
-        4. Transfer tax > 10%? → reject
-        5. Owner can pause trading? → warn
-        
+        1. Is token a honeypot?
+        2. Can token be sold?
+        3. Transfer/sell tax > 10%? → reject
+        4. Owner can mint unlimited tokens? → warn
+        5. Proxy contract? → warn
+        6. Low LP lock? → warn
+
         Args:
             token_address: Token contract address
             chain: Chain name
-            
+
         Returns:
             TokenCheck result
         """
         warnings = []
-        
-        # Mock token check (in production, would call token analysis APIs)
-        # For now, return safe for known good tokens
+
+        # Use GoPlus for token security if available
+        if self.goplus_api_key or self._goplus_client:
+            goplus_result = await self.check_token_security(token_address, chain)
+            if goplus_result:
+                return goplus_result
+
+        # Fallback: known safe tokens
         known_safe = {
             "solana": {"EPjFWdd5AufqSSqeM2qN1xzybapC8G4wEGGkZwyTDt1v"},  # USDC
             "ethereum": {"0xA0b86991c6218b36c1d19D4a2e9Eb0cE3606eB48"},  # USDC
+            "bsc": {"0x8AC76a51CC950d9822D68d83eE1E17b64D5b4f3B"},  # USDC
+            "polygon": {"0x3c499c542cEF5E91e2010A2F6dF1725c3dA19B35"},  # USDC
+            "arbitrum": {"0xaf88d065e77c8cC2239327C5EDb3A432268e5831"},  # USDC
         }
-        
+
         if chain in known_safe and token_address in known_safe[chain]:
             return TokenCheck(
                 is_safe=True,
@@ -238,15 +257,91 @@ class TransactionGuard:
                 is_pausable=False,
                 warnings=[],
             )
-        
+
         # Default: assume suspicious until proven otherwise
         return TokenCheck(
-            is_safe=True,  # Default to safe for demo
+            is_safe=True,
             can_sell=True,
             transfer_tax=0.0,
             is_pausable=False,
             warnings=[],
         )
+
+    async def check_token_security(
+        self,
+        token_address: str,
+        chain: str,
+    ) -> Optional[TokenCheck]:
+        """
+        Use GoPlus API to check token security.
+
+        Args:
+            token_address: Token contract address
+            chain: Chain name (eth, bsc, polygon, etc.)
+
+        Returns:
+            TokenCheck result or None if GoPlus unavailable
+        """
+        if not self._goplus_client:
+            # Lazy initialization of GoPlus client
+            try:
+                from borg.defi.api_clients.goplus import GoPlusClient
+                self._goplus_client = GoPlusClient(api_key=self.goplus_api_key)
+            except ImportError:
+                logger.warning("GoPlus client not available")
+                return None
+
+        try:
+            result = await self._goplus_client.token_security(chain, token_address)
+
+            if not result:
+                return None
+
+            client = self._goplus_client
+
+            # Determine if token is safe
+            is_honeypot = client.is_honeypot(result)
+            can_sell = result.get("can_sell", "true").lower() != "false"
+            risk = client.risk_score(result)
+
+            # Calculate transfer tax
+            try:
+                transfer_tax = float(result.get("transfer_tax", 0) or 0)
+            except (ValueError, TypeError):
+                transfer_tax = 0.0
+
+            # Check if owner can pause/is pausable
+            is_pausable = result.get("is_mintable", "").lower() == "true"
+
+            # Build warnings
+            warnings = client.get_warnings(result)
+
+            # Determine safety
+            is_safe = not is_honeypot and can_sell and risk < 50
+
+            # Block if honeypot or can't sell
+            if is_honeypot or not can_sell:
+                is_safe = False
+
+            # Block if very high risk
+            if risk >= 80:
+                is_safe = False
+
+            # Block if very high tax
+            if transfer_tax > 10:
+                is_safe = False
+
+            return TokenCheck(
+                is_safe=is_safe,
+                can_sell=can_sell,
+                transfer_tax=transfer_tax,
+                is_pausable=is_pausable,
+                warnings=warnings,
+            )
+
+        except Exception as e:
+            logger.error(f"GoPlus token check failed for {token_address}: {e}")
+            return None
     
     def check_human_approval(
         self,

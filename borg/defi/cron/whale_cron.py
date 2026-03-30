@@ -6,12 +6,17 @@ for whale activity and returns formatted Telegram-ready alert strings.
 
 Usage:
     alerts = await run_whale_scan()
+    # With state persistence:
+    state = CronState()
+    alerts = await run_whale_scan(state=state)
 """
 
 import logging
+import time
 from typing import Any, Dict, List, Optional
 
 from borg.defi.whale_tracker import WhaleTracker
+from borg.defi.cron.state import CronState
 
 logger = logging.getLogger(__name__)
 
@@ -22,6 +27,7 @@ async def run_whale_scan(
     alert_cooldown: int = 300,
     helius_client: Optional[Any] = None,
     alchemy_clients: Optional[Dict[str, Any]] = None,
+    state: Optional[CronState] = None,
 ) -> List[str]:
     """
     Scan all chains for whale activity and return formatted alerts.
@@ -36,6 +42,7 @@ async def run_whale_scan(
         alchemy_clients: Dict of chain name -> Alchemy client for EVM scanning.
                          Keys: 'ethereum', 'base', 'arbitrum', etc.
                          If None, EVM scanning is skipped.
+        state: Optional CronState for cooldown tracking across runs.
 
     Returns:
         List of formatted Telegram message strings, one per whale alert.
@@ -51,6 +58,14 @@ async def run_whale_scan(
     alerts: List[str] = []
 
     try:
+        # Check cooldowns from state if provided
+        if state is not None:
+            cooldowns = state.get("wallet_cooldowns", {})
+            for wallet, last_alert_time in cooldowns.items():
+                if time.time() - last_alert_time < alert_cooldown:
+                    # Mark wallet as in cooldown
+                    tracker._wallet_last_alert[wallet] = last_alert_time
+
         # Scan Solana if helius_client provided
         if helius_client is not None:
             solana_alerts = await tracker.scan_solana(helius_client)
@@ -76,6 +91,17 @@ async def run_whale_scan(
                 for alert in all_alerts:
                     formatted = tracker.format_telegram(alert)
                     alerts.append(formatted)
+
+        # Update cooldowns in state if provided
+        if state is not None and alerts:
+            cooldowns = state.get("wallet_cooldowns", {})
+            for alert in alerts:
+                # Extract wallet from formatted alert if possible
+                if hasattr(alert, 'wallet'):
+                    cooldowns[alert.wallet] = time.time()
+                elif hasattr(alert, 'address'):
+                    cooldowns[alert.address] = time.time()
+            state.set("wallet_cooldowns", cooldowns)
 
     except Exception as e:
         logger.error(f"Whale scan error: {e}")

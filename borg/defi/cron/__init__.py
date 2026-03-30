@@ -26,6 +26,20 @@ Usage:
             await send_telegram(alert)
 
     asyncio.run(main())
+
+With state persistence:
+    from borg.defi.cron import run_whale_scan
+    from borg.defi.cron.state import CronState
+
+    state = CronState()
+    alerts = await run_whale_scan(state=state)
+
+With Telegram delivery:
+    from borg.defi.cron import run_whale_scan
+    from borg.defi.cron.delivery import deliver_alerts
+
+    alerts = await run_whale_scan()
+    await deliver_alerts(alerts)
 """
 
 from borg.defi.cron.whale_cron import run_whale_scan
@@ -34,6 +48,8 @@ from borg.defi.cron.alpha_cron import run_alpha_scan
 from borg.defi.cron.portfolio_cron import run_portfolio_report
 from borg.defi.cron.liquidation_cron import run_liquidation_scan
 from borg.defi.cron.risk_cron import run_risk_check
+from borg.defi.cron.state import CronState
+from borg.defi.cron.delivery import deliver_alerts, send_telegram
 
 __all__ = [
     "run_whale_scan",
@@ -42,4 +58,7 @@ __all__ = [
     "run_portfolio_report",
     "run_liquidation_scan",
     "run_risk_check",
+    "CronState",
+    "deliver_alerts",
+    "send_telegram",
 ]

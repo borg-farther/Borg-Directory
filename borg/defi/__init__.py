@@ -34,6 +34,8 @@ from borg.defi.api_clients.defillama import DeFiLlamaClient
 from borg.defi.api_clients.dexscreener import DexScreenerClient
 from borg.defi.api_clients.helius import HeliusClient
 from borg.defi.api_clients.birdeye import BirdeyeClient
+from borg.defi.api_clients.goplus import GoPlusClient
+from borg.defi.api_clients.alchemy import AlchemyClient
 
 from borg.defi.liquidation_watcher import (
     LiquidationTarget,
@@ -83,6 +85,11 @@ from borg.defi.cron import (
     run_liquidation_scan,
     run_risk_check,
 )
+from borg.defi.cron.state import CronState
+from borg.defi.cron.delivery import deliver_alerts
+
+# Dojo Bridge
+from borg.defi.dojo_bridge import DojoBridge
 
 __all__ = [
     # Data models
@@ -99,6 +106,8 @@ __all__ = [
     "DexScreenerClient",
     "HeliusClient",
     "BirdeyeClient",
+    "GoPlusClient",
+    "AlchemyClient",
     # Liquidation watcher (Phase 2)
     "LiquidationTarget",
     "scan_aave_positions",
@@ -136,4 +145,9 @@ __all__ = [
     "run_portfolio_report",
     "run_liquidation_scan",
     "run_risk_check",
+    # Cron state and delivery
+    "CronState",
+    "deliver_alerts",
+    # Dojo Bridge
+    "DojoBridge",
 ]

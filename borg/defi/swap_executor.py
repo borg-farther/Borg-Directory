@@ -34,6 +34,8 @@ from borg.defi.security.tx_guard import (
     ContractNotWhitelistedError,
     HumanApprovalRequiredError,
 )
+from borg.defi.mev.jito import JitoClient
+from borg.defi.mev.flashbots import FlashbotsClient
 
 logger = logging.getLogger(__name__)
 
@@ -389,6 +391,7 @@ class OneInchClient:
     API Docs: https://api.1inch.dev/swap/v6.0/docs/
     
     Quote Endpoint: GET https://api.1inch.dev/swap/v6.0/{chainId}/quote
+    Swap Endpoint: POST https://api.1inch.dev/swap/v6.0/{chainId}/swap
     """
     
     # 1inch chain IDs
@@ -405,6 +408,7 @@ class OneInchClient:
     }
     
     QUOTE_URL = "https://api.1inch.dev/swap/v6.0/{chainId}/quote"
+    SWAP_URL = "https://api.1inch.dev/swap/v6.0/{chainId}/swap"
     
     # Slippage defaults (percentage)
     DEFAULT_SLIPPAGE = 0.5  # 0.5%
@@ -521,6 +525,81 @@ class OneInchClient:
         except Exception as e:
             logger.error(f"1inch quote error: {e}")
             return None
+    
+    async def get_swap(
+        self,
+        chain: str,
+        src: str,
+        dst: str,
+        amount: int,
+        slippage: float = DEFAULT_SLIPPAGE,
+        from_address: str = "",
+        referrer: str = "",
+        disable_estimate: bool = False,
+        allow_emergency: bool = False,
+    ) -> Optional[Dict[str, Any]]:
+        """Get swap transaction calldata from 1inch.
+        
+        Args:
+            chain: Chain name (ethereum, polygon, arbitrum, etc.)
+            src: Source token address
+            dst: Destination token address
+            amount: Amount in smallest unit
+            slippage: Slippage tolerance as percentage (e.g., 0.5 for 0.5%)
+            from_address: Wallet address to execute the swap
+            referrer: Referrer address (optional)
+            disable_estimate: Disable gas estimation
+            allow_emergency: Allow emergency mode
+            
+        Returns:
+            Dict with swap transaction data or None on error
+            
+        Note: This returns calldata for external signing. The actual transaction
+        signing should be done by the caller (e.g., via wallet hardware).
+        """
+        chain_id = self._get_chain_id(chain)
+        
+        # Validate slippage
+        slippage = max(self.MIN_SLIPPAGE, min(slippage, self.MAX_SLIPPAGE))
+        
+        url = self.SWAP_URL.format(chainId=chain_id)
+        params = {
+            "src": src,
+            "dst": dst,
+            "amount": amount,
+            "slippage": slippage,
+            "from": from_address,
+            "disable_estimate": disable_estimate,
+            "allow_emergency": allow_emergency,
+        }
+        
+        if referrer:
+            params["referrer"] = referrer
+        
+        headers = {
+            "Authorization": f"Bearer {self.api_key}",
+            "Accept": "application/json",
+            "Content-Type": "application/json",
+        }
+        
+        try:
+            session = await self._get_session()
+            async with session.post(url, json=params, headers=headers) as response:
+                if response.status != 200:
+                    text = await response.text()
+                    logger.error(f"1inch swap error: {response.status} - {text}")
+                    return None
+                
+                return await response.json()
+        except asyncio.TimeoutError:
+            logger.error("1inch swap request timed out")
+            return None
+        except ValueError as e:
+            logger.error(f"1inch swap chain error: {e}")
+            return None
+        except Exception as e:
+            logger.error(f"1inch swap error: {e}")
+            return None
 
 
 # ============================================================================
@@ -579,6 +658,8 @@ class SwapExecutor:
         tx_guard: Optional[TransactionGuard] = None,
         session_id: str = "",
         wallet: str = "",
+        jito_client: Optional[JitoClient] = None,
+        flashbots_client: Optional[FlashbotsClient] = None,
     ):
         """Initialize swap executor.
         
@@ -588,6 +669,8 @@ class SwapExecutor:
             tx_guard: TransactionGuard instance for security checks
             session_id: Dojo session ID for trade logging
             wallet: Wallet address for this executor
+            jito_client: Jito client for Solana MEV protection
+            flashbots_client: Flashbots client for EVM MEV protection
         """
         self.jupiter = jupiter_client or JupiterClient()
         self.oneinch = oneinch_client
@@ -595,6 +678,8 @@ class SwapExecutor:
         self.session_id = session_id or f"swap_{int(time.time())}"
         self.wallet = wallet
         self._trade_history: List[SwapTrade] = []
+        self.jito = jito_client
+        self.flashbots = flashbots_client
     
     async def close(self):
         """Close all client sessions."""
@@ -603,6 +688,10 @@ class SwapExecutor:
             await self.oneinch.close()
         if self.tx_guard:
             await self.tx_guard.close()
+        if self.jito:
+            await self.jito.close()
+        if self.flashbots:
+            await self.flashbots.close()
     
     def _validate_slippage(self, slippage_bps: int, chain: str) -> int:
         """Validate and clamp slippage.
@@ -699,6 +788,7 @@ class SwapExecutor:
         quote: SwapQuote,
         wallet_keypair: Any,
         simulate_only: bool = True,
+        use_mev_protection: bool = False,
     ) -> SwapResult:
         """Execute a swap on Solana via Jupiter.
         
@@ -709,7 +799,9 @@ class SwapExecutor:
             quote: SwapQuote from get_quote()
             wallet_keypair: Solana keypair (will be used for signing)
             simulate_only: If True, only simulate (no real tx). Default True.
-            
+            use_mev_protection: If True, route through Jito for MEV protection.
+                Requires jito_client to be configured on the executor.
+                
         Returns:
             SwapResult with execution details
         """
@@ -797,7 +889,8 @@ class SwapExecutor:
                 quote_used=quote.to_dict(),
             )
         
-        # Get swap transaction
+        # Get swap transaction from Jupiter
+        # This returns the serialized transaction for external signing
         wallet_address = str(wallet_keypair.pubkey()) if hasattr(wallet_keypair, 'pubkey') else str(wallet_keypair)
         
         swap_tx_data = await self.jupiter.get_swap_transaction(
@@ -822,6 +915,26 @@ class SwapExecutor:
                 wallet=self.wallet,
                 quote_used=quote.to_dict(),
             )
+        
+        # MEV Protection: Send through Jito if enabled
+        bundle_id = ""
+        if use_mev_protection:
+            if not self.jito:
+                logger.warning("use_mev_protection=True but jito_client not configured")
+            else:
+                try:
+                    # Extract base64 transactions from swap response
+                    txs = swap_tx_data.get("transactions", [])
+                    if txs:
+                        bundle_id = await self.jito.send_bundle(txs)
+                        if bundle_id:
+                            logger.info(f"Solana swap bundle sent via Jito: {bundle_id[:16]}...")
+                        else:
+                            logger.warning("Jito bundle send returned empty ID")
+                    else:
+                        logger.warning("No transactions in swap response for Jito bundling")
+                except Exception as e:
+                    logger.error(f"Jito bundle send error: {e}")
         
         # In production: sign and send transaction via Helius RPC
         # For now, simulate the execution
@@ -867,6 +980,7 @@ class SwapExecutor:
         quote: SwapQuote,
         wallet_address: str,
         simulate_only: bool = True,
+        use_mev_protection: bool = False,
     ) -> SwapResult:
         """Execute a swap on EVM chain via 1inch.
         
@@ -876,7 +990,9 @@ class SwapExecutor:
             quote: SwapQuote from get_quote()
             wallet_address: EVM wallet address
             simulate_only: If True, only simulate (no real tx). Default True.
-            
+            use_mev_protection: If True, route through Flashbots for MEV protection.
+                Requires flashbots_client to be configured on the executor.
+                
         Returns:
             SwapResult with execution details
         """
@@ -929,7 +1045,7 @@ class SwapExecutor:
                 quote_used=quote.to_dict(),
             )
         
-        # Check quote expiration
+# Check quote expiration
         if quote.is_expired:
             return SwapResult(
                 success=False,
@@ -948,8 +1064,91 @@ class SwapExecutor:
                 quote_used=quote.to_dict(),
             )
         
-        # In production: construct and send transaction via web3
+        # Call 1inch swap API to get actual calldata
+        # Only call the API if we're not in simulate_only mode
+        # In simulate mode, we skip the actual API call and use mock data
+        if not simulate_only:
+            if not self.oneinch:
+                return SwapResult(
+                    success=False,
+                    tx_signature=None,
+                    input_token=quote.input_token,
+                    output_token=quote.output_token,
+                    input_amount=quote.input_amount,
+                    output_amount=0,
+                    price_impact_pct=quote.price_impact_pct,
+                    gas_used=0,
+                    gas_used_usd=0,
+                    provider="1inch",
+                    chain=quote.chain,
+                    error="1inch client not configured",
+                    wallet=wallet_address,
+                    quote_used=quote.to_dict(),
+                )
+            
+            # Convert slippage bps to percentage for 1inch
+            slippage_pct = quote.slippage_bps / 100
+            
+            swap_data = await self.oneinch.get_swap(
+                chain=quote.chain,
+                src=quote.input_token,
+                dst=quote.output_token,
+                amount=quote.input_amount,
+                slippage=slippage_pct,
+                from_address=wallet_address,
+            )
+            
+            if not swap_data:
+                return SwapResult(
+                    success=False,
+                    tx_signature=None,
+                    input_token=quote.input_token,
+                    output_token=quote.output_token,
+                    input_amount=quote.input_amount,
+                    output_amount=0,
+                    price_impact_pct=quote.price_impact_pct,
+                    gas_used=0,
+                    gas_used_usd=0,
+                    provider="1inch",
+                    chain=quote.chain,
+                    error="Failed to get swap calldata from 1inch",
+                    wallet=wallet_address,
+                    quote_used=quote.to_dict(),
+                )
+        else:
+            # Simulate mode: use mock swap data
+            swap_data = {"tx": {"data": "0x_mock_calldata"}, "routerAddress": router_address}
+        
+        # MEV Protection: Send through Flashbots if enabled
+        bundle_hash = ""
+        if use_mev_protection:
+            if not self.flashbots:
+                logger.warning("use_mev_protection=True but flashbots_client not configured")
+            else:
+                try:
+                    # Extract signed transaction data from swap response
+                    signed_tx = swap_data.get("tx", {}).get("data", "")
+                    if signed_tx:
+                        # Get current block number for targeting
+                        # In production, fetch actual block number via RPC
+                        target_block = 0  # Would be fetched from RPC
+                        
+                        bundle_hash = await self.flashbots.send_bundle(
+                            signed_txs=[signed_tx],
+                            target_block=target_block,
+                        )
+                        if bundle_hash:
+                            logger.info(f"EVM swap bundle sent via Flashbots: {bundle_hash[:16]}...")
+                        else:
+                            logger.warning("Flashbots bundle send returned empty hash")
+                    else:
+                        logger.warning("No transaction data in swap response for Flashbots bundling")
+                except Exception as e:
+                    logger.error(f"Flashbots bundle send error: {e}")
+        
+        # In production: sign and send transaction via web3
         # For now, simulate the execution
+        # The swap_data contains 'tx' (calldata) for external signing
         if simulate_only:
             tx_signature = f"simulated_sig_{trade_id}"
             gas_used = 150000  # gas units
@@ -987,6 +1186,45 @@ class SwapExecutor:
         
         return result
     
+    def get_unsigned_transaction(self, quote: SwapQuote, chain: str) -> Optional[Dict[str, Any]]:
+        """Get the unsigned transaction data for external signing.
+        
+        This method returns the raw transaction data that should be signed
+        externally by a hardware wallet or other signing mechanism.
+        
+        Args:
+            quote: SwapQuote from get_quote()
+            chain: Chain name (solana or evm chain)
+            
+        Returns:
+            Dict with transaction data for external signing, or None
+        """
+        if chain == "solana":
+            # For Solana, the swap transaction from Jupiter is already serializable
+            # Return the raw quote data which can be used to construct the transaction
+            return {
+                "type": "solana_swap",
+                "provider": "jupiter",
+                "quote_response": quote.raw_quote,
+                "input_token": quote.input_token,
+                "output_token": quote.output_token,
+                "input_amount": quote.input_amount,
+                "output_amount": quote.output_amount,
+                "slippage_bps": quote.slippage_bps,
+            }
+        else:
+            # For EVM, return the quote data that can be used to construct the tx
+            return {
+                "type": "evm_swap",
+                "provider": "1inch",
+                "chain": quote.chain,
+                "src": quote.input_token,
+                "dst": quote.output_token,
+                "amount": quote.input_amount,
+                "slippage": quote.slippage_bps / 100,
+                "route": quote.route,
+            }
+
     def _log_trade(self, quote: SwapQuote, result: SwapResult) -> None:
         """Log trade for dojo session analysis.
         

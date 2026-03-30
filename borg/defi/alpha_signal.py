@@ -739,6 +739,85 @@ class AlphaSignalEngine:
         logger.info(f"Detected {len(flows)} bridge flows")
         return flows
 
+    async def detect_bridge_flows_defillama(
+        self,
+        defillama_client: Any,
+        min_usd_threshold: float = 100_000,
+    ) -> List[BridgeFlow]:
+        """
+        Detect cross-chain bridge flows using DeFiLlama bridge API.
+
+        Uses DeFiLlama's bridge volume data to identify large cross-chain transfers,
+        which often predict volume or price movements on destination chains.
+
+        Args:
+            defillama_client: DeFiLlama API client
+            min_usd_threshold: Minimum USD value to trigger detection (default 100k)
+
+        Returns:
+            List of BridgeFlow events for large transfers
+        """
+        flows: List[BridgeFlow] = []
+        current_time = time.time()
+
+        cache_key = "defillama_bridge_flows"
+        if self._is_in_cache(cache_key, cooldown=300):
+            logger.debug("Bridge flows data still in cache")
+            return flows
+
+        try:
+            # Fetch bridge volume data from DeFiLlama
+            # Endpoint: https://bridges.llama.fi/bridgevolume
+            data = await defillama_client.get_bridge_volumes()
+
+            if not data or "data" not in data:
+                logger.debug("No bridge volume data from DeFiLlama")
+                return flows
+
+            for bridge_data in data.get("data", []):
+                try:
+                    # Extract bridge information
+                    bridge_name = bridge_data.get("bridgeName", "")
+                    volume_24h = self._safe_float(bridge_data.get("volume24h", 0))
+                    chains = bridge_data.get("chains", [])
+                    if not chains or len(chains) < 2:
+                        continue
+
+                    source_chain = chains[0]
+                    dest_chain = chains[-1]
+
+                    # Only process large transfers above threshold
+                    if volume_24h < min_usd_threshold:
+                        continue
+
+                    # Create a BridgeFlow for this large transfer
+                    flow = BridgeFlow(
+                        wallet=f"defillama_{bridge_name}",
+                        source_chain=source_chain,
+                        destination_chain=dest_chain,
+                        token=bridge_data.get("tokenSymbol", "UNKNOWN"),
+                        token_address=bridge_data.get("contractAddress", ""),
+                        amount_usd=volume_24h,
+                        flow_type="cross_chain",
+                        bridge_name=bridge_name,
+                        timestamp=current_time,
+                        tx_hash=f"llama_{bridge_name}_{int(current_time)}",
+                        confidence=min(0.9, volume_24h / 1_000_000),
+                    )
+                    flows.append(flow)
+
+                except Exception as e:
+                    logger.debug(f"Error parsing bridge data: {e}")
+                    continue
+
+            self._set_cache(cache_key, current_time)
+            logger.info(f"Detected {len(flows)} large bridge flows from DeFiLlama")
+
+        except Exception as e:
+            logger.error(f"Error fetching DeFiLlama bridge data: {e}")
+
+        return flows
+
     async def _analyze_bridge_tx(
         self,
         tx: Dict[str, Any],

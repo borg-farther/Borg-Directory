@@ -3,6 +3,7 @@ Whale Tracker — Monitor high-value wallet movements across chains.
 
 Scans Solana (via Helius) and EVM chains (via Alchemy) for whale activity.
 Generates alerts with signal scoring based on whale history.
+Integrates Arkham Intelligence for entity labels and smart money detection.
 """
 
 import asyncio
@@ -13,6 +14,7 @@ from typing import Dict, List, Optional, Any
 from datetime import datetime
 
 from borg.defi.data_models import WhaleAlert
+from borg.defi.api_clients.arkham import ArkhamClient
 
 
 @dataclass
@@ -46,6 +48,9 @@ class WhaleTracker:
         min_usd_threshold: Minimum USD value to trigger alert (default $50K)
         alert_cooldown: Seconds between alerts for same wallet (default 300 = 5min)
         whale_history: Dict of wallet -> WhaleHistory for signal scoring
+        arkham_api_key: Optional Arkham API key for entity intelligence
+        arkham_client: Optional ArkhamClient instance (created from arkham_api_key)
+        smart_money_cache: Cached smart money entities
     """
 
     tracked_wallets: Dict[str, str] = field(default_factory=dict)
@@ -53,6 +58,9 @@ class WhaleTracker:
     alert_cooldown: int = 300  # 5 minutes
     whale_history: Dict[str, WhaleHistory] = field(default_factory=dict)
     _cooldown_cache: Dict[str, float] = field(default_factory=dict)
+    arkham_api_key: Optional[str] = field(default=None)
+    arkham_client: Optional[Any] = field(default=None, repr=False)
+    _smart_money_cache: Optional[List[Dict[str, Any]]] = field(default=None)
 
     # Explorer URLs by chain
     EXPLORER_URLS: Dict[str, str] = field(default_factory=lambda: {
@@ -63,12 +71,15 @@ class WhaleTracker:
     })
 
     def __post_init__(self):
-        """Initialize cooldown cache and whale history from tracked wallets."""
+        """Initialize cooldown cache, whale history, and optionally Arkham client."""
         self._cooldown_cache: Dict[str, float] = {}
         # Initialize history for all tracked wallets
         for wallet, label in self.tracked_wallets.items():
             if wallet not in self.whale_history:
                 self.whale_history[wallet] = WhaleHistory(wallet=wallet, label=label)
+        # Initialize Arkham client if API key provided
+        if self.arkham_api_key:
+            self.arkham_client = ArkhamClient(api_key=self.arkham_api_key)
 
     def _is_under_cooldown(self, wallet: str) -> bool:
         """Check if wallet is under cooldown period."""
@@ -456,3 +467,119 @@ class WhaleTracker:
         large_move = alert.amount_usd > 500_000
 
         return not is_known and large_move
+
+    async def enrich_alert_with_arkham(self, alert: WhaleAlert) -> WhaleAlert:
+        """Enrich a whale alert with Arkham entity intelligence.
+
+        If Arkham API key is available, fetches entity labels and tags
+        for the wallet address and updates the alert's context and signal strength.
+
+        Args:
+            alert: The whale alert to enrich
+
+        Returns:
+            Enriched WhaleAlert with entity labels and updated signal strength
+        """
+        if not self.arkham_client:
+            return alert
+
+        try:
+            # Extract raw address from wallet label (if it's a truncated address)
+            address = alert.wallet
+            if "..." in address:
+                # Can't enrich without full address - skip
+                return alert
+
+            entity_info = await self.arkham_client.enrich_alert_with_entity(address)
+            if not entity_info:
+                return alert
+
+            entity_name = entity_info.get("entity_name")
+            labels = entity_info.get("labels", [])
+            is_smart_money = entity_info.get("is_smart_money", False)
+
+            # Build enriched context
+            enrichment_parts = []
+            if entity_name:
+                enrichment_parts.append(f"Entity: {entity_name}")
+            if labels:
+                enrichment_parts.append(f"Labels: {', '.join(labels[:3])}")
+            if is_smart_money:
+                enrichment_parts.append("Smart Money")
+
+            if enrichment_parts:
+                alert.context = f"{alert.context} | {' | '.join(enrichment_parts)}"
+
+            # Boost signal strength for smart money
+            if is_smart_money:
+                alert.signal_strength = min(1.0, alert.signal_strength * 1.3)
+
+            return alert
+
+        except Exception as e:
+            # Don't fail the alert due to enrichment error
+            return alert
+
+    async def get_smart_money_wallets(self) -> Optional[List[Dict[str, Any]]]:
+        """Get known smart money wallets from Arkham.
+
+        Returns cached results if available, otherwise queries Arkham
+        for entities matching known smart money labels.
+
+        Returns:
+            List of smart money entity dicts with id, name, labels, addresses,
+            or None if Arkham is not configured
+        """
+        if not self.arkham_client:
+            return None
+
+        # Return cached results if available
+        if self._smart_money_cache is not None:
+            return self._smart_money_cache
+
+        try:
+            self._smart_money_cache = await self.arkham_client.get_smart_money_wallets()
+            return self._smart_money_cache
+        except Exception:
+            return None
+
+    async def discover_new_whales(
+        self, min_usd: float = 100_000, limit: int = 20
+    ) -> List[Dict[str, Any]]:
+        """Discover potential new whale wallets from recent large transfers.
+
+        Uses Arkham to find large transfers from unknown wallets that may
+        represent undiscovered smart money or whale activity.
+
+        Args:
+            min_usd: Minimum USD value to consider (default $100K)
+            limit: Maximum number of discoveries to return
+
+        Returns:
+            List of potential whale discoveries with entity info
+        """
+        discoveries = []
+
+        if not self.arkham_client:
+            return discoveries
+
+        # For tracked wallets, check if any have Arkham entity data
+        for wallet in self.tracked_wallets:
+            if wallet.startswith("0x") or len(wallet) > 40:
+                # EVM or long address format
+                try:
+                    entity_info = await self.arkham_client.enrich_alert_with_entity(wallet)
+                    if entity_info and entity_info.get("is_smart_money"):
+                        discoveries.append({
+                            "address": wallet,
+                            "entity_name": entity_info.get("entity_name"),
+                            "labels": entity_info.get("labels", []),
+                            "source": "tracked_wallets",
+                        })
+                except Exception:
+                    continue
+
+            if len(discoveries) >= limit:
+                break
+
+        return discoveries

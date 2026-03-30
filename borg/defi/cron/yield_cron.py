@@ -6,13 +6,16 @@ detect yield changes, and return formatted Telegram-ready alert strings.
 
 Usage:
     alerts = await run_yield_scan()
-    # Returns top opportunities + any yield change alerts
+    # With state persistence for change detection:
+    state = CronState()
+    alerts = await run_yield_scan(state=state)
 """
 
 import logging
 from typing import List, Optional
 
 from borg.defi.yield_scanner import YieldScanner
+from borg.defi.cron.state import CronState
 
 logger = logging.getLogger(__name__)
 
@@ -23,6 +26,7 @@ async def run_yield_scan(
     chains: Optional[List[str]] = None,
     top_n: int = 5,
     change_threshold_pct: float = 20.0,
+    state: Optional[CronState] = None,
 ) -> List[str]:
     """
     Scan DeFiLlama for yield opportunities and yield changes.
@@ -34,6 +38,7 @@ async def run_yield_scan(
                 e.g., ['solana', 'ethereum', 'arbitrum']
         top_n: Number of top opportunities to include in the report (default 5).
         change_threshold_pct: Percentage change to trigger a yield change alert (default 20%).
+        state: Optional CronState for storing previous pools for change detection.
 
     Returns:
         List of formatted Telegram message strings.
@@ -50,6 +55,12 @@ async def run_yield_scan(
     alerts: List[str] = []
 
     try:
+        # Load previous pools from state if available
+        if state is not None:
+            prev_pools = state.get_previous("previous_pools")
+            if prev_pools:
+                scanner._previous_pools = prev_pools
+
         # Scan DeFiLlama for current opportunities
         opportunities = await scanner.scan_defillama()
 
@@ -78,7 +89,11 @@ async def run_yield_scan(
                 alerts.append(change_alert)
                 logger.debug(f"Yield change: {change.protocol} {change.chain} {change.change_pct:+.1f}%")
 
-        # Update previous pools for next scan
+        # Update previous pools in state for next scan
+        if state is not None:
+            state.set("previous_pools", {o.pool_id: o.__dict__ for o in opportunities if o.pool_id})
+
+        # Update scanner's previous_pools for detect_yield_changes
         scanner._previous_pools = {o.pool_id: o for o in opportunities if o.pool_id}
 
         logger.info(f"Yield scan complete: {len(opportunities)} opportunities, {len(alerts)} alert messages")
