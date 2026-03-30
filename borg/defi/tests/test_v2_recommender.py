@@ -46,7 +46,9 @@ def recommender(temp_dir):
     """Create a DeFiRecommender with temporary directories."""
     packs_dir = temp_dir / "packs"
     outcomes_dir = temp_dir / "outcomes"
-    return DeFiRecommender(packs_dir=packs_dir, outcomes_dir=outcomes_dir)
+    breaker_dir = temp_dir / "breaker"
+    return DeFiRecommender(packs_dir=packs_dir, outcomes_dir=outcomes_dir,
+                          circuit_breaker_state_dir=breaker_dir)
 
 
 @pytest.fixture

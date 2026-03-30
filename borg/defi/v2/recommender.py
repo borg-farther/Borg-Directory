@@ -13,6 +13,7 @@ from borg.defi.v2.models import (
     ExecutionOutcome,
     CollectiveStats,
 )
+from borg.defi.v2.circuit_breaker import CircuitBreaker
 from borg.defi.v2.pack_store import PackStore
 from borg.defi.v2.outcome_store import OutcomeStore
 
@@ -230,15 +231,18 @@ class DeFiRecommender:
     This is the main entry point for the DeFi V2 recommendation system.
     """
 
-    def __init__(self, packs_dir=None, outcomes_dir=None):
+    def __init__(self, packs_dir=None, outcomes_dir=None, circuit_breaker_state_dir=None):
         """Initialize the recommender.
 
         Args:
             packs_dir: Optional custom packs directory path.
             outcomes_dir: Optional custom outcomes directory path.
+            circuit_breaker_state_dir: Optional custom circuit breaker state directory.
+                                      Defaults to ~/.hermes/borg/defi/circuit_breaker/
         """
         self.pack_store = PackStore(packs_dir)
         self.outcome_store = OutcomeStore(outcomes_dir)
+        self.circuit_breaker = CircuitBreaker(state_dir=circuit_breaker_state_dir)
 
     def get_pack(self, pack_id: str) -> Optional[DeFiStrategyPack]:
         """Get a specific pack by ID.
@@ -286,6 +290,11 @@ class DeFiRecommender:
             if pack.id in warned_pack_ids:
                 continue
 
+            # Circuit breaker check — skip OPEN packs, warn on HALF
+            can_rec, warning = self.circuit_breaker.check_before_recommend(pack.id, pack)
+            if not can_rec:
+                continue  # skip OPEN packs entirely
+
             # Skip packs that don't meet minimum amount
             if pack.entry and query.amount_usd > 0:
                 if pack.entry.min_amount_usd > query.amount_usd:
@@ -325,6 +334,11 @@ class DeFiRecommender:
 
             # Get rug warnings for this pack
             rug_warnings = [w.get("guidance", "") for w in active_warnings if w.get("pack_id") == pack.id]
+
+            # HALF state: add breaker warning and halve confidence
+            if warning:
+                rug_warnings.append(warning)
+                confidence_score *= 0.5
 
             # Build recommendation
             recommendation = StrategyRecommendation(
@@ -453,7 +467,13 @@ class DeFiRecommender:
         if pack.collective.beta >= 4 and pack.collective.reputation < 0.4:
             self._propagate_warning(pack, "Low win rate with sufficient sample size")
 
-        # 8. Bump version and save
+        # 8. Circuit breaker check — may trip based on this outcome
+        loss_pct = abs(outcome.return_pct) if not outcome.profitable else 0.0
+        alert = self.circuit_breaker.record_outcome(outcome.pack_id, outcome.profitable, loss_pct)
+        # Also check reputation-based trip after pack stats are updated
+        self.circuit_breaker.check_outcome_from_pack(outcome.pack_id, pack)
+
+        # 9. Bump version and save
         pack.version += 1
         pack.updated_at = now
         self.pack_store.save_pack(pack)

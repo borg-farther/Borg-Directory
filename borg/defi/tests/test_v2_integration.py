@@ -29,7 +29,7 @@ class TestFullLoop:
         assert len(packs) == 5
 
         # 2. Get recommendations
-        recommender = DeFiRecommender(packs_dir=tmp_path)
+        recommender = DeFiRecommender(packs_dir=tmp_path, circuit_breaker_state_dir=tmp_path / "breaker")
         query = StrategyQuery(token="USDC", chain="base", risk_tolerance="medium")
         recs = recommender.recommend(query)
         
@@ -66,7 +66,7 @@ class TestFullLoop:
     def test_pack_version_increments_on_outcome(self, tmp_path):
         """Pack version should increment when outcome is recorded."""
         create_seed_packs(tmp_path)
-        recommender = DeFiRecommender(packs_dir=tmp_path)
+        recommender = DeFiRecommender(packs_dir=tmp_path, circuit_breaker_state_dir=tmp_path / "breaker")
         
         # Get initial version
         pack_id = "yield/aave-usdc-base"
@@ -94,7 +94,7 @@ class TestFullLoop:
     def test_outcome_count_increments(self, tmp_path):
         """Total outcomes count should increment when outcome is recorded."""
         create_seed_packs(tmp_path)
-        recommender = DeFiRecommender(packs_dir=tmp_path)
+        recommender = DeFiRecommender(packs_dir=tmp_path, circuit_breaker_state_dir=tmp_path / "breaker")
         
         pack_id = "yield/aave-usdc-base"
         initial = recommender.get_pack(pack_id)
@@ -122,7 +122,7 @@ class TestWarningPropagationE2E:
     def test_warning_triggered_when_reputation_drops(self, tmp_path):
         """Warning should be created when reputation < 0.4 with 4+ outcomes."""
         create_seed_packs(tmp_path)
-        recommender = DeFiRecommender(packs_dir=tmp_path)
+        recommender = DeFiRecommender(packs_dir=tmp_path, circuit_breaker_state_dir=tmp_path / "breaker")
         
         pack_id = "yield/aave-usdc-base"
         
@@ -153,7 +153,7 @@ class TestWarningPropagationE2E:
     def test_warned_pack_not_in_recommendations(self, tmp_path):
         """Packs with active warnings should be filtered from recommendations."""
         create_seed_packs(tmp_path)
-        recommender = DeFiRecommender(packs_dir=tmp_path)
+        recommender = DeFiRecommender(packs_dir=tmp_path, circuit_breaker_state_dir=tmp_path / "breaker")
         warnings_mgr = WarningManager(warnings_dir=tmp_path / "warnings")
         
         pack_id = "yield/aave-usdc-base"
@@ -215,7 +215,7 @@ class TestAgentReputationProgressionE2E:
     def test_agent_tier_progression_full_path(self, tmp_path):
         """Test full tier progression: observer -> contributor -> trusted."""
         create_seed_packs(tmp_path)
-        recommender = DeFiRecommender(packs_dir=tmp_path)
+        recommender = DeFiRecommender(packs_dir=tmp_path, circuit_breaker_state_dir=tmp_path / "breaker")
         rep_mgr = AgentReputationManager(agents_dir=tmp_path / "agents")
         
         agent_id = "progression-test-agent"
@@ -288,7 +288,7 @@ class TestAgentReputationProgressionE2E:
     def test_verified_outcomes_increase_verified_count(self, tmp_path):
         """Verified outcomes (with tx_hash) should increment outcomes_verified."""
         create_seed_packs(tmp_path)
-        recommender = DeFiRecommender(packs_dir=tmp_path)
+        recommender = DeFiRecommender(packs_dir=tmp_path, circuit_breaker_state_dir=tmp_path / "breaker")
         rep_mgr = AgentReputationManager(agents_dir=tmp_path / "agents")
         
         agent_id = "verified-test-agent"
@@ -330,7 +330,7 @@ class TestPackStoreOutcomeStoreIntegration:
     def test_outcomes_persist_across_sessions(self, tmp_path):
         """Outcomes should persist and be loadable in new session."""
         create_seed_packs(tmp_path)
-        recommender = DeFiRecommender(packs_dir=tmp_path)
+        recommender = DeFiRecommender(packs_dir=tmp_path, circuit_breaker_state_dir=tmp_path / "breaker")
         
         pack_id = "yield/aave-usdc-base"
         
@@ -348,7 +348,7 @@ class TestPackStoreOutcomeStoreIntegration:
         recommender.record_outcome(outcome)
         
         # Create new recommender (simulates new session)
-        recommender2 = DeFiRecommender(packs_dir=tmp_path)
+        recommender2 = DeFiRecommender(packs_dir=tmp_path, circuit_breaker_state_dir=tmp_path / "breaker")
         
         # Load outcomes for pack
         outcomes = recommender2.outcome_store.load_outcomes_for_pack(pack_id)
@@ -361,7 +361,7 @@ class TestPackStoreOutcomeStoreIntegration:
     def test_pack_updates_persist_across_sessions(self, tmp_path):
         """Pack updates (version, stats) should persist."""
         create_seed_packs(tmp_path)
-        recommender = DeFiRecommender(packs_dir=tmp_path)
+        recommender = DeFiRecommender(packs_dir=tmp_path, circuit_breaker_state_dir=tmp_path / "breaker")
         
         pack_id = "yield/aave-usdc-base"
         initial_pack = recommender.get_pack(pack_id)
@@ -381,7 +381,7 @@ class TestPackStoreOutcomeStoreIntegration:
         recommender.record_outcome(outcome)
         
         # New session
-        recommender2 = DeFiRecommender(packs_dir=tmp_path)
+        recommender2 = DeFiRecommender(packs_dir=tmp_path, circuit_breaker_state_dir=tmp_path / "breaker")
         updated_pack = recommender2.get_pack(pack_id)
         
         assert updated_pack.version > initial_version
@@ -393,7 +393,7 @@ class TestDeFiRecommenderIntegration:
     def test_recommender_loads_seed_packs(self, tmp_path):
         """Recommender should load seed packs."""
         create_seed_packs(tmp_path)
-        recommender = DeFiRecommender(packs_dir=tmp_path)
+        recommender = DeFiRecommender(packs_dir=tmp_path, circuit_breaker_state_dir=tmp_path / "breaker")
         
         count = recommender.get_pack_count()
         assert count == 5
@@ -401,7 +401,7 @@ class TestDeFiRecommenderIntegration:
     def test_recommend_filters_by_token(self, tmp_path):
         """recommend should filter by token."""
         create_seed_packs(tmp_path)
-        recommender = DeFiRecommender(packs_dir=tmp_path)
+        recommender = DeFiRecommender(packs_dir=tmp_path, circuit_breaker_state_dir=tmp_path / "breaker")
         
         query = StrategyQuery(token="USDC")
         recs = recommender.recommend(query)
@@ -414,7 +414,7 @@ class TestDeFiRecommenderIntegration:
     def test_recommend_filters_by_chain(self, tmp_path):
         """recommend should filter by chain."""
         create_seed_packs(tmp_path)
-        recommender = DeFiRecommender(packs_dir=tmp_path)
+        recommender = DeFiRecommender(packs_dir=tmp_path, circuit_breaker_state_dir=tmp_path / "breaker")
         
         query = StrategyQuery(chain="base")
         recs = recommender.recommend(query)
@@ -424,7 +424,7 @@ class TestDeFiRecommenderIntegration:
     def test_recommend_filters_by_risk(self, tmp_path):
         """recommend should filter by risk tolerance."""
         create_seed_packs(tmp_path)
-        recommender = DeFiRecommender(packs_dir=tmp_path)
+        recommender = DeFiRecommender(packs_dir=tmp_path, circuit_breaker_state_dir=tmp_path / "breaker")
         
         query = StrategyQuery(risk_tolerance="low")
         recs = recommender.recommend(query)
@@ -434,7 +434,7 @@ class TestDeFiRecommenderIntegration:
     def test_get_collective_stats(self, tmp_path):
         """get_collective_stats should return stats for a pack."""
         create_seed_packs(tmp_path)
-        recommender = DeFiRecommender(packs_dir=tmp_path)
+        recommender = DeFiRecommender(packs_dir=tmp_path, circuit_breaker_state_dir=tmp_path / "breaker")
         
         stats = recommender.get_collective_stats("yield/aave-usdc-base")
         assert stats is not None
@@ -443,7 +443,7 @@ class TestDeFiRecommenderIntegration:
     def test_record_outcome_updates_collective(self, tmp_path):
         """record_outcome should update collective stats."""
         create_seed_packs(tmp_path)
-        recommender = DeFiRecommender(packs_dir=tmp_path)
+        recommender = DeFiRecommender(packs_dir=tmp_path, circuit_breaker_state_dir=tmp_path / "breaker")
         
         pack_id = "yield/aave-usdc-base"
         initial = recommender.get_collective_stats(pack_id)
@@ -470,7 +470,7 @@ class TestDriftDetectionIntegration:
     def test_drift_detected_after_series_of_losses(self, tmp_path):
         """Drift should be detected after recent performance degrades."""
         create_seed_packs(tmp_path)
-        recommender = DeFiRecommender(packs_dir=tmp_path)
+        recommender = DeFiRecommender(packs_dir=tmp_path, circuit_breaker_state_dir=tmp_path / "breaker")
         
         pack_id = "yield/aave-usdc-base"
         
@@ -505,7 +505,7 @@ class TestEndToEndScenarios:
         assert len(packs) == 5
         
         # 2. User queries for yield on base
-        recommender = DeFiRecommender(packs_dir=tmp_path)
+        recommender = DeFiRecommender(packs_dir=tmp_path, circuit_breaker_state_dir=tmp_path / "breaker")
         query = StrategyQuery(token="USDC", chain="base", risk_tolerance="low")
         recs = recommender.recommend(query)
         
@@ -537,7 +537,7 @@ class TestEndToEndScenarios:
     def test_agent_builds_reputation_over_time(self, tmp_path):
         """Test agent building reputation through multiple outcomes."""
         create_seed_packs(tmp_path)
-        recommender = DeFiRecommender(packs_dir=tmp_path)
+        recommender = DeFiRecommender(packs_dir=tmp_path, circuit_breaker_state_dir=tmp_path / "breaker")
         rep_mgr = AgentReputationManager(agents_dir=tmp_path / "agents")
         
         agent_id = "building-agent"
@@ -566,7 +566,7 @@ class TestEndToEndScenarios:
     def test_multiple_agents_interacting(self, tmp_path):
         """Test multiple agents with different outcomes."""
         create_seed_packs(tmp_path)
-        recommender = DeFiRecommender(packs_dir=tmp_path)
+        recommender = DeFiRecommender(packs_dir=tmp_path, circuit_breaker_state_dir=tmp_path / "breaker")
         rep_mgr = AgentReputationManager(agents_dir=tmp_path / "agents")
         
         pack_id = "yield/aave-usdc-base"
