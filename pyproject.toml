@@ -44,6 +44,7 @@ all = ["agent-borg[crypto,embeddings,defi,dev]"]
 borg = "borg.cli:main"
 borg-mcp = "borg.integrations.mcp_server:main"
 borg-http = "borg.integrations.http_server:main"
+borg-defi = "borg.defi.cli:main"
 
 [project.urls]
 Homepage = "https://github.com/bensargotest-sys/guild-packs"

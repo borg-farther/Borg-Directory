@@ -218,14 +218,15 @@ class TestJupiterClient:
     async def test_get_quote_error(self, jupiter_client):
         """Test Jupiter quote with API error."""
         with patch.object(jupiter_client, '_get_session') as mock_session:
-            mock_response = AsyncMock()
+            mock_response = MagicMock()
             mock_response.status = 400
             mock_response.text = AsyncMock(return_value='{"error": "Invalid input"}')
             
-            mock_context = MagicMock()
-            mock_context.__aenter__ = AsyncMock(return_value=mock_response)
-            mock_context.__aexit__ = AsyncMock(return_value=None)
-            mock_session.return_value.get.return_value = mock_context
+            # Create mock session instance and set up return chain first
+            mock_session_instance = MagicMock()
+            mock_session_instance.get.return_value.__aenter__ = AsyncMock(return_value=mock_response)
+            mock_session_instance.get.return_value.__aexit__ = AsyncMock(return_value=None)
+            mock_session.return_value = mock_session_instance
             
             quote = await jupiter_client.get_quote(
                 input_mint="invalid",
@@ -334,14 +335,15 @@ class TestOneInchClient:
     async def test_get_quote_api_error(self, oneinch_client):
         """Test 1inch quote with API error."""
         with patch.object(oneinch_client, '_get_session') as mock_session:
-            mock_response = AsyncMock()
+            mock_response = MagicMock()
             mock_response.status = 401
             mock_response.text = AsyncMock(return_value='{"error": "Unauthorized"}')
             
-            mock_context = MagicMock()
-            mock_context.__aenter__ = AsyncMock(return_value=mock_response)
-            mock_context.__aexit__ = AsyncMock(return_value=None)
-            mock_session.return_value.get.return_value = mock_context
+            # Create mock session instance and set up return chain first
+            mock_session_instance = MagicMock()
+            mock_session_instance.get.return_value.__aenter__ = AsyncMock(return_value=mock_response)
+            mock_session_instance.get.return_value.__aexit__ = AsyncMock(return_value=None)
+            mock_session.return_value = mock_session_instance
             
             quote = await oneinch_client.get_quote(
                 chain="ethereum",

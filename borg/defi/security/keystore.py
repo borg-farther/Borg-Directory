@@ -76,30 +76,43 @@ class KeyStore:
             self.KEYSTORE_DIR.mkdir(parents=True, exist_ok=True)
             self.SALT_FILE.write_bytes(self._salt)
     
-    def _derive_key(self, password: str) -> bytes:
-        """Derive encryption key from password using PBKDF2.
+    def _derive_key(self, password: str, salt: Optional[bytes] = None) -> bytes:
+        """Derive encryption key from password using PBKDF2-HMAC-SHA256.
         
         Args:
             password: User password
+            salt: Optional salt (uses stored salt if not provided)
             
         Returns:
             32-byte derived key
         """
-        if not self._salt:
+        use_salt = salt or self._salt
+        if not use_salt:
             self._load_salt()
+            use_salt = self._salt
+        
+        # OWASP 2024 recommends 600,000 iterations minimum for PBKDF2-HMAC-SHA256.
+        # Use 1,200,000 iterations to achieve target derivation time of 100-500ms.
+        ITERATIONS = 1200000
         
         if HAS_AES_GCM:
             kdf = PBKDF2HMAC(
                 algorithm=hashes.SHA256(),
                 length=32,
-                salt=self._salt,
-                iterations=100000,
+                salt=use_salt,
+                iterations=ITERATIONS,
             )
             return kdf.derive(password.encode())
         else:
-            # Fallback: simple key derivation (NOT secure for production)
+            # Fallback: PBKDF2-HMAC-SHA256 using hashlib
             import hashlib
-            return hashlib.sha256(password.encode() + self._salt).digest()
+            key = hashlib.pbkdf2_hmac(
+                'sha256',
+                password.encode(),
+                use_salt,
+                ITERATIONS
+            )
+            return key
     
     def _get_encryption_key(self) -> bytes:
         """Get or derive encryption key."""

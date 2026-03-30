@@ -22,7 +22,7 @@ import time
 from dataclasses import dataclass, field
 from datetime import datetime
 from decimal import Decimal
-from typing import Optional, Dict, Any, List
+from typing import Optional, Dict, Any, List, Tuple
 
 import aiohttp
 
@@ -660,6 +660,7 @@ class SwapExecutor:
         wallet: str = "",
         jito_client: Optional[JitoClient] = None,
         flashbots_client: Optional[FlashbotsClient] = None,
+        strategy_selector: Optional[Any] = None,
     ):
         """Initialize swap executor.
         
@@ -671,6 +672,7 @@ class SwapExecutor:
             wallet: Wallet address for this executor
             jito_client: Jito client for Solana MEV protection
             flashbots_client: Flashbots client for EVM MEV protection
+            strategy_selector: Optional StrategySelector for routing decisions
         """
         self.jupiter = jupiter_client or JupiterClient()
         self.oneinch = oneinch_client
@@ -680,6 +682,7 @@ class SwapExecutor:
         self._trade_history: List[SwapTrade] = []
         self.jito = jito_client
         self.flashbots = flashbots_client
+        self.strategy_selector = strategy_selector
     
     async def close(self):
         """Close all client sessions."""
@@ -692,6 +695,63 @@ class SwapExecutor:
             await self.jito.close()
         if self.flashbots:
             await self.flashbots.close()
+    
+    def should_use_strategy(self, context: str = "swap") -> Tuple[bool, Optional[str]]:
+        """Check with strategy selector if current routing is advisable.
+        
+        When a strategy_selector is configured, consults it before routing
+        to determine if the selected strategy is appropriate for this context.
+        
+        Args:
+            context: Trading context ('swap', 'yield', 'lp')
+            
+        Returns:
+            Tuple of (proceed_with_routing: bool, strategy_name: Optional[str])
+            If proceed_with_routing is False, strategy_name contains
+            the reason or the name of a better strategy to use.
+        """
+        if not self.strategy_selector:
+            return True, None
+        
+        # Get best strategy for this context
+        best_strategy = self.strategy_selector.get_best_strategy(context)
+        
+        if not best_strategy:
+            # No strategies available
+            return True, None
+        
+        # Check if we should avoid the best strategy
+        avoid, reason = self.strategy_selector.should_avoid(best_strategy)
+        
+        if avoid:
+            return False, f"Avoid {best_strategy}: {reason}"
+        
+        return True, best_strategy
+    
+    def get_strategy_recommendation(self, context: str = "swap") -> Optional[str]:
+        """Get a strategy recommendation for the given context.
+        
+        Args:
+            context: Trading context ('swap', 'yield', 'lp')
+            
+        Returns:
+            Recommended strategy name or None if no good strategies
+        """
+        if not self.strategy_selector:
+            return None
+        
+        # Get best strategy
+        best = self.strategy_selector.get_best_strategy(context)
+        
+        if not best:
+            return None
+        
+        # Verify it's not to be avoided
+        avoid, _ = self.strategy_selector.should_avoid(best)
+        if avoid:
+            return None
+        
+        return best
     
     def _validate_slippage(self, slippage_bps: int, chain: str) -> int:
         """Validate and clamp slippage.
