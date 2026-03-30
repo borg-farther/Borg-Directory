@@ -204,9 +204,24 @@ class CircuitBreaker:
                         return True, f"⚠️ WARNING: {state['reason']}. Recommend smaller position."
                 except (ValueError, TypeError):
                     pass
-            
-            # Still blocked
-            return False, f"Circuit OPEN: {state['reason']}"
+
+            # Check if this is a HALF state (single catastrophic loss > 20%)
+            # vs OPEN state (consecutive losses or reputation)
+            reason = state.get("reason", "")
+            if "exceeds" in reason or "Single loss" in reason:
+                # HALF state — allow with warning
+                return True, f"⚠️ WARNING: {reason}. Recommend smaller position."
+
+            # Still blocked — OPEN state
+            return False, f"Circuit OPEN: {reason}"
+
+        # Check reputation-based tripping with pack's collective stats
+        if pack and hasattr(pack, 'collective') and pack.collective:
+            total_outcomes = getattr(pack.collective, 'total_outcomes', 0)
+            if total_outcomes >= self.MIN_OUTCOMES_FOR_REP:
+                reputation = getattr(pack.collective, 'reputation', 1.0)
+                if reputation < self.MIN_REPUTATION:
+                    return True, f"⚠️ WARNING: Pack reputation {reputation:.2f} is low ({total_outcomes} outcomes). Consider smaller position."
 
         return True, None
 
