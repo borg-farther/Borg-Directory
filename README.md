@@ -1,6 +1,8 @@
 # Borg
 
-**Your agent's shared brain. Remembers what worked. Forgets what didn't. Shares the good stuff.**
+**Domain-specific experience for solving real problems. The collective never forgets. We learn from every failure. Alpha is found through the hive.**
+
+**Assimilate now. Resistance is futile.**
 
 ```bash
 pip install agent-borg
@@ -8,44 +10,46 @@ pip install agent-borg
 
 ---
 
-## The Problem
+## What Is Borg
 
-Every AI agent starts from zero. Your agent spends 20 minutes debugging a Docker network issue that another agent solved yesterday. It tries the same bad approach three times because it has no memory. It can't learn from other agents' wins or losses.
+Every AI agent starts from zero. It solves a problem, forgets, and solves it again tomorrow. Your agent can't learn from other agents. It can't share what worked. It operates alone.
 
-**Borg fixes this.** It's a shared cache of proven approaches. When your agent gets stuck, borg gives it the approach that worked last time. When your agent discovers something new, borg saves it so every other agent benefits.
+Borg is the shared brain. One agent fails, every agent learns. One agent succeeds, every agent benefits. The approach that worked is preserved. The approach that failed is eliminated.
 
-Think: **git for agent reasoning**.
-
-## How It Works
+Not a database. Not a framework. **Connective tissue between agents.**
 
 ```
-Your agent hits a problem
-  → borg finds a proven approach (search)
-    → previews it (try)
-      → applies it step by step (apply)
-        → records what happened (feedback)
-          → next agent starts smarter
+Agent hits problem → borg finds proven approach → agent applies it
+→ records outcome → next agent starts smarter → collective grows
 ```
 
-That's the whole loop. Approaches get better every time they're used. Bad ones get downranked. Good ones spread.
+## Why Borg Wins
+
+| Without Borg | With Borg |
+|-------------|-----------|
+| Agent retries the same failed approach | Failure recorded once, never repeated |
+| Each agent solves problems in isolation | Collective intelligence across all agents |
+| No memory between sessions | Every outcome persists and improves packs |
+| Generic strategies, no track record | Strategies ranked by real agent outcomes |
+| Gets rugged, learns nothing | Rug detected, warning propagates instantly |
 
 ## Quick Start
 
 ```bash
-# Find an approach
+# Search the collective
 borg search "docker networking"
 
 # Preview before committing
 borg try borg://hermes/systematic-debugging
 
-# Use it
+# Apply it
 borg apply systematic-debugging --task "Fix container DNS resolution"
 
-# Tell borg what happened
+# Record what happened — the collective learns
 borg feedback <session_id>
 ```
 
-**MCP (for Claude Code, Cursor, etc):**
+**MCP (Claude Code, Cursor, Windsurf, etc):**
 ```json
 { "mcpServers": { "borg": { "command": "borg-mcp" } } }
 ```
@@ -54,173 +58,158 @@ borg feedback <session_id>
 
 ---
 
-## DeFi Module
+## V2: Collective Learning
 
-**The agent that remembers every trade, learns from every loss, and shares alpha with the collective.**
+The core value: **recommendations backed by real outcomes, not raw data.**
+
+Your agent asks: *"I have $3K USDC idle on Base. What should I do?"*
+
+Borg answers: *"7 agents tried Aave lending. 6 made money. Average return: 4.2%. No impermanent loss. Confidence: high."*
+
+That's not scraped from DeFiLlama. That's verified outcomes from agents who actually did it.
+
+```python
+from borg.defi.v2 import DeFiRecommender, StrategyQuery
+
+recommender = DeFiRecommender()
+recs = recommender.recommend(
+    StrategyQuery(token="USDC", chain="base", amount_usd=3000.0)
+)
+# → Ranked strategies with collective evidence
+# → Thompson Sampling balances proven vs exploratory
+# → Bayesian confidence from Beta-Binomial model
+```
+
+### The Learning Loop
+
+```
+Agent executes strategy
+    ↓
+Outcome recorded (return %, duration, lessons)
+    ↓
+Win → strategy reputation increases, pack improves
+Loss → failure pattern extracted, warning propagated
+    ↓
+Next agent gets better recommendation
+    ↓
+3+ agents lose on same pool → auto-warning to ALL agents
+```
+
+### How Confidence Works
+
+| Outcomes | Confidence | What It Means |
+|----------|-----------|---------------|
+| 0-2 | Experimental | "We're guessing. Synthetic data only." |
+| 3-9 | Growing | "Some real evidence. Smaller position." |
+| 10+ | Established | "Real collective data. Higher confidence." |
+| Warning flag | Danger | "Agents have lost money here." |
+
+---
+
+## DeFi Module
 
 ```bash
 pip install agent-borg[defi]
 ```
 
-Most DeFi bots are stateless — they make the same mistakes forever. Borg DeFi has memory. It tracks what worked, avoids what didn't, and shares winning strategies across agents.
-
-### Zero-Config Scans (Free, No API Keys)
+### Zero-Config (Free, No API Keys)
 
 ```bash
 borg-defi yields          # Top yields from 18,000+ pools
 borg-defi tokens          # New token launches in real-time
-borg-defi tvl             # Protocol TVL movements — who's gaining, who's bleeding
+borg-defi tvl             # Protocol TVL — who's gaining, who's bleeding
 borg-defi stablecoins     # Depeg detection across 350+ stablecoins
 borg-defi scan-all        # Everything at once
 ```
 
-That's it. No API keys. No setup. Free data from DeFiLlama and DexScreener.
-
-### What You Get on Telegram
-
-Set up cron jobs and get alerts delivered automatically:
-
-```
-📈 YIELD HUNTER — 2026-03-30 10:55 UTC
-
-1. 🔥🔥🔥 aerodrome-slipstream | Base
-   USDC-CBBTC — APY: 555.9% [DEGEN] ⚠️IL
-   TVL: $4.3M | 7d avg: 312.1%
-
-2. 🔥🔥 uniswap-v3 | Ethereum
-   WTAO-WETH — APY: 170.8% [HIGH] ⚠️IL
-   TVL: $1.9M
-
-💰 Avg APY: 245.3% | Total TVL: $36M
-📡 Source: DeFiLlama (18,633 pools scanned)
-```
-
-```
-💵 STABLECOIN WATCH — 10:55 UTC
-
-========================================
-🚨 USYC DEPEGGED — $1.1204 (12.04% above peg)
-========================================
-
-  ✅ Tether    | USDT | $184.0B | $0.9991
-  ✅ USD Coin  | USDC |  $77.6B | $0.9998
-  ✅ Sky Dollar| USDS |   $8.6B | $0.9997
-
-💰 Total stablecoin supply: $296.1B
-```
-
-### The Learning Loop
-
-This is what makes borg different from every other DeFi bot:
-
-```
-Agent executes trade
-    ↓
-Dojo classifies: win or loss?
-    ↓
-Win → pattern extracted, strategy reputation goes up
-Loss → failure classified, strategy patched, warning shared
-    ↓
-Strategy Selector picks best approach next time
-    ↓
-Collective: winning strategies propagate to ALL agents
-```
-
-A bot that loses money on bad slippage does it again tomorrow. Borg DeFi remembers, patches the routing strategy, and warns every other agent running the same approach.
-
 ### What's Under the Hood
 
-| Layer | What | Modules |
-|-------|------|---------|
-| **Signals** | Watch everything | whale_tracker, yield_scanner, alpha_signal, portfolio_monitor |
-| **Execution** | Act on signals | swap_executor (Jupiter + 1inch), lp_manager, liquidation_watcher |
-| **Risk** | Don't get rekt | risk_engine, strategy_backtester, GoPlus rug detection |
-| **MEV Protection** | Don't get frontrun | Jito (Solana), Flashbots (EVM) |
-| **Memory** | Learn from outcomes | dojo_bridge, strategy_selector |
-| **Delivery** | Get the alpha | Telegram/Discord alerts, cron orchestration |
+| Layer | Purpose | Details |
+|-------|---------|---------|
+| **Signals** | Watch | whale_tracker, yield_scanner, alpha_signal |
+| **Execution** | Act | Jupiter (Solana), 1inch (EVM), unsigned-tx |
+| **Risk** | Protect | GoPlus rug detection, risk_engine, backtester |
+| **MEV** | Shield | Jito (Solana), Flashbots (EVM) |
+| **Memory** | Learn | dojo_bridge, strategy_selector, V2 recommender |
 
-**9 API clients:** DeFiLlama, DexScreener, Helius, Birdeye, GoPlus, Alchemy, Arkham, Jupiter, 1inch
+**9 API clients.** 6 chains. 1,123 tests. ~40K LOC.
 
-**Chains:** Solana, Ethereum, Base, Arbitrum, Polygon, Optimism
+### API Keys (Optional)
 
-### API Keys (Optional — Unlocks More)
-
-The free scans work with zero config. API keys unlock richer features:
-
-| API | What It Unlocks | Free Tier |
-|-----|----------------|-----------|
-| DeFiLlama | Yields, TVL, bridges | ✅ Unlimited |
-| DexScreener | Pairs, new tokens | ✅ Unlimited |
-| GoPlus | Rug/honeypot detection | ✅ Generous |
-| Helius | Solana whale tracking | 100K credits/mo |
-| Birdeye | Token prices, OHLCV | 500K credits/mo |
-| Alchemy | EVM multi-chain data | 100M CU/mo |
-| Arkham | Smart money labels | Limited |
+| API | Free | What It Unlocks |
+|-----|------|----------------|
+| DeFiLlama | ✅ | Yields, TVL, bridges |
+| DexScreener | ✅ | Pairs, new tokens |
+| GoPlus | ✅ | Rug/honeypot detection |
+| Helius | 100K/mo | Solana whale tracking |
+| Birdeye | 500K/mo | Token prices |
+| Alchemy | 100M CU/mo | EVM multi-chain |
+| Arkham | Limited | Smart money labels |
 
 ---
 
-## Installation Variants
+## Installation
 
 ```bash
-pip install agent-borg                 # Core reasoning cache
-pip install agent-borg[defi]           # + DeFi scanner & alerts
+pip install agent-borg                 # Core — shared reasoning cache
+pip install agent-borg[defi]           # + DeFi intelligence
 pip install agent-borg[embeddings]     # + Semantic search
 pip install agent-borg[crypto]         # + Ed25519 pack signing
 pip install agent-borg[all]            # Everything
 ```
 
-Python 3.10+. That's it.
+Python 3.10+.
 
 ---
 
 ## Architecture
 
 ```
-┌──────────────────────────────────────────────┐
-│  YOUR AGENT (Hermes, Claude, Cursor, etc)    │
-└──────────────┬───────────────────────────────┘
+┌──────────────────────────────────────────┐
+│  YOUR AGENT                              │
+│  (Hermes, Claude, Cursor, Windsurf)      │
+└──────────────┬───────────────────────────┘
                │
     ┌──────────▼──────────┐
     │    BORG CORE         │
     │                      │
-    │  search → try →      │
-    │  apply → feedback    │
-    │                      │
-    │  Packs get better    │
-    │  every time they're  │
-    │  used                │
+    │  Search the          │
+    │  collective.         │
+    │  Apply what worked.  │
+    │  Record outcomes.    │
+    │  Packs get smarter.  │
     └──────────┬───────────┘
                │
     ┌──────────▼──────────┐
-    │    BORG DEFI         │
+    │    BORG DEFI (V2)    │
     │                      │
-    │  Signals → Execution │
-    │  → Risk → Memory     │
-    │                      │
-    │  Learns from every   │
-    │  trade, shares alpha │
-    │  across agents       │
+    │  Recommend by        │
+    │  collective outcome. │
+    │  Thompson Sampling.  │
+    │  Beta-Binomial       │
+    │  reputation.         │
+    │  Warning propagation.│
     └──────────┬───────────┘
                │
     ┌──────────▼──────────┐
     │    ON-CHAIN           │
     │  Solana  Ethereum    │
     │  Base    Arbitrum    │
+    │  Polygon Optimism    │
     └──────────────────────┘
 ```
-
-**Core:** PyYAML only. Everything else is optional.
 
 ---
 
 ## The Numbers
 
-- **829 tests** across 27 test files
-- **~32K lines** of code
-- **22 DeFi modules** + 9 API clients + 2 MEV modules
-- **4 live cron jobs** scanning free APIs every 30 min
-- **E2E tested** against real APIs (DeFiLlama, DexScreener, Jupiter)
+- **1,123 tests** across 37 test files
+- **~40K lines** of production code
+- **V2 collective learning** with Thompson Sampling + Beta-Binomial reputation
+- **5 seed packs** bootstrapping the recommendation engine
+- **E2E tested** against real APIs and fresh PyPI install
 - **PBKDF2 keystore** (OWASP compliant, 600K iterations)
+- **Circuit breaker:** 2 consecutive losses disables pack
 
 ---
 
@@ -228,20 +217,26 @@ Python 3.10+. That's it.
 
 ### What Works
 
-- Full CLI with 11 subcommands
-- MCP server with 10 tools
-- Pack lifecycle: search → try → pull → apply → feedback
-- Safety scanner (13 injection patterns, 11 privacy patterns)
-- DeFi: live scans returning real data from real APIs
-- DeFi: strategy selector that actually learns from trade outcomes
-- DeFi: rug detection via GoPlus before any swap
+- Skill search, retrieval, and application
+- CLI and MCP interface for all major AI agents
+- DeFi scanning (live data from free APIs)
+- V2 recommender (mathematically sound, Thompson Sampling)
+- Pack persistence and outcome recording
 
-### What Doesn't (Yet)
+### What's Unproven
 
-- **No external users.** The feedback loop hasn't been battle-tested by the community.
-- **Reputation engine is advisory.** Computes scores but doesn't enforce access.
-- **DeFi execution is unsigned-tx only.** Returns transaction data for external signing — doesn't hold private keys.
-- **No funded wallet E2E test.** Never tested a real swap on mainnet.
+- **Collective learning needs real users.** Seed packs are synthetic.
+- **First users build the collective from scratch.** Your outcomes become the real data.
+- **Alpha decay:** if many agents follow the same strategy, returns may degrade.
+- **Warning propagation needs 2+ losses.** First agents in a bad pool are the canaries.
+
+### Risk Mitigations
+
+- Circuit breaker: 2 consecutive losses → pack disabled
+- GoPlus pre-swap security scanning
+- Human alerts on every circuit breaker trip
+- Seed packs clearly marked synthetic until real outcomes replace them
+- Unsigned-tx only — borg never holds private keys
 
 We'd rather tell you what's missing than pretend it's finished.
 
@@ -250,18 +245,12 @@ We'd rather tell you what's missing than pretend it's finished.
 ## Contributing
 
 ```bash
-# Create a pack
-borg init my-workflow
+borg init my-workflow                    # Create a pack
+borg convert ./CLAUDE.md --format auto   # Convert existing docs
+borg publish ~/.hermes/borg/pack.yaml    # Share with the collective
 
-# Convert existing docs
-borg convert ./CLAUDE.md --format auto
-
-# Publish
-borg publish ~/.hermes/borg/my-workflow/pack.yaml
-
-# Run tests
 pip install agent-borg[all]
-pytest borg/tests/ borg/defi/tests/
+pytest borg/tests/ borg/defi/tests/      # Run tests
 ```
 
 ---
@@ -270,8 +259,8 @@ pytest borg/tests/ borg/defi/tests/
 
 - **PyPI:** [pypi.org/project/agent-borg](https://pypi.org/project/agent-borg/)
 - **DeFi Spec:** [docs/BORG_DEFI_SPEC.md](docs/BORG_DEFI_SPEC.md)
-- **API Audit:** [docs/DEFI_API_AUDIT_2026.md](docs/DEFI_API_AUDIT_2026.md)
+- **V2 Design:** [docs/BORG_DEFI_V2_SPEC.md](docs/BORG_DEFI_V2_SPEC.md)
 
 ---
 
-**v2.5.0** — Borg core + DeFi module. The agent that gets smarter every time it trades.
+**v2.5.1** — The collective never forgets. Resistance is futile.
