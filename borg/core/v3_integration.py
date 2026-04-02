@@ -95,6 +95,12 @@ CREATE TABLE IF NOT EXISTS pack_versions (
     created_at   TEXT    NOT NULL
 );
 
+CREATE TABLE IF NOT EXISTS maintenance_state (
+    key         TEXT PRIMARY KEY,
+    value       INTEGER NOT NULL DEFAULT 0,
+    updated_at  TEXT    NOT NULL
+);
+
 CREATE INDEX IF NOT EXISTS idx_outcomes_pack_id    ON outcomes(pack_id);
 CREATE INDEX IF NOT EXISTS idx_outcomes_agent_id   ON outcomes(agent_id);
 CREATE INDEX IF NOT EXISTS idx_outcomes_category   ON outcomes(task_category);
@@ -687,6 +693,40 @@ class BorgV3:
                 """INSERT INTO feedback_signals (agent_id, pack_id, signal_type, value, timestamp)
                    VALUES (?, ?, ?, ?, ?)""",
                 (agent_id, pack_id, signal_type, value, ts),
+            )
+            conn.commit()
+
+    # -------------------------------------------------------------------------
+    # Maintenance counter — persisted in DB, survives restarts
+    # -------------------------------------------------------------------------
+
+    def _get_maintenance_counter(self) -> int:
+        """Get the current maintenance invocation counter from DB."""
+        with self._conn() as conn:
+            row = conn.execute(
+                "SELECT value FROM maintenance_state WHERE key = 'feedback_count'"
+            ).fetchone()
+            return row[0] if row else 0
+
+    def _inc_maintenance_counter(self) -> int:
+        """Increment the maintenance counter and return the new value.
+
+        Uses INSERT OR CONFLICT to atomically upsert the counter.
+        """
+        with self._conn() as conn:
+            conn.execute("""
+                INSERT INTO maintenance_state (key, value, updated_at)
+                VALUES ('feedback_count', 1, datetime('now'))
+                ON CONFLICT(key) DO UPDATE SET value = value + 1, updated_at = datetime('now')
+            """)
+            conn.commit()
+        return self._get_maintenance_counter()
+
+    def _reset_maintenance_counter(self) -> None:
+        """Reset the maintenance counter to zero."""
+        with self._conn() as conn:
+            conn.execute(
+                "UPDATE maintenance_state SET value = 0 WHERE key = 'feedback_count'"
             )
             conn.commit()
 

@@ -28,6 +28,7 @@ import pytest
 sys.path.insert(0, str(Path(__file__).parent.parent.parent))
 
 from borg.integrations import mcp_server as mcp_module
+from borg.core.v3_integration import BorgV3
 
 
 # ============================================================================
@@ -609,6 +610,57 @@ class TestBorgV3EndToEnd:
         assert dash["total_outcomes"] == 2
         assert dash["total_packs"] == 1
         assert "pack-test" in dash["quality_scores"]
+
+
+class TestMaintenanceCounterPersistence:
+    """Test that the maintenance counter persists across BorgV3 instances."""
+
+    def test_maintenance_counter_persists(self, tmp_path):
+        """Counter stored in DB survives instance restarts and resets correctly."""
+        db_path = str(tmp_path / "test_v3.db")
+
+        # Instance 1: increment counter 3 times
+        v3_a = BorgV3(db_path=db_path)
+        assert v3_a._get_maintenance_counter() == 0
+        v3_a._inc_maintenance_counter()
+        v3_a._inc_maintenance_counter()
+        count = v3_a._inc_maintenance_counter()
+        assert count == 3
+
+        # Instance 2 (same DB): verify count = 3
+        v3_b = BorgV3(db_path=db_path)
+        assert v3_b._get_maintenance_counter() == 3
+
+        # Instance 3: increment more
+        v3_b._inc_maintenance_counter()
+        assert v3_b._get_maintenance_counter() == 4
+
+        # Reset and verify = 0
+        v3_b._reset_maintenance_counter()
+        assert v3_b._get_maintenance_counter() == 0
+
+        # New instance after reset confirms 0
+        v3_c = BorgV3(db_path=db_path)
+        assert v3_c._get_maintenance_counter() == 0
+
+    def test_maintenance_counter_default_zero_on_new_db(self, tmp_path):
+        """Fresh DB with no counter entry returns 0."""
+        db_path = str(tmp_path / "fresh.db")
+        v3 = BorgV3(db_path=db_path)
+        assert v3._get_maintenance_counter() == 0
+
+    def test_maintenance_counter_after_many_increments(self, tmp_path):
+        """Counter handles many increments correctly."""
+        db_path = str(tmp_path / "many.db")
+        v3 = BorgV3(db_path=db_path)
+
+        for i in range(100):
+            v3._inc_maintenance_counter()
+
+        assert v3._get_maintenance_counter() == 100
+
+        v3._reset_maintenance_counter()
+        assert v3._get_maintenance_counter() == 0
 
 
 class TestBackwardCompatibility:

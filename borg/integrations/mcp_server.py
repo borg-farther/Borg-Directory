@@ -39,8 +39,6 @@ _current_agent_id: contextvars.ContextVar[str] = contextvars.ContextVar('agent_i
 # Global trace captures — one per session_id
 _trace_captures: Dict[str, TraceCapture] = {}
 
-# Counter for run_maintenance invocations
-_feedback_invocation_count: int = 0
 _MAINTENANCE_INTERVAL: int = 10  # Run maintenance every N feedback calls
 
 
@@ -1194,17 +1192,16 @@ def borg_feedback(
                 # Never let V3 recording break feedback generation
                 pass
 
-        # Periodic maintenance: run every N invocations
-        global _feedback_invocation_count
-        _feedback_invocation_count += 1
-        if _feedback_invocation_count >= _MAINTENANCE_INTERVAL:
-            _feedback_invocation_count = 0
-            try:
-                v3 = _get_borg_v3()
+        # Periodic maintenance: run every N invocations (counter persisted in V3 DB)
+        try:
+            v3 = _get_borg_v3()
+            count = v3._inc_maintenance_counter()
+            if count >= _MAINTENANCE_INTERVAL:
+                v3._reset_maintenance_counter()
                 maintenance_result = v3.run_maintenance()
                 logger.debug(f"Periodic maintenance: {maintenance_result}")
-            except Exception:
-                pass  # Never let maintenance break feedback
+        except Exception:
+            pass  # Never let maintenance break feedback
 
         return json.dumps({
             "success": True,
