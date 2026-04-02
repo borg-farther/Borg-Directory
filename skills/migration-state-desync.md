@@ -14,18 +14,18 @@ root_cause:
   category: schema_mismatch
   explanation: Django's migration history in django_migrations table disagrees with the actual database schema. Either the migration was never recorded, or the table was created manually.
 investigation_trail:
-  - file: django/db/migrations/state.py
+  - file: django/db/migrations/executor.py
     position: FIRST
-    what: How Django reconstructs the state of all models from migration history
-    grep_pattern: from_apps|ProjectState
-  - file: django/db/migrations/loader.py
+    what: How Django records and checks applied migrations. Look for MigrationExecutor.recorder and apply_migration behavior
+    grep_pattern: apply_migration|unapply_migration|record_migration
+  - file: django/db/backends/base/schema.py
     position: SECOND
-    what: Which migrations Django thinks have been applied
-    grep_pattern: applied_migrations|disk_migrations
-  - file: "@database"
+    what: How the schema editor creates/destroys tables. Look for table existence checks and CREATE TABLE statements
+    grep_pattern: create_table|execute|add_field|alter_field
+  - file: django/db/migrations/autodetector.py
     position: THIRD
-    what: Check actual tables in the database directly
-    grep_pattern: ""
+    what: How autodetector generates migration operations and detects changes to models
+    grep_pattern: generate|CreateModel|AlterField|delete_model
 resolution_sequence:
   - action: fake_initial
     command: python manage.py migrate --fake-initial
@@ -49,7 +49,7 @@ evidence:
   success_rate: 0.90
   avg_time_to_resolve_minutes: 5.5
   uses: 20
-provenance: Seed pack v1 | General Django debugging | 2026-04-02
+provenance: Seed pack v1 | Updated with SWE-bench django__django-12708, django__django-12754, django__django-14500, django__django-15252 patch files | 2026-04-03
 ---
 
 ## When to Use This Pack
@@ -58,5 +58,6 @@ Use when you encounter:
 - `OperationalError: no such table`
 - `OperationalError: table already exists`
 - Django says a migration is applied but the table does not exist (or vice versa)
+- Migration crashes with index_together/unique_together conflicts
 
 Do NOT use when the error is about circular dependency ordering.

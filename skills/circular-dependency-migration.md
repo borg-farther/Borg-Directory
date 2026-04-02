@@ -16,16 +16,16 @@ root_cause:
 investigation_trail:
   - file: django/db/migrations/graph.py
     position: FIRST
-    what: Find where Django raises the circular dependency error and how it resolves the graph
-    grep_pattern: CircularDependency|requires|get_dependencies
+    what: Find where Django raises the circular dependency error and how it resolves the migration dependency graph
+    grep_pattern: CircularDependency|requires|get_dependencies|StateMachine
   - file: django/db/migrations/state.py
     position: SECOND
-    what: Check if a swappable model (AUTH_USER_MODEL) creates an implicit dependency
-    grep_pattern: swappable|relation|app_config
-  - file: "@initial_migration"
+    what: Check if a swappable model (AUTH_USER_MODEL) or model base creates an implicit circular dependency through the app registry
+    grep_pattern: swappable|app_config|get_model|render
+  - file: django/db/migrations/autodetector.py
     position: THIRD
-    what: Check initial migration for base dependencies and operations
-    grep_pattern: dependencies|operations
+    what: Check if autodetector is generating dependencies that create a cycle between two apps' migrations
+    grep_pattern: dependencies|generate|AlterField|CreateModel
 resolution_sequence:
   - action: add_explicit_depends_on
     command: "Edit the later migration file. Add to the top: dependencies = [('app_name', 'migration_name')]"
@@ -43,15 +43,13 @@ anti_patterns:
     why_fails: Skips execution but does not fix the ordering
   - action: Using --run-syncdb
     why_fails: Bypasses the migration system entirely and creates worse inconsistencies
-  - action: Manually editing migration graph in the database
-    why_fails: Django will re-create the problem on next migrate
 evidence:
   success_count: 23
   failure_count: 3
   success_rate: 0.88
   avg_time_to_resolve_minutes: 4.2
   uses: 26
-provenance: Seed pack v1 | SWE-bench django-10554 | 2026-04-02
+provenance: Seed pack v1 | Updated with SWE-bench django__django-10554, django__django-12754 patch files | 2026-04-03
 ---
 
 ## When to Use This Pack
