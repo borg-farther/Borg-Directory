@@ -402,12 +402,12 @@ class BorgV3:
                     self._mutation.record_outcome(pack_id, category, success, tokens_used, time_taken)
                 else:
                     # Real MutationEngine.record_outcome(test_id, variant, success)
-                    for ab in self._mutation.check_ab_tests():
-                        ab_variant = ab.variant
-                        for test_id, test in self._mutation.ab_tests.items():
-                            if test.variant.original_pack_id == ab_variant.original_pack_id:
-                                self._mutation.record_outcome(test_id, "mutant" if success else "original", success)
-                                break
+                    # The mutation engine requires knowing which A/B test variant was used.
+                    # Since record_outcome(pack_id) doesn't pass test_id, we cannot
+                    # correctly attribute the outcome to a specific A/B test variant.
+                    # We skip mutation engine recording here — it should be recorded
+                    # at selection time when the variant is known.
+                    pass
         except Exception as e:
             logger.warning("MutationEngine.record_outcome failed: %s", e)
 
