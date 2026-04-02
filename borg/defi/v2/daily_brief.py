@@ -90,8 +90,8 @@ async def generate_daily_brief(
 
     # Section 3: Collective stats
     all_packs = recommender.pack_store.list_packs()
-    total_outcomes = sum(p.collective.total_outcomes for p in all_packs)
-    high_conf = sum(1 for p in all_packs if p.collective.total_outcomes >= 10)
+    total_outcomes = sum(p.collective.total_outcomes for p in all_packs if p.collective)
+    high_conf = sum(1 for p in all_packs if p.collective and p.collective.total_outcomes >= 10)
     tripped = recommender.circuit_breaker.get_tripped_packs() if hasattr(recommender, 'circuit_breaker') and recommender.circuit_breaker else []
 
     lines.append(f"\n📈 COLLECTIVE: {len(all_packs)} packs | {total_outcomes} outcomes | {high_conf} high-confidence")

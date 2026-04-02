@@ -24,11 +24,6 @@ import sys
 from pathlib import Path
 
 from borg import __version__
-from borg.core.search import borg_search, borg_pull, borg_try, borg_init
-from borg.core.search import generate_feedback as _core_generate_feedback
-from borg.core.apply import apply_handler
-from borg.core.publish import action_publish, action_list
-from borg.core.convert import convert_auto, convert_skill, convert_claude_md, convert_cursorrules
 
 
 # ---------------------------------------------------------------------------
@@ -63,6 +58,8 @@ def _require_success(raw: str, ctx: str = "") -> bool:
 
 def _cmd_search(args: argparse.Namespace) -> int:
     """Search for packs matching a query."""
+    from borg.core.search import borg_search
+
     raw = borg_search(args.query, mode=args.mode)
     if args.json:
         _print_json(raw)
@@ -89,6 +86,8 @@ def _cmd_search(args: argparse.Namespace) -> int:
 
 def _cmd_pull(args: argparse.Namespace) -> int:
     """Fetch and save a pack locally."""
+    from borg.core.search import borg_pull
+
     raw = borg_pull(args.uri)
     if _require_success(raw):
         data = json.loads(raw)
@@ -101,6 +100,8 @@ def _cmd_pull(args: argparse.Namespace) -> int:
 
 def _cmd_try(args: argparse.Namespace) -> int:
     """Preview a pack without saving."""
+    from borg.core.search import borg_try
+
     raw = borg_try(args.uri)
     if args.json:
         _print_json(raw)
@@ -133,6 +134,8 @@ def _cmd_try(args: argparse.Namespace) -> int:
 
 def _cmd_init(args: argparse.Namespace) -> int:
     """Create a pack scaffold or convert from a skill."""
+    from borg.core.search import borg_init
+
     raw = borg_init(args.name)
     if _require_success(raw, ctx=" (skill not found)"):
         data = json.loads(raw)
@@ -154,6 +157,8 @@ def _cmd_init(args: argparse.Namespace) -> int:
 
 def _cmd_apply(args: argparse.Namespace) -> int:
     """Start applying a pack to a task."""
+    from borg.core.apply import apply_handler
+
     raw = apply_handler(
         action="start",
         pack_name=args.pack,
@@ -169,7 +174,10 @@ def _cmd_apply(args: argparse.Namespace) -> int:
         phase_names = ", ".join(p.get("name", "?") for p in phases) if phases else "none"
         print(f"Session ID: {session_id}")
         print(f"Phases ({len(phases)}): {phase_names}")
-        print("Awaiting approval")
+        print()
+        print("Session started. In your agent (MCP), use:")
+        print(f"  borg_apply(action='checkpoint', session_id='{session_id}', phase_result='done')")
+        print("to advance through each phase. Or use borg_search to find the pack first.")
     else:
         _print_json(raw)
         return 1
@@ -178,6 +186,8 @@ def _cmd_apply(args: argparse.Namespace) -> int:
 
 def _cmd_publish(args: argparse.Namespace) -> int:
     """Publish a pack to GitHub."""
+    from borg.core.publish import action_publish
+
     raw = action_publish(path=args.path)
     if _require_success(raw, ctx=" (publish failed)"):
         _print_json(raw)
@@ -189,8 +199,8 @@ def _cmd_publish(args: argparse.Namespace) -> int:
 
 def _cmd_feedback(args: argparse.Namespace) -> int:
     """Generate feedback from a session."""
-    # Load the session to get execution data
     from borg.core.session import load_session
+    from borg.core.search import generate_feedback as _core_generate_feedback
 
     session = load_session(args.session_id)
     if not session:
@@ -211,6 +221,7 @@ def _cmd_feedback(args: argparse.Namespace) -> int:
 def _cmd_convert(args: argparse.Namespace) -> int:
     """Convert a SKILL.md, CLAUDE.md, or .cursorrules file to a workflow pack."""
     import yaml
+    from borg.core.convert import convert_auto, convert_skill, convert_claude_md, convert_cursorrules
 
     try:
         if args.format == "auto":
@@ -234,6 +245,8 @@ def _cmd_convert(args: argparse.Namespace) -> int:
 
 def _cmd_list(args: argparse.Namespace) -> int:
     """List local packs."""
+    from borg.core.publish import action_list
+
     raw = action_list()
     data = json.loads(raw)
     if not data.get("success"):
@@ -241,7 +254,10 @@ def _cmd_list(args: argparse.Namespace) -> int:
         return 1
 
     artifacts = data.get("artifacts", [])
-    packs = [a for a in artifacts if a.get("type") == "pack"]
+    # Filter out test/smoke packs that shouldn't appear in production
+    _test_patterns = ("test-pack", "smoke-test", "wf-test", "test-call", "my-test", "fresh-pack", "old-pack", "my-pack", "guild:--")
+    packs = [a for a in artifacts if a.get("type") == "pack" 
+             and not any(a.get("name", "").startswith(p) or a.get("id", "").startswith(p) for p in _test_patterns)]
 
     if not packs:
         print("No local packs found.")

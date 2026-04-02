@@ -27,22 +27,22 @@ def detect_drift(pack: DeFiStrategyPack) -> Optional[str]:
 
     Requires at least 10 total outcomes for a meaningful comparison.
     """
-    if pack.total_outcomes < 10:
+    if pack.collective is None or pack.collective.total_outcomes < 10:
         return None
 
-    if len(pack.last_5_returns) < 5:
+    if len(pack.collective.last_5_returns) < 5:
         return None
 
-    recent = pack.last_5_returns
-    historical_mean = pack.avg_return_pct
+    recent = pack.collective.last_5_returns
+    historical_mean = pack.collective.avg_return_pct
 
     # Need standard deviation
-    if pack.std_dev <= 0:
+    if pack.collective.std_dev <= 0:
         return None
 
     # Z-test: z = (recent_mean - historical_mean) / (std_dev / sqrt(n))
     recent_mean = statistics.mean(recent)
-    standard_error = pack.std_dev / math.sqrt(len(recent))
+    standard_error = pack.collective.std_dev / math.sqrt(len(recent))
     z = (recent_mean - historical_mean) / standard_error
 
     if z < -2.0:

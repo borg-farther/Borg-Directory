@@ -84,7 +84,11 @@ def resolve_guild_uri(uri: str) -> str:
     if uri.startswith("/"):
         return uri
 
-    raise ValueError(f"Unsupported URI scheme: {uri}")
+    # Bare pack name (no scheme) — try as borg://hermes/<name>
+    if re.match(r'^[\w-]+$', uri):
+        return resolve_guild_uri(f"borg://hermes/{uri}")
+
+    raise ValueError(f"Unsupported URI scheme: {uri}. Use: borg://domain/pack-name or a bare pack name.")
 
 
 # ---------------------------------------------------------------------------

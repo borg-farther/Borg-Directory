@@ -208,7 +208,7 @@ def format_recommendation(rec: StrategyRecommendation) -> str:
     lines = []
 
     # Header
-    lines.append(f"  {rec.name}")
+    lines.append(f"  {rec.name or rec.pack_id}")
     lines.append(f"  {rec.protocol} on {rec.chain} | {rec.token}")
 
     # Key stats
@@ -290,7 +290,7 @@ def format_brief(
         lines.append(f"\n📊 TOP RECOMMENDATIONS ({len(recs)})")
         lines.append("-" * 40)
         for i, rec in enumerate(recs, 1):
-            lines.append(f"\n{i}. {rec.name}")
+            lines.append(f"\n{i}. {rec.name or rec.pack_id}")
             lines.append(format_recommendation(rec))
     else:
         lines.append("\nNo recommendations found for your query.")

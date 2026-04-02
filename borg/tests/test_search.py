@@ -1124,12 +1124,15 @@ phases:
 escalation_rules: []
 provenance:
   author: Author
-  created: '2026-03-01T00:00:00Z'
+  created: '{fresh_date}'
   confidence: guessed
   evidence: ''
   failure_cases:
     - Case 1
 """
+        from datetime import datetime, timezone
+        fresh_date = (datetime.now(timezone.utc)).strftime("%Y-%m-%dT%H:%M:%SZ")
+        fresh_pack_yaml = fresh_pack_yaml.replace("{fresh_date}", fresh_date)
 
         resolved_url = "https://example.com/fresh-pack.yaml"
 

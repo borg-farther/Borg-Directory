@@ -253,6 +253,9 @@ class StrategyQuery:
 class StrategyRecommendation:
     """A recommended strategy with supporting evidence."""
     pack_id: str
+    name: str = ""                        # human-readable strategy name
+    chain: str = ""                       # blockchain (base, ethereum, etc)
+    token: str = ""                       # target token (USDC, ETH, etc)
     rank: int = 0
     agent_count: int = 0                 # total agents who tried
     profitable_count: int = 0             # how many were profitable
@@ -268,6 +271,11 @@ class StrategyRecommendation:
     trend: str = "stable"                 # improving | stable | degrading
     reputation: float = 0.0              # Beta-Binomial reputation
     confidence_interval: tuple = field(default_factory=lambda: (0.0, 1.0))  # 95% CI
+    total_outcomes: int = 0               # total outcome count
+    risk_tolerance: List[str] = field(default_factory=lambda: ["low", "medium"])  # risk tags
+    score_components: Optional[dict] = None  # breakdown of scoring formula
+    warning: str = ""                     # active warning message
+    drift_alert: str = ""                 # drift detection alert
 
 
 @dataclass

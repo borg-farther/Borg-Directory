@@ -55,7 +55,7 @@ def capture_main(args: list[str]) -> tuple[int, str, str]:
 # Subcommand dispatch tests
 # ---------------------------------------------------------------------------
 
-@patch("borg.cli.borg_search")
+@patch("borg.core.search.borg_search")
 def test_search_dispatches_to_borg_search(mock_search):
     mock_search.return_value = '{"success": true, "matches": [], "total": 0}'
     code, out, err = capture_main(["search", "debugging"])
@@ -64,7 +64,7 @@ def test_search_dispatches_to_borg_search(mock_search):
     assert mock_search.call_args[0][0] == "debugging"
 
 
-@patch("borg.cli.borg_pull")
+@patch("borg.core.search.borg_pull")
 def test_pull_dispatches_to_borg_pull(mock_pull):
     mock_pull.return_value = json.dumps({"success": True, "name": "foo", "path": "/tmp/foo"})
     code, out, err = capture_main(["pull", "borg://test/foo"])
@@ -72,7 +72,7 @@ def test_pull_dispatches_to_borg_pull(mock_pull):
     mock_pull.assert_called_once_with("borg://test/foo")
 
 
-@patch("borg.cli.borg_try")
+@patch("borg.core.search.borg_try")
 def test_try_dispatches_to_borg_try(mock_try):
     mock_try.return_value = json.dumps({"success": True, "id": "foo"})
     code, out, err = capture_main(["try", "borg://test/foo"])
@@ -80,7 +80,7 @@ def test_try_dispatches_to_borg_try(mock_try):
     mock_try.assert_called_once_with("borg://test/foo")
 
 
-@patch("borg.cli.borg_init")
+@patch("borg.core.search.borg_init")
 def test_init_dispatches_to_borg_init(mock_init):
     mock_init.return_value = json.dumps({
         "success": True,
@@ -91,7 +91,7 @@ def test_init_dispatches_to_borg_init(mock_init):
     mock_init.assert_called_once_with("my-skill")
 
 
-@patch("borg.cli.apply_handler")
+@patch("borg.core.apply.apply_handler")
 def test_apply_dispatches_to_apply_handler(mock_apply):
     mock_apply.return_value = json.dumps({
         "success": True,
@@ -104,7 +104,7 @@ def test_apply_dispatches_to_apply_handler(mock_apply):
     assert mock_apply.call_args[1]["task"] == "do the thing"
 
 
-@patch("borg.cli.action_publish")
+@patch("borg.core.publish.action_publish")
 def test_publish_dispatches_to_action_publish(mock_publish):
     mock_publish.return_value = json.dumps({"success": True})
     code, out, err = capture_main(["publish", "/path/to/pack.yaml"])
@@ -113,7 +113,7 @@ def test_publish_dispatches_to_action_publish(mock_publish):
 
 
 @patch("borg.core.session.load_session")
-@patch("borg.cli._core_generate_feedback")
+@patch("borg.core.search.generate_feedback")
 def test_feedback_dispatches_to_generate_feedback(mock_fb, mock_load):
     mock_load.return_value = {
         "pack_id": "p/1",
@@ -128,7 +128,7 @@ def test_feedback_dispatches_to_generate_feedback(mock_fb, mock_load):
     mock_fb.assert_called_once()
 
 
-@patch("borg.cli.action_list")
+@patch("borg.core.publish.action_list")
 def test_list_dispatches_to_action_list(mock_list):
     mock_list.return_value = json.dumps({
         "success": True,
@@ -207,7 +207,7 @@ def test_apply_requires_task():
     assert code == 2
 
 
-@patch("borg.cli.convert_auto")
+@patch("borg.core.convert.convert_auto")
 def test_convert_dispatches_to_convert_auto(mock_convert):
     mock_convert.return_value = {"type": "workflow_pack", "version": "1.0"}
     code, out, err = capture_main(["convert", "/path/to/myfile.md"])
@@ -216,7 +216,7 @@ def test_convert_dispatches_to_convert_auto(mock_convert):
     assert "workflow_pack" in out
 
 
-@patch("borg.cli.convert_skill")
+@patch("borg.core.convert.convert_skill")
 def test_convert_with_explicit_format_dispatches_correctly(mock_convert):
     mock_convert.return_value = {"type": "workflow_pack", "version": "1.0", "id": "test"}
     code, out, err = capture_main(["convert", "/path/to/SKILL.md", "--format", "skill"])

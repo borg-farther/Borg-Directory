@@ -154,7 +154,7 @@ borg-defi scan-all        # Everything at once
 pip install agent-borg                 # Core — shared reasoning cache
 pip install agent-borg[defi]           # + DeFi intelligence
 pip install agent-borg[embeddings]     # + Semantic search
-pip install agent-borg[crypto]         # + Ed25519 pack signing
+pip install agent-borg[crypto]         # + cryptographic pack signing
 pip install agent-borg[all]            # Everything
 ```
 
@@ -206,11 +206,11 @@ Python 3.10+.
 - **1,162 tests** across 37+ test files
 - **~45K lines** of production code
 - **V2 collective learning** with Thompson Sampling + Beta-Binomial reputation
-- **5 seed packs** bootstrapping the recommendation engine
+- **5 seed packs** bootstrapping the recommendation engine (synthetic — no real user data yet)
 - **E2E tested** against real APIs and fresh PyPI install
 - **PBKDF2 keystore** (OWASP compliant, 600K iterations)
-- **Circuit breaker:** 2 consecutive losses disables pack
-- **+50% success rate** with borg vs without (collective intelligence)
+- **Circuit breaker (PLANNED):** 2 consecutive losses would disable pack
+- **+50 percentage points** on SWE-bench Django tasks (p=0.031, n=10)
 
 ---
 
@@ -233,9 +233,9 @@ Python 3.10+.
 
 ### Risk Mitigations
 
-- Circuit breaker: 2 consecutive losses → pack disabled
+- Circuit breaker (PLANNED): 2 consecutive losses → pack disabled
 - GoPlus pre-swap security scanning
-- Human alerts on every circuit breaker trip
+- Human alerts on every circuit breaker trip (when implemented)
 - Seed packs clearly marked synthetic until real outcomes replace them
 - Unsigned-tx only — borg never holds private keys
 

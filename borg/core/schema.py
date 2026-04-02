@@ -214,6 +214,11 @@ def collect_text_fields(pack: dict) -> List[str]:
                 texts.append(str(prompt))
             for ap in phase.get("anti_patterns", []) or []:
                 texts.append(str(ap))
+            for cp in phase.get("context_prompts", []) or []:
+                if isinstance(cp, dict) and cp.get("prompt"):
+                    texts.append(str(cp["prompt"]))
+                elif isinstance(cp, str):
+                    texts.append(cp)
 
     for rule in pack.get("escalation_rules", []) or []:
         texts.append(str(rule))
