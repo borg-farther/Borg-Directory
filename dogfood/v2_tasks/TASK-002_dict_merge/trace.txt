@@ -1,0 +1,18 @@
+REASONING TRACE FOR: Dictionary merge mutation bug
+
+PROBLEM DECOMPOSITION:
+- The merge method needs to combine nested dicts without mutating inputs
+- Two separate issues: mutation of overrides, and loss of default keys
+
+WHAT WAS TRIED:
+- Read the merge method carefully — the assignment self._data[key] = value creates a reference, not a copy
+- The subsequent update() call operates on the same dict object as the overrides
+
+KEY INSIGHT:
+- When you do self._data[key] = value, both self._data[key] and the original overrides[key] now point to the SAME dict object
+- Any update() on self._data[key] also modifies overrides[key]
+- Need to create a NEW dict that combines both
+
+PITFALLS:
+- Don't just copy.copy() — need to handle the merge logic correctly
+- The order of the update matters: defaults should be overridden by overrides, not the reverse

@@ -1,0 +1,17 @@
+# Solution for TASK-022
+
+## The Bug
+In the `deserialize` method, when we pop a `None` node from the queue (which was added as a placeholder), we incorrectly advance the index `i` twice. This causes subsequent values in the serialized stream to be misaligned with their intended positions.
+
+## Why It Happens
+When serializing a tree with BFS and None markers (#), we add None placeholders to the queue for absent children. Later when deserializing, we pop these None nodes from the queue. The bug is that we advance `i` (the values index) when we pop a None node, even though we already consumed the # marker when processing its parent.
+
+## The Fix
+When we pop a None node from the queue, we should NOT advance the index `i` at all. The # marker was already consumed when we processed the parent's child assignment. Simply continue without advancing:
+
+```python
+if node is None:
+    continue  # Don't advance i - the # was already consumed when parent was processed
+```
+
+This ensures the values array index stays synchronized with the queue processing.

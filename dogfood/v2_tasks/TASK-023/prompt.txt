@@ -1,0 +1,20 @@
+# TASK-023: Middleware Chain Bug
+
+## Problem Description
+A middleware chain is supposed to process requests through multiple middleware functions. When an error occurs in one middleware, an error handler should catch it and optionally allow the chain to continue. However, the current implementation re-raises errors immediately, preventing remaining middleware (including error handlers) from running.
+
+## Your Task
+Fix the bug in the `MiddlewareChain.execute` method in `middleware.py` to properly handle errors and allow error handlers to run.
+
+## Files
+- `middleware.py` - The middleware chain implementation with a bug
+- `test_middleware.py` - Test cases that expose the bug
+
+## Expected Behavior
+When running `python3 test_middleware.py`, all tests should pass:
+1. Normal flow should work without errors
+2. Error handlers should be called when middleware throws
+3. The chain should be able to continue after error handling
+
+## Hint
+The bug is in how exceptions are handled in the `next_handler` function. When an exception occurs, it is printed and re-raised immediately, but it should instead be caught and passed to error handlers. Error handlers are decorated with `@error_handler`.

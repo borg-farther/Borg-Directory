@@ -1,0 +1,126 @@
+{
+  "experiment_id": "borg-ab-001",
+  "started_at": "2026-03-31T19:51:05.843611+00:00",
+  "results": [
+    {
+      "task_id": "DEBUG-001",
+      "condition": "control",
+      "order": 1,
+      "success": true,
+      "tokens_used": 15000,
+      "time_seconds": 300.0,
+      "tool_calls": 25,
+      "borg_searches": 0,
+      "error": null,
+      "recorded_at": "2026-03-31T19:51:05.843594+00:00"
+    },
+    {
+      "task_id": "DEBUG-001",
+      "condition": "treatment",
+      "order": 2,
+      "success": true,
+      "tokens_used": 12000,
+      "time_seconds": 250.0,
+      "tool_calls": 30,
+      "borg_searches": 5,
+      "error": null,
+      "recorded_at": "2026-03-31T19:51:05.890736+00:00"
+    },
+    {
+      "task_id": "DEBUG-002",
+      "condition": "control",
+      "order": 1,
+      "success": false,
+      "tokens_used": 4842,
+      "time_seconds": 352.0,
+      "tool_calls": 7,
+      "borg_searches": 0,
+      "error": null,
+      "recorded_at": "2026-03-31T20:17:44.693010+00:00"
+    },
+    {
+      "task_id": "DEBUG-002",
+      "condition": "treatment",
+      "order": 2,
+      "success": true,
+      "tokens_used": 3251,
+      "time_seconds": 81.0,
+      "tool_calls": 15,
+      "borg_searches": 1,
+      "error": null,
+      "recorded_at": "2026-03-31T20:22:00.667863+00:00"
+    },
+    {
+      "task_id": "DEBUG-001",
+      "condition": "control",
+      "order": 1,
+      "success": true,
+      "tokens_used": 1183,
+      "time_seconds": 34.0,
+      "tool_calls": 5,
+      "borg_searches": 0,
+      "error": null,
+      "recorded_at": "2026-03-31T20:25:44.766318+00:00"
+    },
+    {
+      "task_id": "DEBUG-003",
+      "condition": "control",
+      "order": 1,
+      "success": true,
+      "tokens_used": 788,
+      "time_seconds": 30.0,
+      "tool_calls": 4,
+      "borg_searches": 0,
+      "error": null,
+      "recorded_at": "2026-03-31T20:25:45.070364+00:00"
+    },
+    {
+      "task_id": "DEBUG-004",
+      "condition": "control",
+      "order": 1,
+      "success": true,
+      "tokens_used": 2017,
+      "time_seconds": 52.0,
+      "tool_calls": 9,
+      "borg_searches": 0,
+      "error": null,
+      "recorded_at": "2026-03-31T20:25:45.353007+00:00"
+    },
+    {
+      "task_id": "DEBUG-001",
+      "condition": "treatment",
+      "order": 2,
+      "success": true,
+      "tokens_used": 3315,
+      "time_seconds": 95.0,
+      "tool_calls": 19,
+      "borg_searches": 0,
+      "error": null,
+      "recorded_at": "2026-03-31T20:27:52.581421+00:00"
+    },
+    {
+      "task_id": "DEBUG-003",
+      "condition": "treatment",
+      "order": 2,
+      "success": true,
+      "tokens_used": 1265,
+      "time_seconds": 35.0,
+      "tool_calls": 7,
+      "borg_searches": 0,
+      "error": null,
+      "recorded_at": "2026-03-31T20:27:52.892140+00:00"
+    },
+    {
+      "task_id": "DEBUG-004",
+      "condition": "treatment",
+      "order": 2,
+      "success": true,
+      "tokens_used": 1556,
+      "time_seconds": 43.0,
+      "tool_calls": 6,
+      "borg_searches": 0,
+      "error": null,
+      "recorded_at": "2026-03-31T20:27:53.207360+00:00"
+    }
+  ]
+}

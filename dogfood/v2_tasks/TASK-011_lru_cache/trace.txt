@@ -1,0 +1,37 @@
+## Reasoning Trace for LRU Cache Bug
+
+### Initial Observation
+
+The test `test_eviction_order()` fails. It creates a cache with capacity 3, adds items a, b, c, accesses 'a', then adds 'd'. The expected result is that 'b' (the LRU item) gets evicted, leaving [c, a, d].
+
+### Hint 1: Trace the State Changes
+
+Focus on what happens in the `get()` method. The OrderedDict maintains insertion order, with the **end** being most recently used.
+
+### Hint 2: When Does Eviction Happen?
+
+The eviction check is: `if len(self.cache) >= self.capacity:`
+
+Think carefully about when this check happens relative to state changes. If the cache has 3 items and capacity is 3, when is the check evaluated?
+
+### Hint 3: The Sequence Matters
+
+Trace through step by step:
+1. After `put("a")`, `put("b")`, `put("c")` — cache has 3 items
+2. After `get("a")` — what is the cache state? What does `move_to_end()` do?
+3. When `put("d")` is called, the cache already has 3 items. What is `len(self.cache)` at this point?
+
+### Key Question
+
+The condition is `>=` not `>`. Does this matter? And more importantly — after accessing an item via `get()`, does the cache actually grow before eviction happens, or does eviction trigger correctly?
+
+### Hint 4: Check Both Methods
+
+Look at both `get()` and `put()` — specifically what happens to the OrderedDict in each method. The bug may involve how `move_to_end()` interacts with the eviction timing.
+
+### Approach
+
+1. Run the tests to confirm the failure
+2. Add debug prints to trace the actual order after each operation
+3. Compare with expected order
+4. The bug is in the **timing of eviction** — specifically when the cache checks if it needs to evict vs when state updates happen

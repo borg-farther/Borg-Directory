@@ -1,0 +1,49 @@
+{
+  "experiment_start": "2026-03-31T22:32:07.976094",
+  "tasks": {},
+  "completed_runs": [
+    {
+      "task_id": "HARD-002",
+      "condition": "A",
+      "run_number": 1,
+      "run_id": "HARD-002_A_run1",
+      "prompt_length": 920
+    },
+    {
+      "task_id": "HARD-002",
+      "condition": "B",
+      "run_number": 1,
+      "run_id": "HARD-002_B_run1",
+      "prompt_length": 2913
+    },
+    {
+      "task_id": "HARD-002",
+      "condition": "C",
+      "run_number": 1,
+      "run_id": "HARD-002_C_run1",
+      "prompt_length": 3533
+    },
+    {
+      "task_id": "HARD-002",
+      "condition": "A",
+      "run_number": 2,
+      "run_id": "HARD-002_A_run2",
+      "prompt_length": 920
+    },
+    {
+      "task_id": "HARD-002",
+      "condition": "B",
+      "run_number": 2,
+      "run_id": "HARD-002_B_run2",
+      "prompt_length": 2913
+    },
+    {
+      "task_id": "HARD-002",
+      "condition": "C",
+      "run_number": 2,
+      "run_id": "HARD-002_C_run2",
+      "prompt_length": 3533
+    }
+  ],
+  "failed_runs": []
+}

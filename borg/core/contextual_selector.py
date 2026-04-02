@@ -400,6 +400,7 @@ class ContextualSelector:
         exploration_budget: float = EXPLORATION_BUDGET,
         prior_alpha: float = PRIOR_ALPHA,
         prior_beta: float = PRIOR_BETA,
+        feedback_loop=None,
     ):
         """Initialize the selector.
 
@@ -407,10 +408,12 @@ class ContextualSelector:
             exploration_budget: Fraction of calls that force exploration (default 0.20)
             prior_alpha: Beta prior alpha (default 1.0 = uninformative)
             prior_beta: Beta prior beta (default 1.0 = uninformative)
+            feedback_loop: Optional FeedbackLoop instance for signal-based boost
         """
         self.exploration_budget = exploration_budget
         self.prior_alpha = prior_alpha
         self.prior_beta = prior_beta
+        self._feedback_loop = feedback_loop
         # Main posterior store: (pack_id, category) -> BetaPosterior
         self._posteriors: Dict[Tuple[str, str], BetaPosterior] = {}
         # Total selection calls (for exploration budget tracking)
@@ -436,6 +439,22 @@ class ContextualSelector:
             else:
                 return None
         return self._posteriors[key]
+
+    def feedback_signal_boost(self, pack_id: str) -> float:
+        """Compute multiplicative boost from FeedbackLoop signals.
+
+        Returns float in [0.0, 2.0]. Values < 1.0 reduce sampling
+        probability (negative drift); values > 1.0 increase it (positive drift).
+        """
+        if not hasattr(self, '_feedback_loop') or self._feedback_loop is None:
+            return 1.0  # neutral
+        signals = self._feedback_loop.get_signals(pack_id)
+        if not signals:
+            return 1.0  # neutral
+        quality = sum(s.quality_score for s in signals) / len(signals)
+        trend = sum(s.success_rate_trend for s in signals) / len(signals)
+        boost = quality * (1.0 + trend / 2.0)
+        return max(0.0, min(2.0, boost))
 
     def record_outcome(
         self,
@@ -557,6 +576,10 @@ class ContextualSelector:
 
             # Thompson sample
             sampled = thompson_sample(alpha, beta_param, seed=seed)
+
+            # Apply feedback signal boost
+            boost = self.feedback_signal_boost(pack.pack_id)
+            sampled *= boost
 
             results.append(SelectorResult(
                 pack_id=pack.pack_id,

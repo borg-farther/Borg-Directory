@@ -1,0 +1,5 @@
+{
+  "hard_014_fix": {"tests_fixed": true, "check_returns_1": true},
+  "hard_007_calibration": {"success": true, "tool_calls": 12},
+  "hard_013_calibration": {"success": true, "tool_calls": 14}
+}

@@ -1,0 +1,53 @@
+## Solution for Permission Check Bug
+
+### The Bug
+
+In `check_permission()`, the code uses `|` (bitwise OR) instead of `&` (bitwise AND):
+
+```python
+# BUGGY:
+if user_perms | required_perms:
+    return True
+```
+
+This incorrectly returns True when the user OR the required permissions has any bits set, instead of checking if the user has ALL required bits.
+
+### Example of the Bug
+
+- User has READ|WRITE = 6 (binary: 110)
+- Required is EXECUTE = 1 (binary: 001)
+- `user_perms | required_perms` = 6 | 1 = 7 (binary: 111, truthy)
+- Result: incorrectly grants execute permission!
+
+### The Fix
+
+Change `|` to `&` and check that ALL required bits are present:
+
+```python
+def check_permission(user_perms, required_perms):
+    """
+    Check if user has all required permissions.
+    """
+    # Correct: use AND to get common bits, check they equal required
+    if user_perms & required_perms == required_perms:
+        return True
+    else:
+        raise PermissionError(
+            f"User has {user_perms}, needs {required_perms}"
+        )
+```
+
+### Why This Works
+
+- User has READ|WRITE = 6, requires EXECUTE = 1
+- `6 & 1 = 0`, which does NOT equal `1`
+- Correctly raises PermissionError!
+
+### Alternative Fix (less precise)
+
+```python
+if user_perms & required_perms:
+    return True
+```
+
+This works for most cases but would incorrectly pass if required_perms is 0. The `== required_perms` check is more robust.

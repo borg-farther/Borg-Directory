@@ -1,0 +1,17 @@
+REASONING TRACE FOR: Pipeline error handling bugs
+
+PROBLEM DECOMPOSITION:
+- run(): on error, should continue with previous result (skip the failed step)
+- run_strict(): on error, should break out of the loop immediately
+
+WHAT WAS TRIED:
+- In run(), when step fails, result stays as whatever it was before the failed step — this is actually correct behavior
+- In run_strict(), missing a break/return after recording the error
+
+KEY INSIGHT:
+- run() actually works correctly for error continuation — result isn't modified on exception
+- run_strict() just needs 'break' after the error handling block
+
+PITFALLS:
+- Verify run() carefully — does it really keep the previous result on error?
+- run_strict should return immediately after error, with the last good result

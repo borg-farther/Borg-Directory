@@ -1,0 +1,9 @@
+REASONING TRACE FOR: django__django-15037
+
+HINTS FROM BUG DISCUSSION:
+simple patch to handle FK to non pk field.
+it seems I cannot reproduce outside of my own code...
+I will check it!
+
+Note: These hints are from the original bug discussion and may contain 
+insights about the root cause, proposed approaches, and potential pitfalls.

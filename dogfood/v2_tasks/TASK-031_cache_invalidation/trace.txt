@@ -1,0 +1,14 @@
+REASONING TRACE FOR: TTL cache bugs
+
+PROBLEM DECOMPOSITION:
+- get() should delete expired entries when accessed (lazy cleanup)
+- cleanup() crashes because it deletes dict keys during iteration
+- size() should only count non-expired entries (or rely on proper cleanup)
+
+KEY INSIGHT:
+- In get(), add del self._store[key] before returning None for expired
+- In cleanup(), iterate over a copy of keys: list(self._store.keys()) or build list of keys to delete
+- size() can stay as len(self._store) if get() and cleanup() properly remove expired entries
+
+PITFALLS:
+- For cleanup(): don't just iterate self._store — need list() copy or collect keys then delete

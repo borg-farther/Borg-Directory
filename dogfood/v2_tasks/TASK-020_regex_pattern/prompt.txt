@@ -1,0 +1,39 @@
+## Task: Fix the Regex Pattern Bug
+
+You are debugging regex patterns that have issues with greedy matching causing incorrect capture groups.
+
+### The Problem
+
+The `LogParser` class uses regex patterns with greedy quantifiers that cause incorrect capture group extraction.
+
+### Expected Behavior
+
+```python
+log = "[2024-01-15 10:30:45] [INFO] [user@example.com] Message: Test message"
+# Should extract:
+# timestamp: 2024-01-15 10:30:45
+# level: INFO
+# user: user@example.com
+# message: Test message
+```
+
+### The Bug
+
+The regex pattern uses greedy quantifiers like `.*` that match more than intended:
+```python
+r'\[([^\]]+)\] '  # user email pattern - non-greedy would be better
+r'Message: (.*)'  # message - greedy .* might cause issues
+```
+
+### What to Look For
+
+1. `\[([^\]]+)\] ` for user - `[^\]]+` should be non-greedy with `+?` to match minimum
+2. `(.*)` for message is greedy and might capture too much
+
+### Your Task
+
+Fix the regex patterns to use non-greedy quantifiers where appropriate, ensuring correct capture groups.
+
+Key fixes:
+- Change `+` to `+?` (non-greedy) for the email pattern
+- Change `.*` to `.*?` (non-greedy) for the message pattern

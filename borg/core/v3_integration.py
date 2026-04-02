@@ -164,25 +164,6 @@ class BorgV3:
         self._db_path = os.path.expanduser(db_path)
         self._ensure_db()
 
-        # Contextual selector
-        if ContextualSelector is not None:
-            self._selector = ContextualSelector()
-        else:
-            self._selector = _StubContextualSelector()
-
-        # Mutation engine — try real MutationEngine first, fall back to stub
-        self._mutation: Any = _StubMutationEngine()
-        try:
-            from borg.core.mutation_engine import MutationEngine as RealME
-            from borg.db.store import AgentStore
-            from borg.core.failure_memory import FailureMemory
-            if AgentStore is not None and FailureMemory is not None:
-                store = AgentStore()
-                fm = FailureMemory()
-                self._mutation = RealME(pack_store=store, failure_memory=fm)
-        except Exception as e:
-            logger.debug("MutationEngine not available, using stub: %s", e)
-
         # Feedback loop — try real FeedbackLoop first, fall back to stub
         self._feedback: Any = _StubFeedbackLoop()
         try:
@@ -192,6 +173,31 @@ class BorgV3:
                 self._feedback = RealFL()
         except Exception as e:
             logger.debug("FeedbackLoop not available, using stub: %s", e)
+
+        # Contextual selector (needs _feedback to be initialized first)
+        if ContextualSelector is not None:
+            self._selector = ContextualSelector(feedback_loop=self._feedback)
+        else:
+            self._selector = _StubContextualSelector()
+
+        # Failure memory — shared with search for prior failure context
+        self._failure_memory: Any = None
+        try:
+            from borg.core.failure_memory import FailureMemory as RealFM
+            self._failure_memory = RealFM()
+        except Exception as e:
+            logger.debug("FailureMemory not available: %s", e)
+
+        # Mutation engine — try real MutationEngine first, fall back to stub
+        self._mutation: Any = _StubMutationEngine()
+        try:
+            from borg.core.mutation_engine import MutationEngine as RealME
+            from borg.db.store import AgentStore
+            if AgentStore is not None and self._failure_memory is not None:
+                store = AgentStore()
+                self._mutation = RealME(pack_store=store, failure_memory=self._failure_memory)
+        except Exception as e:
+            logger.debug("MutationEngine not available, using stub: %s", e)
 
     # -------------------------------------------------------------------------
     # DB helpers
@@ -260,7 +266,7 @@ class BorgV3:
 
         out = []
         for r in results:
-            out.append({
+            item = {
                 "pack_id": r.pack_id,
                 "name": r.pack_id,
                 "category": r.category,
@@ -270,7 +276,27 @@ class BorgV3:
                 "is_exploration": r.is_exploration,
                 "reputation": r.reputation,
                 "match_type": "contextual",
-            })
+            }
+            # Annotate A/B test info if pack is part of an active A/B test
+            if hasattr(self._mutation, 'ab_tests'):
+                for test_id, test in self._mutation.ab_tests.items():
+                    if test.variant.mutant_pack_id == r.pack_id:
+                        item["ab_test"] = {"test_id": test_id, "variant": "mutant"}
+                        break
+                    elif test.variant.original_pack_id == r.pack_id:
+                        item["ab_test"] = {"test_id": test_id, "variant": "original"}
+                        break
+                if "ab_test" not in item:
+                    item["ab_test"] = None
+            out.append(item)
+
+        # ITEM 3.2: Inject prior failure context from FailureMemory
+        if self._failure_memory is not None and task_context and task_context.get("error_message"):
+            prior = self._failure_memory.recall(task_context["error_message"])
+            if prior:
+                for item in out:
+                    item["prior_failures"] = prior.get("wrong_approaches", [])[:3]
+                    item["prior_successes"] = prior.get("correct_approaches", [])[:2]
 
         return out
 
@@ -329,6 +355,7 @@ class BorgV3:
         tokens_used: int = 0,
         time_taken: float = 0.0,
         agent_id: Optional[str] = None,
+        session_id: Optional[str] = None,
     ) -> None:
         """Record a pack execution outcome.
 
@@ -410,6 +437,17 @@ class BorgV3:
                     pass
         except Exception as e:
             logger.warning("MutationEngine.record_outcome failed: %s", e)
+
+        # 5. A/B test outcome — look up selected_variant from session if session_id provided
+        if session_id:
+            try:
+                from borg.core import session as session_module
+                session = session_module.get_session(session_id) or {}
+                sv = session.get("selected_variant")
+                if sv and hasattr(self._mutation, 'record_outcome'):
+                    self._mutation.record_outcome(sv["test_id"], sv["variant"], success)
+            except Exception as e:
+                logger.warning("A/B test outcome recording failed: %s", e)
 
     # -------------------------------------------------------------------------
     # should_mutate — checks if a pack should be mutated
@@ -613,6 +651,14 @@ class BorgV3:
                 results["mutations_suggested"] = suggestions
         except Exception as e:
             logger.warning("Mutation suggestion failed: %s", e)
+
+        # 4. Trace maintenance
+        try:
+            from borg.core.traces import traces_maintenance
+            trace_stats = traces_maintenance()
+            results["trace_maintenance"] = trace_stats
+        except Exception as e:
+            logger.warning("Trace maintenance failed: %s", e)
 
         return results
 

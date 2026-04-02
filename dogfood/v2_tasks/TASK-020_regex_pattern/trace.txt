@@ -1,0 +1,48 @@
+## Reasoning Trace for Regex Pattern Bug
+
+### The Bug Location
+
+The bug is in `LogParser.__init__()` where the regex pattern uses greedy quantifiers.
+
+### Hint 1: Greedy vs Non-Greedy
+
+- Greedy `*` and `+` match as much as possible
+- Non-greedy `*?` and `+?` match as little as possible
+
+### Hint 2: The Email Pattern
+
+```python
+r'\[([^\]]+)\] '  # Captures user email
+```
+
+This uses `[^\]]+` which is "one or more chars that are not ]". This should work, but being greedy means it will match as much as possible up to the last `]`.
+
+For: `[user@example.com] Message: ]extra]`
+Greedy would match: `user@example.com] Message: ]extra`
+
+### Hint 3: The Message Pattern
+
+```python
+r'Message: (.*)'  # Captures message
+```
+
+The greedy `.*` matches everything to the end of the string. This is often what we want for "rest of line" but can cause issues with backtracking.
+
+### Hint 4: Non-Greedy Fix
+
+Change greedy to non-greedy:
+```python
+r'\[([^\]]+?)\] '  # Non-greedy +? for email
+r'Message: (.*?)'  # Non-greedy .*? for message
+```
+
+### Key Insight
+
+Non-greedy quantifiers will match the MINIMUM needed to satisfy the pattern, which often gives more correct capture groups.
+
+### Approach
+
+1. Look at the regex pattern
+2. Identify greedy quantifiers: `+` and `*`
+3. Change them to non-greedy: `+?` and `*?`
+4. Test that captures are correct

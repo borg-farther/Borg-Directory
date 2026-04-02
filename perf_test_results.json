@@ -1,0 +1,122 @@
+{
+  "timestamp": "2026-03-31T11:01:53.375726",
+  "summary": {
+    "total": 10,
+    "passed": 8,
+    "failed": 2,
+    "p0_passed": 3,
+    "p0_total": 4
+  },
+  "results": [
+    {
+      "test_id": "P-001",
+      "name": "borg search latency (local)",
+      "method": "time.perf_counter 100 searches",
+      "p0": true,
+      "measured": "p50=116.1ms p95=172.2ms",
+      "threshold": "<200ms",
+      "unit": "ms",
+      "passed": true,
+      "notes": ""
+    },
+    {
+      "test_id": "P-002",
+      "name": "semantic search latency",
+      "method": "time.perf_counter 50 searches",
+      "p0": false,
+      "measured": "p50=0.0ms p95=0.1ms",
+      "threshold": "<500ms",
+      "unit": "ms",
+      "passed": true,
+      "notes": ""
+    },
+    {
+      "test_id": "P-003",
+      "name": "MCP server response time",
+      "method": "JSON-RPC 100 calls via subprocess",
+      "p0": true,
+      "measured": "p50=119.7ms p95=145.6ms",
+      "threshold": "<300ms",
+      "unit": "ms",
+      "passed": true,
+      "notes": ""
+    },
+    {
+      "test_id": "P-004",
+      "name": "Pack apply memory usage",
+      "method": "tracemalloc during 10-phase apply",
+      "p0": false,
+      "measured": "0.0MB",
+      "threshold": "<100MB",
+      "unit": "MB",
+      "passed": true,
+      "notes": ""
+    },
+    {
+      "test_id": "P-005",
+      "name": "Large corpus search (1000 packs)",
+      "method": "time.perf_counter with 1000-pack corpus",
+      "p0": false,
+      "measured": "p50=112.0ms p95=126.9ms",
+      "threshold": "<500ms",
+      "unit": "ms",
+      "passed": true,
+      "notes": ""
+    },
+    {
+      "test_id": "P-006",
+      "name": "V2 recommender throughput",
+      "method": "1000 recommend() calls",
+      "p0": false,
+      "measured": "2266443.0 ops/sec",
+      "threshold": ">=100",
+      "unit": "ops/sec",
+      "passed": true,
+      "notes": ""
+    },
+    {
+      "test_id": "P-007",
+      "name": "pip install time",
+      "method": "fresh venv + pip install agent-borg",
+      "p0": true,
+      "measured": "6.7s",
+      "threshold": "<60s",
+      "unit": "s",
+      "passed": true,
+      "notes": ""
+    },
+    {
+      "test_id": "P-008",
+      "name": "CLI startup time",
+      "method": "time borg version (cold)",
+      "p0": true,
+      "measured": "5.89s",
+      "threshold": "<2s",
+      "unit": "s",
+      "passed": false,
+      "notes": "CLI imports heavy modules (uvicorn, fastapi, httpx)"
+    },
+    {
+      "test_id": "P-009",
+      "name": "SQLite WAL concurrent writes",
+      "method": "10 threads x 10 writes to agents table",
+      "p0": false,
+      "measured": "10/10 threads OK, integrity=ok",
+      "threshold": "no errors",
+      "unit": "threads",
+      "passed": true,
+      "notes": "errors: []"
+    },
+    {
+      "test_id": "P-010",
+      "name": "DeFi API caching",
+      "method": "call scan_defillama twice, compare latency",
+      "p0": false,
+      "measured": "cold=833.1ms cached=810.2ms speedup=1.0x",
+      "threshold": ">=10x speedup",
+      "unit": "x",
+      "passed": false,
+      "notes": "has_cache=False"
+    }
+  ]
+}

@@ -34,6 +34,7 @@ from borg.integrations.mcp_server import (
     borg_feedback,
     init_trace_capture,
     _feed_trace_capture,
+    _current_session_id,
     save_trace,
 )
 from borg.core.v3_integration import BorgV3
@@ -180,14 +181,18 @@ class TestObserveReturnsGuidance:
         assert parsed.get("success") is True
 
     def test_borg_observe_calls_init_trace_capture(self):
-        """borg_observe calls init_trace_capture to start a new capture."""
+        """borg_observe does NOT call init_trace_capture in the new API.
+
+        Trace capture is now initiated by borg_apply action='start', not by borg_observe.
+        This test verifies that borg_observe completes without calling init_trace_capture.
+        """
         import borg.integrations.mcp_server as mcp_mod
-        mcp_mod._trace_capture = None
+        mcp_mod._trace_captures = {}
 
         init_calls = []
 
-        def track_init(task="", agent_id=""):
-            init_calls.append(("init", task, agent_id))
+        def track_init(session_id="", task="", agent_id=""):
+            init_calls.append(("init", session_id, task, agent_id))
 
         with patch("borg.core.uri._fetch_index", return_value={"packs": []}):
             with patch("borg.core.trace_matcher.TraceMatcher") as MockTM:
@@ -195,16 +200,15 @@ class TestObserveReturnsGuidance:
                 with patch("borg.integrations.mcp_server.init_trace_capture", track_init):
                     result = borg_observe(task="Test task for trace capture")
 
-        assert len(init_calls) == 1
-        assert init_calls[0][1] == "Test task for trace capture"
+        parsed = json.loads(result)
+        assert parsed.get("success") is True
+        # In the new API, borg_observe does NOT call init_trace_capture
+        assert len(init_calls) == 0
 
-        mcp_mod._trace_capture = None
+        mcp_mod._trace_captures = {}
 
     def test_borg_observe_find_relevant_path(self, tmp_trace_db, saved_trace):
         """borg_observe uses TraceMatcher.find_relevant for prior traces."""
-        import borg.integrations.mcp_server as mcp_mod
-        mcp_mod._trace_capture = None
-
         # Use the real TraceMatcher with our temp DB so find_relevant actually works
         with patch("borg.core.uri._fetch_index", return_value={"packs": []}):
             result = borg_observe(
@@ -217,8 +221,6 @@ class TestObserveReturnsGuidance:
         # With no matching packs, guidance may be empty but no error should occur
         assert "guidance" in parsed
 
-        mcp_mod._trace_capture = None
-
 
 # ============================================================================
 # Test 3: borg_apply action=start initiates trace capture
@@ -229,6 +231,9 @@ class TestApplyStartsTraceCapture:
 
     def test_apply_start_calls_init_trace_capture(self, tmp_path):
         """borg_apply(action='start') calls init_trace_capture."""
+        import borg.integrations.mcp_server as mcp_mod
+        mcp_mod._trace_captures = {}
+
         fake_guild = tmp_path / "guild" / "test-pack"
         fake_guild.mkdir(parents=True)
         (fake_guild / "pack.yaml").write_text("""
@@ -242,8 +247,8 @@ phases:
 
         init_calls = []
 
-        def track_init(task="", agent_id=""):
-            init_calls.append(("init", task, agent_id))
+        def track_init(session_id="", task="", agent_id=""):
+            init_calls.append(("init", session_id, task, agent_id))
 
         fake_session_mod = _FakeSessionModule()
 
@@ -266,7 +271,13 @@ phases:
         parsed = json.loads(result)
         assert parsed.get("success") is True
         assert len(init_calls) == 1
-        assert init_calls[0][1] == "Fix the bug"
+        # New API: init_trace_capture(session_id, task, agent_id)
+        assert init_calls[0][2] == "Fix the bug"
+        session_id = parsed.get("session_id")
+        assert session_id is not None
+        assert init_calls[0][1] == session_id
+
+        mcp_mod._trace_captures = {}
 
 
 # ============================================================================
@@ -279,9 +290,10 @@ class TestTraceCaptureAccumulates:
     def test_feed_trace_capture_accumulates_calls(self):
         """Feeding 5 read_file calls increments tool_calls counter."""
         import borg.integrations.mcp_server as mcp_mod
-        mcp_mod._trace_capture = None
+        mcp_mod._trace_captures = {}
 
-        init_trace_capture(task="Test accumulation", agent_id="test-agent")
+        _current_session_id.set("test-session")
+        init_trace_capture("test-session", task="Test accumulation", agent_id="test-agent")
 
         for i in range(5):
             _feed_trace_capture(
@@ -290,19 +302,20 @@ class TestTraceCaptureAccumulates:
                 result=f"Content of file {i}"
             )
 
-        tc = mcp_mod._trace_capture
+        tc = mcp_mod._trace_captures["test-session"]
         assert tc is not None
         assert tc.tool_calls == 5
         assert len(tc.files_read) == 5
 
-        mcp_mod._trace_capture = None
+        mcp_mod._trace_captures = {}
 
     def test_trace_capture_extract_returns_correct_tool_count(self):
         """extract_trace returns the correct number of accumulated tool calls."""
         import borg.integrations.mcp_server as mcp_mod
-        mcp_mod._trace_capture = None
+        mcp_mod._trace_captures = {}
 
-        init_trace_capture(task="Extract test", agent_id="test-agent")
+        _current_session_id.set("test-session")
+        init_trace_capture("test-session", task="Extract test", agent_id="test-agent")
 
         for i in range(7):
             _feed_trace_capture(
@@ -311,7 +324,7 @@ class TestTraceCaptureAccumulates:
                 result=f"module content {i}"
             )
 
-        tc = mcp_mod._trace_capture
+        tc = mcp_mod._trace_captures["test-session"]
         trace = tc.extract_trace(outcome="success")
 
         assert trace["tool_calls"] == 7
@@ -319,14 +332,15 @@ class TestTraceCaptureAccumulates:
         files_read_list = json.loads(trace["files_read"])
         assert len(files_read_list) == 7
 
-        mcp_mod._trace_capture = None
+        mcp_mod._trace_captures = {}
 
     def test_trace_capture_tracks_errors(self):
         """TraceCapture.on_tool_call extracts error messages from results."""
         import borg.integrations.mcp_server as mcp_mod
-        mcp_mod._trace_capture = None
+        mcp_mod._trace_captures = {}
 
-        init_trace_capture(task="Error tracking", agent_id="test-agent")
+        _current_session_id.set("test-session")
+        init_trace_capture("test-session", task="Error tracking", agent_id="test-agent")
 
         _feed_trace_capture(
             tool_name="terminal",
@@ -334,11 +348,25 @@ class TestTraceCaptureAccumulates:
             result="Error: TypeError: 'NoneType' object has no attribute 'value'\nSome other output"
         )
 
-        tc = mcp_mod._trace_capture
+        tc = mcp_mod._trace_captures["test-session"]
         assert len(tc.errors) >= 1
         assert "TypeError" in tc.errors[0]
 
-        mcp_mod._trace_capture = None
+        mcp_mod._trace_captures = {}
+
+
+    def test_agent_id_populated_in_trace(self):
+        """TraceCapture.extract_trace returns the agent_id that was passed to __init__."""
+        import borg.integrations.mcp_server as mcp_mod
+        mcp_mod._trace_captures = {}
+
+        capture = TraceCapture(task="test", agent_id="claude-code-abc123")
+        for i in range(2):
+            capture.on_tool_call("read_file", {"path": f"/test/file{i}.py"}, "ok")
+        trace = capture.extract_trace(outcome="success")
+        assert trace["agent_id"] == "claude-code-abc123"
+
+        mcp_mod._trace_captures = {}
 
 
 # ============================================================================
@@ -584,12 +612,13 @@ class TestBorgFeedbackRecordsToV3:
 
         record_calls = []
 
-        def track_record(pack_id, task_context, success, tokens_used=0, time_taken=0.0, agent_id=None):
+        def track_record(pack_id, task_context, success, tokens_used=0, time_taken=0.0, agent_id=None, session_id=None):
             record_calls.append({
                 "pack_id": pack_id,
                 "task_context": task_context,
                 "success": success,
                 "tokens_used": tokens_used,
+                "session_id": session_id,
             })
 
         fake_session_mod = _FakeSessionModule()
@@ -625,6 +654,7 @@ class TestBorgFeedbackRecordsToV3:
         assert len(record_calls) == 1
         assert record_calls[0]["pack_id"] == "feedback-pack"
         assert record_calls[0]["success"] is True
+        assert record_calls[0]["session_id"] == "feedback-test-001"
 
 
 # ============================================================================
@@ -688,7 +718,10 @@ class TestFullLearningLoop:
     def test_full_loop_trace_capture_to_feedback(self, tmp_path, tmp_trace_db, tmp_v3_db):
         """End-to-end: observe → apply start → feed 5 calls → extract → save → feedback."""
         import borg.integrations.mcp_server as mcp_mod
-        mcp_mod._trace_capture = None
+        mcp_mod._trace_captures = {}
+
+        # Set session context for all trace operations
+        _current_session_id.set("session-1")
 
         # ── Step 1: borg_search ──────────────────────────────────────────
         with patch("borg.core.uri._fetch_index", return_value={"packs": []}):
@@ -696,7 +729,7 @@ class TestFullLearningLoop:
         search_parsed = json.loads(search_result)
         assert search_parsed.get("success") is True
 
-        # ── Step 2: borg_observe (initiates trace capture) ───────────────
+        # ── Step 2: borg_observe (returns guidance + prior matches) ───────
         with patch("borg.core.uri._fetch_index", return_value={"packs": []}):
             with patch("borg.core.trace_matcher.TraceMatcher") as MockTM:
                 MockTM.return_value.find_relevant.return_value = []
@@ -707,9 +740,9 @@ class TestFullLearningLoop:
         observe_parsed = json.loads(observe_result)
         assert observe_parsed.get("success") is True
 
-        # Trace capture should be active after observe
-        assert mcp_mod._trace_capture is not None
-        assert mcp_mod._trace_capture.task == "Debug authentication bug"
+        # Note: borg_observe does NOT call init_trace_capture in the new API.
+        # Trace capture is initiated by borg_apply start.
+        # Step 2 just validates borg_observe works without error.
 
         # ── Step 3: borg_apply start ─────────────────────────────────────
         fake_guild = tmp_path / "guild" / "e2e-pack"
@@ -745,6 +778,9 @@ phases:
         assert apply_parsed.get("success") is True
         session_id = apply_parsed["session_id"]
 
+        # Update contextvar to use the actual session_id from borg_apply
+        _current_session_id.set(session_id)
+
         # ── Step 4: Feed 5 read_file calls ──────────────────────────────
         test_files = [
             "/app/auth.py", "/app/models.py", "/app/config.py",
@@ -757,12 +793,14 @@ phases:
                 result=f"# Content of {path}"
             )
 
-        assert mcp_mod._trace_capture is not None
-        assert mcp_mod._trace_capture.tool_calls == 5
-        assert len(mcp_mod._trace_capture.files_read) == 5
+        assert session_id in mcp_mod._trace_captures
+        tc = mcp_mod._trace_captures[session_id]
+        assert tc is not None
+        assert tc.tool_calls == 5
+        assert len(tc.files_read) == 5
 
         # ── Step 4b: Extract and save trace ────────────────────────────
-        trace = mcp_mod._trace_capture.extract_trace(outcome="success")
+        trace = tc.extract_trace(outcome="success")
         trace["id"] = "e2e-trace-001"
         saved_id = save_trace(trace, db_path=tmp_trace_db)
         assert saved_id == "e2e-trace-001"
@@ -798,12 +836,13 @@ phases:
 
         record_calls = []
 
-        def track_record(pack_id, task_context, success, tokens_used=0, time_taken=0.0, agent_id=None):
+        def track_record(pack_id, task_context, success, tokens_used=0, time_taken=0.0, agent_id=None, session_id=None):
             record_calls.append({
                 "pack_id": pack_id,
                 "task_context": task_context,
                 "success": success,
                 "tokens_used": tokens_used,
+                "session_id": session_id,
             })
 
         with patch.dict(os.environ, {"HERMES_HOME": str(tmp_path)}):
@@ -845,6 +884,7 @@ phases:
         assert record_calls[0]["pack_id"] == "e2e-pack"
         assert record_calls[0]["success"] is True
         assert record_calls[0]["tokens_used"] == 800
+        assert record_calls[0]["session_id"] == session_id
 
         # ── Step 6: TraceMatcher can find the saved trace ───────────────
         matcher = TraceMatcher(db_path=tmp_trace_db)
@@ -865,7 +905,7 @@ phases:
         assert "ab_tests_checked" in maint
 
         # Clean up global state
-        mcp_mod._trace_capture = None
+        mcp_mod._trace_captures = {}
 
     def test_trace_matcher_format_for_agent(self, saved_trace):
         """TraceMatcher.format_for_agent produces readable guidance text."""
@@ -873,3 +913,216 @@ phases:
         formatted = matcher.format_for_agent(saved_trace)
         assert isinstance(formatted, str)
         assert len(formatted) > 0
+
+
+# ============================================================================
+# Test 8: Root Cause Extraction from what_changed
+# ============================================================================
+
+class TestRootCauseExtraction:
+    """Step 8: borg_feedback extracts root_cause from what_changed and saves it."""
+
+    def test_root_cause_save_and_retrieve(self, tmp_trace_db):
+        """root_cause is saved and retrieved correctly from the DB."""
+        # Create capture and accumulate
+        capture = TraceCapture(task="Fix auth bug", agent_id="test-agent")
+        for i in range(3):
+            capture.on_tool_call("read_file", {"path": f"/test/file{i}.py"}, "content")
+
+        # Extract with root_cause
+        trace = capture.extract_trace(
+            outcome="success",
+            root_cause="Missing null check in getUser()",
+            approach_summary="Added if user is None check"
+        )
+
+        tid = save_trace(trace, db_path=tmp_trace_db)
+
+        # Verify in DB
+        conn = sqlite3.connect(tmp_trace_db)
+        conn.row_factory = sqlite3.Row
+        row = conn.execute("SELECT root_cause, approach_summary FROM traces WHERE id = ?", (tid,)).fetchone()
+        conn.close()
+
+        assert row is not None
+        assert "Missing null check" in row["root_cause"]
+        assert "Added if user is None" in row["approach_summary"]
+
+    def test_root_cause_passed_to_extract_trace(self, tmp_trace_db):
+        """what_changed is passed as root_cause to extract_trace in borg_feedback."""
+        import borg.integrations.mcp_server as mcp_mod
+        mcp_mod._trace_captures = {}
+
+        session_id = "rc-test-session"
+        _current_session_id.set(session_id)
+        init_trace_capture(session_id, task="Fix bug", agent_id="test-agent")
+
+        for i in range(6):
+            _feed_trace_capture(
+                tool_name="read_file",
+                args={"path": f"/app/file{i}.py"},
+                result=f"content {i}"
+            )
+
+        fake_session_mod = _FakeSessionModule()
+        fake_session_mod.register_session({
+            "session_id": session_id,
+            "execution_log_path": "",
+            "phase_results": [],
+            "pack_id": "test-pack",
+            "pack_version": "1.0.0",
+            "task": "Fix bug",
+            "outcome": "success"
+        })
+
+        # Mock generate_feedback to avoid external dependencies
+        with patch("borg.core.search.generate_feedback", return_value={"success": True, "feedback": {}}):
+            with patch("borg.integrations.mcp_server._get_core_modules") as mock_core:
+                mock_core.return_value = (
+                    MagicMock(),
+                    MagicMock(),
+                    fake_session_mod,
+                    MagicMock(),
+                    MagicMock(),
+                )
+                with patch("borg.integrations.mcp_server.save_trace") as mock_save:
+                    borg_feedback(
+                        session_id=session_id,
+                        what_changed="Fixed null pointer in getUser() by adding guard clause",
+                        where_to_reuse="Any user lookup in auth flow",
+                    )
+                    assert mock_save.called
+                    call_kwargs = mock_save.call_args[1]
+                    trace = call_kwargs.get("trace") or mock_save.call_args[0][0]
+                    assert "null pointer" in trace.get("root_cause", "")
+                    assert "guard clause" in trace.get("root_cause", "")
+
+        mcp_mod._trace_captures = {}
+
+
+# ============================================================================
+# Test 12: Thompson Sampling Feedback Boost
+# ============================================================================
+
+class TestThompsonSamplingFeedbackBoost:
+    """Test PRD item 3.4: Thompson Sampling + FeedbackLoop Signal Integration."""
+
+    def test_feedback_signal_boost_formula(self):
+        from borg.core.contextual_selector import ContextualSelector
+        from unittest.mock import Mock
+
+        # Create mock feedback loop
+        mock_fl = Mock()
+        mock_fl.get_signals.return_value = []
+
+        selector = ContextualSelector(feedback_loop=mock_fl)
+
+        # No signals → neutral boost
+        assert selector.feedback_signal_boost("any-pack") == 1.0
+
+        # Negative drift signal
+        mock_signal = Mock()
+        mock_signal.quality_score = 0.3
+        mock_signal.success_rate_trend = -0.5
+        mock_fl.get_signals.return_value = [mock_signal]
+
+        boost = selector.feedback_signal_boost("failing-pack")
+        # 0.3 * (1 + -0.5/2) = 0.3 * 0.75 = 0.225
+        assert abs(boost - 0.225) < 0.001, f"Expected ~0.225, got {boost}"
+
+        # Positive drift signal
+        mock_signal2 = Mock()
+        mock_signal2.quality_score = 0.9
+        mock_signal2.success_rate_trend = 0.5
+        mock_fl.get_signals.return_value = [mock_signal2]
+
+        boost2 = selector.feedback_signal_boost("good-pack")
+        # 0.9 * (1 + 0.5/2) = 0.9 * 1.25 = 1.125
+        assert abs(boost2 - 1.125) < 0.001, f"Expected ~1.125, got {boost2}"
+
+    def test_feedback_signal_boost_no_feedback_loop(self):
+        from borg.core.contextual_selector import ContextualSelector
+
+        selector = ContextualSelector()
+        # Without feedback_loop, should return neutral 1.0
+        assert selector.feedback_signal_boost("any-pack") == 1.0
+
+    def test_feedback_signal_boost_multiple_signals(self):
+        from borg.core.contextual_selector import ContextualSelector
+        from unittest.mock import Mock
+
+        mock_fl = Mock()
+        # Multiple signals are averaged
+        mock_signal1 = Mock()
+        mock_signal1.quality_score = 0.4
+        mock_signal1.success_rate_trend = -0.2
+        mock_signal2 = Mock()
+        mock_signal2.quality_score = 0.8
+        mock_signal2.success_rate_trend = 0.4
+        mock_fl.get_signals.return_value = [mock_signal1, mock_signal2]
+
+        selector = ContextualSelector(feedback_loop=mock_fl)
+
+        boost = selector.feedback_signal_boost("multi-signal-pack")
+        # avg_quality = (0.4 + 0.8) / 2 = 0.6
+        # avg_trend = (-0.2 + 0.4) / 2 = 0.1
+        # boost = 0.6 * (1 + 0.1/2) = 0.6 * 1.05 = 0.63
+        assert abs(boost - 0.63) < 0.001, f"Expected ~0.63, got {boost}"
+
+    def test_feedback_signal_boost_clamped_to_2_0(self):
+        from borg.core.contextual_selector import ContextualSelector
+        from unittest.mock import Mock
+
+        mock_fl = Mock()
+        mock_signal = Mock()
+        mock_signal.quality_score = 1.0
+        mock_signal.success_rate_trend = 1.0  # max positive trend
+        mock_fl.get_signals.return_value = [mock_signal]
+
+        selector = ContextualSelector(feedback_loop=mock_fl)
+
+        boost = selector.feedback_signal_boost("max-boost-pack")
+        # 1.0 * (1 + 1.0/2) = 1.0 * 1.5 = 1.5 (not clamped)
+        assert abs(boost - 1.5) < 0.001, f"Expected ~1.5, got {boost}"
+
+    def test_feedback_signal_boost_clamped_to_0_0(self):
+        from borg.core.contextual_selector import ContextualSelector
+        from unittest.mock import Mock
+
+        mock_fl = Mock()
+        mock_signal = Mock()
+        mock_signal.quality_score = 0.0
+        mock_signal.success_rate_trend = -1.0  # worst trend
+        mock_fl.get_signals.return_value = [mock_signal]
+
+        selector = ContextualSelector(feedback_loop=mock_fl)
+
+        boost = selector.feedback_signal_boost("min-boost-pack")
+        # 0.0 * (1 + -1.0/2) = 0.0 * 0.5 = 0.0
+        assert abs(boost - 0.0) < 0.001, f"Expected ~0.0, got {boost}"
+
+    def test_boost_applied_in_select(self):
+        from borg.core.contextual_selector import ContextualSelector, PackDescriptor
+        from unittest.mock import Mock
+
+        mock_fl = Mock()
+        mock_fl.get_signals.return_value = []
+
+        selector = ContextualSelector(feedback_loop=mock_fl)
+
+        candidates = [
+            PackDescriptor(
+                pack_id="boost-test-pack",
+                name="Boost Test Pack",
+                keywords=["debug", "error"],
+                supported_tasks=["debug"],
+            )
+        ]
+
+        # With no signals, boost is neutral (1.0)
+        ctx = {"task_type": "debug", "keywords": ["error"]}
+        results = selector.select(ctx, candidates, seed=42)
+
+        assert len(results) == 1
+        assert results[0].pack_id == "boost-test-pack"
+        assert results[0].category == "debug"

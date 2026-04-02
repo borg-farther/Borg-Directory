@@ -1,0 +1,42 @@
+{
+  "task_id": "HARD-004",
+  "task_name": "Event System Race",
+  "attempts": [
+    {
+      "attempt": 1,
+      "action": "Ran the tests and got RuntimeError: list changed size during iteration in processor.py line with for loop",
+      "result": "The error occurs when process_events calls emitter.emit which iterates over subscribers",
+      "diagnosis": "Initially thought the bug was in processor.py's for loop that iterates over events",
+      "fix_attempted": "Added a copy() call on the events list before iterating",
+      "outcome": "FAILED - The error still occurred because the real iteration issue is in the subscriber list"
+    },
+    {
+      "attempt": 2,
+      "action": "Examined events.py emit() method more closely",
+      "result": "Found that emit() iterates directly over self.subscribers: 'for handler in self.subscribers:'",
+      "diagnosis": "Realized the issue is that handlers can unsubscribe themselves during iteration",
+      "fix_attempted": "Changed the emit loop to iterate over a copy: 'for handler in list(self.subscribers):'",
+      "outcome": "SUCCESS - The list() call creates a snapshot to iterate over safely"
+    },
+    {
+      "attempt": 3,
+      "action": "Also noticed that handle_event_B calls emitter.unsubscribe(handle_event_A) during event processing",
+      "result": "This modifies the subscriber list mid-iteration, causing the crash",
+      "diagnosis": "The handler is unsubscribing another handler, not itself, which is unusual design but the core issue is the iteration safety",
+      "fix_attempted": "Alternative fix: prevent handlers from modifying subscriber list during events, but this is more invasive",
+      "outcome": "SUCCESS (alternative) - Fixing the iteration in events.py is cleaner"
+    }
+  ],
+  "final_fix": {
+    "file": "src/events.py",
+    "line": 22,
+    "change": "Changed 'for handler in self.subscribers:' to 'for handler in list(self.subscribers):'",
+    "explanation": "Creating a copy of the subscriber list before iteration prevents RuntimeError when handlers modify the original list during event processing"
+  },
+  "lessons_learned": [
+    "Never modify a list while iterating over it - always iterate over a copy",
+    "Event handlers should not modify the subscriber list during event processing",
+    "The error manifested in processor.py but the bug was in events.py",
+    "Using list() to copy the list is a simple but effective fix"
+  ]
+}

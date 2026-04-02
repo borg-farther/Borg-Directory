@@ -1,0 +1,18 @@
+REASONING TRACE FOR: Timezone comparison bug
+
+PROBLEM DECOMPOSITION:
+- datetime.now() returns a naive datetime (no timezone info)
+- datetime.now(timezone.utc) returns an aware datetime
+- Comparing naive vs aware raises TypeError in Python 3
+
+WHAT WAS TRIED:
+- The events are stored with timezone-aware datetimes (UTC)
+- But get_due_events() and get_next_event() call datetime.now() without timezone
+
+KEY INSIGHT:
+- Replace datetime.now() with datetime.now(timezone.utc) in both methods
+- The default parameter in get_due_events should also use UTC
+
+PITFALLS:
+- Don't forget get_next_event() also has the same bug
+- Don't use datetime.utcnow() — it also returns naive datetime despite the name

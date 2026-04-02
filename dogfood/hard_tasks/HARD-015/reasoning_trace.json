@@ -1,0 +1,9 @@
+{
+  "task_id": "HARD-015",
+  "task_name": "State Machine Transition Bug",
+  "bug_description": "transitions.py guards run AFTER state change instead of BEFORE, so invalid transitions are applied then rejected, leaving machine in wrong state",
+  "root_cause": "transitions.py execute_transition() calls machine._set_state_internal(to_state) BEFORE checking the guard",
+  "symptom": "machine.py reports correct state but internal state may be corrupted after failed guard check",
+  "fix_location": "src/transitions.py execute_transition() - check guard BEFORE calling _set_state_internal()",
+  "verification": "check.sh returns 1 when run, confirming tests fail due to transition order bug"
+}

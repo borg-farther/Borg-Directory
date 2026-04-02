@@ -1,0 +1,16 @@
+# Solution for TASK-026
+
+## The Bug
+In `matmul_backward`, the code computes `transpose(upstream) @ w` but should compute `upstream @ transpose(w)`.
+
+For Y = X @ W + b:
+- upstream (dL/dY) has shape 2x4
+- w has shape 3x4
+- We need dL/dX = upstream @ W.T = (2x4) @ (4x3) = 2x3
+
+But the buggy code does transpose(upstream) @ w = (4x2) @ (3x4) which fails due to dimension mismatch.
+
+## The Fix
+```python
+return multiply(upstream, w_transposed)  # upstream @ w.T
+```

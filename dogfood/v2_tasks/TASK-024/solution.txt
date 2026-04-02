@@ -1,0 +1,19 @@
+# Solution for TASK-024
+
+## The Bug
+The `_resize` method creates a new bucket array but doesn't rehash the existing entries into it. The old entries are lost when resize happens.
+
+## The Fix
+After creating the new empty bucket array, iterate through the old buckets and insert each entry into the new bucket array using the new capacity:
+
+```python
+def _resize(self, new_capacity: int) -> None:
+    old_buckets = self.buckets
+    self.capacity = new_capacity
+    self.buckets = [[] for _ in range(self.capacity)]
+    # Rehash all entries from old buckets into new buckets
+    for bucket in old_buckets:
+        for key, value in bucket:
+            index = self._hash(key)  # Uses the new capacity
+            self.buckets[index].append((key, value))
+```

@@ -1,0 +1,951 @@
+# Reasoning Trace for TASK-022
+
+## Initial Observation
+When we serialize a tree and then deserialize it, the resulting tree has a different structure. The inorder and preorder traversals don't match.
+
+## Analysis
+The serialization uses level-order (BFS) traversal, storing # for None nodes. The deserialization reconstructs the tree using a queue.
+
+## Key Insight
+Look at the deserialize method. When we pop a node from the queue and it's None, we should skip processing its children entirely. But the current code advances the index `i` even when the current node is None.
+
+## Trace Example
+For a tree [1, 2, 3, 4] (1 is root, 2 is left child of 1, 3 is right child of 1, 4 is left child of 2):
+- Serialized: "1,2,3,4"
+- At deserialize:
+  - i=0: Create root TreeNode(1), queue=[root], i=1
+  - i=1: Pop root. values[1]="2" != "#", create left=TreeNode(2), queue=[left], i=2
+  - i=2: Pop left (now the queue has the actual left node). values[2]="3" != "#", create right=TreeNode(3), queue=[left, right], i=3
+  - i=3: Pop... wait, the queue.pop(0) gives us left (from earlier), but we just processed its children in the same iteration!
+
+The bug is: when we process the left child, we add its left and right to the queue. But then when we pop the next item from the queue (which is the RIGHT child of the root), we're actually reading values[2] which is the LEFT child of 2!
+
+## Deeper Bug
+Actually, the bug is simpler. When we encounter a None node in the queue and try to process its children, we still advance the index. But we shouldn't process children of None nodes at all.
+
+Wait, let me re-read the deserialize code...
+
+Oh! I see it now. When node is None, we do:
+```python
+if node is None:
+    if i < len(values):
+        i += 1  # BUG!
+    if i < len(values):
+        i += 1  # BUG!
+    continue
+```
+
+The problem is: even though we continue (don't process children of None), we still advance `i`. This causes the indices to misalign for subsequent nodes.
+
+Actually, looking more carefully: when we encounter a non-None node, we ALWAYS advance i twice (once for left, once for right), regardless of whether the children are None or not. This is correct for the algorithm IF we properly handle the queue.
+
+But the issue is: when we add children to the queue, we add them as placeholders even if they're None. Then when we pop them later, we check if the VALUE at index i is "#" and create accordingly. But we always advance i.
+
+Wait, that should work for proper BFS reconstruction...
+
+Actually, let me trace through a failing case:
+
+For tree [1, 2, 3, 4]:
+- Serialized: "1,2,3,4" (no trailing #s since they're all filled)
+
+Deserialization:
+- values = ["1", "2", "3", "4"]
+- i=0: root = TreeNode(1), queue=[root], i=1
+- Loop: while queue and i < len(values):
+  - queue.pop(0) = root
+  - Left: values[1]="2" != "#", node.left = TreeNode(2), queue.append(node.left), i=2
+  - Right: values[2]="3" != "#", node.right = TreeNode(3), queue.append(node.right), i=3
+- Loop: while queue and i < len(values):
+  - queue.pop(0) = node.left (TreeNode(2))
+  - Left: values[3]="4" != "#", node.left = TreeNode(4), queue.append(node.left), i=4
+  - Right: i=4 !< 4, skip
+
+Now deserialized tree:
+- root = 1
+- root.left = 2, where 2.left = 4, 2.right = None
+
+Inorder: 4, 2, 1, 3. Preorder: 1, 2, 4, 3. That's [4, 2, 1, 3] and [1, 2, 4, 3].
+
+Original tree for [1, 2, 3, 4]:
+- 1's left = 2, 1's right = 3
+- 2's left = 4, 2's right = None
+
+Inorder: 4, 2, 1, 3. Preorder: 1, 2, 4, 3.
+
+This should work! But wait, what about when we have None nodes in between?
+
+For [1, 2, 3, 4, None, None, None] (tree with gap):
+-     1
+-    / \
+-   2   3
+-  /
+- 4
+
+Serialized: "1,2,3,4"
+
+Wait, the serializer removes trailing # markers. So for [1,2,3,4,None,None,None], the serialized would still be "1,2,3,4" because the # markers at the end are removed.
+
+But wait, that's the bug! The serializer removes trailing # markers, but the deserializer expects them to properly reconstruct the tree shape.
+
+Let me trace with [1, 2, 3, 4, None, None, None]:
+- Values in memory during build: [1, 2, 3, 4, None, None, None]
+- But serialized is "1,2,3,4" (trailing Nones removed)
+- Deserializer gets "1,2,3,4" and tries to reconstruct
+
+Reconstruction:
+- values = ["1", "2", "3", "4"]
+- root = 1, queue=[1], i=1
+- Pop 1: left=2, queue=[2], i=2; right=3, queue=[2,3], i=3
+- Pop 2: left=4, queue=[3,2(left=4)], i=4; right=None (i=4!<
+4, skip)
+
+So we get:
+- root=1, left=2, right=3
+- 2's left=4, 2's right=None
+
+But original tree was:
+- root=1, left=2, right=3
+- 2's left=4, 2's right=None (same!)
+
+Wait, that seems correct? Let me re-check.
+
+Actually, in [1, 2, 3, 4, None, None, None], position 4 is None, position 5 is None, position 6 is None.
+
+But when we serialize [1,2,3,4,None,None,None]:
+- BFS: [1, 2, 3, 4, #, #, #]
+- Remove trailing #: [1, 2, 3, 4]
+
+So serialized = "1,2,3,4".
+
+When we deserialize "1,2,3,4":
+- We reconstruct [1, 2, 3, 4] as level-order
+- But the original had 4 at position 3 (0-indexed), with None at 4, 5, 6
+
+Wait, in a full binary tree stored in level order:
+- Index 0: root
+- Index 1: left child of root
+- Index 2: right child of root
+- Index 3: left child of index 1
+- Index 4: right child of index 1
+- Index 5: left child of index 2
+- Index 6: right child of index 2
+
+So for [1, 2, 3, 4, None, None, None]:
+- Index 0: 1 (root)
+- Index 1: 2 (left child)
+- Index 2: 3 (right child)
+- Index 3: 4 (left child of 2)
+- Index 4: None (right child of 2)
+- Index 5: None (left child of 3)
+- Index 6: None (right child of 3)
+
+Serialized as "1,2,3,4" (trailing Nones removed).
+
+When we deserialize "1,2,3,4", we get:
+- Index 0: 1 (root)
+- Index 1: 2 (left child)
+- Index 2: 3 (right child)
+- Index 3: 4 (left child of 2)
+
+This is wrong! We lost the information that index 4 (right child of 2) should be None.
+
+The bug is that the serializer removes trailing Nones, but the deserializer doesn't know how many Nones were there. It assumes a complete tree or something similar.
+
+But wait, that can't be the bug because the test creates the tree differently.
+
+Actually, looking at the test code:
+
+```python
+def build_tree(values):
+    """Build tree from list (level order). None values are skipped."""
+    if not values:
+        return None
+    root = TreeNode(values[0])
+    queue = [root]
+    i = 1
+    while queue and i < len(values):
+        node = queue.pop(0)
+        if i < len(values) and values[i] is not None:
+            node.left = TreeNode(values[i])
+            queue.append(node.left)
+        i += 1
+        if i < len(values) and values[i] is not None:
+            node.right = TreeNode(values[i])
+            queue.append(node.right)
+        i += 1
+    return root
+```
+
+This build_tree skips None values in the input list! So build_tree([1, 2, 3, 4, None, None, None]) creates the same tree as build_tree([1, 2, 3, 4]) because None values are skipped.
+
+So the test's build_tree creates a "compact" representation that skips Nones.
+
+But the serializer's deserialize should properly reconstruct the tree from the serialized string "1,2,3,4".
+
+Hmm, let me trace through deserialize again more carefully for "1,2,3,4":
+
+values = ["1", "2", "3", "4"]
+
+i=0: root = TreeNode(1), queue=[root], i=1
+
+Loop (queue=[root], i=1 < 4):
+  node = queue.pop(0) = root
+  Left: values[1]="2" != "#", node.left = TreeNode(2), queue.append(node.left), i=2
+  Right: values[2]="3" != "#", node.right = TreeNode(3), queue.append(node.right), i=3
+
+Loop (queue=[TreeNode(2), TreeNode(3)], i=3 < 4):
+  node = queue.pop(0) = TreeNode(2)
+  Left: values[3]="4" != "#", node.left = TreeNode(4), queue.append(node.left), i=4
+  Right: i=4 !< 4, skip
+
+Loop (queue=[TreeNode(3), TreeNode(4)], i=4 !< 4):
+  Exit loop
+
+Final tree:
+- root = 1
+- root.left = 2, where 2.left = 4
+- root.right = 3
+
+Inorder: 4, 2, 1, 3. Preorder: 1, 2, 4, 3.
+
+Original tree (from build_tree([1, 2, 3, 4, None, None, None])):
+- 1's left = 2, 1's right = 3
+- 2's left = 4, 2's right = None (skipped)
+- 3's left = None (skipped), 3's right = None (skipped)
+
+Inorder: 4, 2, 1, 3. Preorder: 1, 2, 4, 3.
+
+These match! So test_simple_tree should pass.
+
+But test_unbalanced_left fails! Let me check that one.
+
+test_unbalanced_left uses [1, 2, None, 3, None].
+
+build_tree([1, 2, None, 3, None]):
+- root = 1, queue=[1], i=1
+- Pop 1: values[1]=2 != None, left=2, queue=[2], i=2
+         values[2]=None, right skipped, i=3
+- Pop 2: queue=[], values[3]=3 != None, left=3, queue=[3], i=4
+         values[4]=None, right skipped, i=5
+
+Tree: 1.left=2, 1.right=None, 2.left=3, 2.right=None
+
+Inorder: 3, 2, 1. Preorder: 1, 2, 3.
+
+Serialized: "1,2,3" (no trailing Nones)
+
+Deserialize "1,2,3":
+- root=1, i=1
+- Pop 1: left=2 (i=2), right=3 (i=3)
+- Pop 2: left=None (i=3!<'#'?? values[3] doesn't exist)
+
+Wait, values[3] is out of bounds for ["1", "2", "3"]! indices are 0,1,2.
+
+Oh! The bug is that deserialize doesn't handle the case where we run out of values in the serialized list. The while condition is `i < len(values)` but when we pop a node from the queue, we try to access values[i] which might be out of bounds even though i < len(values) was true at the start of the iteration.
+
+Actually wait, let me trace deserialize("1,2,3") more carefully:
+
+values = ["1", "2", "3"]
+i=0: root = TreeNode(1), queue=[root], i=1
+
+Loop (queue=[root], i=1 < 3):
+  node = queue.pop(0) = root
+  Left: values[1]="2" != "#", node.left = TreeNode(2), queue.append(node.left), i=2
+  Right: values[2]="3" != "#", node.right = TreeNode(3), queue.append(node.right), i=3
+
+Loop (queue=[TreeNode(2), TreeNode(3)], i=3 !< 3):
+  Exit
+
+Final tree:
+- root=1, root.left=2, root.right=3
+- 2.left=None, 2.right=None
+
+Inorder: 2, 1, 3. Preorder: 1, 2, 3.
+
+Expected:
+- Inorder: 3, 2, 1
+- Preorder: 1, 2, 3
+
+So inorder doesn't match! The bug is that deserialize is creating a different tree shape.
+
+The issue is that the serialized form "1,2,3" is ambiguous. It could be:
+-     1
+-    / \
+-   2   3
+
+Or:
+-   1
+-    \
+-     2
+-      \
+-       3
+
+The serializer produces the first shape (full binary tree), but build_tree for [1, 2, None, 3, None] creates the second shape.
+
+Wait, that can't be right either. Let me re-check build_tree([1, 2, None, 3, None]):
+
+i=1: values[1]=2, create left=2, queue=[2], i=2
+i=2: values[2]=None, skip right, i=3
+i=3: values[3]=3, create left=3 (of node 2), queue=[3], i=4
+i=4: values[4]=None, skip right, i=5
+
+So node 2 has left=3, right=None. Node 3 has no children.
+
+The tree looks like:
+```
+    1
+   /
+  2
+ /
+3
+```
+
+But deserialize of "1,2,3" gives:
+```
+  1
+ / \
+2   3
+```
+
+So the bug is: the serializer doesn't correctly handle trees with gaps (skipped right children where there are further left descendants).
+
+Actually wait, let me check what serialize produces for the tree from build_tree([1, 2, None, 3, None]):
+
+BFS of that tree: [1, 2, None, 3, None, None, None]
+Remove trailing Nones: [1, 2, 3]
+
+So serialize produces "1,2,3".
+
+But deserialize "1,2,3" gives a different tree!
+
+The bug is that the serializer's BFS is wrong, OR the deserializer's BFS is wrong.
+
+Actually, the issue is that BFS with # markers for None doesn't work correctly when you have a skewed tree. The serialize method uses:
+```python
+while queue:
+    node = queue.pop(0)
+    if node is None:
+        result.append("#")
+    else:
+        result.append(str(node.value))
+        queue.append(node.left)
+        queue.append(node.right)
+```
+
+For the skewed tree:
+- queue=[1]
+- Pop 1: result=["1"], queue=[2]
+- Pop 2: result=["1","2"], queue=[3]
+- Pop 3: result=["1","2","3"], queue=[]
+- Remove trailing #: result stays ["1","2","3"]
+
+But wait, when we pop 2, we add its children. 2.left=3, 2.right=None. So queue becomes [3, None].
+
+Pop None: result=["1","2","#"], queue=[3]
+
+Pop 3: result=["1","2","#","3"], queue=[]
+Remove trailing: ["1","2","#","3"]
+
+So serialized should be "1,2,#,3" for the skewed tree!
+
+But the test_serialize produces "1,2,3"! That means the serialize method is also buggy, OR I'm misreading the code.
+
+Actually, let me re-read serialize:
+
+```python
+while queue:
+    node = queue.pop(0)
+    if node is None:
+        result.append("#")
+    else:
+        result.append(str(node.value))
+        queue.append(node.left)
+        queue.append(node.right)
+
+# Remove trailing None/# markers to save space
+while result and result[-1] == "#":
+    result.pop()
+```
+
+So for the skewed tree:
+- queue=[1]
+- Pop 1: result=["1"], queue=[2]
+- Pop 2: result=["1","2"], queue=[3, None] because 2.right=None
+- Pop 3: result=["1","2","#"], queue=[None] because 3.left=None, 3.right=None... wait, we add None twice for each None child
+
+Actually, let me trace more carefully:
+- Start: queue=[1], result=[]
+- Pop 1: node=1, not None. result=["1"]. queue.append(1.left=2), queue.append(1.right=None). queue=[2, None]. result=["1"]
+- Pop 2: node=2, not None. result=["1","2"]. queue.append(2.left=3), queue.append(2.right=None). queue=[None, 3, None]. result=["1","2"]
+- Pop None: node=None. result=["1","2","#"]. queue.append(None.left=None?), no, None has no .left, but we don't check... wait, the code does queue.append(node.left) where node is None! That would crash!
+
+Oh! The bug is that when node is None, we still try to do node.left and node.right! That would raise an AttributeError.
+
+Unless... wait, let me re-read:
+
+```python
+if node is None:
+    result.append("#")
+else:
+    result.append(str(node.value))
+    queue.append(node.left)
+    queue.append(node.right)
+```
+
+So if node is None, we just append "#" and don't append children. So queue doesn't get any None children added for the None node.
+
+But wait, earlier I said for 2.right=None, we append None. Let me re-trace:
+
+After pop 1:
+- node=1, not None
+- result=["1"]
+- queue.append(node.left=2) -> queue=[2]
+- queue.append(node.right=None) -> queue=[2, None]
+
+After pop 2:
+- node=2, not None
+- result=["1","2"]
+- queue.append(node.left=3) -> queue=[None, 3]
+- queue.append(node.right=None) -> queue=[None, 3, None]
+
+After pop None:
+- node=None, is None -> True
+- result=["1","2","#"]
+- queue stays [3, None] because we don't append children for None nodes
+
+After pop 3:
+- node=3, not None
+- result=["1","2","#","3"]
+- queue.append(node.left=None) -> queue=[None, None]
+- queue.append(node.right=None) -> queue=[None, None, None]
+
+After pop None:
+- node=None
+- result=["1","2","#","3","#"]
+
+After pop None:
+- node=None
+- result=["1","2","#","3","#","#"]
+
+After pop None:
+- node=None
+- result=["1","2","#","3","#","#","#"]
+
+Now queue is empty. Loop ends.
+
+result=["1","2","#","3","#","#","#"]
+
+Remove trailing "#"s:
+- pop -> ["1","2","#","3","#","#"]
+- pop -> ["1","2","#","3","#"]
+- pop -> ["1","2","#","3"] (last element is "3")
+
+So serialized = "1,2,#,3"
+
+But the test says serialized = "1,2,3"! And the test passes for simple_tree but fails for unbalanced_left.
+
+Wait, the issue is that the serialize method I traced adds NONE nodes to the queue when we do queue.append(node.left) and node.left is None. Then we process that None node and add "#".
+
+But in the code I wrote, there's a bug: when node is None, we don't add its children. But the test's build_tree creates a tree where None children are simply not set (node.left = None only if values[i] is not None).
+
+So for the skewed tree, the queue never contains None nodes because we only add to queue if we actually create a node!
+
+Oh! I see the issue now. The serialize method correctly handles None nodes in the queue, but the deserialize method has the bug I identified earlier - when we pop a node and it's None (because we added None placeholders), we still advance the index.
+
+But wait, the serialize I wrote doesn't add None placeholders! It only adds actual TreeNode objects:
+
+```python
+if node is None:
+    result.append("#")
+else:
+    result.append(str(node.value))
+    queue.append(node.left)  # This adds None if node.left is None!
+    queue.append(node.right)
+```
+
+So if node.left is None (the Python value None), we DO append None to the queue. Then later we pop that None and add "#".
+
+So my trace is correct. Serialize produces "1,2,#,3" for the skewed tree.
+
+But deserialize of "1,2,#,3" should work if we fix the None-handling bug in deserialize.
+
+Let me trace deserialize("1,2,#,3"):
+
+values = ["1", "2", "#", "3"]
+i=0: root = TreeNode(1), queue=[root], i=1
+
+Loop (queue=[root], i=1 < 4):
+  node = queue.pop(0) = root
+  Left: values[1]="2" != "#", node.left = TreeNode(2), queue.append(node.left), i=2
+  Right: values[2]="#" == "#", node.right = None, queue.append(None), i=3
+
+Loop (queue=[TreeNode(2), None], i=3 < 4):
+  node = queue.pop(0) = TreeNode(2)
+  Left: values[3]="3" != "#", node.left = TreeNode(3), queue.append(node.left), i=4
+  Right: i=4 !< 4, skip
+
+Loop (queue=[None, TreeNode(3)], i=4 !< 4):
+  Exit
+
+Final tree:
+- root=1, root.left=2, root.right=None
+- 2.left=3, 2.right=None
+
+Inorder: 3, 2, 1. Preorder: 1, 2, 3.
+
+This is correct!
+
+So where's the bug? Let me re-check the deserialize code in the actual file.
+
+Oh wait, looking at the code again:
+
+```python
+if node is None:
+    # Still advance index even for null nodes - this is the bug!
+    if i < len(values):
+        i += 1  # BUG: Should not advance if current node is None
+    if i < len(values):
+        i += 1  # BUG: Same here
+    continue
+```
+
+This code advances i even when node is None. But wait, we already advanced i for left and right in the normal path:
+
+```python
+# Left child
+if i < len(values) and values[i] != "#":
+    node.left = TreeNode(int(values[i]))
+    queue.append(node.left)
+else:
+    queue.append(None)
+i += 1
+```
+
+So even if node.left is None, we still do i += 1.
+
+And for the None node case:
+
+```python
+if node is None:
+    if i < len(values):
+        i += 1
+    if i < len(values):
+        i += 1
+    continue
+```
+
+So we advance i twice! But we didn't actually consume any values for the None node's children.
+
+Actually wait, the issue is: when node is None, we shouldn't be processing children at all. But the code advances i twice anyway, which means we're skipping values in the serialized stream.
+
+For deserialize("1,2,#,3"):
+- i=0: root=1, queue=[root], i=1
+- Pop root: left=2 (i=2), right=None marker (i=3), queue=[2, None]
+- Pop 2: left=3 (i=4), right skip, queue=[None, 3]
+- But now i=4 which is out of bounds
+
+Wait, that doesn't match my earlier trace where i advanced differently.
+
+Let me re-read the deserialize code:
+
+```python
+while queue and i < len(values):
+    node = queue.pop(0)
+    
+    if node is None:
+        # Still advance index even for null nodes - this is the bug!
+        if i < len(values):
+            i += 1  # BUG!
+        if i < len(values):
+            i += 1  # BUG!
+        continue
+    
+    # Left child
+    if i < len(values) and values[i] != "#":
+        node.left = TreeNode(int(values[i]))
+        queue.append(node.left)
+    else:
+        queue.append(None)
+    i += 1
+        
+    # Right child
+    if i < len(values) and values[i] != "#":
+        node.right = TreeNode(int(values[i]))
+        queue.append(node.right)
+    else:
+        queue.append(None)
+    i += 1
+```
+
+So when node is None, we advance i twice and continue. But when node is not None, we also advance i twice (once for left, once for right).
+
+The bug is: when node is None, we advance i twice but we didn't actually read any values! So the indices get misaligned.
+
+For example, with "1,2,#,3":
+- values = ["1", "2", "#", "3"]
+- i=0: root=1, queue=[root], i=1
+- Pop root (not None):
+  - left: values[1]="2" != "#", node.left=2, queue=[2], i=2
+  - right: values[2]="#" == "#", queue.append(None), i=3
+- Pop 2 (not None):
+  - left: values[3]="3" != "#", node.left=3, queue=[None, 3], i=4
+  - right: i=4 !< 4, skip
+- Pop None: queue=[3]
+  - i += 1 (i=5)
+  - i += 1 (i=6)
+  - continue
+- Pop 3: queue=[], but i=6 > len(values)
+
+Wait, but we exit the loop when queue is empty or i >= len(values). After popping 2, queue=[None, 3], i=4. i >= len(values) is True (4 >= 4), so we exit the loop.
+
+So we never pop None and never pop 3!
+
+But the tree is wrong because we only processed 1, 2, 3's left child but not 3 itself properly.
+
+Actually, 3 was added to queue but we exited before processing it.
+
+Hmm, but the test expects inorder [3, 2, 1] and preorder [1, 2, 3]. If we never process 3, we can't get that.
+
+Wait, in my trace above, we did process 3's left (which is None) but not 3 itself as a node with a value.
+
+Actually, I think I need to run the code to see what actually happens.
+
+Let me just write a simpler test case. For "1,2,3":
+- i=0: root=1, queue=[1], i=1
+- Pop 1: left=2 (i=2), right=3 (i=3), queue=[2, 3]
+- Pop 2: left=skip (i=3 >= 3), queue=[3]
+- Pop 3: queue=[]
+
+Final tree: root=1, left=2, right=3. 2 has no children. 3 has no children.
+
+Inorder: 2, 1, 3. But expected is [3, 2, 1] for the skewed tree.
+
+So the issue is that "1,2,3" is ambiguous. It could mean:
+- 1's left=2, right=3 (full tree, no Nones)
+- 1's left=2, 2's left=3 (skewed tree)
+
+The serializer produces "1,2,3" for the full tree [1,2,3], but the test expects it to work for the skewed tree which should serialize to "1,2,#,3".
+
+But the test calls serialize on the skewed tree and gets "1,2,3" according to the comment!
+
+Oh wait, the test comment says:
+```python
+serialized = TreeSerializer.serialize(root)
+print(f"Serialized: {serialized}")
+```
+
+So serialize is called and it prints the result. If it printed "1,2,3", then that's what serialize produced.
+
+But according to my trace, serialize for the skewed tree should produce "1,2,#,3".
+
+Unless... the skewed tree's serialize produces "1,2,3" because of how the queue works.
+
+Let me re-trace the serialize with the ACTUAL tree structure from build_tree([1, 2, None, 3, None]):
+
+In this tree:
+- root.left = node(2)
+- root.right = None
+- node(2).left = node(3)
+- node(2).right = None
+- node(3).left = None
+- node(3).right = None
+
+Now serialize:
+- queue = [node(1)]
+- Pop node(1): result=["1"], queue.append(node(1).left=node(2)), queue.append(node(1).right=None)
+  - queue = [node(2), None]
+- Pop node(2): result=["1","2"], queue.append(node(2).left=node(3)), queue.append(node(2).right=None)
+  - queue = [None, node(3), None]
+- Pop None: result=["1","2","#"], we don't add children for None
+  - queue = [node(3), None]
+- Pop node(3): result=["1","2","#","3"], queue.append(node(3).left=None), queue.append(node(3).right=None)
+  - queue = [None, None, None]
+- Pop None: result=["1","2","#","3","#"]
+- Pop None: result=["1","2","#","3","#","#"]
+- Pop None: result=["1","2","#","3","#","#","#"]
+
+After removing trailing #: ["1","2","#","3"]
+
+So serialize SHOULD produce "1,2,#,3".
+
+But the test expects different behavior? Let me re-check the test comment:
+```python
+#     1
+#    /
+#   2
+#  /
+# 3
+root = build_tree([1, 2, None, 3, None])
+
+serialized = TreeSerializer.serialize(root)
+print(f"Serialized: {serialized}")
+```
+
+It just prints, doesn't assert. So the output would be "1,2,#,3".
+
+Then deserialize is called and it reconstructs... but with the bug.
+
+Let me trace deserialize("1,2,#,3") with the buggy code:
+
+values = ["1", "2", "#", "3"]
+i=0: root = TreeNode(1), queue=[root], i=1
+
+Loop (queue=[root], i=1 < 4):
+  node = queue.pop(0) = root (not None)
+  Left: values[1]="2" != "#", node.left = TreeNode(2), queue.append(node.left), i=2
+  Right: values[2]="#" == "#", node.right = None, queue.append(None), i=3
+
+Loop (queue=[TreeNode(2), None], i=3 < 4):
+  node = queue.pop(0) = TreeNode(2) (not None)
+  Left: values[3]="3" != "#", node.left = TreeNode(3), queue.append(node.left), i=4
+  Right: i=4 !< 4, skip, but still i += 1? No wait, the code says:
+    ```python
+    if i < len(values) and values[i] != "#":
+        ...
+    else:
+        queue.append(None)
+    i += 1
+    ```
+    So even if we skip, we do i += 1. But i=4 already, so i += 1 would be 5.
+
+Wait, the condition is checked BEFORE i += 1. So if i < len(values) is False (i=4, len=4), we go to else, queue.append(None), then i += 1 makes i=5.
+
+Loop (queue=[None, TreeNode(3)], i=5 !< 4):
+  Exit loop!
+
+So we never process the None and we never process TreeNode(3) properly!
+
+Final tree:
+- root=1, left=2, right=None
+- 2.left=3, 2.right=None
+- 3.left=None, 3.right=None
+
+Inorder: 3, 2, 1. Preorder: 1, 2, 3.
+
+This is correct! So why does the test fail?
+
+Wait, in my trace, when we process node(2), we process left=3 at values[3]="3", and we don't process right because i=4 >= 4.
+
+But then queue becomes [None, TreeNode(3)]. When we pop None, we advance i twice (to 7), but we never process TreeNode(3) because i=5 >= 4 and we exit.
+
+But wait, the tree structure IS correct (1->2->3), and the inorder and preorder are correct!
+
+So maybe the test passes for that case?
+
+Let me check test_simple_tree which should definitely fail:
+
+test_simple_tree uses [1, 2, 3] (full tree):
+- 1's left=2, 1's right=3
+- 2 and 3 have no children
+
+Serialize of this:
+- queue=[1]
+- Pop 1: result=["1"], queue=[2, 3]
+- Pop 2: result=["1","2"], queue=[3, None, None]
+- Pop 3: result=["1","2","3"], queue=[None, None, None, None]
+- Pop None x4: result=["1","2","3","#","#","#","#"]
+- Remove trailing #: ["1","2","3"]
+
+So serialize produces "1,2,3".
+
+Deserialize "1,2,3":
+- values=["1","2","3"]
+- i=0: root=1, queue=[1], i=1
+- Pop 1: left=2 (i=2), right=3 (i=3), queue=[2,3]
+- Pop 2: left=skip (i=3 >= 3), queue=[3]
+- Pop 3: queue=[]
+
+Tree: 1.left=2, 1.right=3. Same as original.
+
+Inorder: 2, 1, 3. Preorder: 1, 2, 3.
+
+This is correct!
+
+So test_simple_tree should pass.
+
+But the problem says there's a bug that causes "node order on deserialization" to be lost.
+
+Let me think about what "loses node order" means...
+
+Actually, wait. The issue might be with the test_unbalanced_right test:
+
+```python
+def test_unbalanced_right():
+    """Test serialization of right-heavy tree."""
+    #   1
+    #    \
+    #     2
+    #      \
+    #       3
+    root = build_tree([1, None, 2, None, 3])
+```
+
+build_tree([1, None, 2, None, 3]):
+- root=1, queue=[1], i=1
+- Pop 1: values[1]=None, skip left, i=2
+         values[2]=2, right=2, queue=[2], i=3
+- Pop 2: values[3]=None, skip left, i=4
+         values[4]=3, right=3, queue=[3], i=5
+
+Tree: 1.right=2, 2.right=3.
+
+Serialize:
+- queue=[1]
+- Pop 1: result=["1"], queue=[None, 2]
+- Pop None: result=["1","#"], queue=[2]
+- Pop 2: result=["1","#","2"], queue=[None, 3]
+- Pop None: result=["1","#","2","#"], queue=[3]
+- Pop 3: result=["1","#","2","#","3"], queue=[None, None]
+- Pop None x2: result=["1","#","2","#","3","#","#"]
+- Remove trailing #: ["1","#","2","#","3"]
+
+Serialized: "1,#,2,#,3"
+
+Deserialize "1,#,2,#,3":
+- values=["1","#","2","#","3"]
+- i=0: root=1, queue=[1], i=1
+- Pop 1: left="#" (None), queue=[None], i=2
+        right="2" (not None), node.right=2, queue=[None, 2], i=3
+- Pop None: i+=1 (i=4), i+=1 (i=5), continue
+- Pop 2: left="#" (None), queue=[None], i=6 (out of bounds)
+        right="3" (not None)... wait values[6] doesn't exist
+
+Actually at i=5 with len=5, i < len is False, so we skip and do i+=1 to make i=6.
+
+Hmm, let me trace more carefully.
+
+Actually wait, I think I see the issue now. When we have a skewed right tree, the serialized string has # markers in between values. But when we deserialize, we process the queue in BFS order. The issue is that the # markers in the serialized string don't correspond to actual None nodes in the tree structure - they correspond to ABSENT children.
+
+For a right-skewed tree:
+```
+  1
+   \
+    2
+     \
+      3
+```
+
+The level order with markers is: [1, #, 2, #, 3, #, #]
+Or in string form: "1,#,2,#,3"
+
+But when we deserialize, we treat each position in the serialized array as corresponding to a position in the complete binary tree. So:
+- index 0: 1 (root)
+- index 1: # (left child of 1) -> None
+- index 2: 2 (right child of 1)
+- index 3: # (left child of 2) -> None
+- index 4: 3 (right child of 2)
+- index 5: # (left child of 3)
+- index 6: # (right child of 3)
+
+But the serialized string "1,#,2,#,3" only has 5 elements! It was trimmed to remove trailing #s.
+
+So when we deserialize "1,#,2,#,3", we get:
+- index 0: 1
+- index 1: # (which we interpret as None)
+- index 2: 2
+- index 3: #
+- index 4: 3
+
+But we lost indices 5 and 6! So we think 3 has no children, but actually it might have had children that were trimmed.
+
+But more importantly, the BFS queue-based deserialization doesn't correctly handle the fact that # markers indicate absent children at specific positions.
+
+Actually, let me re-think. The standard way to serialize a binary tree with None markers is to do BFS and include # for each None child. Then when deserializing, we use the BFS queue approach.
+
+For "1,#,2,#,3" (after trimming trailing #s from "1,#,2,#,3,#,#"):
+- We reconstruct:
+  - root = 1
+  - For 1's left: # -> None
+  - For 1's right: 2
+  - For 2's left: # -> None
+  - For 2's right: 3
+  - For 3's left: missing, but we might have trailing #s removed
+
+But the issue is that when we pop nodes from the queue, we process them in a specific order, and the # markers we read from values[] don't correspond to the positions we expect.
+
+Actually, I think the bug is that the deserialization assumes a specific relationship between queue position and values[] index, but the presence of # markers breaks this assumption.
+
+For the right-skewed tree, the serialized string has # markers at positions 1 and 3. But when we process the queue:
+1. Pop root (1). Process left (#), right (2). queue=[#, 2]
+2. Pop #. But # in the queue means "this node is None", so we should skip its children entirely. But the code still advances i for #, which is wrong!
+
+That's the bug! When we encounter a # marker in the queue (because we added it as a placeholder), we should NOT advance the values index when processing it. We should just continue.
+
+But in the current code, when node is None (from queue), we do:
+```python
+if node is None:
+    if i < len(values):
+        i += 1
+    if i < len(values):
+        i += 1
+    continue
+```
+
+This advances i TWICE even though we didn't consume any actual node values! The # marker in the queue corresponds to NO position in the values array because it was already consumed when we processed the parent's children.
+
+Wait, no. The # was added to queue when we processed the parent's left or right child. So when we pop it from queue, we shouldn't read more values.
+
+Let me trace "1,#,2,#,3" again:
+
+values = ["1", "#", "2", "#", "3"]
+
+i=0: root = TreeNode(1), queue=[root], i=1
+
+Pop root (not None):
+  Left: values[1]="#" == "#", node.left = None, queue.append(None), i=2
+  Right: values[2]="2" != "#", node.right = TreeNode(2), queue.append(2), i=3
+
+Pop None (the left child of root):
+  # BUG: We advance i twice even though we didn't read values
+  i=3 (2+1)
+  i=4 (3+1)
+  continue
+
+Pop TreeNode(2):
+  Left: values[4]="3" != "#", node.left = TreeNode(3), queue.append(3), i=5
+  Right: i=5 >= len(values)=5, skip, i=6
+
+Pop TreeNode(3):
+  queue=[]
+
+Final tree:
+- root=1, left=None, right=2
+- 2.left=3, 2.right=None
+
+Inorder: 1, 3, 2. Preorder: 1, 2, 3.
+
+Expected inorder for right-skewed tree [1,None,2,None,3]: 1, 2, 3.
+Expected preorder: 1, 2, 3.
+
+So inorder is wrong! We got 1, 3, 2 instead of 1, 2, 3.
+
+The bug is confirmed: when we pop a None node from the queue, we shouldn't advance i because the # marker was already consumed when we processed its parent's child assignment.
+
+Actually wait, let me re-check my trace. When we processed root's left child:
+- values[1]="#", so we set node.left = None and queue.append(None).
+- Then we did i += 1, making i=2.
+
+So the # at values[1] was consumed when processing root's left child. When we later pop the None from queue, we shouldn't consume any more values.
+
+But the bug code does:
+```python
+if node is None:
+    if i < len(values):
+        i += 1  # WRONG! This consumes values we shouldn't
+    if i < len(values):
+        i += 1  # WRONG!
+    continue
+```
+
+So at i=2 (after processing root), we pop None and advance to i=4, effectively skipping values[2]="2" and values[3]="#"!
+
+That's why the tree is wrong.
+
+The fix: when node is None (from queue), we should NOT advance i. We should just continue.
+
+```python
+if node is None:
+    continue  # Don't advance i, the # was already consumed
+```
+
+This is the bug and the fix.

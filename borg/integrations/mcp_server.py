@@ -18,6 +18,7 @@ Zero imports from tools.* or guild_mcp.* — uses only borg.core.* and borg.inte
 
 from __future__ import annotations
 
+import contextvars
 import json
 import logging
 import os
@@ -31,34 +32,42 @@ logging.basicConfig(stream=sys.stderr, level=logging.WARNING)
 
 from borg.core.traces import TraceCapture, save_trace
 
-# Global trace capture state — one capture per MCP server session
-_trace_capture: Optional[TraceCapture] = None
+# Thread-safe session tracking via contextvars
+_current_session_id: contextvars.ContextVar[str] = contextvars.ContextVar('session_id', default='')
+_current_agent_id: contextvars.ContextVar[str] = contextvars.ContextVar('agent_id', default='unknown')
+
+# Global trace captures — one per session_id
+_trace_captures: Dict[str, TraceCapture] = {}
 
 # Counter for run_maintenance invocations
 _feedback_invocation_count: int = 0
 _MAINTENANCE_INTERVAL: int = 10  # Run maintenance every N feedback calls
 
 
-def init_trace_capture(task: str = "", agent_id: str = ""):
-    """Initialize trace capture for a new session."""
-    global _trace_capture
-    _trace_capture = TraceCapture(task=task, agent_id=agent_id)
+def init_trace_capture(session_id: str, task: str = "", agent_id: str = ""):
+    """Initialize trace capture for a session."""
+    global _trace_captures
+    _trace_captures[session_id] = TraceCapture(task=task, agent_id=agent_id)
 
 
 def _feed_trace_capture(tool_name: str, args: Dict[str, Any], result: str):
-    """Accumulate a tool call into the active trace capture."""
-    global _trace_capture
-    if _trace_capture is None:
-        return  # No active capture
-    _trace_capture.on_tool_call(tool_name, args, result)
+    """Accumulate a tool call into the active trace capture for the current session."""
+    session_id = _current_session_id.get()
+    if not session_id:
+        return  # No active session
+    global _trace_captures
+    capture = _trace_captures.get(session_id)
+    if capture is None:
+        return  # No active capture for this session
+    capture.on_tool_call(tool_name, args, result)
 
     # Auto-save at 45 calls (before agent wastes more tokens)
-    if _trace_capture.tool_calls >= 45:
-        if _trace_capture.task:  # Only save if we have a task
-            trace = _trace_capture.extract_trace(outcome="auto_truncated")
+    if capture.tool_calls >= 45:
+        if capture.task:  # Only save if we have a task
+            trace = capture.extract_trace(outcome="auto_truncated")
             if trace["tool_calls"] > 5:
                 save_trace(trace)
-        _trace_capture = None  # Reset
+        del _trace_captures[session_id]
 
 # ---------------------------------------------------------------------------
 # Tool definitions (MCP schema)
@@ -196,6 +205,14 @@ TOOLS: List[Dict[str, Any]] = [
                 "session_id": {
                     "type": "string",
                     "description": "Active session ID from guild_apply_start (for checkpoint/complete)",
+                },
+                "ab_test": {
+                    "type": "object",
+                    "description": "A/B test info if selected pack is a variant (for action='start')",
+                    "properties": {
+                        "test_id": {"type": "string"},
+                        "variant": {"type": "string"},
+                    },
                 },
                 "phase_name": {
                     "type": "string",
@@ -642,12 +659,16 @@ def borg_search(query: str = "", mode: str = "text", task_context: Dict[str, Any
             # Format results to match expected MCP response format
             matches = []
             for r in results:
-                matches.append({
+                match_item = {
                     "pack_id": r.get("pack_id", r.get("name", "")),
                     "name": r.get("name", ""),
                     "category": r.get("category", r.get("problem_class", "")),
                     "score": r.get("score", 0.0),
-                })
+                }
+                # Pass through A/B test info if present
+                if r.get("ab_test"):
+                    match_item["ab_test"] = r["ab_test"]
+                matches.append(match_item)
 
             return json.dumps({
                 "success": True,
@@ -837,6 +858,7 @@ def borg_apply(
     status: str = "",
     evidence: str = "",
     outcome: str = "",
+    ab_test: dict = None,
 ) -> str:
     """Execute a borg pack with session tracking (start / checkpoint / complete)."""
     try:
@@ -845,9 +867,6 @@ def borg_apply(
         if action == "start":
             if not pack_name or not task:
                 return json.dumps({"success": False, "error": "pack_name and task are required for action=start"})
-
-            # Initialize trace capture for this task
-            init_trace_capture(task=task, agent_id="")
 
             # Load pack
             BORG_DIR = Path(os.getenv("HERMES_HOME", Path.home() / ".hermes")) / "guild"
@@ -864,6 +883,15 @@ def borg_apply(
             import uuid
             from datetime import datetime, timezone
             session_id = str(uuid.uuid4())[:8]
+
+            # Set session context for thread-safe trace access before initializing trace
+            _current_session_id.set(session_id)
+
+            # Get agent_id from MCP initialize context (defaults to 'unknown')
+            agent_id = _current_agent_id.get()
+
+            # Initialize trace capture for this session
+            init_trace_capture(session_id, task=task, agent_id=agent_id)
 
             phases = pack_data.get("phases", [])
             session: Dict[str, Any] = {
@@ -883,6 +911,9 @@ def borg_apply(
                 "phase_results": [],
                 "approved": False,
             }
+            # Store A/B test variant selection if provided
+            if ab_test:
+                session["selected_variant"] = ab_test
             session_module.register_session(session)
             session_module.save_session(session)
 
@@ -1048,13 +1079,22 @@ def borg_feedback(
         task_context: V3 task context dict for outcome recording (V3 parameter).
     """
     try:
-        # Finalize any active trace capture
-        global _trace_capture
-        if _trace_capture is not None:
-            if _trace_capture.tool_calls > 5:
-                trace = _trace_capture.extract_trace(outcome="success")
+        # Set session context for thread-safe trace access
+        _current_session_id.set(session_id)
+
+        # Finalize any active trace capture for this session
+        session_id_from_ctx = _current_session_id.get()
+        global _trace_captures
+        capture = _trace_captures.get(session_id_from_ctx)
+        if capture is not None:
+            if capture.tool_calls > 5:
+                trace = capture.extract_trace(
+                    outcome="success",
+                    root_cause=what_changed[:200] if what_changed else "",
+                    approach_summary=where_to_reuse[:200] if where_to_reuse else ""
+                )
                 save_trace(trace)
-            _trace_capture = None
+            del _trace_captures[session_id_from_ctx]
 
         import uuid
         import yaml
@@ -1148,6 +1188,7 @@ def borg_feedback(
                     tokens_used=tokens_used,
                     time_taken=time_taken,
                     agent_id=agent_id,
+                    session_id=session_id,
                 )
             except Exception:
                 # Never let V3 recording break feedback generation
@@ -1298,9 +1339,6 @@ def borg_observe(task: str = "", context: str = "", context_dict: dict = None, p
         if not task:
             return ""
 
-        # Initialize trace capture for this task
-        init_trace_capture(task=task)
-
         # Normalize context_dict
         eval_context = context_dict or {}
 
@@ -1319,16 +1357,37 @@ def borg_observe(task: str = "", context: str = "", context_dict: dict = None, p
             # Fallback keywords for common task types
             search_terms = ["debug"]
 
-        # Search with extracted keywords using text mode (no embeddings needed)
+        # ITEM 3.3: Use V3 search path when context_dict provides rich error context.
+        # This properly forwards error_type to classify_task for better task classification.
         all_matches = []
-        for term in search_terms:
-            search_result = _core_search(term, mode="text")
+        if context_dict and isinstance(context_dict, dict) and (context_dict.get("error_type") or context_dict.get("error_message")):
             try:
-                parsed = json.loads(search_result)
-                if parsed.get("success") and parsed.get("matches"):
-                    all_matches.extend(parsed["matches"])
-            except (json.JSONDecodeError, TypeError):
-                continue
+                v3 = _get_borg_v3()
+                keywords = _extract_keywords(task) if task else []
+                task_type = search_terms[0] if search_terms else ""
+                task_context = {
+                    "task_type": task_type,
+                    "keywords": keywords,
+                    "error_type": context_dict.get("error_type", ""),
+                    "error_message": context_dict.get("error_message", ""),
+                    "attempts": context_dict.get("attempts", 0),
+                }
+                v3_results = v3.search(task, task_context=task_context)
+                if v3_results:
+                    all_matches = v3_results
+            except Exception:
+                pass  # Fall back to V2 search below
+
+        # V2 search fallback (or if no rich context available)
+        if not all_matches:
+            for term in search_terms:
+                search_result = _core_search(term, mode="text")
+                try:
+                    parsed = json.loads(search_result)
+                    if parsed.get("success") and parsed.get("matches"):
+                        all_matches.extend(parsed["matches"])
+                except (json.JSONDecodeError, TypeError):
+                    continue
 
         if not all_matches:
             return ""
@@ -2243,6 +2302,9 @@ def handle_request(request: Dict[str, Any]) -> Optional[Dict[str, Any]]:
     params = request.get("params", {})
 
     if method == "initialize":
+        # Extract agent_id from params if provided
+        agent_id = params.get("agent_id", "unknown")
+        _current_agent_id.set(agent_id)
         return make_response(req_id, {
             "protocolVersion": "2024-11-05",
             "serverInfo": SERVER_INFO,

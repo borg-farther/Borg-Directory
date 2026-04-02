@@ -1,0 +1,16 @@
+# TASK-024: Hash Table Resize Bug
+
+## Problem Description
+A hash table implementation has a resize function that's supposed to rehash all existing entries into the new bucket array. However, the resize function creates new empty buckets but doesn't copy the old entries over, causing data loss when a resize occurs.
+
+## Your Task
+Fix the bug in the `_resize` method in `hash_table.py`.
+
+## Files
+- `hash_table.py` - The hash table implementation with a bug in resize
+
+## Expected Behavior
+When running `python3 hash_table.py`, all tests should pass. Data should be preserved across resizes.
+
+## Hint
+Look at the `_resize` method. It creates a new bucket array with the new capacity, but what happens to the old entries?

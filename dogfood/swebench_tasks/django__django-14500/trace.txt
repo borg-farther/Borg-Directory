@@ -1,0 +1,11 @@
+REASONING TRACE FOR: django__django-14500
+
+HINTS FROM BUG DISCUSSION:
+While working on #24800 I realized that the issue is actually not fully correct. The squashed migration is not marked as applied.
+PR: ​https://github.com/django/django/pull/5280
+The commit this depends on is moved to "Work in progress" status, so moving this off the checkin queue.
+Updated ticket, since original PR was closed.
+"Has patch + Patch needs improvement" is the correct status.
+
+Note: These hints are from the original bug discussion and may contain 
+insights about the root cause, proposed approaches, and potential pitfalls.

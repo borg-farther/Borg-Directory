@@ -32,6 +32,8 @@ class FeedbackSignal:
     value: bool  # True = success, False = failure
     timestamp: datetime
     task_context: Optional[Dict[str, Any]] = None
+    quality_score: float = 0.5  # quality ∈ [0, 1], default neutral
+    success_rate_trend: float = 0.0  # trend ∈ [-1, 1], default neutral drift
 
 
 @dataclass
@@ -561,4 +563,12 @@ class FeedbackLoop:
 
     def get_signals_for_pack(self, pack_id: str) -> List[FeedbackSignal]:
         """Get all signals for a specific pack."""
+        return self.aggregator.get_signals(pack_id)
+
+    def get_signals(self, pack_id: str) -> List[FeedbackSignal]:
+        """Get all signals for a specific pack (alias for get_signals_for_pack).
+
+        This method is used by ContextualSelector.feedback_signal_boost()
+        to compute multiplicative boosts from FeedbackLoop signals.
+        """
         return self.aggregator.get_signals(pack_id)

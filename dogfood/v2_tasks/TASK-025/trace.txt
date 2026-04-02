@@ -1,0 +1,56 @@
+# Reasoning Trace for TASK-025
+
+## Initial Observation
+The test `test_multiline_logs` fails because continuation lines are not being properly joined to their parent log entry.
+
+## Analysis
+Looking at `parse_logs_with_continuation`, the issue is in how continuation lines are detected:
+
+```python
+continuation_text = log_text[match.end():next_start].strip()
+if continuation_text:
+    lines = continuation_text.split('\n')
+    for line in lines:
+        if line.strip() and line.startswith((' ', '\t')):
+            message += '\n' + line
+```
+
+## Key Insight
+The bug is using `strip()` on `continuation_text` BEFORE splitting into lines. This removes leading and trailing whitespace from the entire block, which can cause issues when:
+1. The continuation lines are at the beginning of the block (after `match.end()`)
+2. The trailing whitespace that might indicate formatting is lost
+
+But more importantly, the issue is that when we do `continuation_text.split('\n')`, the first line might be empty or just whitespace (the gap between the log line and the continuation). We then check if subsequent lines start with whitespace.
+
+Actually, the real bug: `strip()` removes leading whitespace from the ENTIRE continuation text. Then when we split by '\n', the continuation lines have already lost their leading whitespace!
+
+## Trace Example
+For the log:
+```
+2024-01-15 10:30:01 [ERROR] Connection failed:
+    could not connect to host
+    retrying in 5 seconds
+```
+
+- First match ends at "Connection failed:"
+- `continuation_text` = "\n    could not connect to host\n    retrying in 5 seconds\n2024-01-15 10:30:02"
+- After `.strip()`: "could not connect to host\n    retrying in 5 seconds\n2024-01-15 10:30:02"
+- The leading "    " from the first continuation line is gone!
+- So the check `line.startswith((' ', '\t'))` fails for the first line
+
+## The Fix
+Don't use `strip()` on the continuation text before processing, or use a different approach to extract continuation lines that preserves their leading whitespace.
+
+Actually, the simplest fix is to NOT strip the continuation_text, or to strip each LINE individually instead of the whole block:
+
+```python
+continuation_text = log_text[match.end():next_start]
+if continuation_text:
+    lines = continuation_text.split('\n')
+    for line in lines:
+        stripped = line.strip()
+        if stripped and line.startswith((' ', '\t')):
+            message += '\n' + line
+```
+
+Or even simpler: check the raw line before stripping.

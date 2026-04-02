@@ -1,0 +1,13 @@
+REASONING TRACE FOR: Interval merge boundary bug
+
+PROBLEM DECOMPOSITION:
+- The overlap check uses start < last_end
+- Adjacent intervals have start == last_end, which fails the < check
+
+KEY INSIGHT:
+- Change < to <= so that start == last_end counts as overlapping
+- (1,3) and (3,5) should merge because they touch at point 3
+
+PITFALLS:
+- Make sure non-adjacent intervals (1,2) and (4,5) still don't merge
+- The <= change is a one-character fix but easy to miss

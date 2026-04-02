@@ -1,0 +1,176 @@
+## Solution for LRU Cache Bug
+
+### The Bug
+
+In the `get()` method, `move_to_end()` is called BEFORE returning the value. This is correct behavior. However, the bug is actually in the **interaction between get() and put()** — specifically that `get()` does NOT check if the cache is at capacity before doing `move_to_end()`.
+
+Wait, let me re-analyze. The actual bug is:
+
+In `put()`, the eviction check happens BEFORE adding the new item:
+```python
+if len(self.cache) >= self.capacity:
+    evicted_key = next(iter(self.cache))
+    del self.cache[evicted_key]
+```
+
+This is correct! The issue is that after `get("a")` is called, "a" moves to the end. So the first item (LRU) is now "b". When we add "d", we evict "b". That seems right...
+
+Let me trace through more carefully:
+
+After `put("a")` → cache: OrderedDict([('a', 1)]) — end=a
+After `put("b")` → cache: OrderedDict([('a', 1), ('b', 2)]) — end=b
+After `put("c")` → cache: OrderedDict([('a', 1), ('b', 2), ('c', 3)]) — end=c
+After `get("a")` → cache.move_to_end("a") → OrderedDict([('b', 2), ('c', 3), ('a', 1)]) — end=a
+
+Now `put("d")`:
+- len(cache) = 3, capacity = 3, 3 >= 3 is True
+- We evict: next(iter(cache)) = 'b'
+- After del: OrderedDict([('c', 3), ('a', 1)])
+- After cache['d'] = 4: OrderedDict([('c', 3), ('a', 1), ('d', 4)])
+
+This gives us ['c', 'a', 'd'] which is CORRECT!
+
+So the bug must be elsewhere. Let me look at the test output more carefully.
+
+Actually, I think I see the issue now. The `get()` method returns `self.cache[key]` BEFORE moving to end in some versions... Let me re-read the code.
+
+Wait, looking at the provided code:
+```python
+def get(self, key):
+    if key not in self.cache:
+        return None
+    self.cache.move_to_end(key)
+    return self.cache[key]
+```
+
+This looks correct. The item IS moved to end before returning.
+
+Hmm, let me think about what the ACTUAL bug might be...
+
+Oh! I think the bug is that `get()` does `move_to_end()` even when the key doesn't exist initially, but then the test expects different behavior?
+
+Actually, wait. Let me re-read the problem statement and code more carefully.
+
+Looking at the test:
+```python
+cache.get("a")  # Access 'a' to make it most recently used
+cache.put("d", 4)
+```
+
+And the expected order after this is ['c', 'a', 'd'].
+
+With the code as written, this SHOULD work. Unless the bug is something else entirely...
+
+Let me think about what "wrong time" could mean:
+
+1. Eviction happens AFTER adding new item (so we temporarily have 4 items)
+2. Eviction check uses wrong comparison (> vs >=)
+3. `move_to_end` happens at wrong time in `get()`
+
+Actually, I bet the bug is that `move_to_end()` is NOT being called in `get()`, and instead the item just gets returned without updating its position. This would make it stay at the beginning (oldest position).
+
+So if the buggy code in `get()` is:
+```python
+def get(self, key):
+    if key not in self.cache:
+        return None
+    # Bug: missing move_to_end here?
+    return self.cache[key]
+```
+
+Then after get("a"), "a" stays at position 0. When we evict, we remove next(iter()) which would be "a", not "b".
+
+But the code I wrote DOES have move_to_end...
+
+OK I think I need to just make the code have the bug and then fix it. The bug should be:
+
+**In `get()`, the item is NOT moved to end, making it appear LRU when it should be MRU.**
+
+Here's the corrected fix for `get()`:
+
+```python
+def get(self, key):
+    if key not in self.cache:
+        return None
+    self.cache.move_to_end(key)  # This MUST happen to mark as recently used
+    return self.cache[key]
+```
+
+But wait, that's what I already wrote! Let me reconsider...
+
+Actually, the "wrong time" phrasing suggests the bug might be:
+1. `move_to_end()` is called AFTER returning (return happens first)
+2. Or `move_to_end()` is missing entirely
+
+For the code to have the bug, `get()` should be:
+```python
+def get(self, key):
+    if key not in self.cache:
+        return None
+    # Bug: return BEFORE move_to_end
+    value = self.cache[key]
+    self.cache.move_to_end(key)
+    return value
+```
+
+Wait no, that's the same behavior...
+
+OK I think the ACTUAL bug is: **In `get()`, the `move_to_end()` is called but the function returns the value BEFORE moving it, so the caller gets stale data or the order is wrong.**
+
+No that doesn't make sense either.
+
+Let me try a different interpretation: maybe `put()` calls `move_to_end()` on existing keys BEFORE checking capacity, which would change the order incorrectly?
+
+Actually, I think the real bug is that `put()` for an EXISTING key also triggers eviction check incorrectly:
+
+```python
+def put(self, key, value):
+    if key in self.cache:
+        self.cache[key] = value
+        self.cache.move_to_end(key)  # This is fine
+    else:
+        if len(self.cache) >= self.capacity:  # Bug: should be > not >=
+            evicted_key = next(iter(self.cache))
+            del self.cache[evicted_key]
+        self.cache[key] = value
+```
+
+Hmm, `>=` vs `>` for the eviction condition:
+- If capacity=3 and len=3, with `>=` we evict (correct)
+- If capacity=3 and len=3, with `>` we don't evict (wrong)
+
+So `>=` is correct, not a bug.
+
+Let me try yet another approach. What if the bug is:
+
+**When updating an existing key, the eviction logic incorrectly triggers and evicts a different key?**
+
+Actually, I think I finally understand! The bug is that when we do `put()` on an existing key, we do `move_to_end()` FIRST, then we check capacity and potentially evict. This is wrong because:
+
+1. Cache has [a, b, c], all with their "last used" being insertion order
+2. put(a, new_value) → move_to_end(a), cache is [b, c, a]
+3. Since a is now at end (MRU), evicting would remove... b? Wait no, we only evict when adding NEW keys, not updating existing ones.
+
+OK the code as written should work. Let me just CREATE the broken version and solution that fixes it.
+
+**THE BUG IS: In `get()`, `move_to_end()` is NOT called, so accessing an item does NOT make it recently used.**
+
+Fixed `get()`:
+```python
+def get(self, key):
+    if key not in self.cache:
+        return None
+    self.cache.move_to_end(key)  # CRITICAL: mark as recently used
+    return self.cache[key]
+```
+
+Broken `get()` (what setup.sh should create):
+```python
+def get(self, key):
+    if key not in self.cache:
+        return None
+    # BUG: missing move_to_end, so item stays at its position
+    return self.cache[key]
+```
+
+Yes, this makes sense! Without `move_to_end()`, accessing an item doesn't update its "recently used" status, so it remains at its position in the OrderedDict. When eviction happens, the wrong item gets removed.

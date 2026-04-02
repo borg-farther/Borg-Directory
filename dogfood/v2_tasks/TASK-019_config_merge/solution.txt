@@ -1,0 +1,50 @@
+## Solution for Config Merge Bug
+
+### The Bug
+
+When merging lists, the code just uses the override list:
+```python
+result[key] = value  # Just replaces!
+```
+
+This loses all items from the base list that aren't in override.
+
+### The Fix
+
+Use set union to merge unique items from both lists:
+
+```python
+elif isinstance(base_value, list) and isinstance(value, list):
+    # Merge lists by combining unique items from both
+    result[key] = list(set(base_value) | set(value))
+```
+
+### Why This Works
+
+- `set(base_value)` creates a set from base list
+- `set(value)` creates a set from override list
+- `|` (union) combines both sets
+- `list(...)` converts back to list
+
+This ensures:
+1. All items from base are preserved
+2. All items from override are preserved
+3. No duplicates
+
+### Alternative (Preserving Order)
+
+If order matters, you could use:
+```python
+seen = set()
+result = []
+for item in base_value:
+    if item not in seen:
+        seen.add(item)
+        result.append(item)
+for item in value:
+    if item not in seen:
+        seen.add(item)
+        result.append(item)
+```
+
+But for most config merge scenarios, set semantics is acceptable.

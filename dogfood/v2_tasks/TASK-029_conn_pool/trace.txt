@@ -1,0 +1,17 @@
+REASONING TRACE FOR: Connection pool cleanup bug
+
+PROBLEM DECOMPOSITION:
+- release() just appends the connection back to available without cleanup
+- Need to reset transaction state and query count
+
+WHAT WAS TRIED:
+- Looked at Connection class — has rollback() and commit() methods
+- If in_transaction, should rollback before pooling
+
+KEY INSIGHT:
+- Before appending to _available, reset: rollback if in transaction, reset query_count to 0
+- Connection's own state tracking needs to be zeroed out
+
+PITFALLS:
+- Don't close the connection — just reset its state
+- Rollback before reset, not after

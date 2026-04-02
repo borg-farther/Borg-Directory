@@ -1,0 +1,9 @@
+{
+  "task_id": "HARD-014",
+  "task_name": "Middleware Chain Short-Circuit Bug",
+  "bug_description": "rate_limit_mw.py raises exception instead of returning error response, which bypasses logging_mw.py's after-hook",
+  "root_cause": "rate_limit_mw.py process() raises RateLimitExceeded exception instead of return Response(status_code=429)",
+  "symptom": "logs are incomplete when rate-limited - logging_after is missing from log",
+  "fix_location": "src/rate_limit_mw.py process() - replace 'raise RateLimitExceeded' with 'return Response(status_code=429)'",
+  "verification": "check.sh returns 1 when run, confirming tests fail due to exception bypassing after-hook"
+}

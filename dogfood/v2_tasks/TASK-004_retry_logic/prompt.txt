@@ -1,0 +1,1 @@
+The RetryHandler in repo/retry.py has a bug: when a PartialSuccess exception is raised, the attempt counter resets to 0, which causes exponential backoff to restart from the base delay instead of continuing to increase. Fix the retry logic so that partial success doesn't reset the backoff progression.

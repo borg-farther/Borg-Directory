@@ -1,0 +1,19 @@
+REASONING TRACE FOR: Rate limiter boundary bugs
+
+PROBLEM DECOMPOSITION:
+- Window boundary: t >= cutoff keeps requests at exact boundary, should use >
+- remaining() and allow() should use same filter logic
+- reset_time returns time until oldest expires — need to verify formula
+
+WHAT WAS TRIED:
+- The cutoff comparison should be > not >= (request exactly at boundary is expired)
+- remaining() should filter the same way as allow() does
+
+KEY INSIGHT:
+- Change >= to > in the list comprehension filter for cleanup
+- This makes requests exactly at the window boundary get removed
+- Apply same fix to remaining() and reset_time()
+
+PITFALLS:
+- Be consistent: all three methods must use the same boundary comparison
+- reset_time formula: oldest + window - now gives time until oldest expires

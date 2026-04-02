@@ -1,0 +1,18 @@
+# TASK-026: Matrix Operations Transpose Bug
+
+## Problem Description
+A matrix operations module has a bug in the `matmul_backward` function where transpose is applied in the wrong order when computing the gradient with respect to the input.
+
+## Your Task
+Fix the bug in the `matmul_backward` function in `matrix_ops.py`.
+
+## Files
+- `matrix_ops.py` - Matrix operations with a transpose bug
+
+## Expected Behavior
+When running `python3 matrix_ops.py`, all tests should pass.
+
+## Hint
+In neural network backpropagation, for Y = X @ W + b:
+- dL/dX = dL/dY @ W.T
+The bug is applying transpose incorrectly. Check the dimensions carefully.

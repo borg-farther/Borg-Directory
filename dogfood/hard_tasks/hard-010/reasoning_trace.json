@@ -1,0 +1,24 @@
+[
+  {
+    "attempt": 1,
+    "hypothesis": "The parser is not correctly handling operator precedence",
+    "action": "Reviewed parser.py and added parentheses handling",
+    "result": "Single expressions parse correctly, issue must be elsewhere",
+    "found_bug": false
+  },
+  {
+    "attempt": 2,
+    "hypothesis": "The evaluator has a bug in its operator handling",
+    "action": "Added debug output to evaluator to trace values",
+    "result": "Values are correct for first parse but wrong on second parse",
+    "found_bug": false
+  },
+  {
+    "attempt": 3,
+    "hypothesis": "The lexer is not properly tokenizing the second expression",
+    "action": "Added debug output to track lexer position and tokens between calls",
+    "result": "Found that _current_char is not reset in tokenize(). After first call, _current_char is None (end of string). Second call doesn't reset it properly, causing parsing to fail or produce wrong results.",
+    "found_bug": true,
+    "fix": "Add self._current_char = None at the start of tokenize() method, or properly reinitialize it to the first character of the new input"
+  }
+]

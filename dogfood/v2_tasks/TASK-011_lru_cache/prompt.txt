@@ -1,0 +1,24 @@
+## Task: Fix the LRU Cache Bug
+
+You are debugging a Least Recently Used (LRU) cache implementation.
+
+### The Problem
+
+The LRU cache is supposed to evict the **least recently used** item when capacity is exceeded. However, there's a subtle bug in the eviction logic that causes the wrong item to be evicted.
+
+### What to Look For
+
+Examine `lru_cache.py` and trace through what happens when:
+1. Cache is filled to capacity (3 items: a, b, c)
+2. An item is accessed via `get()` (making it recently used)
+3. A new item is added via `put()`
+
+### Expected Behavior
+
+- When `get("a")` is called, item "a" should become the **most** recently used
+- When `put("d")` is called on a full cache, the **least** recently used item should be evicted
+- After the sequence: put(a), put(b), put(c), get(a), put(d) — cache should contain [c, a, d] (in that order)
+
+### Your Task
+
+Find and fix the bug in `lru_cache.py` so all tests pass.

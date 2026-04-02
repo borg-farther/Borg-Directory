@@ -1,0 +1,49 @@
+## Task: Fix the State Machine Bug
+
+You are debugging a state machine that has issues with transition guards.
+
+### The Problem
+
+The state machine should allow:
+- IDLE -> PROCESSING (always allowed)
+- PROCESSING -> COMPLETED (when success=True)
+- PROCESSING -> FAILED (when success=False)
+
+But there's a subtle bug where the transition doesn't happen correctly.
+
+### What to Look For
+
+The bug is in the `trigger()` method. When an event is triggered, the method:
+1. Updates internal data with passed data
+2. Iterates through possible transitions
+3. Evaluates guards and transitions if guard passes
+
+The issue involves how the guards are evaluated and which transition is chosen.
+
+### Expected Behavior
+
+```python
+sm = StateMachine()
+sm.trigger("start", {"success": True})  # Goes to PROCESSING
+sm.trigger("finish", {"success": True})  # Should go to COMPLETED
+assert sm.get_state() == "COMPLETED"
+
+sm.reset()
+sm.trigger("start", {"success": True})  # Goes to PROCESSING
+sm.trigger("finish", {"success": False}) # Should go to FAILED
+assert sm.get_state() == "FAILED"
+```
+
+### The Bug
+
+The guards in `PROCESSING` state are:
+- COMPLETED: `lambda sm: sm.data.get("success", False)`
+- FAILED: `lambda sm: not sm.data.get("success", False)`
+
+When `success=True`, COMPLETED guard returns True. When `success=False`, FAILED guard returns True.
+
+But the bug is in the **order of evaluation and the condition check logic**. The `not` operator with truthy/falsy values doesn't behave as expected in all cases.
+
+### Your Task
+
+Find and fix the bug in the state machine's transition logic.

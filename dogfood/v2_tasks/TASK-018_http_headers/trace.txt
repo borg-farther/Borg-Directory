@@ -1,0 +1,69 @@
+## Reasoning Trace for HTTP Header Case Sensitivity Bug
+
+### The Bug Location
+
+The bug is in `HTTPRequest.set_header()`, `get_header()`, and `has_header()`. Headers are stored with original case but retrieved with case-sensitive lookups.
+
+### Hint 1: RFC 7230 Requirement
+
+RFC 7230 states: "Each header field name is case-insensitive."
+
+This means:
+- `Content-Type: application/json`
+- `content-type: application/json`
+- `CONTENT-TYPE: application/json`
+
+Are all the same header!
+
+### Hint 2: Python Dict is Case-Sensitive
+
+```python
+d = {}
+d["Content-Type"] = "value"
+d["content-type"]  # Returns None - case-sensitive!
+```
+
+### Hint 3: Solution Approaches
+
+**Approach 1: Normalize on storage**
+```python
+def set_header(self, name: str, value: str):
+    self.headers[name.lower()] = value  # Store with lowercase key
+```
+
+Then get/has also use lowercase:
+```python
+def get_header(self, name: str):
+    return self.headers.get(name.lower())
+```
+
+**Approach 2: Normalize on retrieval**
+Store with original case, but normalize on get:
+```python
+def get_header(self, name: str):
+    name_lower = name.lower()
+    for key, value in self.headers.items():
+        if key.lower() == name_lower:
+            return value
+    return None
+```
+
+Approach 1 is simpler and more efficient.
+
+### Hint 4: Order Matters
+
+If you normalize on storage, all existing tests using `get_header()` with lowercase should work.
+
+If you normalize on retrieval, you need to ensure the iteration finds matches.
+
+### Key Insight
+
+The fix is to normalize header names to lowercase when storing AND when retrieving, so that lookups become case-insensitive.
+
+### Approach
+
+1. Change `set_header()` to store with `name.lower()` as key
+2. Change `get_header()` to lookup with `name.lower()` as key
+3. Change `has_header()` to check with `name.lower()` as key
+
+This way, all case variations map to the same internal key.

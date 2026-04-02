@@ -1,0 +1,1 @@
+The CSV parser in repo/parser.py has bugs: it doesn't handle files without a trailing newline (loses the last row), and it doesn't handle escaped quotes (doubled quotes "" inside quoted fields should become a single "). Fix both issues.

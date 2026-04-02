@@ -1,66 +1,38 @@
-"""End-to-end flow test — simulates what a real user would do."""
+#!/usr/bin/env python
+"""Test pack discovery: search, suggest, try."""
 import json
 import sys
 sys.path.insert(0, '.')
 
-from borg.core.search import guild_search, guild_try, guild_pull, check_for_suggestion
-from borg.core.apply import apply_handler
+from borg.core.search import borg_search, check_for_suggestion, borg_try
 
-print("=== 1. SEARCH ===")
-result = guild_search("debugging")
-data = json.loads(result)
-print(f"Success: {data.get('success')}")
-print(f"Matches: {len(data.get('matches', []))}")
-if data.get('matches'):
-    for m in data['matches'][:3]:
-        print(f"  - {m.get('name', m.get('id', '?'))}: {m.get('confidence', '?')} ({m.get('tier', '?')})")
+# Test 1: search
+print("=== SEARCH ===")
+r = borg_search('debugging')
+d = json.loads(r)
+print(f"  success: {d.get('success')}, matches: {len(d.get('matches', []))}")
+for m in d.get('matches', [])[:3]:
+    print(f"    - {m.get('name', m.get('id', '?'))}: tier={m.get('tier', '?')}, conf={m.get('confidence', '?')}")
 
-print("\n=== 2. TRY ===")
-result = guild_try("borg://systematic-debugging")
-data = json.loads(result)
-print(f"Success: {data.get('success')}")
-if data.get('error'):
-    print(f"Error: {data['error']}")
-if data.get('pack_name'):
-    print(f"Pack: {data['pack_name']}")
-    print(f"Phases: {data.get('phase_count', '?')}")
+# Test 2: suggest
+print("\n=== SUGGEST ===")
+r2 = check_for_suggestion('I keep getting TypeError and the test keeps failing', failure_count=3)
+d2 = json.loads(r2)
+print(f"  has_suggestion: {d2.get('has_suggestion')}, suggestions: {len(d2.get('suggestions', []))}")
+for s in d2.get('suggestions', [])[:3]:
+    print(f"    - {s.get('pack_name', '?')}: {s.get('why_relevant', '?')[:60]}")
 
-print("\n=== 3. AUTO-SUGGEST ===")
-result = check_for_suggestion(
-    conversation_context="I keep getting TypeError and the test keeps failing, stuck in a loop",
-    failure_count=3
-)
-data = json.loads(result)
-print(f"Has suggestion: {data.get('has_suggestion')}")
-if data.get('suggestions'):
-    for s in data['suggestions'][:3]:
-        print(f"  - {s.get('pack_name')}: {s.get('why_relevant', '?')}")
+# Test 3: try
+print("\n=== TRY ===")
+r3 = borg_try('borg://systematic-debugging')
+d3 = json.loads(r3)
+print(f"  success: {d3.get('success')}, pack: {d3.get('pack_name', 'none')}, phases: {d3.get('phase_count', '?')}")
 
-print("\n=== 4. CONVERT ===")
-from borg.core.convert import convert_skill
-import tempfile, os
-# Create a sample SKILL.md
-skill_content = '''---
-name: test-skill
-description: A test skill for debugging
-tags: [testing, debugging]
----
-## Step 1: Reproduce
-Reproduce the issue consistently.
-## Step 2: Investigate  
-Look at logs and traces.
-## Step 3: Fix
-Apply the fix and verify.
-'''
-with tempfile.NamedTemporaryFile(mode='w', prefix='SKILL', suffix='.md', delete=False, dir='/tmp') as f:
-    f.write(skill_content)
-    tmp = f.name
-try:
-    pack = convert_skill(tmp)
-    print(f"Converted: {pack.get('id', '?')}")
-    print(f"Phases: {len(pack.get('phases', []))}")
-    print(f"Problem class: {pack.get('problem_class', '?')}")
-finally:
-    os.unlink(tmp)
+# Test 4: MCP server via JSON-RPC
+print("\n=== MCP SEARCH ===")
+import borg.integrations.mcp_server as mcp
+result = mcp.call_tool('borg_search', {'query': 'debugging', 'mode': 'text'})
+d4 = json.loads(result)
+print(f"  success: {d4.get('success')}, matches: {len(d4.get('matches', []))}")
 
 print("\n=== DONE ===")

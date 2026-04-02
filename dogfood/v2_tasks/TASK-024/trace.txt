@@ -1,0 +1,31 @@
+# Reasoning Trace for TASK-024
+
+## Initial Observation
+The test `test_resize_rehash` fails - after adding a second key, both keys become inaccessible.
+
+## Analysis
+Looking at the `_resize` method:
+```python
+def _resize(self, new_capacity: int) -> None:
+    old_buckets = self.buckets
+    self.capacity = new_capacity
+    self.buckets = [[] for _ in range(self.capacity)]
+    # BUG: We save old_buckets but never use it!
+```
+
+The bug is clear: we save the old buckets but then never rehash the entries into the new bucket array. The old entries are lost.
+
+## The Fix
+After creating the new bucket array, we need to iterate through the old buckets and rehash each entry into the new buckets.
+
+```python
+def _resize(self, new_capacity: int) -> None:
+    old_buckets = self.buckets
+    self.capacity = new_capacity
+    self.buckets = [[] for _ in range(self.capacity)]
+    # FIX: Rehash all entries from old buckets
+    for bucket in old_buckets:
+        for key, value in bucket:
+            index = self._hash(key)  # Uses new capacity
+            self.buckets[index].append((key, value))
+```

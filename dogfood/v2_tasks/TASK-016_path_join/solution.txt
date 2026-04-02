@@ -1,0 +1,54 @@
+## Solution for Path Joining Bug
+
+### The Bug
+
+The `join_paths()` function uses simple string concatenation:
+```python
+result = result + "/" + part
+```
+
+This creates double slashes when parts have leading "/" or trailing "/".
+
+### The Fix
+
+Use Python's built-in `os.path.join()` which handles all cross-platform edge cases:
+
+```python
+def join_paths(*parts: str) -> str:
+    """Join multiple path parts into a single path."""
+    if not parts:
+        return ""
+    
+    # Use os.path.join for proper cross-platform path joining
+    return os.path.join(*parts)
+```
+
+### Why This Works
+
+`os.path.join()`:
+- Automatically handles leading/trailing separators correctly
+- Uses the correct separator for the current platform
+- Handles Windows vs Unix path differences
+- Returns "" if no parts, or just "" if parts are empty strings
+
+### Alternative Fix (manual)
+
+If you can't use `os.path.join()`, strip separators from each part:
+
+```python
+def join_paths(*parts: str) -> str:
+    if not parts:
+        return ""
+    
+    # Strip separators from each part
+    cleaned_parts = []
+    for part in parts:
+        # Strip both forward and back slashes
+        cleaned = part.strip("/").strip("\\")
+        if cleaned:
+            cleaned_parts.append(cleaned)
+    
+    return "/".join(cleaned_parts)
+```
+
+But `os.path.join()` is preferred because it handles platform-specific behavior correctly.

@@ -1,0 +1,36 @@
+## Task: Fix the Priority Queue Bug
+
+You are debugging a priority queue implementation that has issues maintaining the heap property when items have the same priority.
+
+### The Problem
+
+The priority queue should:
+1. Return items with lower priority number first (priority 1 before priority 5)
+2. When priorities are equal, return items in FIFO order (first-in, first-out)
+
+But there's a subtle bug causing items with the same priority to come out in the wrong order.
+
+### Expected Behavior
+
+```python
+pq = PriorityQueue()
+pq.push("first", priority=5)
+pq.push("second", priority=5)
+pq.push("third", priority=5)
+
+# Should come out: "first", "second", "third"
+```
+
+### What to Look For
+
+The `push()` method uses `heapq.heappush()` with a tuple `(priority, counter, item)`. The heap module uses tuple comparison, comparing element by element.
+
+The bug involves how the counter or the tuple structure affects comparison when priorities are equal.
+
+### The Bug
+
+When two items have the same priority, the heap should use the counter as a tiebreaker. But there might be an issue with how the tuple is structured or compared.
+
+### Your Task
+
+Fix the `PriorityQueue.push()` method so that items with equal priorities come out in FIFO order.

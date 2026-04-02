@@ -1,0 +1,41 @@
+## Solution for Regex Pattern Bug
+
+### The Bug
+
+The regex pattern uses greedy quantifiers that can cause incorrect captures:
+
+```python
+r'\[([^\]]+)\] '  # Greedy + for email
+r'Message: (.*)'  # Greedy .* for message
+```
+
+### The Fix
+
+Change to non-greedy quantifiers:
+
+```python
+self.log_pattern = re.compile(
+    r'\[(\d{4}-\d{2}-\d{2} \d{2}:\d{2}:\d{2})\] '  # timestamp - OK
+    r'\[(\w+)\] '  # log level - OK, no greedy issue
+    r'\[([^\]]+?)\] '  # user email - NON-GREEDY +? now!
+    r'Message: (.*?)'  # message - NON-GREEDY .*? now!
+)
+```
+
+### Why Non-Greedy Helps
+
+**Greedy `+`**: Matches as many characters as possible
+- `[^\]]+` on `[user@test.com] Message: ]` would match `user@test.com] Message: ` (too much)
+
+**Non-Greedy `+?`**: Matches as few characters as needed
+- `[^\]]+?` on `[user@test.com] Message: ]` matches `user@test.com` (correct)
+
+### Alternative: More Specific Patterns
+
+An even better fix would be to use more specific patterns:
+```python
+r'\[([a-zA-Z0-9_.@]+)\] '  # More specific email pattern
+r'Message: (.+)$'  # One or more chars until end of line
+```
+
+But non-greedy is the minimal fix for the existing pattern structure.

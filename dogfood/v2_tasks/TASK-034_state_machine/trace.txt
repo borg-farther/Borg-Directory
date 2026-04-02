@@ -1,0 +1,14 @@
+REASONING TRACE FOR: State machine transition check bug
+
+PROBLEM DECOMPOSITION:
+- transition() should only allow transitions listed in TRANSITIONS[current_state]
+- Currently checks 'if new_state in self.TRANSITIONS' which is True for ANY valid state name
+
+KEY INSIGHT:
+- The variable 'allowed' is computed correctly but never used!
+- The check should be 'if new_state in allowed' not 'if new_state in self.TRANSITIONS'
+- can_transition() does this correctly — transition() should match its logic
+
+PITFALLS:
+- Make sure invalid transition returns False AND doesn't change state
+- The 'allowed' variable is already computed but ignored

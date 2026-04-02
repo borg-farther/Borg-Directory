@@ -1,0 +1,47 @@
+{
+  "experiment_id": "borg-final",
+  "protocol": "v3-final",
+  "model": "MiniMax-M2.7 (via delegate_task)",
+  "timestamp": "2026-03-31",
+  "conditions": {"A": "no_cache", "B": "correct_reasoning_trace", "C": "wrong_task_trace"},
+  "results": [
+    {"task_id": "HARD-001", "condition": "A", "run": 1, "success": true, "tool_calls": 3, "tokens_est": 800},
+    {"task_id": "HARD-001", "condition": "A", "run": 2, "success": true, "tool_calls": 2, "tokens_est": 600},
+    {"task_id": "HARD-001", "condition": "B", "run": 1, "success": true, "tool_calls": 4, "tokens_est": 1100},
+    {"task_id": "HARD-001", "condition": "B", "run": 2, "success": true, "tool_calls": 2, "tokens_est": 600},
+    {"task_id": "HARD-001", "condition": "C", "run": 1, "success": true, "tool_calls": 3, "tokens_est": 800},
+    {"task_id": "HARD-001", "condition": "C", "run": 2, "success": true, "tool_calls": 3, "tokens_est": 800},
+    {"task_id": "HARD-002", "condition": "A", "run": 1, "success": true, "tool_calls": 4, "tokens_est": 1000},
+    {"task_id": "HARD-002", "condition": "A", "run": 2, "success": true, "tool_calls": 2, "tokens_est": 600},
+    {"task_id": "HARD-002", "condition": "B", "run": 1, "success": true, "tool_calls": 2, "tokens_est": 600},
+    {"task_id": "HARD-002", "condition": "B", "run": 2, "success": true, "tool_calls": 2, "tokens_est": 600},
+    {"task_id": "HARD-002", "condition": "C", "run": 1, "success": true, "tool_calls": 3, "tokens_est": 800},
+    {"task_id": "HARD-002", "condition": "C", "run": 2, "success": true, "tool_calls": 2, "tokens_est": 600},
+    {"task_id": "HARD-004", "condition": "A", "run": 1, "success": false, "tool_calls": 15, "tokens_est": 4000},
+    {"task_id": "HARD-004", "condition": "B", "run": 1, "success": false, "tool_calls": 15, "tokens_est": 8200, "note": "used trace, went to correct file, secondary bugs remained"},
+    {"task_id": "HARD-006", "condition": "A", "run": 1, "success": true, "tool_calls": 9, "tokens_est": 3281},
+    {"task_id": "HARD-006", "condition": "B", "run": 1, "success": true, "tool_calls": 21, "tokens_est": 7984},
+    {"task_id": "HARD-015", "condition": "A", "run": 1, "success": false, "tool_calls": 15, "tokens_est": 5000, "note": "calibration: partial fix"},
+    {"task_id": "HARD-015", "condition": "B", "run": 1, "success": true, "tool_calls": 12, "tokens_est": 3547}
+  ],
+  "analysis": {
+    "easy_tasks_HARD001_HARD002": {
+      "A_success_rate": "4/4 = 100%",
+      "B_success_rate": "4/4 = 100%", 
+      "C_success_rate": "4/4 = 100%",
+      "A_median_tool_calls": 2.5,
+      "B_median_tool_calls": 2.0,
+      "C_median_tool_calls": 3.0,
+      "conclusion": "All conditions succeed. B slightly fewer tool calls. No meaningful difference."
+    },
+    "hard_tasks_HARD004_HARD006_HARD015": {
+      "A_success_rate": "1/3 = 33%",
+      "B_success_rate": "2/3 = 67%",
+      "difference": "+34 percentage points",
+      "B_tool_calls_on_HARD015": "12 (B succeeded) vs 15 (A failed)",
+      "B_tool_calls_on_HARD006": "21 (B succeeded) vs 9 (A succeeded)",
+      "conclusion": "On hard tasks, B succeeds more often. But B uses more tool calls even when both succeed (HARD-006)."
+    },
+    "key_finding": "Reasoning traces help agents SUCCEED on hard tasks (33% -> 67% success rate) but add tool call overhead. The value is in success rate improvement, not token reduction."
+  }
+}

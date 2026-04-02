@@ -282,3 +282,63 @@ def _normalize_errors(errors: List[str]) -> str:
         if match:
             types.add(match.group(1))
     return " ".join(sorted(types))
+
+
+# ---------------------------------------------------------------------------
+# Trace Maintenance
+# ---------------------------------------------------------------------------
+
+from datetime import datetime, timezone, timedelta
+
+
+def traces_maintenance(
+    db_path: str = None,
+    decay_factor: float = 0.95,
+    decay_days: int = 30,
+    max_traces: int = 10000,
+) -> Dict[str, Any]:
+    """
+    Run trace maintenance: decay scores, delete low-value traces, enforce cap.
+    
+    Returns: {"decayed": int, "deleted": int, "total": int}
+    """
+    db = _get_db(db_path)
+    
+    decayed = 0
+    deleted = 0
+    
+    # 1. Decay helpfulness_score for traces not shown in decay_days
+    cutoff = (datetime.now(timezone.utc) - timedelta(days=decay_days)).strftime("%Y-%m-%dT%H:%M:%SZ")
+    cur = db.execute(
+        """UPDATE traces 
+           SET helpfulness_score = helpfulness_score * ?
+           WHERE times_shown = 0 
+             AND created_at < ?
+             AND helpfulness_score > 0""",
+        (decay_factor, cutoff)
+    )
+    decayed = cur.rowcount
+    
+    # 2. Delete traces with times_shown > 5 AND helpfulness_score < 0.1
+    cur = db.execute(
+        """DELETE FROM traces 
+           WHERE times_shown > 5 AND helpfulness_score < 0.1"""
+    )
+    deleted = cur.rowcount
+    
+    # 3. Enforce 10,000 trace cap (FIFO — delete oldest)
+    cur = db.execute("SELECT COUNT(*) FROM traces")
+    total = cur.fetchone()[0]
+    if total > max_traces:
+        excess = total - max_traces
+        db.execute(
+            f"""DELETE FROM traces WHERE id IN (
+                SELECT id FROM traces ORDER BY created_at ASC LIMIT ?
+            )""",
+            (excess,)
+        )
+    
+    db.commit()
+    db.close()
+    
+    return {"decayed": decayed, "deleted": deleted, "total": total}

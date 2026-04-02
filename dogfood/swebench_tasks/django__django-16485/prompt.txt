@@ -1,0 +1,19 @@
+Fix the following Django bug. The code is in the repo at /workspace/django.
+
+BUG REPORT:
+floatformat() crashes on "0.00".
+Description
+	
+from decimal import Decimal
+from django.template.defaultfilters import floatformat
+floatformat('0.00', 0)
+floatformat(Decimal('0.00'), 0)
+Both throw ValueError: valid range for prec is [1, MAX_PREC]
+
+
+The fix should make these tests pass:
+[
+  "test_zero_values (template_tests.filter_tests.test_floatformat.FunctionTests.test_zero_values)"
+]
+
+After fixing, verify with: cd /workspace && python -m pytest test_zero_values (template_tests.filter_tests.test_floatformat.FunctionTests.test_zero_values) --no-header -q

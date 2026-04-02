@@ -1,0 +1,433 @@
+#!/bin/bash
+#
+# Borg V3 Dogfood - Task Runner
+# ==============================
+# Picks tasks from a queue file, runs each with an agent that has borg MCP
+# tools available, then calls borg_feedback with the outcome.
+#
+# Supports two modes:
+#   --once      Pick ONE task, run it, exit (default for cron/oneshot)
+#   --daemon    Run forever, polling the queue every QUEUE_POLL_SECONDS
+#   --dry-run   Validate queue format and print next task without running
+#
+# Queue file format: JSON (see 05_task_queue.json for schema / sample tasks)
+#
+# Usage:
+#   ./02_task_runner.sh                        # run one task
+#   ./02_task_runner.sh --daemon               # run continuously
+#   ./02_task_runner.sh --queue /path/to/q.json
+#   ./02_task_runner.sh --dry-run
+#
+# Environment variables (override defaults below):
+#   TASK_QUEUE_FILE   — path to JSON queue (default: ./task_queue.json)
+#   VPS_HOSTNAME      — identifies this VPS (default: hostname)
+#   BORG_DB_PATH      — path to borg SQLite DB (default: ~/.borg/borg.db)
+#   AGENT_COMMAND     — agent CLI to invoke (default: claude --print)
+#   QUEUE_POLL_SECONDS — daemon poll interval (default: 30)
+#   LOG_DIR           — log directory (default: /opt/borg-dogfood/logs)
+#   TASK_TIMEOUT_SECONDS — max time per task (default: 600)
+# -----------------------------------------------------------------------------
+
+set -euo pipefail
+
+# ---- Default configuration ----
+INSTALL_ROOT="/opt/borg-dogfood"
+LOG_DIR="${LOG_DIR:-${INSTALL_ROOT}/logs}"
+DATA_DIR="${DATA_DIR:-${INSTALL_ROOT}/data}"
+RUN_DIR="${RUN_DIR:-${INSTALL_ROOT}/run}"
+VENV_BIN="${INSTALL_ROOT}/venv/bin"
+
+TASK_QUEUE_FILE="${TASK_QUEUE_FILE:-${INSTALL_ROOT}/05_task_queue.json}"
+VPS_HOSTNAME="${VPS_HOSTNAME:-$(hostname 2>/dev/null || echo 'vps-unknown')}"
+BORG_DB_PATH="${BORG_DB_PATH:-${HOME}/.borg/borg.db}"
+AGENT_COMMAND="${AGENT_COMMAND:-claude --print}"
+QUEUE_POLL_SECONDS="${QUEUE_POLL_SECONDS:-30}"
+TASK_TIMEOUT_SECONDS="${TASK_TIMEOUT_SECONDS:-600}"
+LOCK_FILE="${RUN_DIR}/task_runner.lock"
+
+# Ensure directories exist
+mkdir -p "${LOG_DIR}" "${DATA_DIR}" "${RUN_DIR}"
+
+# ---- CLI flags ----
+MODE="once"        # one of: once, daemon, dry-run
+QUEUE_SOURCE=""
+
+while [[ $# -gt 0 ]]; do
+    case "$1" in
+        --daemon)  MODE="daemon"; shift ;;
+        --dry-run) MODE="dry-run"; shift ;;
+        --queue)   QUEUE_SOURCE="$2"; shift 2 ;;
+        --help)
+            echo "Usage: $0 [--daemon|--dry-run] [--queue FILE]"
+            exit 0
+            ;;
+        *) echo "Unknown flag: $1" >&2; exit 1 ;;
+    esac
+done
+
+[[ -n "${QUEUE_SOURCE}" ]] && TASK_QUEUE_FILE="${QUEUE_SOURCE}"
+
+# ---- Logging helpers ----
+log()  { echo -e "\033[0;32m[RUNNER]\033[0m $(date +%H:%M:%S) $*"; }
+warn() { echo -e "\033[1;33m[WARN]\033[0m  $(date +%H:%M:%S) $*" >&2; }
+die()  { echo -e "\033[0;31m[FAIL]\033[0m  $*" >&2; exit 1; }
+
+# ---- Locking (prevent two runners on same VPS) ----
+acquire_lock() {
+    if [[ -f "${LOCK_FILE}" ]]; then
+        local pid
+        pid=$(cat "${LOCK_FILE}" 2>/dev/null)
+        if [[ -n "${pid}" ]] && kill -0 "${pid}" 2>/dev/null; then
+            die "Lock file exists (PID ${pid}). Another runner is running."
+        fi
+        warn "Stale lock file removed."
+        rm -f "${LOCK_FILE}"
+    fi
+    echo $$ > "${LOCK_FILE}"
+}
+
+release_lock() {
+    rm -f "${LOCK_FILE}"
+}
+
+trap release_lock EXIT
+
+# ---- Validate environment ----
+check_deps() {
+    local missing=""
+    python3 -c "import borg" 2>/dev/null || missing="${missing} borg"
+    python3 -c "import hermes" 2>/dev/null || missing="${missing} hermes"
+    command -v jq &>/dev/null || missing="${missing} jq"
+    if [[ -n "${missing}" ]]; then
+        die "Missing dependencies:${missing}. Run 01_vps_setup.sh first."
+    fi
+}
+
+# ---- Database helpers ----
+log_outcome() {
+    # Write a task outcome to the borg.db
+    # Args: task_id task_type success error_msg tokens_spent tokens_saved feedback_score
+    local task_id="$1"
+    local task_type="$2"
+    local success="$3"
+    local error_msg="$4"
+    local tokens_spent="$5"
+    local tokens_saved="$6"
+    local feedback_score="$7"
+
+    python3 << PYEOF
+import sqlite3, os, time
+db = os.path.expanduser("${BORG_DB_PATH}")
+conn = sqlite3.connect(db)
+c = conn.cursor()
+c.execute("""
+    INSERT INTO task_outcomes
+        (task_id, task_type, success, error_msg, tokens_spent, tokens_saved,
+         feedback_score, vps_hostname, completed_at)
+    VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?)
+""", ("${task_id}", "${task_type}",
+      1 if "${success}" == "true" else 0,
+      "${error_msg}",
+      ${tokens_spent:-0}, ${tokens_saved:-0},
+      ${feedback_score:-0.0},
+      "${VPS_HOSTNAME}",
+      time.time()))
+conn.commit()
+conn.close()
+PYEOF
+    log "  Outcome recorded to DB."
+}
+
+log_pack_usage() {
+    # Record pack usage
+    local pack_id="$1"
+    local pack_name="$2"
+    local pack_version="$3"
+    local task_id="$4"
+    local success="$5"
+
+    python3 << PYEOF
+import sqlite3, os, time
+db = os.path.expanduser("${BORG_DB_PATH}")
+conn = sqlite3.connect(db)
+c = conn.cursor()
+c.execute("""
+    INSERT INTO pack_usage (pack_id, pack_name, pack_version, used_at, task_id, success)
+    VALUES (?, ?, ?, ?, ?, ?)
+""", ("${pack_id}", "${pack_name}", "${pack_version}",
+      time.time(), "${task_id}",
+      1 if "${success}" == "true" else 0))
+conn.commit()
+conn.close()
+PYEOF
+}
+
+# ---- Load and parse queue ----
+load_queue() {
+    local queue_file="$1"
+    if [[ ! -f "${queue_file}" ]]; then
+        die "Queue file not found: ${queue_file}"
+    fi
+    if ! jq empty "${queue_file}" 2>/dev/null; then
+        die "Queue file is not valid JSON: ${queue_file}"
+    fi
+}
+
+# Get next pending task (first task with status "pending")
+get_next_task() {
+    local queue_file="$1"
+
+    # Check for a tasks array inside a "queue" wrapper
+    local task_json=""
+    if jq -e '.queue[] | select(.status == "pending")' "${queue_file}" &>/dev/null; then
+        task_json=$(jq '[.queue[] | select(.status == "pending")][0]' "${queue_file}")
+    elif jq -e '.[] | select(.status == "pending")' "${queue_file}" &>/dev/null; then
+        task_json=$(jq '[.[] | select(.status == "pending")][0]' "${queue_file}")
+    fi
+
+    echo "${task_json}"
+}
+
+# Mark a task as completed or failed in the queue file
+update_task_status() {
+    local queue_file="$1"
+    local task_id="$2"
+    local new_status="$3"
+
+    local tmp
+    tmp=$(mktemp)
+
+    # Try wrapper style first
+    if jq -e '.queue' "${queue_file}" &>/dev/null; then
+        jq --arg tid "${task_id}" --arg st "${new_status}" \
+           '(.queue[] | select(.id == $tid) | .status) = $st' \
+           "${queue_file}" > "${tmp}" && mv "${tmp}" "${queue_file}"
+    else
+        jq --arg tid "${task_id}" --arg st "${new_status}" \
+           '(.[] | select(.id == $tid) | .status) = $st' \
+           "${queue_file}" > "${tmp}" && mv "${tmp}" "${queue_file}"
+    fi
+}
+
+# ---- Run a single task with the agent ----
+run_task() {
+    local task_json="$1"
+    local task_id
+    local task_prompt
+    local task_type
+    local expected_tools
+    local timeout_seconds
+
+    task_id=$(echo "${task_json}" | jq -r '.id // "unknown"')
+    task_prompt=$(echo "${task_json}" | jq -r '.prompt // .task // ""')
+    task_type=$(echo "${task_json}" | jq -r '.type // "general"')
+    expected_tools=$(echo "${task_json}" | jq -r '.expected_tools // [] | join(",")')
+    timeout_seconds=$(echo "${task_json}" | jq -r '.timeout_seconds // '"${TASK_TIMEOUT_SECONDS}")
+
+    log "=== Task: ${task_id} (type: ${task_type}) ==="
+    log "  Prompt : ${task_prompt:0:80}..."
+    log "  Tools  : ${expected_tools:-any}"
+    log "  Timeout: ${timeout_seconds}s"
+
+    local start_time
+    start_time=$(date +%s)
+    local output_file="${LOG_DIR}/task_${task_id}_$(date +%s).log"
+
+    # Build the agent prompt with borg context
+    local agent_input
+    agent_input=$(cat << PROMPT
+You are running a dogfood task for Borg V3.
+Your ID: ${VPS_HOSTNAME}
+Task ID: ${task_id}
+Task type: ${task_type}
+
+Use the available borg MCP tools to complete this task.
+After completing (or failing), you MUST call borg_feedback with the outcome.
+
+IMPORTANT: Call borg_feedback tool with this exact JSON:
+{"task_id": "${task_id}", "success": true/false, "feedback_score": 0.0-1.0, "error_msg": ""}
+
+Task:
+${task_prompt}
+PROMPT
+)
+
+    # Activate the venv before running the agent
+    export PATH="${VENV_BIN}:${PATH}"
+    local exit_code=0
+    local agent_output
+
+    # Run the agent with timeout
+    set +e
+    agent_output=$( \
+        timeout "${timeout_seconds}" \
+            bash -c "source '${VENV_BIN}/activate' && ${AGENT_COMMAND} --print '${agent_input}'" \
+            2>&1 \
+    ) || exit_code=$?
+    set -e
+
+    local end_time
+    end_time=$(date +%s)
+    local duration=$(( end_time - start_time ))
+
+    # Save raw output
+    printf '%s' "${agent_output}" > "${output_file}"
+    log "  Duration: ${duration}s, exit_code: ${exit_code}"
+    log "  Output saved: ${output_file}"
+
+    # ---- Parse agent output for borg_feedback ----
+    local success="false"
+    local feedback_score="0.0"
+    local error_msg=""
+
+    # Try to extract borg_feedback call from output
+    local feedback_json
+    feedback_json=$(echo "${agent_output}" | \
+        grep -oP '\{[^}]*"task_id"\s*:\s*"'${task_id}'"[^}]*\}' | \
+        head -1 || \
+        echo "${agent_output}" | jq -r '.feedback // .result // empty' 2>/dev/null \
+    )
+
+    if [[ -n "${feedback_json}" ]] && echo "${feedback_json}" | jq -e . &>/dev/null; then
+        success=$(echo "${feedback_json}" | jq -r '.success // false')
+        feedback_score=$(echo "${feedback_json}" | jq -r '.feedback_score // 0.0')
+        error_msg=$(echo "${feedback_json}" | jq -r '.error_msg // ""')
+    else
+        # Heuristics: check exit code and output for success/failure signals
+        if [[ ${exit_code} -eq 0 ]]; then
+            success="true"
+            feedback_score="0.8"
+        else
+            success="false"
+            feedback_score="0.0"
+            error_msg="Agent exited with code ${exit_code}. Check ${output_file}."
+        fi
+    fi
+
+    # Estimate token usage (rough — in production this comes from API response)
+    local num_chars
+    num_chars=${#agent_output}
+    local tokens_spent
+    tokens_spent=$(echo "${num_chars}" | awk '{print int($1 * 1.5)}')
+
+    # Log to DB
+    local safe_error
+    safe_error="${error_msg//\"/\\\"}"
+    log_outcome "${task_id}" "${task_type}" "${success}" \
+                "${safe_error}" "${tokens_spent}" "0" "${feedback_score}"
+
+    # Extract pack info if present in output
+    local pack_id pack_name pack_version
+    pack_id=$(echo "${agent_output}" | jq -r '.pack_id // .context.pack_id // empty' 2>/dev/null)
+    pack_name=$(echo "${agent_output}" | jq -r '.pack_name // .context.pack_name // empty' 2>/dev/null)
+    pack_version=$(echo "${agent_output}" | jq -r '.pack_version // .context.pack_version // empty' 2>/dev/null)
+
+    if [[ -n "${pack_id}" ]]; then
+        log_pack_usage "${pack_id}" "${pack_name:-unknown}" \
+                       "${pack_version:-unknown}" "${task_id}" "${success}"
+        log "  Pack: ${pack_id} (${pack_name} ${pack_version})"
+    fi
+
+    log "  Success: ${success}, Score: ${feedback_score}"
+
+    [[ "${success}" == "true" ]]
+}
+
+# ---- Daemon mode ----
+run_daemon() {
+    log "Starting task runner daemon (poll interval: ${QUEUE_POLL_SECONDS}s)..."
+    log "Queue file: ${TASK_QUEUE_FILE}"
+    log "PID: $$"
+
+    while true; do
+        if [[ ! -f "${TASK_QUEUE_FILE}" ]]; then
+            warn "Queue file not found: ${TASK_QUEUE_FILE}, waiting..."
+            sleep $(( QUEUE_POLL_SECONDS * 2 ))
+            continue
+        fi
+
+        local task_json
+        task_json=$(get_next_task "${TASK_QUEUE_FILE}") || true
+
+        if [[ -z "${task_json}" ]] || [[ "${task_json}" == "null" ]]; then
+            log "$(date +%H:%M:%S) No pending tasks in queue, sleeping..."
+            sleep "${QUEUE_POLL_SECONDS}"
+            continue
+        fi
+
+        local task_id
+        task_id=$(echo "${task_json}" | jq -r '.id // "unknown"')
+
+        # Mark as running to prevent duplicate execution
+        update_task_status "${TASK_QUEUE_FILE}" "${task_id}" "running"
+
+        acquire_lock
+        run_task "${task_json}" && status="completed" || status="failed"
+        release_lock
+
+        update_task_status "${TASK_QUEUE_FILE}" "${task_id}" "${status}"
+        log "Task ${task_id} ${status}."
+
+        sleep "${QUEUE_POLL_SECONDS}"
+    done
+}
+
+# ---- Dry-run mode ----
+run_dry_run() {
+    log "Dry-run mode — validating queue and showing next task..."
+    load_queue "${TASK_QUEUE_FILE}" || die "Queue validation failed"
+
+    local task_json
+    task_json=$(get_next_task "${TASK_QUEUE_FILE}") || {
+        log "No pending tasks found in queue."
+        return 0
+    }
+
+    echo ""
+    echo "=== Next Task ==="
+    echo "${task_json}" | jq .
+    echo ""
+    echo "=== Parsed Fields ==="
+    echo "  id           : $(echo "${task_json}" | jq -r '.id')"
+    echo "  type         : $(echo "${task_json}" | jq -r '.type')"
+    echo "  priority     : $(echo "${task_json}" | jq -r '.priority // 0')"
+    echo "  timeout      : $(echo "${task_json}" | jq -r '.timeout_seconds // 600')s"
+    echo "  description  : $(echo "${task_json}" | jq -r '.description // .prompt[0:100]')"
+}
+
+# ---- Main ----
+main() {
+    check_deps
+    acquire_lock
+
+    case "${MODE}" in
+        once)
+            log "Mode: once"
+            load_queue "${TASK_QUEUE_FILE}" || die "Failed to load queue"
+
+            local task_json
+            task_json=$(get_next_task "${TASK_QUEUE_FILE}") || {
+                log "No pending tasks in queue (${TASK_QUEUE_FILE})."
+                exit 0
+            }
+
+            local task_id
+            task_id=$(echo "${task_json}" | jq -r '.id')
+            update_task_status "${TASK_QUEUE_FILE}" "${task_id}" "running"
+
+            run_task "${task_json}" && status="completed" || status="failed"
+            update_task_status "${TASK_QUEUE_FILE}" "${task_id}" "${status}"
+            log "Done. Task ${task_id}: ${status}."
+            ;;
+
+        daemon)
+            run_daemon
+            ;;
+
+        dry-run)
+            run_dry_run
+            ;;
+    esac
+}
+
+main

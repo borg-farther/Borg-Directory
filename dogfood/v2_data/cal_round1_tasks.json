@@ -1,0 +1,134 @@
+[
+  {
+    "task_id": "TASK-001",
+    "workspace": "/tmp/borg_cal_r1/TASK-001"
+  },
+  {
+    "task_id": "TASK-002_dict_merge",
+    "workspace": "/tmp/borg_cal_r1/TASK-002_dict_merge"
+  },
+  {
+    "task_id": "TASK-003_csv_parser",
+    "workspace": "/tmp/borg_cal_r1/TASK-003_csv_parser"
+  },
+  {
+    "task_id": "TASK-004_retry_logic",
+    "workspace": "/tmp/borg_cal_r1/TASK-004_retry_logic"
+  },
+  {
+    "task_id": "TASK-005_date_compare",
+    "workspace": "/tmp/borg_cal_r1/TASK-005_date_compare"
+  },
+  {
+    "task_id": "TASK-006_graph_bfs",
+    "workspace": "/tmp/borg_cal_r1/TASK-006_graph_bfs"
+  },
+  {
+    "task_id": "TASK-007_event_leak",
+    "workspace": "/tmp/borg_cal_r1/TASK-007_event_leak"
+  },
+  {
+    "task_id": "TASK-008_template_engine",
+    "workspace": "/tmp/borg_cal_r1/TASK-008_template_engine"
+  },
+  {
+    "task_id": "TASK-009_binary_search",
+    "workspace": "/tmp/borg_cal_r1/TASK-009_binary_search"
+  },
+  {
+    "task_id": "TASK-010_pagination",
+    "workspace": "/tmp/borg_cal_r1/TASK-010_pagination"
+  },
+  {
+    "task_id": "TASK-011_lru_cache",
+    "workspace": "/tmp/borg_cal_r1/TASK-011_lru_cache"
+  },
+  {
+    "task_id": "TASK-012_permission_check",
+    "workspace": "/tmp/borg_cal_r1/TASK-012_permission_check"
+  },
+  {
+    "task_id": "TASK-014_encoding",
+    "workspace": "/tmp/borg_cal_r1/TASK-014_encoding"
+  },
+  {
+    "task_id": "TASK-015_state_machine",
+    "workspace": "/tmp/borg_cal_r1/TASK-015_state_machine"
+  },
+  {
+    "task_id": "TASK-016_path_join",
+    "workspace": "/tmp/borg_cal_r1/TASK-016_path_join"
+  },
+  {
+    "task_id": "TASK-017_priority_queue",
+    "workspace": "/tmp/borg_cal_r1/TASK-017_priority_queue"
+  },
+  {
+    "task_id": "TASK-018_http_headers",
+    "workspace": "/tmp/borg_cal_r1/TASK-018_http_headers"
+  },
+  {
+    "task_id": "TASK-019_config_merge",
+    "workspace": "/tmp/borg_cal_r1/TASK-019_config_merge"
+  },
+  {
+    "task_id": "TASK-020_regex_pattern",
+    "workspace": "/tmp/borg_cal_r1/TASK-020_regex_pattern"
+  },
+  {
+    "task_id": "TASK-022",
+    "workspace": "/tmp/borg_cal_r1/TASK-022"
+  },
+  {
+    "task_id": "TASK-023",
+    "workspace": "/tmp/borg_cal_r1/TASK-023"
+  },
+  {
+    "task_id": "TASK-024",
+    "workspace": "/tmp/borg_cal_r1/TASK-024"
+  },
+  {
+    "task_id": "TASK-025",
+    "workspace": "/tmp/borg_cal_r1/TASK-025"
+  },
+  {
+    "task_id": "TASK-026",
+    "workspace": "/tmp/borg_cal_r1/TASK-026"
+  },
+  {
+    "task_id": "TASK-027_command_undo",
+    "workspace": "/tmp/borg_cal_r1/TASK-027_command_undo"
+  },
+  {
+    "task_id": "TASK-028_topo_sort",
+    "workspace": "/tmp/borg_cal_r1/TASK-028_topo_sort"
+  },
+  {
+    "task_id": "TASK-029_conn_pool",
+    "workspace": "/tmp/borg_cal_r1/TASK-029_conn_pool"
+  },
+  {
+    "task_id": "TASK-030_interval_merge",
+    "workspace": "/tmp/borg_cal_r1/TASK-030_interval_merge"
+  },
+  {
+    "task_id": "TASK-031_cache_invalidation",
+    "workspace": "/tmp/borg_cal_r1/TASK-031_cache_invalidation"
+  },
+  {
+    "task_id": "TASK-032_rate_limiter",
+    "workspace": "/tmp/borg_cal_r1/TASK-032_rate_limiter"
+  },
+  {
+    "task_id": "TASK-033_multifile_import",
+    "workspace": "/tmp/borg_cal_r1/TASK-033_multifile_import"
+  },
+  {
+    "task_id": "TASK-034_state_machine",
+    "workspace": "/tmp/borg_cal_r1/TASK-034_state_machine"
+  },
+  {
+    "task_id": "TASK-035_data_pipeline",
+    "workspace": "/tmp/borg_cal_r1/TASK-035_data_pipeline"
+  }
+]

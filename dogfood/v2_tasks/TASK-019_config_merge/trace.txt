@@ -1,0 +1,49 @@
+## Reasoning Trace for Config Merge Bug
+
+### The Bug Location
+
+The bug is in `deep_merge()` in the list handling branch:
+
+```python
+elif isinstance(base_value, list) and isinstance(value, list):
+    result[key] = value  # BUG: Just replaces, doesn't merge!
+```
+
+### Hint 1: What Should Happen
+
+When merging lists:
+- Base: `["auth", "logging", "metrics"]`
+- Override: `["auth", "api"]`
+- Expected: `["auth", "logging", "metrics", "api"]` (union of unique items)
+
+### Hint 2: Set Union
+
+The simplest way to merge lists while removing duplicates is to use set union:
+
+```python
+merged_list = list(set(base_list) | set(override_list))
+```
+
+This gives us all unique items from both lists.
+
+### Hint 3: Order May Not Be Preserved
+
+Using `set()` doesn't preserve order. If order matters, you'd need a different approach. But for config merging, set semantics (unique items) is usually the desired behavior.
+
+### Hint 4: The Fix
+
+Replace:
+```python
+result[key] = value
+```
+
+With:
+```python
+result[key] = list(set(base_value) | set(value))
+```
+
+This creates a union of unique items from both lists.
+
+### Key Insight
+
+The bug is simply that the code replaces instead of merging. The fix is to use set union to combine unique items from both lists.

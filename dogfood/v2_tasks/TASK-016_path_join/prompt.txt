@@ -1,0 +1,39 @@
+## Task: Fix the Path Joining Bug
+
+You are debugging path utility functions that have cross-platform compatibility issues.
+
+### The Problem
+
+The `join_paths()` function uses simple string concatenation with "/" which doesn't properly handle:
+1. Path parts that already start with "/" (creates double slashes)
+2. Path parts that have trailing separators (creates double slashes)
+3. Mixed separators from Windows and Unix paths
+
+### Expected Behavior
+
+```python
+join_paths("/home", "user", "config")  # → "/home/user/config"
+join_paths("/home", "/user", "config") # → "/home/user/config" (no double slashes!)
+join_paths("/home/", "user", "config")  # → "/home/user/config" (no double slashes!)
+```
+
+### The Bug
+
+The current implementation:
+```python
+if result.endswith("/") or result.endswith("\\"):
+    result = result + part
+else:
+    result = result + "/" + part
+```
+
+This doesn't handle parts that START with "/" - it just concatenates, creating "//".
+
+### Your Task
+
+Fix the `join_paths()` function to properly handle:
+1. Parts with leading "/" (should be stripped before joining)
+2. Parts with trailing "/" (should be stripped before joining)
+3. Mixed separators
+
+Use `os.path.join()` or properly handle the separators.

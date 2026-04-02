@@ -1,0 +1,52 @@
+{
+  "task_id": "HARD-007",
+  "task_name": "Auth Chain Bug",
+  "attempts": [
+    {
+      "attempt": 1,
+      "action": "Ran tests and found test_role_change_takes_effect failed - role update didn't take effect",
+      "result": "After updating charlie from guest to admin, permission check still returned False",
+      "diagnosis": "Thought the bug was in middleware.py where permissions are checked",
+      "fix_attempted": "Added explicit cache invalidation call after role update in permissions.py",
+      "outcome": "FAILED - The fix wasn't in the right place, tests still failed"
+    },
+    {
+      "attempt": 2,
+      "action": "Examined the middleware flow more closely",
+      "result": "Found that middleware checks permissions BEFORE authenticating - it checks for user_id before checking username/password",
+      "diagnosis": "The middleware processes permissions for user_id before even authenticating the user!",
+      "fix_attempted": "Changed middleware to authenticate first, then check permissions",
+      "outcome": "PARTIAL SUCCESS - Auth order fixed, but role change test still failed"
+    },
+    {
+      "attempt": 3,
+      "action": "Dug deeper into permissions.py update_user_role method",
+      "result": "Found that update_user_role updates the role but doesn't invalidate the cache!",
+      "diagnosis": "The role is updated in _user_roles but cached permissions remain stale",
+      "fix_attempted": "Added cache invalidation inside update_user_role method",
+      "outcome": "SUCCESS - Both bugs fixed"
+    }
+  ],
+  "final_fix": {
+    "files": [
+      {
+        "file": "src/middleware.py",
+        "lines": "process_request method",
+        "change": "Reordered to authenticate first, then check permissions",
+        "explanation": "The middleware was checking permissions before knowing who the user actually was"
+      },
+      {
+        "file": "src/permissions.py",
+        "line": 47,
+        "change": "Added cache invalidation in update_user_role: keys_to_delete = [k for k in self._cache if k.startswith(f'{user_id}:')]",
+        "explanation": "When a user's role changes, all cached permission results for that user must be invalidated"
+      }
+    ]
+  },
+  "lessons_learned": [
+    "Authentication must always precede authorization",
+    "Caching requires cache invalidation when underlying data changes",
+    "The order of security checks matters critically",
+    "Stale cache bugs can cause subtle permission bypass issues"
+  ]
+}

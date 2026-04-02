@@ -1,0 +1,17 @@
+{
+  "django__django-10554": {
+    "A_run1": false,
+    "A_run2": false,
+    "B_run1": true
+  },
+  "django__django-13344": {
+    "A_run1": false,
+    "A_run2": false,
+    "B_run1": true
+  },
+  "django__django-16560": {
+    "A_run1": false,
+    "A_run2": true,
+    "B_run1": true
+  }
+}

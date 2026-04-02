@@ -1,0 +1,1 @@
+The Scheduler class in repo/scheduler.py has timezone bugs. Events are added with timezone-aware datetimes (UTC), but get_due_events() and get_next_event() use naive datetime.now() for comparison, causing TypeError when comparing aware and naive datetimes. Fix both methods to consistently use timezone-aware UTC datetimes.

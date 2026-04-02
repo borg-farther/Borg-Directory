@@ -1,0 +1,1 @@
+The permissions module in repo/myapp/permissions.py has a bug: it compares resource.owner (a string like 'alice') to the user object directly, which always fails because a string never equals a User object. Fix can_edit, can_delete, and can_view to compare resource.owner against user.name instead.

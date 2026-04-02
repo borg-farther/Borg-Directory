@@ -1,0 +1,111 @@
+{
+  "_comment": "Model file for Borg autoresearch - trace format optimization",
+  "_instructions": "This file is the ONLY file the autoresearch agent modifies. Do not modify eval_harness.py or other infrastructure.",
+
+  "trace_format": {
+    "capture_threshold": 5,
+    "_comment_capture_threshold": "Min tool calls before extracting trace. Lower = more traces but more noise.",
+    "max_files_tracked": 20,
+    "_comment_max_files_tracked": "Max files to track (prevents memory bloat)",
+    "max_errors_tracked": 10,
+    "_comment_max_errors_tracked": "Max errors to store per session",
+    "include_dead_ends": true,
+    "_comment_include_dead_ends": "Include files read multiple times but never modified (may be dead ends)",
+    "include_tool_sequence": false,
+    "_comment_include_tool_sequence": "Include full tool call sequence (high token cost, rarely helpful)",
+    "min_session_duration_seconds": 30,
+    "_comment_min_session_duration": "Min session length to capture (skip trivial interactions)"
+  },
+
+  "matching": {
+    "top_k": 3,
+    "_comment_top_k": "Return top_k matches. Higher = more chance of help, lower = less dilution",
+    "min_match_score": 1.0,
+    "_comment_min_match_score": "Minimum match score threshold. Higher = precision, lower = recall",
+    "signals": {
+      "fts_weight": 1.0,
+      "_comment_fts": "FTS5 text search base weight",
+      "error_type_weight": 5.0,
+      "_comment_error_type": "Bonus for matching error types (TypeError, ImportError, etc)",
+      "file_overlap_weight": 3.0,
+      "_comment_file_overlap": "Bonus for overlapping file paths",
+      "technology_match_weight": 2.0,
+      "_comment_tech_match": "Bonus for same technology (django, flask, etc)",
+      "helpfulness_multiplier": true,
+      "_comment_helpfulness": "Multiply score by helpfulness_score (0-1)"
+    },
+    "filters": {
+      "min_trace_quality": 0.3,
+      "_comment_quality": "Minimum helpfulness_score to consider",
+      "decay_old_traces": true,
+      "_comment_decay": "Apply 0.9 decay to traces not shown in 30 days",
+      "decay_days": 30
+    }
+  },
+
+  "injection": {
+    "trigger": "after_2_failures",
+    "_comment_trigger": "When to inject trace: 'immediate', 'after_1_failure', 'after_2_failures'",
+    "format": "concise",
+    "_comment_format": "Output format: 'concise' (1-2 lines), 'verbose' (full details), 'structured' (sections)",
+    "include_key_files": true,
+    "_comment_key_files": "Include 'KEY FILES: file1, file2' in trace",
+    "include_root_cause": true,
+    "_comment_root_cause": "Include 'ROOT CAUSE: ...' if available",
+    "include_dead_ends": true,
+    "_comment_dead_ends": "Include 'AVOID: ...' warnings",
+    "include_approach": true,
+    "_comment_approach": "Include 'APPROACH: ...' summary"
+  },
+
+  "pack_structure": {
+    "enabled": false,
+    "_comment_packs_vs_traces": "Set true to use workflow packs instead of traces for this experiment",
+    "pack_template": "phase_based",
+    "_comment_pack_template": "If packs enabled: 'phase_based' (reproduce/hypothesize/isolate/fix/verify) or 'entity_based' (model/view/template)"
+  },
+
+  "exploration_order": [
+    {
+      "id": "baseline",
+      "description": "Current default config",
+      "trace_format": {"capture_threshold": 5, "include_dead_ends": true},
+      "matching": {"top_k": 3, "min_match_score": 1.0},
+      "injection": {"trigger": "after_2_failures", "format": "concise"}
+    },
+    {
+      "id": "immediate_injection",
+      "description": "Test immediate trace injection vs delayed",
+      "injection": {"trigger": "immediate"}
+    },
+    {
+      "id": "verbose_trace",
+      "description": "Test verbose trace format vs concise",
+      "injection": {"format": "verbose"}
+    },
+    {
+      "id": "top_1_match",
+      "description": "Test top_k=1 (highest precision) vs top_k=3",
+      "matching": {"top_k": 1}
+    },
+    {
+      "id": "lower_threshold",
+      "description": "Test capture_threshold=3 (more traces, more noise)",
+      "trace_format": {"capture_threshold": 3}
+    },
+    {
+      "id": "no_dead_ends",
+      "description": "Test excluding dead ends (less noise)",
+      "trace_format": {"include_dead_ends": false}
+    }
+  ],
+
+  "success_criteria": {
+    "primary_test": "McNemar exact test (one-tailed)",
+    "alpha": 0.05,
+    "min_delta_pass_rate": 15,
+    "_comment_min_delta": "Minimum percentage point improvement",
+    "max_negative_transfer": 0,
+    "_comment_negative_transfer": "Tasks where B is WORSE than A (should be 0)"
+  }
+}

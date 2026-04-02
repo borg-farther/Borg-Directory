@@ -1,0 +1,70 @@
+{
+  "experiment": "batch3",
+  "protocol": "v2",
+  "experiment_id": "borg-ab-003",
+  "tasks": ["HARD-007", "HARD-013", "HARD-014", "HARD-015"],
+  "started_at": "2026-03-31T22:47:44Z",
+  "completed_at": "2026-03-31T22:48:50Z",
+  "total_duration_seconds": 66.5,
+  "notes": "Final batch: 4 tasks × 3 conditions × 2 runs = 24 runs. Fresh workspace per run. 15 tool call budget. Setup verified all 24 runs prepared correctly with broken starting states.",
+  "task_configurations": {
+    "HARD-007": {
+      "counterbalance": ["B", "A", "C"],
+      "wrong_trace_source": "HARD-014"
+    },
+    "HARD-013": {
+      "counterbalance": ["A", "B", "C"],
+      "wrong_trace_source": "HARD-015"
+    },
+    "HARD-014": {
+      "counterbalance": ["B", "A", "C"],
+      "wrong_trace_source": "HARD-001"
+    },
+    "HARD-015": {
+      "counterbalance": ["A", "B", "C"],
+      "wrong_trace_source": "HARD-002"
+    }
+  },
+  "summary": {
+    "total_runs": 24,
+    "setup_success": 24,
+    "start_state_broken": 24,
+    "condition_results": {
+      "A": {"total": 8, "setup_ok": 8, "start_broken": 8},
+      "B": {"total": 8, "setup_ok": 8, "start_broken": 8},
+      "C": {"total": 8, "setup_ok": 8, "start_broken": 8}
+    },
+    "task_results": {
+      "HARD-007": {"total": 6, "setup_ok": 6, "start_broken": 6},
+      "HARD-013": {"total": 6, "setup_ok": 6, "start_broken": 6},
+      "HARD-014": {"total": 6, "setup_ok": 6, "start_broken": 6},
+      "HARD-015": {"total": 6, "setup_ok": 6, "start_broken": 6}
+    }
+  },
+  "results": [
+    {"run_id": "HARD-007_B_run1", "task_id": "HARD-007", "condition": "B", "run_number": 1, "success": null, "setup_ok": true, "start_state_broken": true, "prompt_length": 3958},
+    {"run_id": "HARD-007_A_run1", "task_id": "HARD-007", "condition": "A", "run_number": 1, "success": null, "setup_ok": true, "start_state_broken": true, "prompt_length": 1301},
+    {"run_id": "HARD-007_C_run1", "task_id": "HARD-007", "condition": "C", "run_number": 1, "success": null, "setup_ok": true, "start_state_broken": true, "prompt_length": 2156},
+    {"run_id": "HARD-007_B_run2", "task_id": "HARD-007", "condition": "B", "run_number": 2, "success": null, "setup_ok": true, "start_state_broken": true, "prompt_length": 3958},
+    {"run_id": "HARD-007_A_run2", "task_id": "HARD-007", "condition": "A", "run_number": 2, "success": null, "setup_ok": true, "start_state_broken": true, "prompt_length": 1301},
+    {"run_id": "HARD-007_C_run2", "task_id": "HARD-007", "condition": "C", "run_number": 2, "success": null, "setup_ok": true, "start_state_broken": true, "prompt_length": 2156},
+    {"run_id": "HARD-013_A_run1", "task_id": "HARD-013", "condition": "A", "run_number": 1, "success": null, "setup_ok": true, "start_state_broken": true, "prompt_length": 34},
+    {"run_id": "HARD-013_B_run1", "task_id": "HARD-013", "condition": "B", "run_number": 1, "success": null, "setup_ok": true, "start_state_broken": true, "prompt_length": 929},
+    {"run_id": "HARD-013_C_run1", "task_id": "HARD-013", "condition": "C", "run_number": 1, "success": null, "setup_ok": true, "start_state_broken": true, "prompt_length": 909},
+    {"run_id": "HARD-013_A_run2", "task_id": "HARD-013", "condition": "A", "run_number": 2, "success": null, "setup_ok": true, "start_state_broken": true, "prompt_length": 34},
+    {"run_id": "HARD-013_B_run2", "task_id": "HARD-013", "condition": "B", "run_number": 2, "success": null, "setup_ok": true, "start_state_broken": true, "prompt_length": 929},
+    {"run_id": "HARD-013_C_run2", "task_id": "HARD-013", "condition": "C", "run_number": 2, "success": null, "setup_ok": true, "start_state_broken": true, "prompt_length": 909},
+    {"run_id": "HARD-014_B_run1", "task_id": "HARD-014", "condition": "B", "run_number": 1, "success": null, "setup_ok": true, "start_state_broken": true, "prompt_length": 889},
+    {"run_id": "HARD-014_A_run1", "task_id": "HARD-014", "condition": "A", "run_number": 1, "success": null, "setup_ok": true, "start_state_broken": true, "prompt_length": 34},
+    {"run_id": "HARD-014_C_run1", "task_id": "HARD-014", "condition": "C", "run_number": 1, "success": null, "setup_ok": true, "start_state_broken": true, "prompt_length": 2091},
+    {"run_id": "HARD-014_B_run2", "task_id": "HARD-014", "condition": "B", "run_number": 2, "success": null, "setup_ok": true, "start_state_broken": true, "prompt_length": 889},
+    {"run_id": "HARD-014_A_run2", "task_id": "HARD-014", "condition": "A", "run_number": 2, "success": null, "setup_ok": true, "start_state_broken": true, "prompt_length": 34},
+    {"run_id": "HARD-014_C_run2", "task_id": "HARD-014", "condition": "C", "run_number": 2, "success": null, "setup_ok": true, "start_state_broken": true, "prompt_length": 2091},
+    {"run_id": "HARD-015_A_run1", "task_id": "HARD-015", "condition": "A", "run_number": 1, "success": null, "setup_ok": true, "start_state_broken": true, "prompt_length": 34},
+    {"run_id": "HARD-015_B_run1", "task_id": "HARD-015", "condition": "B", "run_number": 1, "success": null, "setup_ok": true, "start_state_broken": true, "prompt_length": 909},
+    {"run_id": "HARD-015_C_run1", "task_id": "HARD-015", "condition": "C", "run_number": 1, "success": null, "setup_ok": true, "start_state_broken": true, "prompt_length": 2027},
+    {"run_id": "HARD-015_A_run2", "task_id": "HARD-015", "condition": "A", "run_number": 2, "success": null, "setup_ok": true, "start_state_broken": true, "prompt_length": 34},
+    {"run_id": "HARD-015_B_run2", "task_id": "HARD-015", "condition": "B", "run_number": 2, "success": null, "setup_ok": true, "start_state_broken": true, "prompt_length": 909},
+    {"run_id": "HARD-015_C_run2", "task_id": "HARD-015", "condition": "C", "run_number": 2, "success": null, "setup_ok": true, "start_state_broken": true, "prompt_length": 2027}
+  ]
+}

@@ -1,0 +1,14 @@
+REASONING TRACE FOR: Topological sort cycle detection
+
+PROBLEM DECOMPOSITION:
+- Kahn's algorithm (BFS-based topo sort) naturally detects cycles
+- If not all nodes end up in the result, there's a cycle
+
+KEY INSIGHT:
+- After the BFS loop completes, compare len(result) to total number of nodes
+- If result is shorter, some nodes couldn't be processed (they have unresolved dependencies = cycle)
+- Just add a check after the loop
+
+PITFALLS:
+- Make sure to count ALL nodes (including those only appearing as dependencies)
+- Self-loops are a special case of cycles — should be caught too

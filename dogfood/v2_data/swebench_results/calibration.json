@@ -1,0 +1,238 @@
+{
+  "experiment": "borg-swebench-v1",
+  "runs": [
+    {
+      "task_id": "django__django-16631",
+      "condition": "A",
+      "run": 1,
+      "success": false,
+      "timestamp": "2026-04-01T10:30:00Z",
+      "notes": "Agent found the session decode fix (adding fallback_keys to signing.loads) but couldn't solve the deeper auth hash verification issue. Partial fix only. Hit max_iterations (50 tool calls).",
+      "partial_fix": true,
+      "tool_calls": 50,
+      "agent_identified_root_cause": true,
+      "agent_identified_secondary_issue": true
+    },
+    {
+      "task_id": "django__django-10554",
+      "condition": "A",
+      "run": 1,
+      "success": null,
+      "error": null,
+      "timestamp": "2026-04-01T11:23:43.300274+00:00",
+      "container": "borg_cal_django__django-10554_1775042623",
+      "prompt_length": 4304,
+      "prompt_file": "/tmp/cal_prompt_django__django-10554_1.txt",
+      "needs_execution": true
+    },
+    {
+      "task_id": "django__django-10554",
+      "condition": "A",
+      "run": 1,
+      "success": false,
+      "notes": "Agent explored code but hit iteration limit. Couldn't docker cp properly.",
+      "timestamp": "2026-04-01T11:30:00Z"
+    },
+    {
+      "task_id": "django__django-11138",
+      "condition": "A",
+      "run": 1,
+      "success": false,
+      "notes": "Agent identified the fix across 4 files but couldn't apply test_patch. Very complex multi-file change.",
+      "timestamp": "2026-04-01T11:30:00Z"
+    },
+    {
+      "task_id": "django__django-11400",
+      "condition": "A",
+      "run": 1,
+      "success": false,
+      "notes": "Agent confused - didn't apply test_patch, thought bug was already fixed. Postgres tests skipped (no DB).",
+      "timestamp": "2026-04-01T11:30:00Z"
+    },
+    {
+      "task_id": "django__django-13212",
+      "condition": "A",
+      "run": 1,
+      "success": null,
+      "error": null,
+      "timestamp": "2026-04-01T11:36:43.916953+00:00",
+      "container": "borg_cal_django__django-13212_1775043404",
+      "prompt_length": 2204,
+      "prompt_file": "/tmp/cal_prompt_django__django-13212_1.txt",
+      "needs_execution": true
+    },
+    {
+      "task_id": "django__django-13344",
+      "condition": "A",
+      "run": 1,
+      "success": null,
+      "error": null,
+      "timestamp": "2026-04-01T11:36:55.942584+00:00",
+      "container": "borg_cal_django__django-13344_1775043416",
+      "prompt_length": 2696,
+      "prompt_file": "/tmp/cal_prompt_django__django-13344_1.txt",
+      "needs_execution": true
+    },
+    {
+      "task_id": "django__django-15128",
+      "condition": "A",
+      "run": 1,
+      "success": null,
+      "error": null,
+      "timestamp": "2026-04-01T11:37:01.100118+00:00",
+      "container": "borg_cal_django__django-15128_1775043421",
+      "prompt_length": 3921,
+      "prompt_file": "/tmp/cal_prompt_django__django-15128_1.txt",
+      "needs_execution": true
+    },
+    {
+      "task_id": "django__django-13212",
+      "condition": "A",
+      "run": 1,
+      "success": false,
+      "notes": "Agent identified all fixes needed (add params={'value': value} to ValidationError calls) but couldn't docker cp the fixed file into container. Hit iteration limit.",
+      "agent_identified_fix": true,
+      "execution_blocked": true,
+      "timestamp": "2026-04-01T11:55:00Z"
+    },
+    {
+      "task_id": "django__django-13344",
+      "condition": "A",
+      "run": 1,
+      "success": false,
+      "notes": "Agent correctly diagnosed middleware _async_check() issue across 2 files. Identified all files to modify. Couldn't apply fixes to container in time.",
+      "agent_identified_fix": true,
+      "execution_blocked": true,
+      "timestamp": "2026-04-01T11:55:00Z"
+    },
+    {
+      "task_id": "django__django-15128",
+      "condition": "A",
+      "run": 1,
+      "success": false,
+      "notes": "Agent started analysis but hit errors with docker exec commands. Couldn't progress past initial investigation.",
+      "agent_identified_fix": false,
+      "execution_blocked": true,
+      "timestamp": "2026-04-01T11:55:00Z"
+    },
+    {
+      "task_id": "django__django-13212",
+      "condition": "A",
+      "run": 2,
+      "success": false,
+      "partial": true,
+      "tests_passed": "6/7",
+      "notes": "v2 pipeline (host mount). Agent correctly identified and applied fix to most validators. Missed DecimalValidator NaN edge case. 6/7 tests pass.",
+      "pipeline": "v2_host_mount",
+      "timestamp": "2026-04-01T12:15:00Z"
+    },
+    {
+      "task_id": "django__django-10554",
+      "condition": "A",
+      "run": 1,
+      "success": false,
+      "pipeline": "v2",
+      "notes": "Agent explored code extensively but couldn't find the fix in time.",
+      "timestamp": "2026-04-01T12:45:00Z"
+    },
+    {
+      "task_id": "django__django-13344",
+      "condition": "A",
+      "run": 1,
+      "success": false,
+      "pipeline": "v2",
+      "notes": "Agent read middleware code but 4/4 tests still fail. Couldn't apply fix.",
+      "timestamp": "2026-04-01T12:45:00Z"
+    },
+    {
+      "task_id": "django__django-15128",
+      "condition": "A",
+      "run": 1,
+      "success": true,
+      "pipeline": "v2",
+      "notes": "FIRST PASS! Agent fixed Query.change_aliases bug. 18/18 tests pass.",
+      "timestamp": "2026-04-01T12:45:00Z"
+    },
+    {
+      "task_id": "django__django-11400",
+      "condition": "A",
+      "run": 1,
+      "success": true,
+      "pipeline": "v2",
+      "notes": "PASS! Agent fixed RelatedFieldListFilter and RelatedOnlyFieldListFilter ordering. 34/34 tests pass.",
+      "timestamp": "2026-04-01T13:10:00Z"
+    },
+    {
+      "task_id": "django__django-12708",
+      "condition": "A",
+      "run": 1,
+      "success": true,
+      "pipeline": "v2",
+      "notes": "PASS! Agent fixed _delete_composed_index to exclude unique constraints. Clean one-line fix.",
+      "timestamp": "2026-04-01T13:10:00Z"
+    },
+    {
+      "task_id": "django__django-15503",
+      "condition": "A",
+      "run": 1,
+      "success": false,
+      "pipeline": "v2",
+      "notes": "FAIL. Agent explored but hit iteration limit. 9/88 tests still fail.",
+      "timestamp": "2026-04-01T13:10:00Z"
+    },
+    {
+      "task_id": "django__django-11087",
+      "condition": "A",
+      "run": 1,
+      "success": true,
+      "pipeline": "v2",
+      "notes": "PASS! 27/27 check_framework tests pass.",
+      "timestamp": "2026-04-01T13:30:00Z"
+    },
+    {
+      "task_id": "django__django-16560",
+      "condition": "A",
+      "run": 1,
+      "success": false,
+      "pipeline": "v2",
+      "notes": "FAIL. Agent introduced syntax error in constraints.py while adding violation_error_code.",
+      "timestamp": "2026-04-01T13:30:00Z"
+    },
+    {
+      "task_id": "django__django-11138",
+      "condition": "A",
+      "run": 1,
+      "success": false,
+      "pipeline": "v2",
+      "notes": "FAIL. Agent fixed MySQL backend but test runs on SQLite. Fix incomplete.",
+      "timestamp": "2026-04-01T13:30:00Z"
+    },
+    {
+      "task_id": "django__django-11265",
+      "condition": "A",
+      "run": 1,
+      "success": true,
+      "pipeline": "v2",
+      "notes": "PASS! Agent fixed FilteredRelation exclude by copying _filtered_relations in split_exclude().",
+      "timestamp": "2026-04-01T14:00:00Z"
+    },
+    {
+      "task_id": "django__django-12754",
+      "condition": "A",
+      "run": 1,
+      "success": false,
+      "pipeline": "v2",
+      "notes": "FAIL. Test patch not properly applied (test method doesn't exist). Agent modified autodetector but can't verify.",
+      "timestamp": "2026-04-01T14:00:00Z"
+    },
+    {
+      "task_id": "django__django-13315",
+      "condition": "A",
+      "run": 1,
+      "success": false,
+      "pipeline": "v2",
+      "notes": "FAIL. Test patch not properly applied. Agent added .distinct() but can't verify.",
+      "timestamp": "2026-04-01T14:00:00Z"
+    }
+  ]
+}

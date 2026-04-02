@@ -1,0 +1,57 @@
+{
+  "results": {
+    "django__django-10554": {
+      "A": false,
+      "B": true
+    },
+    "django__django-11138": {
+      "A": false,
+      "B": false
+    },
+    "django__django-11265": {
+      "A": true,
+      "B": true
+    },
+    "django__django-12708": {
+      "A": true,
+      "B": true
+    },
+    "django__django-13344": {
+      "A": false,
+      "B": true
+    },
+    "django__django-15128": {
+      "A": true,
+      "B": true
+    },
+    "django__django-16560": {
+      "A": false,
+      "B": true
+    },
+    "django__django-12754": {
+      "A": true,
+      "B": true
+    },
+    "django__django-13315": {
+      "A": false,
+      "B": true
+    },
+    "django__django-15503": {
+      "A": false,
+      "B": true
+    }
+  },
+  "summary": {
+    "n": 10,
+    "a_rate": 0.4,
+    "b_rate": 0.9,
+    "improvement": 0.5,
+    "flips_helped": 5,
+    "flips_hurt": 0,
+    "both_pass": 4,
+    "both_fail": 1,
+    "p_value": 0.03125,
+    "n_discordant": 5,
+    "decision": "GO"
+  }
+}

@@ -1,0 +1,16 @@
+# TASK-025: Log Parser Multiline Bug
+
+## Problem Description
+A log parser is supposed to handle multiline log entries, where continuation lines (lines that start with whitespace after a log line) should be joined to the previous log entry's message. However, the `parse_logs_with_continuation` method has a bug that causes it to miss or incorrectly join continuation lines.
+
+## Your Task
+Fix the bug in the `parse_logs_with_continuation` method in `log_parser.py`.
+
+## Files
+- `log_parser.py` - The log parser implementation with a bug
+
+## Expected Behavior
+When running `python3 log_parser.py`, all tests should pass. Multiline log entries should be properly joined.
+
+## Hint
+The bug is in how continuation lines are detected and joined. The current code checks if a line starts with whitespace, but the issue is with the order of checking or how the continuation text is extracted.

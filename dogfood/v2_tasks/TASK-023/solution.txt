@@ -1,0 +1,17 @@
+# Solution for TASK-023
+
+## The Bug
+In the `MiddlewareChain.execute` method, when an exception occurs in a middleware, the code stores the error and then immediately re-raises it with `raise`. This prevents the error handler loop at the end of `execute()` from ever running.
+
+## The Fix
+Remove the `raise` statement from the except block. The error should be caught and stored in the context, allowing the flow to continue to the error handler loop.
+
+```python
+except Exception as e:
+    context["error"] = e
+    print(f"Error in middleware {middleware_index}: {e}")
+    # BUG: raise  # This prevents error handlers from running!
+    # FIX: Don't re-raise - let the error handler loop process it
+```
+
+This way, when a middleware throws, the error is stored in `context["error"]`, execution stops for that branch, but the function doesn't exit. The error handler loop at the end iterates through middlewares looking for those with `_is_error_handler` attribute and calls them with the error and context.

@@ -1,0 +1,16 @@
+## Task: Fix Pagination Bug
+
+A pagination module has a bug where page boundaries are calculated incorrectly.
+
+### Files to examine:
+- `pagination.py` - Contains the pagination logic with the bug
+- `test_pagination.py` - Contains test cases that demonstrate the expected behavior
+
+### Your task:
+The `get_page_boundaries` function in `pagination.py` calculates wrong indices for pages. Currently:
+- Page 1, size 10: returns (10, 19) instead of (0, 9)
+- Page 2, size 10: returns (20, 29) instead of (10, 19)
+
+The bug causes all pages to return empty results or wrong items.
+
+Fix the `get_page_boundaries` function so all tests pass.
