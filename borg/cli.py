@@ -9,6 +9,7 @@ Usage:
     borg apply <pack> --task  — start applying a pack
     borg publish <path>       — publish pack to GitHub
     borg feedback <session_id> — generate feedback from session
+    borg debug <error>        — get structured guidance for an error
     borg list                 — list local packs
     borg autopilot            — zero-config setup (install MCP + skill + auto-suggest)
     borg setup-claude         — configure borg MCP for Claude Code
@@ -215,6 +216,74 @@ def _cmd_feedback(args: argparse.Namespace) -> int:
         outcome=session.get("outcome", ""),
     )
     print(json.dumps(raw, indent=2))
+    return 0
+
+
+def _cmd_feedback_v3(args: argparse.Namespace) -> int:
+    """Record an outcome for a debug guidance session (V3 feedback loop)."""
+    from borg.core.v3_integration import BorgV3
+    from borg.core.pack_taxonomy import load_pack_by_problem_class
+
+    # Resolve pack_id
+    pack_id = args.pack
+    problem_class = args.problem_class
+
+    if not pack_id and not problem_class:
+        print("Error: must provide --pack or --problem-class", file=sys.stderr)
+        return 1
+
+    if problem_class:
+        pack = load_pack_by_problem_class(problem_class)
+        if not pack:
+            print(f"Error: no pack found for problem_class '{problem_class}'", file=sys.stderr)
+            return 1
+        pack_id = pack.get("id", pack.get("name", problem_class))
+    else:
+        pack_id = args.pack
+
+    # Determine success
+    success = args.success.lower() in ("yes", "true", "1", "y")
+    time_taken = args.time or 0.0
+    tokens_used = args.tokens or 0
+
+    # Record to V3
+    task_context = {"task_category": problem_class or "unknown"}
+    try:
+        v3 = BorgV3(db_path="~/.borg/borg_v3.db")
+        v3.record_outcome(
+            pack_id=pack_id,
+            task_context=task_context,
+            success=success,
+            tokens_used=tokens_used,
+            time_taken=time_taken,
+        )
+        status = "✓ success" if success else "✗ failure"
+        print(f"Recorded: {pack_id} [{problem_class or 'unknown'}] — {status}")
+        return 0
+    except Exception as e:
+        print(f"Error recording outcome: {e}", file=sys.stderr)
+        return 1
+
+
+def _cmd_debug(args: argparse.Namespace) -> int:
+    """Get structured debugging guidance for an error message."""
+    from borg.core.pack_taxonomy import debug_error, classify_error, PROBLEM_CLASSES
+
+    error_message = " ".join(args.error)
+
+    # Show classification without full guidance if --classify only
+    if args.classify:
+        pc = classify_error(error_message)
+        if pc:
+            print(f"problem_class: {pc}")
+        else:
+            print("No matching problem class.")
+            print(f"Known classes: {', '.join(PROBLEM_CLASSES)}")
+        return 0
+
+    # Full guidance
+    result = debug_error(error_message, show_evidence=not args.quiet)
+    print(result)
     return 0
 
 
@@ -818,6 +887,53 @@ def main() -> int:
     p = sub.add_parser("feedback", help="Generate feedback from session")
     p.add_argument("session_id", help="Session ID")
     p.set_defaults(func=_cmd_feedback)
+
+    # guild feedback-v3 --problem-class <class> --success yes --time 120
+    p = sub.add_parser("feedback-v3", help="Record debug guidance outcome to V3 feedback loop")
+    p.add_argument(
+        "--pack",
+        default=None,
+        help="Pack ID (or use --problem-class to look it up)",
+    )
+    p.add_argument(
+        "--problem-class",
+        default=None,
+        dest="problem_class",
+        help="Problem class (pack looked up automatically)",
+    )
+    p.add_argument(
+        "--success",
+        required=True,
+        help="Did the guidance help? (yes/no)",
+    )
+    p.add_argument(
+        "--time",
+        type=float,
+        default=None,
+        help="Time to resolve in minutes (optional)",
+    )
+    p.add_argument(
+        "--tokens",
+        type=int,
+        default=None,
+        help="Tokens used (optional)",
+    )
+    p.set_defaults(func=_cmd_feedback_v3)
+
+    # guild debug <error>
+    p = sub.add_parser("debug", help="Get structured debugging guidance for an error")
+    p.add_argument("error", nargs="+", help="Error message or traceback")
+    p.add_argument(
+        "--classify",
+        action="store_true",
+        help="Only classify the error — don't show full guidance",
+    )
+    p.add_argument(
+        "-q", "--quiet",
+        action="store_true",
+        help="Suppress evidence statistics in output",
+    )
+    p.set_defaults(func=_cmd_debug)
 
     # guild convert <path> [--format auto|skill|claude|cursorrules]
     p = sub.add_parser("convert", help="Convert SKILL.md / CLAUDE.md / .cursorrules to workflow pack")
