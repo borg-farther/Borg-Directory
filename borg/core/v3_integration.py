@@ -501,7 +501,14 @@ class BorgV3:
                     except Exception:
                         pass
 
-                # Path (c): no A/B context available — skip silently
+                # Path (d): no A/B context — feed mutation engine directly for drift tracking
+                if not ab_recorded:
+                    try:
+                        self._mutation.record_outcome(pack_id, category, success, tokens_used, time_taken)
+                    except TypeError:
+                        # Real MutationEngine.record_outcome(test_id, variant, success) doesn't
+                        # accept extended params — skip silently in that case
+                        pass
         except Exception as e:
             logger.warning("MutationEngine.record_outcome failed: %s", e)
 

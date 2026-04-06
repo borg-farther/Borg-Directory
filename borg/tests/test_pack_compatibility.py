@@ -37,7 +37,7 @@ PACKS_INDEX_PATH = Path("/root/hermes-workspace/guild-packs/index.json")
 PACKS_DIR = Path("/root/hermes-workspace/guild-packs/packs")
 TOP_5_PACKS = [
     "systematic-debugging",
-    "code-review",
+    # "code-review",  # Removed in v3.0.0: d=-2.83, actively hurts performance
     "test-driven-development",
     "plan",
     "quick-debug",
@@ -120,7 +120,9 @@ _PACK_LIST = _build_pack_list()
 # {pack_name: (filename, uri)}  -- pack_name may have duplicates; key by filename instead
 PACK_INFO: Dict[str, tuple] = {item[0]: (item[1], item[2]) for item in _PACK_LIST}
 ALL_PACK_FILES: List[str] = [item[1] for item in _PACK_LIST]  # filenames
-ALL_PACK_NAMES: List[str] = [item[0] for item in _PACK_LIST]  # pack names (with dups)
+# Filter deprecated packs: code-review removed in v3.0.0 (d=-2.83, actively hurts)
+_DEPRECATED_PACKS = {"code-review"}
+ALL_PACK_NAMES: List[str] = [item[0] for item in _PACK_LIST if item[0] not in _DEPRECATED_PACKS]
 
 
 def get_pack_file_path(pack_name: str) -> Path:
