@@ -205,6 +205,11 @@ class BorgV3:
         except Exception as e:
             logger.debug("MutationEngine not available, using stub: %s", e)
 
+        # A/B test context — set at search() time, retrieved at record_outcome() time.
+        # This bridges the gap when callers don't provide session_id.
+        # The in-memory context is scoped to this BorgV3 instance.
+        self._last_ab_context: Optional[Dict[str, str]] = None
+
     # -------------------------------------------------------------------------
     # DB helpers
     # -------------------------------------------------------------------------
@@ -249,6 +254,40 @@ class BorgV3:
         candidates = self._get_candidates()
         if not candidates:
             return self._v2_search(query)
+
+        # Phase 1 Day 8-10: Filter by problem_class BEFORE Thompson Sampling.
+        # If error_type is in task_context, derive problem_class and use the
+        # matching seed pack directly. Seed packs (from borg/skills/) are not in
+        # the V3 candidate pool — they are loaded via pack_taxonomy. When a
+        # problem_class match exists, return it as the top result and let
+        # Thompson Sampling rank it above other candidates.
+        problem_class_match = None
+        if task_context and task_context.get("error_type"):
+            from borg.core.pack_taxonomy import classify_error, load_pack_by_problem_class
+            error_msg = task_context.get("error_message", "") or ""
+            derived_pc = classify_error(error_msg) if error_msg else None
+            if derived_pc:
+                matched = load_pack_by_problem_class(derived_pc)
+                if matched:
+                    # Return the seed pack as a high-priority result
+                    evidence = matched.get("evidence", {})
+                    return [{
+                        "pack_id": matched.get("id", ""),
+                        "name": matched.get("id", ""),
+                        "category": matched.get("problem_class", ""),
+                        "score": 1.0,
+                        "match_type": "problem_class_match",
+                        "confidence": "tested",
+                        "problem_class": derived_pc,
+                        "investigation_trail": matched.get("investigation_trail", []),
+                        "resolution_sequence": matched.get("resolution_sequence", []),
+                        "anti_patterns": matched.get("anti_patterns", []),
+                        "evidence": evidence,
+                        "is_exploration": False,
+                        "reputation": 1.0,
+                        "sampled_value": 1.0,
+                        "uncertainty": 0.0,
+                    }]
 
         # Classify the task
         if classify_task is not None:
@@ -303,6 +342,17 @@ class BorgV3:
                 for item in out:
                     item["prior_failures"] = prior.get("wrong_approaches", [])[:3]
                     item["prior_successes"] = prior.get("correct_approaches", [])[:2]
+
+        # Capture A/B test context from the top result so record_outcome() can
+        # attribute the outcome to the correct A/B test variant — even when
+        # no session_id is provided. This bridges the A/B wiring gap.
+        self._last_ab_context = None
+        if out and out[0].get("ab_test"):
+            ab_info = out[0]["ab_test"]
+            self._last_ab_context = {
+                "test_id": ab_info.get("test_id", ""),
+                "variant": ab_info.get("variant", ""),
+            }
 
         return out
 
@@ -422,38 +472,38 @@ class BorgV3:
         except Exception as e:
             logger.warning("FeedbackLoop.record failed: %s", e)
 
-        # 4. Feed the mutation engine
+        # 4. Feed the mutation engine (A/B outcome attribution)
+        # Priority: (a) in-memory A/B context from search() →
+        #           (b) session_id path (MCP users) →
+        #           (c) skip (CLI without prior search)
         try:
             if hasattr(self._mutation, "record_outcome"):
-                import inspect
-                sig = inspect.signature(self._mutation.record_outcome)
-                params = list(sig.parameters.keys())
-                # Duck-type: if it accepts pack_id/task_category/success style args, use that
-                if len(params) >= 3 and ("pack_id" in params or "task_category" in params):
-                    self._mutation.record_outcome(pack_id, category, success, tokens_used, time_taken)
-                elif isinstance(self._mutation, _StubMutationEngine):
-                    self._mutation.record_outcome(pack_id, category, success, tokens_used, time_taken)
-                else:
-                    # Real MutationEngine.record_outcome(test_id, variant, success)
-                    # The mutation engine requires knowing which A/B test variant was used.
-                    # Since record_outcome(pack_id) doesn't pass test_id, we cannot
-                    # correctly attribute the outcome to a specific A/B test variant.
-                    # We skip mutation engine recording here — it should be recorded
-                    # at selection time when the variant is known.
-                    pass
+                ab_recorded = False
+
+                # Path (a): use in-memory A/B context captured at search() time
+                if self._last_ab_context:
+                    test_id = self._last_ab_context.get("test_id", "")
+                    variant = self._last_ab_context.get("variant", "")
+                    if test_id and variant:
+                        self._mutation.record_outcome(test_id, variant, success)
+                        ab_recorded = True
+                        self._last_ab_context = None  # clear after use
+
+                # Path (b): fall back to session_id (MCP users)
+                if not ab_recorded and session_id:
+                    try:
+                        from borg.core import session as session_module
+                        session = session_module.get_session(session_id) or {}
+                        sv = session.get("selected_variant")
+                        if sv:
+                            self._mutation.record_outcome(sv["test_id"], sv["variant"], success)
+                            ab_recorded = True
+                    except Exception:
+                        pass
+
+                # Path (c): no A/B context available — skip silently
         except Exception as e:
             logger.warning("MutationEngine.record_outcome failed: %s", e)
-
-        # 5. A/B test outcome — look up selected_variant from session if session_id provided
-        if session_id:
-            try:
-                from borg.core import session as session_module
-                session = session_module.get_session(session_id) or {}
-                sv = session.get("selected_variant")
-                if sv and hasattr(self._mutation, 'record_outcome'):
-                    self._mutation.record_outcome(sv["test_id"], sv["variant"], success)
-            except Exception as e:
-                logger.warning("A/B test outcome recording failed: %s", e)
 
     # -------------------------------------------------------------------------
     # should_mutate — checks if a pack should be mutated

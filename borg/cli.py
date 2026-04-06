@@ -284,6 +284,28 @@ def _cmd_debug(args: argparse.Namespace) -> int:
     # Full guidance
     result = debug_error(error_message, show_evidence=not args.quiet)
     print(result)
+
+    # Append FailureMemory warnings if error_message is provided
+    if error_message and not args.quiet:
+        try:
+            from borg.core.failure_memory import FailureMemory
+            fm = FailureMemory()
+            memory = fm.recall(error_message)
+            if memory and (memory.get("wrong_approaches") or memory.get("correct_approaches")):
+                print()
+                wrong = memory.get("wrong_approaches", [])
+                correct = memory.get("correct_approaches", [])
+                if wrong:
+                    top = wrong[0]
+                    print(f"⚠️ Other agents tried: {top.get('approach', 'unknown')} "
+                          f"and failed ({top.get('failure_count', 0)} times). Try a different approach.")
+                if correct:
+                    top = correct[0]
+                    print(f"✅ Instead, try: {top.get('approach', 'unknown')} "
+                          f"(succeeded {top.get('success_count', 0)} times).")
+        except Exception:
+            pass  # Never let FailureMemory break the CLI
+
     return 0
 
 

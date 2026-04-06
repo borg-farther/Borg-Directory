@@ -24,6 +24,8 @@ import logging
 import os
 import signal
 import sys
+import threading
+import time
 from pathlib import Path
 from typing import Any, Dict, List, Optional
 
@@ -38,6 +40,72 @@ _current_agent_id: contextvars.ContextVar[str] = contextvars.ContextVar('agent_i
 
 # Global trace captures — one per session_id
 _trace_captures: Dict[str, TraceCapture] = {}
+_trace_lock = threading.Lock()  # Lock for thread-safe access to _trace_captures
+
+# -------------------------------------------------------------------------
+# Rate limiting (token bucket: 60 requests per minute)
+# -------------------------------------------------------------------------
+_rate_limit_lock = threading.Lock()
+_rate_requests: List[float] = []  # Timestamps of recent requests
+_RATE_LIMIT = 60  # requests per window
+_RATE_WINDOW = 60.0  # window in seconds
+
+
+def _check_rate_limit() -> bool:
+    """Return True if request is allowed, False if rate limited."""
+    with _rate_limit_lock:
+        now = time.time()
+        # Remove requests outside the window
+        while _rate_requests and _rate_requests[0] < now - _RATE_WINDOW:
+            _rate_requests.pop(0)
+        if len(_rate_requests) >= _RATE_LIMIT:
+            return False
+        _rate_requests.append(now)
+        return True
+
+
+# -------------------------------------------------------------------------
+# MCP request timeouts (30s)
+# -------------------------------------------------------------------------
+TOOL_TIMEOUT_SEC = 30
+
+# Per-call timeout state (for threading.Timer fallback when SIGALRM unavailable)
+_timeout_state: Dict[str, Any] = {}
+
+
+def _timeout_handler(signum, frame):
+    """Called when a tool call exceeds TOOL_TIMEOUT_SEC (SIGALRM path)."""
+    raise TimeoutError(f"Tool call exceeded {TOOL_TIMEOUT_SEC}s timeout")
+
+
+class _ThreadTimeout:
+    """threading.Timer-based timeout for non-main threads."""
+    def __init__(self, seconds: float):
+        self.seconds = seconds
+        self._timer: Optional[threading.Timer] = None
+        self._cancelled = False
+        self._exc_info = None
+
+    def _do_timeout(self):
+        self._exc_info = (TimeoutError, TimeoutError(f"Tool call exceeded {self.seconds}s timeout"), None)
+
+    def __enter__(self):
+        def do_timeout():
+            self._do_timeout()
+        self._timer = threading.Timer(self.seconds, do_timeout)
+        self._timer.start()
+        return self
+
+    def __exit__(self, typ, val, tb):
+        if self._timer:
+            self._timer.cancel()
+        if self._exc_info and isinstance(val, TimeoutError):
+            raise self._exc_info[1]
+        return False
+
+    def did_timeout(self) -> bool:
+        return self._exc_info is not None
+
 
 _MAINTENANCE_INTERVAL: int = 10  # Run maintenance every N feedback calls
 
@@ -45,7 +113,8 @@ _MAINTENANCE_INTERVAL: int = 10  # Run maintenance every N feedback calls
 def init_trace_capture(session_id: str, task: str = "", agent_id: str = ""):
     """Initialize trace capture for a session."""
     global _trace_captures
-    _trace_captures[session_id] = TraceCapture(task=task, agent_id=agent_id)
+    with _trace_lock:
+        _trace_captures[session_id] = TraceCapture(task=task, agent_id=agent_id)
 
 
 def _feed_trace_capture(tool_name: str, args: Dict[str, Any], result: str):
@@ -54,18 +123,19 @@ def _feed_trace_capture(tool_name: str, args: Dict[str, Any], result: str):
     if not session_id:
         return  # No active session
     global _trace_captures
-    capture = _trace_captures.get(session_id)
-    if capture is None:
-        return  # No active capture for this session
-    capture.on_tool_call(tool_name, args, result)
+    with _trace_lock:
+        capture = _trace_captures.get(session_id)
+        if capture is None:
+            return  # No active capture for this session
+        capture.on_tool_call(tool_name, args, result)
 
-    # Auto-save at 45 calls (before agent wastes more tokens)
-    if capture.tool_calls >= 45:
-        if capture.task:  # Only save if we have a task
-            trace = capture.extract_trace(outcome="auto_truncated")
-            if trace["tool_calls"] > 5:
-                save_trace(trace)
-        del _trace_captures[session_id]
+        # Auto-save at 45 calls (before agent wastes more tokens)
+        if capture.tool_calls >= 45:
+            if capture.task:  # Only save if we have a task
+                trace = capture.extract_trace(outcome="auto_truncated")
+                if trace["tool_calls"] > 5:
+                    save_trace(trace)
+            del _trace_captures[session_id]
 
 # ---------------------------------------------------------------------------
 # Tool definitions (MCP schema)
@@ -1083,16 +1153,17 @@ def borg_feedback(
         # Finalize any active trace capture for this session
         session_id_from_ctx = _current_session_id.get()
         global _trace_captures
-        capture = _trace_captures.get(session_id_from_ctx)
-        if capture is not None:
-            if capture.tool_calls > 5:
-                trace = capture.extract_trace(
-                    outcome="success",
-                    root_cause=what_changed[:200] if what_changed else "",
-                    approach_summary=where_to_reuse[:200] if where_to_reuse else ""
-                )
-                save_trace(trace)
-            del _trace_captures[session_id_from_ctx]
+        with _trace_lock:
+            capture = _trace_captures.get(session_id_from_ctx)
+            if capture is not None:
+                if capture.tool_calls > 5:
+                    trace = capture.extract_trace(
+                        outcome="success",
+                        root_cause=what_changed[:200] if what_changed else "",
+                        approach_summary=where_to_reuse[:200] if where_to_reuse else ""
+                    )
+                    save_trace(trace)
+                del _trace_captures[session_id_from_ctx]
 
         import uuid
         import yaml
@@ -1537,22 +1608,29 @@ def borg_observe(task: str = "", context: str = "", context_dict: dict = None, p
         if phases_data:
             lines.append("Phases:")
             if isinstance(phases_data, list):
-                for i, phase in enumerate(phases_data, 1):
+                # Import conditions functions once, before filtering
+                from borg.core.conditions import (
+                    evaluate_skip_conditions,
+                    evaluate_inject_conditions,
+                    evaluate_context_prompts,
+                )
+
+                # Filter phases BEFORE rendering — skip_if should REMOVE phases, not just mark them
+                filtered_phases = []
+                for phase in phases_data:
+                    if isinstance(phase, dict):
+                        should_skip, skip_reason = evaluate_skip_conditions(phase, eval_context)
+                        if not should_skip:
+                            filtered_phases.append(phase)
+                    else:
+                        # String phases pass through unchanged
+                        filtered_phases.append(phase)
+
+                # Now iterate over FILTERED phases (skipped ones never appear)
+                for i, phase in enumerate(filtered_phases, 1):
                     if isinstance(phase, dict):
                         phase_name = phase.get("name", f"phase-{i}")
                         phase_desc = phase.get("description", "")
-
-                        # Evaluate skip_if conditions
-                        from borg.core.conditions import (
-                            evaluate_skip_conditions,
-                            evaluate_inject_conditions,
-                            evaluate_context_prompts,
-                        )
-
-                        should_skip, skip_reason = evaluate_skip_conditions(phase, eval_context)
-                        if should_skip:
-                            lines.append(f"  Phase {i}: {phase_name} — SKIPPED ({skip_reason})")
-                            continue
 
                         lines.append(f"  Phase {i}: {phase_name} — {phase_desc}")
 
@@ -2128,19 +2206,29 @@ def call_tool(name: str, arguments: Dict[str, Any]) -> str:
     """Dispatch a tool call to the appropriate guild function. Returns JSON string.
     
     All code paths return a JSON string (never raises). Tool execution is
-    protected by a timeout to prevent hangs.
+    protected by a timeout to prevent hangs and rate limiting.
     """
+    # Check rate limit first
+    if not _check_rate_limit():
+        return json.dumps({
+            "success": False,
+            "error": "Rate limit exceeded: maximum 60 requests per minute",
+            "type": "RateLimitError"
+        })
+
     try:
-        # Install timeout alarm (Unix only)
-        if hasattr(signal, "SIGALRM"):
+        # Try SIGALRM timeout first (main thread only)
+        if hasattr(signal, "SIGALRM") and threading.current_thread() is threading.main_thread():
             old_handler = signal.signal(signal.SIGALRM, _timeout_handler)
             signal.alarm(TOOL_TIMEOUT_SEC)
+            use_signal_timeout = True
+        else:
+            use_signal_timeout = False
 
         try:
             result = _call_tool_impl(name, arguments)
         finally:
-            # Cancel alarm and restore handler
-            if hasattr(signal, "SIGALRM"):
+            if use_signal_timeout:
                 signal.alarm(0)
                 signal.signal(signal.SIGALRM, old_handler)
 
