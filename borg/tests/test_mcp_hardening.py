@@ -253,22 +253,43 @@ class TestRequestTimeouts(unittest.TestCase):
                 with patch('borg.integrations.mcp_server._call_tool_impl') as mock_impl:
                     mock_impl.return_value = '{"success": true}'
                     result = call_tool("borg_search", {"query": "test"})
-                    # On main thread, alarm should have been set
-                    self.assertTrue(len(alarms_set) >= 0)  # Signal path may or may not be used
+                    # On main thread, alarm should have been set and then cleared (set to 0)
+                    if threading.current_thread() is threading.main_thread():
+                        self.assertGreaterEqual(len(alarms_set), 1,
+                            "SIGALRM should be set at least once on main thread")
+                        # Should have set timeout AND cleared it (alarm(0))
+                        self.assertIn(TOOL_TIMEOUT_SEC, alarms_set,
+                            f"Should have set alarm to {TOOL_TIMEOUT_SEC}s")
 
-    def test_timeout_does_not_affect_main_thread_signal(self):
-        """Verify SIGALRM is only used when threading.main_thread()."""
-        # This test documents the expected behavior:
-        # - If SIGALRM is available AND we're on main thread: use signal alarm
-        # - Otherwise: fall back to no timeout (or threading.Timer in future)
-        if hasattr(signal, "SIGALRM"):
-            current_thread = threading.current_thread()
-            is_main = current_thread is threading.main_thread()
-            # The code checks: hasattr(signal, "SIGALRM") and threading.current_thread() is threading.main_thread()
-            self.assertTrue(
-                hasattr(signal, "SIGALRM"),
-                "SIGALRM should be available on Unix"
-            )
+    def test_timeout_not_used_in_non_main_thread(self):
+        """Verify SIGALRM is NOT used from a non-main thread."""
+        if not hasattr(signal, "SIGALRM"):
+            self.skipTest("SIGALRM not available on this platform")
+
+        alarms_set = []
+        original_alarm = signal.alarm
+        def mock_alarm(sec):
+            alarms_set.append(sec)
+            return 0
+
+        errors = []
+        def worker():
+            try:
+                with patch.object(signal, 'alarm', mock_alarm):
+                    with patch('borg.integrations.mcp_server._call_tool_impl') as mock_impl:
+                        mock_impl.return_value = '{"success": true}'
+                        call_tool("borg_search", {"query": "test"})
+            except Exception as e:
+                errors.append(str(e))
+
+        t = threading.Thread(target=worker)
+        t.start()
+        t.join()
+        self.assertEqual(errors, [], f"Errors in thread: {errors}")
+        # SIGALRM should NOT be used from non-main thread
+        timeout_alarms = [a for a in alarms_set if a == TOOL_TIMEOUT_SEC]
+        self.assertEqual(len(timeout_alarms), 0,
+            "SIGALRM should not be set from non-main thread")
 
 
 if __name__ == "__main__":
