@@ -3,18 +3,39 @@
 **A Python/Django debugging expert that's honest about what it doesn't know.**
 
 [![PyPI](https://img.shields.io/pypi/v/agent-borg)](https://pypi.org/project/agent-borg/)
-[![Tests](https://img.shields.io/badge/tests-2872%20passed-brightgreen)]()
+[![Version](https://img.shields.io/badge/version-3.2.4-blue)]()
+[![Tests](https://img.shields.io/badge/tests-1708%20passed-brightgreen)]()
 [![License: MIT](https://img.shields.io/badge/license-MIT-blue.svg)]()
 
-> **v3.2.2 honesty patch.** Earlier versions of `borg debug` would route any
-> error containing the substring "Error" to a Django migration pack — including
-> Rust, Go, Docker, and JavaScript errors. v3.2.2 deletes that fallback and
-> adds a non-Python language guard. Borg now refuses to give a Python answer
-> to a non-Python error and tells you so explicitly. JS/TS, Rust, Go,
-> Docker, and Kubernetes pack coverage is on the roadmap (see
+> **v3.2.4 patch.** Fixes a broken `borg observe → borg search` roundtrip:
+> earlier versions of `observe` could emit task-guidance query strings that
+> `search` was unable to index, so the second hop silently returned nothing.
+> v3.2.4 aligns the tokenizer on both sides and adds a regression test so
+> the path stays honest. No new features, no new claims — this is a
+> correctness fix.
+
+> **v3.2.2 honesty patch (still in force).** Earlier versions of `borg debug`
+> would route any error containing the substring "Error" to a Django migration
+> pack — including Rust, Go, Docker, and JavaScript errors. v3.2.2 deleted
+> that fallback and added a non-Python language guard. Borg refuses to give a
+> Python answer to a non-Python error and tells you so explicitly. JS/TS,
+> Rust, Go, Docker, and Kubernetes pack coverage is on the roadmap (see
 > `docs/20260408-0623_classifier_prd/`). If you are a Python/Django developer
 > `borg debug` should still help; if you are not, we would rather say
 > "we don't know yet" than give you a confidently wrong answer.
+
+> **What borg has been measured on.** Honest snapshot at v3.2.4:
+> - **Classifier, 173-row Python/Django error corpus:** FCR 53.8% → 0.58%,
+>   precision 13.1% → 93.8%. Reproducible via the test suite.
+> - **Agent-level retrieval effect, 1 model:** MiniMax (P1.1) — floor-effect
+>   null (0/10 both arms on Django SWE-bench easy). One model only; not
+>   evidence for or against the mechanism.
+> - **Agent-level retrieval effect, Sonnet replication:** in progress. Will
+>   be published whichever way it lands.
+> - **Not measured:** cross-language (non-Python), cross-vertical, and any
+>   claim about collective learning across agents in production.
+> See `BORG_PRD_FINAL.md` for the full audit trail (two correction blocks
+> preserved as forensic evidence).
 
 ---
 

@@ -1,8 +1,8 @@
 # BORG — Product Requirements Document
-## Version 4.0 | Date: 2026-04-01
-## Status: APPROVED — based on directional experiment data (see 20260408 correction)
+## Version 4.1 | Date: 2026-04-08
+## Status: SHIPPING (v3.2.4 on PyPI) — agent-level effect UNPROVEN, classifier measured
 
-> **[CORRECTION 2026-04-08]** — An earlier version of this PRD cited the
+> **[CORRECTION 2026-04-08 #1]** — An earlier version of this PRD cited the
 > SWE-bench Borg A/B result as "p=0.031, A=40% → B=90%, +50pp, n=10" and
 > declared Product A "VALIDATED." A forensic audit on 2026-04-08 proved
 > the n=10 result was fabricated in a post-hoc file
@@ -19,19 +19,56 @@
 > (20260408-1103) is the first honest agent-level measurement.
 > See: `docs/20260408-1003_scope3_experiment/PRIOR_CLAIMS_AUDIT.md`.
 
+> **[CORRECTION 2026-04-08 #2]** — A second audit (`docs/20260408-1118_borg_roadmap/PLUS34PP_AUDIT.md`)
+> reviewed the "+34pp" figure that had been reused after correction #1.
+> Finding: the directional +34pp / +43pp observation is real (n=3 discordant
+> pairs all favor traces in the only real paired run) but the significance
+> language that had crept back in ("appears to improve," "directionally
+> supports the hypothesis," etc.) was caveat-stripping. There is **no
+> statistically-supported agent-level effect of Borg retrieval as of this
+> revision.** The only honest measurements are: (a) the classifier precision /
+> FCR numbers below, and (b) the MiniMax P1.1 run, which showed a floor effect
+> (both arms 0/10 on Django SWE-bench easy set — see `P1_MINIMAX_REPORT.md`).
+> A Sonnet replication (P2.1) is in progress at the time of this revision.
+
 ---
 
 ## 1. EXECUTIVE SUMMARY
 
-Borg is a collective intelligence layer for AI agents. One agent fails, every agent learns. One agent succeeds, every agent benefits.
+Borg is a local, offline debugging aid for Python/Django developers. It ships
+as a PyPI package (`agent-borg`, current release v3.2.4) with a set of
+hand-authored packs and a classifier that routes errors to the right pack —
+or refuses when nothing matches.
 
-**The candidate mechanism (directionally supported, not yet statistically significant):** Injecting reasoning traces from prior investigations into agents facing similar problems appears to improve success rate on real-world Django coding tasks (n=7 paired, 3/3 discordant pairs favor traces, McNemar p=0.125, zero negative transfer). [ATTENTION 20260408: prior citation of "+50pp, p=0.031" was fabricated — see audit doc above.]
+**What is measured (v3.2.4, 2026-04-08):**
+- **Classifier FCR** (false confident routes) on the 173-row Python/Django
+  evaluation corpus: **53.8% → 0.58%** (measured, reproducible via
+  `pytest tests/test_classifier_*.py`).
+- **Classifier precision** on the same corpus: **13.1% → 93.8%**.
+- **Test suite:** 1708 tests passing on v3.2.4 at the time of this revision.
+- **v3.2.4 patch:** fixes a broken `borg observe → borg search` roundtrip
+  where observe would emit query strings that search could not index. This
+  is a correctness fix, not a marketing claim.
+
+**What is NOT measured (and the PRD no longer claims it is):**
+- There is **no statistically-supported agent-level effect** of Borg
+  retrieval on task success. The only real paired SWE-bench run is n=7
+  (McNemar p=0.125, directional only). The prior "+50pp / p=0.031" figure
+  was fabricated (correction #1). The reused "+34pp / directionally
+  supports" framing was caveat-stripped (correction #2).
+- The MiniMax P1.1 agent-level run (the first properly-instrumented Borg
+  retrieval measurement) showed a **floor effect** — both treatment and
+  control scored 0/10 on the Django SWE-bench easy set. That is a null
+  result, not a negative result, and it is a measurement on **one model
+  only**.
+- A Sonnet replication (P2.1) is running at the time of this revision to
+  determine whether the floor effect is model-specific or mechanism-wide.
 
 **Three products, one platform:**
 
 | Product | Status | Evidence |
 |---------|--------|----------|
-| A. Failure Memory (reasoning traces) | DIRECTIONAL POSITIVE — NOT YET SIGNIFICANT | n=7 SWE-bench Django, p=0.125, zero negative transfer (prior "+50pp / p=0.031 / n=10" was fabricated — see audit doc) |
+| A. Failure Memory (reasoning traces) | SHIPPING classifier, AGENT-LEVEL EFFECT UNPROVEN | Classifier: FCR 0.58%, precision 93.8% on 173-row corpus (measured). Agent-level: n=7 directional-only (p=0.125) + 1 model P1.1 floor-effect null. Sonnet P2.1 in progress. See corrections #1 and #2 above. |
 | B. Codebase Navigation Cache | DESIGNED | Architecture complete, not tested |
 | C. Collective DeFi Intelligence | DESIGNED | Thompson Sampling built, no real users |
 
@@ -39,12 +76,39 @@ Borg is a collective intelligence layer for AI agents. One agent fails, every ag
 
 ## 2. WHAT'S PROVEN vs WHAT'S CLAIMED
 
-### DIRECTIONALLY POSITIVE (with small-n data)
-- Reasoning traces appear to improve coding agent success on Django: n=7, A=3/7 (43%) → B=6/7 (86%), McNemar p=0.125 — directional only, NOT statistically significant. [CORRECTION 20260408: prior "40% → 90% (+50pp, p=0.031)" claim was fabricated — see docs/20260408-1003_scope3_experiment/PRIOR_CLAIMS_AUDIT.md]
-- Agent-generated traces work ~50% as well as developer traces (n=2, anecdotal)
-- Zero negative transfer (traces never hurt tasks agents already solve)
-- MCP tools, SQLite store, FTS5 search all working (2545 tests)
-- DeFi scanning CLI works with live free APIs
+### MEASURED (v3.2.4, reproducible)
+- **Classifier FCR:** 53.8% → 0.58% on the 173-row Python/Django evaluation
+  corpus. Reproducible via the classifier test suite.
+- **Classifier precision:** 13.1% → 93.8% on the same corpus.
+- **Test suite:** 1708 tests passing at the v3.2.4 tag.
+- **Non-Python language guard** (v3.2.2+): Borg now refuses Python answers
+  for Rust / Go / JS / Docker errors instead of mis-routing them to the
+  Django migration pack.
+- **observe → search roundtrip** (v3.2.4): regression test covers the path
+  that used to silently drop queries.
+- **MCP tools, SQLite store, FTS5 search:** all running.
+- **DeFi scanning CLI:** works with live free APIs (scanning only — no
+  collective learning claim).
+
+### DIRECTIONAL ONLY (small-n, not statistically significant)
+- Reasoning traces on SWE-bench Django, n=7 paired, A=3/7 → B=6/7, McNemar
+  exact p=0.125. This is the only real paired agent-level run Borg has.
+  [CORRECTION #1: prior "40% → 90% (+50pp, p=0.031)" claim was fabricated.
+  CORRECTION #2: the "+34pp, directionally supports" framing was caveat-
+  stripped. See audit docs referenced at the top of this PRD.]
+
+### MEASURED AS NULL (floor effect, 1 model)
+- **P1.1 MiniMax agent-level run:** Both treatment (Borg retrieval on) and
+  control (Borg off) scored 0/10 on the Django SWE-bench easy set. Interpreted
+  as a floor effect (the model is too weak to produce signal either way),
+  not as evidence against the mechanism. See
+  `docs/20260408-1118_borg_roadmap/P1_MINIMAX_REPORT.md`.
+
+### IN PROGRESS
+- **P2.1 Sonnet replication** of the agent-level measurement. Checkpointed
+  at rate-limit wait as of 2026-04-08 16:12. If Sonnet also shows 0/0 the
+  floor-effect interpretation is confirmed; if Sonnet shows signal either
+  way the mechanism can finally be measured.
 
 ### CLAIMED BUT UNPROVEN
 - Collective learning in DeFi (zero real users)
@@ -52,7 +116,7 @@ Borg is a collective intelligence layer for AI agents. One agent fails, every ag
 - Circuit breaker (claimed in README, NOT IMPLEMENTED)
 - Ed25519 signing (listed as feature, ZERO code)
 - Multi-node fleet learning loop (designed, not built)
-- Cross-vertical generalization (only Django tested)
+- Cross-vertical generalization (only Python/Django classifier tested)
 
 ### CRITICAL GAPS TO FIX
 1. **Remove Ed25519 claim** from README until implemented
@@ -85,12 +149,33 @@ When Agent B hits the same problem, Borg provides Agent A's investigation notes.
 ### What it does
 Stores structured investigation notes from agent sessions (both successes and failures). Matches incoming problems to relevant prior investigations. Serves investigation context to agents, reducing redundant exploration.
 
-### Directionally-supported claims (n=7, not statistically significant)
-- +43pp directional success-rate improvement on SWE-bench Django tasks (3/7 → 6/7)
-- 3/3 discordant pairs favor treatment; McNemar p=0.125
-- Agent-generated traces help ~50% of the time (n=2, anecdotal)
-- Zero negative transfer
-- [CORRECTION 20260408] Prior claim "+50pp, p=0.031" was fabricated — see docs/20260408-1003_scope3_experiment/PRIOR_CLAIMS_AUDIT.md
+### What is measured vs. what is still open
+**Measured (classifier layer, reproducible on the 173-row corpus):**
+- FCR 53.8% → 0.58%
+- Precision 13.1% → 93.8%
+- 1708 tests passing at the v3.2.4 tag
+
+**Directional only (n=7 SWE-bench Django paired run):**
+- A=3/7 → B=6/7, McNemar exact p=0.125 (NOT statistically significant)
+- 3/3 discordant pairs favor treatment
+- Zero negative transfer in that run
+
+**Null / floor effect (n=10 MiniMax, P1.1):**
+- Both arms 0/10 on Django SWE-bench easy set. Not a negative result for
+  the mechanism; the model is too weak to produce signal either way.
+
+**In progress:**
+- P2.1 Sonnet replication, checkpointed at rate-limit wait 2026-04-08 16:12.
+
+**Anecdotes (labeled as such, not claims):**
+- One instance where agent-generated traces appeared to help; n=2, anecdotal.
+
+**Corrections of prior claims:**
+- [CORRECTION #1 20260408-1003] "+50pp, p=0.031" was fabricated.
+  See `docs/20260408-1003_scope3_experiment/PRIOR_CLAIMS_AUDIT.md`.
+- [CORRECTION #2 20260408-1118] Reused "+34pp, directionally supports"
+  framing was caveat-stripped. See
+  `docs/20260408-1118_borg_roadmap/PLUS34PP_AUDIT.md`.
 
 ### MVP (ship now)
 ```
@@ -274,10 +359,34 @@ SWE-agent, Devin, Cursor, Windsurf, Claude Code — these all need Borg. They're
 
 ## 11. THE BOTTOM LINE
 
-We have ZERO statistically significant results. The one directional result we have on SWE-bench Django (n=7, 3/3 discordant pairs favor traces, McNemar p=0.125, zero negative transfer) is promising but does not reject the null at α=0.05. [CORRECTION 20260408: an earlier version of this section claimed "ONE statistically significant result: +50pp on SWE-bench Django tasks (p=0.031)." That number was fabricated — see docs/20260408-1003_scope3_experiment/PRIOR_CLAIMS_AUDIT.md. The Borg retrieval mechanism itself (borg_searches in treatment) has never been measured in a properly-instrumented agent experiment.]
+As of v3.2.4 (2026-04-08):
 
-Everything else is either designed-but-unbuilt or claimed-but-unproven.
+**What is real and measured:**
+- The classifier is meaningfully better. FCR 53.8% → 0.58% and precision
+  13.1% → 93.8% on a 173-row Python/Django corpus, with 1708 passing tests.
+  This is the only layer of Borg with reproducible quantitative evidence.
+- The non-Python guard and the observe→search roundtrip fix are correctness
+  wins, not marketing claims.
 
-The honest path forward: run a properly-powered experiment, ship only what's supported by real data, stop claiming what's unbuilt.
+**What is open:**
+- The agent-level effect of Borg retrieval is NOT statistically supported.
+  The only real paired run is n=7, p=0.125. The P1.1 MiniMax measurement
+  produced a floor-effect null (0/10 both arms). P2.1 Sonnet is still
+  running. One of three things is true: (a) the mechanism works on
+  stronger models and the floor effect masked it, (b) the mechanism does
+  not work, or (c) we need a harder benchmark. We do not yet know which.
 
-**The product is real. The evidence is real but thin. Time to be honest about the gaps and build.**
+**What was fabricated:**
+- "+50pp / p=0.031 / n=10" — fabricated in a post-hoc file (correction #1).
+- "+34pp, directionally supports" — caveat-stripped from a real n=7 result
+  (correction #2). Both correction blocks are preserved at the top of this
+  PRD as forensic evidence.
+
+**The honest path forward:** finish the Sonnet replication, publish whatever
+result it produces, and resist writing any agent-level claim into this PRD
+until a properly-powered experiment exists. The classifier can and should
+ship on its own merits.
+
+**The product is real. The classifier evidence is real. The agent-level
+evidence is not. Ship the classifier, keep measuring the mechanism, and
+stop promising what has not been tested.**
