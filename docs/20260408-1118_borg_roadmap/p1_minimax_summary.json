@@ -1,0 +1,29 @@
+{
+  "n_done": 45,
+  "n_success": 0,
+  "n_skipped": 0,
+  "n_crashed": 0,
+  "per_condition": {
+    "C0_no_borg": {
+      "done": 15,
+      "success": 0,
+      "skipped": 0,
+      "crashed": 0
+    },
+    "C1_borg_empty": {
+      "done": 15,
+      "success": 0,
+      "skipped": 0,
+      "crashed": 0
+    },
+    "C2_borg_seeded": {
+      "done": 15,
+      "success": 0,
+      "skipped": 0,
+      "crashed": 0
+    }
+  },
+  "total_cost_usd": 0.0443,
+  "budget_aborted": false,
+  "invariant_fired": false
+}
