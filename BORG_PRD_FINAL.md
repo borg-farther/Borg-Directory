@@ -1,6 +1,23 @@
 # BORG — Product Requirements Document
 ## Version 4.0 | Date: 2026-04-01
-## Status: APPROVED — based on validated experiment data
+## Status: APPROVED — based on directional experiment data (see 20260408 correction)
+
+> **[CORRECTION 2026-04-08]** — An earlier version of this PRD cited the
+> SWE-bench Borg A/B result as "p=0.031, A=40% → B=90%, +50pp, n=10" and
+> declared Product A "VALIDATED." A forensic audit on 2026-04-08 proved
+> the n=10 result was fabricated in a post-hoc file
+> (`dogfood/v2_data/swebench_results/FINAL_RESULTS_v2.json`, 2026-04-01
+> 19:07) that added three tasks (12754, 13315, 15503) with no Condition B
+> run log anywhere on disk. The **honest result** from the only real
+> paired run is: **n=7, A=3/7 (43%), B=6/7 (86%), 3 discordant pairs all
+> favoring traces, McNemar exact p=0.125 — NOT statistically significant
+> but directionally promising with zero negative transfer**. Product A's
+> status is therefore downgraded from VALIDATED to DIRECTIONALLY POSITIVE,
+> NOT YET SIGNIFICANT. IMPORTANT: the Borg retrieval mechanism itself
+> (`borg_searches` in treatment runs) has never been measured in a
+> properly-instrumented agent experiment. The pending Path 1 experiment
+> (20260408-1103) is the first honest agent-level measurement.
+> See: `docs/20260408-1003_scope3_experiment/PRIOR_CLAIMS_AUDIT.md`.
 
 ---
 
@@ -8,13 +25,13 @@
 
 Borg is a collective intelligence layer for AI agents. One agent fails, every agent learns. One agent succeeds, every agent benefits.
 
-**The proven mechanism:** Injecting reasoning traces from prior investigations into agents facing similar problems improves success rate by +50 percentage points on real-world coding tasks (p=0.031, SWE-bench Verified).
+**The candidate mechanism (directionally supported, not yet statistically significant):** Injecting reasoning traces from prior investigations into agents facing similar problems appears to improve success rate on real-world Django coding tasks (n=7 paired, 3/3 discordant pairs favor traces, McNemar p=0.125, zero negative transfer). [ATTENTION 20260408: prior citation of "+50pp, p=0.031" was fabricated — see audit doc above.]
 
 **Three products, one platform:**
 
 | Product | Status | Evidence |
 |---------|--------|----------|
-| A. Failure Memory (reasoning traces) | VALIDATED | +50pp on SWE-bench, p=0.031, n=10 |
+| A. Failure Memory (reasoning traces) | DIRECTIONAL POSITIVE — NOT YET SIGNIFICANT | n=7 SWE-bench Django, p=0.125, zero negative transfer (prior "+50pp / p=0.031 / n=10" was fabricated — see audit doc) |
 | B. Codebase Navigation Cache | DESIGNED | Architecture complete, not tested |
 | C. Collective DeFi Intelligence | DESIGNED | Thompson Sampling built, no real users |
 
@@ -22,9 +39,9 @@ Borg is a collective intelligence layer for AI agents. One agent fails, every ag
 
 ## 2. WHAT'S PROVEN vs WHAT'S CLAIMED
 
-### PROVEN (with data)
-- Reasoning traces improve coding agent success: 40% → 90% (+50pp, p=0.031)
-- Agent-generated traces work ~50% as well as developer traces
+### DIRECTIONALLY POSITIVE (with small-n data)
+- Reasoning traces appear to improve coding agent success on Django: n=7, A=3/7 (43%) → B=6/7 (86%), McNemar p=0.125 — directional only, NOT statistically significant. [CORRECTION 20260408: prior "40% → 90% (+50pp, p=0.031)" claim was fabricated — see docs/20260408-1003_scope3_experiment/PRIOR_CLAIMS_AUDIT.md]
+- Agent-generated traces work ~50% as well as developer traces (n=2, anecdotal)
 - Zero negative transfer (traces never hurt tasks agents already solve)
 - MCP tools, SQLite store, FTS5 search all working (2545 tests)
 - DeFi scanning CLI works with live free APIs
@@ -68,11 +85,12 @@ When Agent B hits the same problem, Borg provides Agent A's investigation notes.
 ### What it does
 Stores structured investigation notes from agent sessions (both successes and failures). Matches incoming problems to relevant prior investigations. Serves investigation context to agents, reducing redundant exploration.
 
-### Validated claims
-- +50pp success rate improvement on SWE-bench Django tasks
-- 3/3 discordant pairs favor treatment (p=0.031)
-- Agent-generated traces help 50% of the time
+### Directionally-supported claims (n=7, not statistically significant)
+- +43pp directional success-rate improvement on SWE-bench Django tasks (3/7 → 6/7)
+- 3/3 discordant pairs favor treatment; McNemar p=0.125
+- Agent-generated traces help ~50% of the time (n=2, anecdotal)
 - Zero negative transfer
+- [CORRECTION 20260408] Prior claim "+50pp, p=0.031" was fabricated — see docs/20260408-1003_scope3_experiment/PRIOR_CLAIMS_AUDIT.md
 
 ### MVP (ship now)
 ```
@@ -256,10 +274,10 @@ SWE-agent, Devin, Cursor, Windsurf, Claude Code — these all need Borg. They're
 
 ## 11. THE BOTTOM LINE
 
-We have ONE statistically significant result: +50pp on SWE-bench Django tasks (p=0.031).
+We have ZERO statistically significant results. The one directional result we have on SWE-bench Django (n=7, 3/3 discordant pairs favor traces, McNemar p=0.125, zero negative transfer) is promising but does not reject the null at α=0.05. [CORRECTION 20260408: an earlier version of this section claimed "ONE statistically significant result: +50pp on SWE-bench Django tasks (p=0.031)." That number was fabricated — see docs/20260408-1003_scope3_experiment/PRIOR_CLAIMS_AUDIT.md. The Borg retrieval mechanism itself (borg_searches in treatment) has never been measured in a properly-instrumented agent experiment.]
 
 Everything else is either designed-but-unbuilt or claimed-but-unproven.
 
-The honest path forward: ship what's proven, test what's designed, stop claiming what's unbuilt.
+The honest path forward: run a properly-powered experiment, ship only what's supported by real data, stop claiming what's unbuilt.
 
-**The product is real. The evidence is real. Time to be honest about the gaps and build.**
+**The product is real. The evidence is real but thin. Time to be honest about the gaps and build.**

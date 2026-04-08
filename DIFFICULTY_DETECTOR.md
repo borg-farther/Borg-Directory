@@ -6,12 +6,16 @@ Build a simple classifier that predicts whether an agent will need help based on
 
 ## Background
 
-Prior SWE-bench experiments (n=10) showed:
-- Without trace (A): 40% pass rate
-- With trace (B): 90% pass rate
-- Improvement: +50pp (p=0.031)
+Prior SWE-bench experiment (n=7, the only honest paired run on disk) showed:
+- Without trace (A): 3/7 pass (43%)
+- With trace (B): 6/7 pass (86%)
+- Directional +43pp; 3/3 discordant pairs favor traces
+- McNemar exact p=0.125 (NOT statistically significant at α=0.05)
+- Zero negative transfer
 
-This detector predicts which issues require trace assistance vs. which can be solved directly.
+[CORRECTION 20260408] An earlier version of this background cited "n=10, 40% → 90%, +50pp, p=0.031" as a proven result. Forensic audit on 2026-04-08 showed those numbers were fabricated in a post-hoc file. See docs/20260408-1003_scope3_experiment/PRIOR_CLAIMS_AUDIT.md.
+
+This detector predicts which issues require trace assistance vs. which can be solved directly. [ATTENTION 20260408: the motivation for difficulty-gating rests on a directional, not significant, result. Revisit this design decision if the pending Path 1 experiment does not confirm the direction.]
 
 ## Features Extracted
 

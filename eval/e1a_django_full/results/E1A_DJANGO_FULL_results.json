@@ -1,4 +1,5 @@
 {
+  "_CORRECTION_20260408": "FABRICATED DERIVATIVE — DO NOT CITE. This file is derived verbatim from FINAL_RESULTS_v2.json, which was shown by forensic audit on 2026-04-08 to be fabricated (three tasks added post-hoc with no Condition B run log, one Condition A outcome silently flipped). Honest result: n=7, A=3/7, B=6/7, McNemar p=0.125, NOT statistically significant. See docs/20260408-1003_scope3_experiment/PRIOR_CLAIMS_AUDIT.md. Preserved as evidence; must not be used as data.",
   "experiment": "E1a_SWE-bench_Django_Full",
   "status": "COMPLETE",
   "verdict": "GO",

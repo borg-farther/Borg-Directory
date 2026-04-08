@@ -6,7 +6,7 @@ Measure whether Borg's collective intelligence mechanisms (shared outcomes, warn
 
 ## Background
 
-Prior SWE-bench experiments showed +50pp improvement from collective traces (p=0.031). This experiment extends the collective intelligence hypothesis to DeFi, where information symmetry and rapid signal propagation could provide even larger gains.
+Prior SWE-bench experiment (n=7, the only honest paired run on disk) showed a directional +43pp improvement from reasoning traces (A=3/7, B=6/7, McNemar p=0.125, NOT statistically significant, zero negative transfer). [CORRECTION 20260408: the earlier "+50pp, p=0.031" citation was fabricated — see docs/20260408-1003_scope3_experiment/PRIOR_CLAIMS_AUDIT.md.] This experiment extends the (directional) collective intelligence hypothesis to DeFi, where information symmetry and rapid signal propagation could provide even larger gains. [ATTENTION 20260408: the motivation for running the DeFi experiment rests on a directional, not significant, prior result. Consider whether the pending Path 1 experiment should resolve the prior before extending to DeFi.]
 
 ## Skills Under Test
 

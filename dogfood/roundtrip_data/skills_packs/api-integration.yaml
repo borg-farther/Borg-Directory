@@ -1,0 +1,29 @@
+type: workflow_pack
+version: 1.0.0
+problem_class: Converted workflow
+mental_model: ''
+required_inputs: []
+escalation_rules:
+- Escalate on ambiguous or missing information.
+id: borg://converted/skill
+phases:
+- name: error_handling
+  description: '- Wrap operations in try/except
+
+    - Log clear error messages
+
+    - Suggest actionable next steps'
+  checkpoint: ''
+  anti_patterns: []
+  prompts: []
+- name: usage
+  description: Describe how to use this capability.
+  checkpoint: ''
+  anti_patterns: []
+  prompts: []
+provenance:
+  author_agent: convert://tool
+  evidence: Converted from SKILL
+  confidence: inferred
+  failure_cases: []
+

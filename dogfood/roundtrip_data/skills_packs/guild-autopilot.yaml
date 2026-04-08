@@ -1,0 +1,117 @@
+type: workflow_pack
+version: 1.0.0
+problem_class: Converted workflow
+mental_model: ''
+required_inputs: []
+escalation_rules:
+- Escalate on ambiguous or missing information.
+id: borg://converted/skill
+phases:
+- name: purpose
+  description: "Borg Autopilot is a **self-configuring skill** that makes agent-borg\
+    \ work automatically,\nwithout any user setup or CLAUDE.md editing. A Hermes user\
+    \ only needs agent-borg installed\nand the MCP server configured \u2014 this skill\
+    \ tells the agent **when** and **how** to use it."
+  checkpoint: ''
+  anti_patterns: []
+  prompts: []
+- name: trigger_conditions
+  description: 'Apply this skill automatically when ANY of these conditions are met:
+
+
+    ### 1. Debug / Test / Review Detection (on task start)
+
+    When the task description contains keywords like:
+
+    - `debug`, `debugging`, `fix`, `crash`, `error`, `exception`, `stack trace`, `segfault`
+
+    - `test`, `testing`, `unit test`, `integration test`, `pytest`, `jest`
+
+    - `review`, `code review`, `pr review`, `pull request`, `audit`
+
+    - `performance`, `profiling`, `benchmark`, `optimize`, `slow`
+
+    - `security`, `vulnerability`, `CVE`, `exploit`
+
+
+    **Action:** Call `borg_on_task_start(task_description)` and include the result
+
+    in your reasoning. If a pack is suggested, mention it proactively to the user.
+
+
+    ### 2. Failure Detection (after 2+ consecutive failures)
+
+    When the agent has failed 2 or more consecutive times on the same task:
+
+    - Call `borg_on_failure(context=recent_conversation, failure_count=N)`
+
+    - Inject the returned suggestion into your context as a **system message**
+
+
+    ### 3. Phase-by-Phase Pack Application
+
+    When applying a borg pack, follow this strict sequence:
+
+    1. **Before applying:** Run `borg try <pack_uri>` to preview phases and validate
+    safety
+
+    2. **Start:** Run `borg apply <pack> --task "<task description>"`
+
+    3. **Per phase:** Read the phase description, complete the work, then advance
+
+    4. **Track progress:** Log each completed phase in your context
+
+    5. **On completion:** Generate feedback with `borg feedback <session_id>`
+
+
+    ### 4. Completion Feedback
+
+    After a pack session completes (success or failure):
+
+    - Call `borg feedback <session_id>` to get structured feedback
+
+    - Present the feedback to the user in a clear summary'
+  checkpoint: ''
+  anti_patterns: []
+  prompts: []
+- name: available_commands
+  description: '```bash
+
+    borg try <uri>     # Preview a pack (always do this first)
+
+    borg apply <pack> --task "<task description>"  # Start applying
+
+    borg feedback <session_id>  # Get session feedback
+
+    borg search <query>  # Search for relevant packs
+
+    ```'
+  checkpoint: ''
+  anti_patterns: []
+  prompts: []
+- name: python_api
+  description: "```python\nfrom borg.integrations.agent_hook import borg_on_failure,\
+    \ borg_on_task_start\n\n# On task start \u2014 proactive suggestion\nsuggestion\
+    \ = borg_on_task_start(\"fixing pytest failures\")\n# Returns: \"You might find\
+    \ this useful: systematic-debugging [tested]...\"\n\n# After 2+ failures \u2014\
+    \ reactive injection\nsuggestion = borg_on_failure(context=\"...\", failure_count=2)\n\
+    # Returns: \"Borg pack available: systematic-debugging...\"\n```"
+  checkpoint: ''
+  anti_patterns: []
+  prompts: []
+- name: agent_behavior_rules
+  description: "1. **Always check borg first** for debug/test/review tasks\n2. **Never\
+    \ apply a pack without previewing** with `borg try` first\n3. **Apply packs phase\
+    \ by phase** \u2014 don't skip steps\n4. **Generate feedback** after every pack\
+    \ session\n5. **Respect tried_packs** \u2014 don't suggest the same failed pack\
+    \ twice\n6. **Safety first** \u2014 if `borg try` shows safety threats, warn before\
+    \ proceeding"
+  checkpoint: ''
+  anti_patterns: []
+  prompts: []
+provenance:
+  author_agent: convert://tool
+  evidence: Converted from SKILL
+  confidence: inferred
+  failure_cases: []
+

@@ -1,0 +1,84 @@
+type: workflow_pack
+version: 1.0.0
+problem_class: You are a Rust systems programmer. Write safe, performant, idiomatic
+  Rust.
+mental_model: You are a Rust systems programmer. Write safe, performant, idiomatic
+  Rust.
+required_inputs: []
+escalation_rules:
+- Escalate on ambiguous or missing information.
+id: borg://converted/rust
+phases:
+- name: ownership___borrowing
+  description: "- Prefer borrowing (&T) over cloning\n- Use Cow<str> when you might\
+    \ need to own or borrow\n- Minimize lifetime annotations\u2014let the compiler\
+    \ infer\n- Use Arc<Mutex<T>> for shared mutable state across threads"
+  checkpoint: ''
+  anti_patterns:
+  - "Never use unwrap() in production code\u2014use expect() with context"
+  prompts: []
+- name: error_handling
+  description: "- Use thiserror for library error types\n- Use anyhow for application\
+    \ error handling\n- Implement From conversions for error types\n- Use ? operator\
+    \ consistently\n- Never use unwrap() in production code\u2014use expect() with\
+    \ context\n\n```rust\n// Good: Proper error handling with thiserror\n#[derive(Debug,\
+    \ thiserror::Error)]\npub enum AppError {\n    #[error(\"Database error: {0}\"\
+    )]\n    Database(#[from] sqlx::Error),\n    #[error(\"User {id} not found\")]\n\
+    \    UserNotFound { id: Uuid },\n    #[error(\"Invalid input: {0}\")]\n    Validation(String),\n\
+    }\n```"
+  checkpoint: ''
+  anti_patterns:
+  - "Never use unwrap() in production code\u2014use expect() with context"
+  prompts: []
+- name: performance
+  description: '- Use iterators over manual loops
+
+    - Prefer stack allocation (arrays) over heap (Vec) when size is known
+
+    - Use #[inline] for small, hot functions
+
+    - Profile with cargo flamegraph before optimizing
+
+    - Use rayon for data parallelism'
+  checkpoint: ''
+  anti_patterns:
+  - "Never use unwrap() in production code\u2014use expect() with context"
+  prompts: []
+- name: safety
+  description: "- Minimize unsafe blocks\u2014document safety invariants\n- Use clippy\
+    \ and deny(unsafe_code) in libraries\n- Prefer safe abstractions over raw pointers\n\
+    - Use parking_lot over std::sync for mutexes"
+  checkpoint: ''
+  anti_patterns:
+  - "Never use unwrap() in production code\u2014use expect() with context"
+  prompts: []
+- name: project_structure
+  description: '- Separate library crate from binary crate
+
+    - Use modules for logical grouping
+
+    - Keep mod.rs files minimal
+
+    - Expose a prelude module for common re-exports'
+  checkpoint: ''
+  anti_patterns:
+  - "Never use unwrap() in production code\u2014use expect() with context"
+  prompts: []
+- name: testing
+  description: '- Use #[cfg(test)] modules
+
+    - Property-based testing with proptest
+
+    - Integration tests in tests/ directory
+
+    - Use test fixtures with rstest'
+  checkpoint: ''
+  anti_patterns:
+  - "Never use unwrap() in production code\u2014use expect() with context"
+  prompts: []
+provenance:
+  author_agent: convert://tool
+  evidence: Converted from rust
+  confidence: inferred
+  failure_cases: []
+

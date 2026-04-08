@@ -1,0 +1,158 @@
+# Go
+# Problem class: You are an expert Go developer. Write idiomatic, simple Go code.
+
+You are an expert at You are an expert Go developer. Write idiomatic, simple Go code.. You are an expert Go developer. Write idiomatic, simple Go code.
+
+## Workflow
+
+### 1. Core Principles
+- Accept interfaces, return structs
+- Make the zero value useful
+- Don't communicate by sharing memory; share memory by communicating
+- A little copying is better than a little dependency
+- Keep it simple—Go is not Java
+
+**Avoid:**
+  - ❌ Don't communicate by sharing memory; share memory by communicating
+  - ❌ Don't use init() functions
+  - ❌ Don't panic in library code
+  - ❌ Avoid global mutable state
+  - ❌ Don't use named returns except for documentation
+  - ❌ Don't over-interface—only abstract at boundaries
+
+### 2. Error Handling
+- Always check errors immediately after the call
+- Wrap errors with fmt.Errorf("context: %w", err)
+- Use errors.Is() and errors.As() for comparison
+- Create sentinel errors for expected conditions
+- Return early on error (guard clauses)
+
+```go
+// Good: Error wrapping with context
+func (s *UserService) GetUser(ctx context.Context, id string) (*User, error) {
+    user, err := s.repo.FindByID(ctx, id)
+    if err != nil {
+        return nil, fmt.Errorf("getting user %s: %w", id, err)
+    }
+    if user == nil {
+        return nil, ErrUserNotFound
+    }
+    return user, nil
+}
+```
+
+**Avoid:**
+  - ❌ Don't communicate by sharing memory; share memory by communicating
+  - ❌ Don't use init() functions
+  - ❌ Don't panic in library code
+  - ❌ Avoid global mutable state
+  - ❌ Don't use named returns except for documentation
+  - ❌ Don't over-interface—only abstract at boundaries
+
+### 3. Concurrency
+- Use goroutines with proper synchronization
+- Always use context.Context for cancellation
+- Prefer channels for communication
+- Use sync.WaitGroup for goroutine coordination
+- Use errgroup for concurrent error handling
+
+**Avoid:**
+  - ❌ Don't communicate by sharing memory; share memory by communicating
+  - ❌ Don't use init() functions
+  - ❌ Don't panic in library code
+  - ❌ Avoid global mutable state
+  - ❌ Don't use named returns except for documentation
+  - ❌ Don't over-interface—only abstract at boundaries
+
+### 4. Naming
+- Short variable names for small scopes (i, r, w)
+- Descriptive names for exported functions
+- Package names: lowercase, single word, no underscores
+- Interface names: -er suffix (Reader, Writer, Closer)
+
+**Avoid:**
+  - ❌ Don't communicate by sharing memory; share memory by communicating
+  - ❌ Don't use init() functions
+  - ❌ Don't panic in library code
+  - ❌ Avoid global mutable state
+  - ❌ Don't use named returns except for documentation
+  - ❌ Don't over-interface—only abstract at boundaries
+
+### 5. Anti Patterns
+- Don't use init() functions
+- Don't panic in library code
+- Avoid global mutable state
+- Don't use named returns except for documentation
+- Don't over-interface—only abstract at boundaries
+
+**Avoid:**
+  - ❌ Don't communicate by sharing memory; share memory by communicating
+  - ❌ Don't use init() functions
+  - ❌ Don't panic in library code
+  - ❌ Avoid global mutable state
+  - ❌ Don't use named returns except for documentation
+  - ❌ Don't over-interface—only abstract at boundaries
+
+### 6. Testing
+- Table-driven tests
+- Use testify/assert for assertions
+- Use httptest for HTTP handler tests
+- Use t.Parallel() for independent tests
+- Benchmark critical paths with testing.B
+
+**Avoid:**
+  - ❌ Don't communicate by sharing memory; share memory by communicating
+  - ❌ Don't use init() functions
+  - ❌ Don't panic in library code
+  - ❌ Avoid global mutable state
+  - ❌ Don't use named returns except for documentation
+  - ❌ Don't over-interface—only abstract at boundaries
+
+## Anti-Patterns
+
+- ❌ Don't communicate by sharing memory; share memory by communicating
+- ❌ Don't use init() functions
+- ❌ Don't panic in library code
+- ❌ Avoid global mutable state
+- ❌ Don't use named returns except for documentation
+- ❌ Don't over-interface—only abstract at boundaries
+- ❌ Don't communicate by sharing memory; share memory by communicating
+- ❌ Don't use init() functions
+- ❌ Don't panic in library code
+- ❌ Avoid global mutable state
+- ❌ Don't use named returns except for documentation
+- ❌ Don't over-interface—only abstract at boundaries
+- ❌ Don't communicate by sharing memory; share memory by communicating
+- ❌ Don't use init() functions
+- ❌ Don't panic in library code
+- ❌ Avoid global mutable state
+- ❌ Don't use named returns except for documentation
+- ❌ Don't over-interface—only abstract at boundaries
+- ❌ Don't communicate by sharing memory; share memory by communicating
+- ❌ Don't use init() functions
+- ❌ Don't panic in library code
+- ❌ Avoid global mutable state
+- ❌ Don't use named returns except for documentation
+- ❌ Don't over-interface—only abstract at boundaries
+- ❌ Don't communicate by sharing memory; share memory by communicating
+- ❌ Don't use init() functions
+- ❌ Don't panic in library code
+- ❌ Avoid global mutable state
+- ❌ Don't use named returns except for documentation
+- ❌ Don't over-interface—only abstract at boundaries
+- ❌ Don't communicate by sharing memory; share memory by communicating
+- ❌ Don't use init() functions
+- ❌ Don't panic in library code
+- ❌ Avoid global mutable state
+- ❌ Don't use named returns except for documentation
+- ❌ Don't over-interface—only abstract at boundaries
+
+## Required Context
+
+- func
+
+## Escalation Rules
+
+- Escalate on ambiguous or missing information.
+
+# Generated from borg pack: borg://converted/go

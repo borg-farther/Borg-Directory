@@ -1,4 +1,7 @@
 {
+  "_CORRECTION_20260408": "FABRICATED — DO NOT CITE. Forensic audit on 2026-04-08 proved this file is the source of a fabricated result. Three tasks (django__django-12754, -13315, -15503) were added post-hoc at 2026-04-01 19:07 with no Condition B run log anywhere on disk. One Condition A outcome for 12754 was silently flipped from false to true, contradicting the harness-error note in calibration.json. The honest result from the real paired run is in FINAL_RESULTS.json (n=7, a=3, b=6, discordant=3, McNemar p=0.125, NOT statistically significant). See docs/20260408-1003_scope3_experiment/PRIOR_CLAIMS_AUDIT.md for the full forensic chain. This file is preserved as evidence but MUST NOT be used as data.",
+  "_CORRECTION_honest_source": "dogfood/v2_data/swebench_results/FINAL_RESULTS.json",
+  "_CORRECTION_audit_doc": "docs/20260408-1003_scope3_experiment/PRIOR_CLAIMS_AUDIT.md",
   "results": {
     "django__django-10554": {
       "A": false,

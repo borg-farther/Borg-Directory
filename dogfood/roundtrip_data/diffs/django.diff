@@ -1,0 +1,117 @@
+--- original/django
++++ roundtripped/django
+@@ -1,22 +1,33 @@
+-# Django Development Guidelines
++# Django
++# Problem class: You are a Django expert. Follow Django best practices and the "Django way."
+ 
+-You are a Django expert. Follow Django best practices and the "Django way."
++You are an expert at You are a Django expert. Follow Django best practices and the "Django way.". You are a Django expert. Follow Django best practices and the "Django way."
+ 
+-## Models
++## Workflow
++
++### 1. Models
+ - Use verbose_name and help_text on all fields
+ - Add __str__ method to every model
+ - Use UUIDField for public-facing IDs
+ - Create custom managers for common queries
+ - Use signals sparingly—prefer overriding save()
+ 
+-## Views
++**Avoid:**
++  - ❌ Never trust user input
++  - ❌ Use select_related() and prefetch_related() to avoid N+1 queries
++
++### 2. Views
+ - Prefer class-based views for CRUD operations
+ - Use function-based views for simple, one-off logic
+ - Always validate and clean input data
+ - Return proper HTTP status codes
+ - Use Django REST Framework for APIs
+ 
+-## Security
++**Avoid:**
++  - ❌ Never trust user input
++  - ❌ Use select_related() and prefetch_related() to avoid N+1 queries
++
++### 3. Security
+ - Never trust user input
+ - Use Django's ORM to prevent SQL injection
+ - Enable CSRF protection on all forms
+@@ -24,7 +35,11 @@
+ - Use django-csp for Content Security Policy headers
+ - Rotate SECRET_KEY regularly
+ 
+-## Database
++**Avoid:**
++  - ❌ Never trust user input
++  - ❌ Use select_related() and prefetch_related() to avoid N+1 queries
++
++### 4. Database
+ - Always create migrations for model changes
+ - Use select_related() and prefetch_related() to avoid N+1 queries
+ - Add db_index=True on frequently queried fields
+@@ -40,20 +55,59 @@
+         ).select_related('author').prefetch_related('tags')
+ ```
+ 
+-## Templates
++**Avoid:**
++  - ❌ Never trust user input
++  - ❌ Use select_related() and prefetch_related() to avoid N+1 queries
++
++### 5. Templates
+ - Use template inheritance with base.html
+ - Keep logic out of templates—use template tags
+ - Escape all user-generated content (default in Django)
+ - Use {% url %} tag instead of hardcoded URLs
+ 
+-## Testing
++**Avoid:**
++  - ❌ Never trust user input
++  - ❌ Use select_related() and prefetch_related() to avoid N+1 queries
++
++### 6. Testing
+ - Use Django's TestCase for database tests
+ - Use SimpleTestCase for non-database tests
+ - Factory Boy for test data generation
+ - Test views with RequestFactory or Client
+ 
+-## Deployment
++**Avoid:**
++  - ❌ Never trust user input
++  - ❌ Use select_related() and prefetch_related() to avoid N+1 queries
++
++### 7. Deployment
+ - Use environment variables for secrets (django-environ)
+ - Serve static files with WhiteNoise or CDN
+ - Use Gunicorn + Nginx in production
+ - Enable Django's logging framework
++
++**Avoid:**
++  - ❌ Never trust user input
++  - ❌ Use select_related() and prefetch_related() to avoid N+1 queries
++
++## Anti-Patterns
++
++- ❌ Never trust user input
++- ❌ Use select_related() and prefetch_related() to avoid N+1 queries
++- ❌ Never trust user input
++- ❌ Use select_related() and prefetch_related() to avoid N+1 queries
++- ❌ Never trust user input
++- ❌ Use select_related() and prefetch_related() to avoid N+1 queries
++- ❌ Never trust user input
++- ❌ Use select_related() and prefetch_related() to avoid N+1 queries
++- ❌ Never trust user input
++- ❌ Use select_related() and prefetch_related() to avoid N+1 queries
++- ❌ Never trust user input
++- ❌ Use select_related() and prefetch_related() to avoid N+1 queries
++- ❌ Never trust user input
++- ❌ Use select_related() and prefetch_related() to avoid N+1 queries
++
++## Escalation Rules
++
++- Escalate on ambiguous or missing information.
++
++# Generated from borg pack: borg://converted/django

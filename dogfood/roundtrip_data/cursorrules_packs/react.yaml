@@ -1,0 +1,136 @@
+type: workflow_pack
+version: 1.0.0
+problem_class: You are an expert React developer. Follow these rules strictly.
+mental_model: You are an expert React developer. Follow these rules strictly.
+required_inputs: []
+escalation_rules:
+- Escalate on ambiguous or missing information.
+id: borg://converted/react
+phases:
+- name: component_architecture
+  description: '- Use functional components with hooks exclusively
+
+    - Prefer composition over inheritance
+
+    - Keep components small and focused (< 200 lines)
+
+    - Use React.memo() for expensive renders
+
+    - Extract custom hooks for reusable logic'
+  checkpoint: ''
+  anti_patterns:
+  - Never mutate state directly
+  - Do NOT use class components
+  - Do NOT use string refs (use useRef)
+  - Do NOT put complex logic in useEffect cleanup
+  - Avoid prop drilling more than 3 levels deep
+  - Never use index as key in dynamic lists
+  prompts: []
+- name: state_management
+  description: '- Use useState for local component state
+
+    - Use useReducer for complex state logic
+
+    - Prefer React Context for shared state before reaching for Redux
+
+    - Never mutate state directly
+
+    - Keep state as close to where it''s used as possible'
+  checkpoint: ''
+  anti_patterns:
+  - Never mutate state directly
+  - Do NOT use class components
+  - Do NOT use string refs (use useRef)
+  - Do NOT put complex logic in useEffect cleanup
+  - Avoid prop drilling more than 3 levels deep
+  - Never use index as key in dynamic lists
+  prompts: []
+- name: anti_patterns_to_avoid
+  description: '- Do NOT use class components
+
+    - Do NOT use string refs (use useRef)
+
+    - Do NOT put complex logic in useEffect cleanup
+
+    - Avoid prop drilling more than 3 levels deep
+
+    - Never use index as key in dynamic lists'
+  checkpoint: ''
+  anti_patterns:
+  - Never mutate state directly
+  - Do NOT use class components
+  - Do NOT use string refs (use useRef)
+  - Do NOT put complex logic in useEffect cleanup
+  - Avoid prop drilling more than 3 levels deep
+  - Never use index as key in dynamic lists
+  prompts: []
+- name: code_style
+  description: "```tsx\n// Good: Named export with proper typing\nexport const UserCard:\
+    \ React.FC<UserCardProps> = ({ name, email }) => {\n  const [isExpanded, setIsExpanded]\
+    \ = useState(false);\n  \n  return (\n    <div className=\"user-card\">\n    \
+    \  <h3>{name}</h3>\n      {isExpanded && <p>{email}</p>}\n    </div>\n  );\n};\n\
+    ```"
+  checkpoint: ''
+  anti_patterns:
+  - Never mutate state directly
+  - Do NOT use class components
+  - Do NOT use string refs (use useRef)
+  - Do NOT put complex logic in useEffect cleanup
+  - Avoid prop drilling more than 3 levels deep
+  - Never use index as key in dynamic lists
+  prompts: []
+- name: performance
+  description: '- Use useMemo for expensive computations
+
+    - Use useCallback for function props passed to children
+
+    - Lazy load routes with React.lazy() and Suspense
+
+    - Virtualize long lists with react-window or react-virtuoso'
+  checkpoint: ''
+  anti_patterns:
+  - Never mutate state directly
+  - Do NOT use class components
+  - Do NOT use string refs (use useRef)
+  - Do NOT put complex logic in useEffect cleanup
+  - Avoid prop drilling more than 3 levels deep
+  - Never use index as key in dynamic lists
+  prompts: []
+- name: testing
+  description: '- Write tests with React Testing Library, not Enzyme
+
+    - Test behavior, not implementation details
+
+    - Use screen.getByRole over screen.getByTestId
+
+    - Mock API calls with MSW (Mock Service Worker)'
+  checkpoint: ''
+  anti_patterns:
+  - Never mutate state directly
+  - Do NOT use class components
+  - Do NOT use string refs (use useRef)
+  - Do NOT put complex logic in useEffect cleanup
+  - Avoid prop drilling more than 3 levels deep
+  - Never use index as key in dynamic lists
+  prompts: []
+- name: links_and_references
+  description: '- React docs: https://react.dev
+
+    - Testing Library: https://testing-library.com
+
+    - React patterns: https://reactpatterns.com'
+  checkpoint: ''
+  anti_patterns:
+  - Never mutate state directly
+  - Do NOT use class components
+  - Do NOT use string refs (use useRef)
+  - Do NOT put complex logic in useEffect cleanup
+  - Avoid prop drilling more than 3 levels deep
+  - Never use index as key in dynamic lists
+  prompts: []
+provenance:
+  author_agent: convert://tool
+  evidence: Converted from react
+  confidence: inferred
+  failure_cases: []
+

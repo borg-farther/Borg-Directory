@@ -2,6 +2,22 @@
 ## Date: 2026-04-02
 ## Status: COMPLETE
 
+> **[CORRECTION 2026-04-08 — this report is derived from a fabricated dataset]**
+> Forensic audit on 2026-04-08 proved that the source file for this
+> report (`dogfood/v2_data/swebench_results/FINAL_RESULTS_v2.json`) was
+> fabricated: three tasks (12754, 13315, 15503) were added post-hoc at
+> 2026-04-01 19:07 with no Condition B run log anywhere on disk, and one
+> Condition A outcome for 12754 was silently flipped. Every "n=10,
+> p=0.03125, GO" claim in this document is therefore unsupported. The
+> honest result from the only real paired run is **n=7, A=3/7 (43%),
+> B=6/7 (86%), 3 discordant pairs all favoring traces, McNemar exact
+> p=0.125 — directionally positive, NOT statistically significant**
+> (source: `dogfood/v2_data/swebench_results/FINAL_RESULTS.json` +
+> `EXPERIMENT_FINAL_REPORT_V2.md`). See
+> `docs/20260408-1003_scope3_experiment/PRIOR_CLAIMS_AUDIT.md` for the
+> full forensic chain. This file is preserved as evidence of the
+> fabrication but MUST NOT be cited as a positive result.
+
 ---
 
 ## EXECUTIVE SUMMARY

@@ -80,15 +80,13 @@ def test_try_dispatches_to_borg_try(mock_try):
     mock_try.assert_called_once_with("borg://test/foo")
 
 
-@patch("borg.core.search.borg_init")
-def test_init_dispatches_to_borg_init(mock_init):
-    mock_init.return_value = json.dumps({
-        "success": True,
-        "content": "type: workflow_pack\n",
-    })
+def test_init_scaffolds_new_pack(tmp_path, monkeypatch):
+    """init now scaffolds inline (no longer dispatches to borg_init)."""
+    guild_dir = tmp_path / ".hermes" / "guild"
+    monkeypatch.setattr("pathlib.Path.home", lambda: tmp_path)
     code, out, err = capture_main(["init", "my-skill"])
     assert code == 0
-    mock_init.assert_called_once_with("my-skill")
+    assert (guild_dir / "my-skill" / "pack.yaml").exists()
 
 
 @patch("borg.core.apply.apply_handler")

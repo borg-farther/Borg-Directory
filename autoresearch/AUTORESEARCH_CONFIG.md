@@ -15,7 +15,7 @@
 The stated problem is "only 50% of traces are effective." This is NOT a trace FORMAT problem — it's a **pipeline integration problem**:
 
 1. **Trace capture isn't wired into the agent loop** — `TraceCapture` exists but isn't called from the MCP server's `call_tool` flow
-2. **The SWE-bench results (40%→90%) used hints_text** — manually-written reasoning traces from GitHub issue discussions, NOT auto-captured traces
+2. **The SWE-bench results used hints_text** — manually-written reasoning traces from GitHub issue discussions, NOT auto-captured traces. [CORRECTION 20260408: the original framing "40%→90%" was derived from a fabricated post-hoc file; the honest number is n=7, 3/7 → 6/7 directional, McNemar p=0.125 — see /root/hermes-workspace/borg/docs/20260408-1003_scope3_experiment/PRIOR_CLAIMS_AUDIT.md]
 3. **The gap between hints_text and auto-trace is enormous:**
    - hints_text: Written by developers who UNDERSTAND the bug
    - auto-trace: Extracted from agent tool calls (file reads, errors) with no semantic understanding
@@ -23,9 +23,10 @@ The stated problem is "only 50% of traces are effective." This is NOT a trace FO
 ### What This Means
 
 ```
-Manually-written hints (SWE-bench):  40% → 90% (+50pp)
-Auto-captured traces (current Borg): ??% → ??% (unknown, likely much smaller)
+Manually-written hints (SWE-bench, honest):  3/7 → 6/7 directional, p=0.125 (NOT significant)
+Auto-captured traces (current Borg):          ??% → ??% (unknown, never measured)
 ```
+[CORRECTION 20260408] Prior "40% → 90% (+50pp)" figure was fabricated — see PRIOR_CLAIMS_AUDIT.md.
 
 If auto-captured traces are 50% effective, that could mean:
 - 50% of sessions produce no useful trace (capture not triggered)

@@ -492,6 +492,34 @@ TOOLS: List[Dict[str, Any]] = [
         },
     },
     {
+        "name": "borg_generate",
+        "description": (
+            "Generate platform-specific rules files from a borg workflow pack. "
+            "Takes a pack name and outputs rules in the specified format native to each AI IDE platform "
+            "(Cursor, Cline, Claude Code, Windsurf)."
+        ),
+        "inputSchema": {
+            "type": "object",
+            "properties": {
+                "pack": {
+                    "type": "string",
+                    "description": "Pack name (e.g. 'systematic-debugging'). Must be available in local registry.",
+                },
+                "format": {
+                    "type": "string",
+                    "enum": ["cursorrules", "clinerules", "claude-md", "windsurfrules", "all"],
+                    "description": (
+                        "Output format. 'cursorrules' -> .cursorrules (Cursor), "
+                        "'clinerules' -> .clinerules (Cline), 'claude-md' -> CLAUDE.md (Claude Code), "
+                        "'windsurfrules' -> .windsurfrules (Windsurf), 'all' -> all four formats at once."
+                    ),
+                    "default": "cursorrules",
+                },
+            },
+            "required": ["pack", "format"],
+        },
+    },
+    {
         "name": "borg_context",
         "description": (
             "Detect recent git changes in a project directory. Returns recently changed files, "
@@ -875,6 +903,10 @@ def borg_init(pack_name: str = "", problem_class: str = "general", mental_model:
 
         if not pack_name:
             return json.dumps({"success": False, "error": "pack_name is required"})
+
+        import re
+        if not re.match(r'^[a-zA-Z0-9_-]+$', pack_name):
+            return json.dumps({"success": False, "error": f"pack_name must contain only letters, numbers, hyphens, underscores. Got: '{pack_name}'"})
 
         BORG_DIR = Path(os.getenv("HERMES_HOME", Path.home() / ".hermes")) / "guild"
         pack_dir = BORG_DIR / pack_name
@@ -1270,7 +1302,7 @@ def borg_feedback(
             if count >= _MAINTENANCE_INTERVAL:
                 v3._reset_maintenance_counter()
                 maintenance_result = v3.run_maintenance()
-                logger.debug(f"Periodic maintenance: {maintenance_result}")
+                pass  # maintenance_result logged if logging configured
         except Exception:
             pass  # Never let maintenance break feedback
 
@@ -2186,6 +2218,52 @@ def borg_convert(path: str = "", format: str = "auto") -> str:
         return json.dumps({"success": False, "error": str(e), "type": type(e).__name__})
 
 
+def _borg_generate_handler(pack: str = "", format: str = "cursorrules") -> str:
+    """Generate platform-specific rules files from a borg workflow pack.
+
+    Args:
+        pack: Pack name (e.g. 'systematic-debugging').
+        format: Output format - 'cursorrules', 'clinerules', 'claude-md', 'windsurfrules', 'all'.
+    """
+    try:
+        from borg.core.generator import generate_rules, load_pack, FORMAT_FILENAMES
+
+        if not pack:
+            return json.dumps({"success": False, "error": "pack name is required"})
+
+        try:
+            pack_data = load_pack(pack)
+        except FileNotFoundError as e:
+            return json.dumps({"success": False, "error": str(e)})
+
+        result = generate_rules(pack_data, format=format)
+
+        if isinstance(result, dict):
+            # 'all' format returns dict of {format: content}
+            files = {}
+            for fmt, content in result.items():
+                files[FORMAT_FILENAMES[fmt]] = content
+            return json.dumps({
+                "success": True,
+                "pack": pack,
+                "format": "all",
+                "files": files,
+            })
+        else:
+            filename = FORMAT_FILENAMES.get(format, format)
+            return json.dumps({
+                "success": True,
+                "pack": pack,
+                "format": format,
+                "filename": filename,
+                "content": result,
+            })
+    except (KeyboardInterrupt, SystemExit):
+        raise
+    except (ValueError, KeyError, OSError) as e:
+        return json.dumps({"success": False, "error": str(e), "type": type(e).__name__})
+
+
 # -------------------------------------------------------------------------
 # Timeout configuration (seconds)
 # -------------------------------------------------------------------------
@@ -2314,6 +2392,12 @@ def _call_tool_impl(name: str, arguments: Dict[str, Any]) -> str:
             format=arguments.get("format", "auto"),
         )
 
+    elif name == "borg_generate":
+        return _borg_generate_handler(
+            pack=arguments.get("pack", ""),
+            format=arguments.get("format", "cursorrules"),
+        )
+
     elif name == "borg_context":
         return borg_context(
             project_path=arguments.get("project_path", "."),
@@ -2353,6 +2437,7 @@ def _call_tool_impl(name: str, arguments: Dict[str, Any]) -> str:
             task=arguments.get("task", ""),
             context=arguments.get("context", ""),
             context_dict=arguments.get("context_dict"),
+            project_path=arguments.get("project_path"),
         )
 
     elif name == "borg_dashboard":
@@ -2436,6 +2521,8 @@ def handle_request(request: Dict[str, Any]) -> Optional[Dict[str, Any]]:
 
 def main() -> None:
     """Run the MCP server on stdio. Reads JSON-RPC requests from stdin, writes responses to stdout."""
+    from borg import __version__
+    print(f"borg-mcp-server v{__version__} ready (stdio transport)", file=sys.stderr, flush=True)
     for line in sys.stdin:
         line = line.strip()
         if not line:

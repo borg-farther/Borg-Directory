@@ -10,6 +10,7 @@ Usage:
     borg publish <path>       — publish pack to GitHub
     borg feedback <session_id> — generate feedback from session
     borg debug <error>        — get structured guidance for an error
+    borg generate <pack>      — export pack to .cursorrules / .clinerules / CLAUDE.md / .windsurfrules
     borg list                 — list local packs
     borg autopilot            — zero-config setup (install MCP + skill + auto-suggest)
     borg setup-claude         — configure borg MCP for Claude Code
@@ -69,7 +70,9 @@ def _cmd_search(args: argparse.Namespace) -> int:
     if not data.get("success"):
         print(f"Error: {data.get('error', 'Unknown')}", file=sys.stderr)
         return 1
-    matches = data.get("matches", [])
+    _test_filter = ("test-pack", "smoke-test", "wf-test", "test-call", "my-test", "fresh-pack", "old-pack", "my-pack", "guild:--", "test-scaffold", "stress-project", "test-e2e", "e2e-test")
+    matches = [m for m in data.get("matches", [])
+               if not any(m.get("name", "").startswith(p) or m.get("id", "").startswith(p) for p in _test_filter)]
     if not matches:
         print("No packs found.")
         return 0
@@ -134,25 +137,48 @@ def _cmd_try(args: argparse.Namespace) -> int:
 
 
 def _cmd_init(args: argparse.Namespace) -> int:
-    """Create a pack scaffold or convert from a skill."""
-    from borg.core.search import borg_init
+    """Scaffold a new pack from scratch or convert from a skill."""
+    import yaml as _yaml
+    from datetime import datetime, timezone
 
-    raw = borg_init(args.name)
-    if _require_success(raw, ctx=" (skill not found)"):
-        data = json.loads(raw)
-        # Print the generated YAML content
-        print(data.get("content", raw))
-        if data.get("validation_errors"):
-            print("Validation errors:", file=sys.stderr)
-            for err in data["validation_errors"]:
-                print(f"  - {err}", file=sys.stderr)
-        if data.get("safety_warnings"):
-            print("Safety warnings:", file=sys.stderr)
-            for w in data["safety_warnings"]:
-                print(f"  - {w}", file=sys.stderr)
-    else:
-        _print_json(raw)
+    import re as _re
+    name = args.name
+    if not _re.match(r'^[a-zA-Z0-9_-]+$', name):
+        print(f"Error: Pack name must contain only letters, numbers, hyphens, underscores. Got: '{name}'", file=sys.stderr)
         return 1
+    problem_class = getattr(args, "problem_class", "general") or "general"
+    mental_model = getattr(args, "mental_model", "fast-thinker") or "fast-thinker"
+
+    guild_dir = Path.home() / ".hermes" / "guild"
+    pack_dir = guild_dir / name
+    pack_dir.mkdir(parents=True, exist_ok=True)
+
+    scaffold = {
+        "type": "workflow_pack",
+        "version": "1.0",
+        "id": name,
+        "problem_class": problem_class,
+        "mental_model": mental_model,
+        "provenance": {
+            "author": "agent://init",
+            "created": datetime.now(timezone.utc).isoformat(),
+            "confidence": "guessed",
+        },
+        "phases": [
+            {
+                "name": "phase-1",
+                "description": "Describe this phase",
+                "checkpoint": "done",
+                "anti_patterns": [],
+                "prompts": ["Describe the prompt for this phase"],
+            },
+        ],
+    }
+    content = _yaml.safe_dump(scaffold, default_flow_style=False, sort_keys=False)
+    pack_file = pack_dir / "pack.yaml"
+    pack_file.write_text(content, encoding="utf-8")
+    print(f"Created pack scaffold: {pack_file}")
+    print(f"Edit {pack_file} to define your phases and prompts.")
     return 0
 
 
@@ -249,7 +275,7 @@ def _cmd_feedback_v3(args: argparse.Namespace) -> int:
     # Record to V3
     task_context = {"task_category": problem_class or "unknown"}
     try:
-        v3 = BorgV3(db_path="~/.borg/borg_v3.db")
+        v3 = BorgV3(db_path="~/.hermes/guild/borg_v3.db")
         v3.record_outcome(
             pack_id=pack_id,
             task_context=task_context,
@@ -309,11 +335,77 @@ def _cmd_debug(args: argparse.Namespace) -> int:
     return 0
 
 
+def _cmd_start(args: argparse.Namespace) -> int:
+    """Interactive onboarding — get value from borg in 30 seconds."""
+    print()
+    print("  ╔══════════════════════════════════════════════════╗")
+    print("  ║          Welcome to the Borg Collective          ║")
+    print("  ╚══════════════════════════════════════════════════╝")
+    print()
+    print("  Your agent forgets everything between sessions.")
+    print("  Borg remembers.")
+    print()
+    print("  ── Try it now ─────────────────────────────────────")
+    print()
+    print("  Paste any error message you're dealing with:")
+    print()
+
+    try:
+        error = input("  > ").strip()
+    except (EOFError, KeyboardInterrupt):
+        print()
+        return 0
+
+    if not error:
+        print()
+        print("  No error entered. Try:")
+        print("    borg debug 'your error message here'")
+        print()
+        return 0
+
+    # Run debug
+    from borg.core.pack_taxonomy import debug_error
+    print()
+    result = debug_error(error, show_evidence=True)
+    print(result)
+
+    # Auto-record feedback
+    try:
+        from borg.core.pack_taxonomy import classify_error
+        from borg.core.v3_integration import BorgV3
+        pc = classify_error(error)
+        if pc:
+            v3 = BorgV3(db_path="~/.hermes/guild/borg_v3.db")
+            v3.record_outcome(
+                pack_id=pc,
+                task_context={"task_category": pc, "source": "borg_start"},
+                success=True,
+                tokens_used=0,
+                time_taken=0.0,
+            )
+    except Exception:
+        pass
+
+    # Next steps
+    print()
+    print("  ── What's next ───────────────────────────────────")
+    print()
+    print("  • Run again anytime:   borg debug 'your error'")
+    print("  • Browse workflows:    borg search debugging")
+    print("  • Export for Cursor:   borg generate systematic-debugging --format cursorrules")
+    print("  • Export for Claude:   borg setup-claude")
+    print("  • Record what worked:  borg feedback-v3 --pack systematic-debugging --success yes")
+    print()
+    print("  The more you use borg, the smarter it gets.")
+    print("  Resistance is futile.")
+    print()
+    return 0
+
+
 def _cmd_convert(args: argparse.Namespace) -> int:
     """Convert a SKILL.md, CLAUDE.md, or .cursorrules file to a workflow pack."""
     import yaml
     from borg.core.convert import convert_auto, convert_skill, convert_claude_md, convert_cursorrules
-
     try:
         if args.format == "auto":
             pack = convert_auto(args.path)
@@ -326,12 +418,42 @@ def _cmd_convert(args: argparse.Namespace) -> int:
         else:
             print(f"Error: Unknown format '{args.format}'. Use: auto, skill, claude, cursorrules", file=sys.stderr)
             return 1
-
         print(yaml.safe_dump(pack, default_flow_style=False, sort_keys=False))
         return 0
     except Exception as e:
         print(f"Error: {e}", file=sys.stderr)
         return 1
+
+
+def _cmd_generate(args: argparse.Namespace) -> int:
+    """Export a pack to platform-specific rule files."""
+    from borg.core.generator import generate_rules, generate_to_files, load_pack
+
+    try:
+        pack = load_pack(args.pack)
+    except FileNotFoundError as e:
+        print(f"Error: {e}", file=sys.stderr)
+        return 1
+
+    fmt = args.format
+    output_dir = getattr(args, "output", None)
+
+    if output_dir:
+        written = generate_to_files(pack, format=fmt, output_dir=output_dir)
+        for filename, filepath in written.items():
+            print(f"  {filename} -> {filepath}")
+        return 0
+    else:
+        result = generate_rules(pack, format=fmt)
+        if isinstance(result, dict):
+            for fmt_name, content in result.items():
+                from borg.core.generator import FORMAT_FILENAMES
+                print(f"=== {FORMAT_FILENAMES[fmt_name]} ===")
+                print(content)
+                print()
+        else:
+            print(result)
+        return 0
 
 
 def _cmd_list(args: argparse.Namespace) -> int:
@@ -346,7 +468,7 @@ def _cmd_list(args: argparse.Namespace) -> int:
 
     artifacts = data.get("artifacts", [])
     # Filter out test/smoke packs that shouldn't appear in production
-    _test_patterns = ("test-pack", "smoke-test", "wf-test", "test-call", "my-test", "fresh-pack", "old-pack", "my-pack", "guild:--")
+    _test_patterns = ("test-pack", "smoke-test", "wf-test", "test-call", "my-test", "fresh-pack", "old-pack", "my-pack", "guild:--", "test-scaffold", "stress-project", "test-e2e", "e2e-test")
     packs = [a for a in artifacts if a.get("type") == "pack" 
              and not any(a.get("name", "").startswith(p) or a.get("id", "").startswith(p) for p in _test_patterns)]
 
@@ -850,11 +972,27 @@ def main() -> int:
     parser = argparse.ArgumentParser(
         prog="borg",
         description="Borg — Semantic reasoning cache for AI agents.",
+        formatter_class=argparse.RawDescriptionHelpFormatter,
+        epilog="""Quick Start:
+  borg start                     First time? Start here — paste an error, get a fix
+  borg debug 'TypeError: ...'    Get structured debugging guidance for any error
+  borg search debugging          Search for workflow packs
+  borg generate systematic-debugging --format cursorrules
+                                  Export a debugging workflow for Cursor
+  borg setup-claude              Configure borg MCP for Claude Code
+  borg setup-cursor              Configure borg MCP for Cursor
+  borg autopilot                 Zero-config setup for Hermes""",
     )
+    parser.add_argument("--version", "-V", action="version", version=f"borg {__version__}")
     sub = parser.add_subparsers(dest="command", required=True)
 
     # guild search <query>
-    p = sub.add_parser("search", help="Search for packs")
+    p = sub.add_parser("search", help="Search for packs",
+        formatter_class=argparse.RawDescriptionHelpFormatter,
+        epilog="""Examples:
+  borg search debugging
+  borg search 'python import error'
+  borg search testing --mode semantic""")
     p.add_argument("query", help="Search query")
     p.add_argument(
         "--mode",
@@ -870,12 +1008,20 @@ def main() -> int:
     p.set_defaults(func=_cmd_search)
 
     # guild pull <uri>
-    p = sub.add_parser("pull", help="Fetch and save pack locally")
+    p = sub.add_parser("pull", help="Fetch and save pack locally",
+        formatter_class=argparse.RawDescriptionHelpFormatter,
+        epilog="""Examples:
+  borg pull guild://community/systematic-debugging
+  borg pull https://github.com/user/pack.yaml""")
     p.add_argument("uri", help="Pack URI (guild://, https://, or local path)")
     p.set_defaults(func=_cmd_pull)
 
     # guild try <uri>
-    p = sub.add_parser("try", help="Preview pack without saving")
+    p = sub.add_parser("try", help="Preview pack without saving",
+        formatter_class=argparse.RawDescriptionHelpFormatter,
+        epilog="""Examples:
+  borg try systematic-debugging
+  borg try systematic-debugging --json""")
     p.add_argument("uri", help="Pack URI")
     p.add_argument(
         "--json",
@@ -884,13 +1030,24 @@ def main() -> int:
     )
     p.set_defaults(func=_cmd_try)
 
-    # guild init <name>
-    p = sub.add_parser("init", help="Create pack scaffold or convert from skill")
-    p.add_argument("name", help="Skill name to convert")
+    # guild init <name> [--problem-class] [--mental-model]
+    p = sub.add_parser("init", help="Scaffold a new pack from scratch",
+        formatter_class=argparse.RawDescriptionHelpFormatter,
+        epilog="""Examples:
+  borg init my-debugging-workflow
+  borg init api-testing --problem-class testing
+  borg init perf-tuning --mental-model slow-thinker""")
+    p.add_argument("name", help="Pack name (used as directory name)")
+    p.add_argument("--problem-class", default="general", help="Problem class (default: general)")
+    p.add_argument("--mental-model", default="fast-thinker", help="Mental model (default: fast-thinker)")
     p.set_defaults(func=_cmd_init)
 
     # guild apply <pack> --task <task>
-    p = sub.add_parser("apply", help="Start applying a pack")
+    p = sub.add_parser("apply", help="Start applying a pack",
+        formatter_class=argparse.RawDescriptionHelpFormatter,
+        epilog="""Examples:
+  borg apply systematic-debugging --task 'fix failing test in auth module'
+  borg apply systematic-debugging --task 'debug segfault' --json""")
     p.add_argument("pack", help="Pack name")
     p.add_argument("--task", required=True, help="Task description")
     p.add_argument(
@@ -901,17 +1058,30 @@ def main() -> int:
     p.set_defaults(func=_cmd_apply)
 
     # guild publish <path>
-    p = sub.add_parser("publish", help="Publish pack to GitHub")
+    p = sub.add_parser("publish", help="Publish pack to GitHub",
+        formatter_class=argparse.RawDescriptionHelpFormatter,
+        epilog="""Examples:
+  borg publish systematic-debugging
+  borg publish ./my-pack/pack.yaml""")
     p.add_argument("path", help="Path to pack YAML or pack name")
     p.set_defaults(func=_cmd_publish)
 
     # guild feedback <session_id>
-    p = sub.add_parser("feedback", help="Generate feedback from session")
+    p = sub.add_parser("feedback", help="Generate feedback from session",
+        formatter_class=argparse.RawDescriptionHelpFormatter,
+        epilog="""Examples:
+  borg feedback abc123
+  borg feedback session-2024-01-15-001""")
     p.add_argument("session_id", help="Session ID")
     p.set_defaults(func=_cmd_feedback)
 
     # guild feedback-v3 --problem-class <class> --success yes --time 120
-    p = sub.add_parser("feedback-v3", help="Record debug guidance outcome to V3 feedback loop")
+    p = sub.add_parser("feedback-v3", help="Record debug guidance outcome to V3 feedback loop",
+        formatter_class=argparse.RawDescriptionHelpFormatter,
+        epilog="""Examples:
+  borg feedback-v3 --pack systematic-debugging --success yes
+  borg feedback-v3 --problem-class debugging --success no --time 30
+  borg feedback-v3 --pack systematic-debugging --success yes --tokens 5000""")
     p.add_argument(
         "--pack",
         default=None,
@@ -943,7 +1113,12 @@ def main() -> int:
     p.set_defaults(func=_cmd_feedback_v3)
 
     # guild debug <error>
-    p = sub.add_parser("debug", help="Get structured debugging guidance for an error")
+    p = sub.add_parser("debug", help="Get structured debugging guidance for an error",
+        formatter_class=argparse.RawDescriptionHelpFormatter,
+        epilog="""Examples:
+  borg debug 'TypeError: NoneType has no attribute get'
+  borg debug 'ModuleNotFoundError: No module named flask'
+  borg debug 'segmentation fault' --classify""")
     p.add_argument("error", nargs="+", help="Error message or traceback")
     p.add_argument(
         "--classify",
@@ -958,7 +1133,12 @@ def main() -> int:
     p.set_defaults(func=_cmd_debug)
 
     # guild convert <path> [--format auto|skill|claude|cursorrules]
-    p = sub.add_parser("convert", help="Convert SKILL.md / CLAUDE.md / .cursorrules to workflow pack")
+    p = sub.add_parser("convert", help="Convert SKILL.md / CLAUDE.md / .cursorrules to workflow pack",
+        formatter_class=argparse.RawDescriptionHelpFormatter,
+        epilog="""Examples:
+  borg convert SKILL.md
+  borg convert .cursorrules --format cursorrules
+  borg convert CLAUDE.md --format claude""")
     p.add_argument("path", help="Path to source file (SKILL.md, CLAUDE.md, or .cursorrules)")
     p.add_argument(
         "--format",
@@ -968,25 +1148,71 @@ def main() -> int:
     )
     p.set_defaults(func=_cmd_convert)
 
+    # guild generate <pack> [--format] [--output]
+    p = sub.add_parser("generate", help="Export pack to .cursorrules / .clinerules / CLAUDE.md / .windsurfrules",
+        formatter_class=argparse.RawDescriptionHelpFormatter,
+        epilog="""Examples:
+  borg generate systematic-debugging --format all
+  borg generate systematic-debugging --format cursorrules --output ./rules/
+  borg generate systematic-debugging --format claude-md""")
+    p.add_argument("pack", help="Pack name")
+    p.add_argument(
+        "--format",
+        choices=["cursorrules", "clinerules", "claude-md", "windsurfrules", "all"],
+        default="all",
+        help="Output format (default: all)",
+    )
+    p.add_argument(
+        "--output", "-o",
+        default=None,
+        help="Output directory (default: print to stdout)",
+    )
+    p.set_defaults(func=_cmd_generate)
+
     # guild list
-    p = sub.add_parser("list", help="List local packs")
+    p = sub.add_parser("list", help="List local packs",
+        formatter_class=argparse.RawDescriptionHelpFormatter,
+        epilog="""Examples:
+  borg list""")
     p.set_defaults(func=_cmd_list)
 
     # guild version
-    p = sub.add_parser("version", help="Show version")
+    p = sub.add_parser("version", help="Show version",
+        formatter_class=argparse.RawDescriptionHelpFormatter,
+        epilog="""Examples:
+  borg version""")
     p.set_defaults(func=_cmd_version)
 
     # guild autopilot
-    p = sub.add_parser("autopilot", help="Zero-config setup: install MCP + skill + auto-suggest")
+    p = sub.add_parser("autopilot", help="Zero-config setup: install MCP + skill + auto-suggest",
+        formatter_class=argparse.RawDescriptionHelpFormatter,
+        epilog="""Examples:
+  borg autopilot""")
     p.set_defaults(func=_cmd_autopilot)
 
     # guild setup-claude
-    p = sub.add_parser("setup-claude", help="Configure guild MCP server for Claude Code")
+    p = sub.add_parser("setup-claude", help="Configure guild MCP server for Claude Code",
+        formatter_class=argparse.RawDescriptionHelpFormatter,
+        epilog="""Examples:
+  borg setup-claude""")
     p.set_defaults(func=_cmd_setup_claude)
 
     # guild setup-cursor
-    p = sub.add_parser("setup-cursor", help="Configure guild MCP server for Cursor")
+    p = sub.add_parser("setup-cursor", help="Configure guild MCP server for Cursor",
+        formatter_class=argparse.RawDescriptionHelpFormatter,
+        epilog="""Examples:
+  borg setup-cursor""")
     p.set_defaults(func=_cmd_setup_cursor)
+
+    # borg start — interactive onboarding
+    p = sub.add_parser("start", help="Get started — paste an error, get a fix in 30 seconds",
+        formatter_class=argparse.RawDescriptionHelpFormatter,
+        epilog="""Examples:
+  borg start              Interactive onboarding — paste an error, get guidance
+  
+First time? Just run:
+  pip install agent-borg && borg start""")
+    p.set_defaults(func=_cmd_start)
 
     args = parser.parse_args()
 

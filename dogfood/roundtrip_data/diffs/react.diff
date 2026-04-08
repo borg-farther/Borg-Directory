@@ -1,0 +1,171 @@
+--- original/react
++++ roundtripped/react
+@@ -1,29 +1,56 @@
+-# React Development Rules
++# React
++# Problem class: You are an expert React developer. Follow these rules strictly.
+ 
+-You are an expert React developer. Follow these rules strictly.
++You are an expert at You are an expert React developer. Follow these rules strictly.. You are an expert React developer. Follow these rules strictly.
+ 
+-## Component Architecture
++## Workflow
++
++### 1. Component Architecture
+ - Use functional components with hooks exclusively
+ - Prefer composition over inheritance
+ - Keep components small and focused (< 200 lines)
+ - Use React.memo() for expensive renders
+ - Extract custom hooks for reusable logic
+ 
+-## State Management
++**Avoid:**
++  - ❌ Never mutate state directly
++  - ❌ Do NOT use class components
++  - ❌ Do NOT use string refs (use useRef)
++  - ❌ Do NOT put complex logic in useEffect cleanup
++  - ❌ Avoid prop drilling more than 3 levels deep
++  - ❌ Never use index as key in dynamic lists
++
++### 2. State Management
+ - Use useState for local component state
+ - Use useReducer for complex state logic
+ - Prefer React Context for shared state before reaching for Redux
+ - Never mutate state directly
+ - Keep state as close to where it's used as possible
+ 
+-## Anti-patterns to Avoid
++**Avoid:**
++  - ❌ Never mutate state directly
++  - ❌ Do NOT use class components
++  - ❌ Do NOT use string refs (use useRef)
++  - ❌ Do NOT put complex logic in useEffect cleanup
++  - ❌ Avoid prop drilling more than 3 levels deep
++  - ❌ Never use index as key in dynamic lists
++
++### 3. Anti Patterns To Avoid
+ - Do NOT use class components
+ - Do NOT use string refs (use useRef)
+ - Do NOT put complex logic in useEffect cleanup
+ - Avoid prop drilling more than 3 levels deep
+ - Never use index as key in dynamic lists
+ 
+-## Code Style
++**Avoid:**
++  - ❌ Never mutate state directly
++  - ❌ Do NOT use class components
++  - ❌ Do NOT use string refs (use useRef)
++  - ❌ Do NOT put complex logic in useEffect cleanup
++  - ❌ Avoid prop drilling more than 3 levels deep
++  - ❌ Never use index as key in dynamic lists
++
++### 4. Code Style
+ ```tsx
+ // Good: Named export with proper typing
+ export const UserCard: React.FC<UserCardProps> = ({ name, email }) => {
+@@ -38,19 +65,102 @@
+ };
+ ```
+ 
+-## Performance
++**Avoid:**
++  - ❌ Never mutate state directly
++  - ❌ Do NOT use class components
++  - ❌ Do NOT use string refs (use useRef)
++  - ❌ Do NOT put complex logic in useEffect cleanup
++  - ❌ Avoid prop drilling more than 3 levels deep
++  - ❌ Never use index as key in dynamic lists
++
++### 5. Performance
+ - Use useMemo for expensive computations
+ - Use useCallback for function props passed to children
+ - Lazy load routes with React.lazy() and Suspense
+ - Virtualize long lists with react-window or react-virtuoso
+ 
+-## Testing
++**Avoid:**
++  - ❌ Never mutate state directly
++  - ❌ Do NOT use class components
++  - ❌ Do NOT use string refs (use useRef)
++  - ❌ Do NOT put complex logic in useEffect cleanup
++  - ❌ Avoid prop drilling more than 3 levels deep
++  - ❌ Never use index as key in dynamic lists
++
++### 6. Testing
+ - Write tests with React Testing Library, not Enzyme
+ - Test behavior, not implementation details
+ - Use screen.getByRole over screen.getByTestId
+ - Mock API calls with MSW (Mock Service Worker)
+ 
+-## Links and References
++**Avoid:**
++  - ❌ Never mutate state directly
++  - ❌ Do NOT use class components
++  - ❌ Do NOT use string refs (use useRef)
++  - ❌ Do NOT put complex logic in useEffect cleanup
++  - ❌ Avoid prop drilling more than 3 levels deep
++  - ❌ Never use index as key in dynamic lists
++
++### 7. Links And References
+ - React docs: https://react.dev
+ - Testing Library: https://testing-library.com
+ - React patterns: https://reactpatterns.com
++
++**Avoid:**
++  - ❌ Never mutate state directly
++  - ❌ Do NOT use class components
++  - ❌ Do NOT use string refs (use useRef)
++  - ❌ Do NOT put complex logic in useEffect cleanup
++  - ❌ Avoid prop drilling more than 3 levels deep
++  - ❌ Never use index as key in dynamic lists
++
++## Anti-Patterns
++
++- ❌ Never mutate state directly
++- ❌ Do NOT use class components
++- ❌ Do NOT use string refs (use useRef)
++- ❌ Do NOT put complex logic in useEffect cleanup
++- ❌ Avoid prop drilling more than 3 levels deep
++- ❌ Never use index as key in dynamic lists
++- ❌ Never mutate state directly
++- ❌ Do NOT use class components
++- ❌ Do NOT use string refs (use useRef)
++- ❌ Do NOT put complex logic in useEffect cleanup
++- ❌ Avoid prop drilling more than 3 levels deep
++- ❌ Never use index as key in dynamic lists
++- ❌ Never mutate state directly
++- ❌ Do NOT use class components
++- ❌ Do NOT use string refs (use useRef)
++- ❌ Do NOT put complex logic in useEffect cleanup
++- ❌ Avoid prop drilling more than 3 levels deep
++- ❌ Never use index as key in dynamic lists
++- ❌ Never mutate state directly
++- ❌ Do NOT use class components
++- ❌ Do NOT use string refs (use useRef)
++- ❌ Do NOT put complex logic in useEffect cleanup
++- ❌ Avoid prop drilling more than 3 levels deep
++- ❌ Never use index as key in dynamic lists
++- ❌ Never mutate state directly
++- ❌ Do NOT use class components
++- ❌ Do NOT use string refs (use useRef)
++- ❌ Do NOT put complex logic in useEffect cleanup
++- ❌ Avoid prop drilling more than 3 levels deep
++- ❌ Never use index as key in dynamic lists
++- ❌ Never mutate state directly
++- ❌ Do NOT use class components
++- ❌ Do NOT use string refs (use useRef)
++- ❌ Do NOT put complex logic in useEffect cleanup
++- ❌ Avoid prop drilling more than 3 levels deep
++- ❌ Never use index as key in dynamic lists
++- ❌ Never mutate state directly
++- ❌ Do NOT use class components
++- ❌ Do NOT use string refs (use useRef)
++- ❌ Do NOT put complex logic in useEffect cleanup
++- ❌ Avoid prop drilling more than 3 levels deep
++- ❌ Never use index as key in dynamic lists
++
++## Escalation Rules
++
++- Escalate on ambiguous or missing information.
++
++# Generated from borg pack: borg://converted/react

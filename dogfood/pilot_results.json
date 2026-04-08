@@ -1,0 +1,28 @@
+{
+  "experiment": "Borg v3.1.0 Pilot A/B",
+  "date": "2026-04-07",
+  "model": "claude-opus-4-6",
+  "results": [
+    {
+      "task_id": "scikit-learn__scikit-learn-13142",
+      "difficulty": "medium",
+      "condition_A": {"pass": true, "duration_s": 75.68, "tool_calls": 14},
+      "condition_B": {"pass": true, "duration_s": 101.58, "tool_calls": 15, "borg_used": false, "note": "borg search returned empty, agent proceeded without borg guidance"}
+    },
+    {
+      "task_id": "django__django-10973",
+      "difficulty": "hard",
+      "condition_A": {"pass": true, "duration_s": 661.28, "tool_calls": 49},
+      "condition_B": {"pass": true, "duration_s": 324.04, "tool_calls": 36, "borg_used": true, "note": "borg debug returned structured guidance, agent was faster"}
+    }
+  ],
+  "summary": {
+    "condition_A_pass_rate": "2/2 (100%)",
+    "condition_B_pass_rate": "2/2 (100%)",
+    "concordant_pairs": 2,
+    "discordant_pairs": 0,
+    "mcnemar_p": "N/A (no discordant pairs)",
+    "observation": "Both conditions solved both tasks. B was 2x faster on hard task (324s vs 661s) but slightly slower on medium task (101s vs 75s). Borg search returned empty (no packs matched), borg debug gave useful structured output.",
+    "pilot_verdict": "Pipeline validated. Both conditions work E2E. No discordant pairs yet — tasks may be too easy for this agent/model. Need harder tasks or weaker model for discrimination."
+  }
+}

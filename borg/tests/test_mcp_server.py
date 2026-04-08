@@ -129,7 +129,7 @@ class TestToolsList:
     def test_tools_list_correct_count(self):
         req = minimal_request("tools/list", {}, req_id=4)
         resp = mcp_module.handle_request(req)
-        assert len(resp["result"]["tools"]) == 16
+        assert len(resp["result"]["tools"]) == 17
 
 
 # ============================================================================

@@ -550,7 +550,7 @@ class TestMCPToolsList:
     def test_tools_count_includes_borg_dashboard(self):
         req = minimal_request("tools/list", {}, req_id=4)
         resp = mcp_module.handle_request(req)
-        assert len(resp["result"]["tools"]) == 16
+        assert len(resp["result"]["tools"]) == 17
 
 
 class TestBorgV3EndToEnd:

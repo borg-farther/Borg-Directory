@@ -1,0 +1,123 @@
+type: workflow_pack
+version: 1.0.0
+problem_class: You are a senior Python developer writing production-quality code.
+mental_model: You are a senior Python developer writing production-quality code.
+required_inputs: []
+escalation_rules:
+- Escalate on ambiguous or missing information.
+id: borg://converted/python
+phases:
+- name: general_rules
+  description: '- Use Python 3.11+ features (match statements, tomllib, ExceptionGroup)
+
+    - Always add type hints to function signatures
+
+    - Use dataclasses or Pydantic models for structured data
+
+    - Prefer pathlib.Path over os.path
+
+    - Use f-strings for string formatting'
+  checkpoint: ''
+  anti_patterns:
+  - Use specific exception types, never bare except
+  - Do NOT use mutable default arguments
+  - Do NOT use global variables for state
+  - Avoid import * in production code
+  - Never use eval() or exec() with user input
+  - Don't catch Exception without re-raising
+  prompts: []
+- name: project_structure
+  description: '- Follow src layout: src/package_name/
+
+    - Use pyproject.toml for project configuration
+
+    - Pin dependencies with pip-compile or poetry.lock
+
+    - Separate dev dependencies from production'
+  checkpoint: ''
+  anti_patterns:
+  - Use specific exception types, never bare except
+  - Do NOT use mutable default arguments
+  - Do NOT use global variables for state
+  - Avoid import * in production code
+  - Never use eval() or exec() with user input
+  - Don't catch Exception without re-raising
+  prompts: []
+- name: error_handling
+  description: "- Use specific exception types, never bare except\n- Create custom\
+    \ exceptions for domain errors\n- Use contextlib.suppress() for expected exceptions\n\
+    - Log exceptions with proper context\n\n```python\n# Good error handling\nclass\
+    \ UserNotFoundError(Exception):\n    def __init__(self, user_id: str):\n     \
+    \   self.user_id = user_id\n        super().__init__(f\"User {user_id} not found\"\
+    )\n\nasync def get_user(user_id: str) -> User:\n    try:\n        return await\
+    \ db.fetch_user(user_id)\n    except DatabaseError as e:\n        logger.error(\"\
+    DB error fetching user %s: %s\", user_id, e)\n        raise UserNotFoundError(user_id)\
+    \ from e\n```"
+  checkpoint: ''
+  anti_patterns:
+  - Use specific exception types, never bare except
+  - Do NOT use mutable default arguments
+  - Do NOT use global variables for state
+  - Avoid import * in production code
+  - Never use eval() or exec() with user input
+  - Don't catch Exception without re-raising
+  prompts: []
+- name: anti_patterns
+  description: '- Do NOT use mutable default arguments
+
+    - Do NOT use global variables for state
+
+    - Avoid import * in production code
+
+    - Never use eval() or exec() with user input
+
+    - Don''t catch Exception without re-raising'
+  checkpoint: ''
+  anti_patterns:
+  - Use specific exception types, never bare except
+  - Do NOT use mutable default arguments
+  - Do NOT use global variables for state
+  - Avoid import * in production code
+  - Never use eval() or exec() with user input
+  - Don't catch Exception without re-raising
+  prompts: []
+- name: testing
+  description: '- Use pytest with fixtures
+
+    - Aim for 80%+ coverage on business logic
+
+    - Use parametrize for data-driven tests
+
+    - Mock external dependencies, not internal logic'
+  checkpoint: ''
+  anti_patterns:
+  - Use specific exception types, never bare except
+  - Do NOT use mutable default arguments
+  - Do NOT use global variables for state
+  - Avoid import * in production code
+  - Never use eval() or exec() with user input
+  - Don't catch Exception without re-raising
+  prompts: []
+- name: performance
+  description: '- Use generators for large data processing
+
+    - Profile before optimizing (cProfile, line_profiler)
+
+    - Use functools.lru_cache for expensive pure functions
+
+    - Consider async for I/O-bound operations'
+  checkpoint: ''
+  anti_patterns:
+  - Use specific exception types, never bare except
+  - Do NOT use mutable default arguments
+  - Do NOT use global variables for state
+  - Avoid import * in production code
+  - Never use eval() or exec() with user input
+  - Don't catch Exception without re-raising
+  prompts: []
+provenance:
+  author_agent: convert://tool
+  evidence: Converted from python
+  confidence: inferred
+  failure_cases: []
+

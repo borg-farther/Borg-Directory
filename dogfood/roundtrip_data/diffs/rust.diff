@@ -1,0 +1,89 @@
+--- original/rust
++++ roundtripped/rust
+@@ -1,14 +1,20 @@
+-# Rust Development Rules
++# Rust
++# Problem class: You are a Rust systems programmer. Write safe, performant, idiomatic Rust.
+ 
+-You are a Rust systems programmer. Write safe, performant, idiomatic Rust.
++You are an expert at You are a Rust systems programmer. Write safe, performant, idiomatic Rust.. You are a Rust systems programmer. Write safe, performant, idiomatic Rust.
+ 
+-## Ownership & Borrowing
++## Workflow
++
++### 1. Ownership   Borrowing
+ - Prefer borrowing (&T) over cloning
+ - Use Cow<str> when you might need to own or borrow
+ - Minimize lifetime annotations—let the compiler infer
+ - Use Arc<Mutex<T>> for shared mutable state across threads
+ 
+-## Error Handling
++**Avoid:**
++  - ❌ Never use unwrap() in production code—use expect() with context
++
++### 2. Error Handling
+ - Use thiserror for library error types
+ - Use anyhow for application error handling
+ - Implement From conversions for error types
+@@ -28,27 +34,57 @@
+ }
+ ```
+ 
+-## Performance
++**Avoid:**
++  - ❌ Never use unwrap() in production code—use expect() with context
++
++### 3. Performance
+ - Use iterators over manual loops
+ - Prefer stack allocation (arrays) over heap (Vec) when size is known
+ - Use #[inline] for small, hot functions
+ - Profile with cargo flamegraph before optimizing
+ - Use rayon for data parallelism
+ 
+-## Safety
++**Avoid:**
++  - ❌ Never use unwrap() in production code—use expect() with context
++
++### 4. Safety
+ - Minimize unsafe blocks—document safety invariants
+ - Use clippy and deny(unsafe_code) in libraries
+ - Prefer safe abstractions over raw pointers
+ - Use parking_lot over std::sync for mutexes
+ 
+-## Project Structure
++**Avoid:**
++  - ❌ Never use unwrap() in production code—use expect() with context
++
++### 5. Project Structure
+ - Separate library crate from binary crate
+ - Use modules for logical grouping
+ - Keep mod.rs files minimal
+ - Expose a prelude module for common re-exports
+ 
+-## Testing
++**Avoid:**
++  - ❌ Never use unwrap() in production code—use expect() with context
++
++### 6. Testing
+ - Use #[cfg(test)] modules
+ - Property-based testing with proptest
+ - Integration tests in tests/ directory
+ - Use test fixtures with rstest
++
++**Avoid:**
++  - ❌ Never use unwrap() in production code—use expect() with context
++
++## Anti-Patterns
++
++- ❌ Never use unwrap() in production code—use expect() with context
++- ❌ Never use unwrap() in production code—use expect() with context
++- ❌ Never use unwrap() in production code—use expect() with context
++- ❌ Never use unwrap() in production code—use expect() with context
++- ❌ Never use unwrap() in production code—use expect() with context
++- ❌ Never use unwrap() in production code—use expect() with context
++
++## Escalation Rules
++
++- Escalate on ambiguous or missing information.
++
++# Generated from borg pack: borg://converted/rust

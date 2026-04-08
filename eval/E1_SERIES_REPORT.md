@@ -1,5 +1,15 @@
 # E1 Series Report — 2026-04-02
 
+> **[CORRECTION 2026-04-08]** The "+50pp, p=0.03125" SWE-bench A/B
+> evidence cited throughout this report is derived from a fabricated
+> post-hoc file (`FINAL_RESULTS_v2.json`). The honest result from the
+> only real paired run is n=7, A=3/7, B=6/7, McNemar exact p=0.125 —
+> directionally positive but NOT statistically significant. See
+> `docs/20260408-1003_scope3_experiment/PRIOR_CLAIMS_AUDIT.md`.
+> Every "E1a PASS" conclusion resting on the p=0.031 number should be
+> re-read as: the guidance format is **directionally** supported, not
+> statistically proven.
+
 ## E1a: Format Validation — PASS ✓
 
 **Method:** Check whether investigation_trail files in seed packs overlap with actual SWE-bench Django patch files.
