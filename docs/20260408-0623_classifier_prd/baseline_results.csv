@@ -7,7 +7,7 @@ e0005,python,,missing_module,missing_dependency,import_cycle,0,0,1,0,ImportError
 e0006,python,,missing_module,missing_dependency,missing_dependency,1,0,0,0,ModuleNotFoundError: No module named 'numpy'
 e0007,python,,type_mismatch,type_mismatch,type_mismatch,1,0,0,0,TypeError: unsupported operand type(s) for +: 'int' and 'str'
 e0008,python,,type_mismatch,type_mismatch,type_mismatch,1,0,0,0,"TypeError: list indices must be integers or slices, not str"
-e0009,python,,import_cycle,import_cycle,circular_dependency,0,0,1,0,ImportError: cannot import name 'User' from partially initialized module 'app.models' (most likely due to a circular import)
+e0009,python,,import_cycle,import_cycle,import_cycle,1,0,0,0,ImportError: cannot import name 'User' from partially initialized module 'app.models' (most likely due to a circular import)
 e0010,python,,key_error,python_key_error,,0,0,0,1,KeyError: 'user_id'
 e0011,python,,index_error,python_index_error,,0,0,0,1,IndexError: list index out of range
 e0012,python,,value_error,python_value_error,,0,0,0,1,ValueError: invalid literal for int() with base 10: 'abc'
@@ -36,15 +36,15 @@ age
 e0033,python,fastapi,pydantic_validation,python_pydantic_validation,,0,0,0,1,"fastapi.exceptions.RequestValidationError: [{'loc': ['body', 'email'], 'msg': 'field required', 'type': 'value_error.missing'}]"
 e0034,python,fastapi,async_error,python_async_error,,0,0,0,1,RuntimeError: asyncio.run() cannot be called from a running event loop
 e0035,javascript,,undefined_access,js_undefined_property,,0,0,0,1,TypeError: Cannot read properties of undefined (reading 'map')
-e0036,javascript,,undefined_access,js_undefined_property,type_mismatch,0,0,1,0,TypeError: Cannot read property 'length' of null
+e0036,javascript,,undefined_access,js_undefined_property,,0,0,0,1,TypeError: Cannot read property 'length' of null
 e0037,javascript,,reference_error,js_reference_error,,0,0,0,1,ReferenceError: foo is not defined
 e0038,javascript,,reference_error,js_ssr_reference_error,,0,0,0,1,ReferenceError: window is not defined
 e0039,javascript,,reference_error,js_ssr_reference_error,,0,0,0,1,ReferenceError: document is not defined
 e0040,javascript,,syntax_error,js_syntax_error,,0,0,0,1,SyntaxError: Unexpected token '<'
 e0041,javascript,,syntax_error,js_json_parse_error,,0,0,0,1,SyntaxError: Unexpected end of JSON input
-e0042,javascript,,type_error,js_type_error,type_mismatch,0,0,1,0,TypeError: foo.map is not a function
-e0043,javascript,,type_error,js_type_error,type_mismatch,0,0,1,0,TypeError: Assignment to constant variable.
-e0044,javascript,,type_error,js_json_circular,circular_dependency,0,0,1,0,TypeError: Converting circular structure to JSON
+e0042,javascript,,type_error,js_type_error,,0,0,0,1,TypeError: foo.map is not a function
+e0043,javascript,,type_error,js_type_error,,0,0,0,1,TypeError: Assignment to constant variable.
+e0044,javascript,,type_error,js_json_circular,,0,0,0,1,TypeError: Converting circular structure to JSON
 e0045,javascript,,async_unhandled,js_unhandled_promise,,0,0,0,1,UnhandledPromiseRejectionWarning: Unhandled promise rejection.
 e0046,javascript,node,module_not_found,js_module_not_found,,0,0,0,1,Error: Cannot find module 'express'
 e0047,javascript,node,module_not_found,js_module_not_found,,0,0,0,1,Error [ERR_MODULE_NOT_FOUND]: Cannot find package 'lodash' imported from /app/index.mjs
@@ -125,7 +125,7 @@ Previous write at 0x00c0000a8010 by goroutine 6:"
 e0120,go,,deadlock,go_deadlock,,0,0,0,1,fatal error: all goroutines are asleep - deadlock!
 e0121,go,,goroutine_leak,go_goroutine_leak,,0,0,0,1,"goroutine 123 [chan receive, 5 minutes]:
 main.worker(...)"
-e0122,go,,import_cycle,go_import_cycle,import_cycle,0,0,1,0,"import cycle not allowed
+e0122,go,,import_cycle,go_import_cycle,,0,0,0,1,"import cycle not allowed
 package foo imports bar imports foo"
 e0123,go,,module_error,go_module_error,,0,0,0,1,go: module github.com/foo/bar: reading https://proxy.golang.org/...: 404 Not Found
 e0124,go,,module_error,go_module_error,,0,0,0,1,"go: cannot find main module, but found .git/config in /home/me/proj"
@@ -169,7 +169,7 @@ Message: The node was low on resource: ephemeral-storage. Container app was usin
 e0154,shell,kubernetes,config_missing,k8s_config_missing,,0,0,0,1,Error: couldn't find key db-password in Secret default/app-secrets
 e0155,shell,kubernetes,config_missing,k8s_config_missing,,0,0,0,1,"MountVolume.SetUp failed for volume ""config"" : configmap ""app-config"" not found"
 e0156,shell,kubernetes,rbac,k8s_rbac_denied,,0,0,0,1,"Error from server (Forbidden): pods is forbidden: User ""system:serviceaccount:default:app-sa"" cannot list resource ""pods"" in API group """" in the namespace ""default"""
-e0157,shell,kubernetes,probe_failed,k8s_probe_failed,timeout_hang,0,0,1,0,"Readiness probe failed: Get ""http://10.0.0.5:8080/health"": dial tcp 10.0.0.5:8080: connect: connection refused"
+e0157,shell,kubernetes,probe_failed,k8s_probe_failed,,0,0,0,1,"Readiness probe failed: Get ""http://10.0.0.5:8080/health"": dial tcp 10.0.0.5:8080: connect: connection refused"
 e0158,shell,kubernetes,pvc_pending,k8s_pvc_pending,,0,0,0,1,pod has unbound immediate PersistentVolumeClaims
 e0159,shell,kubernetes,scheduling,k8s_unschedulable,,0,0,0,1,0/3 nodes are available: 3 Insufficient cpu.
 e0160,shell,kubernetes,scheduling,k8s_unschedulable,,0,0,0,1,0/3 nodes are available: 3 node(s) had untolerated taint {node.kubernetes.io/unreachable: }

@@ -182,6 +182,95 @@ def _detect_language_quick(error_message: str) -> Optional[str]:
             return lang
     return None
 
+
+# -----------------------------------------------------------------------
+# v3.2.3 anti_signatures — suppress first-match-wins over-fires
+# -----------------------------------------------------------------------
+# An anti_signature is a regex that, if it matches the error text, blocks
+# the firing keyword's problem_class from winning. The classifier loop
+# continues to the next keyword and returns None if nothing clears.
+#
+# Each entry names the corpus row it targets and the Python positive it
+# explicitly does NOT match. See docs/20260408-0623_classifier_prd/
+# v323_fc_analysis.md for the full design + simulation proof.
+#
+# Phase 1 will migrate these into per-pack `anti_signatures` frontmatter
+# (ARCHITECTURE_SPEC.md §4.2 / §8.1). Until then, the dict lives here next
+# to _ERROR_KEYWORDS so the patch is a pure classifier change.
+_ANTI_SIGNATURES: Dict[str, List["_re.Pattern[str]"]] = {
+    "circular_dependency": [
+        # Corpus row e0009 — Python's canonical "partially initialized
+        # module" phrasing is the RIGHT phrase for import_cycle, not
+        # circular_dependency. Does NOT match any of the 10
+        # PYTHON_REGRESSION_FIXTURES (none contain "partially initialized
+        # module" or "most likely due to a circular import").
+        _re.compile(r"partially initialized module", _re.IGNORECASE),
+        _re.compile(r"most likely due to a circular import", _re.IGNORECASE),
+        # Corpus row e0044 — JS JSON.stringify cyclic structure error.
+        # Does NOT match any Python fixture (no Python fixture mentions
+        # "Converting circular structure to JSON").
+        _re.compile(r"Converting circular structure to JSON", _re.IGNORECASE),
+    ],
+    "type_mismatch": [
+        # Corpus row e0036 — JS "Cannot read property 'length' of null"
+        # (pre-2019 singular phrasing). The 0-40 char gap covers the
+        # quoted key like 'length'. Anchored on `of (null|undefined)` so
+        # a Python message containing the literal phrase "cannot read
+        # property" without the JS-specific null/undefined ending will
+        # not match. Does NOT match any Python fixture.
+        _re.compile(
+            r"Cannot read propert(?:y|ies)\b[^\n]{0,40}?\bof (?:null|undefined)",
+            _re.IGNORECASE,
+        ),
+        # Corpus row e0042 — JS "x is not a function". Python equivalent
+        # for non-callables is "is not callable" (PEP 8 / CPython), so
+        # the literal `is not a function` is JS-only. Does NOT match any
+        # Python fixture.
+        _re.compile(r"\bis not a function\b", _re.IGNORECASE),
+        # Corpus row e0043 — JS "Assignment to constant variable". Python
+        # does not have const-reassignment errors (no consts). Does NOT
+        # match any Python fixture.
+        _re.compile(r"Assignment to constant variable", _re.IGNORECASE),
+        # Corpus row e0044 — defence-in-depth duplicate of the
+        # circular_dependency anti_signature. If _ERROR_KEYWORDS is ever
+        # reordered so TypeError fires before 'circular', this row still
+        # gets suppressed. Does NOT match any Python fixture.
+        _re.compile(r"Converting circular structure to JSON", _re.IGNORECASE),
+    ],
+    "import_cycle": [
+        # Corpus row e0122 — Go's exact cyclic-import compiler phrasing.
+        # Does NOT match any Python fixture (no Python fixture contains
+        # the literal string "import cycle not allowed").
+        _re.compile(r"import cycle not allowed", _re.IGNORECASE),
+    ],
+    "timeout_hang": [
+        # Corpus row e0157 — K8s readiness/liveness/startup probe failures
+        # that contain the substring "connection refused" but should
+        # route to k8s_probe_failed (no pack yet — Phase 3). Does NOT
+        # match Python fixture #7 "TimeoutError: [Errno 110] Connection
+        # timed out" because that fixture has no probe-failed phrasing.
+        _re.compile(
+            r"\b(?:Readiness|Liveness|Startup) probe failed\b",
+            _re.IGNORECASE,
+        ),
+    ],
+}
+
+
+def _anti_signature_blocks(error_message: str, problem_class: str) -> bool:
+    """Return True if any anti_signature for the class matches the text.
+
+    Preserves case of the original `error_message` — the regexes use
+    re.IGNORECASE themselves where appropriate. Safe on empty / None
+    inputs (returns False).
+    """
+    if not error_message:
+        return False
+    for pattern in _ANTI_SIGNATURES.get(problem_class, ()):
+        if pattern.search(error_message):
+            return True
+    return False
+
 # Canonical list of all known problem classes (must match seed pack filenames)
 PROBLEM_CLASSES: List[str] = [
     "circular_dependency",
@@ -286,17 +375,22 @@ def classify_error(error_message: str) -> Optional[str]:
     """
     Classify an error message string into a problem_class.
 
-    v3.2.2 (Phase 0 of the multi-language classifier roadmap):
+    v3.2.3 (Phase 0 of the multi-language classifier roadmap):
     1. Detect non-Python locking signals (Rust E0xxx, Go panic, JS
        Cannot read properties of, TS####, React Hydration failed,
        Docker ENOSPC, Kubernetes CrashLoopBackOff, etc.). If any
        fire, return None ("we don't know yet, refusing to give a
        Python answer to a non-Python error").
-    2. Otherwise fall back to the legacy substring keyword table
-       (Python/Django coverage unchanged).
+    2. Walk the legacy substring keyword table (Python/Django coverage
+       unchanged).
+    3. Before returning a keyword's problem_class, consult
+       `_ANTI_SIGNATURES` to suppress known first-match-wins
+       over-fires on Python-looking inputs whose text has a JS/Go/K8s
+       phrase the language guard did not catch.
 
     Phase 1+ (ARCHITECTURE_SPEC.md §3-§7) replaces this with a
-    confidence-scored Match | UnknownMatch dataclass return type.
+    confidence-scored Match | UnknownMatch dataclass return type and
+    migrates `_ANTI_SIGNATURES` into per-pack frontmatter.
 
     See docs/20260408-0623_classifier_prd/ for the full PRD.
     """
@@ -308,6 +402,13 @@ def classify_error(error_message: str) -> Optional[str]:
     lower = error_message.lower()
     for keyword, problem_class in _ERROR_KEYWORDS:
         if keyword.lower() in lower:
+            # v3.2.3 anti_signature gate — if a class-specific regex
+            # matches the (case-preserved) text, suppress this keyword
+            # and keep scanning. Returns None at the end if nothing
+            # clears, so `debug_error()` falls through to the same
+            # UnknownMatch block as before.
+            if _anti_signature_blocks(error_message, problem_class):
+                continue
             return problem_class
     return None
 
