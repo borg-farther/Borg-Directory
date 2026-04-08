@@ -123,7 +123,7 @@ For each task:
 - n = 25 paired observations (tasks)
 - Each task aggregated to majority-vote success (3 runs → binary)
 - Expected: ~50% baseline success (calibrated)
-- Expected effect: +34pp (based on pilot)
+- Expected effect: +34pp (based on n=3 pilot — directional only, not statistically resolved; see borg/docs/20260408-1118_borg_roadmap/PLUS34PP_AUDIT.md)
 - So: P(A=fail, B=success) ≈ 0.34, P(A=success, B=fail) ≈ 0.00
 
 **McNemar's test discordant pairs:**

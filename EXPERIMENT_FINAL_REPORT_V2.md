@@ -1,6 +1,15 @@
 # Borg SWE-bench Experiment — Final Report
 ## Date: 2026-04-01
 
+> **[AUDIT POINTER 20260408-1128]** The pilot "+34pp" number compared to in
+> this report (line ~87) was audited 20260408-1128 and determined to be a
+> n=3 directional-only observation with McNemar p=1.0 — real raw data but
+> zero statistical resolution. See
+> `docs/20260408-1118_borg_roadmap/PLUS34PP_AUDIT.md`. The SWE-bench n=7
+> result described in this report is itself honest (p=0.125, directional);
+> for that claim's audit see
+> `docs/20260408-1003_scope3_experiment/PRIOR_CLAIMS_AUDIT.md`.
+
 ---
 
 ## VERDICT: CONDITIONAL GO

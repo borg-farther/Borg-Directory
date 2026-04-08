@@ -2,6 +2,17 @@
 ## Does the Reasoning Cache Help AI Agents?
 ## Date: 2026-03-31
 
+> **[AUDIT POINTER 20260408-1128]** This report is the HONEST source-of-truth
+> for the "+34pp on hard tasks" claim. The 2026-04-08 audit
+> (`docs/20260408-1118_borg_roadmap/PLUS34PP_AUDIT.md`) confirmed that the
+> raw data (`dogfood/final_experiment_data.json`) matches this report's
+> description: n=3 hard tasks, A=1/3, B=2/3, +33.3pp raw (rounded to +34pp),
+> McNemar exact p=1.0, one-tailed binomial p=0.5. This report's own caveats
+> ("n=3 is too small", "preliminary results", "CANNOT say: Statistical
+> significance") are fully supported. DOWNSTREAM citations in
+> `docs/BORG_E2E_PRD_20260402.md` that strip these caveats (and add a
+> fabricated "p<0.05 YES" annotation) are the problem, not this report.
+
 ---
 
 # VERDICT: YES, ON HARD TASKS. NO, ON EASY TASKS.
