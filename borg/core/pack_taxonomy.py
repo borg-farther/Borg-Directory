@@ -79,9 +79,108 @@ _ERROR_KEYWORDS: List[Tuple[str, str]] = [
     # Schema drift
     ("OperationalError", "schema_drift"),
     ("SyncError", "schema_drift"),
-    # Generic
-    ("Error", "schema_drift"),
+    # NOTE: v3.2.2 — the bare ("Error", "schema_drift") fallback was removed.
+    # It was a generic substring trap that routed every error containing the
+    # word "error" — Rust E0382, Docker ENOSPC, Go panics, JS TypeError — to
+    # the Django schema_drift pack. See docs/20260408-0623_classifier_prd/
+    # for the full PRD and the new confidence-gated classifier roadmap.
 ]
+
+
+# -----------------------------------------------------------------------
+# Phase 0 language detection — non-Python locking signals
+# -----------------------------------------------------------------------
+# Each entry is a regex that, if matched, locks the input to a specific
+# non-Python language. Phase 0 only needs to detect "this is definitely
+# NOT Python" so classify_error can refuse to answer instead of routing
+# to a Python/Django pack. Phase 1 (ARCHITECTURE_SPEC.md §5.1) replaces
+# this with a full multi-language detection cascade.
+import re as _re
+
+_NON_PYTHON_LOCKING_SIGNALS: List[Tuple[str, "_re.Pattern[str]"]] = [
+    # Rust — rustc error codes and borrow checker
+    ("rust", _re.compile(r"error\[E\d{4}\]")),
+    ("rust", _re.compile(r"\bborrow checker\b", _re.IGNORECASE)),
+    ("rust", _re.compile(r"borrow of moved value", _re.IGNORECASE)),
+    ("rust", _re.compile(r"\bcargo (build|run|test|check)\b")),
+    ("rust", _re.compile(r"\brustc\b")),
+    ("rust", _re.compile(r"does not live long enough")),
+    ("rust", _re.compile(r"cannot borrow .* as mutable")),
+    # Go — runtime panics, goroutines, modules
+    ("go", _re.compile(r"\bgoroutine \d+ \[")),
+    ("go", _re.compile(r"panic: runtime error")),
+    ("go", _re.compile(r"invalid memory address or nil pointer dereference")),
+    ("go", _re.compile(r"\bgo\.mod\b")),
+    ("go", _re.compile(r"go: cannot find module")),
+    # JavaScript / Node.js
+    ("javascript", _re.compile(r"Cannot read propert(?:y|ies) of (?:null|undefined)")),
+    ("javascript", _re.compile(r"\bReferenceError\b.*is not defined")),
+    ("javascript", _re.compile(r"UnhandledPromiseRejectionWarning")),
+    ("javascript", _re.compile(r"\bnode_modules\b")),
+    ("javascript", _re.compile(r"at .*\.(?:js|mjs|cjs):\d+")),
+    ("javascript", _re.compile(r"npm ERR!")),
+    # TypeScript — compiler errors
+    ("typescript", _re.compile(r"\bTS\d{4}\b")),
+    ("typescript", _re.compile(r"is not assignable to type")),
+    ("typescript", _re.compile(r"\.tsx?:\d+:\d+")),
+    # React / Next.js
+    ("react", _re.compile(r"Hydration failed because", _re.IGNORECASE)),
+    ("react", _re.compile(r"Text content does not match server-rendered HTML")),
+    ("react", _re.compile(r"Invalid hook call")),
+    ("react", _re.compile(r"Each child in a list should have a unique \"key\" prop")),
+    # Docker / BuildKit
+    ("docker", _re.compile(r"\bENOSPC\b")),
+    ("docker", _re.compile(r"no space left on device", _re.IGNORECASE)),
+    ("docker", _re.compile(r"failed to solve:")),
+    ("docker", _re.compile(r"^docker:", _re.MULTILINE)),
+    ("docker", _re.compile(r"COPY failed:")),
+    ("docker", _re.compile(r"manifest unknown")),
+    # Kubernetes
+    ("kubernetes", _re.compile(r"CrashLoopBackOff")),
+    ("kubernetes", _re.compile(r"ImagePullBackOff")),
+    ("kubernetes", _re.compile(r"ErrImagePull")),
+    ("kubernetes", _re.compile(r"OOMKilled")),
+    ("kubernetes", _re.compile(r"\bkubectl\b")),
+    ("kubernetes", _re.compile(r"FailedScheduling")),
+]
+
+# Python "positive lock" signals — if any of these match we KEEP processing
+# Python keywords even if a non-Python signal also fires (polyglot logs).
+_PYTHON_LOCKING_SIGNALS: List["_re.Pattern[str]"] = [
+    _re.compile(r"Traceback \(most recent call last\)"),
+    _re.compile(r"\bpython3?(?:\.\d+)?\b"),
+    _re.compile(r"\.py:\d+"),
+    _re.compile(r"\bmanage\.py\b"),
+    _re.compile(r"\bdjango\."),
+    _re.compile(r"\bflask\b", _re.IGNORECASE),
+    _re.compile(r"\bfastapi\b", _re.IGNORECASE),
+    _re.compile(r"\bpip install\b"),
+    _re.compile(r"ModuleNotFoundError: No module named"),
+]
+
+
+def _detect_language_quick(error_message: str) -> Optional[str]:
+    """Phase 0 language detector — return non-Python language if locked.
+
+    Returns one of {'rust','go','javascript','typescript','react','docker',
+    'kubernetes'} when a high-confidence non-Python signal fires AND no
+    Python locking signal also fires. Returns None otherwise (which means
+    "Python or unknown — proceed with the legacy keyword table").
+
+    Phase 1 will replace this with the full cascade in
+    ARCHITECTURE_SPEC.md §4.3 / §5.1.
+    """
+    if not error_message:
+        return None
+    # If any Python locking signal fires, treat as Python (keep current behaviour).
+    for pat in _PYTHON_LOCKING_SIGNALS:
+        if pat.search(error_message):
+            return None
+    # Otherwise, the first non-Python locking signal wins.
+    for lang, pat in _NON_PYTHON_LOCKING_SIGNALS:
+        if pat.search(error_message):
+            return lang
+    return None
 
 # Canonical list of all known problem classes (must match seed pack filenames)
 PROBLEM_CLASSES: List[str] = [
@@ -108,21 +207,34 @@ _CACHE_INITIALIZED = False
 
 
 def _get_skills_dir() -> Path:
-    """Return the borg/skills directory (one level above borg package)."""
-    # borg/                     <- package root
-    # borg/core/                <- where this file lives
-    # borg/skills/              <- one level up from package
-    # borg/skills/*.md          <- seed packs live here
+    """Return the directory containing seed pack .md files.
+    
+    Search order:
+    1. borg/seeds_data/ inside the installed package (PyPI installs)
+    2. skills/ directory sibling to borg package (editable/dev installs)
+    3. Absolute dev fallback
+    4. Return None if not found (callers must handle gracefully)
+    """
     import borg as borg_pkg
     borg_path = Path(borg_pkg.__file__).parent  # .../borg/
-    skills_dir = borg_path.parent / "skills"      # .../skills/ (one level up)
+
+    # 1. Inside package (PyPI wheel)
+    seeds_data = borg_path / "seeds_data"
+    if seeds_data.is_dir():
+        return seeds_data
+
+    # 2. Sibling to package (editable install)
+    skills_dir = borg_path.parent / "skills"
     if skills_dir.is_dir():
         return skills_dir
-    # Fallback: absolute path for development workspace
+
+    # 3. Absolute dev fallback
     dev_path = Path("/root/hermes-workspace/borg/skills")
     if dev_path.is_dir():
         return dev_path
-    raise FileNotFoundError(f"Cannot find skills directory. Checked: {skills_dir}, {dev_path}")
+
+    # 4. Not found — return None instead of crashing
+    return None
 
 
 def _init_cache() -> None:
@@ -132,6 +244,9 @@ def _init_cache() -> None:
         return
 
     skills_dir = _get_skills_dir()
+    if skills_dir is None:
+        _CACHE_INITIALIZED = True
+        return
     for pack_file in skills_dir.glob("*.md"):
         try:
             text = pack_file.read_text(encoding="utf-8")
@@ -171,10 +286,24 @@ def classify_error(error_message: str) -> Optional[str]:
     """
     Classify an error message string into a problem_class.
 
-    Uses keyword matching against ERROR_KEYWORDS.
-    Returns the first matching problem_class, or None if no match.
+    v3.2.2 (Phase 0 of the multi-language classifier roadmap):
+    1. Detect non-Python locking signals (Rust E0xxx, Go panic, JS
+       Cannot read properties of, TS####, React Hydration failed,
+       Docker ENOSPC, Kubernetes CrashLoopBackOff, etc.). If any
+       fire, return None ("we don't know yet, refusing to give a
+       Python answer to a non-Python error").
+    2. Otherwise fall back to the legacy substring keyword table
+       (Python/Django coverage unchanged).
+
+    Phase 1+ (ARCHITECTURE_SPEC.md §3-§7) replaces this with a
+    confidence-scored Match | UnknownMatch dataclass return type.
+
+    See docs/20260408-0623_classifier_prd/ for the full PRD.
     """
     if not error_message:
+        return None
+    # Phase 0 language guard — refuse to answer non-Python errors.
+    if _detect_language_quick(error_message) is not None:
         return None
     lower = error_message.lower()
     for keyword, problem_class in _ERROR_KEYWORDS:
@@ -377,17 +506,43 @@ def debug_error(error_message: str, show_evidence: bool = True) -> str:
         show_evidence: Include evidence stats in output
 
     Returns:
-        Formatted guidance string, or a "no pack found" message if
-        no matching problem_class is found.
+        Formatted guidance string, or an "I don't know yet" UnknownMatch
+        block when no matching problem_class is found. v3.2.2 (Phase 0)
+        explicitly refuses to print Python/Django guidance for detected
+        non-Python errors — it returns the UnknownMatch block instead.
     """
+    # Phase 0: detect non-Python languages first so the UnknownMatch
+    # block can name the language we DID detect.
+    detected_lang = _detect_language_quick(error_message) if error_message else None
+
     # Step 1: classify
     problem_class = classify_error(error_message)
 
     if not problem_class:
+        lang_line = (
+            f"Detected language: {detected_lang}. "
+            "Borg currently has Python/Django expert packs only.\n"
+            f"v3.2.2 refuses to give a Python answer to a {detected_lang} "
+            "error — see docs/20260408-0623_classifier_prd/ for the\n"
+            "multi-language classifier roadmap."
+        ) if detected_lang else (
+            "Borg's current packs are Python/Django specific.\n"
+            "If your error is Python/Django, try pasting more of the traceback."
+        )
         return (
-            "No matching problem class found.\n"
-            "Try: borg debug <your-error-message>\n"
-            "Known problem classes: " + ", ".join(PROBLEM_CLASSES)
+            "============================================================\n"
+            f"ERROR: {error_message[:120]}{'...' if len(error_message) > 120 else ''}\n"
+            "============================================================\n"
+            "[unknown] No matching problem class found.\n"
+            "\n"
+            f"{lang_line}\n"
+            "\n"
+            "Known Python/Django problem classes:\n"
+            "  " + ", ".join(PROBLEM_CLASSES) + "\n"
+            "\n"
+            "Help us add coverage for your language:\n"
+            "  https://github.com/bensargotest-sys/agent-borg/issues/new\n"
+            "============================================================"
         )
 
     # Step 2: load pack

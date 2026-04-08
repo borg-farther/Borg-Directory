@@ -4,8 +4,8 @@ build-backend = "setuptools.build_meta"
 
 [project]
 name = "agent-borg"
-version = "3.0.0"
-description = "Proven workflows for AI agents — execution-proven, safety-scanned, feedback-improving"
+version = "3.2.2"
+description = "Collective memory for AI coding agents — your agent learns from every session"
 readme = "README.md"
 license = "MIT"
 requires-python = ">=3.10"
@@ -54,6 +54,9 @@ Documentation = "https://github.com/bensargotest-sys/guild-packs#readme"
 [tool.setuptools.packages.find]
 include = ["borg*"]
 exclude = ["borg.tests*", "borg.defi.tests*", "test_e2e"]
+
+[tool.setuptools.package-data]
+borg = ["seeds_data/**/*.md", "seeds_data/**/*.yaml", "seeds_data/**"]
 
 [tool.pytest.ini_options]
 testpaths = ["borg/tests", "borg/defi/tests"]
