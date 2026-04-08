@@ -7,7 +7,7 @@
 | Title    | Borg Debug Classifier v1 — Multi-Language Confidence-Gated Classification |
 | Date     | 20260408-0623 |
 | Owner    | Hermes Agent on behalf of AB |
-| Status   | Proposed for approval |
+| Status   | Phase 0 SHIPPED (v3.2.2). Phase 0.5 anti_signatures SHIPPED (v3.2.3). Phases 1-4 DEFERRED pending user-research evidence per SKEPTIC_REVIEW.md Appendix B. |
 | Inputs   | CONTEXT_DOSSIER.md, RED_TEAM_REVIEW.md, ARCHITECTURE_SPEC.md, DATA_ANALYSIS.md, error_corpus.jsonl (173 rows) |
 
 **TL;DR.** Delete one line of `pack_taxonomy.py` today to stop shipping confidently-wrong Django advice for Rust/Docker/JS errors, then over four phases replace the 40-entry substring table with a language-detected, confidence-gated, regex+features classifier whose headline metric is per-language False-Confident Rate ≤ 2%.
@@ -223,6 +223,8 @@ We are not religious — Phase 4 leaves room for an opt-in `--llm` "explain hard
 ---
 
 ## 6. PHASED ROLLOUT
+
+> **STATUS (20260408-0832):** Phase 0 shipped as v3.2.2 on 20260408-0735 — corpus FCR 53.8% -> 4.6%. Phase 0.5 (anti_signatures, residual 8 false-confident rows killed) shipped as v3.2.3 on 20260408-~0900. **Phases 1-4 are DEFERRED.** The GEPA spike (see gepa_spike/SPIKE_REPORT.md) disproved the naive GEPA-replaces-hand-authoring hypothesis. The Skeptic gate (SKEPTIC_REVIEW.md) continues to recommend redirecting the 5-6 week Phase 1-4 capacity to MCP-in-Claude-Code / SWE-bench polish / pack-adoption cron until user-research evidence flips ≥2 of the 5 conditions in Appendix B.
 
 ### Phase 0 — STOP THE BLEEDING (must ship within 24h)
 
