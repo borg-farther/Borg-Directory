@@ -1,0 +1,5 @@
+{
+    "expected": "missing_dependency",
+    "actual": "import_cycle",
+    "kind": "false_confident"
+}

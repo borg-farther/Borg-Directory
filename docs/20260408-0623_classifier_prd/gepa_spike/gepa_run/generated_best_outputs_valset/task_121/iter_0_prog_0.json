@@ -1,0 +1,5 @@
+{
+    "expected": "go_import_cycle",
+    "actual": "import_cycle",
+    "kind": "false_confident"
+}

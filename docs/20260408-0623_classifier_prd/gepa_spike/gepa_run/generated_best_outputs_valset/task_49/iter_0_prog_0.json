@@ -1,0 +1,5 @@
+{
+    "expected": "timeout_hang",
+    "actual": null,
+    "kind": "correct_no_match"
+}

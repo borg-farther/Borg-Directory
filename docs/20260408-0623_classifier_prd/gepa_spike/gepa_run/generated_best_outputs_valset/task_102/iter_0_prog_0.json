@@ -1,0 +1,5 @@
+{
+    "expected": "rust_async_send",
+    "actual": null,
+    "kind": "correct_no_match"
+}

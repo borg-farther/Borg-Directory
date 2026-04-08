@@ -1,0 +1,5 @@
+{
+    "expected": "import_cycle",
+    "actual": "circular_dependency",
+    "kind": "false_confident"
+}

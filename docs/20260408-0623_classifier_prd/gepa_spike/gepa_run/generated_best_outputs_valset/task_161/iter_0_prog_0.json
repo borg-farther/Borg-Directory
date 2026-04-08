@@ -1,0 +1,5 @@
+{
+    "expected": "k8s_resource_quota",
+    "actual": null,
+    "kind": "correct_no_match"
+}

@@ -1,0 +1,5 @@
+{
+    "expected": "react_hydration_mismatch",
+    "actual": null,
+    "kind": "correct_no_match"
+}

@@ -1,0 +1,5 @@
+{
+    "expected": "docker_oom_killed",
+    "actual": null,
+    "kind": "correct_no_match"
+}

@@ -1,0 +1,5 @@
+{
+    "expected": "js_type_error",
+    "actual": "type_mismatch",
+    "kind": "false_confident"
+}

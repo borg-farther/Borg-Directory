@@ -1,0 +1,5 @@
+{
+    "expected": "rust_type_annotation",
+    "actual": null,
+    "kind": "correct_no_match"
+}

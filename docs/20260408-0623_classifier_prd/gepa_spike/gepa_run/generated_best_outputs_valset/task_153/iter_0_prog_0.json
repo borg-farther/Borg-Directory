@@ -1,0 +1,5 @@
+{
+    "expected": "k8s_config_missing",
+    "actual": null,
+    "kind": "correct_no_match"
+}

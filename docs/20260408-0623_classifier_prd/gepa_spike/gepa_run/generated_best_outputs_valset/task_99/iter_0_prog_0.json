@@ -1,0 +1,5 @@
+{
+    "expected": "rust_trait_bound",
+    "actual": null,
+    "kind": "correct_no_match"
+}

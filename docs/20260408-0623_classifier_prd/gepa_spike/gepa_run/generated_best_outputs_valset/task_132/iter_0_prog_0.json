@@ -1,0 +1,5 @@
+{
+    "expected": "docker_build_context",
+    "actual": null,
+    "kind": "correct_no_match"
+}
