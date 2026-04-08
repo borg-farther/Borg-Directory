@@ -171,7 +171,7 @@ This is Borg's unique gap. No one else:
 ### Focus to be ONLY solution:
 
 **Option A: Coding Agent Failure Memory (Fastest validation)**
-- Already proven +43pp on SWE-bench
+- Directional +43pp on SWE-bench (n=7 Django paired, McNemar exact p=0.125, NOT statistically significant — see docs/20260408-1216_third_audit/THIRD_SWEEP_AUDIT.md). [CORRECTION 20260408-1216] Prior wording "Already proven" was caveat-stripped.
 - Clear use case, clear pain
 - Dogfood internally with Hermes first
 

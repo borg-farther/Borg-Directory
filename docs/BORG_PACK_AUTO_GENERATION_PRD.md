@@ -182,7 +182,7 @@ These run continuously after launch. Alerts fire if thresholds breached.
 
 ### 3.3 The Critical Unknown
 
-**Do seed packs actually help?** The prior experiment (+43pp with traces) proved that investigation trails help. But that was with traces from successful agents. We haven't proven that the seed packs — written from SWE-bench data by us — produce the same benefit.
+**Do seed packs actually help?** The prior experiment (+43pp directional with traces; n=7 Django paired, McNemar exact p=0.125, NOT statistically significant — see docs/20260408-1216_third_audit/THIRD_SWEEP_AUDIT.md) suggested that investigation trails help. [CORRECTION 20260408-1216] Prior wording "proved" was caveat-stripped — n=7 with p=0.125 does not prove anything at α=0.05, it is directional only. And that was with traces from successful agents. We haven't shown that the seed packs — written from SWE-bench data by us — produce the same benefit.
 
 **This is why E1 (Dogfood A/B) must run before Phase 1.** If seed packs don't help, the entire pipeline is built on an untested assumption.
 

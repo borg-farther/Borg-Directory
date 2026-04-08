@@ -1,6 +1,17 @@
 # Borg Strategic Synthesis — What We Know, What To Build Next
 ## Date: 2026-04-01
 
+> **[CORRECTION 20260408-1216]** Every "+43pp on SWE-bench" citation in
+> this document refers to the n=7 paired Django A/B run in
+> `dogfood/v2_data/swebench_results/FINAL_RESULTS.json`. The numerical
+> +42.86pp delta is correct (A=3/7=42.86%, B=6/7=85.71%) but the
+> McNemar exact one-sided p-value is **0.125** with only 3 discordant
+> pairs — **NOT statistically significant** at α=0.05. Several lines
+> below frame this as "Evidence" or use the verb "proved"; that
+> framing is unsupported. The honest summary is "+43pp directional
+> (n=7, McNemar p=0.125, NOT significant, zero negative transfer)".
+> See `docs/20260408-1216_third_audit/THIRD_SWEEP_AUDIT.md`.
+
 ---
 
 ## 1. WHAT WE PROVED
