@@ -1,5 +1,64 @@
 # Changelog
 
+## 3.2.4 — 20260408 — Observe→search roundtrip fix
+
+Fixes a production bug discovered by the P1.1 MiniMax experiment
+(docs/20260408-1118_borg_roadmap/P1_MINIMAX_REPORT.md): `borg observe` wrote
+traces but `borg search` could not find them. Silently made the C2 (borg
+seeded) condition indistinguishable from C1 (borg empty) in the experiment,
+invalidating cross-condition comparison.
+
+### Root cause (two defects, both required)
+
+1. `borg/core/search.py` `borg_search()` only queried the workflow pack
+   index — it never opened `~/.borg/traces.db` even though
+   `TraceMatcher.find_relevant()` existed for exactly this purpose.
+2. `borg` CLI had no `observe` subcommand at all. Only the MCP server path
+   could write traces. The P1.1 seeding calls hit the CLI, so nothing was
+   written.
+
+### Changes
+
+- **`borg/cli.py`**: added `_cmd_observe()` subcommand. `borg observe <task>`
+  with optional `--context`, `--error`, `--agent` flags creates a
+  `TraceCapture`, synthesizes a stub tool-call, and calls `save_trace()`.
+- **`borg/core/search.py`**: after pack matches, call
+  `TraceMatcher().find_relevant(query, top_k=10)` and surface hits as
+  synthetic matches with `source="trace"`, `tier="trace"`, name
+  `trace:<id>`. Gated on `BORG_DIR` being a real directory so mocked tests
+  preserve their pre-3.2.4 expectations.
+- **`borg/tests/test_observe_search_roundtrip.py`** (new): 3 regression
+  tests covering single trace, multi-trace relevance ranking, cross-process
+  persistence.
+
+### Test status
+
+- Before: 1705 passing.
+- After: **1708 passing** (1705 existing + 3 new roundtrip tests).
+- Zero regressions.
+
+### Verified manually
+
+```
+$ borg observe 'fix django authentication bug for the third time today'
+Recorded trace 0bbba511 for task: fix django authentication bug ...
+
+$ borg search django
+Name                Confidence  Tier   Problem Class
+trace:0bbba511      observed    trace  fix django authentication bug ...
+trace:c80de01c      observed    trace  Django migration for model field change
+... (10 trace matches total)
+```
+
+### Why this matters
+
+This was discovered by the exact kind of experiment it unblocks. Without
+this fix, every cross-condition borg experiment that uses `borg observe`
+for seeding is measuring a broken pipeline. Priority 2.1 of the borg
+testing roadmap (Sonnet replication) is now meaningful.
+
+---
+
 ## 3.2.3 — 20260408 — anti_signatures patch — residual Python over-fires killed
 
 This is a narrow follow-up to 3.2.2. v3.2.2 dropped the corpus false-confident

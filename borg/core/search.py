@@ -279,6 +279,45 @@ def borg_search(query: str, mode: str = "text", requesting_agent_id: str = None)
             if query_lower in searchable:
                 matches.append(pack)
 
+        # v3.2.4 observe→search roundtrip fix: also surface relevant traces.
+        # Traces are stored in ~/.borg/traces.db by borg observe / MCP
+        # borg_observe / borg_apply, but pre-3.2.4 borg_search never read from
+        # them — which made C2 (seeded) indistinguishable from C1 (empty) in
+        # the P1.1 experiment. We now add trace hits as synthetic matches with
+        # source="trace" so callers can tell them apart from packs.
+        #
+        # Gate: only surface traces if BORG_DIR is a real directory. Tests that
+        # mock BORG_DIR to /nonexistent will skip this path, preserving their
+        # pre-3.2.4 expectations. Production code paths hit the real directory
+        # and get trace surfacing.
+        try:
+            if not (BORG_DIR and Path(BORG_DIR).is_dir()):
+                raise RuntimeError("BORG_DIR not present — skipping trace lookup")
+            from borg.core.trace_matcher import TraceMatcher
+            matcher = TraceMatcher()
+            trace_hits = matcher.find_relevant(query, top_k=10)
+            for trace in trace_hits or []:
+                trace_id = str(trace.get("id", ""))
+                if not trace_id:
+                    continue
+                task_desc = (trace.get("task_description") or "")[:120]
+                matches.append({
+                    "name": f"trace:{trace_id}",
+                    "id": f"trace:{trace_id}",
+                    "problem_class": task_desc or "observed-trace",
+                    "phase_names": [],
+                    "phases": 0,
+                    "confidence": "observed",
+                    "tier": "trace",
+                    "source": "trace",
+                    "trace_id": trace_id,
+                    "outcome": trace.get("outcome", ""),
+                    "technology": trace.get("technology", ""),
+                    "match_score": trace.get("match_score", 0.0),
+                })
+        except Exception:
+            pass  # Never let trace lookup break pack search
+
         # Apply reputation-weighted re-ranking for text mode
         if requesting_agent_id and matches and AgentStore is not None and ReputationEngine is not None:
             try:

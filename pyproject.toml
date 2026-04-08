@@ -4,7 +4,7 @@ build-backend = "setuptools.build_meta"
 
 [project]
 name = "agent-borg"
-version = "3.2.3"
+version = "3.2.4"
 description = "Collective memory for AI coding agents — your agent learns from every session"
 readme = "README.md"
 license = "MIT"

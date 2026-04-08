@@ -487,6 +487,59 @@ def _cmd_list(args: argparse.Namespace) -> int:
     return 0
 
 
+def _cmd_observe(args: argparse.Namespace) -> int:
+    """Record a task/context observation as a trace in ~/.borg/traces.db.
+
+    This is the CLI counterpart to the MCP borg_observe tool. Calling this
+    records a minimal trace entry (task + optional context/error) via
+    borg.core.traces so that subsequent `borg search` calls can surface it.
+
+    Added in v3.2.4 to fix the observe→search roundtrip bug discovered in the
+    P1.1 MiniMax experiment (docs/20260408-1118_borg_roadmap).
+    """
+    from borg.core.traces import TraceCapture, save_trace
+
+    task = " ".join(args.task).strip() if isinstance(args.task, list) else (args.task or "").strip()
+    if not task:
+        print("Error: observe requires a non-empty task description", file=sys.stderr)
+        return 1
+
+    context = getattr(args, "context", "") or ""
+    error = getattr(args, "error", "") or ""
+    agent_id = getattr(args, "agent", "") or "cli"
+
+    try:
+        capture = TraceCapture(task=task, agent_id=agent_id)
+        # Synthesize a minimum set of tool calls so the trace has content:
+        # one stub 'observe' call carrying the context/error text so the
+        # keywords/error patterns extractors have something to chew on.
+        if context or error:
+            capture.on_tool_call(
+                tool_name="observe",
+                args={"task": task, "context": context},
+                result=error or context,
+            )
+        trace = capture.extract_trace(
+            outcome="observed",
+            root_cause="",
+            approach_summary=context[:500] if context else "",
+        )
+        trace["source"] = "observe-cli"
+        trace_id = save_trace(trace)
+        print(f"Recorded trace {trace_id} for task: {task[:80]}")
+        if args.json:
+            print(json.dumps({
+                "success": True,
+                "trace_id": trace_id,
+                "task": task,
+                "source": "observe-cli",
+            }))
+        return 0
+    except Exception as e:
+        print(f"Error recording observation: {e}", file=sys.stderr)
+        return 1
+
+
 def _cmd_version(args: argparse.Namespace) -> int:
     """Show version."""
     print(f"borg {__version__}")
@@ -1175,6 +1228,24 @@ def main() -> int:
         epilog="""Examples:
   borg list""")
     p.set_defaults(func=_cmd_list)
+
+    # borg observe <task> [--context ...] [--error ...]
+    p = sub.add_parser("observe", help="Record an observation as a trace",
+        formatter_class=argparse.RawDescriptionHelpFormatter,
+        epilog="""Examples:
+  borg observe 'fix django authentication bug'
+  borg observe 'debug failing test in auth module' --context 'TypeError on login'
+  borg observe 'migrate database schema' --error 'OperationalError: no such column'
+
+Writes a trace to ~/.borg/traces.db so subsequent 'borg search' calls can
+surface it. This is the CLI counterpart to the MCP borg_observe tool. Added
+in v3.2.4 to fix the observe→search roundtrip bug from the P1.1 experiment.""")
+    p.add_argument("task", nargs="+", help="Task description (required)")
+    p.add_argument("--context", default="", help="Additional context (optional)")
+    p.add_argument("--error", default="", help="Error message to associate with the trace (optional)")
+    p.add_argument("--agent", default="cli", help="Agent id for provenance (default: cli)")
+    p.add_argument("--json", action="store_true", help="Output raw JSON")
+    p.set_defaults(func=_cmd_observe)
 
     # guild version
     p = sub.add_parser("version", help="Show version",
