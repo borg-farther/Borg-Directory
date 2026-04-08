@@ -623,7 +623,7 @@ def debug_error(error_message: str, show_evidence: bool = True) -> str:
         lang_line = (
             f"Detected language: {detected_lang}. "
             "Borg currently has Python/Django expert packs only.\n"
-            f"v3.2.2 refuses to give a Python answer to a {detected_lang} "
+            f"Borg refuses to give a Python answer to a {detected_lang} "
             "error — see docs/20260408-0623_classifier_prd/ for the\n"
             "multi-language classifier roadmap."
         ) if detected_lang else (
