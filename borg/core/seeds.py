@@ -29,7 +29,7 @@ class SeedPack:
     problem_class: str
     solution: str
     source_url: str
-    tier: str = "SEED"
+    tier: str = "seed"
     tags: List[str] = None
 
     def __post_init__(self):
@@ -43,7 +43,7 @@ class SeedPack:
             problem_class=data.get("problem_class", ""),
             solution=data.get("solution", data.get("description", "")),
             source_url=data.get("source_url", ""),
-            tier="SEED",
+            tier="seed",
             tags=data.get("tags", []),
         )
 
@@ -58,7 +58,7 @@ class SeedPack:
             "phase_names": [normalized_name],  # Include normalized name for search
             "phases": 0,
             "confidence": "seed",
-            "tier": "SEED",
+            "tier": "seed",
             "source": "seed",
             "solution": self.solution,
             "source_url": self.source_url,

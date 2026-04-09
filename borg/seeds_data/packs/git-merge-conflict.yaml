@@ -1,5 +1,6 @@
 name: git-merge-conflict
 problem_class: merge_conflict
+license: MIT
 description: |
   Git merge or rebase fails due to conflicting changes.
   "CONFLICT (content): merge conflict in <file>".

@@ -1,5 +1,6 @@
 name: django-null-pointer
 problem_class: null_pointer_chain
+license: MIT
 description: |
   Django template or view fails with "NoneType is not iterable" or
   "'NoneType' object has no attribute".

@@ -1212,7 +1212,7 @@ def borg_feedback(
         if not session:
             session = session_module.load_session(session_id)
             if not session:
-                return json.dumps({"success": False, "error": "Session not found: {session_id}"})
+                return json.dumps({"success": False, "error": f"Session not found: {session_id}"})
 
         # Collect execution log and compute hash
         log_path = Path(session.get("execution_log_path", ""))

@@ -1,5 +1,6 @@
 name: django-schema-drift
 problem_class: schema_drift
+license: MIT
 description: |
   Django model and database schema are out of sync.
   "no such column" or "table has no column" errors after adding fields.

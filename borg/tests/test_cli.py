@@ -258,8 +258,7 @@ def test_setup_claude_creates_config_and_claude_md(mock_home, tmp_path, monkeypa
     assert "mcpServers" in config
     assert "borg" in config["mcpServers"]
     borg_entry = config["mcpServers"]["borg"]
-    assert borg_entry["command"] == "python"
-    assert borg_entry["args"] == ["-m", "borg.integrations.mcp_server"]
+    assert borg_entry["command"].endswith("borg-mcp") or borg_entry["command"] == "borg-mcp"
 
     # Check CLAUDE.md was created
     claude_md = project_dir / "CLAUDE.md"
@@ -368,8 +367,7 @@ def test_setup_cursor_creates_mcp_json_and_cursorrules(mock_home, tmp_path, monk
     assert "mcpServers" in config
     assert "borg" in config["mcpServers"]
     borg_entry = config["mcpServers"]["borg"]
-    assert borg_entry["command"] == "python"
-    assert borg_entry["args"] == ["-m", "borg.integrations.mcp_server"]
+    assert borg_entry["command"].endswith("borg-mcp") or borg_entry["command"] == "borg-mcp"
 
     # Check .cursorrules was created
     cursor_rules = project_dir / ".cursorrules"

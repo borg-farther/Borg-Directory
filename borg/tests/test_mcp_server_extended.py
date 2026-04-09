@@ -732,9 +732,11 @@ class TestBorgSuggestErrors(unittest.TestCase):
     """Test borg_suggest error paths."""
 
     def test_suggest_empty_context(self):
-        """Test borg_suggest with empty context returns empty JSON."""
+        """Test borg_suggest with empty context returns error JSON."""
         result = borg_suggest(context="")
-        self.assertEqual(result, "{}")
+        parsed = json.loads(result)
+        self.assertEqual(parsed["success"], False)
+        self.assertIn("context required", parsed["error"])
 
     def test_suggest_failure_count_triggers_v3(self):
         """Test borg_suggest with failure_count >= 2 uses V3 path."""

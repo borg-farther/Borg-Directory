@@ -301,7 +301,9 @@ class TestCallTool:
 
     def test_call_tool_borg_suggest_empty_context(self):
         result = mcp_module.call_tool("borg_suggest", {"context": ""})
-        assert result == "{}"
+        parsed = json.loads(result)
+        assert parsed["success"] is False
+        assert "context required" in parsed["error"]
 
     def test_call_tool_borg_suggest_with_context(self):
         result = mcp_module.call_tool("borg_suggest", {

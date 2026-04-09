@@ -975,7 +975,7 @@ class TestCheckForSuggestion:
         assert "pack_name" in result
         assert result["pack_name"] == "deploy-pipeline"
         assert "pack_uri" in result
-        assert "borg://hermes/deploy-pipeline" in result["pack_uri"]
+        assert "guild://hermes/deploy-pipeline" in result["pack_uri"]
         assert "search_terms" in result
         assert "match_count" in result
         assert result["match_count"] >= 1

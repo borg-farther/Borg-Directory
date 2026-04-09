@@ -1,5 +1,6 @@
 name: python-import-cycle
 problem_class: import_cycle
+license: MIT
 description: |
   Python module fails with "ImportError: circular import" or
   "cannot import name 'X' from 'Y'".

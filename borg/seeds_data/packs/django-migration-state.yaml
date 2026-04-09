@@ -1,5 +1,6 @@
 name: django-migration-state
 problem_class: migration_state_desync
+license: MIT
 description: |
   Django migrations are out of sync with database state.
   "table already exists", "no such table", or "applied migrations" errors.

@@ -1,5 +1,6 @@
 name: django-circular-dependency
 problem_class: import_cycle
+license: MIT
 description: |
   Django app fails with "ImportError: circular import" during startup.
 solution: |

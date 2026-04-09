@@ -1,5 +1,6 @@
 name: bash-permission-denied
 problem_class: permission_denied
+license: MIT
 description: |
   Bash or shell command fails with "Permission denied" error.
   Usually occurs when running scripts or accessing files without execute/read permissions.

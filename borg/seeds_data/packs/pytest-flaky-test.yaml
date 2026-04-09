@@ -1,5 +1,6 @@
 name: pytest-flaky-test
 problem_class: flaky_test
+license: MIT
 description: |
   Pytest test passes sometimes and fails other times without code changes.
   Tests using network, time-based assertions, or shared state are flaky.

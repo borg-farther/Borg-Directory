@@ -1,5 +1,6 @@
 name: docker-no-space
 problem_class: docker_no_space
+license: MIT
 description: |
   Docker fails with "no space left on device" or "ENOSPC" error
   when building images or running containers.

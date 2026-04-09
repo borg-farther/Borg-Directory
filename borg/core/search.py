@@ -988,7 +988,7 @@ def _format_suggestion(pack_matches: list, context: str) -> str:
 
     return (
         f"Guild pack available: {name} ({desc}). "
-        f"Try: borg_try borg://hermes/{name}"
+        f"Try: borg_try guild://hermes/{name}"
     )
 
 
@@ -1109,7 +1109,7 @@ def check_for_suggestion(
         "suggestion": suggestion_text,
         "suggestions": suggestions_list,
         "pack_name": best_name,
-        "pack_uri": f"borg://hermes/{best_name}",
+        "pack_uri": f"guild://hermes/{best_name}",
         "search_terms": search_terms,
         "match_count": len(unique_matches),
         "human_message": (

@@ -1,5 +1,6 @@
 name: python-missing-dependency
 problem_class: missing_dependency
+license: MIT
 description: |
   Python fails with "ModuleNotFoundError: No module named 'X'" or
   "ImportError: No module named 'X'".
