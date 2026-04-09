@@ -36,3 +36,55 @@ Warning: You are sending unauthenticated requests to the HF Hub. Please set a HF
 ango__django-10554 / C0_no_borg]
 [2026-04-08 18:08:41]   ratelimit probe: status=200 util_5h=0.75 overage=rejected err=None
 [2026-04-08 18:08:41]   5h bucket at 75.0%, sleeping 10308s until reset
+[2026-04-08 20:24:29] existing JSONL backed up to p2_sonnet_results.jsonl.bak.1775679869
+[2026-04-08 20:24:29] == P2.1 Sonnet Path 1 orchestrator starting ==
+[2026-04-08 20:24:29] model=claude-sonnet-4-5-20250929
+[2026-04-08 20:24:29] tasks=15 conditions=3 runs=45
+[2026-04-08 20:24:29] jsonl=/root/hermes-workspace/borg/docs/20260408-1118_borg_roadmap/p2_sonnet_results.jsonl
+[2026-04-08 20:24:29] budget_hard=$25.0 budget_abort=$24.0
+[2026-04-08 20:24:29] loading 18 tasks from SWE-bench Verified
+[2026-04-08 20:24:34] loaded 18 task records from HF dataset
+[2026-04-08 20:24:34] == Phase A-lite seeding (v3.2.4 observe→search roundtrip) ==
+[2026-04-08 20:24:34]   OBSERVE django__django-10973: rc=0 Recorded trace fa45a290 for task: Fix django__django-10973: Use subprocess.run and PGPASSWORD for client in postgr
+[2026-04-08 20:24:35]   OBSERVE django__django-11087: rc=0 Recorded trace a4444b09 for task: Fix django__django-11087: Optimize .delete() to use only required fields
+[2026-04-08 20:24:35]   OBSERVE django__django-11265: rc=0 Recorded trace 980dd495 for task: Fix django__django-11265: Using exclude on annotated FilteredRelation doesn't wo
+[2026-04-08 20:24:55] borg search 'django' (head 15):
+[2026-04-08 20:24:55]   Name                                Confidence   Tier     Problem Class
+[2026-04-08 20:24:55]   ------------------------------------------------------------------------------------------
+[2026-04-08 20:24:55]   trace:1d9ec2b8                      observed     trace    Fix django__django-11087: Optimize .delete() to use only req
+[2026-04-08 20:24:55]   trace:e4cad75b                      observed     trace    Fix django__django-11087: Optimize .delete() to use only req
+[2026-04-08 20:24:55]   trace:fc47a610                      observed     trace    Fix django__django-11087: Optimize .delete() to use only req
+[2026-04-08 20:24:55]   trace:eb811864                      observed     trace    Fix django__django-11087: Optimize .delete() to use only req
+[2026-04-08 20:24:55]   trace:f8608e7f                      observed     trace    Fix django__django-11087: Optimize .delete() to use only req
+[2026-04-08 20:24:55]   trace:0c475be8                      observed     trace    Fix django__django-11087: Optimize .delete() to use only req
+[2026-04-08 20:24:55]   trace:a4444b09                      observed     trace    Fix django__django-11087: Optimize .delete() to use only req
+[2026-04-08 20:24:55]   trace:db49581e                      observed     trace    Fix django__django-11265: Using exclude on annotated Filtere
+[2026-04-08 20:24:55]   trace:51428451                      observed     trace    Fix django__django-11265: Using exclude on annotated Filtere
+[2026-04-08 20:24:55]   trace:ad8b75d4                      observed     trace    Fix django__django-11265: Using exclude on annotated Filtere
+[2026-04-08 20:24:55]   
+[2026-04-08 20:24:55]   Total: 10 pack(s)
+[2026-04-08 20:24:55]   trace hits counted: 10
+[2026-04-08 20:24:55] phase_a_lite_seeding result: {'seeded_tasks': ['django__django-10973', 'django__django-11087', 'django__django-11265'], 'n_seeded': 3, 'n_search_hits': 10, 'verified': True}
+[2026-04-08 20:24:55] == P2.1 Main 45-run eval loop ==
+[2026-04-08 20:24:55] between-run sleep = 60s
+[2026-04-08 20:24:55] -- task 1/15 django__django-10554: order=['C0_no_borg', 'C1_borg_empty', 'C2_borg_seeded']
+[2026-04-08 20:24:55] START run 1/45 [django__django-10554 / C0_no_borg]
+[2026-04-08 20:24:57]   ratelimit probe: status=200 util_5h=0.82 overage=rejected err=None
+[2026-04-08 20:24:57]   5h bucket at 82.0%, sleeping 2132s until reset
+[2026-04-08 22:04:43] == P2.1 Sonnet Path 1 orchestrator starting ==
+[2026-04-08 22:04:43] model=claude-sonnet-4-5-20250929
+[2026-04-08 22:04:43] tasks=15 conditions=3 runs=45
+[2026-04-08 22:04:43] jsonl=/root/hermes-workspace/borg/docs/20260408-1118_borg_roadmap/p2_sonnet_results.jsonl
+[2026-04-08 22:04:43] budget_hard=$25.0 budget_abort=$24.0
+[2026-04-08 22:04:43] skip_seeding=True
+[2026-04-08 22:04:43] RESUME MODE: skipping Phase A-lite seeding (--skip-seeding)
+[2026-04-08 22:04:43] loading 15 tasks from SWE-bench Verified
+[2026-04-08 22:04:45] loaded 15 eval task records from HF dataset
+[2026-04-08 22:04:56] resume seed verification: borg search 'django' → 10 trace hits
+[2026-04-08 22:04:56] == P2.1 Main 45-run eval loop ==
+[2026-04-08 22:04:56] between-run sleep = 60s
+[2026-04-08 22:04:56] -- task 1/15 django__django-10554: order=['C0_no_borg', 'C1_borg_empty', 'C2_borg_seeded']
+[2026-04-08 22:04:56] START run 1/45 [django__django-10554 / C0_no_borg]
+[2026-04-08 22:04:57]   ratelimit probe: status=200 util_5h=0.21 overage=rejected err=None
+[2026-04-08 22:05:17]   429 BACKOFF attempt=1 sleep=120s (rec.error=llm_call_failed: HTTPStatusError: Client error '429 Too Many Requests' for url 'https://api.anthropic.com/v1/messages'
+For more information check: https://developer.mozilla.org/en-US/docs/Web/HTTP/Sta)

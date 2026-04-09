@@ -454,11 +454,18 @@ def run_eval_loop(tasks: dict[str, dict]) -> dict:
 
 
 def main():
+    import argparse
+    ap = argparse.ArgumentParser(description="P2.1 Sonnet Path 1 orchestrator")
+    ap.add_argument("--skip-seeding", action="store_true",
+                    help="Skip Phase A-lite seeding (assume traces already in DB). "
+                         "Also preserves the existing JSONL file (no backup/rename).")
+    args = ap.parse_args()
+
     OUTDIR.mkdir(parents=True, exist_ok=True)
     WORKDIR.mkdir(parents=True, exist_ok=True)
     BORG_DB_SEEDED.parent.mkdir(parents=True, exist_ok=True)
 
-    if JSONL.exists():
+    if JSONL.exists() and not args.skip_seeding:
         backup = JSONL.with_suffix(f".jsonl.bak.{int(time.time())}")
         JSONL.rename(backup)
         log(f"existing JSONL backed up to {backup.name}")
@@ -468,24 +475,53 @@ def main():
     log(f"tasks={len(PRE_REGISTERED)} conditions={len(CONDITIONS)} runs={len(PRE_REGISTERED)*3}")
     log(f"jsonl={JSONL}")
     log(f"budget_hard=${BUDGET_HARD} budget_abort=${BUDGET_ABORT}")
+    log(f"skip_seeding={args.skip_seeding}")
 
-    # Load all tasks (eval + seeding) in one shot
-    all_ids = list(PRE_REGISTERED) + [t for t in SEEDING_TASKS if t not in PRE_REGISTERED]
-    tasks = load_tasks(all_ids)
-    log(f"loaded {len(tasks)} task records from HF dataset")
+    if args.skip_seeding:
+        # Resume mode: load only the eval tasks. Verify seeds already in DB.
+        log("RESUME MODE: skipping Phase A-lite seeding (--skip-seeding)")
+        tasks = load_tasks(list(PRE_REGISTERED))
+        log(f"loaded {len(tasks)} eval task records from HF dataset")
+        # Independent verification: borg search 'django' must return >=3 trace hits
+        try:
+            r = subprocess.run(["borg", "search", "django"],
+                               capture_output=True, text=True, timeout=30)
+            search_out = r.stdout or ""
+            hit_lines = [ln for ln in search_out.splitlines() if ln.startswith("trace:")]
+            n_hits = len(hit_lines)
+            log(f"resume seed verification: borg search 'django' → {n_hits} trace hits")
+            if n_hits < 3:
+                log("RESUME SEED VERIFICATION FAILED: <3 trace hits in DB. HALTING.")
+                block_report = OUTDIR / "P2_RESUME_SEED_MISSING.md"
+                with open(block_report, "w") as f:
+                    f.write("# P2 Resume Seed Verification Failure\n\n"
+                            f"`borg search django` returned only {n_hits} trace hits "
+                            "after --skip-seeding requested. The seed traces from the "
+                            "prior Phase A run are not in the DB. HALTED before any "
+                            "paid eval runs.\n")
+                return 3
+        except Exception as e:
+            log(f"resume seed verification CRASH: {e}")
+            return 3
+        seed_result = {"resumed": True, "n_search_hits": n_hits, "verified": True}
+    else:
+        # Load all tasks (eval + seeding) in one shot
+        all_ids = list(PRE_REGISTERED) + [t for t in SEEDING_TASKS if t not in PRE_REGISTERED]
+        tasks = load_tasks(all_ids)
+        log(f"loaded {len(tasks)} task records from HF dataset")
 
-    # Phase A-lite seeding: observe→search roundtrip via the borg CLI
-    seed_result = phase_a_lite_seeding(tasks)
-    if not seed_result["verified"]:
-        log("SEEDING FAILED VERIFICATION. HALTING before eval runs.")
-        block_report = OUTDIR / "P2_SEEDING_FAILURE.md"
-        with open(block_report, "w") as f:
-            f.write("# P2 Phase A-lite Seeding Verification Failure\n\n"
-                    f"`borg search django` returned only "
-                    f"{seed_result['n_search_hits']} hits (required ≥3).\n\n"
-                    "v3.2.4 observe→search roundtrip is not live in production. "
-                    "HALTED before any paid eval runs.\n")
-        return 3
+        # Phase A-lite seeding: observe→search roundtrip via the borg CLI
+        seed_result = phase_a_lite_seeding(tasks)
+        if not seed_result["verified"]:
+            log("SEEDING FAILED VERIFICATION. HALTING before eval runs.")
+            block_report = OUTDIR / "P2_SEEDING_FAILURE.md"
+            with open(block_report, "w") as f:
+                f.write("# P2 Phase A-lite Seeding Verification Failure\n\n"
+                        f"`borg search django` returned only "
+                        f"{seed_result['n_search_hits']} hits (required ≥3).\n\n"
+                        "v3.2.4 observe→search roundtrip is not live in production. "
+                        "HALTED before any paid eval runs.\n")
+            return 3
 
     eval_summary = run_eval_loop(tasks)
 
