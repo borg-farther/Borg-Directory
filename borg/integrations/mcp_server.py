@@ -1367,7 +1367,7 @@ def borg_suggest(
         from borg.core.search import check_for_suggestion as _check_for_suggestion
 
         if not context:
-            return "{}"
+            return json.dumps({"success": False, "error": "context required for borg_suggest"})
 
         # V3 path: when failure_count >= 2, use V3 contextual suggestion
         if failure_count >= 2:

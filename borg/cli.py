@@ -272,6 +272,9 @@ def _cmd_feedback_v3(args: argparse.Namespace) -> int:
         pack_id = args.pack
 
     # Determine success
+    if args.success.lower() not in ("yes", "true", "1", "y", "no", "false", "0", "n"):
+        print(f"Error: --success must be one of: yes, true, 1, y, no, false, 0, n", file=sys.stderr)
+        return 1
     success = args.success.lower() in ("yes", "true", "1", "y")
     time_taken = args.time or 0.0
     tokens_used = args.tokens or 0
@@ -306,10 +309,11 @@ def _cmd_debug(args: argparse.Namespace) -> int:
         pc = classify_error(error_message)
         if pc:
             print(f"problem_class: {pc}")
+            return 0  # match found
         else:
-            print("No matching problem class.")
+            print("No matching problem class.")  # no match
             print(f"Known classes: {', '.join(PROBLEM_CLASSES)}")
-        return 0
+            return 1  # no match = exit 1
 
     # Full guidance
     result = debug_error(error_message, show_evidence=not args.quiet)
@@ -336,6 +340,10 @@ def _cmd_debug(args: argparse.Namespace) -> int:
         except Exception:
             pass  # Never let FailureMemory break the CLI
 
+    # Return 1 if no match (output contains [unknown])
+    lines = result.strip().split('\n')
+    if any('[unknown]' in line for line in lines):
+        return 1
     return 0
 
 
@@ -957,7 +965,7 @@ def _cmd_autopilot(args: argparse.Namespace) -> int:
     home = Path.home()
     hermes_dir = home / ".hermes"
     hermes_config = hermes_dir / "config.yaml"
-    skill_dir = hermes_dir / "skills" / "guild-autopilot"
+    skill_dir = hermes_dir / "skills" / "borg-autopilot"
     skill_file = skill_dir / "SKILL.md"
 
     python_path = str(Path(__file__).parent.parent.parent.resolve())
@@ -1091,9 +1099,9 @@ def main() -> int:
     p = sub.add_parser("pull", help="Fetch and save pack locally",
         formatter_class=argparse.RawDescriptionHelpFormatter,
         epilog="""Examples:
-  borg pull guild://community/systematic-debugging
+  borg pull borg://community/systematic-debugging
   borg pull https://github.com/user/pack.yaml""")
-    p.add_argument("uri", help="Pack URI (guild://, https://, or local path)")
+    p.add_argument("uri", help="Pack URI (borg://, https://, or local path)")
     p.set_defaults(func=_cmd_pull)
 
     # guild try <uri>
