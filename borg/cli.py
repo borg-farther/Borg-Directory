@@ -62,8 +62,11 @@ def _require_success(raw: str, ctx: str = "") -> bool:
 def _cmd_search(args: argparse.Namespace) -> int:
     """Search for packs matching a query."""
     from borg.core.search import borg_search
+    from borg.core.seeds import is_seeds_disabled
 
-    raw = borg_search(args.query, mode=args.mode)
+    # Respect BORG_DISABLE_SEEDS env var or --no-seeds flag
+    include_seeds = not (args.no_seeds or is_seeds_disabled())
+    raw = borg_search(args.query, mode=args.mode, include_seeds=include_seeds)
     if args.json:
         _print_json(raw)
         return 0
@@ -1076,6 +1079,11 @@ def main() -> int:
         "--json",
         action="store_true",
         help="Output raw JSON for programmatic use",
+    )
+    p.add_argument(
+        "--no-seeds",
+        action="store_true",
+        help="Exclude seed packs from results",
     )
     p.set_defaults(func=_cmd_search)
 

@@ -31,6 +31,7 @@ from borg.core.uri import (
     _fetch_index,
     BORG_DIR,
 )
+from borg.core.seeds import is_seeds_disabled, get_seed_packs
 
 # Optional: SemanticSearchEngine (graceful fallback if unavailable)
 try:
@@ -79,7 +80,7 @@ MAX_DOWNLOAD_SIZE = 5 * 1024 * 1024  # 5 MB
 # Guild search
 # ---------------------------------------------------------------------------
 
-def borg_search(query: str, mode: str = "text", requesting_agent_id: str = None) -> str:
+def borg_search(query: str, mode: str = "text", requesting_agent_id: str = None, include_seeds: bool = True) -> str:
     """Search guild packs by keyword or semantic similarity.
 
     Searches across pack names, problem_class, id, and phase names
@@ -142,6 +143,14 @@ def borg_search(query: str, mode: str = "text", requesting_agent_id: str = None)
                             "name": local_name,
                             "source": "local",
                         })
+
+        # Load and merge seed packs (cold-start fix)
+        # Seed packs are lowest priority: local > remote > seed
+        # This means seeds only show up when no local/remote pack matches
+        if include_seeds and not is_seeds_disabled():
+            seed_packs = get_seed_packs()
+            for seed_pack in seed_packs:
+                all_packs.append(seed_pack.to_search_dict())
 
         # Attach tier to every pack that doesn't have one yet
         for pack in all_packs:
@@ -1056,7 +1065,7 @@ def check_for_suggestion(
     all_matches: List[dict] = []
     for term in search_terms:
         try:
-            result = json.loads(borg_search(term, requesting_agent_id=requesting_agent_id))
+            result = json.loads(borg_search(term, requesting_agent_id=requesting_agent_id, include_seeds=False))
             if result.get("success") and result.get("matches"):
                 all_matches.extend(result["matches"])
         except Exception as e:

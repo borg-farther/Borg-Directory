@@ -1,0 +1,19 @@
+name: django-circular-dependency
+problem_class: import_cycle
+description: |
+  Django app fails with "ImportError: circular import" during startup.
+solution: |
+  Move the import inside the function, or refactor to a third module.
+  Common fix: move Model imports to bottom of file or into lazy imports.
+source_url: https://docs.djangoproject.com/en/stable/topics/migrations/
+tier: SEED
+tags:
+  - django
+  - import
+  - circular
+required_inputs:
+  - name: error_message
+    type: string
+escalation_rules:
+  - condition: "'recursive' in error_message"
+    action: check __init__.py files for cross-imports

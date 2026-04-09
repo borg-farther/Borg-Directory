@@ -176,7 +176,8 @@ class TestBorgSearch:
 
         with patch("borg.core.search._fetch_index", return_value=fake_index):
             with patch("borg.core.search.BORG_DIR", Path("/nonexistent")):
-                result = json.loads(borg_search(""))
+                with patch("borg.core.search.get_seed_packs", return_value=[]):
+                    result = json.loads(borg_search(""))
 
         assert result["success"] is True
         assert result["total"] == 2
