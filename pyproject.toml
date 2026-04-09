@@ -47,9 +47,9 @@ borg-http = "borg.integrations.http_server:main"
 borg-defi = "borg.defi.cli:main"
 
 [project.urls]
-Homepage = "https://github.com/bensargotest-sys/guild-packs"
-Repository = "https://github.com/bensargotest-sys/guild-packs"
-Documentation = "https://github.com/bensargotest-sys/guild-packs#readme"
+Homepage = "https://github.com/bensargotest-sys/agent-borg"
+Repository = "https://github.com/bensargotest-sys/agent-borg"
+Documentation = "https://github.com/bensargotest-sys/agent-borg#readme"
 
 [tool.setuptools.packages.find]
 include = ["borg*"]

@@ -22,6 +22,7 @@ from __future__ import annotations
 
 import argparse
 import json
+import shutil
 import sys
 from pathlib import Path
 
@@ -429,13 +430,21 @@ def _cmd_generate(args: argparse.Namespace) -> int:
     """Export a pack to platform-specific rule files."""
     from borg.core.generator import generate_rules, generate_to_files, load_pack
 
+    # Alias short names to canonical format names for back-compat
+    _FORMAT_ALIASES = {
+        "cursor": "cursorrules",
+        "cline": "clinerules",
+        "claude": "claude-md",
+        "windsurf": "windsurfrules",
+    }
+
     try:
         pack = load_pack(args.pack)
     except FileNotFoundError as e:
         print(f"Error: {e}", file=sys.stderr)
         return 1
 
-    fmt = args.format
+    fmt = _FORMAT_ALIASES.get(args.format, args.format)
     output_dir = getattr(args, "output", None)
 
     if output_dir:
@@ -564,13 +573,22 @@ def _get_python_path() -> str:
     return str(BORG_ROOT_DIR)
 
 
+def _get_python_executable() -> str:
+    """Return the python executable to use in MCP config (prefer borg-mcp if available)."""
+    borg_mcp = shutil.which("borg-mcp")
+    if borg_mcp:
+        return borg_mcp
+    return sys.executable
+
+
 def _borg_mcp_server_entry(python_path: str) -> dict:
     """Return the mcpServers entry for the borg MCP server (camelCase for Claude/Cursor)."""
+    python_exec = _get_python_executable()
     return {
         "mcpServers": {
             "borg": {
                 "enabled": True,
-                "command": "python",
+                "command": python_exec,
                 "args": ["-m", "borg.integrations.mcp_server"],
                 "env": {"PYTHONPATH": python_path},
             }
@@ -968,9 +986,10 @@ def _cmd_autopilot(args: argparse.Namespace) -> int:
     else:
         config = {}
 
+    python_exec = _get_python_executable()
     mcp_entry = {
         "enabled": True,
-        "command": "python",
+        "command": python_exec,
         "args": ["-m", "borg.integrations.mcp_server"],
         "env": {"PYTHONPATH": python_path},
     }
@@ -993,7 +1012,7 @@ def _cmd_autopilot(args: argparse.Namespace) -> int:
             print(f"[autopilot] Warning: could not preserve config.yaml formatting: {e}")
             # Fall back: just rewrite entirely
             hermes_config.write_text(
-                f"mcp_servers:\n  guild:\n    enabled: true\n    command: python\n    args:\n      - -m\n      - borg.integrations.mcp_server\n    env:\n      PYTHONPATH: {python_path}\n"
+                f"mcp_servers:\n  guild:\n    enabled: true\n    command: {python_exec}\n    args:\n      - -m\n      - borg.integrations.mcp_server\n    env:\n      PYTHONPATH: {python_path}\n"
             )
         changes.append(f"  • config.yaml → {hermes_config}")
 
@@ -1211,7 +1230,7 @@ def main() -> int:
     p.add_argument("pack", help="Pack name")
     p.add_argument(
         "--format",
-        choices=["cursorrules", "clinerules", "claude-md", "windsurfrules", "all"],
+        choices=["cursor", "cline", "claude", "windsurf", "cursorrules", "clinerules", "claude-md", "windsurfrules", "all"],
         default="all",
         help="Output format (default: all)",
     )
