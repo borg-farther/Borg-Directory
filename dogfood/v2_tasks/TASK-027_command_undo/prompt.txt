@@ -1,0 +1,1 @@
+The TextEditor in repo/editor.py implements undo using the command pattern, but the undo for delete operations doesn't work correctly. After inserting 'hello world', moving cursor to position 5, deleting 'hello', then undoing — the text should be 'hello world' again with cursor at 5. Fix the delete/undo logic.

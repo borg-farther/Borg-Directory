@@ -1,0 +1,42 @@
+{
+  "task_id": "HARD-005",
+  "task_name": "Database Layer Corruption",
+  "attempts": [
+    {
+      "attempt": 1,
+      "action": "Ran tests and saw that update_email_preserves_data failed - name was corrupted",
+      "result": "After updating email, the name field was getting lost or corrupted",
+      "diagnosis": "Initially thought the bug was in api.py where we update the email",
+      "fix_attempted": "Made sure to call db.put after updating user dict in api.py",
+      "outcome": "FAILED - The bug persisted, suggesting the issue was deeper"
+    },
+    {
+      "attempt": 2,
+      "action": "Examined models.py update method more closely",
+      "result": "The update method does user[key] = value then db.put(user_id, user)",
+      "diagnosis": "Thought maybe the issue was in how update handles the dict",
+      "fix_attempted": "Tried making a copy in the update method: user = dict(user)",
+      "outcome": "FAILED - The api.py update_user_email doesn't even call model.update"
+    },
+    {
+      "attempt": 3,
+      "action": "Examined db.py get() method - found it returns self._data.get(key) directly",
+      "result": "This returns a reference to the internal dict, not a copy. Any mutation affects the database!",
+      "diagnosis": "Realized the root cause - db.get() returns a reference, so mutations in api.py corrupt the db",
+      "fix_attempted": "Changed db.get() to return a deep copy instead",
+      "outcome": "SUCCESS - All tests pass now"
+    }
+  ],
+  "final_fix": {
+    "file": "src/db.py",
+    "line": 14,
+    "change": "Changed 'return self._data.get(key)' to 'import copy; return copy.deepcopy(self._data.get(key))'",
+    "explanation": "The database was returning direct references to its internal dictionaries. When api.py code modified these returned dicts, it was mutating the database's internal state. Returning a deep copy protects the database integrity."
+  },
+  "lessons_learned": [
+    "Database layers should always return copies of stored data, not references",
+    "Mutation bugs can be subtle - the corruption shows up in one place but is caused by another",
+    "Defensive programming at the database boundary is essential",
+    "The aliasing problem: returning internal state directly allows callers to corrupt data"
+  ]
+}

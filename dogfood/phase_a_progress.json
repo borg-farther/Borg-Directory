@@ -1,0 +1,12 @@
+{
+  "completed": [
+    "django__django-11477"
+  ],
+  "results_summary": {
+    "django__django-11477": {
+      "success": false,
+      "tool_calls": 0,
+      "elapsed_sec": 2.0
+    }
+  }
+}

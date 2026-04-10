@@ -1,0 +1,40 @@
+## Task: Fix the Config Merge Bug
+
+You are debugging a configuration merge function that has issues with how lists are handled during deep merging.
+
+### The Problem
+
+The `deep_merge()` function correctly handles nested dictionaries but incorrectly handles lists. When both base and override have lists for the same key, the override list completely replaces the base list, instead of merging them.
+
+### Expected Behavior
+
+```python
+base = {"features": ["auth", "logging", "metrics"]}
+override = {"features": ["auth", "api"]}
+
+result = deep_merge(base, override)
+
+# Expected: merged list with unique items from both
+# ["auth", "logging", "metrics", "api"]
+```
+
+### The Bug
+
+In `deep_merge()`:
+```python
+elif isinstance(base_value, list) and isinstance(value, list):
+    result[key] = value  # Just replaces! Bug!
+```
+
+### What to Look For
+
+The issue is in the list handling branch of `deep_merge()`. When both values are lists, the code just uses the override list instead of merging the unique items from both.
+
+### Your Task
+
+Fix the `deep_merge()` function so that lists are properly merged (union of unique items), not replaced.
+
+Expected behavior for lists:
+- Combine items from both base and override
+- Remove duplicates (each unique item appears once)
+- Order is not important (set union semantics)

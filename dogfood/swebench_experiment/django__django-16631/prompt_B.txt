@@ -1,0 +1,29 @@
+You are an expert software engineer. Fix the bug described below.
+The Django codebase is at /testbed.
+
+ISSUE:
+SECRET_KEY_FALLBACKS is not used for sessions
+Description
+	
+I recently rotated my secret key, made the old one available in SECRET_KEY_FALLBACKS and I'm pretty sure everyone on our site is logged out now.
+I think the docs for ​SECRET_KEY_FALLBACKS may be incorrect when stating the following:
+In order to rotate your secret keys, set a new SECRET_KEY and move the previous value to the beginning of SECRET_KEY_FALLBACKS. Then remove the old values from the end of the SECRET_KEY_FALLBACKS when you are ready to expire the sessions, password reset tokens, and so on, that make use of them.
+When looking at the Django source code, I see that the ​salted_hmac function uses the SECRET_KEY by default and the ​AbstractBaseUser.get_session_auth_hash method does not call salted_hmac with a value for the secret keyword argument.
+
+
+REASONING TRACE FROM PRIOR INVESTIGATION:
+The following notes are from developers who investigated this bug.
+They contain observations about the root cause and potential approaches.
+
+Hi! I'm a colleague of Eric's, and we were discussing some of the ramifications of fixing this issue and I thought I'd write them here for posterity. In particular for user sessions, using fallback keys in the AuthenticationMiddleware/auth.get_user(request) will keep existing _auth_user_hash values from before the rotation being seen as valid, which is nice during the rotation period, but without any upgrading of the _auth_user_hash values, when the rotation is finished and the fallback keys are removed, all of those sessions will essentially be invalidated again. So, I think possibly an additional need here is a way to upgrade the cookies when a fallback key is used? Or at least documentation calling out this drawback. Edit: It's possible I'm conflating a cookie value and a session value, but either way I think the principle of what I wrote stands?
+Thanks for the report. Agreed, we should check fallback session hashes. Bug in 0dcd549bbe36c060f536ec270d34d9e7d4b8e6c7. In particular for user sessions, using fallback keys in the AuthenticationMiddleware/auth.get_user(request) will keep existing _auth_user_hash values from before the rotation being seen as valid, which is nice during the rotation period, but without any upgrading of the _auth_user_hash values, when the rotation is finished and the fallback keys are removed, all of those sessions will essentially be invalidated again. So, I think possibly an additional need here is a way to upgrade the cookies when a fallback key is used? Or at least documentation calling out this drawback. Edit: It's possible I'm conflating a cookie value and a session value, but either way I think the principle of what I wrote stands? As far as I'm aware, this is a new feature request not a bug in #30360, so we should discuss it separately. Maybe we could call update_session_auth_hash() when a fallback hash is valid 🤔
+
+TESTS THAT MUST PASS AFTER YOUR FIX:
+[
+  "test_get_user_fallback_secret (auth_tests.test_basic.TestGetUser.test_get_user_fallback_secret)"
+]
+
+Use Django's test runner to verify:
+cd /testbed && python tests/runtests.py test_get_user_fallback_secret  --verbosity 2
+
+Fix the bug by editing the appropriate source files in /testbed/django/.

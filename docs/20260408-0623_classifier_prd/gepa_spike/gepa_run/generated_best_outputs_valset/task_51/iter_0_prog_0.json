@@ -1,0 +1,5 @@
+{
+    "expected": "js_missing_await",
+    "actual": null,
+    "kind": "correct_no_match"
+}

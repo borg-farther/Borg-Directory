@@ -1,0 +1,107 @@
+[
+  {
+    "instance_id": "django__django-10554",
+    "difficulty": "1-4 hours",
+    "hints_length": 338,
+    "tests": 2,
+    "problem_length": 2909
+  },
+  {
+    "instance_id": "django__django-11138",
+    "difficulty": "1-4 hours",
+    "hints_length": 166,
+    "tests": 1,
+    "problem_length": 3135
+  },
+  {
+    "instance_id": "django__django-11400",
+    "difficulty": "1-4 hours",
+    "hints_length": 1056,
+    "tests": 6,
+    "problem_length": 799
+  },
+  {
+    "instance_id": "django__django-12708",
+    "difficulty": "1-4 hours",
+    "hints_length": 421,
+    "tests": 1,
+    "problem_length": 959
+  },
+  {
+    "instance_id": "django__django-13212",
+    "difficulty": "1-4 hours",
+    "hints_length": 1848,
+    "tests": 5,
+    "problem_length": 468
+  },
+  {
+    "instance_id": "django__django-13344",
+    "difficulty": "1-4 hours",
+    "hints_length": 1554,
+    "tests": 2,
+    "problem_length": 1361
+  },
+  {
+    "instance_id": "django__django-13449",
+    "difficulty": "1-4 hours",
+    "hints_length": 1183,
+    "tests": 1,
+    "problem_length": 6278
+  },
+  {
+    "instance_id": "django__django-14011",
+    "difficulty": "1-4 hours",
+    "hints_length": 4476,
+    "tests": 17,
+    "problem_length": 1907
+  },
+  {
+    "instance_id": "django__django-14631",
+    "difficulty": "1-4 hours",
+    "hints_length": 660,
+    "tests": 2,
+    "problem_length": 1399
+  },
+  {
+    "instance_id": "django__django-15128",
+    "difficulty": "1-4 hours",
+    "hints_length": 8382,
+    "tests": 1,
+    "problem_length": 2662
+  },
+  {
+    "instance_id": "django__django-15503",
+    "difficulty": "1-4 hours",
+    "hints_length": 634,
+    "tests": 2,
+    "problem_length": 1797
+  },
+  {
+    "instance_id": "django__django-15957",
+    "difficulty": "1-4 hours",
+    "hints_length": 3760,
+    "tests": 4,
+    "problem_length": 854
+  },
+  {
+    "instance_id": "django__django-16263",
+    "difficulty": "1-4 hours",
+    "hints_length": 3786,
+    "tests": 3,
+    "problem_length": 656
+  },
+  {
+    "instance_id": "django__django-16560",
+    "difficulty": "1-4 hours",
+    "hints_length": 355,
+    "tests": 8,
+    "problem_length": 840
+  },
+  {
+    "instance_id": "django__django-16631",
+    "difficulty": "1-4 hours",
+    "hints_length": 1881,
+    "tests": 1,
+    "problem_length": 824
+  }
+]

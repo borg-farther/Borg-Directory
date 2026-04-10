@@ -1,0 +1,19 @@
+REASONING TRACE FOR: Template engine bugs
+
+PROBLEM DECOMPOSITION:
+- Three issues: included template variables not rendered, missing vars show raw tags, nested includes fail
+- All relate to the order and recursion of processing
+
+WHAT WAS TRIED:
+- _process_includes just returns raw template text without rendering it
+- _substitute returns match.group(0) for missing vars instead of empty string
+
+KEY INSIGHT:
+- Included templates need to be rendered (both includes AND substitutions) before insertion
+- This means _process_includes should call render() recursively on the included content
+- This also fixes nested includes — the recursive render will process includes in the included template
+- For missing vars, return empty string instead of the raw tag
+
+PITFALLS:
+- Watch for infinite recursion if templates include each other
+- The order matters: includes first, then substitution

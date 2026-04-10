@@ -1,0 +1,5 @@
+{
+    "expected": "go_compile_error",
+    "actual": null,
+    "kind": "correct_no_match"
+}

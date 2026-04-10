@@ -1,0 +1,104 @@
+#!/bin/bash
+cd "$(dirname "$0")"
+mkdir -p repo
+cat > repo/events.py << 'PYEOF'
+class EventBus:
+    """Simple event bus with subscribe/publish."""
+    
+    def __init__(self):
+        self._handlers = {}  # event_name -> [handler_funcs]
+    
+    def subscribe(self, event_name, handler):
+        """Register a handler for an event."""
+        if event_name not in self._handlers:
+            self._handlers[event_name] = []
+        self._handlers[event_name].append(handler)
+    
+    def unsubscribe(self, event_name, handler):
+        """Remove a handler for an event."""
+        if event_name in self._handlers:
+            # BUG: uses remove() which compares by identity for bound methods
+            # but bound methods create new objects each time, so == comparison fails
+            self._handlers[event_name].remove(handler)
+    
+    def publish(self, event_name, *args, **kwargs):
+        """Publish event to all handlers."""
+        if event_name not in self._handlers:
+            return
+        for handler in self._handlers[event_name]:
+            handler(*args, **kwargs)
+    
+    def handler_count(self, event_name):
+        """Return number of handlers for an event."""
+        return len(self._handlers.get(event_name, []))
+
+
+class Widget:
+    """A widget that subscribes to events."""
+    
+    def __init__(self, name, bus):
+        self.name = name
+        self.bus = bus
+        self.received = []
+        bus.subscribe("update", self.on_update)
+    
+    def on_update(self, data):
+        self.received.append(data)
+    
+    def destroy(self):
+        """Clean up — unsubscribe from events."""
+        self.bus.unsubscribe("update", self.on_update)
+PYEOF
+
+cat > repo/test_events.py << 'PYEOF'
+import sys
+sys.path.insert(0, '.')
+from events import EventBus, Widget
+
+def test_unsubscribe_works():
+    """After destroy(), widget should not receive events."""
+    bus = EventBus()
+    w = Widget("w1", bus)
+    
+    bus.publish("update", "msg1")
+    assert w.received == ["msg1"], f"Should receive before destroy: {w.received}"
+    
+    w.destroy()
+    bus.publish("update", "msg2")
+    assert w.received == ["msg1"], f"Should NOT receive after destroy: {w.received}"
+
+def test_handler_count_after_unsubscribe():
+    """Handler count should decrease after unsubscribe."""
+    bus = EventBus()
+    w1 = Widget("w1", bus)
+    w2 = Widget("w2", bus)
+    
+    assert bus.handler_count("update") == 2
+    w1.destroy()
+    assert bus.handler_count("update") == 1, f"Expected 1 handler, got {bus.handler_count('update')}"
+
+def test_multiple_destroy_safe():
+    """Calling destroy() twice should not crash."""
+    bus = EventBus()
+    w = Widget("w1", bus)
+    w.destroy()
+    try:
+        w.destroy()  # Should not raise
+    except ValueError:
+        print("FAIL: second destroy() raised ValueError")
+        sys.exit(1)
+
+if __name__ == "__main__":
+    tests = [test_unsubscribe_works, test_handler_count_after_unsubscribe, test_multiple_destroy_safe]
+    for t in tests:
+        try:
+            t()
+            print(f"PASS: {t.__name__}")
+        except AssertionError as e:
+            print(f"FAIL: {t.__name__}: {e}")
+            sys.exit(1)
+        except Exception as e:
+            print(f"ERROR: {t.__name__}: {e}")
+            sys.exit(1)
+    print("ALL TESTS PASSED")
+PYEOF

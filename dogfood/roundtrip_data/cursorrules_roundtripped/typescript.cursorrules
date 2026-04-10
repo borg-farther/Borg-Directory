@@ -1,0 +1,174 @@
+# Typescript
+# Problem class: You are a TypeScript expert. Write type-safe, maintainable code.
+
+You are an expert at You are a TypeScript expert. Write type-safe, maintainable code.. You are a TypeScript expert. Write type-safe, maintainable code.
+
+## Workflow
+
+### 1. Type System
+- Enable strict mode in tsconfig.json
+- Prefer interfaces over types for object shapes
+- Use discriminated unions for state machines
+- Avoid `any` — use `unknown` when type is uncertain
+- Use const assertions for literal types
+- Leverage template literal types for string patterns
+
+**Avoid:**
+  - ❌ Avoid `any` — use `unknown` when type is uncertain
+  - ❌ Avoid circular dependencies
+  - ❌ Use exhaustive checks with never type
+  - ❌ Never use `as` for type casting (use type guards)
+  - ❌ Don't use enums—use const objects with `as const`
+  - ❌ Avoid optional chaining abuse (?. chains > 3)
+  - ❌ Don't use `!` non-null assertion operator
+  - ❌ Avoid overloads when union types suffice
+
+### 2. Patterns
+```typescript
+// Discriminated union for state management
+type RequestState<T> =
+  | { status: 'idle' }
+  | { status: 'loading' }
+  | { status: 'success'; data: T }
+  | { status: 'error'; error: Error };
+
+// Branded types for type safety
+type UserId = string & { readonly __brand: 'UserId' };
+type OrderId = string & { readonly __brand: 'OrderId' };
+
+function createUserId(id: string): UserId {
+  return id as UserId;
+}
+```
+
+**Avoid:**
+  - ❌ Avoid `any` — use `unknown` when type is uncertain
+  - ❌ Avoid circular dependencies
+  - ❌ Use exhaustive checks with never type
+  - ❌ Never use `as` for type casting (use type guards)
+  - ❌ Don't use enums—use const objects with `as const`
+  - ❌ Avoid optional chaining abuse (?. chains > 3)
+  - ❌ Don't use `!` non-null assertion operator
+  - ❌ Avoid overloads when union types suffice
+
+### 3. Module System
+- Use ES modules (import/export)
+- Barrel exports via index.ts files
+- Avoid circular dependencies
+- Use path aliases (@/components, @/utils)
+
+**Avoid:**
+  - ❌ Avoid `any` — use `unknown` when type is uncertain
+  - ❌ Avoid circular dependencies
+  - ❌ Use exhaustive checks with never type
+  - ❌ Never use `as` for type casting (use type guards)
+  - ❌ Don't use enums—use const objects with `as const`
+  - ❌ Avoid optional chaining abuse (?. chains > 3)
+  - ❌ Don't use `!` non-null assertion operator
+  - ❌ Avoid overloads when union types suffice
+
+### 4. Error Handling
+- Use Result types instead of throwing
+- Create typed error classes
+- Handle Promise rejections explicitly
+- Use exhaustive checks with never type
+
+**Avoid:**
+  - ❌ Avoid `any` — use `unknown` when type is uncertain
+  - ❌ Avoid circular dependencies
+  - ❌ Use exhaustive checks with never type
+  - ❌ Never use `as` for type casting (use type guards)
+  - ❌ Don't use enums—use const objects with `as const`
+  - ❌ Avoid optional chaining abuse (?. chains > 3)
+  - ❌ Don't use `!` non-null assertion operator
+  - ❌ Avoid overloads when union types suffice
+
+### 5. Anti Patterns
+- Never use `as` for type casting (use type guards)
+- Don't use enums—use const objects with `as const`
+- Avoid optional chaining abuse (?. chains > 3)
+- Don't use `!` non-null assertion operator
+- Avoid overloads when union types suffice
+
+**Avoid:**
+  - ❌ Avoid `any` — use `unknown` when type is uncertain
+  - ❌ Avoid circular dependencies
+  - ❌ Use exhaustive checks with never type
+  - ❌ Never use `as` for type casting (use type guards)
+  - ❌ Don't use enums—use const objects with `as const`
+  - ❌ Avoid optional chaining abuse (?. chains > 3)
+  - ❌ Don't use `!` non-null assertion operator
+  - ❌ Avoid overloads when union types suffice
+
+### 6. Naming Conventions
+- PascalCase for types, interfaces, classes
+- camelCase for variables, functions
+- SCREAMING_SNAKE_CASE for constants
+- Prefix interfaces with I only in legacy codebases
+
+**Avoid:**
+  - ❌ Avoid `any` — use `unknown` when type is uncertain
+  - ❌ Avoid circular dependencies
+  - ❌ Use exhaustive checks with never type
+  - ❌ Never use `as` for type casting (use type guards)
+  - ❌ Don't use enums—use const objects with `as const`
+  - ❌ Avoid optional chaining abuse (?. chains > 3)
+  - ❌ Don't use `!` non-null assertion operator
+  - ❌ Avoid overloads when union types suffice
+
+## Anti-Patterns
+
+- ❌ Avoid `any` — use `unknown` when type is uncertain
+- ❌ Avoid circular dependencies
+- ❌ Use exhaustive checks with never type
+- ❌ Never use `as` for type casting (use type guards)
+- ❌ Don't use enums—use const objects with `as const`
+- ❌ Avoid optional chaining abuse (?. chains > 3)
+- ❌ Don't use `!` non-null assertion operator
+- ❌ Avoid overloads when union types suffice
+- ❌ Avoid `any` — use `unknown` when type is uncertain
+- ❌ Avoid circular dependencies
+- ❌ Use exhaustive checks with never type
+- ❌ Never use `as` for type casting (use type guards)
+- ❌ Don't use enums—use const objects with `as const`
+- ❌ Avoid optional chaining abuse (?. chains > 3)
+- ❌ Don't use `!` non-null assertion operator
+- ❌ Avoid overloads when union types suffice
+- ❌ Avoid `any` — use `unknown` when type is uncertain
+- ❌ Avoid circular dependencies
+- ❌ Use exhaustive checks with never type
+- ❌ Never use `as` for type casting (use type guards)
+- ❌ Don't use enums—use const objects with `as const`
+- ❌ Avoid optional chaining abuse (?. chains > 3)
+- ❌ Don't use `!` non-null assertion operator
+- ❌ Avoid overloads when union types suffice
+- ❌ Avoid `any` — use `unknown` when type is uncertain
+- ❌ Avoid circular dependencies
+- ❌ Use exhaustive checks with never type
+- ❌ Never use `as` for type casting (use type guards)
+- ❌ Don't use enums—use const objects with `as const`
+- ❌ Avoid optional chaining abuse (?. chains > 3)
+- ❌ Don't use `!` non-null assertion operator
+- ❌ Avoid overloads when union types suffice
+- ❌ Avoid `any` — use `unknown` when type is uncertain
+- ❌ Avoid circular dependencies
+- ❌ Use exhaustive checks with never type
+- ❌ Never use `as` for type casting (use type guards)
+- ❌ Don't use enums—use const objects with `as const`
+- ❌ Avoid optional chaining abuse (?. chains > 3)
+- ❌ Don't use `!` non-null assertion operator
+- ❌ Avoid overloads when union types suffice
+- ❌ Avoid `any` — use `unknown` when type is uncertain
+- ❌ Avoid circular dependencies
+- ❌ Use exhaustive checks with never type
+- ❌ Never use `as` for type casting (use type guards)
+- ❌ Don't use enums—use const objects with `as const`
+- ❌ Avoid optional chaining abuse (?. chains > 3)
+- ❌ Don't use `!` non-null assertion operator
+- ❌ Avoid overloads when union types suffice
+
+## Escalation Rules
+
+- Escalate on ambiguous or missing information.
+
+# Generated from borg pack: borg://converted/typescript

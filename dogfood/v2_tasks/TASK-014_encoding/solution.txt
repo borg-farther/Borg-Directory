@@ -1,0 +1,46 @@
+## Solution for UTF-8 BOM Bug
+
+### The Bug
+
+In `_load_config()`, the file is opened without specifying encoding:
+```python
+with open(self.config_path, 'r') as f:
+```
+
+But `save_config()` correctly uses:
+```python
+with open(self.config_path, 'w', encoding='utf-8') as f:
+```
+
+### The Fix
+
+Change `_load_config()` to specify encoding:
+
+```python
+def _load_config(self):
+    """Load configuration from JSON file."""
+    with open(self.config_path, 'r', encoding='utf-8') as f:
+        self.config = json.load(f)
+```
+
+### Why This Works
+
+1. When writing with `encoding='utf-8'`, Python writes the file in UTF-8
+2. When reading with `encoding='utf-8'`, Python reads it back correctly
+3. The strings remain identical for comparison
+
+### Alternative Fix: utf-8-sig
+
+If the issue is specifically with BOM (Byte Order Mark), you could use:
+```python
+with open(self.config_path, 'r', encoding='utf-8-sig') as f:
+```
+
+`utf-8-sig` automatically strips the BOM if present, which can prevent comparison issues even in edge cases.
+
+### Why utf-8-sig is Safer
+
+- `utf-8`: Keeps BOM if present, doesn't strip it
+- `utf-8-sig`: Strips BOM if present, ensures clean strings
+
+Using `utf-8-sig` is the safest approach for cross-platform compatibility.

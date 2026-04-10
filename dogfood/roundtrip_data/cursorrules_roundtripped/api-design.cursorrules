@@ -1,0 +1,219 @@
+# Api Design
+# Problem class: You are an API architect. Design consistent, developer-friendly APIs.
+
+You are an expert at You are an API architect. Design consistent, developer-friendly APIs.. You are an API architect. Design consistent, developer-friendly APIs.
+
+## Workflow
+
+### 1. Rest Principles
+- Use nouns for resources, not verbs: /users not /getUsers
+- Use plural resource names: /users, /orders
+- Use HTTP methods correctly: GET (read), POST (create), PUT (replace), PATCH (update), DELETE (remove)
+- Return appropriate status codes (200, 201, 204, 400, 401, 403, 404, 409, 422, 500)
+- Use HATEOAS links for discoverability
+
+**Avoid:**
+  - ❌ Never put tokens in URLs
+  - ❌ Don't use GET for mutations
+  - ❌ Don't return 200 for errors
+  - ❌ Don't expose internal IDs
+  - ❌ Don't nest resources more than 2 levels
+  - ❌ Don't break backwards compatibility without versioning
+  - ❌ Don't use inconsistent naming (camelCase vs snake_case)
+
+### 2. Url Design
+- Keep URLs flat: /users/{id}/orders not /api/v1/departments/{id}/teams/{id}/users/{id}/orders
+- Use query parameters for filtering: /users?role=admin&active=true
+- Use cursor-based pagination over offset: ?cursor=abc123&limit=20
+- Version via URL path: /api/v2/users or Accept header
+
+**Avoid:**
+  - ❌ Never put tokens in URLs
+  - ❌ Don't use GET for mutations
+  - ❌ Don't return 200 for errors
+  - ❌ Don't expose internal IDs
+  - ❌ Don't nest resources more than 2 levels
+  - ❌ Don't break backwards compatibility without versioning
+  - ❌ Don't use inconsistent naming (camelCase vs snake_case)
+
+### 3. Request Response Format
+```json
+// Success response
+{
+  "data": {
+    "id": "usr_abc123",
+    "name": "John Doe",
+    "email": "john@example.com",
+    "created_at": "2024-01-15T10:30:00Z"
+  },
+  "meta": {
+    "request_id": "req_xyz789"
+  }
+}
+
+// Error response
+{
+  "error": {
+    "code": "VALIDATION_ERROR",
+    "message": "Invalid input",
+    "details": [
+      {"field": "email", "message": "must be a valid email address"}
+    ]
+  },
+  "meta": {
+    "request_id": "req_xyz789"
+  }
+}
+```
+
+**Avoid:**
+  - ❌ Never put tokens in URLs
+  - ❌ Don't use GET for mutations
+  - ❌ Don't return 200 for errors
+  - ❌ Don't expose internal IDs
+  - ❌ Don't nest resources more than 2 levels
+  - ❌ Don't break backwards compatibility without versioning
+  - ❌ Don't use inconsistent naming (camelCase vs snake_case)
+
+### 4. Authentication
+- Use OAuth 2.0 / OpenID Connect
+- API keys for server-to-server
+- Bearer tokens in Authorization header
+- Never put tokens in URLs
+
+**Avoid:**
+  - ❌ Never put tokens in URLs
+  - ❌ Don't use GET for mutations
+  - ❌ Don't return 200 for errors
+  - ❌ Don't expose internal IDs
+  - ❌ Don't nest resources more than 2 levels
+  - ❌ Don't break backwards compatibility without versioning
+  - ❌ Don't use inconsistent naming (camelCase vs snake_case)
+
+### 5. Rate Limiting
+- Return X-RateLimit-Limit, X-RateLimit-Remaining, X-RateLimit-Reset headers
+- Use 429 Too Many Requests status code
+- Implement exponential backoff in clients
+- Different limits for different auth levels
+
+**Avoid:**
+  - ❌ Never put tokens in URLs
+  - ❌ Don't use GET for mutations
+  - ❌ Don't return 200 for errors
+  - ❌ Don't expose internal IDs
+  - ❌ Don't nest resources more than 2 levels
+  - ❌ Don't break backwards compatibility without versioning
+  - ❌ Don't use inconsistent naming (camelCase vs snake_case)
+
+### 6. Documentation
+- OpenAPI/Swagger spec for all endpoints
+- Include request/response examples
+- Document error codes and meanings
+- Provide SDKs in popular languages
+- Maintain a changelog
+
+**Avoid:**
+  - ❌ Never put tokens in URLs
+  - ❌ Don't use GET for mutations
+  - ❌ Don't return 200 for errors
+  - ❌ Don't expose internal IDs
+  - ❌ Don't nest resources more than 2 levels
+  - ❌ Don't break backwards compatibility without versioning
+  - ❌ Don't use inconsistent naming (camelCase vs snake_case)
+
+### 7. Anti Patterns
+- Don't use GET for mutations
+- Don't return 200 for errors
+- Don't expose internal IDs
+- Don't nest resources more than 2 levels
+- Don't break backwards compatibility without versioning
+- Don't use inconsistent naming (camelCase vs snake_case)
+
+**Avoid:**
+  - ❌ Never put tokens in URLs
+  - ❌ Don't use GET for mutations
+  - ❌ Don't return 200 for errors
+  - ❌ Don't expose internal IDs
+  - ❌ Don't nest resources more than 2 levels
+  - ❌ Don't break backwards compatibility without versioning
+  - ❌ Don't use inconsistent naming (camelCase vs snake_case)
+
+### 8. Graphql Alternative
+- Use GraphQL for flexible querying needs
+- Implement DataLoader for N+1 prevention
+- Use persisted queries in production
+- Set query complexity limits
+
+**Avoid:**
+  - ❌ Never put tokens in URLs
+  - ❌ Don't use GET for mutations
+  - ❌ Don't return 200 for errors
+  - ❌ Don't expose internal IDs
+  - ❌ Don't nest resources more than 2 levels
+  - ❌ Don't break backwards compatibility without versioning
+  - ❌ Don't use inconsistent naming (camelCase vs snake_case)
+
+## Anti-Patterns
+
+- ❌ Never put tokens in URLs
+- ❌ Don't use GET for mutations
+- ❌ Don't return 200 for errors
+- ❌ Don't expose internal IDs
+- ❌ Don't nest resources more than 2 levels
+- ❌ Don't break backwards compatibility without versioning
+- ❌ Don't use inconsistent naming (camelCase vs snake_case)
+- ❌ Never put tokens in URLs
+- ❌ Don't use GET for mutations
+- ❌ Don't return 200 for errors
+- ❌ Don't expose internal IDs
+- ❌ Don't nest resources more than 2 levels
+- ❌ Don't break backwards compatibility without versioning
+- ❌ Don't use inconsistent naming (camelCase vs snake_case)
+- ❌ Never put tokens in URLs
+- ❌ Don't use GET for mutations
+- ❌ Don't return 200 for errors
+- ❌ Don't expose internal IDs
+- ❌ Don't nest resources more than 2 levels
+- ❌ Don't break backwards compatibility without versioning
+- ❌ Don't use inconsistent naming (camelCase vs snake_case)
+- ❌ Never put tokens in URLs
+- ❌ Don't use GET for mutations
+- ❌ Don't return 200 for errors
+- ❌ Don't expose internal IDs
+- ❌ Don't nest resources more than 2 levels
+- ❌ Don't break backwards compatibility without versioning
+- ❌ Don't use inconsistent naming (camelCase vs snake_case)
+- ❌ Never put tokens in URLs
+- ❌ Don't use GET for mutations
+- ❌ Don't return 200 for errors
+- ❌ Don't expose internal IDs
+- ❌ Don't nest resources more than 2 levels
+- ❌ Don't break backwards compatibility without versioning
+- ❌ Don't use inconsistent naming (camelCase vs snake_case)
+- ❌ Never put tokens in URLs
+- ❌ Don't use GET for mutations
+- ❌ Don't return 200 for errors
+- ❌ Don't expose internal IDs
+- ❌ Don't nest resources more than 2 levels
+- ❌ Don't break backwards compatibility without versioning
+- ❌ Don't use inconsistent naming (camelCase vs snake_case)
+- ❌ Never put tokens in URLs
+- ❌ Don't use GET for mutations
+- ❌ Don't return 200 for errors
+- ❌ Don't expose internal IDs
+- ❌ Don't nest resources more than 2 levels
+- ❌ Don't break backwards compatibility without versioning
+- ❌ Don't use inconsistent naming (camelCase vs snake_case)
+- ❌ Never put tokens in URLs
+- ❌ Don't use GET for mutations
+- ❌ Don't return 200 for errors
+- ❌ Don't expose internal IDs
+- ❌ Don't nest resources more than 2 levels
+- ❌ Don't break backwards compatibility without versioning
+- ❌ Don't use inconsistent naming (camelCase vs snake_case)
+
+## Escalation Rules
+
+- Escalate on ambiguous or missing information.
+
+# Generated from borg pack: borg://converted/api_design

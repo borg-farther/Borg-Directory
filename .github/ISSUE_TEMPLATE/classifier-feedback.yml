@@ -1,0 +1,106 @@
+name: Classifier feedback (v3.2.2+)
+description: Five-question survey for anyone who has run `borg debug` on any language
+title: "[feedback] borg debug survey — "
+labels: ["classifier-feedback"]
+assignees: []
+body:
+  - type: markdown
+    attributes:
+      value: |
+        ## Why we're asking
+        agent-borg v3.2.2 and v3.2.3 shipped on 20260408. The honesty patch
+        dropped false-confident rate from 53.8% to 0.58% on a 173-row
+        multi-language corpus. Before we invest 5–6 more weeks building
+        non-Python pack coverage (Rust, Go, JS, TS, Docker, Kubernetes),
+        we want to hear from real users.
+
+        Full PRD: [docs/20260408-0623_classifier_prd/](../tree/main/docs/20260408-0623_classifier_prd/)
+
+        Five questions. Honest "less useful" / "I'd uninstall" answers
+        are explicitly welcome — they're more valuable than hype.
+
+  - type: dropdown
+    id: language
+    attributes:
+      label: What language did you run `borg debug` on?
+      multiple: false
+      options:
+        - python
+        - rust
+        - go
+        - javascript
+        - typescript
+        - react
+        - docker
+        - kubernetes
+        - other
+    validations:
+      required: true
+
+  - type: textarea
+    id: q1
+    attributes:
+      label: "Q1. When did you last run `borg debug`? First time or do you run it routinely?"
+      placeholder: "e.g. 'first time, on a rust borrow checker error, 20260407'"
+    validations:
+      required: true
+
+  - type: textarea
+    id: q2
+    attributes:
+      label: "Q2. What error did you paste, and what did you actually want back?"
+      description: A diagnosis, an exact fix, a pointer to docs, or something else?
+      placeholder: "e.g. 'E0382, I wanted ownership explanation + suggested .clone() fix'"
+    validations:
+      required: true
+
+  - type: dropdown
+    id: q3
+    attributes:
+      label: "Q3. If `borg debug` had said 'I don't know, looks like <your language>, borg only knows Python/Django right now' — would you have kept it installed?"
+      options:
+        - "Kept it installed"
+        - "Uninstalled"
+        - "Would have ignored until I hit a Python error"
+    validations:
+      required: true
+
+  - type: dropdown
+    id: q4
+    attributes:
+      label: "Q4. If `borg debug` were only callable from Claude Code / Cursor / Cline via MCP (not as a human CLI) — more or less useful?"
+      options:
+        - "More useful — MCP is the right surface"
+        - "Less useful — I want the CLI"
+        - "About the same"
+        - "Both would be useful"
+    validations:
+      required: true
+
+  - type: dropdown
+    id: q5
+    attributes:
+      label: "Q5. Would you actually use a borg pack for your language if it existed, or just paste into ChatGPT/Claude/Cursor like you do today?"
+      options:
+        - "Yes, I'd use a borg pack"
+        - "No, I'd stick with ChatGPT/Claude/Cursor"
+        - "Depends on quality vs the LLM"
+    validations:
+      required: true
+
+  - type: textarea
+    id: extra
+    attributes:
+      label: "Anything else? (optional)"
+      placeholder: "Bugs, frustrations, feature requests, or just what you wish it did differently."
+    validations:
+      required: false
+
+  - type: checkboxes
+    id: contrib
+    attributes:
+      label: "Would you contribute a pack?"
+      options:
+        - label: "I'd be willing to author a pack for my language if you sent me a template"
+        - label: "I'd review a pack someone else wrote"
+        - label: "Just a user, not contributing"

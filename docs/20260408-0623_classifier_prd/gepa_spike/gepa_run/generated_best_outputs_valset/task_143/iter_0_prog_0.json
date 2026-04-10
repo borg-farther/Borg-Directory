@@ -1,0 +1,5 @@
+{
+    "expected": "docker_platform_mismatch",
+    "actual": null,
+    "kind": "correct_no_match"
+}

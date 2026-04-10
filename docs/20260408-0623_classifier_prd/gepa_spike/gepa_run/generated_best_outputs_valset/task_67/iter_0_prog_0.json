@@ -1,0 +1,5 @@
+{
+    "expected": "ts_module_resolution",
+    "actual": null,
+    "kind": "correct_no_match"
+}

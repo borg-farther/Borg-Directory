@@ -1,0 +1,16 @@
+REASONING TRACE FOR: Bound method identity bug
+
+PROBLEM DECOMPOSITION:
+- In Python, self.method creates a new bound method object each time
+- list.remove() uses == which for bound methods checks __self__ and __func__
+- But the issue is the handler stored during subscribe is a different object than the one passed to unsubscribe
+
+KEY INSIGHT:
+- Actually, Python's == DOES compare bound methods correctly (same __self__ and __func__)
+- The real issue is that remove() raises ValueError if the handler is not found
+- Need to handle the case where handler isn't found (double destroy)
+- Also need to verify the comparison actually works with the specific implementation
+
+PITFALLS:
+- Test both the comparison and the error handling
+- Consider storing a reference to the handler during subscribe for reliable removal

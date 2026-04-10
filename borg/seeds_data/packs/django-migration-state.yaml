@@ -1,0 +1,25 @@
+name: django-migration-state
+problem_class: migration_state_desync
+license: MIT
+description: |
+  Django migrations are out of sync with database state.
+  "table already exists", "no such table", or "applied migrations" errors.
+solution: |
+  Run: python manage.py migrate --fake-initial
+  Or: python manage.py migrate --fake <app_name> zero
+  Then reapply: python manage.py migrate
+  For missing tables: use python manage.py migrate --fake-initial
+source_url: https://docs.djangoproject.com/en/stable/topics/migrations/
+tier: SEED
+tags:
+  - django
+  - migration
+  - database
+required_inputs:
+  - name: error_message
+    type: string
+escalation_rules:
+  - condition: "'table already exists' in error_message"
+    action: fake the migration then reapply
+  - condition: "'no such table' in error_message"
+    action: check if migration was applied with --fake

@@ -1,0 +1,35 @@
+FROM python:3.11-slim-bookworm
+
+SHELL ["/bin/bash", "-euo", "pipefail", "-c"]
+
+# Install system deps in one layer
+RUN apt-get update && apt-get install -y --no-install-recommends \
+        git \
+        curl \
+        ca-certificates \
+        gnupg \
+        lsb-release \
+    && rm -rf /var/lib/apt/lists/*
+
+# Install gh CLI (reuses host ~/.config/gh mount for auth)
+RUN curl -fsSL https://cli.github.com/packages/githubcli-archive-keyring.gpg \
+        -o /usr/share/keyrings/githubcli-archive-keyring.gpg \
+    && chmod go+r /usr/share/keyrings/githubcli-archive-keyring.gpg \
+    && echo "deb [arch=$(dpkg --print-architecture) \
+            signed-by=/usr/share/keyrings/githubcli-archive-keyring.gpg] \
+            https://cli.github.com/packages stable main" \
+        > /etc/apt/sources.list.d/github-cli.list \
+    && apt-get update && apt-get install -y gh \
+    && rm -rf /var/lib/apt/lists/*
+
+# Install agent-borg from PyPI
+RUN pip install --no-cache-dir agent-borg==3.3.0
+
+# Health check — verifies core tools are functional
+HEALTHCHECK --interval=30s --timeout=10s --start-period=5s --retries=3 \
+    CMD git rev-parse --is-inside-work-tree > /dev/null 2>&1 || true \
+    && borg --version > /dev/null 2>&1 \
+    && gh auth status > /dev/null 2>&1 || true
+
+ENTRYPOINT ["borg"]
+CMD ["--version"]

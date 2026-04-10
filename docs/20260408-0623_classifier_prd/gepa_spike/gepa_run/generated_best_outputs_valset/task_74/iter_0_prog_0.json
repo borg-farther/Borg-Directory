@@ -1,0 +1,5 @@
+{
+    "expected": "ts_exhaustiveness",
+    "actual": null,
+    "kind": "correct_no_match"
+}

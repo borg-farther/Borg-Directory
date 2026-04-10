@@ -1,0 +1,39 @@
+## Task: Fix the Permission Check Bug
+
+You are debugging a permission checking module that uses bitwise operators for permission flags.
+
+### The Problem
+
+The permission system uses bit flags:
+- READ = 4 (binary: 100)
+- WRITE = 2 (binary: 010)  
+- EXECUTE = 1 (binary: 001)
+
+A user with READ and WRITE permissions has value 6 (binary: 110).
+
+The `check_permission()` function should verify that a user has **ALL** required permissions. However, there's a bug that causes it to incorrectly grant permissions.
+
+### What to Look For
+
+The bug is in `check_permission()`:
+```python
+if user_perms | required_perms:
+    return True
+```
+
+### Expected Behavior
+
+- `check_permission(READ|WRITE, READ)` → True (user has read)
+- `check_permission(READ|WRITE, EXECUTE)` → PermissionError (user lacks execute)
+- `check_permission(READ|WRITE, READ|WRITE)` → True (user has both)
+- `check_permission(READ|WRITE, READ|EXECUTE)` → PermissionError (user lacks execute!)
+
+### The Bug
+
+The function uses `|` (OR) instead of `&` (AND). This means:
+- With OR: `6 | 1 = 7` (truthy) → incorrectly grants execute
+- With AND: `6 & 1 = 0` (falsy) → correctly denies execute
+
+### Your Task
+
+Fix the `check_permission()` function in `permissions.py`.

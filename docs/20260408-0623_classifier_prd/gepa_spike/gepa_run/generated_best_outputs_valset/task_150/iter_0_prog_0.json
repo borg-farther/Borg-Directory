@@ -1,0 +1,5 @@
+{
+    "expected": "k8s_image_not_found",
+    "actual": null,
+    "kind": "correct_no_match"
+}

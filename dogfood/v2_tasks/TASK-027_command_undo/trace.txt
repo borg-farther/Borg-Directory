@@ -1,0 +1,19 @@
+REASONING TRACE FOR: Command pattern undo bug
+
+PROBLEM DECOMPOSITION:
+- Insert records an undo of 'delete' — this works
+- Delete records an undo of 'insert' — but saves the wrong position
+
+WHAT WAS TRIED:
+- Traced through delete('hello'): cursor starts at 5, deleted text is 'hello'
+- The undo record saves position as self.cursor (5) BEFORE deletion
+- But after deletion, cursor moves to 0
+- On undo, it inserts at position 5 (saved) but text has changed
+
+KEY INSIGHT:
+- The delete operation saves the cursor BEFORE deletion in the undo record
+- But it should save the position where the deleted text STARTS (cursor - count)
+- That way undo can re-insert at the correct position
+
+PITFALLS:
+- The cursor position in the undo record for delete should be cursor - count, not cursor

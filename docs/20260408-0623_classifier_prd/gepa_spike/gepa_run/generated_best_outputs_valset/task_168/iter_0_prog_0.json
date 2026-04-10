@@ -1,0 +1,5 @@
+{
+    "expected": "shell_ssl_error",
+    "actual": null,
+    "kind": "correct_no_match"
+}

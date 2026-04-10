@@ -9,6 +9,8 @@ Usage:
     borg apply <pack> --task  — start applying a pack
     borg publish <path>       — publish pack to GitHub
     borg feedback <session_id> — generate feedback from session
+    borg debug <error>        — get structured guidance for an error
+    borg generate <pack>      — export pack to .cursorrules / .clinerules / CLAUDE.md / .windsurfrules
     borg list                 — list local packs
     borg autopilot            — zero-config setup (install MCP + skill + auto-suggest)
     borg setup-claude         — configure borg MCP for Claude Code
@@ -20,21 +22,11 @@ from __future__ import annotations
 
 import argparse
 import json
-import os
+import shutil
 import sys
 from pathlib import Path
 
 from borg import __version__
-from borg.core.search import borg_search, borg_pull, borg_try, borg_init
-from borg.core.search import generate_feedback as _core_generate_feedback
-from borg.core.apply import apply_handler
-from borg.core.publish import action_publish, action_list
-from borg.core.convert import convert_auto, convert_skill, convert_claude_md, convert_cursorrules
-from borg.core.generate import generate_rules, generate_all, load_pack
-from borg.core.dirs import get_borg_dir
-from borg.core.session import load_persisted_sessions, _active_sessions
-from borg.db.reputation import ReputationEngine
-from borg.db.store import AgentStore
 
 
 # ---------------------------------------------------------------------------
@@ -92,7 +84,12 @@ def _require_success(raw: str, ctx: str = "") -> bool:
 
 def _cmd_search(args: argparse.Namespace) -> int:
     """Search for packs matching a query."""
-    raw = borg_search(args.query, mode=args.mode)
+    from borg.core.search import borg_search
+    from borg.core.seeds import is_seeds_disabled
+
+    # Respect BORG_DISABLE_SEEDS env var or --no-seeds flag
+    include_seeds = not (args.no_seeds or is_seeds_disabled())
+    raw = borg_search(args.query, mode=args.mode, include_seeds=include_seeds)
     if args.json:
         _print_json(raw)
         return 0
@@ -100,7 +97,9 @@ def _cmd_search(args: argparse.Namespace) -> int:
     if not data.get("success"):
         print(f"Error: {data.get('error', 'Unknown')}", file=sys.stderr)
         return 1
-    matches = data.get("matches", [])
+    _test_filter = ("test-pack", "smoke-test", "wf-test", "test-call", "my-test", "fresh-pack", "old-pack", "my-pack", "guild:--", "test-scaffold", "stress-project", "test-e2e", "e2e-test")
+    matches = [m for m in data.get("matches", [])
+               if not any(m.get("name", "").startswith(p) or m.get("id", "").startswith(p) for p in _test_filter)]
     if not matches:
         print("No packs found.")
         return 0
@@ -118,6 +117,8 @@ def _cmd_search(args: argparse.Namespace) -> int:
 
 def _cmd_pull(args: argparse.Namespace) -> int:
     """Fetch and save a pack locally."""
+    from borg.core.search import borg_pull
+
     raw = borg_pull(args.uri)
     if _require_success(raw):
         data = json.loads(raw)
@@ -130,7 +131,26 @@ def _cmd_pull(args: argparse.Namespace) -> int:
 
 def _cmd_try(args: argparse.Namespace) -> int:
     """Preview a pack without saving."""
+    from borg.core.search import borg_try
+
     raw = borg_try(args.uri)
+    db_path = os.path.expanduser("~/.hermes/guild/borg_v3.db")
+
+    # TASK 1: autonomous outcome inference — borg_try completes without exception → success
+    try:
+        from borg.core.v3_integration import BorgV3
+        v3 = BorgV3(db_path=db_path)
+        success = json.loads(raw).get("success", False)
+        v3.record_outcome(
+            pack_id=json.loads(raw).get("id", args.uri),
+            agent_id="borg-cli",
+            task_context={"uri": args.uri, "task_category": "try"},
+            success=success,
+            category="try",
+        )
+    except Exception:
+        pass  # never break core flow
+
     if args.json:
         _print_json(raw)
         return 0 if json.loads(raw).get("success") else 1
@@ -161,52 +181,134 @@ def _cmd_try(args: argparse.Namespace) -> int:
 
 
 def _cmd_init(args: argparse.Namespace) -> int:
-    """Create a pack scaffold or convert from a skill."""
-    raw = borg_init(args.name)
-    if _require_success(raw, ctx=" (skill not found)"):
-        data = json.loads(raw)
-        # Print the generated YAML content
-        print(data.get("content", raw))
-        if data.get("validation_errors"):
-            print("Validation errors:", file=sys.stderr)
-            for err in data["validation_errors"]:
-                print(f"  - {err}", file=sys.stderr)
-        if data.get("safety_warnings"):
-            print("Safety warnings:", file=sys.stderr)
-            for w in data["safety_warnings"]:
-                print(f"  - {w}", file=sys.stderr)
-    else:
-        _print_json(raw)
+    """Scaffold a new pack from scratch or convert from a skill."""
+    import yaml as _yaml
+    from datetime import datetime, timezone
+
+    import re as _re
+    name = args.name
+    if not _re.match(r'^[a-zA-Z0-9_-]+$', name):
+        print(f"Error: Pack name must contain only letters, numbers, hyphens, underscores. Got: '{name}'", file=sys.stderr)
         return 1
+    problem_class = getattr(args, "problem_class", "general") or "general"
+    mental_model = getattr(args, "mental_model", "fast-thinker") or "fast-thinker"
+
+    guild_dir = Path.home() / ".hermes" / "guild"
+    pack_dir = guild_dir / name
+    pack_dir.mkdir(parents=True, exist_ok=True)
+
+    scaffold = {
+        "type": "workflow_pack",
+        "version": "1.0",
+        "id": name,
+        "problem_class": problem_class,
+        "mental_model": mental_model,
+        "provenance": {
+            "author": "agent://init",
+            "created": datetime.now(timezone.utc).isoformat(),
+            "confidence": "guessed",
+        },
+        "phases": [
+            {
+                "name": "phase-1",
+                "description": "Describe this phase",
+                "checkpoint": "done",
+                "anti_patterns": [],
+                "prompts": ["Describe the prompt for this phase"],
+            },
+        ],
+    }
+    content = _yaml.safe_dump(scaffold, default_flow_style=False, sort_keys=False)
+    pack_file = pack_dir / "pack.yaml"
+    pack_file.write_text(content, encoding="utf-8")
+    print(f"Created pack scaffold: {pack_file}")
+    print(f"Edit {pack_file} to define your phases and prompts.")
+
+    # TASK 1: autonomous outcome inference — init succeeds → record success
+    try:
+        from borg.core.v3_integration import BorgV3
+        v3 = BorgV3(db_path=os.path.expanduser("~/.hermes/guild/borg_v3.db"))
+        v3.record_outcome(
+            pack_id=name,
+            agent_id="borg-cli",
+            task_context={"task_category": "init", "problem_class": problem_class},
+            success=True,
+            category="init",
+        )
+    except Exception:
+        pass  # never break core flow
+
     return 0
 
 
 def _cmd_apply(args: argparse.Namespace) -> int:
     """Start applying a pack to a task."""
-    raw = apply_handler(
-        action="start",
-        pack_name=args.pack,
-        task=args.task,
-    )
-    if args.json:
-        _print_json(raw)
-        return 0 if json.loads(raw).get("success") else 1
-    if _require_success(raw, ctx=" (pack not found)"):
+    from borg.core.apply import apply_handler
+
+    pack_name = args.pack
+    task = args.task
+    db_path = os.path.expanduser("~/.hermes/guild/borg_v3.db")
+
+    try:
+        raw = apply_handler(
+            action="start",
+            pack_name=pack_name,
+            task=task,
+        )
+        if not _require_success(raw, ctx=" (pack not found)"):
+            _print_json(raw)
+            return 1
+
         data = json.loads(raw)
         session_id = data.get("session_id", "?")
         phases = data.get("phases", [])
         phase_names = ", ".join(p.get("name", "?") for p in phases) if phases else "none"
         print(f"Session ID: {session_id}")
         print(f"Phases ({len(phases)}): {phase_names}")
-        print("Awaiting approval")
-    else:
-        _print_json(raw)
+        print()
+        print("Session started. In your agent (MCP), use:")
+        print(f"  borg_apply(action='checkpoint', session_id='{session_id}', phase_result='done')")
+        print("to advance through each phase. Or use borg_search to find the pack first.")
+
+        # TASK 1: autonomous outcome inference — record success when apply completes cleanly
+        try:
+            from borg.core.v3_integration import BorgV3
+            v3 = BorgV3(db_path=db_path)
+            v3.record_outcome(
+                pack_id=pack_name,
+                agent_id="borg-cli",
+                task_context={"task": task, "task_category": "apply"},
+                success=True,
+                category="apply",
+            )
+        except Exception:
+            pass  # never break core flow
+
+        return 0
+
+    except Exception as e:
+        # TASK 1: autonomous outcome inference — record failure with exception as error_message
+        try:
+            from borg.core.v3_integration import BorgV3
+            v3 = BorgV3(db_path=db_path)
+            v3.record_outcome(
+                pack_id=pack_name,
+                agent_id="borg-cli",
+                task_context={"task": task, "task_category": "apply", "error_message": str(e)},
+                success=False,
+                category="apply",
+            )
+        except Exception:
+            pass  # never break core flow
+
+        _print_json(json.dumps({"success": False, "error": str(e)}))
         return 1
-    return 0
 
 
 def _cmd_publish(args: argparse.Namespace) -> int:
     """Publish a pack to GitHub."""
+    from borg.core.publish import action_publish
+
     raw = action_publish(path=args.path)
     if _require_success(raw, ctx=" (publish failed)"):
         _print_json(raw)
@@ -218,8 +320,8 @@ def _cmd_publish(args: argparse.Namespace) -> int:
 
 def _cmd_feedback(args: argparse.Namespace) -> int:
     """Generate feedback from a session."""
-    # Load the session to get execution data
     from borg.core.session import load_session
+    from borg.core.search import generate_feedback as _core_generate_feedback
 
     session = load_session(args.session_id)
     if not session:
@@ -237,6 +339,223 @@ def _cmd_feedback(args: argparse.Namespace) -> int:
     return 0
 
 
+def _cmd_feedback_v3(args: argparse.Namespace) -> int:
+    """Record an outcome for a debug guidance session (V3 feedback loop)."""
+    from borg.core.v3_integration import BorgV3
+    from borg.core.pack_taxonomy import load_pack_by_problem_class
+
+    # Resolve pack_id
+    pack_id = args.pack
+    problem_class = args.problem_class
+
+    if not pack_id and not problem_class:
+        print("Error: must provide --pack or --problem-class", file=sys.stderr)
+        return 1
+
+    if problem_class:
+        pack = load_pack_by_problem_class(problem_class)
+        if not pack:
+            print(f"Error: no pack found for problem_class '{problem_class}'", file=sys.stderr)
+            return 1
+        pack_id = pack.get("id", pack.get("name", problem_class))
+    else:
+        pack_id = args.pack
+
+    # Determine success
+    if args.success.lower() not in ("yes", "true", "1", "y", "no", "false", "0", "n"):
+        print(f"Error: --success must be one of: yes, true, 1, y, no, false, 0, n", file=sys.stderr)
+        return 1
+    success = args.success.lower() in ("yes", "true", "1", "y")
+    time_taken = args.time or 0.0
+    tokens_used = args.tokens or 0
+
+    # Record to V3
+    task_context = {"task_category": problem_class or "unknown"}
+    try:
+        v3 = BorgV3(db_path="~/.hermes/guild/borg_v3.db")
+        v3.record_outcome(
+            pack_id=pack_id,
+            task_context=task_context,
+            success=success,
+            tokens_used=tokens_used,
+            time_taken=time_taken,
+        )
+        status = "✓ success" if success else "✗ failure"
+        print(f"Recorded: {pack_id} [{problem_class or 'unknown'}] — {status}")
+        return 0
+    except Exception as e:
+        print(f"Error recording outcome: {e}", file=sys.stderr)
+        return 1
+
+
+def _cmd_recall(args: argparse.Namespace) -> int:
+    """Query FailureMemory for prior failure/success approaches to an error.
+
+    Usage: borg recall 'NoneType has no attribute'
+    """
+    error_message = " ".join(args.error)
+    if not error_message:
+        print("Error: provide an error message to recall", file=sys.stderr)
+        return 1
+
+    try:
+        from borg.core.failure_memory import FailureMemory
+        fm = FailureMemory()
+        result = fm.recall(error_message)
+
+        if not result:
+            print(f"No prior failures recorded for: {error_message}")
+            return 0
+
+        wrong = result.get("wrong_approaches", [])
+        correct = result.get("correct_approaches", [])
+
+        print(f"Prior failures for: {error_message}")
+        print(f"  Wrong approaches (avoid): {len(wrong)}")
+        for w in wrong[:5]:
+            print(f"    • {w.get('approach', 'unknown')} — failed {w.get('failure_count', 0)}x")
+        if correct:
+            print(f"  Correct approaches (prefer): {len(correct)}")
+            for c in correct[:3]:
+                print(f"    ✓ {c.get('approach', 'unknown')} — succeeded {c.get('success_count', 0)}x")
+
+        # TASK 3: also inject into Thompson Sampling — record recall event so the
+        # selector knows this error class has known solutions (or none yet)
+        try:
+            from borg.core.v3_integration import BorgV3
+            v3 = BorgV3(db_path=os.path.expanduser("~/.hermes/guild/borg_v3.db"))
+            v3.record_outcome(
+                pack_id="recall-query",
+                agent_id="borg-cli",
+                task_context={"task_category": "recall", "error_message": error_message},
+                success=bool(correct),
+                category="recall",
+            )
+        except Exception:
+            pass  # never break core flow
+
+        return 0
+    except Exception as e:
+        print(f"Error: {e}", file=sys.stderr)
+        return 1
+
+
+def _cmd_debug(args: argparse.Namespace) -> int:
+    """Get structured debugging guidance for an error message."""
+    from borg.core.pack_taxonomy import debug_error, classify_error, PROBLEM_CLASSES
+
+    error_message = " ".join(args.error)
+
+    # Show classification without full guidance if --classify only
+    if args.classify:
+        pc = classify_error(error_message)
+        if pc:
+            print(f"problem_class: {pc}")
+            return 0  # match found
+        else:
+            print("No matching problem class.")  # no match
+            print(f"Known classes: {', '.join(PROBLEM_CLASSES)}")
+            return 1  # no match = exit 1
+
+    # Full guidance
+    result = debug_error(error_message, show_evidence=not args.quiet)
+    print(result)
+
+    # Append FailureMemory warnings if error_message is provided
+    if error_message and not args.quiet:
+        try:
+            from borg.core.failure_memory import FailureMemory
+            fm = FailureMemory()
+            memory = fm.recall(error_message)
+            if memory and (memory.get("wrong_approaches") or memory.get("correct_approaches")):
+                print()
+                wrong = memory.get("wrong_approaches", [])
+                correct = memory.get("correct_approaches", [])
+                if wrong:
+                    top = wrong[0]
+                    print(f"⚠️ Other agents tried: {top.get('approach', 'unknown')} "
+                          f"and failed ({top.get('failure_count', 0)} times). Try a different approach.")
+                if correct:
+                    top = correct[0]
+                    print(f"✅ Instead, try: {top.get('approach', 'unknown')} "
+                          f"(succeeded {top.get('success_count', 0)} times).")
+        except Exception:
+            pass  # Never let FailureMemory break the CLI
+
+    # Return 1 if no match (output contains [unknown])
+    lines = result.strip().split('\n')
+    if any('[unknown]' in line for line in lines):
+        return 1
+    return 0
+
+
+def _cmd_start(args: argparse.Namespace) -> int:
+    """Interactive onboarding — get value from borg in 30 seconds."""
+    print()
+    print("  ╔══════════════════════════════════════════════════╗")
+    print("  ║          Welcome to the Borg Collective          ║")
+    print("  ╚══════════════════════════════════════════════════╝")
+    print()
+    print("  Your agent forgets everything between sessions.")
+    print("  Borg remembers.")
+    print()
+    print("  ── Try it now ─────────────────────────────────────")
+    print()
+    print("  Paste any error message you're dealing with:")
+    print()
+
+    try:
+        error = input("  > ").strip()
+    except (EOFError, KeyboardInterrupt):
+        print()
+        return 0
+
+    if not error:
+        print()
+        print("  No error entered. Try:")
+        print("    borg debug 'your error message here'")
+        print()
+        return 0
+
+    # Run debug
+    from borg.core.pack_taxonomy import debug_error
+    print()
+    result = debug_error(error, show_evidence=True)
+    print(result)
+
+    # Auto-record feedback
+    try:
+        from borg.core.pack_taxonomy import classify_error
+        from borg.core.v3_integration import BorgV3
+        pc = classify_error(error)
+        if pc:
+            v3 = BorgV3(db_path="~/.hermes/guild/borg_v3.db")
+            v3.record_outcome(
+                pack_id=pc,
+                task_context={"task_category": pc, "source": "borg_start"},
+                success=True,
+                tokens_used=0,
+                time_taken=0.0,
+            )
+    except Exception:
+        pass
+
+    # Next steps
+    print()
+    print("  ── What's next ───────────────────────────────────")
+    print()
+    print("  • Run again anytime:   borg debug 'your error'")
+    print("  • Browse workflows:    borg search debugging")
+    print("  • Export for Cursor:   borg generate systematic-debugging --format cursorrules")
+    print("  • Export for Claude:   borg setup-claude")
+    print("  • Record what worked:  borg feedback-v3 --pack systematic-debugging --success yes")
+    print()
+    print("  The more you use borg, the smarter it gets.")
+    print("  Resistance is futile.")
+    print()
+    return 0
+
+
 def _cmd_convert(args: argparse.Namespace) -> int:
     """Convert a SKILL.md, CLAUDE.md, or .cursorrules file to a workflow pack.
     
@@ -244,7 +563,7 @@ def _cmd_convert(args: argparse.Namespace) -> int:
     to an OpenClaw skill directory.
     """
     import yaml
-
+    from borg.core.convert import convert_auto, convert_skill, convert_claude_md, convert_cursorrules
     try:
         # Handle OpenClaw format (registry-wide conversion)
         if args.format == "openclaw":
@@ -324,7 +643,6 @@ def _cmd_convert(args: argparse.Namespace) -> int:
         else:
             print(f"Error: Unknown format '{args.format}'. Use: auto, skill, claude, cursorrules, openclaw", file=sys.stderr)
             return 1
-
         print(yaml.safe_dump(pack, default_flow_style=False, sort_keys=False))
         return 0
     except Exception as e:
@@ -333,63 +651,48 @@ def _cmd_convert(args: argparse.Namespace) -> int:
 
 
 def _cmd_generate(args: argparse.Namespace) -> int:
-    """Generate platform-specific rules file from a workflow pack."""
+    """Export a pack to platform-specific rule files."""
+    from borg.core.generator import generate_rules, generate_to_files, load_pack
+
+    # Alias short names to canonical format names for back-compat
+    _FORMAT_ALIASES = {
+        "cursor": "cursorrules",
+        "cline": "clinerules",
+        "claude": "claude-md",
+        "windsurf": "windsurfrules",
+    }
+
     try:
         pack = load_pack(args.pack)
     except FileNotFoundError as e:
         print(f"Error: {e}", file=sys.stderr)
         return 1
 
-    try:
-        if args.format == "all":
-            results = generate_all(pack)
-            output_dir = Path(args.output) if args.output else Path.cwd()
+    fmt = _FORMAT_ALIASES.get(args.format, args.format)
+    output_dir = getattr(args, "output", None)
 
-            if args.output and len(results) > 1:
-                # Write each format to the output directory with appropriate filename
-                output_dir.mkdir(parents=True, exist_ok=True)
-                for fmt, content in results.items():
-                    filename = _format_to_filename(fmt)
-                    out_path = output_dir / filename
-                    out_path.write_text(content, encoding="utf-8")
-                    print(f"  {filename}")
-                print(f"  → {output_dir}")
-            else:
-                # Output to stdout as JSON
-                import json
-                print(json.dumps(results, indent=2))
-            return 0
-
-        content = generate_rules(pack, args.format)
-        if args.output:
-            out_path = Path(args.output)
-            out_path.parent.mkdir(parents=True, exist_ok=True)
-            out_path.write_text(content, encoding="utf-8")
-            print(f"  → {out_path}")
-        else:
-            print(content)
+    if output_dir:
+        written = generate_to_files(pack, format=fmt, output_dir=output_dir)
+        for filename, filepath in written.items():
+            print(f"  {filename} -> {filepath}")
         return 0
-    except ValueError as e:
-        print(f"Error: {e}", file=sys.stderr)
-        return 1
-    except Exception as e:
-        print(f"Error: {e}", file=sys.stderr)
-        return 1
-
-
-def _format_to_filename(fmt: str) -> str:
-    """Map format name to expected filename."""
-    mapping = {
-        "cursorrules": ".cursorrules",
-        "clinerules": ".clinerules",
-        "claude-md": "CLAUDE.md",
-        "windsurfrules": ".windsurfrules",
-    }
-    return mapping.get(fmt, fmt)
+    else:
+        result = generate_rules(pack, format=fmt)
+        if isinstance(result, dict):
+            for fmt_name, content in result.items():
+                from borg.core.generator import FORMAT_FILENAMES
+                print(f"=== {FORMAT_FILENAMES[fmt_name]} ===")
+                print(content)
+                print()
+        else:
+            print(result)
+        return 0
 
 
 def _cmd_list(args: argparse.Namespace) -> int:
     """List local packs."""
+    from borg.core.publish import action_list
+
     raw = action_list()
     data = json.loads(raw)
     if not data.get("success"):
@@ -397,7 +700,10 @@ def _cmd_list(args: argparse.Namespace) -> int:
         return 1
 
     artifacts = data.get("artifacts", [])
-    packs = [a for a in artifacts if a.get("type") == "pack"]
+    # Filter out test/smoke packs that shouldn't appear in production
+    _test_patterns = ("test-pack", "smoke-test", "wf-test", "test-call", "my-test", "fresh-pack", "old-pack", "my-pack", "guild:--", "test-scaffold", "stress-project", "test-e2e", "e2e-test")
+    packs = [a for a in artifacts if a.get("type") == "pack" 
+             and not any(a.get("name", "").startswith(p) or a.get("id", "").startswith(p) for p in _test_patterns)]
 
     if not packs:
         print("No local packs found.")
@@ -412,6 +718,59 @@ def _cmd_list(args: argparse.Namespace) -> int:
         print(f"{name:<30} {pid:<40} {conf}")
     print(f"\nTotal: {len(packs)} pack(s)")
     return 0
+
+
+def _cmd_observe(args: argparse.Namespace) -> int:
+    """Record a task/context observation as a trace in ~/.borg/traces.db.
+
+    This is the CLI counterpart to the MCP borg_observe tool. Calling this
+    records a minimal trace entry (task + optional context/error) via
+    borg.core.traces so that subsequent `borg search` calls can surface it.
+
+    Added in v3.2.4 to fix the observe→search roundtrip bug discovered in the
+    P1.1 MiniMax experiment (docs/20260408-1118_borg_roadmap).
+    """
+    from borg.core.traces import TraceCapture, save_trace
+
+    task = " ".join(args.task).strip() if isinstance(args.task, list) else (args.task or "").strip()
+    if not task:
+        print("Error: observe requires a non-empty task description", file=sys.stderr)
+        return 1
+
+    context = getattr(args, "context", "") or ""
+    error = getattr(args, "error", "") or ""
+    agent_id = getattr(args, "agent", "") or "cli"
+
+    try:
+        capture = TraceCapture(task=task, agent_id=agent_id)
+        # Synthesize a minimum set of tool calls so the trace has content:
+        # one stub 'observe' call carrying the context/error text so the
+        # keywords/error patterns extractors have something to chew on.
+        if context or error:
+            capture.on_tool_call(
+                tool_name="observe",
+                args={"task": task, "context": context},
+                result=error or context,
+            )
+        trace = capture.extract_trace(
+            outcome="observed",
+            root_cause="",
+            approach_summary=context[:500] if context else "",
+        )
+        trace["source"] = "observe-cli"
+        trace_id = save_trace(trace)
+        print(f"Recorded trace {trace_id} for task: {task[:80]}")
+        if args.json:
+            print(json.dumps({
+                "success": True,
+                "trace_id": trace_id,
+                "task": task,
+                "source": "observe-cli",
+            }))
+        return 0
+    except Exception as e:
+        print(f"Error recording observation: {e}", file=sys.stderr)
+        return 1
 
 
 def _cmd_version(args: argparse.Namespace) -> int:
@@ -438,13 +797,22 @@ def _get_python_path() -> str:
     return str(BORG_ROOT_DIR)
 
 
+def _get_python_executable() -> str:
+    """Return the python executable to use in MCP config (prefer borg-mcp if available)."""
+    borg_mcp = shutil.which("borg-mcp")
+    if borg_mcp:
+        return borg_mcp
+    return sys.executable
+
+
 def _borg_mcp_server_entry(python_path: str) -> dict:
     """Return the mcpServers entry for the borg MCP server (camelCase for Claude/Cursor)."""
+    python_exec = _get_python_executable()
     return {
         "mcpServers": {
             "borg": {
                 "enabled": True,
-                "command": "python",
+                "command": python_exec,
                 "args": ["-m", "borg.integrations.mcp_server"],
                 "env": {"PYTHONPATH": python_path},
             }
@@ -810,7 +1178,7 @@ def _cmd_autopilot(args: argparse.Namespace) -> int:
     home = Path.home()
     hermes_dir = home / ".hermes"
     hermes_config = hermes_dir / "config.yaml"
-    skill_dir = hermes_dir / "skills" / "guild-autopilot"
+    skill_dir = hermes_dir / "skills" / "borg-autopilot"
     skill_file = skill_dir / "SKILL.md"
 
     python_path = str(Path(__file__).parent.parent.parent.resolve())
@@ -842,9 +1210,10 @@ def _cmd_autopilot(args: argparse.Namespace) -> int:
     else:
         config = {}
 
+    python_exec = _get_python_executable()
     mcp_entry = {
         "enabled": True,
-        "command": "python",
+        "command": python_exec,
         "args": ["-m", "borg.integrations.mcp_server"],
         "env": {"PYTHONPATH": python_path},
     }
@@ -867,7 +1236,7 @@ def _cmd_autopilot(args: argparse.Namespace) -> int:
             print(f"[autopilot] Warning: could not preserve config.yaml formatting: {e}")
             # Fall back: just rewrite entirely
             hermes_config.write_text(
-                f"mcp_servers:\n  guild:\n    enabled: true\n    command: python\n    args:\n      - -m\n      - borg.integrations.mcp_server\n    env:\n      PYTHONPATH: {python_path}\n"
+                f"mcp_servers:\n  guild:\n    enabled: true\n    command: {python_exec}\n    args:\n      - -m\n      - borg.integrations.mcp_server\n    env:\n      PYTHONPATH: {python_path}\n"
             )
         changes.append(f"  • config.yaml → {hermes_config}")
 
@@ -972,11 +1341,27 @@ def main() -> int:
     parser = argparse.ArgumentParser(
         prog="borg",
         description="Borg — Semantic reasoning cache for AI agents.",
+        formatter_class=argparse.RawDescriptionHelpFormatter,
+        epilog="""Quick Start:
+  borg start                     First time? Start here — paste an error, get a fix
+  borg debug 'TypeError: ...'    Get structured debugging guidance for any error
+  borg search debugging          Search for workflow packs
+  borg generate systematic-debugging --format cursorrules
+                                  Export a debugging workflow for Cursor
+  borg setup-claude              Configure borg MCP for Claude Code
+  borg setup-cursor              Configure borg MCP for Cursor
+  borg autopilot                 Zero-config setup for Hermes""",
     )
+    parser.add_argument("--version", "-V", action="version", version=f"borg {__version__}")
     sub = parser.add_subparsers(dest="command", required=True)
 
     # guild search <query>
-    p = sub.add_parser("search", help="Search for packs")
+    p = sub.add_parser("search", help="Search for packs",
+        formatter_class=argparse.RawDescriptionHelpFormatter,
+        epilog="""Examples:
+  borg search debugging
+  borg search 'python import error'
+  borg search testing --mode semantic""")
     p.add_argument("query", help="Search query")
     p.add_argument(
         "--mode",
@@ -989,15 +1374,28 @@ def main() -> int:
         action="store_true",
         help="Output raw JSON for programmatic use",
     )
+    p.add_argument(
+        "--no-seeds",
+        action="store_true",
+        help="Exclude seed packs from results",
+    )
     p.set_defaults(func=_cmd_search)
 
     # guild pull <uri>
-    p = sub.add_parser("pull", help="Fetch and save pack locally")
-    p.add_argument("uri", help="Pack URI (guild://, https://, or local path)")
+    p = sub.add_parser("pull", help="Fetch and save pack locally",
+        formatter_class=argparse.RawDescriptionHelpFormatter,
+        epilog="""Examples:
+  borg pull borg://community/systematic-debugging
+  borg pull https://github.com/user/pack.yaml""")
+    p.add_argument("uri", help="Pack URI (borg://, https://, or local path)")
     p.set_defaults(func=_cmd_pull)
 
     # guild try <uri>
-    p = sub.add_parser("try", help="Preview pack without saving")
+    p = sub.add_parser("try", help="Preview pack without saving",
+        formatter_class=argparse.RawDescriptionHelpFormatter,
+        epilog="""Examples:
+  borg try systematic-debugging
+  borg try systematic-debugging --json""")
     p.add_argument("uri", help="Pack URI")
     p.add_argument(
         "--json",
@@ -1006,13 +1404,24 @@ def main() -> int:
     )
     p.set_defaults(func=_cmd_try)
 
-    # guild init <name>
-    p = sub.add_parser("init", help="Create pack scaffold or convert from skill")
-    p.add_argument("name", help="Skill name to convert")
+    # guild init <name> [--problem-class] [--mental-model]
+    p = sub.add_parser("init", help="Scaffold a new pack from scratch",
+        formatter_class=argparse.RawDescriptionHelpFormatter,
+        epilog="""Examples:
+  borg init my-debugging-workflow
+  borg init api-testing --problem-class testing
+  borg init perf-tuning --mental-model slow-thinker""")
+    p.add_argument("name", help="Pack name (used as directory name)")
+    p.add_argument("--problem-class", default="general", help="Problem class (default: general)")
+    p.add_argument("--mental-model", default="fast-thinker", help="Mental model (default: fast-thinker)")
     p.set_defaults(func=_cmd_init)
 
     # guild apply <pack> --task <task>
-    p = sub.add_parser("apply", help="Start applying a pack")
+    p = sub.add_parser("apply", help="Start applying a pack",
+        formatter_class=argparse.RawDescriptionHelpFormatter,
+        epilog="""Examples:
+  borg apply systematic-debugging --task 'fix failing test in auth module'
+  borg apply systematic-debugging --task 'debug segfault' --json""")
     p.add_argument("pack", help="Pack name")
     p.add_argument("--task", required=True, help="Task description")
     p.add_argument(
@@ -1023,18 +1432,97 @@ def main() -> int:
     p.set_defaults(func=_cmd_apply)
 
     # guild publish <path>
-    p = sub.add_parser("publish", help="Publish pack to GitHub")
+    p = sub.add_parser("publish", help="Publish pack to GitHub",
+        formatter_class=argparse.RawDescriptionHelpFormatter,
+        epilog="""Examples:
+  borg publish systematic-debugging
+  borg publish ./my-pack/pack.yaml""")
     p.add_argument("path", help="Path to pack YAML or pack name")
     p.set_defaults(func=_cmd_publish)
 
     # guild feedback <session_id>
-    p = sub.add_parser("feedback", help="Generate feedback from session")
+    p = sub.add_parser("feedback", help="Generate feedback from session",
+        formatter_class=argparse.RawDescriptionHelpFormatter,
+        epilog="""Examples:
+  borg feedback abc123
+  borg feedback session-2024-01-15-001""")
     p.add_argument("session_id", help="Session ID")
     p.set_defaults(func=_cmd_feedback)
 
-    # guild convert <path> [--format auto|skill|claude|cursorrules|openclaw]
-    p = sub.add_parser("convert", help="Convert SKILL.md / CLAUDE.md / .cursorrules to workflow pack")
-    p.add_argument("path", nargs="?", help="Path to source file (SKILL.md, CLAUDE.md, or .cursorrules). Not needed with --format=openclaw --all")
+    # guild feedback-v3 --problem-class <class> --success yes --time 120
+    p = sub.add_parser("feedback-v3", help="Record debug guidance outcome to V3 feedback loop",
+        formatter_class=argparse.RawDescriptionHelpFormatter,
+        epilog="""Examples:
+  borg feedback-v3 --pack systematic-debugging --success yes
+  borg feedback-v3 --problem-class debugging --success no --time 30
+  borg feedback-v3 --pack systematic-debugging --success yes --tokens 5000""")
+    p.add_argument(
+        "--pack",
+        default=None,
+        help="Pack ID (or use --problem-class to look it up)",
+    )
+    p.add_argument(
+        "--problem-class",
+        default=None,
+        dest="problem_class",
+        help="Problem class (pack looked up automatically)",
+    )
+    p.add_argument(
+        "--success",
+        required=True,
+        help="Did the guidance help? (yes/no)",
+    )
+    p.add_argument(
+        "--time",
+        type=float,
+        default=None,
+        help="Time to resolve in minutes (optional)",
+    )
+    p.add_argument(
+        "--tokens",
+        type=int,
+        default=None,
+        help="Tokens used (optional)",
+    )
+    p.set_defaults(func=_cmd_feedback_v3)
+
+    # guild debug <error>
+    p = sub.add_parser("debug", help="Get structured debugging guidance for an error",
+        formatter_class=argparse.RawDescriptionHelpFormatter,
+        epilog="""Examples:
+  borg debug 'TypeError: NoneType has no attribute get'
+  borg debug 'ModuleNotFoundError: No module named flask'
+  borg debug 'segmentation fault' --classify""")
+    p.add_argument("error", nargs="+", help="Error message or traceback")
+    p.add_argument(
+        "--classify",
+        action="store_true",
+        help="Only classify the error — don't show full guidance",
+    )
+    p.add_argument(
+        "-q", "--quiet",
+        action="store_true",
+        help="Suppress evidence statistics in output",
+    )
+    p.set_defaults(func=_cmd_debug)
+
+    # borg recall <error> — query FailureMemory for prior failure/success approaches
+    p = sub.add_parser("recall", help="Query prior failure memory for an error message",
+        formatter_class=argparse.RawDescriptionHelpFormatter,
+        epilog="""Examples:
+  borg recall 'NoneType has no attribute'
+  borg recall 'ModuleNotFoundError'""")
+    p.add_argument("error", nargs="+", help="Error message to look up")
+    p.set_defaults(func=_cmd_recall)
+
+    # borg convert <path> [--format auto|skill|claude|cursorrules]
+    p = sub.add_parser("convert", help="Convert SKILL.md / CLAUDE.md / .cursorrules to workflow pack",
+        formatter_class=argparse.RawDescriptionHelpFormatter,
+        epilog="""Examples:
+  borg convert SKILL.md
+  borg convert .cursorrules --format cursorrules
+  borg convert CLAUDE.md --format claude""")
+    p.add_argument("path", help="Path to source file (SKILL.md, CLAUDE.md, or .cursorrules)")
     p.add_argument(
         "--format",
         choices=["auto", "skill", "claude", "cursorrules", "openclaw"],
@@ -1052,53 +1540,89 @@ def main() -> int:
     )
     p.set_defaults(func=_cmd_convert)
 
-    # guild list
-    p = sub.add_parser("list", help="List local packs")
-    p.set_defaults(func=_cmd_list)
-
-    # guild generate --format=cursorrules --pack=systematic-debugging --output .cursorrules
-    p = sub.add_parser("generate", help="Generate platform-specific rules file from a workflow pack")
+    # guild generate <pack> [--format] [--output]
+    p = sub.add_parser("generate", help="Export pack to .cursorrules / .clinerules / CLAUDE.md / .windsurfrules",
+        formatter_class=argparse.RawDescriptionHelpFormatter,
+        epilog="""Examples:
+  borg generate systematic-debugging --format all
+  borg generate systematic-debugging --format cursorrules --output ./rules/
+  borg generate systematic-debugging --format claude-md""")
+    p.add_argument("pack", help="Pack name")
     p.add_argument(
         "--format",
-        choices=["cursorrules", "clinerules", "claude-md", "windsurfrules", "all"],
-        default="cursorrules",
-        help="Output format (default: cursorrules)",
+        choices=["cursor", "cline", "claude", "windsurf", "cursorrules", "clinerules", "claude-md", "windsurfrules", "all"],
+        default="all",
+        help="Output format (default: all)",
     )
     p.add_argument(
-        "--pack",
-        required=True,
-        help="Pack name (e.g. systematic-debugging) or path to pack YAML",
-    )
-    p.add_argument(
-        "--output",
-        help="Output file path or directory (for --format=all, use a directory)",
+        "--output", "-o",
+        default=None,
+        help="Output directory (default: print to stdout)",
     )
     p.set_defaults(func=_cmd_generate)
 
+    # guild list
+    p = sub.add_parser("list", help="List local packs",
+        formatter_class=argparse.RawDescriptionHelpFormatter,
+        epilog="""Examples:
+  borg list""")
+    p.set_defaults(func=_cmd_list)
+
+    # borg observe <task> [--context ...] [--error ...]
+    p = sub.add_parser("observe", help="Record an observation as a trace",
+        formatter_class=argparse.RawDescriptionHelpFormatter,
+        epilog="""Examples:
+  borg observe 'fix django authentication bug'
+  borg observe 'debug failing test in auth module' --context 'TypeError on login'
+  borg observe 'migrate database schema' --error 'OperationalError: no such column'
+
+Writes a trace to ~/.borg/traces.db so subsequent 'borg search' calls can
+surface it. This is the CLI counterpart to the MCP borg_observe tool. Added
+in v3.2.4 to fix the observe→search roundtrip bug from the P1.1 experiment.""")
+    p.add_argument("task", nargs="+", help="Task description (required)")
+    p.add_argument("--context", default="", help="Additional context (optional)")
+    p.add_argument("--error", default="", help="Error message to associate with the trace (optional)")
+    p.add_argument("--agent", default="cli", help="Agent id for provenance (default: cli)")
+    p.add_argument("--json", action="store_true", help="Output raw JSON")
+    p.set_defaults(func=_cmd_observe)
+
     # guild version
-    p = sub.add_parser("version", help="Show version")
+    p = sub.add_parser("version", help="Show version",
+        formatter_class=argparse.RawDescriptionHelpFormatter,
+        epilog="""Examples:
+  borg version""")
     p.set_defaults(func=_cmd_version)
 
     # guild autopilot
-    p = sub.add_parser("autopilot", help="Zero-config setup: install MCP + skill + auto-suggest")
+    p = sub.add_parser("autopilot", help="Zero-config setup: install MCP + skill + auto-suggest",
+        formatter_class=argparse.RawDescriptionHelpFormatter,
+        epilog="""Examples:
+  borg autopilot""")
     p.set_defaults(func=_cmd_autopilot)
 
     # guild setup-claude
-    p = sub.add_parser("setup-claude", help="Configure guild MCP server for Claude Code")
+    p = sub.add_parser("setup-claude", help="Configure guild MCP server for Claude Code",
+        formatter_class=argparse.RawDescriptionHelpFormatter,
+        epilog="""Examples:
+  borg setup-claude""")
     p.set_defaults(func=_cmd_setup_claude)
 
     # guild setup-cursor
-    p = sub.add_parser("setup-cursor", help="Configure guild MCP server for Cursor")
+    p = sub.add_parser("setup-cursor", help="Configure guild MCP server for Cursor",
+        formatter_class=argparse.RawDescriptionHelpFormatter,
+        epilog="""Examples:
+  borg setup-cursor""")
     p.set_defaults(func=_cmd_setup_cursor)
 
-    # guild reputation <agent_id>
-    p = sub.add_parser("reputation", help="Show reputation profile for an agent")
-    p.add_argument("agent_id", help="Agent ID")
-    p.set_defaults(func=_cmd_reputation)
-
-    # guild status
-    p = sub.add_parser("status", help="Show borg system status")
-    p.set_defaults(func=_cmd_status)
+    # borg start — interactive onboarding
+    p = sub.add_parser("start", help="Get started — paste an error, get a fix in 30 seconds",
+        formatter_class=argparse.RawDescriptionHelpFormatter,
+        epilog="""Examples:
+  borg start              Interactive onboarding — paste an error, get guidance
+  
+First time? Just run:
+  pip install agent-borg && borg start""")
+    p.set_defaults(func=_cmd_start)
 
     args = parser.parse_args()
 

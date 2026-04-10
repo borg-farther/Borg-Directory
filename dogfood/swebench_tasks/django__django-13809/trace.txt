@@ -1,0 +1,8 @@
+REASONING TRACE FOR: django__django-13809
+
+HINTS FROM BUG DISCUSSION:
+Sounds reasonable.
+​PR
+
+Note: These hints are from the original bug discussion and may contain 
+insights about the root cause, proposed approaches, and potential pitfalls.

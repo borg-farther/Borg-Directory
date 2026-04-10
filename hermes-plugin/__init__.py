@@ -246,8 +246,21 @@ def register(ctx) -> None:
                 _V2_BRIDGE_ENABLED = False
                 logger.info("Guild v2 bridge disabled by config — plugin is a no-op")
                 return
+            # Also check nudge sub-config (all nudge settings under agent.borg.nudge)
+            borg_cfg = agent_cfg.get("borg", {})
+            nudge_cfg = borg_cfg.get("nudge", {})
+            _NUDGE_ENABLED = nudge_cfg.get("enabled", True)
+            _NUDGE_COOLDOWN = nudge_cfg.get("cooldown_seconds", 120)
+            _NUDGE_MIN_TURNS = nudge_cfg.get("min_turns_between", 3)
+        else:
+            _NUDGE_ENABLED = True
+            _NUDGE_COOLDOWN = 120
+            _NUDGE_MIN_TURNS = 3
     except Exception as exc:
         logger.debug("Could not read config.yaml (using defaults): %s", exc)
+        _NUDGE_ENABLED = True
+        _NUDGE_COOLDOWN = 120
+        _NUDGE_MIN_TURNS = 3
 
     if not _GUILD_V2_ENABLED:
         logger.info("HERMES_GUILD_V2_ENABLED=false — plugin is a no-op")
@@ -275,5 +288,96 @@ def register(ctx) -> None:
         _register_lifecycle_hooks(ctx._manager)
     except Exception as exc:
         logger.debug("Could not register lifecycle hooks: %s", exc)
+
+    # Step 4: Start the NudgeEngine (background, non-blocking)
+    # The NudgeEngine monitors conversation context and proactively
+    # suggests packs without blocking the agent loop.
+    try:
+        from borg.integrations.nudge import NudgeEngine
+
+        _nudge_engine = NudgeEngine(
+            cooldown_seconds=_NUDGE_COOLDOWN,
+            min_turns_between=_NUDGE_MIN_TURNS,
+        )
+        _nudge_engine.start()
+
+        # Mutable turn index tracked across submit calls
+        _nudge_turn_index = [0]
+
+        def _submit_turn(
+            user_message: str,
+            agent_messages: list,
+            tool_errors: list,
+            tried_packs: Optional[list] = None,
+        ) -> None:
+            """Submit a conversation turn to the NudgeEngine."""
+            _nudge_engine.submit_turn(
+                turn_index=_nudge_turn_index[0],
+                user_message=user_message,
+                agent_messages=agent_messages,
+                tool_errors=tool_errors,
+                tried_packs=tried_packs,
+            )
+            _nudge_turn_index[0] += 1
+
+        def _poll_nudge():
+            """Poll for a pending nudge from the NudgeEngine."""
+            return _nudge_engine.poll_nudge()
+
+        # Expose via ctx so run_agent.py or other components can use them
+        ctx._borg_nudge_engine = _nudge_engine
+        ctx._borg_submit_turn = _submit_turn
+        ctx._borg_poll_nudge = _poll_nudge
+
+        logger.info(
+            "NudgeEngine started (cooldown=%ds, min_turns=%d)",
+            _NUDGE_COOLDOWN,
+            _NUDGE_MIN_TURNS,
+        )
+    except Exception as exc:
+        logger.warning("Could not start NudgeEngine: %s", exc)
+
+    # Step 5: Start periodic dojo session analysis (background, non-blocking)
+    # This caches SessionAnalysis for use by borg.core.search.classify_task()
+    # and feeds results into nudge, reputation, and analytics modules.
+    try:
+        import threading
+        import time as _time
+
+        _dojo_analysis_done = [False]  # mutable container for closure
+
+        def _run_dojo_analysis():
+            """Run dojo analysis once and cache results for search augmentation."""
+            try:
+                from borg.dojo import BORG_DOJO_ENABLED
+                if not BORG_DOJO_ENABLED:
+                    logger.debug("Dojo analysis skipped (BORG_DOJO_ENABLED=false)")
+                    return
+                from borg.dojo.pipeline import analyze_recent_sessions
+                analysis = analyze_recent_sessions(days=7)
+                logger.info(
+                    "Dojo periodic analysis complete: %d sessions, %.1f%% success rate",
+                    analysis.sessions_analyzed,
+                    analysis.overall_success_rate,
+                )
+            except Exception as exc:
+                logger.warning("Dojo periodic analysis failed: %s", exc)
+            finally:
+                _dojo_analysis_done[0] = True
+
+        def _periodic_dojo_check():
+            """Background thread: runs dojo analysis every 50 turns or on failure spike."""
+            _time.sleep(5)  # Small delay to let the agent start up first
+            _run_dojo_analysis()
+
+        _dojo_thread = threading.Thread(
+            target=_periodic_dojo_check,
+            daemon=True,
+            name="borg-dojo-analysis",
+        )
+        _dojo_thread.start()
+        logger.info("Dojo periodic session analysis thread started")
+    except Exception as exc:
+        logger.warning("Could not start dojo periodic analysis: %s", exc)
 
     logger.info("Guild v2 plugin loaded successfully")

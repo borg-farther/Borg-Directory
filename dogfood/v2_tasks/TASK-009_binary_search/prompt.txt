@@ -1,0 +1,1 @@
+The search functions in repo/search.py have multiple bugs: (1) binary_search uses right=len(arr) instead of len(arr)-1, causing potential IndexError, (2) find_first_occurrence has right=mid instead of right=mid-1 in the else branch, causing infinite loop when target is not found. Fix all bugs.

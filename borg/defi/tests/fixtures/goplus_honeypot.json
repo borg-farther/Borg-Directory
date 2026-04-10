@@ -1,0 +1,17 @@
+{
+  "is_honeypot": "true",
+  "token_symbol": "HONEYPOT",
+  "token_name": "Honeypot Token",
+  "total_supply": "1000000000000000000000000",
+  "owner_address": "0x1234567890123456789012345678901234567890",
+  "is_mintable": "true",
+  "is_proxy": "false",
+  "transfer_tax": "50",
+  "sell_tax": "99",
+  "buy_tax": "50",
+  "trading_honeypot": "honeypot",
+  "can_sell": "false",
+  "honeypot_with_same_token": "true",
+  "trust_list": "fail",
+  "code": "Ok"
+}

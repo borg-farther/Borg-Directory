@@ -1,0 +1,5 @@
+{
+    "expected": "nextjs_use_client",
+    "actual": null,
+    "kind": "correct_no_match"
+}

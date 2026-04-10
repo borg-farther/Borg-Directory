@@ -1,0 +1,5 @@
+{
+    "expected": "shell_command_not_found",
+    "actual": null,
+    "kind": "correct_no_match"
+}

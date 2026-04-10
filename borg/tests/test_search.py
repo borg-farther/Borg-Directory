@@ -176,7 +176,8 @@ class TestBorgSearch:
 
         with patch("borg.core.search._fetch_index", return_value=fake_index):
             with patch("borg.core.search.BORG_DIR", Path("/nonexistent")):
-                result = json.loads(borg_search(""))
+                with patch("borg.core.search.get_seed_packs", return_value=[]):
+                    result = json.loads(borg_search(""))
 
         assert result["success"] is True
         assert result["total"] == 2
@@ -974,7 +975,7 @@ class TestCheckForSuggestion:
         assert "pack_name" in result
         assert result["pack_name"] == "deploy-pipeline"
         assert "pack_uri" in result
-        assert "borg://hermes/deploy-pipeline" in result["pack_uri"]
+        assert "guild://hermes/deploy-pipeline" in result["pack_uri"]
         assert "search_terms" in result
         assert "match_count" in result
         assert result["match_count"] >= 1
@@ -1124,12 +1125,15 @@ phases:
 escalation_rules: []
 provenance:
   author: Author
-  created: '2026-03-01T00:00:00Z'
+  created: '{fresh_date}'
   confidence: guessed
   evidence: ''
   failure_cases:
     - Case 1
 """
+        from datetime import datetime, timezone
+        fresh_date = (datetime.now(timezone.utc)).strftime("%Y-%m-%dT%H:%M:%SZ")
+        fresh_pack_yaml = fresh_pack_yaml.replace("{fresh_date}", fresh_date)
 
         resolved_url = "https://example.com/fresh-pack.yaml"
 

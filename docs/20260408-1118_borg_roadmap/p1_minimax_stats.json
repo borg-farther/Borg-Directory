@@ -1,0 +1,118 @@
+{
+  "jsonl": "/root/hermes-workspace/borg/docs/20260408-1118_borg_roadmap/p1_minimax_results.jsonl",
+  "n_total_rows": 48,
+  "n_eval_rows": 45,
+  "per_condition": {
+    "C0_no_borg": {
+      "n": 15,
+      "skipped": 0,
+      "successes": 0,
+      "pass_rate": 0.0,
+      "pass_rate_ci95_lo": 0.0,
+      "pass_rate_ci95_hi": 0.218019360910534
+    },
+    "C1_borg_empty": {
+      "n": 15,
+      "skipped": 0,
+      "successes": 0,
+      "pass_rate": 0.0,
+      "pass_rate_ci95_lo": 0.0,
+      "pass_rate_ci95_hi": 0.218019360910534
+    },
+    "C2_borg_seeded": {
+      "n": 15,
+      "skipped": 0,
+      "successes": 0,
+      "pass_rate": 0.0,
+      "pass_rate_ci95_lo": 0.0,
+      "pass_rate_ci95_hi": 0.218019360910534
+    }
+  },
+  "glmm": {
+    "n_rows": 45,
+    "n_tasks": 15,
+    "overall_pass": 0,
+    "glmm_bayes_error": "ValueError: endog values must be 0 and 1, and not all identical",
+    "gee": {
+      "Intercept": {
+        "coef": null,
+        "se": null,
+        "z": null,
+        "p": null,
+        "or": null,
+        "or_ci_lo": null,
+        "or_ci_hi": null
+      },
+      "C(condition, Treatment('C0_no_borg'))[T.C1_borg_empty]": {
+        "coef": null,
+        "se": null,
+        "z": null,
+        "p": null,
+        "or": null,
+        "or_ci_lo": null,
+        "or_ci_hi": null
+      },
+      "C(condition, Treatment('C0_no_borg'))[T.C2_borg_seeded]": {
+        "coef": null,
+        "se": null,
+        "z": null,
+        "p": null,
+        "or": null,
+        "or_ci_lo": null,
+        "or_ci_hi": null
+      }
+    },
+    "cochrans_q_n_complete_tasks": 15,
+    "cochrans_q": {
+      "stat": null,
+      "df": 2,
+      "p": null
+    },
+    "mcnemar": {
+      "C0_no_borg_vs_C1_borg_empty": {
+        "table": [
+          [
+            15,
+            0
+          ],
+          [
+            0,
+            0
+          ]
+        ],
+        "stat": 0.0,
+        "p": 1.0
+      },
+      "C0_no_borg_vs_C2_borg_seeded": {
+        "table": [
+          [
+            15,
+            0
+          ],
+          [
+            0,
+            0
+          ]
+        ],
+        "stat": 0.0,
+        "p": 1.0
+      },
+      "C1_borg_empty_vs_C2_borg_seeded": {
+        "table": [
+          [
+            15,
+            0
+          ],
+          [
+            0,
+            0
+          ]
+        ],
+        "stat": 0.0,
+        "p": 1.0
+      }
+    },
+    "degenerate_outcome": true,
+    "degenerate_note": "All 45 eval rows have success=False. GLMM/GEE cannot estimate effects (complete separation / floor effect). Report descriptive Clopper-Pearson CIs per condition instead."
+  }
+}

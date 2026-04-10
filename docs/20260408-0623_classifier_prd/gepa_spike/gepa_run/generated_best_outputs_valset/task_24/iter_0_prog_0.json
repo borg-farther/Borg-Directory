@@ -1,0 +1,5 @@
+{
+    "expected": "migration_state_desync",
+    "actual": null,
+    "kind": "correct_no_match"
+}

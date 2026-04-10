@@ -1,0 +1,30 @@
+{
+  "schema_version": "1.0",
+  "fixture_name": "swebench_coldstart_50",
+  "description": "50-query cold-start benchmark for borg v3.3.0 SWE-bench Lite evaluation",
+  "total_queries": 50,
+  "problem_classes": [
+    "null_pointer_chain",
+    "import_cycle",
+    "migration_state_desync",
+    "schema_drift",
+    "flaky_test",
+    "merge_conflict",
+    "resource_exhaustion",
+    "permission_denied",
+    "missing_dependency"
+  ],
+  "frameworks": [
+    "django",
+    "python",
+    "pytest",
+    "git",
+    "docker",
+    "bash"
+  ],
+  "source": "SWE-bench Lite (https://www.swebench.com/lite)",
+  "fixture_file": "swebench_coldstart_50.json",
+  "benchmark_script": "/root/hermes-workspace/borg/eval/coldstart_benchmark.py",
+  "created_at": "2026-04-10T09:28:00Z",
+  "version": "1.0"
+}

@@ -1,0 +1,387 @@
+2026-04-01 18:58:33,016 - INFO - Building image sweb.eval.x86_64.django__django-14559:latest
+Using dockerfile:
+FROM --platform=linux/x86_64 sweb.env.py.x86_64.297af196949a2a635bce66:latest
+
+COPY ./setup_repo.sh /root/
+RUN sed -i -e 's/\r$//' /root/setup_repo.sh
+RUN /bin/bash /root/setup_repo.sh
+
+WORKDIR /testbed/
+
+Adding (1) setup scripts to image build repo
+2026-04-01 18:58:33,016 - INFO - [SETUP SCRIPT] setup_repo.sh:
+#!/bin/bash
+set -euxo pipefail
+git clone -o origin  --single-branch https://github.com/django/django /testbed
+chmod -R 777 /testbed
+cd /testbed
+git reset --hard d79be3ed39b76d3e34431873eec16f6dd354ab17
+git remote remove origin
+TARGET_TIMESTAMP=$(git show -s --format=%ci d79be3ed39b76d3e34431873eec16f6dd354ab17)
+git tag -l | while read tag; do TAG_COMMIT=$(git rev-list -n 1 "$tag"); TAG_TIME=$(git show -s --format=%ci "$TAG_COMMIT"); if [[ "$TAG_TIME" > "$TARGET_TIMESTAMP" ]]; then git tag -d "$tag"; fi; done
+git reflog expire --expire=now --all
+git gc --prune=now --aggressive
+AFTER_TIMESTAMP=$(date -d "$TARGET_TIMESTAMP + 1 second" '+%Y-%m-%d %H:%M:%S')
+COMMIT_COUNT=$(git log --oneline --all --since="$AFTER_TIMESTAMP" | wc -l)
+[ "$COMMIT_COUNT" -eq 0 ] || exit 1
+source /opt/miniconda3/bin/activate
+conda activate testbed
+echo "Current environment: $CONDA_DEFAULT_ENV"
+python -m pip install -e .
+git config --global user.email setup@swebench.config
+git config --global user.name SWE-bench
+git commit --allow-empty -am SWE-bench
+
+2026-04-01 18:58:33,017 - INFO - Building docker image sweb.eval.x86_64.django__django-14559:latest in logs/build_images/instances/sweb.eval.x86_64.django__django-14559__latest with platform linux/x86_64
+2026-04-01 18:58:33,038 - INFO - Step 1/5 : FROM --platform=linux/x86_64 sweb.env.py.x86_64.297af196949a2a635bce66:latest
+2026-04-01 18:58:33,038 - INFO - 
+2026-04-01 18:58:33,050 - INFO - ---> dbb522899096
+2026-04-01 18:58:33,050 - INFO - Step 2/5 : COPY ./setup_repo.sh /root/
+2026-04-01 18:58:33,050 - INFO - 
+2026-04-01 18:59:37,648 - INFO - ---> db8046654c9e
+2026-04-01 18:59:37,648 - INFO - Step 3/5 : RUN sed -i -e 's/\r$//' /root/setup_repo.sh
+2026-04-01 18:59:37,648 - INFO - 
+2026-04-01 18:59:37,715 - INFO - ---> Running in d8ef0d0e6b78
+2026-04-01 18:59:51,867 - INFO - ---> Removed intermediate container d8ef0d0e6b78
+2026-04-01 18:59:51,868 - INFO - ---> eee5a2119e5c
+2026-04-01 18:59:51,868 - INFO - Step 4/5 : RUN /bin/bash /root/setup_repo.sh
+2026-04-01 18:59:51,868 - INFO - 
+2026-04-01 18:59:51,995 - INFO - ---> Running in 47a85b9f8300
+2026-04-01 18:59:52,490 - INFO - + git clone -o origin --single-branch https://github.com/django/django /testbed
+2026-04-01 18:59:52,495 - INFO - Cloning into '/testbed'...
+2026-04-01 19:00:19,558 - INFO - Updating files:  34% (2456/7029)
+2026-04-01 19:00:19,559 - INFO - Updating files:  35% (2461/7029)
+2026-04-01 19:00:19,600 - INFO - Updating files:  36% (2531/7029)
+2026-04-01 19:00:19,649 - INFO - Updating files:  37% (2601/7029)
+2026-04-01 19:00:19,730 - INFO - Updating files:  38% (2672/7029)
+2026-04-01 19:00:19,769 - INFO - Updating files:  39% (2742/7029)
+2026-04-01 19:00:19,815 - INFO - Updating files:  40% (2812/7029)
+2026-04-01 19:00:19,856 - INFO - Updating files:  41% (2882/7029)
+2026-04-01 19:00:19,885 - INFO - Updating files:  42% (2953/7029)
+2026-04-01 19:00:19,916 - INFO - Updating files:  43% (3023/7029)
+2026-04-01 19:00:19,956 - INFO - Updating files:  44% (3093/7029)
+2026-04-01 19:00:19,991 - INFO - Updating files:  45% (3164/7029)
+2026-04-01 19:00:20,022 - INFO - Updating files:  46% (3234/7029)
+2026-04-01 19:00:20,046 - INFO - Updating files:  47% (3304/7029)
+2026-04-01 19:00:20,087 - INFO - Updating files:  48% (3374/7029)
+2026-04-01 19:00:20,154 - INFO - Updating files:  49% (3445/7029)
+2026-04-01 19:00:20,200 - INFO - Updating files:  50% (3515/7029)
+2026-04-01 19:00:20,222 - INFO - Updating files:  51% (3585/7029)
+2026-04-01 19:00:20,262 - INFO - Updating files:  52% (3656/7029)
+2026-04-01 19:00:20,300 - INFO - Updating files:  53% (3726/7029)
+2026-04-01 19:00:20,348 - INFO - Updating files:  54% (3796/7029)
+2026-04-01 19:00:20,384 - INFO - Updating files:  55% (3866/7029)
+2026-04-01 19:00:20,404 - INFO - Updating files:  56% (3937/7029)
+2026-04-01 19:00:20,425 - INFO - Updating files:  57% (4007/7029)
+2026-04-01 19:00:20,436 - INFO - Updating files:  58% (4077/7029)
+2026-04-01 19:00:20,450 - INFO - Updating files:  59% (4148/7029)
+2026-04-01 19:00:20,465 - INFO - Updating files:  60% (4218/7029)
+2026-04-01 19:00:20,482 - INFO - Updating files:  61% (4288/7029)
+2026-04-01 19:00:20,496 - INFO - Updating files:  62% (4358/7029)
+2026-04-01 19:00:20,519 - INFO - Updating files:  63% (4429/7029)
+2026-04-01 19:00:20,537 - INFO - Updating files:  64% (4499/7029)
+2026-04-01 19:00:20,553 - INFO - Updating files:  64% (4564/7029)
+2026-04-01 19:00:20,554 - INFO - Updating files:  65% (4569/7029)
+2026-04-01 19:00:20,572 - INFO - Updating files:  66% (4640/7029)
+2026-04-01 19:00:20,586 - INFO - Updating files:  67% (4710/7029)
+2026-04-01 19:00:20,601 - INFO - Updating files:  68% (4780/7029)
+2026-04-01 19:00:20,619 - INFO - Updating files:  69% (4851/7029)
+2026-04-01 19:00:20,634 - INFO - Updating files:  70% (4921/7029)
+2026-04-01 19:00:20,648 - INFO - Updating files:  71% (4991/7029)
+2026-04-01 19:00:20,661 - INFO - Updating files:  72% (5061/7029)
+2026-04-01 19:00:20,712 - INFO - Updating files:  73% (5132/7029)
+2026-04-01 19:00:20,735 - INFO - Updating files:  74% (5202/7029)
+2026-04-01 19:00:20,787 - INFO - Updating files:  75% (5272/7029)
+2026-04-01 19:00:20,802 - INFO - Updating files:  76% (5343/7029)
+2026-04-01 19:00:20,863 - INFO - Updating files:  77% (5413/7029)
+2026-04-01 19:00:20,886 - INFO - Updating files:  78% (5483/7029)
+2026-04-01 19:00:20,908 - INFO - Updating files:  79% (5553/7029)
+2026-04-01 19:00:20,932 - INFO - Updating files:  80% (5624/7029)
+2026-04-01 19:00:20,951 - INFO - Updating files:  81% (5694/7029)
+2026-04-01 19:00:20,965 - INFO - Updating files:  82% (5764/7029)
+2026-04-01 19:00:20,998 - INFO - Updating files:  83% (5835/7029)
+2026-04-01 19:00:21,014 - INFO - Updating files:  84% (5905/7029)
+2026-04-01 19:00:21,028 - INFO - Updating files:  85% (5975/7029)
+2026-04-01 19:00:21,052 - INFO - Updating files:  86% (6045/7029)
+2026-04-01 19:00:21,137 - INFO - Updating files:  87% (6116/7029)
+2026-04-01 19:00:21,159 - INFO - Updating files:  88% (6186/7029)
+2026-04-01 19:00:21,170 - INFO - Updating files:  89% (6256/7029)
+2026-04-01 19:00:21,185 - INFO - Updating files:  90% (6327/7029)
+2026-04-01 19:00:21,198 - INFO - Updating files:  91% (6397/7029)
+2026-04-01 19:00:21,215 - INFO - Updating files:  92% (6467/7029)
+2026-04-01 19:00:21,233 - INFO - Updating files:  93% (6537/7029)
+2026-04-01 19:00:21,249 - INFO - Updating files:  94% (6608/7029)
+2026-04-01 19:00:21,257 - INFO - Updating files:  95% (6678/7029)
+2026-04-01 19:00:21,270 - INFO - Updating files:  96% (6748/7029)
+2026-04-01 19:00:21,301 - INFO - Updating files:  97% (6819/7029)
+2026-04-01 19:00:21,347 - INFO - Updating files:  98% (6889/7029)
+2026-04-01 19:00:21,386 - INFO - Updating files:  99% (6959/7029)
+2026-04-01 19:00:21,406 - INFO - Updating files: 100% (7029/7029)Updating files: 100% (7029/7029), done.
+2026-04-01 19:00:21,430 - INFO - + chmod -R 777 /testbed
+2026-04-01 19:00:21,623 - INFO - + cd /testbed
++ git reset --hard d79be3ed39b76d3e34431873eec16f6dd354ab17
+2026-04-01 19:00:22,744 - INFO - Updating files:  67% (4767/7095)
+2026-04-01 19:00:22,751 - INFO - Updating files:  68% (4825/7095)
+2026-04-01 19:00:22,772 - INFO - Updating files:  69% (4896/7095)
+2026-04-01 19:00:22,788 - INFO - Updating files:  70% (4967/7095)
+2026-04-01 19:00:22,802 - INFO - Updating files:  71% (5038/7095)
+2026-04-01 19:00:22,815 - INFO - Updating files:  72% (5109/7095)
+2026-04-01 19:00:22,828 - INFO - Updating files:  73% (5180/7095)
+2026-04-01 19:00:22,844 - INFO - Updating files:  74% (5251/7095)
+2026-04-01 19:00:22,882 - INFO - Updating files:  75% (5322/7095)
+2026-04-01 19:00:22,913 - INFO - Updating files:  76% (5393/7095)
+2026-04-01 19:00:22,970 - INFO - Updating files:  77% (5464/7095)
+2026-04-01 19:00:23,019 - INFO - Updating files:  78% (5535/7095)
+2026-04-01 19:00:23,113 - INFO - Updating files:  79% (5606/7095)
+2026-04-01 19:00:23,154 - INFO - Updating files:  80% (5676/7095)
+2026-04-01 19:00:23,168 - INFO - Updating files:  81% (5747/7095)
+2026-04-01 19:00:23,221 - INFO - Updating files:  82% (5818/7095)
+2026-04-01 19:00:23,265 - INFO - Updating files:  83% (5889/7095)
+2026-04-01 19:00:23,286 - INFO - Updating files:  84% (5960/7095)
+2026-04-01 19:00:23,311 - INFO - Updating files:  85% (6031/7095)
+2026-04-01 19:00:23,324 - INFO - Updating files:  86% (6102/7095)
+2026-04-01 19:00:23,416 - INFO - Updating files:  87% (6173/7095)
+2026-04-01 19:00:23,504 - INFO - Updating files:  88% (6244/7095)
+2026-04-01 19:00:23,564 - INFO - Updating files:  89% (6315/7095)
+2026-04-01 19:00:23,618 - INFO - Updating files:  90% (6386/7095)
+2026-04-01 19:00:23,643 - INFO - Updating files:  91% (6457/7095)
+2026-04-01 19:00:23,664 - INFO - Updating files:  92% (6528/7095)
+2026-04-01 19:00:23,685 - INFO - Updating files:  93% (6599/7095)
+2026-04-01 19:00:23,712 - INFO - Updating files:  94% (6670/7095)
+2026-04-01 19:00:23,736 - INFO - Updating files:  95% (6741/7095)
+2026-04-01 19:00:23,738 - INFO - Updating files:  95% (6748/7095)
+2026-04-01 19:00:23,771 - INFO - Updating files:  96% (6812/7095)
+2026-04-01 19:00:23,799 - INFO - Updating files:  97% (6883/7095)
+2026-04-01 19:00:23,818 - INFO - Updating files:  98% (6954/7095)
+2026-04-01 19:00:23,849 - INFO - Updating files:  99% (7025/7095)
+2026-04-01 19:00:23,867 - INFO - Updating files: 100% (7095/7095)Updating files: 100% (7095/7095), done.
+2026-04-01 19:00:23,898 - INFO - HEAD is now at d79be3ed39 Refs #32880 -- Rearranged logging security notes.
+2026-04-01 19:00:23,910 - INFO - + git remote remove origin
+2026-04-01 19:00:23,922 - INFO - ++ git show -s --format=%ci d79be3ed39b76d3e34431873eec16f6dd354ab17
+2026-04-01 19:00:23,925 - INFO - + TARGET_TIMESTAMP='2021-06-28 11:46:37 +0200'
+2026-04-01 19:00:23,928 - INFO - + git tag -l
++ read tag
+2026-04-01 19:00:23,929 - INFO - ++ git rev-list -n 1 1.0
+2026-04-01 19:00:23,933 - INFO - + TAG_COMMIT=42ef6557a9b88cfc277eb79ddb980e1c62add144
+2026-04-01 19:00:23,935 - INFO - ++ git show -s --format=%ci 42ef6557a9b88cfc277eb79ddb980e1c62add144
+2026-04-01 19:00:23,938 - INFO - + TAG_TIME='2008-09-03 23:38:45 +0000'
++ [[ 2008-09-03 23:38:45 +0000 > 2021-06-28 11:46:37 +0200 ]]
++ read tag
+2026-04-01 19:00:23,938 - INFO - ++ git rev-list -n 1 1.1
+2026-04-01 19:00:23,941 - INFO - + TAG_COMMIT=27358368879cc7d56756f12155393d3277fc52aa
+2026-04-01 19:00:23,941 - INFO - ++ git show -s --format=%ci 27358368879cc7d56756f12155393d3277fc52aa
+2026-04-01 19:00:23,946 - INFO - + TAG_TIME='2009-07-29 05:51:03 +0000'
++ [[ 2009-07-29 05:51:03 +0000 > 2021-06-28 11:46:37 +0200 ]]
++ read tag
+2026-04-01 19:00:23,946 - INFO - ++ git rev-list -n 1 1.2
+2026-04-01 19:00:23,951 - INFO - + TAG_COMMIT=6276167b728256b59071781b2f40d3f48f85cbbe
+2026-04-01 19:00:23,952 - INFO - ++ git show -s --format=%ci 6276167b728256b59071781b2f40d3f48f85cbbe
+2026-04-01 19:00:23,954 - INFO - + TAG_TIME='2010-05-17 17:31:49 +0000'
++ [[ 2010-05-17 17:31:49 +0000 > 2021-06-28 11:46:37 +0200 ]]
++ read tag
+2026-04-01 19:00:23,956 - INFO - ++ git rev-list -n 1 1.2.1
+2026-04-01 19:00:23,960 - INFO - + TAG_COMMIT=6cffb9b8804278c4a617109e65493dc782ef2f7d
+2026-04-01 19:00:23,961 - INFO - ++ git show -s --format=%ci 6cffb9b8804278c4a617109e65493dc782ef2f7d
+2026-04-01 19:00:23,965 - INFO - + TAG_TIME='2010-05-24 19:10:30 +0000'
++ [[ 2010-05-24 19:10:30 +0000 > 2021-06-28 11:46:37 +0200 ]]
++ read tag
+2026-04-01 19:00:23,965 - INFO - ++ git rev-list -n 1 1.3
+2026-04-01 19:00:23,969 - INFO - + TAG_COMMIT=7c08f4c6351f7e53a01ff800d8a61f19ca961b29
+2026-04-01 19:00:23,970 - INFO - ++ git show -s --format=%ci 7c08f4c6351f7e53a01ff800d8a61f19ca961b29
+2026-04-01 19:00:23,973 - INFO - + TAG_TIME='2011-03-23 05:06:31 +0000'
++ [[ 2011-03-23 05:06:31 +0000 > 2021-06-28 11:46:37 +0200 ]]
++ read tag
+2026-04-01 19:00:23,973 - INFO - ++ git rev-list -n 1 1.4
+2026-04-01 19:00:23,977 - INFO - + TAG_COMMIT=2591fb8d4c0246f68b79554976c012039df75359
+2026-04-01 19:00:23,978 - INFO - ++ git show -s --format=%ci 2591fb8d4c0246f68b79554976c012039df75359
+2026-04-01 19:00:23,981 - INFO - + TAG_TIME='2012-03-23 16:53:23 +0000'
++ [[ 2012-03-23 16:53:23 +0000 > 2021-06-28 11:46:37 +0200 ]]
++ read tag
+2026-04-01 19:00:23,982 - INFO - ++ git rev-list -n 1 1.7a1
+2026-04-01 19:00:23,988 - INFO - + TAG_COMMIT=8be9a250c190d9dd8615da4616cdfe401ad6e0af
+2026-04-01 19:00:23,989 - INFO - ++ git show -s --format=%ci 8be9a250c190d9dd8615da4616cdfe401ad6e0af
+2026-04-01 19:00:23,992 - INFO - + TAG_TIME='2014-01-22 21:48:37 -0600'
++ [[ 2014-01-22 21:48:37 -0600 > 2021-06-28 11:46:37 +0200 ]]
++ read tag
+2026-04-01 19:00:23,994 - INFO - ++ git rev-list -n 1 1.7a2
+2026-04-01 19:00:23,996 - INFO - + TAG_COMMIT=43510cffcbf64e73232da1d6209151c7232fd2b6
+2026-04-01 19:00:23,997 - INFO - ++ git show -s --format=%ci 43510cffcbf64e73232da1d6209151c7232fd2b6
+2026-04-01 19:00:24,006 - INFO - + TAG_TIME='2014-02-06 15:54:27 -0600'
++ [[ 2014-02-06 15:54:27 -0600 > 2021-06-28 11:46:37 +0200 ]]
++ read tag
++ git reflog expire --expire=now --all
+2026-04-01 19:00:24,010 - INFO - + git gc --prune=now --aggressive
+2026-04-01 19:01:44,975 - INFO - ++ date -d '2021-06-28 11:46:37 +0200 + 1 second' '+%Y-%m-%d %H:%M:%S'
+2026-04-01 19:01:44,976 - INFO - + AFTER_TIMESTAMP='2021-06-28 09:46:38'
+2026-04-01 19:01:44,977 - INFO - ++ git log --oneline --all '--since=2021-06-28 09:46:38'
+++ wc -l
+2026-04-01 19:01:44,983 - INFO - + COMMIT_COUNT=0
++ '[' 0 -eq 0 ']'
++ source /opt/miniconda3/bin/activate
+2026-04-01 19:01:44,983 - INFO - ++ _CONDA_ROOT=/opt/miniconda3
+++ . /opt/miniconda3/etc/profile.d/conda.sh
+2026-04-01 19:01:44,983 - INFO - +++ export CONDA_EXE=/opt/miniconda3/bin/conda
++++ CONDA_EXE=/opt/miniconda3/bin/conda
++++ export _CE_M=
++++ _CE_M=
++++ export _CE_CONDA=
++++ _CE_CONDA=
++++ export CONDA_PYTHON_EXE=/opt/miniconda3/bin/python
++++ CONDA_PYTHON_EXE=/opt/miniconda3/bin/python
+2026-04-01 19:01:44,983 - INFO - +++ '[' -z '' ']'
++++ export CONDA_SHLVL=0
++++ CONDA_SHLVL=0
++++ '[' -n '' ']'
+2026-04-01 19:01:44,985 - INFO - +++++ dirname /opt/miniconda3/bin/conda
+2026-04-01 19:01:44,986 - INFO - ++++ dirname /opt/miniconda3/bin
+2026-04-01 19:01:44,987 - INFO - +++ PATH=/opt/miniconda3/condabin:/opt/miniconda3/bin:/usr/local/sbin:/usr/local/bin:/usr/sbin:/usr/bin:/sbin:/bin
++++ export PATH
++++ '[' -z '' ']'
++++ PS1=
+++ conda activate
+++ local cmd=activate
+++ case "$cmd" in
+++ __conda_activate activate
+++ '[' -n '' ']'
+++ local ask_conda
+2026-04-01 19:01:44,987 - INFO - +++ PS1=
++++ __conda_exe shell.posix activate
+2026-04-01 19:01:44,988 - INFO - +++ /opt/miniconda3/bin/conda shell.posix activate
+2026-04-01 19:01:45,118 - INFO - ++ ask_conda='PS1='\''(base) '\''
+export PATH='\''/opt/miniconda3/bin:/opt/miniconda3/condabin:/opt/miniconda3/bin:/usr/local/sbin:/usr/local/bin:/usr/sbin:/usr/bin:/sbin:/bin'\''
+export CONDA_PREFIX='\''/opt/miniconda3'\''
+export CONDA_SHLVL='\''1'\''
+export CONDA_DEFAULT_ENV='\''base'\''
+export CONDA_PROMPT_MODIFIER='\''(base) '\''
+export CONDA_EXE='\''/opt/miniconda3/bin/conda'\''
+export _CE_M='\'''\''
+export _CE_CONDA='\'''\''
+export CONDA_PYTHON_EXE='\''/opt/miniconda3/bin/python'\'''
+++ eval 'PS1='\''(base) '\''
+export PATH='\''/opt/miniconda3/bin:/opt/miniconda3/condabin:/opt/miniconda3/bin:/usr/local/sbin:/usr/local/bin:/usr/sbin:/usr/bin:/sbin:/bin'\''
+export CONDA_PREFIX='\''/opt/miniconda3'\''
+export CONDA_SHLVL='\''1'\''
+export CONDA_DEFAULT_ENV='\''base'\''
+export CONDA_PROMPT_MODIFIER='\''(base) '\''
+export CONDA_EXE='\''/opt/miniconda3/bin/conda'\''
+export _CE_M='\'''\''
+export _CE_CONDA='\'''\''
+export CONDA_PYTHON_EXE='\''/opt/miniconda3/bin/python'\'''
++++ PS1='(base) '
++++ export PATH=/opt/miniconda3/bin:/opt/miniconda3/condabin:/opt/miniconda3/bin:/usr/local/sbin:/usr/local/bin:/usr/sbin:/usr/bin:/sbin:/bin
++++ PATH=/opt/miniconda3/bin:/opt/miniconda3/condabin:/opt/miniconda3/bin:/usr/local/sbin:/usr/local/bin:/usr/sbin:/usr/bin:/sbin:/bin
++++ export CONDA_PREFIX=/opt/miniconda3
++++ CONDA_PREFIX=/opt/miniconda3
++++ export CONDA_SHLVL=1
++++ CONDA_SHLVL=1
++++ export CONDA_DEFAULT_ENV=base
++++ CONDA_DEFAULT_ENV=base
++++ export 'CONDA_PROMPT_MODIFIER=(base) '
++++ CONDA_PROMPT_MODIFIER='(base) '
++++ export CONDA_EXE=/opt/miniconda3/bin/conda
++++ CONDA_EXE=/opt/miniconda3/bin/conda
++++ export _CE_M=
++++ _CE_M=
++++ export _CE_CONDA=
++++ _CE_CONDA=
++++ export CONDA_PYTHON_EXE=/opt/miniconda3/bin/python
++++ CONDA_PYTHON_EXE=/opt/miniconda3/bin/python
+++ __conda_hashr
+2026-04-01 19:01:45,118 - INFO - ++ '[' -n '' ']'
+++ '[' -n '' ']'
+++ hash -r
++ conda activate testbed
++ local cmd=activate
++ case "$cmd" in
++ __conda_activate activate testbed
++ '[' -n '' ']'
++ local ask_conda
+2026-04-01 19:01:45,119 - INFO - ++ PS1='(base) '
+++ __conda_exe shell.posix activate testbed
+2026-04-01 19:01:45,119 - INFO - ++ /opt/miniconda3/bin/conda shell.posix activate testbed
+2026-04-01 19:01:45,251 - INFO - + ask_conda='PS1='\''(testbed) '\''
+export PATH='\''/opt/miniconda3/envs/testbed/bin:/opt/miniconda3/condabin:/opt/miniconda3/bin:/usr/local/sbin:/usr/local/bin:/usr/sbin:/usr/bin:/sbin:/bin'\''
+export CONDA_PREFIX='\''/opt/miniconda3/envs/testbed'\''
+export CONDA_SHLVL='\''2'\''
+export CONDA_DEFAULT_ENV='\''testbed'\''
+export CONDA_PROMPT_MODIFIER='\''(testbed) '\''
+export CONDA_PREFIX_1='\''/opt/miniconda3'\''
+export CONDA_EXE='\''/opt/miniconda3/bin/conda'\''
+export _CE_M='\'''\''
+export _CE_CONDA='\'''\''
+export CONDA_PYTHON_EXE='\''/opt/miniconda3/bin/python'\'''
++ eval 'PS1='\''(testbed) '\''
+export PATH='\''/opt/miniconda3/envs/testbed/bin:/opt/miniconda3/condabin:/opt/miniconda3/bin:/usr/local/sbin:/usr/local/bin:/usr/sbin:/usr/bin:/sbin:/bin'\''
+export CONDA_PREFIX='\''/opt/miniconda3/envs/testbed'\''
+export CONDA_SHLVL='\''2'\''
+export CONDA_DEFAULT_ENV='\''testbed'\''
+export CONDA_PROMPT_MODIFIER='\''(testbed) '\''
+export CONDA_PREFIX_1='\''/opt/miniconda3'\''
+export CONDA_EXE='\''/opt/miniconda3/bin/conda'\''
+export _CE_M='\'''\''
+export _CE_CONDA='\'''\''
+export CONDA_PYTHON_EXE='\''/opt/miniconda3/bin/python'\'''
+++ PS1='(testbed) '
+++ export PATH=/opt/miniconda3/envs/testbed/bin:/opt/miniconda3/condabin:/opt/miniconda3/bin:/usr/local/sbin:/usr/local/bin:/usr/sbin:/usr/bin:/sbin:/bin
+++ PATH=/opt/miniconda3/envs/testbed/bin:/opt/miniconda3/condabin:/opt/miniconda3/bin:/usr/local/sbin:/usr/local/bin:/usr/sbin:/usr/bin:/sbin:/bin
+++ export CONDA_PREFIX=/opt/miniconda3/envs/testbed
+++ CONDA_PREFIX=/opt/miniconda3/envs/testbed
+++ export CONDA_SHLVL=2
+++ CONDA_SHLVL=2
+++ export CONDA_DEFAULT_ENV=testbed
+++ CONDA_DEFAULT_ENV=testbed
+++ export 'CONDA_PROMPT_MODIFIER=(testbed) '
+++ CONDA_PROMPT_MODIFIER='(testbed) '
+++ export CONDA_PREFIX_1=/opt/miniconda3
+++ CONDA_PREFIX_1=/opt/miniconda3
+++ export CONDA_EXE=/opt/miniconda3/bin/conda
+++ CONDA_EXE=/opt/miniconda3/bin/conda
+++ export _CE_M=
+++ _CE_M=
+++ export _CE_CONDA=
+++ _CE_CONDA=
+++ export CONDA_PYTHON_EXE=/opt/miniconda3/bin/python
+++ CONDA_PYTHON_EXE=/opt/miniconda3/bin/python
++ __conda_hashr
+2026-04-01 19:01:45,251 - INFO - + '[' -n '' ']'
++ '[' -n '' ']'
++ hash -r
+2026-04-01 19:01:45,251 - INFO - Current environment: testbed
+2026-04-01 19:01:45,251 - INFO - + echo 'Current environment: testbed'
++ python -m pip install -e .
+2026-04-01 19:01:45,636 - INFO - Obtaining file:///testbed
+2026-04-01 19:01:45,643 - INFO - Installing build dependencies: started
+2026-04-01 19:01:47,355 - INFO - Installing build dependencies: finished with status 'done'
+2026-04-01 19:01:47,356 - INFO - Checking if build backend supports build_editable: started
+2026-04-01 19:01:47,542 - INFO - Checking if build backend supports build_editable: finished with status 'done'
+2026-04-01 19:01:47,544 - INFO - Getting requirements to build editable: started
+2026-04-01 19:01:48,132 - INFO - Getting requirements to build editable: finished with status 'done'
+2026-04-01 19:01:48,134 - INFO - Preparing editable metadata (pyproject.toml): started
+2026-04-01 19:01:48,722 - INFO - Preparing editable metadata (pyproject.toml): finished with status 'done'
+2026-04-01 19:01:48,737 - INFO - Requirement already satisfied: asgiref>=3.3.2 in /opt/miniconda3/envs/testbed/lib/python3.8/site-packages (from Django==4.0.dev20210628094637) (3.8.1)
+2026-04-01 19:01:48,737 - INFO - Requirement already satisfied: pytz in /opt/miniconda3/envs/testbed/lib/python3.8/site-packages (from Django==4.0.dev20210628094637) (2026.1.post1)
+2026-04-01 19:01:48,738 - INFO - Requirement already satisfied: sqlparse>=0.2.2 in /opt/miniconda3/envs/testbed/lib/python3.8/site-packages (from Django==4.0.dev20210628094637) (0.5.5)
+2026-04-01 19:01:48,740 - INFO - Requirement already satisfied: typing-extensions>=4 in /opt/miniconda3/envs/testbed/lib/python3.8/site-packages (from asgiref>=3.3.2->Django==4.0.dev20210628094637) (4.13.2)
+2026-04-01 19:01:48,744 - INFO - Building wheels for collected packages: Django
+2026-04-01 19:01:48,745 - INFO - Building editable for Django (pyproject.toml): started
+2026-04-01 19:01:49,969 - INFO - Building editable for Django (pyproject.toml): finished with status 'done'
+2026-04-01 19:01:49,972 - INFO - Created wheel for Django: filename=django-4.0.dev20210628094637-0.editable-py3-none-any.whl size=26191 sha256=f18af06d5a71eb980c685a68b89fa3926bd20c69eac231b1df5aa9d6e6724b23
+  Stored in directory: /tmp/pip-ephem-wheel-cache-1apmlr3p/wheels/b2/50/f1/218f2e9962a80d01a4b1297698978f9fb3b60056aa24343f24
+2026-04-01 19:01:49,977 - INFO - Successfully built Django
+2026-04-01 19:01:50,055 - INFO - Installing collected packages: Django
+2026-04-01 19:01:50,126 - INFO - Successfully installed Django-4.0.dev20210628094637
+2026-04-01 19:01:50,126 - INFO - WARNING: Running pip as the 'root' user can result in broken permissions and conflicting behaviour with the system package manager, possibly rendering your system unusable.It is recommended to use a virtual environment instead: https://pip.pypa.io/warnings/venv. Use the --root-user-action option if you know what you are doing and want to suppress this warning.
+2026-04-01 19:01:50,243 - INFO - + git config --global user.email setup@swebench.config
+2026-04-01 19:01:50,245 - INFO - + git config --global user.name SWE-bench
+2026-04-01 19:01:50,248 - INFO - + git commit --allow-empty -am SWE-bench
+2026-04-01 19:01:50,349 - INFO - [main 356af3dad3] SWE-bench
+2026-04-01 19:02:14,250 - INFO - ---> Removed intermediate container 47a85b9f8300
+2026-04-01 19:02:14,250 - INFO - ---> 2d20833ce762
+2026-04-01 19:02:14,250 - INFO - Step 5/5 : WORKDIR /testbed/
+2026-04-01 19:02:14,250 - INFO - 
+2026-04-01 19:02:14,651 - INFO - ---> Running in 565590b4b649
+2026-04-01 19:02:26,140 - INFO - ---> Removed intermediate container 565590b4b649
+2026-04-01 19:02:26,140 - INFO - ---> acab95b04e6c
+2026-04-01 19:02:26,144 - INFO - Successfully built acab95b04e6c
+2026-04-01 19:02:26,159 - INFO - Successfully tagged sweb.eval.x86_64.django__django-14559:latest
+2026-04-01 19:02:26,159 - INFO - Image built successfully!

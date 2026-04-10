@@ -30,7 +30,7 @@ logger = logging.getLogger(__name__)
 # Constants
 # ---------------------------------------------------------------------------
 
-DEFAULT_REPO = "bensargotest-sys/guild-packs"
+DEFAULT_REPO = os.environ.get('BORG_REPO', 'bensargotest-sys/guild-packs')
 DEFAULT_BRANCH = "main"
 BORG_DIR = get_borg_dir()
 INDEX_URL = f"https://raw.githubusercontent.com/{DEFAULT_REPO}/{DEFAULT_BRANCH}/index.json"
@@ -86,16 +86,11 @@ def resolve_guild_uri(uri: str) -> str:
     if uri.startswith("/"):
         return uri
 
-    # Bare pack name (no scheme) — treat as guild:// shorthand
-    # Exclude anything that looks like a URI scheme (contains "://")
-    if uri and not uri.startswith((".", "~")) and "://" not in uri and ":" not in uri:
-        pack_name = uri
-        return (
-            f"https://raw.githubusercontent.com/{DEFAULT_REPO}/{DEFAULT_BRANCH}"
-            f"/packs/{pack_name}.workflow.yaml"
-        )
+    # Bare pack name (no scheme) — try as borg://hermes/<name>
+    if re.match(r'^[\w-]+$', uri):
+        return resolve_guild_uri(f"borg://hermes/{uri}")
 
-    raise ValueError(f"Unsupported URI scheme: {uri}")
+    raise ValueError(f"Unsupported URI scheme: {uri}. Use: borg://domain/pack-name or a bare pack name.")
 
 
 # ---------------------------------------------------------------------------
@@ -157,7 +152,11 @@ def _fetch_index() -> dict:
     except Exception as e:
         if _index_cache[0] is not None:
             return _index_cache[0]
-        raise ValueError(f"Failed to fetch guild index: {e}")
+        # Don't fail search when remote index is unreachable — seeds still work.
+        # Log at debug level so production users aren't affected by network issues.
+        import logging
+        logging.getLogger("borg.uri").debug("Index fetch failed, using empty index: %s", e)
+        return {"packs": []}
 
 
 # ---------------------------------------------------------------------------

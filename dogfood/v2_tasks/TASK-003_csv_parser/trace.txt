@@ -1,0 +1,16 @@
+REASONING TRACE FOR: CSV parser bugs
+
+PROBLEM DECOMPOSITION:
+- Two bugs: (1) last row dropped if no trailing newline, (2) escaped quotes not handled
+
+WHAT WAS TRIED:
+- Traced through the parser character by character
+- The loop ends without appending the last field/row if there's no final newline
+
+KEY INSIGHT:
+- After the loop ends, there may be a pending field and row that never got appended
+- For escaped quotes: two consecutive quote chars inside a quoted field should produce one quote in output, not toggle in_quotes twice
+
+PITFALLS:
+- Be careful with the quote toggling — need to look ahead or track state differently for escaped quotes
+- Edge case: empty last field with no trailing newline

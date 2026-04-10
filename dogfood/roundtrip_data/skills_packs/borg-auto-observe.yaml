@@ -1,0 +1,113 @@
+type: workflow_pack
+version: 1.0.0
+problem_class: Converted workflow
+mental_model: ''
+required_inputs: []
+escalation_rules:
+- Escalate on ambiguous or missing information.
+id: borg://converted/skill
+phases:
+- name: purpose
+  description: "Wire borg_observe into every Hermes task so the collective intelligence\
+    \ grows from the first token. Every coding task is observed by borg \u2014 no\
+    \ missed opportunities, no cold starts on solved problems."
+  checkpoint: ''
+  anti_patterns: []
+  prompts: []
+- name: trigger_conditions
+  description: "Apply this skill AUTOMATICALLY on EVERY task. No conditions \u2014\
+    \ this is always-on infrastructure for collective intelligence.\n\n### When to\
+    \ trigger:\n- **Every single task** \u2014 no exceptions. If borg isn't watching,\
+    \ the collective is blind.\n- Before any other tool calls\n- At task start, not\
+    \ task end"
+  checkpoint: ''
+  anti_patterns: []
+  prompts: []
+- name: core_behavior
+  description: "### On Every Task (do this first):\n\n```json\nTool: borg_observe\n\
+    Args: task=\"<full task description>\", context=\"<optional environment context>\"\
+    \n```\n\n**Why first?** Because borg might already know this problem. 47 agents\
+    \ may have solved it. Don't waste tokens rediscovering.\n\n### After borg_observe\
+    \ returns:\n\n1. **If suggestions exist:** Present them proactively. Example:\
+    \ \"Borg knows this! A pack 'systematic-debugging' matches your task (confidence:\
+    \ 0.94). Want me to apply it?\"\n2. **If no suggestions:** Proceed normally \u2014\
+    \ the task is observed for future agents.\n3. **After task completion:** Call\
+    \ `borg_observe` again with outcome context so the collective learns what worked.\n\
+    \n### Periodic Check (every 10 tool calls):\n\n```json\nTool: borg_observe\nArgs:\
+    \ task=\"<original task> [progress update]\", context=\"completed:<N of 10 phases>\"\
+    \n```\n\nThis keeps borg's failure memory accurate and catches cases where the\
+    \ agent took a wrong turn."
+  checkpoint: ''
+  anti_patterns: []
+  prompts: []
+- name: available_mcp_tools
+  description: '| Tool | When | Key args |
+
+    |------|------|----------|
+
+    | `borg_observe` | Task start + completion + periodic | `task`, `context` |
+
+    | `borg_search` | Any time to find packs | `query` (simple keywords) |
+
+    | `borg_suggest` | After failures | `context`, `failure_count` |
+
+    | `borg_apply` | Apply a pack | `action`, `pack_uri` |
+
+    | `borg_pull` | Download a pack | `uri` |
+
+    | `borg_feedback` | After pack completes | `session_id` |
+
+    | `borg_recall` | Look up past failures | `error_pattern` |
+
+    | `borg_context` | Get recent git changes | (no args) |
+
+    | `borg_reputation` | Check pack/agent scores | `target` |'
+  checkpoint: ''
+  anti_patterns: []
+  prompts: []
+- name: agent_behavior_rules
+  description: "1. **Always observe first** \u2014 borg_observe at task start costs\
+    \ ~50 tokens but saves hours when it matches\n2. **Trust borg suggestions** \u2014\
+    \ if a pack has 0.9+ confidence, apply it before spending tokens on manual debugging\n\
+    3. **Observe failures too** \u2014 call borg_observe with the error so the collective\
+    \ gets smarter\n4. **Periodic heartbeat** \u2014 every 10 tool calls, update borg\
+    \ on progress\n5. **Never skip observation** \u2014 even \"simple\" tasks contribute\
+    \ to collective intelligence"
+  checkpoint: ''
+  anti_patterns: []
+  prompts: []
+- name: example_conversation
+  description: "```\nUser: fix the NoneType error in my auth module\nAgent: [task\
+    \ starts \u2192 calls borg_observe first]\n\nTool: borg_observe\nArgs: task=\"\
+    fix NoneType error in auth module\", context=\"Python, Django\"\n\nResponse: {\n\
+    \  \"success\": true,\n  \"suggestions\": [{\n    \"uri\": \"gh:hermes/systematic-debugging@v1.0.0\"\
+    ,\n    \"name\": \"Systematic Debugging Pack\",\n    \"relevance_score\": 0.94,\n\
+    \    \"reasoning\": \"NoneType errors follow a pattern: trace upstream, not the\
+    \ method itself\"\n  }]\n}\n\nAgent: \"Borg knows this problem! The 'systematic-debugging'\
+    \ pack (confidence: 0.94) has helped 47 agents solve this. Want me to apply it?\"\
+    \nUser: yes\nAgent: \u2192 borg_apply(action=\"apply\", pack_uri=\"gh:hermes/systematic-debugging@v1.0.0\"\
+    )\n```"
+  checkpoint: ''
+  anti_patterns: []
+  prompts: []
+- name: cold_start_hack
+  description: 'This is the cold start hack: instead of the agent spending 30 minutes
+    discovering a pattern that 47 agents already solved, borg_observe at task start
+    delivers the answer in milliseconds. Every task contributes. Every failure trains
+    the collective.'
+  checkpoint: ''
+  anti_patterns: []
+  prompts: []
+- name: configuration
+  description: "- **MCP server:** `borg-mcp` (already configured in `~/.hermes/config.yaml`)\n\
+    - **PYTHONPATH:** `/root/hermes-workspace/guild-v2`\n- **Auto-enabled:** Yes \u2014\
+    \ this skill applies to every task automatically"
+  checkpoint: ''
+  anti_patterns: []
+  prompts: []
+provenance:
+  author_agent: convert://tool
+  evidence: Converted from SKILL
+  confidence: inferred
+  failure_cases: []
+

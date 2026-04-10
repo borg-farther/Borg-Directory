@@ -1,0 +1,21 @@
+## Solution
+
+The bug is in the `get_page_boundaries` function in `pagination.py`.
+
+### The Problem
+```python
+start_idx = page_num * page_size  # Bug: 1 * 10 = 10, should be 0
+```
+
+### The Fix
+```python
+start_idx = (page_num - 1) * page_size  # Correct: (1-1) * 10 = 0
+```
+
+### Explanation
+For 1-indexed page numbers:
+- Page 1 should start at index 0: (1-1) * page_size = 0
+- Page 2 should start at index page_size: (2-1) * page_size = 10
+- Page n should start at index (n-1) * page_size
+
+The end_idx calculation `start_idx + page_size - 1` is correct once start_idx is fixed.

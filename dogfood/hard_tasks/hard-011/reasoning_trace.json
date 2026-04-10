@@ -1,0 +1,24 @@
+[
+  {
+    "attempt": 1,
+    "hypothesis": "The executor is running tasks in wrong order",
+    "action": "Added debug output to trace execution order",
+    "result": "Execution order is correct, but tasks are being executed multiple times",
+    "found_bug": false
+  },
+  {
+    "attempt": 2,
+    "hypothesis": "The scheduler's heap is not properly handling duplicate entries",
+    "action": "Reviewed heapq usage and added checks for duplicates",
+    "result": "Found that when a task becomes ready via multiple dependency paths, it gets pushed to heap multiple times",
+    "found_bug": false
+  },
+  {
+    "attempt": 3,
+    "hypothesis": "The scheduler doesn't track completed tasks when determining ready tasks",
+    "action": "Traced through schedule() method - it uses remaining_deps dict but doesn't check if task is already in execution_order or completed set before adding to ready_heap",
+    "result": "When D becomes ready (after B completes) and then again (after C completes), it's pushed to heap twice. The completed set is checked when popping, but not when pushing. Task D gets executed twice.",
+    "found_bug": true,
+    "fix": "Track which tasks have been added to the ready heap to prevent duplicates, or check completed set before pushing to heap"
+  }
+]

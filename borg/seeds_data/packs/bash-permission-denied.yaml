@@ -1,0 +1,25 @@
+name: bash-permission-denied
+problem_class: permission_denied
+license: MIT
+description: |
+  Bash or shell command fails with "Permission denied" error.
+  Usually occurs when running scripts or accessing files without execute/read permissions.
+solution: |
+  1. Check file permissions: ls -la <file>
+  2. Add execute permission: chmod +x <script.sh>
+  3. For directories: chmod +x <directory>
+  4. Check ownership: ls -ln <file>
+  5. Run as appropriate user: sudo <command>
+  6. For SSH keys: chmod 600 ~/.ssh/id_rsa
+source_url: https://www.gnu.org/software/bash/manual/
+tier: SEED
+tags:
+  - bash
+  - shell
+  - permission
+required_inputs:
+  - name: error_message
+    type: string
+escalation_rules:
+  - condition: "'Permission denied' in error_message or 'EACCES' in error_message"
+    action: check and fix file permissions with chmod

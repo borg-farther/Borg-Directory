@@ -1,0 +1,5 @@
+{
+    "expected": "shell_dns_error",
+    "actual": null,
+    "kind": "correct_no_match"
+}

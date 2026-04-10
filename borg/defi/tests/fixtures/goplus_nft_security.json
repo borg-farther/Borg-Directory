@@ -1,0 +1,10 @@
+{
+  "is_nft": "true",
+  "nft_type": "erc721",
+  "owner_count": "500",
+  "total_supply": "10000",
+  "is_mintable": "false",
+  "creator_address": "0x1234567890123456789012345678901234567890",
+  "royalty_fee": "0",
+  "code": "Ok"
+}

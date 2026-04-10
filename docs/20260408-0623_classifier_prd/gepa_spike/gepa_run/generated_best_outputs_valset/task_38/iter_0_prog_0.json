@@ -1,0 +1,5 @@
+{
+    "expected": "js_ssr_reference_error",
+    "actual": null,
+    "kind": "correct_no_match"
+}

@@ -1,0 +1,179 @@
+{
+  "verification_summary": {
+    "total_repos": 20,
+    "valid": 13,
+    "invalid": 7,
+    "needs_rebuild": 5
+  },
+  "repos": {
+    "DEBUG-001": {
+      "setup_ok": true,
+      "check_fails": true,
+      "exit_code": 1,
+      "status": "VALID",
+      "bug_type": "Missing user returns 200 instead of 404",
+      "solution_describes_real_fix": true
+    },
+    "DEBUG-002": {
+      "setup_ok": true,
+      "check_fails": true,
+      "exit_code": 1,
+      "status": "VALID",
+      "bug_type": "Missing user returns None instead of empty dict, causes KeyError/TypeError",
+      "solution_describes_real_fix": true
+    },
+    "DEBUG-003": {
+      "setup_ok": true,
+      "check_fails": true,
+      "exit_code": 1,
+      "status": "VALID",
+      "bug_type": "Race condition in thread-safe counter (101 instead of 1000)",
+      "solution_describes_real_fix": true
+    },
+    "DEBUG-004": {
+      "setup_ok": true,
+      "check_fails": true,
+      "exit_code": 1,
+      "status": "VALID",
+      "bug_type": "Circular import between models.py and utils.py",
+      "solution_describes_real_fix": true
+    },
+    "DEBUG-005": {
+      "setup_ok": true,
+      "check_fails": true,
+      "exit_code": 1,
+      "status": "VALID",
+      "bug_type": "Cache.__init__() doesn't accept max_size parameter",
+      "solution_describes_real_fix": true
+    },
+    "DEBUG-006": {
+      "setup_ok": true,
+      "check_fails": true,
+      "exit_code": 1,
+      "status": "VALID",
+      "bug_type": "N+1 query problem (3 queries instead of <=2)",
+      "solution_describes_real_fix": true
+    },
+    "DEBUG-007": {
+      "setup_ok": true,
+      "check_fails": true,
+      "exit_code": 1,
+      "status": "VALID",
+      "bug_type": "Logger level set to ERROR instead of WARNING, filtering out warnings",
+      "solution_describes_real_fix": true
+    },
+    "DEBUG-008": {
+      "setup_ok": true,
+      "check_fails": true,
+      "exit_code": 1,
+      "status": "VALID",
+      "bug_type": "JSON encoder has circular reference error for datetime/date/decimal/set",
+      "solution_describes_real_fix": true
+    },
+    "TEST-001": {
+      "setup_ok": true,
+      "check_fails": false,
+      "exit_code": 5,
+      "status": "INVALID",
+      "error": "No test files exist - tests/ directory only has .gitkeep",
+      "issue": "check.sh tries to run tests but tests/test_app.py is missing",
+      "needs_rebuild": true
+    },
+    "TEST-002": {
+      "setup_ok": true,
+      "check_fails": false,
+      "exit_code": 0,
+      "status": "INVALID",
+      "error": "check.sh returns 0 (passes) in starting state",
+      "issue": "Too easy - existing 2 tests already pass",
+      "needs_rebuild": true
+    },
+    "TEST-003": {
+      "setup_ok": true,
+      "check_fails": true,
+      "exit_code": 1,
+      "status": "VALID",
+      "bug_type": "Only 1 integration test found, need 8",
+      "solution_describes_real_fix": true
+    },
+    "TEST-004": {
+      "setup_ok": true,
+      "check_fails": true,
+      "exit_code": 1,
+      "status": "VALID",
+      "bug_type": "Only 3 tests found, need 12 including edge cases",
+      "solution_describes_real_fix": true
+    },
+    "REVIEW-001": {
+      "setup_ok": true,
+      "check_fails": false,
+      "exit_code": 2,
+      "status": "INVALID",
+      "error": "Syntax error in check.sh: unexpected EOF while looking for matching '' (line 23)",
+      "issue": "Unbalanced single quote in grep pattern on line 23",
+      "line_23": "PLAIN_TEXT=$(grep -n \"password.*=.*'\" src/auth.py 2>/dev/null || grep -n 'password.*=.*\"' src/auth.py 2>/dev/null || true)",
+      "needs_rebuild": true
+    },
+    "REVIEW-002": {
+      "setup_ok": true,
+      "check_fails": false,
+      "exit_code": 124,
+      "status": "INVALID",
+      "error": "check.sh times out after 60 seconds",
+      "issue": "Likely infinite loop or blocking operation in check script",
+      "needs_rebuild": true
+    },
+    "REFACTOR-001": {
+      "setup_ok": true,
+      "check_fails": false,
+      "exit_code": 0,
+      "status": "INVALID",
+      "error": "check.sh returns 0 (passes) in starting state",
+      "issue": "Code already refactored - helper functions already exist in src/reports.py",
+      "needs_rebuild": true
+    },
+    "REFACTOR-002": {
+      "setup_ok": true,
+      "check_fails": false,
+      "exit_code": 0,
+      "status": "INVALID",
+      "error": "check.sh returns 0 but AST checker has AttributeError: 'arg' object has no attribute 'name'",
+      "issue": "Callback depth checker is broken (Python version incompatibility), all tests pass",
+      "needs_rebuild": true
+    },
+    "CONTROL-001": {
+      "setup_ok": true,
+      "check_fails": false,
+      "exit_code": 0,
+      "status": "INVALID",
+      "error": "check.sh returns 0 in starting state",
+      "issue": "CONTROL task passes by design - TODO comments already exist",
+      "needs_rebuild": true
+    },
+    "CONTROL-002": {
+      "setup_ok": true,
+      "check_fails": true,
+      "exit_code": 1,
+      "status": "VALID",
+      "bug_type": "Filenames use camelCase instead of snake_case",
+      "solution_describes_real_fix": true
+    },
+    "CONTROL-003": {
+      "setup_ok": true,
+      "check_fails": false,
+      "exit_code": 0,
+      "status": "INVALID",
+      "error": "check.sh returns 0 in starting state",
+      "issue": "CONTROL task passes by design - all functions already have docstrings",
+      "needs_rebuild": true
+    },
+    "CONTROL-004": {
+      "setup_ok": true,
+      "check_fails": true,
+      "exit_code": 1,
+      "status": "VALID",
+      "bug_type": "IndentationError in src/messy.py",
+      "solution_describes_real_fix": true
+    }
+  }
+}

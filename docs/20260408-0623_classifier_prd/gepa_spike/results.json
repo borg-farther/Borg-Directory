@@ -1,0 +1,52 @@
+{
+  "label": "gemini_2_flash",
+  "is_mock": false,
+  "elapsed_seconds": 182.31062769889832,
+  "max_metric_calls": 800,
+  "reflection_minibatch_size": 8,
+  "before": {
+    "n_total": 173,
+    "n_correct": 14,
+    "n_false_confident": 8,
+    "n_correct_no_match": 151,
+    "n_fired": 22,
+    "fcr": 0.046242774566473986,
+    "recall": 0.08092485549132948,
+    "precision": 0.6363636363636364,
+    "exact_correct_rate": 0.08092485549132948,
+    "n_rules": 39
+  },
+  "after": {
+    "n_total": 173,
+    "n_correct": 14,
+    "n_false_confident": 8,
+    "n_correct_no_match": 151,
+    "n_fired": 22,
+    "fcr": 0.046242774566473986,
+    "recall": 0.08092485549132948,
+    "precision": 0.6363636363636364,
+    "exact_correct_rate": 0.08092485549132948,
+    "n_rules": 39
+  },
+  "delta": {
+    "fcr": 0.0,
+    "exact_correct_rate": 0.0,
+    "recall": 0.0,
+    "precision": 0.0,
+    "n_rules": 0
+  },
+  "best_score": null,
+  "history": [
+    {
+      "iter": 0,
+      "val_aggregate": 0.5173410404624278
+    },
+    {
+      "iter": 1,
+      "val_aggregate": 0.5
+    }
+  ],
+  "gepa_error": null,
+  "seed_candidate_table": "# Borg classifier keyword table (GEPA-evolved).\n# Format: one rule per line, \"<keyword><TAB><problem_class>\".\n# Lines starting with # are comments and ignored.\n# First match wins. Matching is case-insensitive substring on the lowercased\n# error message. The Phase 0 non-Python language guard runs *before* this\n# table; if it fires, classify_error returns None and never consults this\n# table at all. Therefore adding rules for Rust/Go/JS/TS/Docker/K8s errors\n# whose locking signals already fire is wasted effort \u2014 those rows already\n# return None.\n#\n# The goal is to MINIMISE False-Confident Rate (FCR), defined as the fraction\n# of corpus rows where the classifier returns a non-None problem_class that\n# does not equal the labelled expected_problem_class. Honest misses (returning\n# None when an answer was expected) are a much smaller penalty than confident\n# wrong answers.\n\ncircular\tcircular_dependency\ndependency cycle\tcircular_dependency\nInvalidMoveError\tcircular_dependency\nmakemigrations\tmigration_state_desync\nmigrate\tmigration_state_desync\nno such table\tmigration_state_desync\ntable already exists\tmigration_state_desync\napplied migrations\tmigration_state_desync\nFOREIGN KEY constraint failed\tmissing_foreign_key\nIntegrityError\tmissing_foreign_key\nno such column\tschema_drift\ntable has no column\tschema_drift\nImproperlyConfigured\tconfiguration_error\nSECRET_KEY\tconfiguration_error\nALLOWED_HOSTS\tconfiguration_error\nDATABASE_URL\tconfiguration_error\nNoneType\tnull_pointer_chain\n'NoneType'\tnull_pointer_chain\nobject is not iterable\tnull_pointer_chain\ncircular import\timport_cycle\nimport cycle\timport_cycle\ncannot import name\timport_cycle\nPermissionError\tpermission_denied\npermission denied\tpermission_denied\nEACCES\tpermission_denied\nEPERM\tpermission_denied\ndictionary changed size during iteration\trace_condition\nTimeoutError\ttimeout_hang\ntimed out\ttimeout_hang\nConnection refused\ttimeout_hang\nConnection timed out\ttimeout_hang\nGatewayTimeout\ttimeout_hang\nModuleNotFoundError\tmissing_dependency\nNo module named\tmissing_dependency\nImportError\tmissing_dependency\nTypeError\ttype_mismatch\nmypy\ttype_mismatch\nOperationalError\tschema_drift\nSyncError\tschema_drift\n",
+  "best_candidate_table": "# Borg classifier keyword table (GEPA-evolved).\n# Format: one rule per line, \"<keyword><TAB><problem_class>\".\n# Lines starting with # are comments and ignored.\n# First match wins. Matching is case-insensitive substring on the lowercased\n# error message. The Phase 0 non-Python language guard runs *before* this\n# table; if it fires, classify_error returns None and never consults this\n# table at all. Therefore adding rules for Rust/Go/JS/TS/Docker/K8s errors\n# whose locking signals already fire is wasted effort \u2014 those rows already\n# return None.\n#\n# The goal is to MINIMISE False-Confident Rate (FCR), defined as the fraction\n# of corpus rows where the classifier returns a non-None problem_class that\n# does not equal the labelled expected_problem_class. Honest misses (returning\n# None when an answer was expected) are a much smaller penalty than confident\n# wrong answers.\n\ncircular\tcircular_dependency\ndependency cycle\tcircular_dependency\nInvalidMoveError\tcircular_dependency\nmakemigrations\tmigration_state_desync\nmigrate\tmigration_state_desync\nno such table\tmigration_state_desync\ntable already exists\tmigration_state_desync\napplied migrations\tmigration_state_desync\nFOREIGN KEY constraint failed\tmissing_foreign_key\nIntegrityError\tmissing_foreign_key\nno such column\tschema_drift\ntable has no column\tschema_drift\nImproperlyConfigured\tconfiguration_error\nSECRET_KEY\tconfiguration_error\nALLOWED_HOSTS\tconfiguration_error\nDATABASE_URL\tconfiguration_error\nNoneType\tnull_pointer_chain\n'NoneType'\tnull_pointer_chain\nobject is not iterable\tnull_pointer_chain\ncircular import\timport_cycle\nimport cycle\timport_cycle\ncannot import name\timport_cycle\nPermissionError\tpermission_denied\npermission denied\tpermission_denied\nEACCES\tpermission_denied\nEPERM\tpermission_denied\ndictionary changed size during iteration\trace_condition\nTimeoutError\ttimeout_hang\ntimed out\ttimeout_hang\nConnection refused\ttimeout_hang\nConnection timed out\ttimeout_hang\nGatewayTimeout\ttimeout_hang\nModuleNotFoundError\tmissing_dependency\nNo module named\tmissing_dependency\nImportError\tmissing_dependency\nTypeError\ttype_mismatch\nmypy\ttype_mismatch\nOperationalError\tschema_drift\nSyncError\tschema_drift\n"
+}

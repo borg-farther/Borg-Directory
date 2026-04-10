@@ -1,0 +1,5 @@
+{
+    "expected": "js_undefined_property",
+    "actual": null,
+    "kind": "correct_no_match"
+}

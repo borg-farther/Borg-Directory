@@ -1,0 +1,17 @@
+REASONING TRACE FOR: Binary search boundary bugs
+
+PROBLEM DECOMPOSITION:
+- Classic binary search boundary errors
+- Two functions, two different bugs
+
+WHAT WAS TRIED:
+- binary_search: right should be len(arr)-1 for inclusive bounds
+- find_first_occurrence: the else branch (arr[mid] > target) sets right=mid, which can cause infinite loop when left==right and arr[mid] > target
+
+KEY INSIGHT:
+- For inclusive bounds [left, right]: right = len(arr) - 1, and right = mid - 1 in else branch
+- The infinite loop happens because mid = (left + right) // 2 = left when left == right, so right = mid doesn't change anything
+
+PITFALLS:
+- Don't change the logic of find_first_occurrence's == branch (right = mid - 1 is correct there to keep searching left)
+- Only fix the > branch

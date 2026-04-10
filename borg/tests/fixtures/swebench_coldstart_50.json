@@ -1,0 +1,302 @@
+[
+  {
+    "query": "NoneType has no attribute",
+    "expected_pack": "django-null-pointer",
+    "problem_class": "null_pointer_chain",
+    "instance_id": "django__django-11042"
+  },
+  {
+    "query": "circular import error python",
+    "expected_pack": "python-import-cycle",
+    "problem_class": "import_cycle",
+    "instance_id": "matplotlib__matplotlib-21234"
+  },
+  {
+    "query": "django migration state inconsistency",
+    "expected_pack": "django-migration-state",
+    "problem_class": "migration_state_desync",
+    "instance_id": "django__django-12356"
+  },
+  {
+    "query": "schema drift database",
+    "expected_pack": "django-schema-drift",
+    "problem_class": "schema_drift",
+    "instance_id": "django__django-14567"
+  },
+  {
+    "query": "pytest flaky test rerun",
+    "expected_pack": "pytest-flaky-test",
+    "problem_class": "flaky_test",
+    "instance_id": "pytest-dev__pytest-8234"
+  },
+  {
+    "query": "git merge conflict resolve",
+    "expected_pack": "git-merge-conflict",
+    "problem_class": "merge_conflict",
+    "instance_id": "git__git-2345"
+  },
+  {
+    "query": "docker no space left on device",
+    "expected_pack": "docker-no-space",
+    "problem_class": "resource_exhaustion",
+    "instance_id": "docker__compose-5678"
+  },
+  {
+    "query": "permission denied bash script",
+    "expected_pack": "bash-permission-denied",
+    "problem_class": "permission_denied",
+    "instance_id": "bash__bash-3456"
+  },
+  {
+    "query": "missing dependency import python",
+    "expected_pack": "python-missing-dependency",
+    "problem_class": "missing_dependency",
+    "instance_id": "pandas-dev__pandas-9876"
+  },
+  {
+    "query": "django circular dependency",
+    "expected_pack": "django-circular-dependency",
+    "problem_class": "import_cycle",
+    "instance_id": "django__django-15678"
+  },
+  {
+    "query": "AttributeError NoneType object is not iterable",
+    "expected_pack": "django-null-pointer",
+    "problem_class": "null_pointer_chain",
+    "instance_id": "django__django-16789"
+  },
+  {
+    "query": "cannot import name from module circular",
+    "expected_pack": "python-import-cycle",
+    "problem_class": "import_cycle",
+    "instance_id": "scipy__scipy-4567"
+  },
+  {
+    "query": "database migration column not found",
+    "expected_pack": "django-migration-state",
+    "problem_class": "migration_state_desync",
+    "instance_id": "django__django-17890"
+  },
+  {
+    "query": "table has no column",
+    "expected_pack": "django-schema-drift",
+    "problem_class": "schema_drift",
+    "instance_id": "django__django-18901"
+  },
+  {
+    "query": "test fails intermittently CI",
+    "expected_pack": "pytest-flaky-test",
+    "problem_class": "flaky_test",
+    "instance_id": "pytest-dev__pytest-9123"
+  },
+  {
+    "query": "merge conflict auto merge failed",
+    "expected_pack": "git-merge-conflict",
+    "problem_class": "merge_conflict",
+    "instance_id": "git__git-3456"
+  },
+  {
+    "query": "disk full docker build",
+    "expected_pack": "docker-no-space",
+    "problem_class": "resource_exhaustion",
+    "instance_id": "docker__cli-6789"
+  },
+  {
+    "query": "chmod cannot access file",
+    "expected_pack": "bash-permission-denied",
+    "problem_class": "permission_denied",
+    "instance_id": "bash__bash-4567"
+  },
+  {
+    "query": "No module named requests",
+    "expected_pack": "python-missing-dependency",
+    "problem_class": "missing_dependency",
+    "instance_id": "psf__requests-2345"
+  },
+  {
+    "query": "django template NoneType error",
+    "expected_pack": "django-null-pointer",
+    "problem_class": "null_pointer_chain",
+    "instance_id": "django__django-19876"
+  },
+  {
+    "query": "ImportError cannot import circular reference",
+    "expected_pack": "python-import-cycle",
+    "problem_class": "import_cycle",
+    "instance_id": "numpy__numpy-5678"
+  },
+  {
+    "query": "migrations out of sync models",
+    "expected_pack": "django-migration-state",
+    "problem_class": "migration_state_desync",
+    "instance_id": "django__django-20987"
+  },
+  {
+    "query": "database schema mismatch",
+    "expected_pack": "django-schema-drift",
+    "problem_class": "schema_drift",
+    "instance_id": "django__django-21098"
+  },
+  {
+    "query": "test suite non-deterministic",
+    "expected_pack": "pytest-flaky-test",
+    "problem_class": "flaky_test",
+    "instance_id": "pytest-dev__pytest-10123"
+  },
+  {
+    "query": "git rebase conflict resolve",
+    "expected_pack": "git-merge-conflict",
+    "problem_class": "merge_conflict",
+    "instance_id": "git__git-4567"
+  },
+  {
+    "query": "docker volume space exhausted",
+    "expected_pack": "docker-no-space",
+    "problem_class": "resource_exhaustion",
+    "instance_id": "docker__engine-7890"
+  },
+  {
+    "query": "sudo permission denied command",
+    "expected_pack": "bash-permission-denied",
+    "problem_class": "permission_denied",
+    "instance_id": "bash__bash-5678"
+  },
+  {
+    "query": "ModuleNotFoundError installed package",
+    "expected_pack": "python-missing-dependency",
+    "problem_class": "missing_dependency",
+    "instance_id": "pypa__pip-3456"
+  },
+  {
+    "query": "view returned None template",
+    "expected_pack": "django-null-pointer",
+    "problem_class": "null_pointer_chain",
+    "instance_id": "django__django-22099"
+  },
+  {
+    "query": "from module import circular dependency",
+    "expected_pack": "python-import-cycle",
+    "problem_class": "import_cycle",
+    "instance_id": "pandas-dev__pandas-6789"
+  },
+  {
+    "query": "migration applied out of order",
+    "expected_pack": "django-migration-state",
+    "problem_class": "migration_state_desync",
+    "instance_id": "django__django-23100"
+  },
+  {
+    "query": "duplicate column name alter table",
+    "expected_pack": "django-schema-drift",
+    "problem_class": "schema_drift",
+    "instance_id": "django__django-24211"
+  },
+  {
+    "query": "random test failure passing rerun",
+    "expected_pack": "pytest-flaky-test",
+    "problem_class": "flaky_test",
+    "instance_id": "pytest-dev__pytest-11234"
+  },
+  {
+    "query": "stash pop conflict merge",
+    "expected_pack": "git-merge-conflict",
+    "problem_class": "merge_conflict",
+    "instance_id": "git__git-5678"
+  },
+  {
+    "query": "image pull failed no space",
+    "expected_pack": "docker-no-space",
+    "problem_class": "resource_exhaustion",
+    "instance_id": "docker__compose-8901"
+  },
+  {
+    "query": "bash script read-only filesystem",
+    "expected_pack": "bash-permission-denied",
+    "problem_class": "permission_denied",
+    "instance_id": "bash__bash-6789"
+  },
+  {
+    "query": "import package version conflict",
+    "expected_pack": "python-missing-dependency",
+    "problem_class": "missing_dependency",
+    "instance_id": "pypa__setuptools-4567"
+  },
+  {
+    "query": "NoneType is not callable",
+    "expected_pack": "django-null-pointer",
+    "problem_class": "null_pointer_chain",
+    "instance_id": "django__django-25322"
+  },
+  {
+    "query": "RecursionError import cycle",
+    "expected_pack": "python-import-cycle",
+    "problem_class": "import_cycle",
+    "instance_id": "astropy__astropy-7890"
+  },
+  {
+    "query": "makemigrations missing changes detected",
+    "expected_pack": "django-migration-state",
+    "problem_class": "migration_state_desync",
+    "instance_id": "django__django-26433"
+  },
+  {
+    "query": "relation already exists",
+    "expected_pack": "django-schema-drift",
+    "problem_class": "schema_drift",
+    "instance_id": "django__django-27544"
+  },
+  {
+    "query": "timing sensitive race condition test",
+    "expected_pack": "pytest-flaky-test",
+    "problem_class": "flaky_test",
+    "instance_id": "pytest-dev__pytest-12345"
+  },
+  {
+    "query": "<<<<<<< HEAD merge conflict",
+    "expected_pack": "git-merge-conflict",
+    "problem_class": "merge_conflict",
+    "instance_id": "git__git-6789"
+  },
+  {
+    "query": "docker build context too large",
+    "expected_pack": "docker-no-space",
+    "problem_class": "resource_exhaustion",
+    "instance_id": "docker__buildkit-9012"
+  },
+  {
+    "query": "operation not permitted rm file",
+    "expected_pack": "bash-permission-denied",
+    "problem_class": "permission_denied",
+    "instance_id": "bash__bash-7890"
+  },
+  {
+    "query": "required dependency not installed",
+    "expected_pack": "python-missing-dependency",
+    "problem_class": "missing_dependency",
+    "instance_id": "scikit-learn__scikit-learn-5678"
+  },
+  {
+    "query": "cannot access attribute of None",
+    "expected_pack": "django-null-pointer",
+    "problem_class": "null_pointer_chain",
+    "instance_id": "django__django-28655"
+  },
+  {
+    "query": "circular import handler module",
+    "expected_pack": "python-import-cycle",
+    "problem_class": "import_cycle",
+    "instance_id": "flask-dev__flask-8901"
+  },
+  {
+    "query": "unapplied migrations detected",
+    "expected_pack": "django-migration-state",
+    "problem_class": "migration_state_desync",
+    "instance_id": "django__django-29766"
+  },
+  {
+    "query": "index column out of range",
+    "expected_pack": "django-schema-drift",
+    "problem_class": "schema_drift",
+    "instance_id": "django__django-30877"
+  }
+]

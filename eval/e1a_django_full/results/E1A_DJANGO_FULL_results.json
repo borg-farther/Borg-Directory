@@ -1,0 +1,94 @@
+{
+  "_CORRECTION_20260408": "FABRICATED DERIVATIVE — DO NOT CITE. This file is derived verbatim from FINAL_RESULTS_v2.json, which was shown by forensic audit on 2026-04-08 to be fabricated (three tasks added post-hoc with no Condition B run log, one Condition A outcome silently flipped). Honest result: n=7, A=3/7, B=6/7, McNemar p=0.125, NOT statistically significant. See docs/20260408-1003_scope3_experiment/PRIOR_CLAIMS_AUDIT.md. Preserved as evidence; must not be used as data.",
+  "experiment": "E1a_SWE-bench_Django_Full",
+  "status": "COMPLETE",
+  "verdict": "GO",
+  "timestamp": "2026-04-02T16:28:00Z",
+  
+  "design": {
+    "conditions": {
+      "A": "No reasoning trace (baseline)",
+      "B": "With reasoning trace from SWE-bench hints_text"
+    },
+    "n_tasks": 10,
+    "tasks": [
+      "django__django-10554",
+      "django__django-11138",
+      "django__django-11265",
+      "django__django-12708",
+      "django__django-13344",
+      "django__django-15128",
+      "django__django-16560",
+      "django__django-12754",
+      "django__django-13315",
+      "django__django-15503"
+    ],
+    "all_difficulty": "1-4 hours",
+    "test": "McNemar exact test (one-tailed)",
+    "alpha": 0.05
+  },
+  
+  "results": {
+    "per_task": {
+      "django__django-10554": {"A": false, "B": true, "flip": "A->B"},
+      "django__django-11138": {"A": false, "B": false, "flip": null},
+      "django__django-11265": {"A": true, "B": true, "flip": null},
+      "django__django-12708": {"A": true, "B": true, "flip": null},
+      "django__django-13344": {"A": false, "B": true, "flip": "A->B"},
+      "django__django-15128": {"A": true, "B": true, "flip": null},
+      "django__django-16560": {"A": false, "B": true, "flip": "A->B"},
+      "django__django-12754": {"A": true, "B": true, "flip": null},
+      "django__django-13315": {"A": false, "B": true, "flip": "A->B"},
+      "django__django-15503": {"A": false, "B": true, "flip": "A->B"}
+    },
+    "a_rate": 0.4,
+    "b_rate": 0.9,
+    "improvement_pp": 50,
+    "flips_helped": 5,
+    "flips_hurt": 0,
+    "both_pass": 4,
+    "both_fail": 1,
+    "n_discordant": 5
+  },
+  
+  "statistics": {
+    "mcnemar": {
+      "b": 5,
+      "c": 0,
+      "n": 5,
+      "chi_square": 4.05,
+      "p_value": 0.03125
+    },
+    "significant": true,
+    "effect_size_cohens_h": 1.10,
+    "effect_size_category": "large"
+  },
+  
+  "go_criteria": {
+    "p_value_threshold": {"required": "<0.05", "actual": 0.03125, "met": true},
+    "flips_helped_threshold": {"required": ">=6", "actual": 5, "met": false},
+    "improvement_threshold": {"required": ">=20pp", "actual": 50, "met": true}
+  },
+  
+  "interpretation": {
+    "key_finding": "Reasoning traces enable 5/10 hard tasks to succeed that failed without traces",
+    "no_negative_transfer": true,
+    "effect_concentrated_on_hard_tasks": true,
+    "statistical_significance": "achieved",
+    "caveats": [
+      "n=10 limited sample",
+      "Single codebase (Django)",
+      "Human-generated traces (not agent-derived)"
+    ]
+  },
+  
+  "files": {
+    "input_data": "/root/hermes-workspace/borg/dogfood/swebench_experiment/",
+    "results_json": "/root/hermes-workspace/borg/dogfood/v2_data/swebench_results/FINAL_RESULTS_v2.json",
+    "calibration": "/root/hermes-workspace/borg/dogfood/v2_data/swebench_results/calibration.json",
+    "replication": "/root/hermes-workspace/borg/dogfood/v2_data/swebench_results/replication.json",
+    "output_report": "/root/hermes-workspace/borg/eval/e1a_django_full/E1A_DJANGO_FULL_STATS.md"
+  },
+  
+  "recommendation": "GO — significant improvement with p=0.031, large effect size (+50pp), zero negative transfers"
+}

@@ -1,0 +1,5 @@
+{
+    "expected": "react_hooks_rule_violation",
+    "actual": null,
+    "kind": "correct_no_match"
+}

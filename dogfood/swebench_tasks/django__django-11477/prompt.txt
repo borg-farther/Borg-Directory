@@ -1,0 +1,18 @@
+Fix the following Django bug. The code is in the repo at /workspace/django.
+
+BUG REPORT:
+translate_url() creates an incorrect URL when optional named groups are missing in the URL pattern
+Description
+	
+There is a problem when translating urls with absent 'optional' arguments
+(it's seen in test case of the patch)
+
+
+The fix should make these tests pass:
+[
+  "test_re_path_with_optional_parameter (urlpatterns.tests.SimplifiedURLTests)",
+  "test_two_variable_at_start_of_path_pattern (urlpatterns.tests.SimplifiedURLTests)",
+  "test_translate_url_utility (i18n.patterns.tests.URLTranslationTests)"
+]
+
+After fixing, verify with: cd /workspace && python -m pytest test_re_path_with_optional_parameter (urlpatterns.tests.SimplifiedURLTests) test_two_variable_at_start_of_path_pattern (urlpatterns.tests.SimplifiedURLTests) test_translate_url_utility (i18n.patterns.tests.URLTranslationTests) --no-header -q

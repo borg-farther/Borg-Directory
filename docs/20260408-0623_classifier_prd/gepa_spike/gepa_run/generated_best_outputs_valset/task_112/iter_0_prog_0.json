@@ -1,0 +1,5 @@
+{
+    "expected": "rust_non_exhaustive",
+    "actual": null,
+    "kind": "correct_no_match"
+}

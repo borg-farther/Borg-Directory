@@ -1,0 +1,133 @@
+{
+  "pairs": [
+    {
+      "pairAddress": "8BnEgHoWFysVcuFFX7QztDmzuH8r5ZFvyP3sYwn1XThm",
+      "chainId": "solana",
+      "dexId": "raydium",
+      "baseToken": {
+        "address": "So11111111111111111111111111111111111111112",
+        "symbol": "SOL",
+        "name": "Wrapped SOL",
+        "decimals": 9
+      },
+      "quoteToken": {
+        "address": "EPjFWdd5AufqSSqeM2qN1xzybapC8G4wEGGkZwyTDt1v",
+        "symbol": "USDC",
+        "name": "USD Coin",
+        "decimals": 6
+      },
+      "priceUsd": "98.45",
+      "priceNative": "98.45",
+      "volume": {
+        "h24": 25000000.0,
+        "h6": 10000000.0,
+        "h1": 2000000.0,
+        "m5": 500000.0
+      },
+      "liquidity": {
+        "usd": 15000000.0,
+        "base": 75000.0,
+        "quote": 7500000.0
+      },
+      "txns": {
+        "h24": {
+          "buys": 1200,
+          "sells": 980
+        }
+      },
+      "priceChange": {
+        "h24": 2.5,
+        "h6": 1.2,
+        "h1": 0.3,
+        "m5": 0.05
+      },
+      "pairCreatedAt": 1711651200
+    },
+    {
+      "pairAddress": "8f9sepGyZ2bXxxzD4hPxSBY7M7G4yJZqP6dWb5K8Xq2n",
+      "chainId": "solana",
+      "dexId": "orca",
+      "baseToken": {
+        "address": "So11111111111111111111111111111111111111112",
+        "symbol": "SOL",
+        "name": "Wrapped SOL",
+        "decimals": 9
+      },
+      "quoteToken": {
+        "address": "EPjFWdd5AufqSSqeM2qN1xzybapC8G4wEGGkZwyTDt1v",
+        "symbol": "USDC",
+        "name": "USD Coin",
+        "decimals": 6
+      },
+      "priceUsd": "98.50",
+      "priceNative": "98.50",
+      "volume": {
+        "h24": 18000000.0,
+        "h6": 7500000.0,
+        "h1": 1500000.0,
+        "m5": 300000.0
+      },
+      "liquidity": {
+        "usd": 12000000.0,
+        "base": 60000.0,
+        "quote": 5900000.0
+      },
+      "txns": {
+        "h24": {
+          "buys": 850,
+          "sells": 720
+        }
+      },
+      "priceChange": {
+        "h24": 2.3,
+        "h6": 1.1,
+        "h1": 0.25,
+        "m5": 0.02
+      },
+      "pairCreatedAt": 1711647600
+    },
+    {
+      "pairAddress": "9panbXfmBmimP5imj8r5KL2L5iTc5KPFGNYvF5RxFbV4",
+      "chainId": "ethereum",
+      "dexId": "uniswap-v3",
+      "baseToken": {
+        "address": "C02qKNyGgLqGHHErbN7H7i3YZ6aL5Mz3BcLGX9J7V4Bc",
+        "symbol": "WETH",
+        "name": "Wrapped Ether",
+        "decimals": 18
+      },
+      "quoteToken": {
+        "address": "A1b2C3D4E5F6G7H8I9J0K1L2M3N4O5P6Q7R8S9T0U",
+        "symbol": "USDC",
+        "name": "USD Coin",
+        "decimals": 6
+      },
+      "priceUsd": "3456.78",
+      "priceNative": "3456.78",
+      "volume": {
+        "h24": 150000000.0,
+        "h6": 60000000.0,
+        "h1": 10000000.0,
+        "m5": 1000000.0
+      },
+      "liquidity": {
+        "usd": 85000000.0,
+        "base": 24500.0,
+        "quote": 85000000.0
+      },
+      "txns": {
+        "h24": {
+          "buys": 3500,
+          "sells": 3200
+        }
+      },
+      "priceChange": {
+        "h24": -1.2,
+        "h6": -0.5,
+        "h1": 0.1,
+        "m5": -0.02
+      },
+      "pairCreatedAt": 1711200000
+    }
+  ]
+}

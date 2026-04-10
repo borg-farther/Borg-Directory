@@ -1,0 +1,5 @@
+{
+    "expected": "go_nil_pointer",
+    "actual": null,
+    "kind": "correct_no_match"
+}

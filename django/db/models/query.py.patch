@@ -1,0 +1,23 @@
+--- a/django/db/models/query.py
++++ b/django/db/models/query.py
+@@ -1746,7 +1746,15 @@ class Prefetch:
+         else:
+             qs = all_filters
+ 
+-        if partial:
++        if queryset.query.low_mark:
++            # If the queryset has been sliced, we need to apply the prefetch
++            # filters before slicing. We can't call filter() on a sliced
++            # queryset (it raises an AssertionError), so we clone the queryset
++            # and apply filters to the cloned queryset, then reapply the slice.
++            low_mark = queryset.query.low_mark
++            high_mark = queryset.query.high_mark
++            queryset = queryset._chain()
++            queryset.query.clear_limits()
++            queryset = queryset._filter_or_exclude(False, *filter_args)._slice(high_mark - low_mark, high_mark)
++            if partial:
++                # If partial, we need to slice the results after fetching
++                pass
++        if partial:
+             # Only prefetch some of the related queryset, this is ok only
+             # if the queryset is ordered.

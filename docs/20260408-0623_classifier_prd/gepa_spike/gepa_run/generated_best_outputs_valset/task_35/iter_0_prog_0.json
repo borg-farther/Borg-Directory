@@ -1,0 +1,5 @@
+{
+    "expected": "js_undefined_property",
+    "actual": "type_mismatch",
+    "kind": "false_confident"
+}

@@ -1,0 +1,106 @@
+type: workflow_pack
+version: 1.0.0
+problem_class: You are a Django expert. Follow Django best practices and the "Django
+  way."
+mental_model: You are a Django expert. Follow Django best practices and the "Django
+  way."
+required_inputs: []
+escalation_rules:
+- Escalate on ambiguous or missing information.
+id: borg://converted/django
+phases:
+- name: models
+  description: "- Use verbose_name and help_text on all fields\n- Add __str__ method\
+    \ to every model\n- Use UUIDField for public-facing IDs\n- Create custom managers\
+    \ for common queries\n- Use signals sparingly\u2014prefer overriding save()"
+  checkpoint: ''
+  anti_patterns:
+  - Never trust user input
+  - Use select_related() and prefetch_related() to avoid N+1 queries
+  prompts: []
+- name: views
+  description: '- Prefer class-based views for CRUD operations
+
+    - Use function-based views for simple, one-off logic
+
+    - Always validate and clean input data
+
+    - Return proper HTTP status codes
+
+    - Use Django REST Framework for APIs'
+  checkpoint: ''
+  anti_patterns:
+  - Never trust user input
+  - Use select_related() and prefetch_related() to avoid N+1 queries
+  prompts: []
+- name: security
+  description: '- Never trust user input
+
+    - Use Django''s ORM to prevent SQL injection
+
+    - Enable CSRF protection on all forms
+
+    - Set SECURE_SSL_REDIRECT = True in production
+
+    - Use django-csp for Content Security Policy headers
+
+    - Rotate SECRET_KEY regularly'
+  checkpoint: ''
+  anti_patterns:
+  - Never trust user input
+  - Use select_related() and prefetch_related() to avoid N+1 queries
+  prompts: []
+- name: database
+  description: "- Always create migrations for model changes\n- Use select_related()\
+    \ and prefetch_related() to avoid N+1 queries\n- Add db_index=True on frequently\
+    \ queried fields\n- Use Django's transaction.atomic() for multi-step operations\n\
+    \n```python\n# Good: Optimized queryset\nclass ArticleManager(models.Manager):\n\
+    \    def published(self):\n        return self.filter(\n            status='published',\n\
+    \            published_at__lte=timezone.now()\n        ).select_related('author').prefetch_related('tags')\n\
+    ```"
+  checkpoint: ''
+  anti_patterns:
+  - Never trust user input
+  - Use select_related() and prefetch_related() to avoid N+1 queries
+  prompts: []
+- name: templates
+  description: "- Use template inheritance with base.html\n- Keep logic out of templates\u2014\
+    use template tags\n- Escape all user-generated content (default in Django)\n-\
+    \ Use {% url %} tag instead of hardcoded URLs"
+  checkpoint: ''
+  anti_patterns:
+  - Never trust user input
+  - Use select_related() and prefetch_related() to avoid N+1 queries
+  prompts: []
+- name: testing
+  description: '- Use Django''s TestCase for database tests
+
+    - Use SimpleTestCase for non-database tests
+
+    - Factory Boy for test data generation
+
+    - Test views with RequestFactory or Client'
+  checkpoint: ''
+  anti_patterns:
+  - Never trust user input
+  - Use select_related() and prefetch_related() to avoid N+1 queries
+  prompts: []
+- name: deployment
+  description: '- Use environment variables for secrets (django-environ)
+
+    - Serve static files with WhiteNoise or CDN
+
+    - Use Gunicorn + Nginx in production
+
+    - Enable Django''s logging framework'
+  checkpoint: ''
+  anti_patterns:
+  - Never trust user input
+  - Use select_related() and prefetch_related() to avoid N+1 queries
+  prompts: []
+provenance:
+  author_agent: convert://tool
+  evidence: Converted from django
+  confidence: inferred
+  failure_cases: []
+

@@ -1,0 +1,24 @@
+# Reasoning Trace for TASK-026
+
+## Initial Observation
+The test `test_matmul_backward` fails because of a dimension mismatch when computing the backward pass.
+
+## Analysis
+For Y = X @ W + b:
+- X is 2x3, W is 3x4, so Y is 2x4
+- dL/dY (upstream) is 2x4
+- dL/dX = dL/dY @ W.T should be (2x4) @ (4x3) = 2x3
+
+The buggy code does `transpose(upstream) @ w`:
+- upstream is 2x4
+- transpose(upstream) is 4x2
+- w is 3x4
+- Can't multiply! 4x2 @ 3x4 doesn't work (2 != 3)
+
+## The Bug
+The code does `multiply(transpose(upstream), w)` but should do `multiply(upstream, transpose(w))`.
+
+## The Fix
+```python
+return multiply(upstream, w_transposed)  # Instead of multiply(transpose(upstream), w)
+```

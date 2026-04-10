@@ -1,0 +1,88 @@
+[
+  {
+    "id": "e1c-t1",
+    "name": "Initial Setup",
+    "description": "Install and configure Borg CLI for first use.",
+    "instructions": "Install Borg CLI and run the initial setup command to configure your API credentials. Verify the installation works by running borg --version.",
+    "expected_steps": [
+      "Install via: pip install borg-cli (or appropriate method)",
+      "Run: borg init",
+      "Enter API credentials when prompted",
+      "Verify: borg --version"
+    ],
+    "expert_time_seconds": 120,
+    "success_criteria": "borg --version returns a valid version string without errors",
+    "hints": [
+      "Try 'borg init --help' to see available options",
+      "Check if BORG_API_KEY environment variable is needed"
+    ]
+  },
+  {
+    "id": "e1c-t2",
+    "name": "Search for a Pattern",
+    "description": "Find existing approaches for a common debugging problem.",
+    "instructions": "Search Borg for approaches related to 'null pointer exception' debugging. Find an approach and note its name.",
+    "expected_steps": [
+      "Run: borg search 'null pointer exception'",
+      "Review the list of approaches returned",
+      "Select an approach and view its details"
+    ],
+    "expert_time_seconds": 60,
+    "success_criteria": "At least one approach is displayed with steps for handling null pointer exceptions",
+    "hints": [
+      "The search syntax is: borg search <query>",
+      "Results are ranked by relevance to your query"
+    ]
+  },
+  {
+    "id": "e1c-t3",
+    "name": "Apply an Approach",
+    "description": "Use an existing approach to solve a simulated problem.",
+    "instructions": "Apply the 'debug-null-pointer' approach to understand how it works. Preview the steps without executing them.",
+    "expected_steps": [
+      "Run: borg apply debug-null-pointer --dry-run",
+      "Review the suggested debugging steps",
+      "Note what files or code patterns the approach identifies"
+    ],
+    "expert_time_seconds": 180,
+    "success_criteria": "Approach is loaded and diagnostic steps are displayed",
+    "hints": [
+      "Try 'borg apply --list' to see available approaches",
+      "Use 'borg apply <name> --dry-run' to preview without executing"
+    ]
+  },
+  {
+    "id": "e1c-t4",
+    "name": "Custom Query",
+    "description": "Ask Borg for advice on a specific technical problem.",
+    "instructions": "Use the suggest command to get advice on handling rate limiting in API calls. Be specific about wanting to understand backoff strategies.",
+    "expected_steps": [
+      "Run: borg suggest 'rate limiting with exponential backoff'",
+      "Read the suggested approach or strategy",
+      "Note which approach or pack was recommended"
+    ],
+    "expert_time_seconds": 90,
+    "success_criteria": "A relevant suggestion or approach is returned that addresses rate limiting",
+    "hints": [
+      "The suggest command: borg suggest <description>",
+      "Be specific about your use case for better results"
+    ]
+  },
+  {
+    "id": "e1c-t5",
+    "name": "Feedback Loop",
+    "description": "Provide feedback on an approach to improve Borg's knowledge.",
+    "instructions": "After trying an approach (or reviewing one), submit feedback about its effectiveness. Rate it and add a note.",
+    "expected_steps": [
+      "Run: borg feedback --list",
+      "Select an approach to rate",
+      "Provide a rating (1-5) and optional notes"
+    ],
+    "expert_time_seconds": 60,
+    "success_criteria": "Feedback is recorded and acknowledged by the system",
+    "hints": [
+      "Use 'borg feedback --list' to see recent approaches",
+      "Honest feedback helps improve the collective knowledge base"
+    ]
+  }
+]

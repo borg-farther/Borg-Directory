@@ -1,0 +1,1 @@
+The ConnectionPool in repo/pool.py has a bug: when connections are released back to the pool, they aren't reset to a clean state. A connection returned with an active transaction or non-zero query count will be given to the next user in that dirty state. Fix the release() method to properly clean up connections before returning them to the pool.

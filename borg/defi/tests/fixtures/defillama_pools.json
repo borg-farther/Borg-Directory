@@ -1,0 +1,101 @@
+{
+  "data": [
+    {
+      "pool": "aave-v2-ethereum-usdc",
+      "chain": "Ethereum",
+      "project": "aave-v2",
+      "symbol": "USDC",
+      "tvlUsd": 150000000.0,
+      "apy": 3.25,
+      "apyBase": 3.25,
+      "apyReward": 0.0,
+      "category": "lending",
+      "updatedAt": 1711737600
+    },
+    {
+      "pool": "aave-v3-base-usdc",
+      "chain": "Base",
+      "project": "aave-v3",
+      "symbol": "USDC",
+      "tvlUsd": 75000000.0,
+      "apy": 4.50,
+      "apyBase": 4.50,
+      "apyReward": 0.0,
+      "category": "lending",
+      "updatedAt": 1711737600
+    },
+    {
+      "pool": "kamino-lending-sol",
+      "chain": "Solana",
+      "project": "kamino",
+      "symbol": "SOL",
+      "tvlUsd": 50000000.0,
+      "apy": 8.75,
+      "apyBase": 5.0,
+      "apyReward": 3.75,
+      "category": "lending",
+      "updatedAt": 1711737600
+    },
+    {
+      "pool": "raydium-clmm-sol-usdc",
+      "chain": "Solana",
+      "project": "raydium",
+      "symbol": "SOL-USDC",
+      "tvlUsd": 25000000.0,
+      "apy": 45.5,
+      "apyBase": 25.0,
+      "apyReward": 20.5,
+      "category": "clm",
+      "updatedAt": 1711737600
+    },
+    {
+      "pool": "orca-whirlpool-sol-usdc",
+      "chain": "Solana",
+      "project": "orca",
+      "symbol": "SOL-USDC",
+      "tvlUsd": 18000000.0,
+      "apy": 38.2,
+      "apyBase": 20.0,
+      "apyReward": 18.2,
+      "category": "amm",
+      "updatedAt": 1711737600
+    },
+    {
+      "pool": "compound-v2-eth-usdt",
+      "chain": "Ethereum",
+      "project": "compound-v2",
+      "symbol": "USDT",
+      "tvlUsd": 120000000.0,
+      "apy": 2.85,
+      "apyBase": 2.85,
+      "apyReward": 0.0,
+      "category": "lending",
+      "updatedAt": 1711737600
+    },
+    {
+      "pool": "marinade-finance-sol",
+      "chain": "Solana",
+      "project": "marinade",
+      "symbol": "SOL",
+      "tvlUsd": 400000000.0,
+      "apy": 7.1,
+      "apyBase": 7.1,
+      "apyReward": 0.0,
+      "category": "lending",
+      "updatedAt": 1711737600
+    },
+    {
+      "pool": "saber-pools-usdc-usdt",
+      "chain": "Solana",
+      "project": "saber",
+      "symbol": "USDC-USDT",
+      "tvlUsd": 85000000.0,
+      "apy": 2.45,
+      "apyBase": 2.45,
+      "apyReward": 0.0,
+      "category": "stable",
+      "updatedAt": 1711737600
+    }
+  ],
+  "status": "success"
+}

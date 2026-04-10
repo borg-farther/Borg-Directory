@@ -1,0 +1,40 @@
+[bench] corpus=173  already_done=0
+[bench] output -> /root/hermes-workspace/borg/docs/20260408-1618_priority5_experiments/classifier_benchmark_results.jsonl
+[bench] 5/173  borg=import_cycle  gem0=missing_dependency  gemctx=missing_dependency  elapsed=112s  gem_err=0
+[bench] 10/173  borg=None  gem0=missing_foreign_key  gemctx=null_pointer_chain  elapsed=432s  gem_err=1
+[bench] corpus=173  already_done=10
+[bench] output -> /root/hermes-workspace/borg/docs/20260408-1618_priority5_experiments/classifier_benchmark_results.jsonl
+[bench] 15/173  borg=None  gem0=configuration_error  gemctx=None  elapsed=40s  gem_err=3
+[bench] 20/173  borg=timeout_hang  gem0=timeout_hang  gemctx=timeout_hang  elapsed=80s  gem_err=3
+[bench] 25/173  borg=None  gem0=migration_state_desync  gemctx=migration_state_desync  elapsed=144s  gem_err=3
+[bench] 30/173  borg=None  gem0=configuration_error  gemctx=configuration_error  elapsed=184s  gem_err=3
+[bench] 35/173  borg=None  gem0=type_mismatch  gemctx=None  elapsed=224s  gem_err=3
+[bench] 40/173  borg=None  gem0=None  gemctx=None  elapsed=348s  gem_err=5
+[bench] 45/173  borg=None  gem0=timeout_hang  gemctx=None  elapsed=388s  gem_err=5
+[bench] 50/173  borg=None  gem0=None  gemctx=None  elapsed=428s  gem_err=5
+[bench] 55/173  borg=None  gem0=circular_dependency  gemctx=None  elapsed=468s  gem_err=5
+[bench] 60/173  borg=None  gem0=type_mismatch  gemctx=None  elapsed=508s  gem_err=5
+[bench] 65/173  borg=None  gem0=type_mismatch  gemctx=None  elapsed=548s  gem_err=5
+[bench] 70/173  borg=None  gem0=import_cycle  gemctx=None  elapsed=611s  gem_err=5
+[bench] 75/173  borg=None  gem0=type_mismatch  gemctx=None  elapsed=651s  gem_err=5
+[bench] 80/173  borg=None  gem0=missing_dependency  gemctx=None  elapsed=715s  gem_err=5
+[bench] 85/173  borg=None  gem0=configuration_error  gemctx=None  elapsed=779s  gem_err=6
+[bench] 90/173  borg=None  gem0=configuration_error  gemctx=None  elapsed=845s  gem_err=6
+[bench] 95/173  borg=None  gem0=race_condition  gemctx=None  elapsed=910s  gem_err=7
+[bench] 100/173  borg=None  gem0=type_mismatch  gemctx=None  elapsed=997s  gem_err=7
+[bench] 105/173  borg=None  gem0=type_mismatch  gemctx=None  elapsed=1037s  gem_err=7
+[bench] 110/173  borg=None  gem0=missing_dependency  gemctx=None  elapsed=1077s  gem_err=7
+[bench] 115/173  borg=None  gem0=null_pointer_chain  gemctx=null_pointer_chain  elapsed=1117s  gem_err=8
+[bench] 120/173  borg=None  gem0=race_condition  gemctx=None  elapsed=1157s  gem_err=9
+[bench] 125/173  borg=None  gem0=type_mismatch  gemctx=None  elapsed=1197s  gem_err=9
+[bench] 130/173  borg=None  gem0=timeout_hang  gemctx=timeout_hang  elapsed=1237s  gem_err=9
+[bench] 135/173  borg=None  gem0=permission_denied  gemctx=None  elapsed=1277s  gem_err=10
+[bench] 140/173  borg=None  gem0=configuration_error  gemctx=None  elapsed=1317s  gem_err=10
+[bench] 145/173  borg=None  gem0=missing_dependency  gemctx=missing_dependency  elapsed=1380s  gem_err=10
+[bench] 150/173  borg=None  gem0=None  gemctx=None  elapsed=1420s  gem_err=10
+[bench] 155/173  borg=None  gem0=missing_dependency  gemctx=None  elapsed=1460s  gem_err=11
+[bench] 160/173  borg=None  gem0=None  gemctx=None  elapsed=1500s  gem_err=12
+[bench] 165/173  borg=permission_denied  gem0=permission_denied  gemctx=permission_denied  elapsed=1565s  gem_err=12
+[bench] 170/173  borg=None  gem0=configuration_error  gemctx=configuration_error  elapsed=1629s  gem_err=12
+[bench] 173/173  borg=None  gem0=None  gemctx=None  elapsed=1653s  gem_err=12
+[bench] done. gemini_calls=346 gemini_errors=12

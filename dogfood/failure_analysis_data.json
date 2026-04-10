@@ -1,0 +1,145 @@
+{
+  "analysis_timestamp": "2026-04-01T09:49:00Z",
+  "data_sources": [
+    "dogfood/all_results.json",
+    "dogfood/v2_data/cal_round1_results.json", 
+    "dogfood/experiment_data_actual.json",
+    "dogfood/exp_batch2.json",
+    "dogfood/calibration_run2.json"
+  ],
+  "summary_stats": {
+    "v2_calibration": {
+      "total": 33,
+      "passed": 30,
+      "failed": 3,
+      "success_rate": 0.909
+    },
+    "hard_task_calibration": {
+      "total": 10,
+      "passed": 7,
+      "failed_or_partial": 3,
+      "success_rate": 0.70
+    }
+  },
+  "confirmed_failures": [
+    {
+      "task_id": "TASK-011_lru_cache",
+      "type": "data_structure_logic",
+      "difficulty": "hard",
+      "root_cause": "LRU eviction logic doesn't properly track access order - get() updates access but put() ignores it",
+      "symptom": "Wrong item evicted after get() + put() sequence",
+      "reproducible": true,
+      "files_affected": ["lru_cache.py"],
+      "attempts_needed": "unknown from data"
+    },
+    {
+      "task_id": "TASK-014_encoding",
+      "type": "encoding_mismatch",
+      "difficulty": "medium",
+      "root_cause": "_load_config() missing encoding='utf-8' that save_config() has, causing BOM issues",
+      "symptom": "String comparison fails after JSON save/load despite identical print output",
+      "reproducible": "system_dependent",
+      "files_affected": ["text_processor.py"]
+    },
+    {
+      "task_id": "TASK-031_cache_invalidation",
+      "type": "lifecycle_management",
+      "difficulty": "hard",
+      "root_cause": "Three bugs: (1) get() returns expired without deleting, (2) cleanup() modifies dict during iteration, (3) size() counts expired",
+      "symptom": "Cache grows unbounded, iteration crashes, expired entries persist",
+      "reproducible": true,
+      "files_affected": ["cache.py"]
+    }
+  ],
+  "hard_task_failures": [
+    {
+      "task_id": "HARD-004",
+      "name": "Event System Race",
+      "calibration_result": "partially_fixed",
+      "root_cause": "events.py iterates self.subscribers directly while handlers unsubscribe during iteration",
+      "agent_attempts": [
+        {"attempt": 1, "action": "Fixed processor.py for loop with copy()", "outcome": "WRONG FILE"},
+        {"attempt": 2, "action": "Fixed events.py to iterate over list(self.subscribers)", "outcome": "SUCCESS"}
+      ],
+      "remaining_issue": "Tests still fail due to shared global emitter state between tests",
+      "pattern": "bug_origin_different_from_manifestation",
+      "multiple_bugs": true
+    },
+    {
+      "task_id": "HARD-006",
+      "name": "Template Engine",
+      "calibration_result": "partially_fixed",
+      "root_cause": "Three bugs: (1) default_filter treats 0 as falsy, (2) renderer applies filters but doesn't use result, (3) regex matches literal braces",
+      "agent_attempts": 4,
+      "files_modified": ["filters.py", "renderer.py", "template.py"],
+      "remaining_issue": "One test has incorrect assertion (test bug, not code bug)",
+      "pattern": "multiple_interacting_bugs",
+      "multiple_bugs": true
+    },
+    {
+      "task_id": "HARD-014",
+      "name": "Middleware Chain Short-Circuit",
+      "calibration_result": "conflicting_tests",
+      "root_cause": "rate_limit_mw.py raises exception instead of returning 429 response",
+      "agent_action": "Fixed code correctly (changed raise to return Response(429))",
+      "remaining_issue": "Tests contradict each other - some expect exception, some expect 429",
+      "pattern": "test_design_issue",
+      "multiple_bugs": false
+    },
+    {
+      "task_id": "HARD-015",
+      "name": "State Machine Transition",
+      "calibration_result": "partially_fixed",
+      "root_cause": "execute_transition() checks guard AFTER state change instead of BEFORE",
+      "remaining_issue": "Two test failures due to rule shadowing in get_rule()",
+      "pattern": "execution_order_matters",
+      "multiple_bugs": false
+    }
+  ],
+  "failure_taxonomy": {
+    "iteration_safety": {
+      "examples": ["HARD-004", "TASK-031"],
+      "pattern": "Modification during iteration",
+      "difficulty": "hard"
+    },
+    "data_structure_logic": {
+      "examples": ["TASK-011"],
+      "pattern": "Mutation tracking incorrect",
+      "difficulty": "hard"
+    },
+    "encoding_mismatch": {
+      "examples": ["TASK-014"],
+      "pattern": "Read/write asymmetry",
+      "difficulty": "medium"
+    },
+    "multiple_interacting_bugs": {
+      "examples": ["HARD-006"],
+      "pattern": "All bugs must be fixed together",
+      "difficulty": "hard"
+    },
+    "test_design_issues": {
+      "examples": ["HARD-014", "HARD-015"],
+      "pattern": "Tests don't agree on expected behavior",
+      "difficulty": "medium"
+    },
+    "global_state": {
+      "examples": ["HARD-004"],
+      "pattern": "Shared state between tests causes interference",
+      "difficulty": "medium"
+    }
+  },
+  "borg_reasoning_trace_match": {
+    "matches_real_failures": true,
+    "evidence": [
+      "HARD-004 required wrong hypothesis first, then correct - matches trace pattern",
+      "HARD-006 needed multiple files fixed - matches trace pattern",
+      "HARD-014 had test contradictions - trace captured this",
+      "Multi-attempt diagnosis is real (HARD-004: 2 attempts, HARD-006: 4 attempts)"
+    ]
+  },
+  "infrastructure_issues": {
+    "batch2_batch3_valid": false,
+    "reason": "hermes agent command not available - all runs failed with 'invalid choice: agent'",
+    "impact": "Cannot use batch2/3 for difficulty analysis"
+  }
+}

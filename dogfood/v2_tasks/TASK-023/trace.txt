@@ -1,0 +1,33 @@
+# Reasoning Trace for TASK-023
+
+## Initial Observation
+The middleware chain tests fail because errors are not being properly handled by error handlers.
+
+## Analysis
+Looking at the `execute` method, when a middleware throws an exception:
+1. It gets caught in the except block
+2. It sets `context["error"] = e`
+3. It prints and re-raises with `raise`
+
+The problem is the `raise` statement - it prevents the rest of the code from running, including the error handler loop at the end of execute().
+
+## Key Insight
+The `raise` statement in the except block causes the function to exit immediately, so the error handler loop never runs. The fix is to NOT re-raise, but instead let the error handler loop process the error.
+
+## The Bug
+```python
+except Exception as e:
+    context["error"] = e
+    print(f"Error in middleware {middleware_index}: {e}")
+    raise  # BUG: This prevents error handlers from running!
+```
+
+## The Fix
+Remove the `raise` statement. The error should be stored in context, and control should flow to the error handler loop at the end of execute().
+
+```python
+except Exception as e:
+    context["error"] = e
+    print(f"Error in middleware {middleware_index}: {e}")
+    # Don't re-raise - let error handlers run
+```

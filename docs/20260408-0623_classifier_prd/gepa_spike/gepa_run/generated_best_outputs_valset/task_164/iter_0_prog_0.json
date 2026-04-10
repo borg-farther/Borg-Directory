@@ -1,0 +1,5 @@
+{
+    "expected": "permission_denied",
+    "actual": "permission_denied",
+    "kind": "correct"
+}

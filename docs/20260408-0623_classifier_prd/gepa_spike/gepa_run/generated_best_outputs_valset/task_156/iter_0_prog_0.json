@@ -1,0 +1,5 @@
+{
+    "expected": "k8s_probe_failed",
+    "actual": "timeout_hang",
+    "kind": "false_confident"
+}

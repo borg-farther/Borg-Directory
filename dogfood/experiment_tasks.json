@@ -1,0 +1,427 @@
+{
+  "version": "1.0",
+  "description": "Borg reasoning cache experiment tasks for measuring AI agent performance",
+  "tasks": [
+    {
+      "id": "DEBUG-001",
+      "category": "debugging",
+      "title": "Flask HTTP Status Code Bug",
+      "setup": {
+        "type": "create_repo",
+        "instructions": "Create a Flask app with a route that returns 200 instead of 404 for missing resources, and 500 instead of 400 for bad input. Commit as initial state.",
+        "repo_url": "https://github.com/pallets/flask",
+        "commit_hash": "b94f0b9c8d6f2e8c3a1b4d5e6f7a8b9c0d1e2f3a"
+      },
+      "prompt": "The Flask app at /repo has a bug: the /api/users/<id> endpoint returns HTTP 200 with an empty body when a user is not found, instead of returning 404. Also, when invalid JSON is sent to POST /api/users, it returns 500 instead of 400. Fix both issues.",
+      "pass_condition": "Run: cd /repo && python -m pytest tests/ -v && curl -s -o /dev/null -w '%{http_code}' http://localhost:5000/api/users/99999 returns 404, curl -s -o /dev/null -w '%{http_code}' -X POST -H 'Content-Type: application/json' -d 'invalid' http://localhost:5000/api/users returns 400",
+      "difficulty": "medium",
+      "borg_pack": "systematic-debugging",
+      "phases": ["reproduce", "hypothesize", "isolate", "fix", "verify"],
+      "expected_time_minutes": 10
+    },
+    {
+      "id": "DEBUG-002",
+      "category": "debugging",
+      "title": "Node.js Async/Await Error Handling",
+      "setup": {
+        "type": "git_clone_and_reset",
+        "instructions": "Clone a Express.js starter repo, checkout a known broken commit with async error handling issues",
+        "repo_url": "https://github.com/expressjs/express",
+        "commit_hash": "61a6e8f7c2d3b4a5c6d7e8f9a0b1c2d3e4f5a6b7"
+      },
+      "prompt": "In the Express.js app at /repo, the async route handler for GET /users/:id does not properly catch errors, causing unhandled promise rejections. Add proper error handling so that database connection failures return a 503 status with a helpful message, not a crash.",
+      "pass_condition": "cd /repo && npm test && curl -s http://localhost:3000/users/1 returns valid JSON; stop the database and curl -s -o /dev/null -w '%{http_code}' http://localhost:3000/users/1 returns 503",
+      "difficulty": "medium",
+      "borg_pack": "systematic-debugging",
+      "phases": ["reproduce", "hypothesize", "isolate", "fix", "verify"],
+      "expected_time_minutes": 12
+    },
+    {
+      "id": "DEBUG-003",
+      "category": "debugging",
+      "title": "Django ORM N+1 Query Problem",
+      "setup": {
+        "type": "create_repo",
+        "instructions": "Create a Django project with a User model and Profile model. Create a view that fetches users and their profiles in a loop, causing N+1 queries. Seed with test data."
+      },
+      "prompt": "The Django app at /repo has severe performance issues on the /users directory page. Using Django Debug Toolbar or logs, you can see it executes 1 query for users plus 1 query per user for their profile (N+1 problem). Optimize the view to use select_related or prefetch_related to reduce this to 2 queries maximum.",
+      "pass_condition": "cd /repo && python manage.py test tests/ --verbosity=2 && python -c \"import django; django.setup(); from django.test.utils import CaptureQueriesContext; from django.db import connection; from users.views import user_list; with CaptureQueriesContext(connection) as ctx: list(user_list(request)); print(f'Query count: {len(ctx)}')\" returns query count <= 2",
+      "difficulty": "medium",
+      "borg_pack": "systematic-debugging",
+      "phases": ["reproduce", "hypothesize", "isolate", "fix", "verify"],
+      "expected_time_minutes": 15
+    },
+    {
+      "id": "DEBUG-004",
+      "category": "debugging",
+      "title": "Go Goroutine Leak in HTTP Handler",
+      "setup": {
+        "type": "create_repo",
+        "instructions": "Create a Go HTTP server with a handler that spawns goroutines but never properly terminates them when the client disconnects. Include a way to detect goroutine leaks."
+      },
+      "prompt": "The Go HTTP server at /repo has a memory leak in the /api/search endpoint. Each request spawns a goroutine for background processing that never terminates, even after the client disconnects. Fix this by implementing proper context cancellation and goroutine cleanup.",
+      "pass_condition": "cd /repo && go test -v -run TestGoroutineLeak ./... && go run -race server.go & sleep 2 && curl http://localhost:8080/api/search?q=test & sleep 1 && pkill -f 'server.go' && sleep 2 && go test -v -run TestGoroutineCount returns 'PASS'",
+      "difficulty": "hard",
+      "borg_pack": "systematic-debugging",
+      "phases": ["reproduce", "hypothesize", "isolate", "fix", "verify"],
+      "expected_time_minutes": 20
+    },
+    {
+      "id": "DEBUG-005",
+      "category": "debugging",
+      "title": "Python Threading Race Condition",
+      "setup": {
+        "type": "create_repo",
+        "instructions": "Create a Python app with a shared counter that multiple threads increment. The increment is not atomic, causing lost updates. Include a test that reliably reproduces the race."
+      },
+      "prompt": "The Python app at /repo has a race condition in the request counter. Multiple threads increment a shared counter without proper locking, causing lost updates. Run `python test_race.py` multiple times - you'll see different counts each time, all less than the expected 10000. Fix the race condition using threading.Lock or a thread-safe counter.",
+      "pass_condition": "cd /repo && for i in {1..5}; do python test_race.py; done | sort | uniq -c returns all counts should be exactly 10000 after fix (race condition eliminated)",
+      "difficulty": "hard",
+      "borg_pack": "systematic-debugging",
+      "phases": ["reproduce", "hypothesize", "isolate", "fix", "verify"],
+      "expected_time_minutes": 15
+    },
+    {
+      "id": "DEBUG-006",
+      "category": "debugging",
+      "title": "React State Update Not Triggering Re-render",
+      "setup": {
+        "type": "create_repo",
+        "instructions": "Create a React app with a component that updates state using direct mutation instead of proper setState, so re-renders don't occur."
+      },
+      "prompt": "The React component at /repo/src/Counter.js has a bug: clicking the increment button doesn't update the display. The state is being mutated directly (this.state.count++) instead of using setState. Fix the component to properly update state and trigger re-renders.",
+      "pass_condition": "cd /repo && npm test -- --testPathPattern=Counter.test.js --coverage returns 100% pass; manual test: click increment button, display shows incremented value",
+      "difficulty": "easy",
+      "borg_pack": "systematic-debugging",
+      "phases": ["reproduce", "hypothesize", "isolate", "fix", "verify"],
+      "expected_time_minutes": 8
+    },
+    {
+      "id": "DEBUG-007",
+      "category": "debugging",
+      "title": "Python Memory Leak in Data Processing",
+      "setup": {
+        "type": "create_repo",
+        "instructions": "Create a Python data processing script that accumulates data in a global list without clearing it, causing memory to grow unboundedly. Include memory profiling code."
+      },
+      "prompt": "The Python data processing script at /repo/process.py has a memory leak. Each call to process_batch() adds results to a global list but never clears it, causing memory to grow with each batch. Fix the memory leak while ensuring historical data can still be accessed if needed.",
+      "pass_condition": "cd /repo && python -m pytest tests/test_memory.py -v && python -c \"import tracemalloc; tracemalloc.start(); from process import process_batch; [process_batch(i) for i in range(100)]; current, peak = tracemalloc.get_traced_memory(); print(f'Peak memory: {peak / 1024 / 1024:.2f} MB')\" returns peak < 50MB",
+      "difficulty": "medium",
+      "borg_pack": "systematic-debugging",
+      "phases": ["reproduce", "hypothesize", "isolate", "fix", "verify"],
+      "expected_time_minutes": 15
+    },
+    {
+      "id": "DEBUG-008",
+      "category": "debugging",
+      "title": "Rust Borrow Checker Error",
+      "setup": {
+        "type": "create_repo",
+        "instructions": "Create a Rust project with a data structure that has a borrow checker error - trying to have two mutable references to the same data."
+      },
+      "prompt": "The Rust code at /repo/src/data_store.rs has a compile error due to improper borrowing. The update_cache() function tries to get two mutable references to the cache HashMap, which Rust doesn't allow. Refactor the code to fix the borrowing issues while maintaining the same functionality.",
+      "pass_condition": "cd /repo && cargo build returns successful build with no warnings && cargo test returns all tests pass",
+      "difficulty": "medium",
+      "borg_pack": "systematic-debugging",
+      "phases": ["reproduce", "hypothesize", "isolate", "fix", "verify"],
+      "expected_time_minutes": 12
+    },
+    {
+      "id": "TEST-001",
+      "category": "testing",
+      "title": "Add Unit Tests to CLI Tool",
+      "setup": {
+        "type": "git_clone_and_reset",
+        "instructions": "Clone a Python CLI tool repo (like httpie or click) at a commit where tests are missing for argument parsing",
+        "repo_url": "https://github.com/pallets/click",
+        "commit_hash": "d4f3a1b6c8e9f0a1b2c3d4e5f6a7b8c9d0e1f2a3b"
+      },
+      "prompt": "The Click CLI tool at /repo is missing tests for the nested command group hierarchy. Write comprehensive unit tests for /repo/src/click/commands.py that cover: command discovery, help text generation, argument parsing for nested commands, and error handling for invalid subcommand combinations.",
+      "pass_condition": "cd /repo && python -m pytest tests/test_commands.py -v --cov=src/click/commands --cov-report=term-missing returns >90% coverage and all tests pass",
+      "difficulty": "medium",
+      "borg_pack": "test-driven-development",
+      "phases": ["analyze requirements", "write tests first", "implement", "verify coverage"],
+      "expected_time_minutes": 20
+    },
+    {
+      "id": "TEST-002",
+      "category": "testing",
+      "title": "Write Integration Tests for API Endpoints",
+      "setup": {
+        "type": "create_repo",
+        "instructions": "Create an Express.js app with user CRUD endpoints but no integration tests. Include a test database setup."
+      },
+      "prompt": "The Express.js API at /repo has no integration tests. Write tests using Supertest that cover: GET /users (list with pagination), GET /users/:id (get single user, 404 case), POST /users (validation errors, success), PUT /users/:id (partial update), DELETE /users/:id. Tests should hit actual HTTP endpoints with a test database.",
+      "pass_condition": "cd /repo && npm test -- --coverage returns >80% line coverage for routes and all integration tests pass",
+      "difficulty": "medium",
+      "borg_pack": "test-driven-development",
+      "phases": ["analyze requirements", "write tests first", "implement", "verify coverage"],
+      "expected_time_minutes": 25
+    },
+    {
+      "id": "TEST-003",
+      "category": "testing",
+      "title": "Add Edge Case Tests for Python Utility Module",
+      "setup": {
+        "type": "git_clone_and_reset",
+        "instructions": "Clone Python's collections module or a similar utility library at a commit with known edge case gaps",
+        "repo_url": "https://github.com/python/cpython",
+        "commit_hash": "a1b2c3d4e5f6a7b8c9d0e1f2a3b4c5d6e7f8a9b0"
+      },
+      "prompt": "The Python utility module at /repo/src/utils/parsers.py handles JSON, YAML, and TOML parsing but is missing edge case tests. Add tests for: empty strings, whitespace-only input, deeply nested structures (>100 levels), unicode edge cases (emoji, RTL text, null bytes), circular references (for YAML), and extremely large files (>10MB with streaming).",
+      "pass_condition": "cd /repo && python -m pytest tests/test_parsers.py -v --hypothesis-show-statistics returns all edge case tests pass with no flakiness",
+      "difficulty": "medium",
+      "borg_pack": "test-driven-development",
+      "phases": ["analyze requirements", "write tests first", "implement", "verify coverage"],
+      "expected_time_minutes": 20
+    },
+    {
+      "id": "TEST-004",
+      "category": "testing",
+      "title": "Property-Based Testing for TypeScript Utility Functions",
+      "setup": {
+        "type": "create_repo",
+        "instructions": "Create a TypeScript project with pure utility functions (string manipulation, date formatting, etc.) with basic unit tests but no property-based tests."
+      },
+      "prompt": "The TypeScript utility functions at /repo/src/utils/ have traditional example-based tests but no property-based tests. Using fast-check or similar library, add property-based tests that verify: string truncation preserves encoding, date formatting is consistent across timezones, numeric utilities work for edge values (MAX_SAFE_INTEGER, negative numbers, fractions).",
+      "pass_condition": "cd /repo && npm test returns all property tests pass with >200 successful runs per property && npm run coverage returns >85% coverage",
+      "difficulty": "hard",
+      "borg_pack": "test-driven-development",
+      "phases": ["analyze requirements", "write tests first", "implement", "verify coverage"],
+      "expected_time_minutes": 25
+    },
+    {
+      "id": "REVIEW-001",
+      "category": "code-review",
+      "title": "Security Vulnerability Review",
+      "setup": {
+        "type": "git_clone_and_reset",
+        "instructions": "Clone a Node.js web application and checkout a commit with intentional security vulnerabilities",
+        "repo_url": "https://github.com/ExpressJS/express",
+        "commit_hash": "b1c2d3e4f5a6b7c8d9e0f1a2b3c4d5e6f7a8b9c0"
+      },
+      "prompt": "Review the code changes in /repo for security vulnerabilities. The PR adds new endpoints for user profile picture uploads and a password reset feature. Identify ALL security issues including: SQL injection, XSS vulnerabilities, CSRF issues, authentication bypasses, insecure direct object references, and any sensitive data exposure. List each vulnerability with severity (Critical/High/Medium/Low), location (file:line), and recommended fix.",
+      "pass_condition": "cd /repo && node scripts/security_scan.js returns 'No critical vulnerabilities found' (all critical/high issues must be fixed or documented as accepted risk with justification)",
+      "difficulty": "hard",
+      "borg_pack": "code-review",
+      "phases": ["understand context", "check correctness", "check style", "verify tests"],
+      "expected_time_minutes": 25
+    },
+    {
+      "id": "REVIEW-002",
+      "category": "code-review",
+      "title": "Performance Review for Database Queries",
+      "setup": {
+        "type": "create_repo",
+        "instructions": "Create a Django app with known performance issues: missing indexes, inefficient queries, N+1 problems."
+      },
+      "prompt": "Review the Django models and views at /repo for performance issues. The app is experiencing slow page loads (>2s) on the dashboard. Identify: missing database indexes, inefficient ORM queries, N+1 problems, unoptimized querysets (select_related/prefetch_related opportunities), and any missing database-level constraints that cause redundant queries. Provide specific file:line citations and estimated impact.",
+      "pass_condition": "cd /repo && python manage.py test tests/ --verbosity=1 && python -c \"from django.test.utils import override_settings; from django.db import connection; from django.test.utils import CaptureQueriesContext; from dashboard.views import dashboard; context = CaptureQueriesContext(connection); context.install(); list(dashboard(request)); print(f'Query count: {len(context)}')\" returns count <= 5",
+      "difficulty": "medium",
+      "borg_pack": "code-review",
+      "phases": ["understand context", "check correctness", "check style", "verify tests"],
+      "expected_time_minutes": 20
+    },
+    {
+      "id": "REVIEW-003",
+      "category": "code-review",
+      "title": "API Design Review",
+      "setup": {
+        "type": "git_clone_and_reset",
+        "instructions": "Clone a REST API project and checkout a commit with API design issues",
+        "repo_url": "https://github.com/Microsoft/api-guidelines",
+        "commit_hash": "c1d2e3f4a5b6c7d8e9f0a1b2c3d4e5f6a7b8c9d0"
+      },
+      "prompt": "Review the REST API specification and implementation at /repo for API design issues. The API has inconsistent naming conventions, poor resource modeling (actions as resources instead of methods), missing or incorrect HTTP status codes, no pagination on collection endpoints, and unclear error response formats. Suggest improvements following REST best practices and provide a revised openapi.yaml.",
+      "pass_condition": "cd /repo && npm test && npx @stoplight/spectral lint openapi.yaml returns no errors (only warnings acceptable)",
+      "difficulty": "medium",
+      "borg_pack": "code-review",
+      "phases": ["understand context", "check correctness", "check style", "verify tests"],
+      "expected_time_minutes": 20
+    },
+    {
+      "id": "REFACTOR-001",
+      "category": "refactoring",
+      "title": "Extract Duplicate Code into Reusable Functions",
+      "setup": {
+        "type": "create_repo",
+        "instructions": "Create a Python script with 3-4 almost-identical functions for processing different data types (CSV, JSON, XML) with duplicated validation, error handling, and logging code."
+      },
+      "prompt": "The Python data processors at /repo/src/processors/ contain significant duplicated code across CSV, JSON, and XML processors. Each has the same validation logic, error handling pattern, and logging setup. Extract the common functionality into a base class or utility functions, then refactor each processor to use the shared code while maintaining all current functionality and passing all existing tests.",
+      "pass_condition": "cd /repo && python -m pytest tests/ -v && python -m pylint src/processors/ --disable=all --enable=duplicate-code returns no duplicate code warnings",
+      "difficulty": "medium",
+      "borg_pack": "code-review",
+      "phases": ["understand context", "check correctness", "check style", "verify tests"],
+      "expected_time_minutes": 20
+    },
+    {
+      "id": "REFACTOR-002",
+      "category": "refactoring",
+      "title": "Replace Callback Hell with Async/Await",
+      "setup": {
+        "type": "git_clone_and_reset",
+        "instructions": "Create a Node.js project with deeply nested callbacks (callback hell) for a data processing pipeline",
+        "repo_url": "https://github.com/nodejs/node",
+        "commit_hash": "d1e2f3a4b5c6d7e8f9a0b1c2d3e4f5a6b7c8d9e0"
+      },
+      "prompt": "The Node.js data pipeline at /repo/src/pipeline.js uses deeply nested callbacks (6+ levels deep) for processing: read file → parse → validate → transform → enrich → save. Refactor to use async/await with proper error handling, keeping the same behavior. Ensure all error paths are preserved.",
+      "pass_condition": "cd /repo && npm test -- --coverage returns >80% coverage && node -e \"require('async')\" # verify no nested callbacks > 2 levels deep",
+      "difficulty": "medium",
+      "borg_pack": "code-review",
+      "phases": ["understand context", "check correctness", "check style", "verify tests"],
+      "expected_time_minutes": 25
+    },
+    {
+      "id": "REFACTOR-003",
+      "category": "refactoring",
+      "title": "Break Up God Object into Modules",
+      "setup": {
+        "type": "create_repo",
+        "instructions": "Create a 2000+ line Python class that handles file operations, data transformation, validation, and database operations all in one class."
+      },
+      "prompt": "The DataManager class at /repo/src/data_manager.py is a 'god object' with 2478 lines handling file I/O, data validation, transformation, database operations, caching, and event handling. Break this into focused modules following Single Responsibility Principle: separate DataManager into FileHandler, DataValidator, DataTransformer, DatabaseManager, CacheManager, and EventBus classes with clear interfaces.",
+      "pass_condition": "cd /repo && python -m pytest tests/ -v && python -m radon cc -a src/data_manager.py returns average complexity < 10 && python -m pytest tests/ -k integration returns all integration tests pass",
+      "difficulty": "hard",
+      "borg_pack": "code-review",
+      "phases": ["understand context", "check correctness", "check style", "verify tests"],
+      "expected_time_minutes": 30
+    },
+    {
+      "id": "DEPLOY-001",
+      "category": "deployment",
+      "title": "Fix Docker Container Build Failure",
+      "setup": {
+        "type": "create_repo",
+        "instructions": "Create a Node.js app with a Dockerfile that has multi-stage build issues: wrong base image version, missing dependencies, incorrect WORKDIR paths."
+      },
+      "prompt": "The Dockerfile at /repo/Dockerfile fails to build with errors: 'npm ERR! Could not resolve dependencies', 'exec format error' on ENTRYPOINT, and 'no such file or directory' for copied files. Fix the Dockerfile to successfully build a production-ready container image. Use multi-stage builds to minimize image size.",
+      "pass_condition": "cd /repo && docker build -t test-app . returns 'Successfully built' && docker run --rm test-app npm test returns 'PASS' && docker images test-app returns size < 200MB",
+      "difficulty": "medium",
+      "borg_pack": "build-review-harden-ship",
+      "phases": ["build", "review", "harden", "ship"],
+      "expected_time_minutes": 20
+    },
+    {
+      "id": "DEPLOY-002",
+      "category": "deployment",
+      "title": "Fix CI/CD Pipeline Configuration",
+      "setup": {
+        "type": "git_clone_and_reset",
+        "instructions": "Clone a project with a broken GitHub Actions workflow: missing environment variables, incorrect test commands, cache misconfiguration",
+        "repo_url": "https://github.com/actions/checkout",
+        "commit_hash": "e1a2f3b4c5d6e7f8a9b0c1d2e3f4a5b6c7d8e9f0"
+      },
+      "prompt": "The GitHub Actions workflow at /repo/.github/workflows/ci.yml is failing. Issues: tests run before dependencies are installed, environment variables for staging/production are missing secrets, cache key doesn't include package-lock.json hash, deployment runs on every branch instead of only main. Fix all issues so CI passes and deployments only happen on main branch after all tests pass.",
+      "pass_condition": "cd /repo && act -j test returns '✓ test (ubuntu-latest)' && act -j deploy returns '✓ deploy (ubuntu-latest)' skipped for feature branches && git log --oneline -1 returns deterministic commit",
+      "difficulty": "medium",
+      "borg_pack": "build-review-harden-ship",
+      "phases": ["build", "review", "harden", "ship"],
+      "expected_time_minutes": 15
+    },
+    {
+      "id": "CONTROL-001",
+      "category": "control",
+      "title": "Simple Grep Task",
+      "setup": {
+        "type": "create_repo",
+        "instructions": "Create a repo with 10 Python files containing various function definitions."
+      },
+      "prompt": "In the repository at /repo, find all Python files that contain a function named 'process_data' and list their file paths. Return the list.",
+      "pass_condition": "cd /repo && grep -r --include='*.py' 'def process_data' . returns list of 5 files containing the function",
+      "difficulty": "easy",
+      "borg_pack": null,
+      "phases": [],
+      "expected_time_minutes": 2,
+      "reasoning": "This is a simple search task that requires no structured debugging, testing, or review approach"
+    },
+    {
+      "id": "CONTROL-002",
+      "category": "control",
+      "title": "File Renaming Task",
+      "setup": {
+        "type": "create_repo",
+        "instructions": "Create a repo with files that need consistent renaming."
+      },
+      "prompt": "Rename all files in /repo/src/components that end in .jsx to .tsx (they're actually TypeScript files despite the extension). Update any imports in other files that reference these components.",
+      "pass_condition": "cd /repo && find src/components -name '*.tsx' | wc -l returns 15 && grep -r \"from '.*\\.jsx'\" src/ returns no results",
+      "difficulty": "easy",
+      "borg_pack": null,
+      "phases": [],
+      "expected_time_minutes": 5,
+      "reasoning": "This is a mechanical file renaming task that doesn't require any structured reasoning approach"
+    },
+    {
+      "id": "CONTROL-003",
+      "category": "control",
+      "title": "Documentation Update",
+      "setup": {
+        "type": "create_repo",
+        "instructions": "Create a repo with outdated README.md and API docs."
+      },
+      "prompt": "Update the README.md at /repo/README.md to reflect the current version (2.5.0), add installation instructions for macOS (previously only Windows/Linux were documented), and fix 3 broken links to external documentation.",
+      "pass_condition": "cd /repo && grep 'version 2.5.0' README.md returns the version line && grep -i macos README.md returns installation instructions",
+      "difficulty": "easy",
+      "borg_pack": null,
+      "phases": [],
+      "expected_time_minutes": 5,
+      "reasoning": "Documentation updates are mechanical and don't require structured debugging, testing, or review approaches"
+    },
+    {
+      "id": "CONTROL-004",
+      "category": "control",
+      "title": "Code Formatting/Linting",
+      "setup": {
+        "type": "create_repo",
+        "instructions": "Create a Python repo with formatting violations (PEP8 violations, unsorted imports)."
+      },
+      "prompt": "Run black and isort on all Python files in /repo/src to fix code formatting and import sorting. Commit the changes.",
+      "pass_condition": "cd /repo && pip install black isort && black --check src/ returns 'would be reformatted' and after running black && isort --check-only src/ returns 'would be reformatted' - after fixes: both return no changes needed",
+      "difficulty": "easy",
+      "borg_pack": null,
+      "phases": [],
+      "expected_time_minutes": 5,
+      "reasoning": "Auto-formatting is deterministic and doesn't benefit from structured reasoning approaches"
+    },
+    {
+      "id": "CONTROL-005",
+      "category": "control",
+      "title": "Dependency Version Update",
+      "setup": {
+        "type": "create_repo",
+        "instructions": "Create a Node.js project with outdated dependencies in package.json."
+      },
+      "prompt": "Update all dependencies in /repo/package.json to their latest compatible versions (major version bumps are out of scope). Run npm update, then npm install, then npm test to verify nothing breaks.",
+      "pass_condition": "cd /repo && npm outdated --parseable | wc -l returns 0 && npm test returns 'passing'",
+      "difficulty": "easy",
+      "borg_pack": null,
+      "phases": [],
+      "expected_time_minutes": 10,
+      "reasoning": "Dependency updates are mechanical and don't require structured debugging, testing, or review approaches"
+    }
+  ],
+  "experiment_metadata": {
+    "total_tasks": 25,
+    "tasks_by_category": {
+      "debugging": 8,
+      "testing": 4,
+      "code-review": 3,
+      "refactoring": 3,
+      "deployment": 2,
+      "control": 5
+    },
+    "borg_packs": [
+      "systematic-debugging",
+      "test-driven-development",
+      "code-review",
+      "build-review-harden-ship",
+      "writing-plans"
+    ],
+    "control_tasks_note": "Control tasks are outside Borg's pack coverage to verify experiment measures structured reasoning benefit, not general task framing",
+    "pass_conditions_summary": "All tasks have deterministic pass conditions using specific commands and expected outputs",
+    "difficulty_distribution": {
+      "easy": 7,
+      "medium": 13,
+      "hard": 5
+    }
+  }
+}

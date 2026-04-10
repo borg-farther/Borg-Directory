@@ -1,0 +1,23 @@
+{
+  "is_honeypot": "false",
+  "token_symbol": "TEST",
+  "token_name": "Test Token",
+  "total_supply": "1000000000000000000000000",
+  "owner_address": "0x1234567890123456789012345678901234567890",
+  "owner_address_balance": "500000000000000000000000",
+  "owner_address_balance_percent": "50",
+  "holder_count": "1000",
+  "is_mintable": "false",
+  "is_proxy": "false",
+  "is_verified": "true",
+  "transfer_tax": "1",
+  "sell_tax": "2",
+  "buy_tax": "1",
+  "lp_total_percent": "80",
+  "lp_address": "0xabcdefabcdefabcdefabcdefabcdefabcdefabcd",
+  "trading_honeypot": "",
+  "can_sell": "true",
+  "honeypot_with_same_token": "false",
+  "trust_list": "pass",
+  "code": "Ok"
+}

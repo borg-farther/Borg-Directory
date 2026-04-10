@@ -1,0 +1,51 @@
+## Reasoning Trace for Permission Check Bug
+
+### The Bug Location
+
+The bug is in the `check_permission()` function. The function should check if a user has ALL required permissions by using bitwise AND (`&`), but it incorrectly uses bitwise OR (`|`).
+
+### Understanding Bitwise Operations
+
+When checking permissions:
+- READ = 4 = 0b100
+- WRITE = 2 = 0b010
+- EXECUTE = 1 = 0b001
+- User with READ+WRITE = 6 = 0b110
+
+**AND (&)** gives you bits that exist in BOTH numbers:
+- `6 & 4 = 4` (0b110 & 0b100 = 0b100) → user has READ
+- `6 & 2 = 2` (0b110 & 0b010 = 0b010) → user has WRITE
+- `6 & 1 = 0` (0b110 & 0b001 = 0b000) → user LACKS execute
+
+**OR (|)** gives you bits that exist in EITHER number:
+- `6 | 1 = 7` (0b110 | 0b001 = 0b111) → gives execute bit even though user didn't have it!
+
+### Hint 1
+
+For permission checking, we want: "Does the user have ALL the required permission bits?"
+This means: `user_perms & required_perms == required_perms`
+
+### Hint 2
+
+The current buggy code:
+```python
+if user_perms | required_perms:
+```
+
+This evaluates to True whenever EITHER has any bit set, which is wrong.
+
+### Hint 3
+
+Correct logic should be:
+- User has permission if: `(user_perms & required_perms) == required_perms`
+- Or equivalently: `bool(user_perms & required_perms)` when checking for non-zero required
+
+### Approach
+
+1. Look at how `has_permission()` uses `&` correctly
+2. Apply the same logic pattern to `check_permission()`
+3. The fix should use `&` to isolate common bits, then check if those bits match the required
+
+### Key Insight
+
+The function `has_permission(user_perms, perm)` does `bool(user_perms & perm)` which is correct for single permissions. `check_permission()` should use similar logic but for ALL required permissions, not just any.

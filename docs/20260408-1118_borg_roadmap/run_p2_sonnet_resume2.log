@@ -1,0 +1,26 @@
+[2026-04-09 12:45:54] == P2.1 Sonnet Path 1 orchestrator starting ==
+[2026-04-09 12:45:54] model=claude-sonnet-4-5-20250929
+[2026-04-09 12:45:54] tasks=15 conditions=3 runs=45
+[2026-04-09 12:45:54] jsonl=/root/hermes-workspace/borg/docs/20260408-1118_borg_roadmap/p2_sonnet_results.jsonl
+[2026-04-09 12:45:54] budget_hard=$25.0 budget_abort=$24.0
+[2026-04-09 12:45:54] skip_seeding=True
+[2026-04-09 12:45:54] RESUME MODE: skipping Phase A-lite seeding (--skip-seeding)
+[2026-04-09 12:45:54] loading 15 tasks from SWE-bench Verified
+Warning: You are sending unauthenticated requests to the HF Hub. Please set a HF_TOKEN to enable higher rate limits and faster downloads.
+Using the latest cached version of the dataset since princeton-nlp/SWE-bench_Verified couldn't be found on the Hugging Face Hub
+Found the latest cached dataset configuration 'default' at /root/.cache/huggingface/datasets/princeton-nlp___swe-bench_verified/default/0.0.0/c104f840cc67f8b6eec6f759ebc8b2693d585d4a (last modified on Wed Apr  1 09:55:36 2026).
+[2026-04-09 12:45:56] loaded 15 eval task records from HF dataset
+[2026-04-09 12:46:08] resume seed verification: borg search 'django' → 10 trace hits
+[2026-04-09 12:46:08] == P2.1 Main 45-run eval loop ==
+[2026-04-09 12:46:08] between-run sleep = 60s
+[2026-04-09 12:46:08] -- task 1/15 django__django-10554: order=['C0_no_borg', 'C1_borg_empty', 'C2_borg_seeded']
+[2026-04-09 12:46:08] START run 1/45 [django__django-10554 / C0_no_borg]
+[2026-04-09 12:46:10]   ratelimit probe: status=200 util_5h=0.0 overage=allowed err=None
+[2026-04-09 12:46:32]   429 BACKOFF attempt=1 sleep=120s (rec.error=llm_call_failed: HTTPStatusError: Client error '429 Too Many Requests' for url 'https://api.anthropic.com/v1/messages'
+For more information check: https://developer.mozilla.org/en-US/docs/Web/HTTP/Sta)
+[2026-04-09 12:48:44]   429 BACKOFF attempt=2 sleep=300s (rec.error=llm_call_failed: HTTPStatusError: Client error '429 Too Many Requests' for url 'https://api.anthropic.com/v1/messages'
+For more information check: https://developer.mozilla.org/en-US/docs/Web/HTTP/Sta)
+[2026-04-09 12:53:53]   429 BACKOFF attempt=3 sleep=900s (rec.error=llm_call_failed: HTTPStatusError: Client error '429 Too Many Requests' for url 'https://api.anthropic.com/v1/messages'
+For more information check: https://developer.mozilla.org/en-US/docs/Web/HTTP/Sta)
+[2026-04-09 13:09:11]   429 BACKOFF attempt=4 sleep=1800s (rec.error=llm_call_failed: HTTPStatusError: Client error '429 Too Many Requests' for url 'https://api.anthropic.com/v1/messages'
+For more information check: https://developer.mozilla.org/en-US/docs/Web/HTTP/Sta)

@@ -1,0 +1,5 @@
+{
+    "expected": "js_esm_cjs_mismatch",
+    "actual": null,
+    "kind": "correct_no_match"
+}

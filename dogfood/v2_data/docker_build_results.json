@@ -1,0 +1,20 @@
+{
+  "success": [
+    "django__django-10554",
+    "django__django-11138",
+    "django__django-11400",
+    "django__django-12708",
+    "django__django-13212",
+    "django__django-13344",
+    "django__django-13449",
+    "django__django-14011",
+    "django__django-14631",
+    "django__django-15128",
+    "django__django-15503",
+    "django__django-15957",
+    "django__django-16263",
+    "django__django-16560",
+    "django__django-16631"
+  ],
+  "failed": []
+}

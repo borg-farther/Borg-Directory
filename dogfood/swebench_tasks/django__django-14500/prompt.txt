@@ -1,0 +1,17 @@
+Fix the following Django bug. The code is in the repo at /workspace/django.
+
+BUG REPORT:
+Squashed migration is not marked as unapplied
+Description
+	 
+		(last modified by Markus Holtermann)
+	 
+When unapplying a squashed migration and the replaced migration files are still around, the MigrationExecutor mark the squash migration as unapplied, too, not only the replaced migrations.
+
+
+The fix should make these tests pass:
+[
+  "test_migrate_marks_replacement_unapplied (migrations.test_executor.ExecutorTests)"
+]
+
+After fixing, verify with: cd /workspace && python -m pytest test_migrate_marks_replacement_unapplied (migrations.test_executor.ExecutorTests) --no-header -q

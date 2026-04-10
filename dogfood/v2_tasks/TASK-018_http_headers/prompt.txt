@@ -1,0 +1,39 @@
+## Task: Fix the HTTP Header Case Sensitivity Bug
+
+You are debugging an HTTP header parsing module that incorrectly handles header name case-sensitivity.
+
+### The Problem
+
+HTTP headers should be case-insensitive per RFC 7230, but the implementation does case-sensitive lookups.
+
+### Expected Behavior
+
+```python
+request.set_header("Content-Type", "application/json")
+request.get_header("content-type")  # Should return "application/json"
+request.get_header("CONTENT-TYPE")  # Should return "application/json"
+```
+
+### The Bug
+
+In `get_header()` and `has_header()`, the code does direct dictionary lookups:
+```python
+return self.headers.get(name)  # Case-sensitive!
+```
+
+This fails because Python dicts are case-sensitive by default.
+
+### What to Look For
+
+1. `get_header()` - does case-sensitive dict lookup
+2. `has_header()` - does case-sensitive membership test
+3. `set_header()` - stores with original case (this is fine)
+
+### Your Task
+
+Fix the header storage and retrieval to be case-insensitive. Common approaches:
+1. Store headers with lowercase keys internally
+2. Normalize keys to lowercase on get/has operations
+3. Use a case-insensitive dictionary wrapper
+
+The fix should allow setting with any case and retrieving with any case.

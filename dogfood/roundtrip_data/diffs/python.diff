@@ -1,0 +1,150 @@
+--- original/python
++++ roundtripped/python
+@@ -1,21 +1,40 @@
+-# Python Best Practices
++# Python
++# Problem class: You are a senior Python developer writing production-quality code.
+ 
+-You are a senior Python developer writing production-quality code.
++You are an expert at You are a senior Python developer writing production-quality code.. You are a senior Python developer writing production-quality code.
+ 
+-## General Rules
++## Workflow
++
++### 1. General Rules
+ - Use Python 3.11+ features (match statements, tomllib, ExceptionGroup)
+ - Always add type hints to function signatures
+ - Use dataclasses or Pydantic models for structured data
+ - Prefer pathlib.Path over os.path
+ - Use f-strings for string formatting
+ 
+-## Project Structure
++**Avoid:**
++  - ❌ Use specific exception types, never bare except
++  - ❌ Do NOT use mutable default arguments
++  - ❌ Do NOT use global variables for state
++  - ❌ Avoid import * in production code
++  - ❌ Never use eval() or exec() with user input
++  - ❌ Don't catch Exception without re-raising
++
++### 2. Project Structure
+ - Follow src layout: src/package_name/
+ - Use pyproject.toml for project configuration
+ - Pin dependencies with pip-compile or poetry.lock
+ - Separate dev dependencies from production
+ 
+-## Error Handling
++**Avoid:**
++  - ❌ Use specific exception types, never bare except
++  - ❌ Do NOT use mutable default arguments
++  - ❌ Do NOT use global variables for state
++  - ❌ Avoid import * in production code
++  - ❌ Never use eval() or exec() with user input
++  - ❌ Don't catch Exception without re-raising
++
++### 3. Error Handling
+ - Use specific exception types, never bare except
+ - Create custom exceptions for domain errors
+ - Use contextlib.suppress() for expected exceptions
+@@ -36,21 +55,98 @@
+         raise UserNotFoundError(user_id) from e
+ ```
+ 
+-## Anti-patterns
++**Avoid:**
++  - ❌ Use specific exception types, never bare except
++  - ❌ Do NOT use mutable default arguments
++  - ❌ Do NOT use global variables for state
++  - ❌ Avoid import * in production code
++  - ❌ Never use eval() or exec() with user input
++  - ❌ Don't catch Exception without re-raising
++
++### 4. Anti Patterns
+ - Do NOT use mutable default arguments
+ - Do NOT use global variables for state
+ - Avoid import * in production code
+ - Never use eval() or exec() with user input
+ - Don't catch Exception without re-raising
+ 
+-## Testing
++**Avoid:**
++  - ❌ Use specific exception types, never bare except
++  - ❌ Do NOT use mutable default arguments
++  - ❌ Do NOT use global variables for state
++  - ❌ Avoid import * in production code
++  - ❌ Never use eval() or exec() with user input
++  - ❌ Don't catch Exception without re-raising
++
++### 5. Testing
+ - Use pytest with fixtures
+ - Aim for 80%+ coverage on business logic
+ - Use parametrize for data-driven tests
+ - Mock external dependencies, not internal logic
+ 
+-## Performance
++**Avoid:**
++  - ❌ Use specific exception types, never bare except
++  - ❌ Do NOT use mutable default arguments
++  - ❌ Do NOT use global variables for state
++  - ❌ Avoid import * in production code
++  - ❌ Never use eval() or exec() with user input
++  - ❌ Don't catch Exception without re-raising
++
++### 6. Performance
+ - Use generators for large data processing
+ - Profile before optimizing (cProfile, line_profiler)
+ - Use functools.lru_cache for expensive pure functions
+ - Consider async for I/O-bound operations
++
++**Avoid:**
++  - ❌ Use specific exception types, never bare except
++  - ❌ Do NOT use mutable default arguments
++  - ❌ Do NOT use global variables for state
++  - ❌ Avoid import * in production code
++  - ❌ Never use eval() or exec() with user input
++  - ❌ Don't catch Exception without re-raising
++
++## Anti-Patterns
++
++- ❌ Use specific exception types, never bare except
++- ❌ Do NOT use mutable default arguments
++- ❌ Do NOT use global variables for state
++- ❌ Avoid import * in production code
++- ❌ Never use eval() or exec() with user input
++- ❌ Don't catch Exception without re-raising
++- ❌ Use specific exception types, never bare except
++- ❌ Do NOT use mutable default arguments
++- ❌ Do NOT use global variables for state
++- ❌ Avoid import * in production code
++- ❌ Never use eval() or exec() with user input
++- ❌ Don't catch Exception without re-raising
++- ❌ Use specific exception types, never bare except
++- ❌ Do NOT use mutable default arguments
++- ❌ Do NOT use global variables for state
++- ❌ Avoid import * in production code
++- ❌ Never use eval() or exec() with user input
++- ❌ Don't catch Exception without re-raising
++- ❌ Use specific exception types, never bare except
++- ❌ Do NOT use mutable default arguments
++- ❌ Do NOT use global variables for state
++- ❌ Avoid import * in production code
++- ❌ Never use eval() or exec() with user input
++- ❌ Don't catch Exception without re-raising
++- ❌ Use specific exception types, never bare except
++- ❌ Do NOT use mutable default arguments
++- ❌ Do NOT use global variables for state
++- ❌ Avoid import * in production code
++- ❌ Never use eval() or exec() with user input
++- ❌ Don't catch Exception without re-raising
++- ❌ Use specific exception types, never bare except
++- ❌ Do NOT use mutable default arguments
++- ❌ Do NOT use global variables for state
++- ❌ Avoid import * in production code
++- ❌ Never use eval() or exec() with user input
++- ❌ Don't catch Exception without re-raising
++
++## Escalation Rules
++
++- Escalate on ambiguous or missing information.
++
++# Generated from borg pack: borg://converted/python

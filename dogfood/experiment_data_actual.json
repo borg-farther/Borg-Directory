@@ -1,0 +1,39 @@
+{
+  "experiment_id": "borg-ab-003-final",
+  "protocol": "v3-final",
+  "notes": "Combined data from calibration, pilot, and batch1 experiment runs. Conditions: A=no cache, B=correct reasoning trace, C=wrong-task trace.",
+  "data_from_batch1_agent": {
+    "HARD-001": {
+      "A": [{"run": 1, "success": true, "tool_calls": 3}, {"run": 2, "success": true, "tool_calls": 2}],
+      "B": [{"run": 1, "success": true, "tool_calls": 4}, {"run": 2, "success": true, "tool_calls": 2}],
+      "C": [{"run": 1, "success": true, "tool_calls": 3}, {"run": 2, "success": true, "tool_calls": 3}]
+    },
+    "HARD-002": {
+      "A": [{"run": 1, "success": true, "tool_calls": 4}, {"run": 2, "success": true, "tool_calls": 2}],
+      "B": [{"run": 1, "success": true, "tool_calls": 2}, {"run": 2, "success": true, "tool_calls": 2}],
+      "C": [{"run": 1, "success": true, "tool_calls": 3}, {"run": 2, "success": true, "tool_calls": 2}]
+    }
+  },
+  "data_from_calibration": {
+    "note": "Single baseline runs (Condition A equivalent)",
+    "HARD-001": {"success": true, "tool_calls": 8},
+    "HARD-002": {"success": true, "tool_calls": 6},
+    "HARD-003": {"success": true, "tool_calls": 10},
+    "HARD-004": {"success": false, "tool_calls": 15, "note": "partial fix only"},
+    "HARD-005": {"success": true, "tool_calls": 7},
+    "HARD-006": {"success": false, "tool_calls": 12, "note": "partial fix, 1 test remaining"},
+    "HARD-007": {"success": true, "tool_calls": 15},
+    "HARD-013": {"success": true, "tool_calls": 12},
+    "HARD-014": {"success": false, "tool_calls": 15, "note": "test contradictions confused agent"},
+    "HARD-015": {"success": false, "tool_calls": 15, "note": "partial, 2 failures remaining"}
+  },
+  "data_from_pilot": {
+    "HARD-004_condition_B": {"success": false, "tool_calls": 15, "used_trace": true, "note": "Agent used trace, went to correct file, but secondary bugs remained"}
+  },
+  "summary": {
+    "calibration_success_rate": "7/10 = 70%",
+    "tasks_where_baseline_fails": ["HARD-004", "HARD-006", "HARD-014", "HARD-015"],
+    "batch1_all_conditions_pass": ["HARD-001", "HARD-002"],
+    "observation": "HARD-001 and HARD-002 are too easy - agent solves all conditions. HARD-004, HARD-006, HARD-014, HARD-015 are the right difficulty for testing cache value."
+  }
+}

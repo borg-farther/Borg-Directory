@@ -30,8 +30,7 @@ from borg.core.uri import (
     fuzzy_match_pack,
     _fetch_index,
 )
-from borg.core.dirs import get_borg_dir, BORG_DIR
-from borg.core.telemetry import track_event
+from borg.core.seeds import is_seeds_disabled, get_seed_packs
 
 # Optional: SemanticSearchEngine (graceful fallback if unavailable)
 try:
@@ -80,7 +79,7 @@ MAX_DOWNLOAD_SIZE = 5 * 1024 * 1024  # 5 MB
 # Guild search
 # ---------------------------------------------------------------------------
 
-def borg_search(query: str, mode: str = "text", requesting_agent_id: str = None) -> str:
+def borg_search(query: str, mode: str = "text", requesting_agent_id: str = None, include_seeds: bool = True) -> str:
     """Search guild packs by keyword or semantic similarity.
 
     Searches across pack names, problem_class, id, and phase names
@@ -165,6 +164,14 @@ def borg_search(query: str, mode: str = "text", requesting_agent_id: str = None)
                             "name": local_name,
                             "source": "local",
                         })
+
+        # Load and merge seed packs (cold-start fix)
+        # Seed packs are lowest priority: local > remote > seed
+        # This means seeds only show up when no local/remote pack matches
+        if include_seeds and not is_seeds_disabled():
+            seed_packs = get_seed_packs()
+            for seed_pack in seed_packs:
+                all_packs.append(seed_pack.to_search_dict())
 
         # Attach tier to every pack that doesn't have one yet
         for pack in all_packs:
@@ -292,17 +299,70 @@ def borg_search(query: str, mode: str = "text", requesting_agent_id: str = None)
                 pass
 
         # Text search (default)
+        # For seed packs (source="seed"), use OR matching: any query term hits.
+        # For regular packs, require ALL terms (AND matching) to avoid noise.
+        # This handles queries like "NoneType has no attribute" where the pack
+        # contains "null pointer" and "attribute" but not "has" or "no".
+        query_terms = query_lower.split()
+        seed_pack_ids = {p.get("id") for p in all_packs if p.get("source") == "seed"}
         matches = []
         for pack in all_packs:
             searchable = " ".join([
                 pack.get("name", ""),
                 pack.get("problem_class", ""),
                 pack.get("id", ""),
+                pack.get("search_text", ""),  # seed packs include solution text
                 " ".join(pack.get("phase_names", [])),
             ]).lower()
 
-            if query_lower in searchable:
+            is_seed = pack.get("id") in seed_pack_ids
+            if is_seed:
+                # OR: any query term matches (seed packs are broad, avoid zero results)
+                matched = any(term in searchable for term in query_terms)
+            else:
+                # AND: all query terms must match (avoid noise in curated packs)
+                matched = all(term in searchable for term in query_terms)
+            if matched:
                 matches.append(pack)
+
+        # v3.2.4 observe→search roundtrip fix: also surface relevant traces.
+        # Traces are stored in ~/.borg/traces.db by borg observe / MCP
+        # borg_observe / borg_apply, but pre-3.2.4 borg_search never read from
+        # them — which made C2 (seeded) indistinguishable from C1 (empty) in
+        # the P1.1 experiment. We now add trace hits as synthetic matches with
+        # source="trace" so callers can tell them apart from packs.
+        #
+        # Gate: only surface traces if BORG_DIR is a real directory. Tests that
+        # mock BORG_DIR to /nonexistent will skip this path, preserving their
+        # pre-3.2.4 expectations. Production code paths hit the real directory
+        # and get trace surfacing.
+        try:
+            if not (BORG_DIR and Path(BORG_DIR).is_dir()):
+                raise RuntimeError("BORG_DIR not present — skipping trace lookup")
+            from borg.core.trace_matcher import TraceMatcher
+            matcher = TraceMatcher()
+            trace_hits = matcher.find_relevant(query, top_k=10)
+            for trace in trace_hits or []:
+                trace_id = str(trace.get("id", ""))
+                if not trace_id:
+                    continue
+                task_desc = (trace.get("task_description") or "")[:120]
+                matches.append({
+                    "name": f"trace:{trace_id}",
+                    "id": f"trace:{trace_id}",
+                    "problem_class": task_desc or "observed-trace",
+                    "phase_names": [],
+                    "phases": 0,
+                    "confidence": "observed",
+                    "tier": "trace",
+                    "source": "trace",
+                    "trace_id": trace_id,
+                    "outcome": trace.get("outcome", ""),
+                    "technology": trace.get("technology", ""),
+                    "match_score": trace.get("match_score", 0.0),
+                })
+        except Exception:
+            pass  # Never let trace lookup break pack search
 
         # Apply reputation-weighted re-ranking for text mode
         if requesting_agent_id and matches and AgentStore is not None and ReputationEngine is not None:
@@ -949,6 +1009,18 @@ def classify_task(context: str) -> List[str]:
             seen.add(search_term)
             terms.append(search_term)
 
+    # Augment with dojo skill gaps (dynamic — from cached session analysis)
+    try:
+        from borg.dojo import get_cached_analysis
+        analysis = get_cached_analysis()
+        if analysis:
+            for gap in analysis.skill_gaps:
+                if gap.capability in context_lower and gap.capability not in seen:
+                    seen.add(gap.capability)
+                    terms.append(gap.capability)
+    except ImportError:
+        pass  # Dojo not installed — skip gracefully
+
     return terms
 
 
@@ -974,7 +1046,7 @@ def _format_suggestion(pack_matches: list, context: str) -> str:
 
     return (
         f"Guild pack available: {name} ({desc}). "
-        f"Try: borg_try borg://hermes/{name}"
+        f"Try: borg_try guild://hermes/{name}"
     )
 
 
@@ -1000,6 +1072,7 @@ def check_for_suggestion(
     failure_count: int = 0,
     task_type: str = "",
     tried_packs: Optional[List[str]] = None,
+    requesting_agent_id: Optional[str] = None,
 ) -> str:
     """Check if a guild pack suggestion is warranted and return it.
 
@@ -1012,6 +1085,7 @@ def check_for_suggestion(
         failure_count: Number of consecutive failed attempts.
         task_type: Optional explicit task type hint.
         tried_packs: Optional list of pack names already tried (excluded).
+        requesting_agent_id: Optional agent ID for reputation-aware ranking.
 
     Returns:
         JSON string with suggestion details, or '{}' if no suggestion warranted.
@@ -1049,7 +1123,7 @@ def check_for_suggestion(
     all_matches: List[dict] = []
     for term in search_terms:
         try:
-            result = json.loads(borg_search(term))
+            result = json.loads(borg_search(term, requesting_agent_id=requesting_agent_id, include_seeds=False))
             if result.get("success") and result.get("matches"):
                 all_matches.extend(result["matches"])
         except Exception as e:
@@ -1080,6 +1154,7 @@ def check_for_suggestion(
             "problem_class": pack.get("problem_class", ""),
             "tier": pack.get("tier", "unknown"),
             "why_relevant": _build_why_relevant(pack, search_terms),
+            "author_reputation": pack.get("author_reputation"),
         })
 
     # Format the primary suggestion
@@ -1092,7 +1167,7 @@ def check_for_suggestion(
         "suggestion": suggestion_text,
         "suggestions": suggestions_list,
         "pack_name": best_name,
-        "pack_uri": f"borg://hermes/{best_name}",
+        "pack_uri": f"guild://hermes/{best_name}",
         "search_terms": search_terms,
         "match_count": len(unique_matches),
         "human_message": (

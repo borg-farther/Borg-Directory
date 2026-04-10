@@ -1,0 +1,1 @@
+The Paginator in repo/paginator.py has a bug in total_pages: it uses integer division (//) which drops the remainder, so 11 items with page_size=5 returns 2 pages instead of 3 (losing the last item). Fix total_pages to correctly calculate the number of pages when items don't divide evenly.

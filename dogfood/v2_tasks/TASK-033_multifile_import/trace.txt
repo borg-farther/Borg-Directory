@@ -1,0 +1,14 @@
+REASONING TRACE FOR: Multi-file permission comparison bug
+
+PROBLEM DECOMPOSITION:
+- Resource.owner stores a string (the user's name)
+- Permissions check resource.owner == user (comparing string to User object)
+- This always returns False because str != User
+
+KEY INSIGHT:
+- Change resource.owner == user to resource.owner == user.name in all three functions
+- Need to look at models.py to see what attribute holds the user's name
+
+PITFALLS:
+- Fix ALL three functions, not just one
+- Make sure you compare the right attribute (it's .name, not .email)

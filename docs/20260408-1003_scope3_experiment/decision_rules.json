@@ -1,0 +1,337 @@
+{
+  "document": "Scope 3 Borg SWE-bench Pre-Registered Decision Rules",
+  "date": "20260408-1003",
+  "owner": "Hermes subagent on behalf of AB",
+  "companion": {
+    "stats_plan": "STATS_PLAN.md",
+    "red_team_review": "RED_TEAM_METHODOLOGY_REVIEW.md",
+    "power_simulation": "power_simulation.py",
+    "power_results": "power_results.txt"
+  },
+  "alpha_family_wise": 0.05,
+  "correction": "holm",
+  "primary_confirmatory_family": {
+    "size": 6,
+    "members": [
+      "R1",
+      "R2",
+      "R3",
+      "R4_Q3_interaction_LRT",
+      "R5_Q4_1df_contrast",
+      "R6_cost_effectiveness"
+    ],
+    "alpha_holm_most_stringent": 0.00833,
+    "note": "6-member confirmatory family replaces the brief's proposed family=20. Family=20 anti-pattern is rejected because it inflates correction onto descriptive reads. See STATS_PLAN.md §4.6."
+  },
+  "descriptive_family": {
+    "applies_to": "per-framework Cochran's Q + pairwise McNemar",
+    "alpha": 0.05,
+    "correction_within_framework": "holm on 3 pairwise tests",
+    "correction_across_frameworks": "none (descriptive, not confirmatory)",
+    "note": "Results reported as 'descriptively supportive' or 'descriptively null'. No confirmatory claim drawn."
+  },
+  "exploratory_family": {
+    "applies_to": [
+      "Phase C cross-agent transfer",
+      "patch_quality LLM judge",
+      "per-task heterogeneity"
+    ],
+    "alpha": 0.05,
+    "correction": "none",
+    "note": "Pre-registered directional hypothesis only. All p-values reported with [exploratory, uncorrected] tag."
+  },
+  "primary_test": "pooled mixed-effects GLMM (clustered on task, fixed effects on framework, interaction term on condition x framework)",
+  "fallback_test": "cluster-robust GEE if GLMM fails to converge",
+  "sensitivity_test": "Bayesian GLMM (statsmodels BinomialBayesMixedGLM) reported alongside frequentist fit",
+  "rules": [
+    {
+      "id": "R1",
+      "description": "Borg scaffold helps overall (C1 vs C0, pooled across frameworks)",
+      "research_question": "Q1",
+      "test": "pooled_glmm_main_effect",
+      "contrast": "C1 vs C0",
+      "framework_scope": "pooled_all",
+      "family": "primary_confirmatory",
+      "alpha_corrected": 0.00833,
+      "minimum_or": 1.5,
+      "minimum_power_at_design": 0.33,
+      "mde_or_80pct_power": 2.99,
+      "requires_borg_searches_gt_0_frac": 0.90,
+      "conclusion_if_rule_fires": "Borg scaffold improves agent success pooled across agent frameworks.",
+      "conclusion_if_rule_fails": "See R0A (no evidence)."
+    },
+    {
+      "id": "R2",
+      "description": "Borg seeded knowledge adds value over scaffold (C2 vs C1, pooled, collective knowledge)",
+      "research_question": "Q2",
+      "test": "pooled_glmm_main_effect",
+      "contrast": "C2 vs C1",
+      "framework_scope": "pooled_all",
+      "family": "primary_confirmatory",
+      "alpha_corrected": 0.00833,
+      "minimum_or": 1.5,
+      "minimum_power_at_design": 0.33,
+      "mde_or_80pct_power": 2.99,
+      "requires_borg_searches_gt_0_frac": 0.90,
+      "conclusion_if_rule_fires": "Collective knowledge (seeded DB) adds value beyond the scaffold alone.",
+      "conclusion_if_rule_fails": "Scaffold-only effect cannot be distinguished from full treatment. Report effect CI and descriptively note the null."
+    },
+    {
+      "id": "R3",
+      "description": "Borg total product effect (C2 vs C0, pooled — primary headline)",
+      "research_question": "Q1+Q2 combined",
+      "test": "pooled_glmm_main_effect",
+      "contrast": "C2 vs C0",
+      "framework_scope": "pooled_all",
+      "family": "primary_confirmatory",
+      "alpha_corrected": 0.00833,
+      "minimum_or": 1.5,
+      "minimum_power_at_design": 0.33,
+      "mde_or_80pct_power": 2.99,
+      "requires_borg_searches_gt_0_frac": 0.90,
+      "conclusion_if_rule_fires": "Borg (full product) improves agent success vs no-borg baseline pooled across frameworks.",
+      "conclusion_if_rule_fails": "No evidence borg improves overall success (R0A)."
+    },
+    {
+      "id": "R4_Q3_interaction_LRT",
+      "description": "Cross-framework generalization (full interaction LRT, Q3)",
+      "research_question": "Q3",
+      "test": "glmm_lrt_full_interaction",
+      "contrast": "condition x framework (6 df full, 4 df in fallback)",
+      "framework_scope": "all_frameworks",
+      "family": "primary_confirmatory",
+      "alpha_corrected": 0.00833,
+      "minimum_power_at_design": 0.25,
+      "interpretation_matrix": {
+        "interaction_fail_to_reject_AND_R3_fires": "Borg's benefit generalizes across the tested LLM loops (no detectable framework-specific interaction).",
+        "interaction_rejects_AND_signs_disagree": "Borg is framework-specific. Effect direction depends on agent loop.",
+        "interaction_rejects_AND_signs_agree": "Borg helps all tested frameworks but effect size varies. Report per-framework CIs.",
+        "interaction_fail_to_reject_AND_R3_fails": "No evidence borg helps any framework. This is null, not generalization."
+      },
+      "caveat": "Power for this test is ~0.20-0.30 at OR_ratio=2.0. A non-rejection is NOT strong evidence of generalization."
+    },
+    {
+      "id": "R5_Q4_1df_contrast",
+      "description": "Hermes-family vs OpenClaw (1-df contrast, Q4 — AB's key question)",
+      "research_question": "Q4",
+      "test": "glmm_lrt_1df_family_contrast",
+      "contrast": "condition x framework_family (framework_family in {hermes_like, openclaw}, 1 df)",
+      "framework_scope": "hermes_family_vs_openclaw",
+      "family": "primary_confirmatory",
+      "alpha_corrected": 0.00833,
+      "minimum_power_at_design": 0.40,
+      "interpretation_matrix": {
+        "contrast_fail_to_reject_AND_R3_fires": "Borg's benefit generalizes from Hermes-style loops to OpenClaw at the loop-family level.",
+        "contrast_rejects_AND_both_positive": "Both framework families benefit but at different magnitudes.",
+        "contrast_rejects_AND_one_null": "Borg helps one framework family but not the other. Product is framework-coupled.",
+        "contrast_fail_to_reject_AND_R3_fails": "No evidence borg helps; family contrast uninterpretable."
+      },
+      "conditional_on": "R_OPENCLAW_UNAVAILABLE is not triggered. Otherwise R5 is skipped and Q4 marked 'not answered in this experiment'.",
+      "caveat": "Framework families are not apples-to-apples. See Red Team finding (l). A non-rejection may reflect framework-level confounds (tool schema, prompts, model) rather than true borg invariance."
+    },
+    {
+      "id": "R6_cost_effectiveness",
+      "description": "Borg is net cost-effective (pass_per_dollar)",
+      "research_question": "cost_effectiveness",
+      "test": "bootstrap_pass_per_dollar_ratio",
+      "contrast": "C2 vs C0",
+      "framework_scope": "pooled_all",
+      "family": "primary_confirmatory",
+      "alpha_corrected": 0.00833,
+      "minimum_ratio": 1.10,
+      "required_ci_excludes": 1.0,
+      "conditional_on": "R3 fires (borg must help at all before cost question is meaningful)",
+      "conclusion_if_rule_fires": "Borg is net cost-effective at current prices.",
+      "conclusion_if_rule_fails_but_R3_fires": "Borg improves success at the cost of increased tokens. Net cost-effectiveness depends on user price/quality trade-off.",
+      "note": "Added by Red Team finding (m). Required to answer the product question 'is borg worth paying for'."
+    },
+    {
+      "id": "R0A",
+      "description": "Null: no evidence borg helps overall",
+      "research_question": "Q1/Q2/Q3 null",
+      "test": "R3 failed to fire",
+      "family": "primary_confirmatory_null",
+      "alpha_corrected": 0.00833,
+      "conclusion_if_rule_fires": "No evidence borg helps pooled across frameworks. Pre-registered null reported.",
+      "caveat": "A null at this N reflects the MDE OR ~2.99; effects smaller than that are not ruled out."
+    },
+    {
+      "id": "R0B_descriptive_per_framework_null",
+      "description": "Descriptive per-framework null (for each framework F)",
+      "research_question": "descriptive null",
+      "test": "per_framework_cochran_q",
+      "framework_scope": "each_framework_independently",
+      "family": "descriptive",
+      "alpha": 0.05,
+      "conclusion_if_rule_fires": "Descriptively, no evidence borg helps framework F at N=15. Report 95% CI for per-framework OR(C2-C0|F).",
+      "caveat": "Per-framework N=15 has power below 0.30 at OR=3.0. Null is uninformative."
+    },
+    {
+      "id": "R_TRANSFER_POSITIVE",
+      "description": "Phase C collective intelligence claim (EXPLORATORY)",
+      "research_question": "Q5",
+      "test": "mcnemar_exact_one_sided",
+      "contrast": "(C2_transfer | other_agent_seeded_DB) vs (C1_empty | empty_DB) on matched task-pairs",
+      "phase": "C",
+      "N": 10,
+      "family": "exploratory",
+      "alpha": 0.05,
+      "correction": "none",
+      "minimum_power_at_design": 0.20,
+      "mde_or_80pct_power": "greater_than_50 (not achievable at N=10)",
+      "requires_completion_frac": 0.80,
+      "conclusion_if_rule_fires": "Preliminary evidence of cross-agent knowledge transfer (EXPLORATORY, N=10, power <= 0.20). Requires replication at N >= 40 for confirmatory claim.",
+      "note": "This rule does NOT carry a confirmatory product claim. Reported as exploratory evidence only."
+    },
+    {
+      "id": "R_TRANSFER_NULL",
+      "description": "Phase C null: collective intelligence NOT supported",
+      "research_question": "Q5 null",
+      "test": "Phase C McNemar failed or direction negative or completion < 80%",
+      "phase": "C",
+      "family": "exploratory",
+      "conclusion_if_rule_fires": "Phase C does not support the cross-agent knowledge-transfer claim. Given power <= 0.20, this is not a strong null -- the design cannot rule out a positive effect, only that it was not observed in this sample. The collective-intelligence claim is NOT supported by the current evidence; borg should be positioned as a scaffold, not a memory, until replication at N >= 40 finds otherwise.",
+      "note": "Honest null is a valid outcome. Do not re-label as 'trending toward significance'."
+    },
+    {
+      "id": "R_HALT_SILENT_TREATMENT",
+      "description": "Treatment integrity halt (borg_searches == 0 in treatment)",
+      "trigger": "any C1 or C2 cell reports borg_searches == 0",
+      "action": "Re-run cell once. If re-run also reports 0, HALT experiment, investigate cause, do not resume until fixed.",
+      "severity": "critical",
+      "family": "integrity"
+    },
+    {
+      "id": "R_THEATER_DOWNGRADE",
+      "description": "Treatment-theater downgrade (Red Team (e))",
+      "trigger": "fewer than 30% of borg_search calls in C1/C2 are 'influential' (output text referenced in next 5 tool calls)",
+      "action": "Cell flagged. If > 30% of C2 cells are flagged, the C2 confirmatory claim is downgraded with the caveat 'the treatment was nominally applied but appears to have been mostly ignored'.",
+      "severity": "high",
+      "family": "integrity",
+      "added_by": "red_team_finding_e"
+    },
+    {
+      "id": "R_CRASH_CELL_DROP",
+      "description": "Infrastructure crash drop",
+      "trigger": "cell fails due to OOM, Docker daemon death, network timeout to LLM API, agent loop harness bug",
+      "action": "Drop from paired analysis, track in crash bucket. If crash bucket > 10% of total runs, pause experiment for investigation.",
+      "severity": "medium",
+      "family": "integrity"
+    },
+    {
+      "id": "R_OPENCLAW_UNAVAILABLE",
+      "description": "Scope 3 minus OpenClaw fallback trigger",
+      "trigger": "preflight B subagent reports OpenClaw is not runnable, or pilot integrity checks fail on OpenClaw",
+      "action": "Drop to Scope 3- (3 frameworks). Phase C drops to 2 seed-eval framework families (6 pairs). Rerun power analysis with N_fw=3. R5 skipped; Q4 marked 'not answered in this experiment'.",
+      "severity": "critical",
+      "family": "scope_fallback"
+    },
+    {
+      "id": "R_CALIBRATION_FAIL",
+      "description": "Pre-Phase-B baseline calibration gate",
+      "trigger": "first 3 pilot runs of Phase B on Sonnet show C0 baseline outside [0.20, 0.75]",
+      "action": "Pause Phase B, swap tasks to restore 40-60% baseline, document.",
+      "severity": "high",
+      "family": "integrity"
+    },
+    {
+      "id": "R_HINTS_LEAK_DETECTED",
+      "description": "Retroactive hints_text contamination catch",
+      "trigger": "post-hoc scan of agent run logs reveals diff-like content in hints_text that slipped past filter, OR Phase A trace contains > 30 n-gram overlap with any task's hints_text",
+      "action": "Affected tasks marked contaminated. GLMM re-fit with those tasks dropped. Both versions reported.",
+      "severity": "high",
+      "family": "integrity",
+      "red_team_fix": "red_team_finding_f"
+    },
+    {
+      "id": "R_PHASE_A_TRACE_QUALITY",
+      "description": "Phase A seeding quality gate (Red Team (p))",
+      "trigger": "manual inspection of 5 random traces from Phase A DB reveals any of: empty traces, boilerplate-only content, not retrievable by borg search with relevant queries, fewer than 500 distinct file references or 5000 distinct tokens across all 30 traces",
+      "action": "HALT before Phase B. Investigate, fix seeding pipeline, re-run Phase A.",
+      "severity": "critical",
+      "family": "integrity",
+      "added_by": "red_team_finding_p"
+    },
+    {
+      "id": "R_C0_5_BOILERPLATE_CONTROL",
+      "description": "C1 system-prompt confound mitigation (Red Team (a))",
+      "trigger": "plan activation",
+      "action": "Add an opportunistic C0.5 condition on a 5-task subset: borg tools available, empty DB, borg search monkey-patched to return fixed boilerplate. Compare to C1 on those 5 tasks to estimate 'is the empty-response structure itself treatment?' bias.",
+      "severity": "critical",
+      "family": "confound_mitigation",
+      "added_by": "red_team_finding_a"
+    }
+  ],
+  "power_summary": {
+    "primary_pooled_glmm_4fw_N15_alpha0.0083": {
+      "OR_1.5": 0.093,
+      "OR_2.0": 0.333,
+      "OR_2.5": 0.687,
+      "OR_3.0": 0.833,
+      "OR_4.0": 0.973,
+      "MDE_at_80pct_power": 2.99
+    },
+    "fallback_pooled_glmm_3fw_N15_alpha0.0083": {
+      "OR_1.5": null,
+      "OR_2.0": null,
+      "OR_3.0": null,
+      "MDE_at_80pct_power": 3.43
+    },
+    "per_framework_mcnemar_N15_alpha0.0025_brief_spec": {
+      "OR_1.5": 0.000,
+      "OR_2.0": 0.001,
+      "OR_3.0": 0.001,
+      "OR_5.0": 0.006,
+      "MDE_at_80pct_power": "greater_than_50_unachievable",
+      "verdict": "catastrophically_underpowered_not_confirmatory"
+    },
+    "phase_c_mcnemar_N10_alpha0.05_one_sided": {
+      "OR_2.0": 0.043,
+      "OR_3.0": 0.087,
+      "OR_5.0": 0.152,
+      "OR_7.0": 0.197,
+      "MDE_at_80pct_power": "greater_than_50_unachievable",
+      "verdict": "cannot_carry_confirmatory_claim_exploratory_only"
+    }
+  },
+  "underpowered_research_questions": [
+    "Q3_cross_model_interaction_LRT",
+    "Q5_phase_c_transfer_confirmatory"
+  ],
+  "moderately_powered_research_questions": [
+    "Q4_hermes_vs_openclaw_1df_contrast"
+  ],
+  "adequately_powered_research_questions": [
+    "Q1_pooled",
+    "Q2_pooled",
+    "Q6_effect_estimation"
+  ],
+  "recommendation": "PROCEED_WITH_MODS",
+  "modifications_required": [
+    "Promote pooled GLMM to PRIMARY confirmatory analysis (replaces brief's per-framework McNemar as primary)",
+    "Downgrade per-framework McNemar and Cochran's Q to descriptive-only (no alpha spend)",
+    "Downgrade Phase C to exploratory (no confirmatory claim possible at N=10)",
+    "Reduce confirmatory family from 20 tests to 6 (Holm alpha_min = 0.0083 not 0.0025)",
+    "Add R6 cost-effectiveness rule to confirmatory family",
+    "Add R_THEATER_DOWNGRADE rule and response-influence post-hoc diagnostic (Red (e))",
+    "Add R_PHASE_A_TRACE_QUALITY pre-Phase-B gate (Red (p))",
+    "Add R_C0_5_BOILERPLATE_CONTROL for C1/C0 prompt-confound mitigation (Red (a))",
+    "Pre-commit Phase A / Phase B file-overlap maximum (Red (b))",
+    "Phase A seeding agents given redacted tasks (hints_text empty) (Red (f))",
+    "Always fit both random-intercept and random-slope GLMM; use larger SE (Red (j))",
+    "Pre-commit Phase C task-pair tuples at lock-in (Red (k))",
+    "Pre-publish OpenClaw adapter code; report 'delta from own baseline' framing (Red (l))",
+    "Git-hash the pre-registration and cite in final report (Red (h))"
+  ],
+  "recommendation_if_AB_wants_per_framework_confirmatory_claims": {
+    "action": "HALT and scale up",
+    "new_scope": {
+      "phase_b_N_per_framework": 60,
+      "phase_b_total_runs": 1440,
+      "phase_c_pairs": 40,
+      "phase_c_runs": 160,
+      "budget_multiplier_approx": 4.0
+    },
+    "note": "At N=60 per framework, McNemar Holm-corrected power reaches ~0.60 at OR=3.0. True confirmatory per-framework claims require ~N=100."
+  }
+}

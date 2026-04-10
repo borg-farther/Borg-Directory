@@ -1,0 +1,19 @@
+https://github.com/bensargotest-sys/guild-tools/discussions/1
+Title: v3.2.2 / v3.2.3 feedback — 5 questions on borg debug (FCR 53.8% → 0.58%)
+Category: Q&A
+Opened: 20260408-0940
+Discussion ID: D_kwDORxzxzc4Alj1c
+Discussion number: 1
+
+This is the canonical public feedback channel for the classifier roadmap
+decision. All responses land as discussion comments and can also be
+triaged via GitHub issues with label "classifier-feedback" (see
+.github/ISSUE_TEMPLATE/classifier-feedback.yml).
+
+The borg-v323-dogfood-followup cron (cron_id=64c21258e38f, fires
+20260410-0700) should:
+1. gh issue list --repo bensargotest-sys/guild-tools --label classifier-feedback --state all
+2. gh api graphql to count discussion comments on this thread
+3. Parse dogfood_responses.md for manually-logged answers
+4. Aggregate against the 5 flip conditions from SKEPTIC_REVIEW.md Appendix B
+5. Telegram AB with recommendation

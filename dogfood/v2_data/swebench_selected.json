@@ -1,0 +1,96 @@
+{
+  "total_candidates": 82,
+  "selected": 15,
+  "tasks": [
+    {
+      "instance_id": "django__django-11477",
+      "difficulty": "15 min - 1 hour",
+      "tests": 3,
+      "problem_length": 225
+    },
+    {
+      "instance_id": "django__django-16485",
+      "difficulty": "15 min - 1 hour",
+      "tests": 1,
+      "problem_length": 246
+    },
+    {
+      "instance_id": "django__django-13315",
+      "difficulty": "15 min - 1 hour",
+      "tests": 1,
+      "problem_length": 285
+    },
+    {
+      "instance_id": "django__django-14500",
+      "difficulty": "15 min - 1 hour",
+      "tests": 1,
+      "problem_length": 292
+    },
+    {
+      "instance_id": "django__django-16082",
+      "difficulty": "15 min - 1 hour",
+      "tests": 2,
+      "problem_length": 308
+    },
+    {
+      "instance_id": "django__django-15561",
+      "difficulty": "15 min - 1 hour",
+      "tests": 1,
+      "problem_length": 359
+    },
+    {
+      "instance_id": "django__django-14725",
+      "difficulty": "15 min - 1 hour",
+      "tests": 3,
+      "problem_length": 378
+    },
+    {
+      "instance_id": "django__django-11095",
+      "difficulty": "15 min - 1 hour",
+      "tests": 1,
+      "problem_length": 381
+    },
+    {
+      "instance_id": "django__django-15382",
+      "difficulty": "15 min - 1 hour",
+      "tests": 1,
+      "problem_length": 407
+    },
+    {
+      "instance_id": "django__django-13809",
+      "difficulty": "15 min - 1 hour",
+      "tests": 1,
+      "problem_length": 457
+    },
+    {
+      "instance_id": "django__django-11790",
+      "difficulty": "15 min - 1 hour",
+      "tests": 2,
+      "problem_length": 465
+    },
+    {
+      "instance_id": "django__django-14559",
+      "difficulty": "15 min - 1 hour",
+      "tests": 3,
+      "problem_length": 476
+    },
+    {
+      "instance_id": "django__django-16527",
+      "difficulty": "15 min - 1 hour",
+      "tests": 1,
+      "problem_length": 493
+    },
+    {
+      "instance_id": "django__django-11728",
+      "difficulty": "15 min - 1 hour",
+      "tests": 2,
+      "problem_length": 499
+    },
+    {
+      "instance_id": "django__django-15037",
+      "difficulty": "15 min - 1 hour",
+      "tests": 1,
+      "problem_length": 502
+    }
+  ]
+}

@@ -194,10 +194,12 @@ class EmbeddingEngine:
             vector_bytes = row["vector"]
             stored_embedding = np.frombuffer(vector_bytes, dtype=np.float32)
             
-            # Cosine similarity
-            similarity = np.dot(query_embedding, stored_embedding) / (
-                query_norm * np.linalg.norm(stored_embedding)
-            )
+            # Cosine similarity (guard against zero-norm vectors)
+            denom = query_norm * np.linalg.norm(stored_embedding)
+            if denom > 0:
+                similarity = np.dot(query_embedding, stored_embedding) / denom
+            else:
+                similarity = 0.0
             results.append((pack_id, float(similarity)))
         
         # Sort by similarity (highest first)

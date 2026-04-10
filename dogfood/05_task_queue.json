@@ -1,0 +1,294 @@
+{
+  "_comment": "Borg V3 Dogfood — Task Queue. Schema: see bottom of file. Add new tasks to the 'queue' array. Status: pending | running | completed | failed",
+  "_schema_version": "1.0",
+  "meta": {
+    "name": "Borg V3 Dogfood Task Queue",
+    "description": "Curated debugging tasks for proving collective learning across 4 VPS agents",
+    "created": "2026-03-31",
+    "version": "1.0",
+    "total_tasks": 18
+  },
+  "queue": [
+    {
+      "id": "debug-001",
+      "type": "debugging",
+      "priority": 10,
+      "status": "pending",
+      "description": "Fix the race condition in the task runner lock file handling",
+      "prompt": "A Bash script creates a lock file at /opt/borg-dogfood/run/task_runner.lock using 'echo $$ > $lockfile'. Two processes can race between the check (test -f) and the write. Fix this using flock(1) or a POSIX-compliant atomic approach. The fix must work when both processes are running as root. Show the corrected code.",
+      "expected_tools": ["file_write", "bash", "search_files"],
+      "timeout_seconds": 120,
+      "tags": ["concurrency", "bash", "locks", "race-condition"],
+      "difficulty": "medium"
+    },
+    {
+      "id": "debug-002",
+      "type": "debugging",
+      "priority": 10,
+      "status": "pending",
+      "description": "Diagnose why SQLite writes stall under concurrent access",
+      "prompt": "SQLite is reporting 'database is locked' errors when two Python processes write to ~/.borg/borg.db simultaneously. Investigate: (1) What is the busy_timeout pragma setting? (2) Is WAL mode enabled? (3) Write a Python reproducer that demonstrates the issue and a fix using connection pooling or serialized access via a threading lock.",
+      "expected_tools": ["python", "bash", "search_files"],
+      "timeout_seconds": 180,
+      "tags": ["sqlite", "concurrency", "python", "database-locks"],
+      "difficulty": "hard"
+    },
+    {
+      "id": "debug-003",
+      "type": "debugging",
+      "priority": 8,
+      "status": "pending",
+      "description": "Find why rsync fails with 'Could not resolve hostname' in cron",
+      "prompt": "A cron job runs /opt/borg-dogfood/03_db_sync.sh every 5 minutes and fails with 'Could not resolve hostname central-server'. When run manually as root it works fine. The CENTRAL_SERVER env var is set in the script. Diagnose why cron can't resolve hostnames and propose a fix — either by setting DNS in the cron environment, using IP addresses, or adjusting the script.",
+      "expected_tools": ["bash", "search_files"],
+      "timeout_seconds": 120,
+      "tags": ["cron", "dns", "rsync", "environment"],
+      "difficulty": "easy"
+    },
+    {
+      "id": "debug-004",
+      "type": "performance",
+      "priority": 7,
+      "status": "pending",
+      "description": "Reduce borg DB query time from 800ms to under 50ms",
+      "prompt": "A SQLite query on task_outcomes takes 800ms: 'SELECT * FROM task_outcomes WHERE completed_at > 1740000000 AND success = 0'. The table has 500k rows. Use EXPLAIN QUERY PLAN to diagnose, then add appropriate indexes. Show the CREATE INDEX statements, verify the new plan, and report the speedup.",
+      "expected_tools": ["python", "bash", "search_files"],
+      "timeout_seconds": 180,
+      "tags": ["sqlite", "performance", "indexing", "query-optimization"],
+      "difficulty": "medium"
+    },
+    {
+      "id": "debug-005",
+      "type": "debugging",
+      "priority": 9,
+      "status": "pending",
+      "description": "Fix jq JSON parsing crash on empty queue file",
+      "prompt": "When the task queue file (/opt/borg-dogfood/05_task_queue.json) is empty or contains only whitespace, the task runner crashes with 'jq: error: syntax error'. Add defensive checks in 02_task_runner.sh to detect and handle: (1) empty file, (2) valid but non-object JSON, (3) missing 'queue' key. Return a graceful error message in each case.",
+      "expected_tools": ["bash", "jq", "file_write"],
+      "timeout_seconds": 120,
+      "tags": ["jq", "json", "error-handling", "bash"],
+      "difficulty": "easy"
+    },
+    {
+      "id": "debug-006",
+      "type": "debugging",
+      "priority": 9,
+      "status": "pending",
+      "description": "Trace the missing borg_feedback calls in agent output",
+      "prompt": "The agent sometimes completes tasks successfully (exit code 0) but no borg_feedback record appears in the DB. Search the agent output logs in /opt/borg-dogfood/logs/ for 'feedback' string occurrences. Determine: what percentage of successful tasks had a feedback call? Find the common failure mode (e.g., tool call in wrong format, timeout before submission, parse error).",
+      "expected_tools": ["bash", "grep", "python"],
+      "timeout_seconds": 300,
+      "tags": ["logging", "debugging", "feedback", "agent-analysis"],
+      "difficulty": "medium"
+    },
+    {
+      "id": "debug-007",
+      "type": "configuration",
+      "priority": 6,
+      "status": "pending",
+      "description": "Validate all 4 VPS configurations match the expected schema",
+      "prompt": "Read ~/.config/hermes/config.json on 4 different VPS machines (use a loop with SSH). Validate each config has the required 'dogfood' section with fields: enabled, vps_hostname, vps_ip, sync_tag, central_server, sync_interval_minutes. Report any missing fields or type mismatches. Export a consolidated JSON report of the validation results.",
+      "expected_tools": ["bash", "ssh", "python", "jq"],
+      "timeout_seconds": 180,
+      "tags": ["configuration", "validation", "multi-vps", "ssh"],
+      "difficulty": "medium"
+    },
+    {
+      "id": "debug-008",
+      "type": "debugging",
+      "priority": 8,
+      "status": "pending",
+      "description": "Fix log rotation not respecting size limits",
+      "prompt": "Logrotate config at /etc/logrotate.d/borg-dogfood is configured with 'size 10M' but logs are growing past 100MB. The logrotate cron runs daily but seems to be skipping the size check. Show the current logrotate config, diagnose why size is not being honored, and provide a corrected configuration.",
+      "expected_tools": ["bash", "search_files"],
+      "timeout_seconds": 120,
+      "tags": ["logrotate", "logging", "linux"],
+      "difficulty": "easy"
+    },
+    {
+      "id": "debug-009",
+      "type": "performance",
+      "priority": 7,
+      "status": "pending",
+      "description": "Profile and reduce agent startup time from 4s to under 1s",
+      "prompt": "The claude --print agent command takes ~4 seconds to start on a cold VPS (Python venv activation + model loading). Profile the startup time breakdown using bash time(1) and PYTHONPROFILE. Identify the top 3 bottlenecks and fix them. Common issues: venv activation overhead, redundant pip installs, slow model fetching. Target: under 1 second.",
+      "expected_tools": ["bash", "python"],
+      "timeout_seconds": 300,
+      "tags": ["performance", "startup", "optimization", "python"],
+      "difficulty": "hard"
+    },
+    {
+      "id": "debug-010",
+      "type": "debugging",
+      "priority": 9,
+      "status": "pending",
+      "description": "Find why MCP config changes require manual reload",
+      "prompt": "Changes to ~/.config/agent-borg/mcp_config.json are not picked up by the agent until the process is manually restarted. The MCP config is read once at startup. Implement a SIGHUP handler in the task runner (02_task_runner.sh) that reloads the MCP config without restarting the process. Show the implementation and test it.",
+      "expected_tools": ["bash", "file_write", "search_files"],
+      "timeout_seconds": 180,
+      "tags": ["mcp", "config-reload", "signals", "bash"],
+      "difficulty": "medium"
+    },
+    {
+      "id": "debug-011",
+      "type": "data-integrity",
+      "priority": 8,
+      "status": "pending",
+      "description": "Detect and merge duplicate task outcome records in borg.db",
+      "prompt": "The borg.db has duplicate task_outcomes rows with the same task_id but different completed_at timestamps (resulting from multiple sync attempts). Write a Python script that: (1) Detects duplicates, (2) Keeps the row with the latest completed_at, (3) Deletes the older duplicates, (4) Reports how many duplicates were found and removed.",
+      "expected_tools": ["python", "sqlite"],
+      "timeout_seconds": 120,
+      "tags": ["sqlite", "data-integrity", "deduplication"],
+      "difficulty": "easy"
+    },
+    {
+      "id": "debug-012",
+      "type": "debugging",
+      "priority": 7,
+      "status": "pending",
+      "description": "Debug SSH key permission errors on VPS reboot",
+      "prompt": "After a VPS reboots, the rsync cron job fails with 'Permission denied (publickey)' for the first 30 minutes, then succeeds without any changes. Investigate: (1) Is ssh-agent being used? (2) Are SSH keys loaded at boot vs. on-demand? (3) Is this related to ~/.ssh/ being on an encrypted filesystem that unlocks late? Propose a persistent fix.",
+      "expected_tools": ["bash", "ssh", "systemctl"],
+      "timeout_seconds": 180,
+      "tags": ["ssh", "permissions", "boot", "encrypted-fs"],
+      "difficulty": "hard"
+    },
+    {
+      "id": "debug-013",
+      "type": "monitoring",
+      "priority": 6,
+      "status": "pending",
+      "description": "Build an alerting rule for >5% failure rate spike",
+      "prompt": "The dashboard (04_daily_dashboard.sh) should emit a non-zero exit code and a JSON alert when the failure rate exceeds 5% in any 1-hour window. Add this check to the dashboard script. The alert JSON should include: vps_hostname, failure_rate_pct, threshold, triggered_at, and a list of failed task IDs in that window.",
+      "expected_tools": ["bash", "python"],
+      "timeout_seconds": 180,
+      "tags": ["monitoring", "alerting", "dashboard"],
+      "difficulty": "medium"
+    },
+    {
+      "id": "debug-014",
+      "type": "debugging",
+      "priority": 8,
+      "status": "pending",
+      "description": "Diagnose why task timeout doesn't terminate the agent process",
+      "prompt": "Tasks with timeout_seconds=60 are not being killed after 60 seconds. The timeout(1) command is used in 02_task_runner.sh but the agent process continues running. Investigate: (1) Is timeout installed? (2) Are child processes escaping the timeout pid? (3) Is the venv activate command creating a subshell that timeout can't reach? Provide a corrected run_task() function.",
+      "expected_tools": ["bash", "ps", "search_files"],
+      "timeout_seconds": 120,
+      "tags": ["timeout", "process-management", "bash", "signals"],
+      "difficulty": "medium"
+    },
+    {
+      "id": "debug-015",
+      "type": "security",
+      "priority": 7,
+      "status": "pending",
+      "description": "Audit and fix world-readable borg.db permissions",
+      "prompt": "The file ~/.borg/borg.db is currently mode 0644 (world-readable). This is a security issue because it may contain API keys and task metadata. Write an audit script that: (1) Checks the current permissions, (2) Identifies which tables contain sensitive data, (3) Sets the correct permissions (0600), (4) Updates any scripts that need to run as non-root to access the DB.",
+      "expected_tools": ["bash", "python", "sqlite"],
+      "timeout_seconds": 120,
+      "tags": ["security", "permissions", "sqlite"],
+      "difficulty": "easy"
+    },
+    {
+      "id": "debug-016",
+      "type": "debugging",
+      "priority": 6,
+      "status": "pending",
+      "description": "Fix JSON payload corruption during rsync transfer",
+      "prompt": "The sync payload JSON file is occasionally corrupted mid-transfer (truncated, invalid JSON). This happens when rsync is interrupted. Implement atomic write + rename for the payload file in 03_db_sync.sh using a temp file + mv pattern. Also add a JSON validation step after rsync completes on the receiving side.",
+      "expected_tools": ["bash", "jq", "python"],
+      "timeout_seconds": 120,
+      "tags": ["rsync", "json", "atomicity", "data-integrity"],
+      "difficulty": "easy"
+    },
+    {
+      "id": "debug-017",
+      "type": "performance",
+      "priority": 5,
+      "status": "pending",
+      "description": "Accelerate the dashboard query from 30s to under 2s",
+      "prompt": "Running 04_daily_dashboard.sh takes 30 seconds because it runs 12 separate SQLite queries sequentially on a 500k-row database. Refactor it to use a single query or parallelize with Python threads. Measure before/after execution time and report the speedup factor.",
+      "expected_tools": ["python", "sqlite", "bash"],
+      "timeout_seconds": 300,
+      "tags": ["performance", "sqlite", "parallelism", "dashboard"],
+      "difficulty": "hard"
+    },
+    {
+      "id": "debug-018",
+      "type": "integration",
+      "priority": 9,
+      "status": "pending",
+      "description": "End-to-end test: verify feedback loop completes in <5 minutes",
+      "prompt": "Write a test script that: (1) Picks task 'debug-005' from the queue, (2) Runs it with the agent, (3) Verifies borg_feedback was called within 60 seconds of task completion, (4) Checks the feedback record exists in borg.db, (5) Verifies the record was included in the next sync payload. Report PASS/FAIL for each step with timings.",
+      "expected_tools": ["bash", "python", "sqlite", "jq"],
+      "timeout_seconds": 300,
+      "tags": ["integration-test", "feedback", "end-to-end"],
+      "difficulty": "medium"
+    }
+  ],
+
+  "_queue_schema": {
+    "_comment": "JSON Schema for queue entries (informational — validate with jq or Python jsonschema)",
+    "type": "object",
+    "required": ["id", "type", "prompt"],
+    "properties": {
+      "id": {
+        "type": "string",
+        "description": "Unique task identifier (string, e.g. 'debug-001')",
+        "pattern": "^[a-zA-Z0-9_-]+$"
+      },
+      "type": {
+        "type": "string",
+        "enum": ["debugging", "performance", "security", "configuration", "data-integrity", "monitoring", "integration"],
+        "description": "Task category"
+      },
+      "priority": {
+        "type": "integer",
+        "description": "1-10, higher = more urgent (used for ordering if needed)",
+        "minimum": 1,
+        "maximum": 10
+      },
+      "status": {
+        "type": "string",
+        "enum": ["pending", "running", "completed", "failed"],
+        "description": "Execution state (task runner updates this)"
+      },
+      "description": {
+        "type": "string",
+        "description": "Short human-readable description"
+      },
+      "prompt": {
+        "type": "string",
+        "description": "Full task prompt given to the agent"
+      },
+      "expected_tools": {
+        "type": "array",
+        "items": { "type": "string" },
+        "description": "Tools the agent is expected to use"
+      },
+      "timeout_seconds": {
+        "type": "integer",
+        "description": "Max seconds before task is killed (default: 600)",
+        "default": 600
+      },
+      "tags": {
+        "type": "array",
+        "items": { "type": "string" },
+        "description": "Categorization tags"
+      },
+      "difficulty": {
+        "type": "string",
+        "enum": ["easy", "medium", "hard"],
+        "description": "Estimated difficulty"
+      },
+      "assigned_vps": {
+        "type": "string",
+        "description": "Optional: specific VPS hostname that should run this task"
+      },
+      "metadata": {
+        "type": "object",
+        "description": "Free-form extra data"
+      }
+    }
+  }
+}

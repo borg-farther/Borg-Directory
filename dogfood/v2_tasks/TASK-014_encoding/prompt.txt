@@ -1,0 +1,26 @@
+## Task: Fix the String Comparison Bug
+
+You are debugging a text processor that has issues with string comparison after reading from a JSON file.
+
+### The Problem
+
+When configuration is saved to a JSON file and loaded back, string comparisons fail even though the strings appear identical when printed.
+
+### What to Look For
+
+The bug is in `text_processor.py` in the `_load_config()` method. Pay attention to how the file is opened for reading versus how it's opened for writing.
+
+### Expected Behavior
+
+1. Save config with `"username": "admin"`
+2. Load config in new processor
+3. Get value `"username"` from config
+4. Compare with original string `"admin"` → should match
+
+### The Bug
+
+The `save_config()` method uses `encoding='utf-8'` when writing, but `_load_config()` does NOT specify encoding. This can cause issues with BOM (Byte Order Mark) handling on some systems.
+
+### Your Task
+
+Fix the `_load_config()` method to properly handle UTF-8 encoding, ensuring string comparisons work correctly after loading from file.

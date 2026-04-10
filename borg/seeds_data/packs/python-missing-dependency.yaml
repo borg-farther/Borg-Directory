@@ -1,0 +1,23 @@
+name: python-missing-dependency
+problem_class: missing_dependency
+license: MIT
+description: |
+  Python fails with "ModuleNotFoundError: No module named 'X'" or
+  "ImportError: No module named 'X'".
+solution: |
+  Install the missing package: pip install <package-name>
+  If using a virtual environment, activate it first.
+  If in requirements.txt, run: pip install -r requirements.txt
+  If it's a local module, check that __init__.py exists in the directory.
+source_url: https://docs.python.org/3/tutorial/venv.html
+tier: SEED
+tags:
+  - python
+  - import
+  - module
+required_inputs:
+  - name: error_message
+    type: string
+escalation_rules:
+  - condition: "'ModuleNotFoundError' in error_message"
+    action: install the missing package with pip

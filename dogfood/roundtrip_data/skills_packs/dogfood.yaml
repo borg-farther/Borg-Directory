@@ -1,0 +1,130 @@
+type: workflow_pack
+version: 1.0.0
+problem_class: "Systematic exploratory QA testing of web applications \u2014 find\
+  \ bugs, capture evidence, and generate structured reports"
+mental_model: "Systematic exploratory QA testing of web applications \u2014 find bugs,\
+  \ capture evidence, and generate structured reports"
+required_inputs: []
+escalation_rules:
+- Escalate on ambiguous or missing information.
+id: borg://converted/dogfood
+phases:
+- name: prerequisites
+  description: '- Browser toolset must be available (`browser_navigate`, `browser_snapshot`,
+    `browser_click`, `browser_type`, `browser_vision`, `browser_console`, `browser_scroll`,
+    `browser_back`, `browser_press`, `browser_close`)
+
+    - A target URL and testing scope from the user'
+  checkpoint: ''
+  anti_patterns: []
+  prompts: []
+- name: inputs
+  description: "The user provides:\n1. **Target URL** \u2014 the entry point for testing\n\
+    2. **Scope** \u2014 what areas/features to focus on (or \"full site\" for comprehensive\
+    \ testing)\n3. **Output directory** (optional) \u2014 where to save screenshots\
+    \ and the report (default: `./dogfood-output`)"
+  checkpoint: ''
+  anti_patterns: []
+  prompts: []
+- name: workflow
+  description: "Follow this 5-phase systematic workflow:\n\n### Phase 1: Plan\n\n\
+    1. Create the output directory structure:\n   ```\n   {output_dir}/\n   \u251C\
+    \u2500\u2500 screenshots/       # Evidence screenshots\n   \u2514\u2500\u2500\
+    \ report.md          # Final report (generated in Phase 5)\n   ```\n2. Identify\
+    \ the testing scope based on user input.\n3. Build a rough sitemap by planning\
+    \ which pages and features to test:\n   - Landing/home page\n   - Navigation links\
+    \ (header, footer, sidebar)\n   - Key user flows (sign up, login, search, checkout,\
+    \ etc.)\n   - Forms and interactive elements\n   - Edge cases (empty states, error\
+    \ pages, 404s)\n\n### Phase 2: Explore\n\nFor each page or feature in your plan:\n\
+    \n1. **Navigate** to the page:\n   ```\n   browser_navigate(url=\"https://example.com/page\"\
+    )\n   ```\n\n2. **Take a snapshot** to understand the DOM structure:\n   ```\n\
+    \   browser_snapshot()\n   ```\n\n3. **Check the console** for JavaScript errors:\n\
+    \   ```\n   browser_console(clear=true)\n   ```\n   Do this after every navigation\
+    \ and after every significant interaction. Silent JS errors are high-value findings.\n\
+    \n4. **Take an annotated screenshot** to visually assess the page and identify\
+    \ interactive elements:\n   ```\n   browser_vision(question=\"Describe the page\
+    \ layout, identify any visual issues, broken elements, or accessibility concerns\"\
+    , annotate=true)\n   ```\n   The `annotate=true` flag overlays numbered `[N]`\
+    \ labels on interactive elements. Each `[N]` maps to ref `@eN` for subsequent\
+    \ browser commands.\n\n5. **Test interactive elements** systematically:\n   -\
+    \ Click buttons and links: `browser_click(ref=\"@eN\")`\n   - Fill forms: `browser_type(ref=\"\
+    @eN\", text=\"test input\")`\n   - Test keyboard navigation: `browser_press(key=\"\
+    Tab\")`, `browser_press(key=\"Enter\")`\n   - Scroll through content: `browser_scroll(direction=\"\
+    down\")`\n   - Test form validation with invalid inputs\n   - Test empty submissions\n\
+    \n6. **After each interaction**, check for:\n   - Console errors: `browser_console()`\n\
+    \   - Visual changes: `browser_vision(question=\"What changed after the interaction?\"\
+    )`\n   - Expected vs actual behavior\n\n### Phase 3: Collect Evidence\n\nFor every\
+    \ issue found:\n\n1. **Take a screenshot** showing the issue:\n   ```\n   browser_vision(question=\"\
+    Capture and describe the issue visible on this page\", annotate=false)\n   ```\n\
+    \   Save the `screenshot_path` from the response \u2014 you will reference it\
+    \ in the report.\n\n2. **Record the details**:\n   - URL where the issue occurs\n\
+    \   - Steps to reproduce\n   - Expected behavior\n   - Actual behavior\n   - Console\
+    \ errors (if any)\n   - Screenshot path\n\n3. **Classify the issue** using the\
+    \ issue taxonomy (see `references/issue-taxonomy.md`):\n   - Severity: Critical\
+    \ / High / Medium / Low\n   - Category: Functional / Visual / Accessibility /\
+    \ Console / UX / Content\n\n### Phase 4: Categorize\n\n1. Review all collected\
+    \ issues.\n2. De-duplicate \u2014 merge issues that are the same bug manifesting\
+    \ in different places.\n3. Assign final severity and category to each issue.\n\
+    4. Sort by severity (Critical first, then High, Medium, Low).\n5. Count issues\
+    \ by severity and category for the executive summary.\n\n### Phase 5: Report\n\
+    \nGenerate the final report using the template at `templates/dogfood-report-template.md`.\n\
+    \nThe report must include:\n1. **Executive summary** with total issue count, breakdown\
+    \ by severity, and testing scope\n2. **Per-issue sections** with:\n   - Issue\
+    \ number and title\n   - Severity and category badges\n   - URL where observed\n\
+    \   - Description of the issue\n   - Steps to reproduce\n   - Expected vs actual\
+    \ behavior\n   - Screenshot references (use `MEDIA:<screenshot_path>` for inline\
+    \ images)\n   - Console errors if relevant\n3. **Summary table** of all issues\n\
+    4. **Testing notes** \u2014 what was tested, what was not, any blockers\n\nSave\
+    \ the report to `{output_dir}/report.md`."
+  checkpoint: ''
+  anti_patterns: []
+  prompts: []
+- name: tools_reference
+  description: '| Tool | Purpose |
+
+    |------|---------|
+
+    | `browser_navigate` | Go to a URL |
+
+    | `browser_snapshot` | Get DOM text snapshot (accessibility tree) |
+
+    | `browser_click` | Click an element by ref (`@eN`) or text |
+
+    | `browser_type` | Type into an input field |
+
+    | `browser_scroll` | Scroll up/down on the page |
+
+    | `browser_back` | Go back in browser history |
+
+    | `browser_press` | Press a keyboard key |
+
+    | `browser_vision` | Screenshot + AI analysis; use `annotate=true` for element
+    labels |
+
+    | `browser_console` | Get JS console output and errors |
+
+    | `browser_close` | Close the browser session |'
+  checkpoint: ''
+  anti_patterns: []
+  prompts: []
+- name: tips
+  description: "- **Always check `browser_console()` after navigating and after significant\
+    \ interactions.** Silent JS errors are among the most valuable findings.\n- **Use\
+    \ `annotate=true` with `browser_vision`** when you need to reason about interactive\
+    \ element positions or when the snapshot refs are unclear.\n- **Test with both\
+    \ valid and invalid inputs** \u2014 form validation bugs are common.\n- **Scroll\
+    \ through long pages** \u2014 content below the fold may have rendering issues.\n\
+    - **Test navigation flows** \u2014 click through multi-step processes end-to-end.\n\
+    - **Check responsive behavior** by noting any layout issues visible in screenshots.\n\
+    - **Don't forget edge cases**: empty states, very long text, special characters,\
+    \ rapid clicking.\n- When reporting screenshots to the user, include `MEDIA:<screenshot_path>`\
+    \ so they can see the evidence inline."
+  checkpoint: ''
+  anti_patterns: []
+  prompts: []
+provenance:
+  author_agent: convert://tool
+  evidence: Converted from dogfood
+  confidence: inferred
+  failure_cases: []
+

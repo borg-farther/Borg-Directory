@@ -1,0 +1,43 @@
+title: "v3.2.2 / v3.2.3 feedback — 5 questions on borg debug"
+labels: ["classifier-feedback"]
+body: |
+  ## TL;DR
+
+  agent-borg v3.2.2 and v3.2.3 shipped on 20260408. The honesty patch
+  dropped false-confident rate from **53.8% → 0.58%** on a 173-row
+  multi-language corpus. Before we invest 5–6 more weeks building
+  per-language pack coverage (Rust, Go, JS, TS, Docker, K8s), we want
+  to hear from real users.
+
+  **Five questions. Honest "less useful" / "I'd uninstall" answers
+  are explicitly welcome.**
+
+  Full PRD + reproducible benchmarks:
+  https://github.com/bensargotest-sys/guild-tools/tree/main/docs/20260408-0623_classifier_prd/
+
+  ---
+
+  1. **When did you last run `borg debug`?** First time or do you run it
+     routinely? What language did you run it on?
+
+  2. **What error did you paste, and what did you actually want back?**
+     A diagnosis, an exact fix, a pointer to docs, or something else?
+
+  3. **If `borg debug` had said "I don't know — looks like Rust, Borg
+     only knows Python/Django right now"** (which is what v3.2.2+ now
+     does), would you have kept the tool installed or uninstalled?
+
+  4. **If `borg debug` were only callable from Claude Code / Cursor /
+     Cline via MCP** (so an AI agent inside your IDE invokes it on your
+     behalf when it hits an error mid-task) **instead of as a human CLI**
+     — would that be more useful or less? Honest "less" is fine.
+
+  5. **For the language you hit the bug on**, would you actually use a
+     Borg pack for that language if it existed? Or would you just paste
+     the error into ChatGPT / Claude / Cursor like you do today?
+
+  ---
+
+  Reply with any mix of answers — even just one of the five is useful.
+  Or file an issue with label `classifier-feedback` if you prefer
+  structured form.

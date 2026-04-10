@@ -1,0 +1,18 @@
+REASONING TRACE FOR: Retry backoff reset bug
+
+PROBLEM DECOMPOSITION:
+- The retry handler should increase delay exponentially regardless of exception type
+- PartialSuccess is being treated differently from regular exceptions in terms of counter management
+
+WHAT WAS TRIED:
+- Read through the execute() method flow
+- Found self.attempt = 0 inside the PartialSuccess handler
+
+KEY INSIGHT:
+- The attempt reset (self.attempt = 0) happens in TWO places: on full success (correct) and on PartialSuccess (incorrect)
+- On PartialSuccess, the attempt should NOT reset — the delay should keep growing
+- But on full success, resetting IS correct
+
+PITFALLS:
+- Don't remove both resets — the one on full success (before return result) is correct
+- Only the one in the PartialSuccess handler should be removed

@@ -1,0 +1,18 @@
+# Solution for TASK-025
+
+## The Bug
+In `parse_logs_with_continuation`, the code uses `.strip()` on the continuation text BEFORE splitting into lines. This removes leading whitespace from the entire block, including the leading whitespace of continuation lines. When we then check `line.startswith((' ', '\t'))`, it fails because the leading whitespace was already stripped.
+
+## The Fix
+Don't strip the continuation text, or strip each line individually after checking for continuation:
+
+```python
+continuation_text = log_text[match.end():next_start]
+if continuation_text:
+    lines = continuation_text.split('\n')
+    for line in lines:
+        if line.strip() and line.startswith((' ', '\t')):
+            message += '\n' + line
+```
+
+The key insight: check `line.startswith(...)` on the RAW line (before strip), not on the stripped line. The `line.strip()` check just ensures the line has content, but we must check for leading whitespace before stripping.

@@ -1,0 +1,17 @@
+REASONING TRACE FOR: Pagination total_pages bug
+
+PROBLEM DECOMPOSITION:
+- Integer division truncates: 11 // 5 = 2, but we need 3 pages
+- Need ceiling division instead of floor division
+
+WHAT WAS TRIED:
+- The fix is math.ceil(len / page_size) or the integer trick: (len + page_size - 1) // page_size
+- Also need to handle edge case: 0 items should have 0 or 1 pages depending on convention
+
+KEY INSIGHT:
+- Use ceiling division: -(-len(items) // page_size) or (len + size - 1) // size
+- This ensures partial pages are counted
+
+PITFALLS:
+- Don't import math if you can avoid it — use the integer trick
+- Empty list edge case: should return 0 pages (both formulas handle this)

@@ -1,0 +1,51 @@
+query_id,query,category,difficulty,expected_problem_class,matches_count,matches_source,relevant_hit_count,g1_pass,g2_pass
+1,django.db.utils.IntegrityError: FOREIGN KEY constraint failed during migrate,django,medium,circular_dependency,0,none,0,0,0
+2,django.core.exceptions.ImproperlyConfigured: SECRET_KEY environment variable not set,django,easy,configuration_error,0,none,0,0,0
+3,OperationalError: no such table: django_migrations after migrate,django,medium,migration_state_desync,0,none,0,0,0
+4,IntegrityError: duplicate key value violates unique constraint for user_id,django,medium,missing_foreign_key,0,none,0,0,0
+5,AttributeError: 'NoneType' object has no attribute 'objects' in Django view,django,easy,null_pointer_chain,0,none,0,0,0
+6,django.db.utils.OperationalError: no such column: profile_user_id,django,medium,schema_drift,0,none,0,0,0
+7,InvalidMoveError: cannot reverse migration direction,django,hard,circular_dependency,0,none,0,0,0
+8,"Applied missing migrations: cannot apply, database schema mismatch",django,hard,migration_state_desync,0,none,0,0,0
+9,"TypeError: expected str, bytes or os.PathLike object, not DeferredAttribute",django,medium,type_mismatch,0,none,0,0,0
+10,PermissionError: Access to path /var/www/media denied during file upload,django,easy,permission_denied,0,none,0,0,0
+11,TimeoutError: Django runserver hanging on first request after migrate,django,medium,timeout_hang,0,none,0,0,0
+12,Relation does not exist: FOREIGN KEY constraint failed on PostgreSQL after schema change,django,hard,schema_drift,0,none,0,0,0
+13,ModuleNotFoundError: No module named 'cv2' despite pip install opencv-python,python,easy,missing_dependency,0,none,0,0,0
+14,ImportError: cannot import name 'cache' from 'functools' in Python 3.9,python,medium,import_cycle,0,none,0,0,0
+15,TypeError: 'NoneType' object has no attribute 'get' when parsing JSON,python,easy,null_pointer_chain,0,none,0,0,0
+16,"TypeError: expected bytes, str or Path-like object, got int instead",python,easy,type_mismatch,0,none,0,0,0
+17,ModuleNotFoundError: No module named 'psycopg2' in virtual environment,python,easy,missing_dependency,0,none,0,0,0
+18,ImportError: circular import between auth.py and models.py,python,medium,import_cycle,0,none,0,0,0
+19,AttributeError: 'module' object has no attribute 'something' after pip install upgrade,python,medium,null_pointer_chain,0,none,0,0,0
+20,TypeError: argument of type 'NoneType' is not iterable in template context,python,medium,null_pointer_chain,0,none,0,0,0
+21,PermissionError: [Errno 13] Permission denied writing to /etc/hosts,python,easy,permission_denied,0,none,0,0,0
+22,RuntimeError: dictionary changed size during iteration in multiprocessing loop,python,hard,race_condition,0,none,0,0,0
+23,TimeoutError: connectionpool connection pool exhausted after 30 seconds,python,medium,timeout_hang,0,none,0,0,0
+24,ModuleNotFoundError: No module named 'yaml' after pyproject.toml install,python,easy,missing_dependency,0,none,0,0,0
+25,TypeError: cannot use a bytes pattern on a buffer in Python 3 socket module,python,medium,type_mismatch,0,none,0,0,0
+26,ImportError: cannot import name 'BaseCommand' from 'django.core.management',python,hard,import_cycle,0,none,0,0,0
+27,AttributeError: 'NoneType' object has no attribute 'encode' for SMS gateway,python,easy,null_pointer_chain,0,none,0,0,0
+28,git merge conflict in feature/auth.py — how to resolve using ours strategy,git,medium,schema_drift,0,none,0,0,0
+29,docker build fails with 'cannot verify non-leaf node' in Dockerfile multi-stage,docker,hard,configuration_error,0,none,0,0,0
+30,bash script exits with code 126 — permission denied on executable script,bash,easy,permission_denied,0,none,0,0,0
+31,git stash pop fails with CONFLICT — auto-merge failed in package-lock.json,git,medium,race_condition,0,none,0,0,0
+32,docker compose up hangs on starting service — connection refused on port 5432,docker,medium,timeout_hang,0,none,0,0,0
+33,bash: ./run.sh: Permission denied after chmod +x — filesystem ACL issue,bash,easy,permission_denied,0,none,0,0,0
+34,git rebase -i freezes or hangs waiting for editor to open,git,hard,timeout_hang,0,none,0,0,0
+35,docker build step hangs indefinitely on COPY command with large vendor folder,docker,hard,timeout_hang,0,none,0,0,0
+36,Flask app fails with 'FSADatetimeRepresentationWarning: datetime not naive' in logs,flask,medium,type_mismatch,0,none,0,0,0
+37,pytest raises AttributeError: 'NoneType' object has no attribute 'assertEqual' in conftest,pytest,medium,null_pointer_chain,0,none,0,0,0
+38,Flask blueprints: ImportError: cannot import name 'auth_bp' from '__main__',flask,medium,import_cycle,0,none,0,0,0
+39,pytest fixture 'client' not found — scope conflict with conftest.py,pytest,easy,missing_dependency,0,none,0,0,0
+40,Celery task hangs with TimeoutError: SoftTimeLimitExceeded after 300 seconds,celery,hard,timeout_hang,0,none,0,0,0
+41,SQLAlchemy: AttributeError: 'NoneType' object has no attribute 'query' on model class,sqlalchemy,medium,null_pointer_chain,0,none,0,0,0
+42,FastAPI startup fails with 'ImproperlyConfigured: instance before app' error,fastapi,medium,configuration_error,0,none,0,0,0
+43,pytest ParametrizeWarning: arguments in fixture 'db' have wrong scope,pytest,hard,schema_drift,0,none,0,0,0
+44,Redis connection refused error during Celery task execution in production,celery,medium,timeout_hang,0,none,0,0,0
+45,Flask: OperationalError: (psycopg2.OperationalError) could not connect to server,flask,easy,timeout_hang,0,none,0,0,0
+46,Race condition: concurrent requests to /api/update cause double-charge in Stripe integration,race,hard,race_condition,0,none,0,0,0
+47,TimeoutError: requests library hanging on API call without timeout parameter,python,easy,timeout_hang,0,none,0,0,0
+48,PermissionError: [Errno 13] Permission denied on /root/.ssh/authorized_keys for SSH key deployment,bash,easy,permission_denied,0,none,0,0,0
+49,Race condition in multiprocessing: manager.list() shows stale data between processes,python,hard,race_condition,0,none,0,0,0
+50,Concurrent database writes fail with deadlock detected in PostgreSQL under high load,database,hard,race_condition,0,none,0,0,0

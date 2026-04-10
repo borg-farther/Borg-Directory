@@ -37,7 +37,7 @@ PACKS_INDEX_PATH = Path("/root/hermes-workspace/guild-packs/index.json")
 PACKS_DIR = Path("/root/hermes-workspace/guild-packs/packs")
 TOP_5_PACKS = [
     "systematic-debugging",
-    "code-review",
+    # "code-review",  # Removed in v3.0.0: d=-2.83, actively hurts performance
     "test-driven-development",
     "plan",
     "quick-debug",
@@ -120,8 +120,9 @@ _PACK_LIST = _build_pack_list()
 # {pack_name: (filename, uri)}  -- pack_name may have duplicates; key by filename instead
 PACK_INFO: Dict[str, tuple] = {item[0]: (item[1], item[2]) for item in _PACK_LIST}
 ALL_PACK_FILES: List[str] = [item[1] for item in _PACK_LIST]  # filenames
-ALL_PACK_NAMES: List[str] = [item[0] for item in _PACK_LIST]  # pack names (with dups)
-UNIQUE_PACK_NAMES: List[str] = list(dict.fromkeys(ALL_PACK_NAMES))  # deduped, preserves order
+# Filter deprecated packs: code-review removed in v3.0.0 (d=-2.83, actively hurts)
+_DEPRECATED_PACKS = {"code-review"}
+ALL_PACK_NAMES: List[str] = [item[0] for item in _PACK_LIST if item[0] not in _DEPRECATED_PACKS]
 
 
 def get_pack_file_path(pack_name: str) -> Path:
@@ -203,10 +204,7 @@ class TestBorgSearchFindsPacks:
     def test_search_finds_pack(self, pack_name: str):
         fake_index = _load_index()
         with patch("borg.core.search._fetch_index", return_value=fake_index):
-            # Use the packs parent dir as BORG_DIR so local packs can be found.
-            # The local discovery code looks for BORG_DIR/packs/*.yaml, but some
-            # packs (like agent-a-debugging) only exist locally, not in the remote index.
-            with patch("borg.core.search.BORG_DIR", PACKS_DIR.parent):
+            with patch("borg.core.uri.BORG_DIR", Path("/nonexistent")):
                 result = json.loads(borg_search(pack_name))
 
         assert result["success"] is True, f"borg_search failed: {result.get('error')}"

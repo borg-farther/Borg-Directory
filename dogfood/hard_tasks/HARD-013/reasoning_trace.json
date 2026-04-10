@@ -1,0 +1,10 @@
+{
+  "task_id": "HARD-013",
+  "task_name": "Observer Pattern Memory Leak",
+  "bug_description": "observable.py stores strong references to observers, preventing garbage collection when observables are destroyed",
+  "root_cause": "observable.py __init__ uses List[Any] for _observers instead of weakref.WeakSet",
+  "symptom": "manager.py's memory grows unbounded - observer count remains high after destroy_all()",
+  "red_herring": "observers.py has __del__ methods that look suspicious but aren't the problem",
+  "fix_location": "src/observable.py __init__ - change _observers to use weakref.WeakSet() instead of list",
+  "verification": "check.sh returns 1 when run, confirming tests fail due to memory leak"
+}

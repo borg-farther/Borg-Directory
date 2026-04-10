@@ -1,0 +1,207 @@
+{
+  "total_bugs": 15,
+  "error_distribution": {
+    "AdminInline": 1,
+    "Regex": 3,
+    "URLRouting": 1,
+    "Concurrency": 1,
+    "Unknown": 11,
+    "TypeError": 1
+  },
+  "file_distribution": {
+    "django": 16,
+    "contrib": 4,
+    "urls": 1,
+    "forms": 2,
+    "core": 2,
+    "db": 6,
+    "template": 1
+  },
+  "bugs": [
+    {
+      "instance_id": "django__django-11095",
+      "problem": "add ModelAdmin.get_inlines() hook to allow set inlines based on the request or model instance.\nDescription\n\t\nadd ModelAdmin.get_inlines() hook to allo",
+      "error_types": [
+        "AdminInline"
+      ],
+      "files_touched": [
+        "/django/contrib/admin/options.py",
+        "django/contrib/admin/options.py b/django/contrib/admin/options.py"
+      ],
+      "difficulty": "15 min - 1 hour"
+    },
+    {
+      "instance_id": "django__django-11477",
+      "problem": "translate_url() creates an incorrect URL when optional named groups are missing in the URL pattern\nDescription\n\t\nThere is a problem when translating u",
+      "error_types": [
+        "Regex",
+        "URLRouting"
+      ],
+      "files_touched": [
+        "/django/urls/resolvers.py",
+        "django/urls/resolvers.py b/django/urls/resolvers.py"
+      ],
+      "difficulty": "15 min - 1 hour"
+    },
+    {
+      "instance_id": "django__django-11728",
+      "problem": "simplify_regexp() doesn't replace trailing groups.\nDescription\n\t\nreplace_named_groups() fails to replace the final named group if the urlpattern passe",
+      "error_types": [
+        "Regex",
+        "Concurrency"
+      ],
+      "files_touched": [
+        "django/contrib/admindocs/utils.py b/django/contrib/admindocs/utils.py",
+        "/django/contrib/admindocs/utils.py"
+      ],
+      "difficulty": "15 min - 1 hour"
+    },
+    {
+      "instance_id": "django__django-11790",
+      "problem": "AuthenticationForm's username field doesn't set maxlength HTML attribute.\nDescription\n\t\nAuthenticationForm's username field doesn't render with maxlen",
+      "error_types": [
+        "Unknown"
+      ],
+      "files_touched": [
+        "django/contrib/auth/forms.py b/django/contrib/auth/forms.py",
+        "/django/contrib/auth/forms.py"
+      ],
+      "difficulty": "15 min - 1 hour"
+    },
+    {
+      "instance_id": "django__django-13315",
+      "problem": "limit_choices_to on a ForeignKey can render duplicate options in formfield\nDescription\n\t\nIf you pass a Q object as limit_choices_to on a ForeignKey fi",
+      "error_types": [
+        "TypeError",
+        "Regex"
+      ],
+      "files_touched": [
+        "/django/forms/models.py",
+        "django/forms/models.py b/django/forms/models.py"
+      ],
+      "difficulty": "15 min - 1 hour"
+    },
+    {
+      "instance_id": "django__django-13809",
+      "problem": "Add --skip-checks option to the runserver command.\nDescription\n\t\nRationale:\nIt would be consistent with other management commands performing system ch",
+      "error_types": [
+        "Unknown"
+      ],
+      "files_touched": [
+        "django/core/management/commands/runserver.py b/django/core/management/commands/runserver.py",
+        "/django/core/management/commands/runserver.py"
+      ],
+      "difficulty": "15 min - 1 hour"
+    },
+    {
+      "instance_id": "django__django-14500",
+      "problem": "Squashed migration is not marked as unapplied\nDescription\n\t \n\t\t(last modified by Markus Holtermann)\n\t \nWhen unapplying a squashed migration and the re",
+      "error_types": [
+        "Unknown"
+      ],
+      "files_touched": [
+        "/django/db/migrations/executor.py",
+        "django/db/migrations/executor.py b/django/db/migrations/executor.py"
+      ],
+      "difficulty": "15 min - 1 hour"
+    },
+    {
+      "instance_id": "django__django-14559",
+      "problem": "Include number of rows matched in bulk_update() return value\nDescription\n\t\nCurrently, bulk_update() returns None, unlike update(), which returns \u200bthe ",
+      "error_types": [
+        "Unknown"
+      ],
+      "files_touched": [
+        "django/db/models/query.py b/django/db/models/query.py",
+        "/django/db/models/query.py"
+      ],
+      "difficulty": "15 min - 1 hour"
+    },
+    {
+      "instance_id": "django__django-14725",
+      "problem": "Provide a way for model formsets to disallow new object creation\nDescription\n\t\nModel formsets don't provide a way to create an \"edit only\" view of obj",
+      "error_types": [
+        "Unknown"
+      ],
+      "files_touched": [
+        "/django/forms/models.py",
+        "django/forms/models.py b/django/forms/models.py"
+      ],
+      "difficulty": "15 min - 1 hour"
+    },
+    {
+      "instance_id": "django__django-15037",
+      "problem": "Foreign key to a specific field is not handled in inspectdb\nDescription\n\t \n\t\t(last modified by Tim Graham)\n\t \nif you have a DB like that\nCREATE TABLE ",
+      "error_types": [
+        "Unknown"
+      ],
+      "files_touched": [
+        "django/core/management/commands/inspectdb.py b/django/core/management/commands/inspectdb.py",
+        "/django/core/management/commands/inspectdb.py"
+      ],
+      "difficulty": "15 min - 1 hour"
+    },
+    {
+      "instance_id": "django__django-15382",
+      "problem": "filter on exists-subquery with empty queryset removes whole WHERE block\nDescription\n\t \n\t\t(last modified by Tobias Bengfort)\n\t \n>>> qs = MyModel.object",
+      "error_types": [
+        "Unknown"
+      ],
+      "files_touched": [
+        "/django/db/models/expressions.py",
+        "django/db/models/expressions.py b/django/db/models/expressions.py"
+      ],
+      "difficulty": "15 min - 1 hour"
+    },
+    {
+      "instance_id": "django__django-15561",
+      "problem": "AlterField operation should be noop when adding/changing choices on SQLite.\nDescription\n\t\nwhile writing a test case for #33470 i found that for sqlite",
+      "error_types": [
+        "Unknown"
+      ],
+      "files_touched": [
+        "/django/db/models/fields/__init__.py",
+        "django/db/backends/base/schema.py b/django/db/backends/base/schema.py",
+        "django/db/models/fields/__init__.py b/django/db/models/fields/__init__.py",
+        "/django/db/backends/base/schema.py"
+      ],
+      "difficulty": "15 min - 1 hour"
+    },
+    {
+      "instance_id": "django__django-16082",
+      "problem": "Resolve output_field when combining numeric expressions with MOD operator.\nDescription\n\t\nWhen writing a Django expression for a query that does MOD, i",
+      "error_types": [
+        "Unknown"
+      ],
+      "files_touched": [
+        "/django/db/models/expressions.py",
+        "django/db/models/expressions.py b/django/db/models/expressions.py"
+      ],
+      "difficulty": "15 min - 1 hour"
+    },
+    {
+      "instance_id": "django__django-16485",
+      "problem": "floatformat() crashes on \"0.00\".\nDescription\n\t\nfrom decimal import Decimal\nfrom django.template.defaultfilters import floatformat\nfloatformat('0.00', ",
+      "error_types": [
+        "Unknown"
+      ],
+      "files_touched": [
+        "django/template/defaultfilters.py b/django/template/defaultfilters.py",
+        "/django/template/defaultfilters.py"
+      ],
+      "difficulty": "15 min - 1 hour"
+    },
+    {
+      "instance_id": "django__django-16527",
+      "problem": "\"show_save_as_new\" in admin can add without this permission\nDescription\n\t \n\t\t(last modified by Mariusz Felisiak)\n\t \nAt \"django/contrib/admin/templatet",
+      "error_types": [
+        "Unknown"
+      ],
+      "files_touched": [
+        "/django/contrib/admin/templatetags/admin_modify.py",
+        "django/contrib/admin/templatetags/admin_modify.py b/django/contrib/admin/templatetags/admin_modify.py"
+      ],
+      "difficulty": "15 min - 1 hour"
+    }
+  ]
+}

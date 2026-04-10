@@ -1,0 +1,14 @@
+{
+  "tokenBalances": [
+    {
+      "contractAddress": "0xA0b86991c6218b36c1d19D4a2e9Eb0cE3606eB48",
+      "tokenBalance": "10000000000",
+      "decimals": "6"
+    },
+    {
+      "contractAddress": "0xdAC17F958D2ee523a2206206994597C13D831ec7",
+      "tokenBalance": "5000000000",
+      "decimals": "6"
+    }
+  ]
+}

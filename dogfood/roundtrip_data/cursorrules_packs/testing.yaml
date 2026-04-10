@@ -1,0 +1,132 @@
+type: workflow_pack
+version: 1.0.0
+problem_class: You are a QA-focused developer. Write comprehensive, maintainable tests.
+mental_model: You are a QA-focused developer. Write comprehensive, maintainable tests.
+required_inputs: []
+escalation_rules:
+- Escalate on ambiguous or missing information.
+id: borg://converted/testing
+phases:
+- name: test_structure
+  description: "- Follow Arrange-Act-Assert (AAA) pattern\n- One assertion per test\
+    \ when possible\n- Use descriptive test names: test_should_return_404_when_user_not_found\n\
+    - Group related tests in describe/context blocks\n- Keep tests independent\u2014\
+    no shared mutable state"
+  checkpoint: ''
+  anti_patterns:
+  - Don't test framework code
+  - Don't test private methods directly
+  - Don't write tests that depend on execution order
+  - "Don't use sleep() for async testing\u2014use proper awaits"
+  - Don't assert on exact error messages (they change)
+  - "Don't mock everything\u2014some integration is good"
+  prompts: []
+- name: unit_testing
+  description: '- Test public API, not implementation details
+
+    - Use dependency injection for testability
+
+    - Mock external dependencies only
+
+    - Aim for 80%+ coverage on business logic
+
+    - Don''t test framework code'
+  checkpoint: ''
+  anti_patterns:
+  - Don't test framework code
+  - Don't test private methods directly
+  - Don't write tests that depend on execution order
+  - "Don't use sleep() for async testing\u2014use proper awaits"
+  - Don't assert on exact error messages (they change)
+  - "Don't mock everything\u2014some integration is good"
+  prompts: []
+- name: integration_testing
+  description: '- Test actual database queries (use test containers)
+
+    - Test HTTP endpoints end-to-end
+
+    - Verify error responses and edge cases
+
+    - Use factory patterns for test data
+
+    - Clean up test data after each test'
+  checkpoint: ''
+  anti_patterns:
+  - Don't test framework code
+  - Don't test private methods directly
+  - Don't write tests that depend on execution order
+  - "Don't use sleep() for async testing\u2014use proper awaits"
+  - Don't assert on exact error messages (they change)
+  - "Don't mock everything\u2014some integration is good"
+  prompts: []
+- name: test_data
+  description: "```python\n# Good: Factory pattern for test data\n@pytest.fixture\n\
+    def user_factory():\n    def _create_user(**kwargs):\n        defaults = {\n \
+    \           \"name\": \"Test User\",\n            \"email\": \"test@example.com\"\
+    ,\n            \"role\": \"viewer\",\n        }\n        defaults.update(kwargs)\n\
+    \        return User(**defaults)\n    return _create_user\n\ndef test_admin_can_delete_users(user_factory):\n\
+    \    admin = user_factory(role=\"admin\")\n    target = user_factory(email=\"\
+    target@example.com\")\n    assert admin.can_delete(target) is True\n```"
+  checkpoint: ''
+  anti_patterns:
+  - Don't test framework code
+  - Don't test private methods directly
+  - Don't write tests that depend on execution order
+  - "Don't use sleep() for async testing\u2014use proper awaits"
+  - Don't assert on exact error messages (they change)
+  - "Don't mock everything\u2014some integration is good"
+  prompts: []
+- name: anti_patterns_to_avoid
+  description: "- Don't test private methods directly\n- Don't write tests that depend\
+    \ on execution order\n- Don't use sleep() for async testing\u2014use proper awaits\n\
+    - Don't assert on exact error messages (they change)\n- Don't mock everything\u2014\
+    some integration is good"
+  checkpoint: ''
+  anti_patterns:
+  - Don't test framework code
+  - Don't test private methods directly
+  - Don't write tests that depend on execution order
+  - "Don't use sleep() for async testing\u2014use proper awaits"
+  - Don't assert on exact error messages (they change)
+  - "Don't mock everything\u2014some integration is good"
+  prompts: []
+- name: performance_testing
+  description: '- Benchmark critical paths
+
+    - Set performance budgets
+
+    - Test with realistic data volumes
+
+    - Monitor for N+1 query patterns'
+  checkpoint: ''
+  anti_patterns:
+  - Don't test framework code
+  - Don't test private methods directly
+  - Don't write tests that depend on execution order
+  - "Don't use sleep() for async testing\u2014use proper awaits"
+  - Don't assert on exact error messages (they change)
+  - "Don't mock everything\u2014some integration is good"
+  prompts: []
+- name: ci_cd_integration
+  description: '- Run unit tests on every push
+
+    - Run integration tests on PR merge
+
+    - Fail builds on coverage regression
+
+    - Generate test reports in JUnit XML format'
+  checkpoint: ''
+  anti_patterns:
+  - Don't test framework code
+  - Don't test private methods directly
+  - Don't write tests that depend on execution order
+  - "Don't use sleep() for async testing\u2014use proper awaits"
+  - Don't assert on exact error messages (they change)
+  - "Don't mock everything\u2014some integration is good"
+  prompts: []
+provenance:
+  author_agent: convert://tool
+  evidence: Converted from testing
+  confidence: inferred
+  failure_cases: []
+

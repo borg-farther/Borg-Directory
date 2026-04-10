@@ -1,0 +1,5 @@
+{
+    "expected": "missing_foreign_key",
+    "actual": "missing_foreign_key",
+    "kind": "correct"
+}

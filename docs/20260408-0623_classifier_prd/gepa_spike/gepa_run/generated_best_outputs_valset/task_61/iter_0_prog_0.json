@@ -1,0 +1,5 @@
+{
+    "expected": "ts_argument_error",
+    "actual": null,
+    "kind": "correct_no_match"
+}

@@ -1,0 +1,5 @@
+{
+    "expected": "js_stack_overflow",
+    "actual": null,
+    "kind": "correct_no_match"
+}

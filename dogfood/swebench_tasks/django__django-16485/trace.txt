@@ -1,0 +1,7 @@
+REASONING TRACE FOR: django__django-16485
+
+HINTS FROM BUG DISCUSSION:
+Thanks for the report and testing against the alpha release! Regression in 08c5a787262c1ae57f6517d4574b54a5fcaad124.
+
+Note: These hints are from the original bug discussion and may contain 
+insights about the root cause, proposed approaches, and potential pitfalls.

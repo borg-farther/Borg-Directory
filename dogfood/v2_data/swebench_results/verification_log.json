@@ -1,0 +1,269 @@
+{
+  "verification": [
+    {
+      "task_id": "django__django-10554",
+      "V1": {
+        "pass": true,
+        "test_patch_applied": true,
+        "tests_fail_before": true,
+        "gold_patch_applied": true,
+        "tests_pass_after": true
+      },
+      "V2": {
+        "pass": true,
+        "has_diff": false,
+        "contains_fix_line": false,
+        "hints_length": 338
+      },
+      "V3": {
+        "pass": true,
+        "a_has_hints": false,
+        "b_has_hints": true,
+        "base_shared": true
+      }
+    },
+    {
+      "task_id": "django__django-11087",
+      "V1": {
+        "pass": true,
+        "test_patch_applied": true,
+        "tests_fail_before": true,
+        "gold_patch_applied": true,
+        "tests_pass_after": true
+      },
+      "V2": {
+        "pass": false,
+        "has_diff": false,
+        "contains_fix_line": true,
+        "hints_length": 7256
+      },
+      "V3": {
+        "pass": true,
+        "a_has_hints": false,
+        "b_has_hints": true,
+        "base_shared": true
+      }
+    },
+    {
+      "task_id": "django__django-11138",
+      "V1": {
+        "pass": true,
+        "test_patch_applied": true,
+        "tests_fail_before": true,
+        "gold_patch_applied": true,
+        "tests_pass_after": true
+      },
+      "V2": {
+        "pass": true,
+        "has_diff": false,
+        "contains_fix_line": false,
+        "hints_length": 166
+      },
+      "V3": {
+        "pass": true,
+        "a_has_hints": false,
+        "b_has_hints": true,
+        "base_shared": true
+      }
+    },
+    {
+      "task_id": "django__django-11265",
+      "V1": {
+        "pass": true,
+        "test_patch_applied": true,
+        "tests_fail_before": true,
+        "gold_patch_applied": true,
+        "tests_pass_after": true
+      },
+      "V2": {
+        "pass": true,
+        "has_diff": false,
+        "contains_fix_line": false,
+        "hints_length": 4994
+      },
+      "V3": {
+        "pass": true,
+        "a_has_hints": false,
+        "b_has_hints": true,
+        "base_shared": true
+      }
+    },
+    {
+      "task_id": "django__django-11400",
+      "V1": {
+        "pass": false,
+        "test_patch_applied": true,
+        "tests_fail_before": true,
+        "gold_patch_applied": true,
+        "tests_pass_after": false
+      },
+      "V2": {
+        "pass": true,
+        "has_diff": false,
+        "contains_fix_line": false,
+        "hints_length": 1056
+      },
+      "V3": {
+        "pass": true,
+        "a_has_hints": false,
+        "b_has_hints": true,
+        "base_shared": true
+      }
+    },
+    {
+      "task_id": "django__django-12708",
+      "V1": {
+        "pass": true,
+        "test_patch_applied": true,
+        "tests_fail_before": true,
+        "gold_patch_applied": true,
+        "tests_pass_after": true
+      },
+      "V2": {
+        "pass": true,
+        "has_diff": false,
+        "contains_fix_line": false,
+        "hints_length": 421
+      },
+      "V3": {
+        "pass": true,
+        "a_has_hints": false,
+        "b_has_hints": true,
+        "base_shared": true
+      }
+    },
+    {
+      "task_id": "django__django-12754",
+      "V1": {
+        "pass": true,
+        "test_patch_applied": true,
+        "tests_fail_before": true,
+        "gold_patch_applied": true,
+        "tests_pass_after": true
+      },
+      "V2": {
+        "pass": true,
+        "has_diff": false,
+        "contains_fix_line": false,
+        "hints_length": 13753
+      },
+      "V3": {
+        "pass": true,
+        "a_has_hints": false,
+        "b_has_hints": true,
+        "base_shared": true
+      }
+    },
+    {
+      "task_id": "django__django-13315",
+      "V1": {
+        "pass": true,
+        "test_patch_applied": true,
+        "tests_fail_before": true,
+        "gold_patch_applied": true,
+        "tests_pass_after": true
+      },
+      "V2": {
+        "pass": true,
+        "has_diff": false,
+        "contains_fix_line": false,
+        "hints_length": 6700
+      },
+      "V3": {
+        "pass": true,
+        "a_has_hints": false,
+        "b_has_hints": true,
+        "base_shared": true
+      }
+    },
+    {
+      "task_id": "django__django-13344",
+      "V1": {
+        "pass": true,
+        "test_patch_applied": true,
+        "tests_fail_before": true,
+        "gold_patch_applied": true,
+        "tests_pass_after": true
+      },
+      "V2": {
+        "pass": true,
+        "has_diff": false,
+        "contains_fix_line": false,
+        "hints_length": 1554
+      },
+      "V3": {
+        "pass": true,
+        "a_has_hints": false,
+        "b_has_hints": true,
+        "base_shared": true
+      }
+    },
+    {
+      "task_id": "django__django-15128",
+      "V1": {
+        "pass": true,
+        "test_patch_applied": true,
+        "tests_fail_before": true,
+        "gold_patch_applied": true,
+        "tests_pass_after": true
+      },
+      "V2": {
+        "pass": true,
+        "has_diff": false,
+        "contains_fix_line": false,
+        "hints_length": 8382
+      },
+      "V3": {
+        "pass": true,
+        "a_has_hints": false,
+        "b_has_hints": true,
+        "base_shared": true
+      }
+    },
+    {
+      "task_id": "django__django-15503",
+      "V1": {
+        "pass": true,
+        "test_patch_applied": true,
+        "tests_fail_before": true,
+        "gold_patch_applied": true,
+        "tests_pass_after": true
+      },
+      "V2": {
+        "pass": true,
+        "has_diff": false,
+        "contains_fix_line": false,
+        "hints_length": 634
+      },
+      "V3": {
+        "pass": true,
+        "a_has_hints": false,
+        "b_has_hints": true,
+        "base_shared": true
+      }
+    },
+    {
+      "task_id": "django__django-16560",
+      "V1": {
+        "pass": true,
+        "test_patch_applied": true,
+        "tests_fail_before": true,
+        "gold_patch_applied": true,
+        "tests_pass_after": true
+      },
+      "V2": {
+        "pass": true,
+        "has_diff": false,
+        "contains_fix_line": false,
+        "hints_length": 355
+      },
+      "V3": {
+        "pass": true,
+        "a_has_hints": false,
+        "b_has_hints": true,
+        "base_shared": true
+      }
+    }
+  ],
+  "timestamp": "2026-04-01T13:56:45Z"
+}

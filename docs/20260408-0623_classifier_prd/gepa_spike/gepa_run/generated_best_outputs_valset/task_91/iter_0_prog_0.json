@@ -1,0 +1,5 @@
+{
+    "expected": "react_missing_key",
+    "actual": null,
+    "kind": "correct_no_match"
+}

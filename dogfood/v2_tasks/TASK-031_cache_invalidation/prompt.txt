@@ -1,0 +1,1 @@
+The TTLCache in repo/cache.py has three bugs: (1) get() returns None for expired keys but doesn't delete them from storage, so size() still counts them, (2) cleanup() modifies the dict during iteration which crashes, and (3) size() counts expired entries. Fix all three issues.

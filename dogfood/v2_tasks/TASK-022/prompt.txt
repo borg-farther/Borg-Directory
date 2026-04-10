@@ -1,0 +1,17 @@
+# TASK-022: Tree Serialization Bug
+
+## Problem Description
+A binary tree serializer and deserializer should preserve the tree structure perfectly. The serialization uses level-order (BFS) traversal, but the deserialization has a bug that causes node order to be lost.
+
+## Your Task
+Fix the bug in the `TreeSerializer.deserialize` method in `serializer.py`.
+
+## Files
+- `serializer.py` - The tree serialization implementation with a bug
+- `test_tree.py` - Test cases that expose the bug
+
+## Expected Behavior
+When running `python3 test_tree.py`, all tests should pass. The deserialized tree should have the same inorder and preorder traversals as the original tree.
+
+## Hint
+The bug is in how the deserialization handles None nodes in the serialized stream. When we encounter a None node in the level-order traversal, we should NOT advance the index for its children positions.

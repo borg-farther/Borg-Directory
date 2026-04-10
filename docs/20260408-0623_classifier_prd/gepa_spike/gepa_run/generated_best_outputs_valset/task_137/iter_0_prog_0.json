@@ -1,0 +1,5 @@
+{
+    "expected": "docker_volume_permission",
+    "actual": null,
+    "kind": "correct_no_match"
+}

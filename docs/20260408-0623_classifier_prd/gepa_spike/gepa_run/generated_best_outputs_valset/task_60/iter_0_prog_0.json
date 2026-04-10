@@ -1,0 +1,5 @@
+{
+    "expected": "ts_implicit_any",
+    "actual": null,
+    "kind": "correct_no_match"
+}

@@ -18,16 +18,124 @@ Zero imports from tools.* or guild_mcp.* — uses only borg.core.* and borg.inte
 
 from __future__ import annotations
 
+import contextvars
 import json
 import logging
 import os
 import signal
 import sys
+import threading
+import time
 from pathlib import Path
 from typing import Any, Dict, List, Optional
 
 # Suppress default logging (MCP uses stdout for JSON-RPC)
 logging.basicConfig(stream=sys.stderr, level=logging.WARNING)
+
+from borg.core.traces import TraceCapture, save_trace
+
+# Thread-safe session tracking via contextvars
+_current_session_id: contextvars.ContextVar[str] = contextvars.ContextVar('session_id', default='')
+_current_agent_id: contextvars.ContextVar[str] = contextvars.ContextVar('agent_id', default='unknown')
+
+# Global trace captures — one per session_id
+_trace_captures: Dict[str, TraceCapture] = {}
+_trace_lock = threading.Lock()  # Lock for thread-safe access to _trace_captures
+
+# -------------------------------------------------------------------------
+# Rate limiting (token bucket: 60 requests per minute)
+# -------------------------------------------------------------------------
+_rate_limit_lock = threading.Lock()
+_rate_requests: List[float] = []  # Timestamps of recent requests
+_RATE_LIMIT = 60  # requests per window
+_RATE_WINDOW = 60.0  # window in seconds
+
+
+def _check_rate_limit() -> bool:
+    """Return True if request is allowed, False if rate limited."""
+    with _rate_limit_lock:
+        now = time.time()
+        # Remove requests outside the window
+        while _rate_requests and _rate_requests[0] < now - _RATE_WINDOW:
+            _rate_requests.pop(0)
+        if len(_rate_requests) >= _RATE_LIMIT:
+            return False
+        _rate_requests.append(now)
+        return True
+
+
+# -------------------------------------------------------------------------
+# MCP request timeouts (30s)
+# -------------------------------------------------------------------------
+TOOL_TIMEOUT_SEC = 30
+
+# Per-call timeout state (for threading.Timer fallback when SIGALRM unavailable)
+_timeout_state: Dict[str, Any] = {}
+
+
+def _timeout_handler(signum, frame):
+    """Called when a tool call exceeds TOOL_TIMEOUT_SEC (SIGALRM path)."""
+    raise TimeoutError(f"Tool call exceeded {TOOL_TIMEOUT_SEC}s timeout")
+
+
+class _ThreadTimeout:
+    """threading.Timer-based timeout for non-main threads."""
+    def __init__(self, seconds: float):
+        self.seconds = seconds
+        self._timer: Optional[threading.Timer] = None
+        self._cancelled = False
+        self._exc_info = None
+
+    def _do_timeout(self):
+        self._exc_info = (TimeoutError, TimeoutError(f"Tool call exceeded {self.seconds}s timeout"), None)
+
+    def __enter__(self):
+        def do_timeout():
+            self._do_timeout()
+        self._timer = threading.Timer(self.seconds, do_timeout)
+        self._timer.start()
+        return self
+
+    def __exit__(self, typ, val, tb):
+        if self._timer:
+            self._timer.cancel()
+        if self._exc_info and isinstance(val, TimeoutError):
+            raise self._exc_info[1]
+        return False
+
+    def did_timeout(self) -> bool:
+        return self._exc_info is not None
+
+
+_MAINTENANCE_INTERVAL: int = 10  # Run maintenance every N feedback calls
+
+
+def init_trace_capture(session_id: str, task: str = "", agent_id: str = ""):
+    """Initialize trace capture for a session."""
+    global _trace_captures
+    with _trace_lock:
+        _trace_captures[session_id] = TraceCapture(task=task, agent_id=agent_id)
+
+
+def _feed_trace_capture(tool_name: str, args: Dict[str, Any], result: str):
+    """Accumulate a tool call into the active trace capture for the current session."""
+    session_id = _current_session_id.get()
+    if not session_id:
+        return  # No active session
+    global _trace_captures
+    with _trace_lock:
+        capture = _trace_captures.get(session_id)
+        if capture is None:
+            return  # No active capture for this session
+        capture.on_tool_call(tool_name, args, result)
+
+        # Auto-save at 45 calls (before agent wastes more tokens)
+        if capture.tool_calls >= 45:
+            if capture.task:  # Only save if we have a task
+                trace = capture.extract_trace(outcome="auto_truncated")
+                if trace["tool_calls"] > 5:
+                    save_trace(trace)
+            del _trace_captures[session_id]
 
 # ---------------------------------------------------------------------------
 # Tool definitions (MCP schema)
@@ -39,7 +147,8 @@ TOOLS: List[Dict[str, Any]] = [
         "description": (
             "Search for borg workflow packs by keyword or semantic similarity. Searches local packs and the remote index. "
             "Returns matching packs with their metadata (name, problem class, tier, confidence). "
-            "Use mode='semantic' or mode='hybrid' for semantic search when embeddings are available."
+            "Use mode='semantic' or mode='hybrid' for semantic search when embeddings are available. "
+            "When task_context is provided, uses the V3 contextual search path."
         ),
         "inputSchema": {
             "type": "object",
@@ -59,7 +168,19 @@ TOOLS: List[Dict[str, Any]] = [
                         "'hybrid' for combined text + semantic. Defaults to 'text'."
                     ),
                     "default": "text",
-                }
+                },
+                "task_context": {
+                    "type": "object",
+                    "description": (
+                        "V3 task context for contextual search. "
+                        "Keys: task_type (str), keywords (list of str), agent_id (str, optional)."
+                    ),
+                    "properties": {
+                        "task_type": {"type": "string"},
+                        "keywords": {"type": "array", "items": {"type": "string"}},
+                        "agent_id": {"type": "string"},
+                    },
+                },
             },
             "required": ["query"],
         },
@@ -153,6 +274,14 @@ TOOLS: List[Dict[str, Any]] = [
                     "type": "string",
                     "description": "Active session ID from guild_apply_start (for checkpoint/complete)",
                 },
+                "ab_test": {
+                    "type": "object",
+                    "description": "A/B test info if selected pack is a variant (for action='start')",
+                    "properties": {
+                        "test_id": {"type": "string"},
+                        "variant": {"type": "string"},
+                    },
+                },
                 "phase_name": {
                     "type": "string",
                     "description": (
@@ -216,7 +345,8 @@ TOOLS: List[Dict[str, Any]] = [
         "name": "borg_feedback",
         "description": (
             "Generate a feedback draft for a completed pack execution. "
-            "Reads the execution session log and produces a structured feedback artifact."
+            "Reads the execution session log and produces a structured feedback artifact. "
+            "When task_context is provided, also records outcome to V3."
         ),
         "inputSchema": {
             "type": "object",
@@ -234,6 +364,27 @@ TOOLS: List[Dict[str, Any]] = [
                     "type": "string",
                     "description": "Guidance on where this feedback can be reused.",
                     "default": "",
+                },
+                "success": {
+                    "type": "boolean",
+                    "description": "Whether the pack execution was successful (V3 parameter).",
+                },
+                "tokens_used": {
+                    "type": "integer",
+                    "description": "Number of tokens used in the execution (V3 parameter).",
+                },
+                "time_taken": {
+                    "type": "number",
+                    "description": "Time taken for the execution in seconds (V3 parameter).",
+                },
+                "task_context": {
+                    "type": "object",
+                    "description": "V3 task context for outcome recording.",
+                    "properties": {
+                        "task_type": {"type": "string"},
+                        "keywords": {"type": "array", "items": {"type": "string"}},
+                        "agent_id": {"type": "string"},
+                    },
                 },
             },
             "required": ["session_id"],
@@ -379,6 +530,34 @@ TOOLS: List[Dict[str, Any]] = [
         },
     },
     {
+        "name": "borg_generate",
+        "description": (
+            "Generate platform-specific rules files from a borg workflow pack. "
+            "Takes a pack name and outputs rules in the specified format native to each AI IDE platform "
+            "(Cursor, Cline, Claude Code, Windsurf)."
+        ),
+        "inputSchema": {
+            "type": "object",
+            "properties": {
+                "pack": {
+                    "type": "string",
+                    "description": "Pack name (e.g. 'systematic-debugging'). Must be available in local registry.",
+                },
+                "format": {
+                    "type": "string",
+                    "enum": ["cursorrules", "clinerules", "claude-md", "windsurfrules", "all"],
+                    "description": (
+                        "Output format. 'cursorrules' -> .cursorrules (Cursor), "
+                        "'clinerules' -> .clinerules (Cline), 'claude-md' -> CLAUDE.md (Claude Code), "
+                        "'windsurfrules' -> .windsurfrules (Windsurf), 'all' -> all four formats at once."
+                    ),
+                    "default": "cursorrules",
+                },
+            },
+            "required": ["pack", "format"],
+        },
+    },
+    {
         "name": "borg_context",
         "description": (
             "Detect recent git changes in a project directory. Returns recently changed files, "
@@ -416,8 +595,76 @@ TOOLS: List[Dict[str, Any]] = [
                     "type": "string",
                     "description": "The error message to look up in failure memory.",
                 },
+                "agent_id": {
+                    "type": "string",
+                    "description": "Agent namespace to search. Defaults to 'default'.",
+                    "default": "default",
+                },
             },
             "required": ["error_message"],
+        },
+    },
+    {
+        "name": "borg_record_failure",
+        "description": (
+            "Record a failure or success outcome for an error pattern in collective failure memory. "
+            "This writes to the failure memory store so other agents can benefit from the learning. "
+            "Call this after attempting a fix — record 'success' if it worked, 'failure' if it did not."
+        ),
+        "inputSchema": {
+            "type": "object",
+            "properties": {
+                "error_pattern": {
+                    "type": "string",
+                    "description": "The error message or pattern encountered (e.g. \"NoneType has no attribute 'split'\").",
+                },
+                "pack_id": {
+                    "type": "string",
+                    "description": "The borg pack being used (e.g. 'systematic-debugging').",
+                },
+                "phase": {
+                    "type": "string",
+                    "description": "The phase being executed when the error occurred (e.g. 'investigate_root_cause').",
+                },
+                "approach": {
+                    "type": "string",
+                    "description": "What the agent tried to fix the error (e.g. 'Added if val is not None check').",
+                },
+                "outcome": {
+                    "type": "string",
+                    "enum": ["success", "failure"],
+                    "description": "Result of the approach: 'success' or 'failure'.",
+                },
+                "agent_id": {
+                    "type": "string",
+                    "description": "Agent namespace to write to. Defaults to 'default'.",
+                    "default": "default",
+                },
+            },
+            "required": ["error_pattern", "pack_id", "phase", "approach", "outcome"],
+        },
+    },
+    {
+        "name": "borg_delete_failure",
+        "description": (
+            "Delete a failure memory record for an error pattern. "
+            "Use this to retract wrong entries or clear test data. "
+            "Returns success=True if deleted, success=True with found=False if not found."
+        ),
+        "inputSchema": {
+            "type": "object",
+            "properties": {
+                "error_pattern": {
+                    "type": "string",
+                    "description": "The error pattern whose record should be deleted.",
+                },
+                "agent_id": {
+                    "type": "string",
+                    "description": "Agent namespace to delete from. Defaults to 'default'.",
+                    "default": "default",
+                },
+            },
+            "required": ["error_pattern"],
         },
     },
     {
@@ -442,6 +689,87 @@ TOOLS: List[Dict[str, Any]] = [
                 "pack_id": {
                     "type": "string",
                     "description": "Pack ID to query (for get_pack_trust action).",
+                },
+            },
+            "required": ["action"],
+        },
+    },
+    {
+        "name": "borg_analytics",
+        "description": (
+            "Query ecosystem health metrics and analytics from the AnalyticsEngine. "
+            "Returns ecosystem-wide health, pack usage statistics, adoption metrics, and time-series data. "
+            "Use this to understand the overall state of the guild ecosystem."
+        ),
+        "inputSchema": {
+            "type": "object",
+            "properties": {
+                "action": {
+                    "type": "string",
+                    "enum": ["ecosystem_health", "pack_usage", "adoption", "timeseries"],
+                    "description": "Action: 'ecosystem_health' for overall ecosystem metrics, 'pack_usage' for a specific pack's stats, 'adoption' for adoption metrics, 'timeseries' for time-series data.",
+                },
+                "pack_id": {
+                    "type": "string",
+                    "description": "Pack ID to query (for pack_usage and adoption actions).",
+                },
+                "metric": {
+                    "type": "string",
+                    "description": "Metric name for timeseries action: 'pack_publishes', 'executions', 'avg_quality_score', or 'active_agents'.",
+                },
+                "period": {
+                    "type": "string",
+                    "description": "Time period for timeseries: 'daily', 'weekly', or 'monthly'. Defaults to 'daily'.",
+                },
+                "days": {
+                    "type": "integer",
+                    "description": "Number of days to look back for timeseries. Defaults to 30.",
+                },
+            },
+            "required": ["action"],
+        },
+    },
+    {
+        "name": "borg_dashboard",
+        "description": (
+            "Query the Borg V3 dashboard — aggregated stats from the V3 outcomes database. "
+            "Returns total outcomes, success rates, quality scores per pack, drift alerts, "
+            "mutation stats, and A/B test status. Use this to monitor pack performance "
+            "and system health."
+        ),
+        "inputSchema": {
+            "type": "object",
+            "properties": {},
+        },
+    },
+    {
+        "name": "borg_dojo",
+        "description": (
+            "Borg Dojo — training improvement pipeline. Run session analysis, view learning curves, "
+            "generate reports, and check system health. Actions: "
+            "'analyze' runs session analysis over the last N days; "
+            "'report' generates a formatted improvement report (cli, telegram, or discord format); "
+            "'history' shows the learning curve with historical snapshots; "
+            "'status' returns a quick health summary with error rates and weakest tools."
+        ),
+        "inputSchema": {
+            "type": "object",
+            "properties": {
+                "action": {
+                    "type": "string",
+                    "enum": ["analyze", "report", "history", "status"],
+                    "description": "Action to perform: 'analyze' runs session analysis, 'report' generates formatted report, 'history' shows learning curve, 'status' returns health summary.",
+                },
+                "days": {
+                    "type": "integer",
+                    "description": "Number of days to look back for analysis (default: 7).",
+                    "default": 7,
+                },
+                "report_format": {
+                    "type": "string",
+                    "enum": ["cli", "telegram", "discord"],
+                    "description": "Report format for 'report' action: 'cli', 'telegram', or 'discord'. Defaults to 'telegram'.",
+                    "default": "telegram",
                 },
             },
             "required": ["action"],
@@ -472,19 +800,86 @@ def _get_core_modules():
     return uri_module, publish_module, session_module, safety_module, schema_module
 
 
+# -------------------------------------------------------------------------
+# V3 helper functions
+# -------------------------------------------------------------------------
+
+def _get_borg_v3():
+    """Lazily get or create the BorgV3 singleton instance."""
+    from borg.core.v3_integration import BorgV3
+
+    BORG_DIR = Path(os.getenv("HERMES_HOME", Path.home() / ".hermes")) / "borg"
+    BORG_DIR.mkdir(parents=True, exist_ok=True)
+    db_path = str(BORG_DIR / "borg_v3.db")
+    return BorgV3(db_path=db_path)
+
+
+def _extract_keywords(text: str) -> List[str]:
+    """Extract lowercase words longer than 2 characters from text.
+
+    Args:
+        text: Input text to extract keywords from.
+
+    Returns:
+        List of lowercase keywords (words > 2 chars).
+    """
+    import re
+    words = re.findall(r"\b\w+\b", text.lower())
+    return [w for w in words if len(w) > 2]
+
+
 # ---------------------------------------------------------------------------
 # Tool implementations (wired to borg.core.*)
 # ---------------------------------------------------------------------------
 
-def borg_search(query: str = "", mode: str = "text") -> str:
+def borg_search(query: str = "", mode: str = "text", task_context: Dict[str, Any] = None) -> str:
     """Search for packs matching the query string.
 
     Args:
         query: Search query string.
         mode: Search mode - 'text', 'semantic', or 'hybrid'.
             Defaults to 'text'.
+        task_context: Optional V3 task context dict with keys:
+            - task_type (str): Type of task (e.g. 'debug', 'test', 'review')
+            - keywords (list): List of keyword strings
+            - agent_id (str, optional): Agent identifier
+            When provided, uses the V3 contextual search path.
     """
     try:
+        # V3 path: if task_context is provided, use BorgV3 search
+        if task_context:
+            v3 = _get_borg_v3()
+            task_type = task_context.get("task_type", "")
+            keywords = task_context.get("keywords", [])
+
+            # Build a combined query from task_type and keywords
+            search_terms = [task_type] + keywords if task_type else keywords
+            combined_query = " ".join(search_terms) if search_terms else query
+
+            results = v3.search(combined_query, task_context=task_context)
+
+            # Format results to match expected MCP response format
+            matches = []
+            for r in results:
+                match_item = {
+                    "pack_id": r.get("pack_id", r.get("name", "")),
+                    "name": r.get("name", ""),
+                    "category": r.get("category", r.get("problem_class", "")),
+                    "score": r.get("score", 0.0),
+                }
+                # Pass through A/B test info if present
+                if r.get("ab_test"):
+                    match_item["ab_test"] = r["ab_test"]
+                matches.append(match_item)
+
+            return json.dumps({
+                "success": True,
+                "contextual": True,
+                "matches": matches,
+                "query": combined_query,
+            })
+
+        # V2 path: standard search
         uri_module, _, _, _, _ = _get_core_modules()
         if not query:
             names = uri_module.get_available_pack_names()
@@ -615,6 +1010,10 @@ def borg_init(pack_name: str = "", problem_class: str = "general", mental_model:
         if not pack_name:
             return json.dumps({"success": False, "error": "pack_name is required"})
 
+        import re
+        if not re.match(r'^[a-zA-Z0-9_-]+$', pack_name):
+            return json.dumps({"success": False, "error": f"pack_name must contain only letters, numbers, hyphens, underscores. Got: '{pack_name}'"})
+
         BORG_DIR = Path(os.getenv("HERMES_HOME", Path.home() / ".hermes")) / "guild"
         pack_dir = BORG_DIR / pack_name
         pack_dir.mkdir(parents=True, exist_ok=True)
@@ -665,6 +1064,7 @@ def borg_apply(
     status: str = "",
     evidence: str = "",
     outcome: str = "",
+    ab_test: dict = None,
 ) -> str:
     """Execute a borg pack with session tracking (start / checkpoint / complete)."""
     try:
@@ -690,6 +1090,15 @@ def borg_apply(
             from datetime import datetime, timezone
             session_id = str(uuid.uuid4())[:8]
 
+            # Set session context for thread-safe trace access before initializing trace
+            _current_session_id.set(session_id)
+
+            # Get agent_id from MCP initialize context (defaults to 'unknown')
+            agent_id = _current_agent_id.get()
+
+            # Initialize trace capture for this session
+            init_trace_capture(session_id, task=task, agent_id=agent_id)
+
             phases = pack_data.get("phases", [])
             session: Dict[str, Any] = {
                 "session_id": session_id,
@@ -708,6 +1117,9 @@ def borg_apply(
                 "phase_results": [],
                 "approved": False,
             }
+            # Store A/B test variant selection if provided
+            if ab_test:
+                session["selected_variant"] = ab_test
             session_module.register_session(session)
             session_module.save_session(session)
 
@@ -849,6 +1261,10 @@ def borg_feedback(
     what_changed: str = "",
     where_to_reuse: str = "",
     publish: bool = False,
+    success: bool = None,
+    tokens_used: int = 0,
+    time_taken: float = 0.0,
+    task_context: Dict[str, Any] = None,
 ) -> str:
     """Generate a feedback artifact for a completed session.
 
@@ -856,15 +1272,37 @@ def borg_feedback(
     2. Generates a structured feedback draft via generate_feedback().
     3. Saves the draft as a YAML file in ~/.hermes/guild/feedback/.
     4. Optionally publishes via action_publish.
-    5. Returns the full feedback draft for agent review.
+    5. If task_context is provided, also records outcome to V3.
 
     Args:
         session_id: Session ID of the completed pack execution (required).
         what_changed: Brief description of what changed in this execution.
         where_to_reuse: Guidance on where this feedback can be reused.
         publish: If True, immediately publish the feedback via action_publish.
+        success: Whether the pack execution was successful (V3 parameter).
+        tokens_used: Number of tokens used in the execution (V3 parameter).
+        time_taken: Time taken for the execution in seconds (V3 parameter).
+        task_context: V3 task context dict for outcome recording (V3 parameter).
     """
     try:
+        # Set session context for thread-safe trace access
+        _current_session_id.set(session_id)
+
+        # Finalize any active trace capture for this session
+        session_id_from_ctx = _current_session_id.get()
+        global _trace_captures
+        with _trace_lock:
+            capture = _trace_captures.get(session_id_from_ctx)
+            if capture is not None:
+                if capture.tool_calls > 5:
+                    trace = capture.extract_trace(
+                        outcome="success",
+                        root_cause=what_changed[:200] if what_changed else "",
+                        approach_summary=where_to_reuse[:200] if where_to_reuse else ""
+                    )
+                    save_trace(trace)
+                del _trace_captures[session_id_from_ctx]
+
         import uuid
         import yaml
         from datetime import datetime, timezone
@@ -945,6 +1383,35 @@ def borg_feedback(
                 # Publication failed but draft is still saved
                 publish_result["warning"] = "Draft saved but publication failed"
 
+        # V3: record outcome if task_context is provided
+        if task_context:
+            try:
+                v3 = _get_borg_v3()
+                agent_id = task_context.get("agent_id")
+                v3.record_outcome(
+                    pack_id=pack_id,
+                    task_context=task_context,
+                    success=success if success is not None else (failed == 0),
+                    tokens_used=tokens_used,
+                    time_taken=time_taken,
+                    agent_id=agent_id,
+                    session_id=session_id,
+                )
+            except Exception:
+                # Never let V3 recording break feedback generation
+                pass
+
+        # Periodic maintenance: run every N invocations (counter persisted in V3 DB)
+        try:
+            v3 = _get_borg_v3()
+            count = v3._inc_maintenance_counter()
+            if count >= _MAINTENANCE_INTERVAL:
+                v3._reset_maintenance_counter()
+                maintenance_result = v3.run_maintenance()
+                pass  # maintenance_result logged if logging configured
+        except Exception:
+            pass  # Never let maintenance break feedback
+
         return json.dumps({
             "success": True,
             "feedback_id": feedback_id,
@@ -957,6 +1424,28 @@ def borg_feedback(
             "hint": "Review the feedback draft above. Use guild_publish to refine and submit.",
         })
 
+    except (KeyboardInterrupt, SystemExit):
+        raise
+    except (ValueError, KeyError, OSError, json.JSONDecodeError) as e:
+        return json.dumps({"success": False, "error": str(e), "type": type(e).__name__})
+
+
+def borg_dashboard() -> str:
+    """Query the Borg V3 dashboard — aggregated stats from the V3 outcomes database.
+
+    Returns total outcomes, success rates, quality scores per pack, drift alerts,
+    mutation stats, and A/B test status.
+
+    Returns:
+        JSON string with dashboard stats.
+    """
+    try:
+        v3 = _get_borg_v3()
+        dash = v3.get_dashboard()
+        return json.dumps({
+            "success": True,
+            **dash,
+        })
     except (KeyboardInterrupt, SystemExit):
         raise
     except (ValueError, KeyError, OSError, json.JSONDecodeError) as e:
@@ -984,7 +1473,34 @@ def borg_suggest(
         from borg.core.search import check_for_suggestion as _check_for_suggestion
 
         if not context:
-            return "{}"
+            return json.dumps({"success": False, "error": "context required for borg_suggest"})
+
+        # V3 path: when failure_count >= 2, use V3 contextual suggestion
+        if failure_count >= 2:
+            v3 = _get_borg_v3()
+            # Extract keywords from context
+            keywords = _extract_keywords(context)
+            task_type = task_type_hint or (keywords[0] if keywords else "")
+
+            task_context = {
+                "task_type": task_type,
+                "keywords": keywords,
+            }
+
+            results = v3.search(context, task_context=task_context)
+            if results:
+                top = results[0]
+                return json.dumps({
+                    "success": True,
+                    "has_suggestion": True,
+                    "contextual": True,
+                    "suggestions": [{
+                        "pack_id": top.get("pack_id", top.get("name", "")),
+                        "name": top.get("name", ""),
+                        "score": top.get("score", 0.0),
+                        "reason": f"Based on your {task_type} context",
+                    }],
+                })
 
         result = _check_for_suggestion(
             conversation_context=context,
@@ -1047,16 +1563,37 @@ def borg_observe(task: str = "", context: str = "", context_dict: dict = None, p
             # Fallback keywords for common task types
             search_terms = ["debug"]
 
-        # Search with extracted keywords using text mode (no embeddings needed)
+        # ITEM 3.3: Use V3 search path when context_dict provides rich error context.
+        # This properly forwards error_type to classify_task for better task classification.
         all_matches = []
-        for term in search_terms:
-            search_result = _core_search(term, mode="text")
+        if context_dict and isinstance(context_dict, dict) and (context_dict.get("error_type") or context_dict.get("error_message")):
             try:
-                parsed = json.loads(search_result)
-                if parsed.get("success") and parsed.get("matches"):
-                    all_matches.extend(parsed["matches"])
-            except (json.JSONDecodeError, TypeError):
-                continue
+                v3 = _get_borg_v3()
+                keywords = _extract_keywords(task) if task else []
+                task_type = search_terms[0] if search_terms else ""
+                task_context = {
+                    "task_type": task_type,
+                    "keywords": keywords,
+                    "error_type": context_dict.get("error_type", ""),
+                    "error_message": context_dict.get("error_message", ""),
+                    "attempts": context_dict.get("attempts", 0),
+                }
+                v3_results = v3.search(task, task_context=task_context)
+                if v3_results:
+                    all_matches = v3_results
+            except Exception:
+                pass  # Fall back to V2 search below
+
+        # V2 search fallback (or if no rich context available)
+        if not all_matches:
+            for term in search_terms:
+                search_result = _core_search(term, mode="text")
+                try:
+                    parsed = json.loads(search_result)
+                    if parsed.get("success") and parsed.get("matches"):
+                        all_matches.extend(parsed["matches"])
+                except (json.JSONDecodeError, TypeError):
+                    continue
 
         if not all_matches:
             return ""
@@ -1209,22 +1746,29 @@ def borg_observe(task: str = "", context: str = "", context_dict: dict = None, p
         if phases_data:
             lines.append("Phases:")
             if isinstance(phases_data, list):
-                for i, phase in enumerate(phases_data, 1):
+                # Import conditions functions once, before filtering
+                from borg.core.conditions import (
+                    evaluate_skip_conditions,
+                    evaluate_inject_conditions,
+                    evaluate_context_prompts,
+                )
+
+                # Filter phases BEFORE rendering — skip_if should REMOVE phases, not just mark them
+                filtered_phases = []
+                for phase in phases_data:
+                    if isinstance(phase, dict):
+                        should_skip, skip_reason = evaluate_skip_conditions(phase, eval_context)
+                        if not should_skip:
+                            filtered_phases.append(phase)
+                    else:
+                        # String phases pass through unchanged
+                        filtered_phases.append(phase)
+
+                # Now iterate over FILTERED phases (skipped ones never appear)
+                for i, phase in enumerate(filtered_phases, 1):
                     if isinstance(phase, dict):
                         phase_name = phase.get("name", f"phase-{i}")
                         phase_desc = phase.get("description", "")
-
-                        # Evaluate skip_if conditions
-                        from borg.core.conditions import (
-                            evaluate_skip_conditions,
-                            evaluate_inject_conditions,
-                            evaluate_context_prompts,
-                        )
-
-                        should_skip, skip_reason = evaluate_skip_conditions(phase, eval_context)
-                        if should_skip:
-                            lines.append(f"  Phase {i}: {phase_name} — SKIPPED ({skip_reason})")
-                            continue
 
                         lines.append(f"  Phase {i}: {phase_name} — {phase_desc}")
 
@@ -1257,6 +1801,27 @@ def borg_observe(task: str = "", context: str = "", context_dict: dict = None, p
 
         if checkpoint:
             lines.append(f"Checkpoint before fixing: {checkpoint}")
+
+        # Extract error_message from context for TraceMatcher lookup
+        error_msg = ""
+        if context_dict and isinstance(context_dict, dict):
+            error_msg = context_dict.get("error_message", "")
+        
+        # Use TraceMatcher to find relevant prior traces
+        if task:
+            try:
+                from borg.core.trace_matcher import TraceMatcher
+                matcher = TraceMatcher()
+                relevant_traces = matcher.find_relevant(task, error=error_msg, top_k=2)
+                if relevant_traces:
+                    lines.append("")
+                    lines.append("📜 Prior investigations:")
+                    for trace in relevant_traces:
+                        trace_info = matcher.format_for_agent(trace)
+                        if trace_info:
+                            lines.append(f"  • {trace_info}")
+            except Exception:
+                pass  # Never let TraceMatcher break observe
 
         # Change awareness: cross-reference error with recent changes
         if project_path and context:
@@ -1310,7 +1875,7 @@ def borg_context(project_path: str = ".", hours: int = 24) -> str:
         return json.dumps({"success": False, "error": str(e), "type": type(e).__name__})
 
 
-def borg_recall(error_message: str = "") -> str:
+def borg_recall(error_message: str = "", agent_id: str = "default") -> str:
     """Recall collective failure memory for an error.
 
     Returns approaches that other agents tried and failed, as well as
@@ -1318,6 +1883,7 @@ def borg_recall(error_message: str = "") -> str:
 
     Args:
         error_message: The error message to look up in failure memory.
+        agent_id:     Agent namespace to search. Defaults to "default".
 
     Returns:
         JSON string with wrong_approaches (sorted by frequency) and
@@ -1330,7 +1896,7 @@ def borg_recall(error_message: str = "") -> str:
             return json.dumps({"success": False, "error": "error_message is required"})
 
         fm = FailureMemory()
-        result = fm.recall(error_message)
+        result = fm.recall(error_message, agent_id=agent_id)
 
         if result is None:
             return json.dumps({
@@ -1345,9 +1911,97 @@ def borg_recall(error_message: str = "") -> str:
             "success": True,
             "found": True,
             "error_pattern": result.get("error_pattern", ""),
+            "agent_id": result.get("agent_id", agent_id),
             "wrong_approaches": result.get("wrong_approaches", []),
             "correct_approaches": result.get("correct_approaches", []),
             "total_sessions": result.get("total_sessions", 0),
+        })
+    except (KeyboardInterrupt, SystemExit):
+        raise
+    except (ValueError, KeyError, OSError, json.JSONDecodeError) as e:
+        return json.dumps({"success": False, "error": str(e), "type": type(e).__name__})
+
+
+def borg_record_failure(
+    error_pattern: str = "",
+    pack_id: str = "",
+    phase: str = "",
+    approach: str = "",
+    outcome: str = "",
+    agent_id: str = "default",
+) -> str:
+    """Record a failure or success outcome for an error pattern.
+
+    Writes to the failure memory store so other agents can benefit from the learning.
+    Call this after attempting a fix — record 'success' if it worked, 'failure' if not.
+
+    Args:
+        error_pattern: The error message or pattern encountered.
+        pack_id:      The borg pack being used (e.g. 'systematic-debugging').
+        phase:        The phase being executed when the error occurred.
+        approach:    What the agent tried to fix the error.
+        outcome:     Either 'success' or 'failure'.
+        agent_id:    Agent namespace to write to. Defaults to 'default'.
+
+    Returns:
+        JSON string with success=True and the recorded entry, or success=False on error.
+    """
+    try:
+        from borg.core.failure_memory import FailureMemory
+
+        if not error_pattern:
+            return json.dumps({"success": False, "error": "error_pattern is required"})
+
+        fm = FailureMemory()
+        fm.record_failure(
+            error_pattern=error_pattern,
+            pack_id=pack_id,
+            phase=phase,
+            approach=approach,
+            outcome=outcome,
+            agent_id=agent_id,
+        )
+        return json.dumps({
+            "success": True,
+            "recorded": True,
+            "error_pattern": error_pattern,
+            "agent_id": agent_id,
+        })
+    except (KeyboardInterrupt, SystemExit):
+        raise
+    except ValueError as e:
+        return json.dumps({"success": False, "error": str(e), "type": "ValueError"})
+    except (KeyError, OSError, json.JSONDecodeError) as e:
+        return json.dumps({"success": False, "error": str(e), "type": type(e).__name__})
+
+
+def borg_delete_failure(error_pattern: str = "", agent_id: str = "default") -> str:
+    """Delete a failure memory record for an error pattern.
+
+    Use this to retract wrong entries or clear test data.
+
+    Args:
+        error_pattern: The error pattern whose record should be deleted.
+        agent_id:     Agent namespace to delete from. Defaults to 'default'.
+
+    Returns:
+        JSON string: {"success": True, "deleted": True} if found and deleted,
+        {"success": True, "deleted": False} if not found,
+        or {"success": False, "error": ...} on error.
+    """
+    try:
+        from borg.core.failure_memory import FailureMemory
+
+        if not error_pattern:
+            return json.dumps({"success": False, "error": "error_pattern is required"})
+
+        fm = FailureMemory()
+        deleted = fm.delete(error_pattern=error_pattern, agent_id=agent_id)
+        return json.dumps({
+            "success": True,
+            "deleted": deleted,
+            "error_pattern": error_pattern,
+            "agent_id": agent_id,
         })
     except (KeyboardInterrupt, SystemExit):
         raise
@@ -1448,7 +2102,275 @@ def borg_reputation(action: str = "", agent_id: str = None, pack_id: str = None)
         return json.dumps({"success": False, "error": str(e), "type": type(e).__name__})
 
 
-def borg_convert(path: str = "", format: str = "auto", output_dir: str = None) -> str:
+def borg_analytics(
+    action: str = "",
+    pack_id: str = None,
+    metric: str = None,
+    period: str = "daily",
+    days: int = 30,
+) -> str:
+    """Query ecosystem health metrics and analytics from the AnalyticsEngine.
+
+    Args:
+        action: The action to perform - 'ecosystem_health', 'pack_usage', 'adoption', or 'timeseries'.
+        pack_id: Pack ID to query (for pack_usage and adoption actions).
+        metric: Metric name for timeseries action: 'pack_publishes', 'executions', 'avg_quality_score', or 'active_agents'.
+        period: Time period for timeseries: 'daily', 'weekly', or 'monthly'. Defaults to 'daily'.
+        days: Number of days to look back for timeseries. Defaults to 30.
+
+    Returns:
+        JSON string with analytics data for the specified action.
+    """
+    try:
+        from borg.db.analytics import AnalyticsEngine
+        from borg.db.store import AgentStore
+
+        if AgentStore is None:
+            return json.dumps({"success": False, "error": "AgentStore not available"})
+
+        if action == "ecosystem_health":
+            try:
+                store = AgentStore()
+                engine = AnalyticsEngine(store)
+                health = engine.ecosystem_health()
+                store.close()
+                return json.dumps({
+                    "success": True,
+                    "total_agents": health.total_agents,
+                    "active_contributors": health.active_contributors,
+                    "active_consumers": health.active_consumers,
+                    "contributor_ratio": health.contributor_ratio,
+                    "avg_quality_score": health.avg_quality_score,
+                    "avg_quality_trend": health.avg_quality_trend,
+                    "domain_coverage": health.domain_coverage,
+                    "total_packs": health.total_packs,
+                    "tier_distribution": health.tier_distribution,
+                })
+            except Exception as e:
+                return json.dumps({"success": False, "error": str(e), "type": type(e).__name__})
+
+        elif action == "pack_usage":
+            if not pack_id:
+                return json.dumps({"success": False, "error": "pack_id is required for pack_usage action"})
+            try:
+                store = AgentStore()
+                engine = AnalyticsEngine(store)
+                stats = engine.pack_usage_stats(pack_id)
+                store.close()
+                return json.dumps({
+                    "success": True,
+                    "pack_id": stats.pack_id,
+                    "pull_count": stats.pull_count,
+                    "apply_count": stats.apply_count,
+                    "success_count": stats.success_count,
+                    "failure_count": stats.failure_count,
+                    "completion_rate": stats.completion_rate,
+                })
+            except Exception as e:
+                return json.dumps({"success": False, "error": str(e), "type": type(e).__name__})
+
+        elif action == "adoption":
+            if not pack_id:
+                try:
+                    store = AgentStore()
+                    engine = AnalyticsEngine(store)
+                    metrics = engine.ecosystem_adoption()
+                    store.close()
+                    return json.dumps({
+                        "success": True,
+                        "pack_id": None,
+                        "unique_agents": metrics.unique_agents,
+                        "unique_operators": metrics.unique_operators,
+                    })
+                except Exception as e:
+                    return json.dumps({"success": False, "error": str(e), "type": type(e).__name__})
+            else:
+                try:
+                    store = AgentStore()
+                    engine = AnalyticsEngine(store)
+                    metrics = engine.adoption_metrics(pack_id)
+                    store.close()
+                    return json.dumps({
+                        "success": True,
+                        "pack_id": metrics.pack_id,
+                        "unique_agents": metrics.unique_agents,
+                        "unique_operators": metrics.unique_operators,
+                    })
+                except Exception as e:
+                    return json.dumps({"success": False, "error": str(e), "type": type(e).__name__})
+
+        elif action == "timeseries":
+            if not metric:
+                return json.dumps({"success": False, "error": "metric is required for timeseries action"})
+            try:
+                store = AgentStore()
+                engine = AnalyticsEngine(store)
+                result = engine.timeseries(metric, period=period, days=days)
+                store.close()
+                return json.dumps({
+                    "success": True,
+                    "metric": result.metric,
+                    "period": result.period,
+                    "points": [
+                        {
+                            "timestamp": p.timestamp,
+                            "period": p.period,
+                            "metric": p.metric,
+                            "value": p.value,
+                            "label": p.label,
+                        }
+                        for p in result.points
+                    ],
+                })
+            except Exception as e:
+                return json.dumps({"success": False, "error": str(e), "type": type(e).__name__})
+
+        else:
+            return json.dumps({"success": False, "error": f"Unknown action: {action}. Use ecosystem_health, pack_usage, adoption, or timeseries."})
+
+    except (KeyboardInterrupt, SystemExit):
+        raise
+    except (ValueError, KeyError, OSError, json.JSONDecodeError) as e:
+        return json.dumps({"success": False, "error": str(e), "type": type(e).__name__})
+
+
+def borg_dojo(action: str = "", days: int = 7, report_format: str = "telegram") -> str:
+    """Borg Dojo — training improvement pipeline via MCP.
+
+    Args:
+        action: The action to perform - 'analyze', 'report', 'history', or 'status'.
+        days: Number of days to look back for analysis (default: 7).
+        report_format: Format for 'report' action - 'cli', 'telegram', or 'discord'.
+
+    Returns:
+        JSON string with analysis results, report, history, or health status.
+    """
+    try:
+        import time as _time
+        from borg.dojo.pipeline import DojoPipeline, analyze_recent_sessions, get_cached_analysis
+        from borg.dojo.learning_curve import LearningCurveTracker
+
+        if action == "analyze":
+            try:
+                analysis = analyze_recent_sessions(days=days)
+                return json.dumps({
+                    "success": True,
+                    "action": "analyze",
+                    "days": days,
+                    "schema_version": analysis.schema_version,
+                    "sessions_analyzed": analysis.sessions_analyzed,
+                    "total_tool_calls": analysis.total_tool_calls,
+                    "total_errors": analysis.total_errors,
+                    "overall_success_rate": analysis.overall_success_rate,
+                    "user_corrections": analysis.user_corrections,
+                    "skill_gaps_count": len(analysis.skill_gaps),
+                    "weakest_tools": [
+                        {
+                            "tool_name": t.tool_name,
+                            "failed_calls": t.failed_calls,
+                            "success_rate": t.success_rate,
+                            "top_error_category": t.top_error_category,
+                        }
+                        for t in (analysis.weakest_tools or [])[:5]
+                    ],
+                    "failure_reports": [
+                        {
+                            "tool_name": f.tool_name,
+                            "error_category": f.error_category,
+                            "error_snippet": f.error_snippet,
+                            "session_id": f.session_id,
+                            "timestamp": f.timestamp,
+                            "confidence": f.confidence,
+                        }
+                        for f in (analysis.failure_reports or [])[:10]
+                    ],
+                })
+            except FileNotFoundError:
+                return json.dumps({"success": False, "error": "state.db not found. Is hermes running?"})
+            except Exception as e:
+                return json.dumps({"success": False, "error": str(e), "type": type(e).__name__})
+
+        elif action == "report":
+            try:
+                pipeline = DojoPipeline()
+                report = pipeline.run(days=days, auto_fix=False, report_fmt=report_format)
+                return json.dumps({
+                    "success": True,
+                    "action": "report",
+                    "format": report_format,
+                    "report": report,
+                })
+            except FileNotFoundError:
+                return json.dumps({"success": False, "error": "state.db not found. Is hermes running?"})
+            except Exception as e:
+                return json.dumps({"success": False, "error": str(e), "type": type(e).__name__})
+
+        elif action == "history":
+            try:
+                tracker = LearningCurveTracker()
+                snapshots = tracker.load_history()
+                return json.dumps({
+                    "success": True,
+                    "action": "history",
+                    "snapshot_count": len(snapshots),
+                    "snapshots": [s.to_dict() for s in (snapshots or [])[-30:]],
+                })
+            except Exception as e:
+                return json.dumps({"success": False, "error": str(e), "type": type(e).__name__})
+
+        elif action == "status":
+            try:
+                analysis = get_cached_analysis()
+                if analysis is None:
+                    try:
+                        analysis = analyze_recent_sessions(days=min(days, 7))
+                    except FileNotFoundError:
+                        return json.dumps({"success": False, "error": "state.db not found. Is hermes running?"})
+                    except Exception:
+                        pass
+
+                if analysis is None:
+                    return json.dumps({
+                        "success": True,
+                        "action": "status",
+                        "health": "unknown",
+                        "message": "No analysis available. Run 'analyze' first.",
+                    })
+
+                health = "healthy"
+                if analysis.overall_success_rate < 70:
+                    health = "degraded"
+                if analysis.overall_success_rate < 50:
+                    health = "unhealthy"
+
+                return json.dumps({
+                    "success": True,
+                    "action": "status",
+                    "health": health,
+                    "sessions_analyzed": analysis.sessions_analyzed,
+                    "total_tool_calls": analysis.total_tool_calls,
+                    "total_errors": analysis.total_errors,
+                    "overall_success_rate": analysis.overall_success_rate,
+                    "user_corrections": analysis.user_corrections,
+                    "skill_gaps_count": len(analysis.skill_gaps),
+                    "weakest_tools": [
+                        {"tool_name": t.tool_name, "failed_calls": t.failed_calls}
+                        for t in (analysis.weakest_tools or [])[:3]
+                    ],
+                })
+            except Exception as e:
+                return json.dumps({"success": False, "error": str(e), "type": type(e).__name__})
+
+        else:
+            return json.dumps({"success": False, "error": f"Unknown action: {action}. Use: analyze, report, history, status."})
+
+    except (KeyboardInterrupt, SystemExit):
+        raise
+    except (ValueError, KeyError, OSError, json.JSONDecodeError) as e:
+        return json.dumps({"success": False, "error": str(e), "type": type(e).__name__})
+
+
+def borg_convert(path: str = "", format: str = "auto") -> str:
     """Convert a SKILL.md, CLAUDE.md, or .cursorrules file into a workflow pack.
 
     Args:
@@ -1548,51 +2470,49 @@ def borg_convert(path: str = "", format: str = "auto", output_dir: str = None) -
         return json.dumps({"success": False, "error": str(e), "type": type(e).__name__})
 
 
-def borg_generate(pack: str = "", format: str = "cursorrules") -> str:
+def _borg_generate_handler(pack: str = "", format: str = "cursorrules") -> str:
     """Generate platform-specific rules files from a borg workflow pack.
 
     Args:
-        pack: Pack name (e.g. 'systematic-debugging') or path to pack YAML file.
-        format: Output format - 'cursorrules', 'clinerules', 'claude-md', 'windsurfrules', or 'all'.
-
-    Returns:
-        JSON string with generated rules content.
+        pack: Pack name (e.g. 'systematic-debugging').
+        format: Output format - 'cursorrules', 'clinerules', 'claude-md', 'windsurfrules', 'all'.
     """
     try:
-        from borg.core.generate import generate_rules, generate_all, load_pack
+        from borg.core.generator import generate_rules, load_pack, FORMAT_FILENAMES
 
         if not pack:
-            return json.dumps({"success": False, "error": "pack is required"})
+            return json.dumps({"success": False, "error": "pack name is required"})
 
-        pack_data = load_pack(pack)
+        try:
+            pack_data = load_pack(pack)
+        except FileNotFoundError as e:
+            return json.dumps({"success": False, "error": str(e)})
 
-        if format == "all":
-            results = generate_all(pack_data)
+        result = generate_rules(pack_data, format=format)
+
+        if isinstance(result, dict):
+            # 'all' format returns dict of {format: content}
+            files = {}
+            for fmt, content in result.items():
+                files[FORMAT_FILENAMES[fmt]] = content
             return json.dumps({
                 "success": True,
-                "formats": results,
+                "pack": pack,
+                "format": "all",
+                "files": files,
             })
         else:
-            content = generate_rules(pack_data, format)
-            filename_map = {
-                "cursorrules": ".cursorrules",
-                "clinerules": ".clinerules",
-                "claude-md": "CLAUDE.md",
-                "windsurfrules": ".windsurfrules",
-            }
-            filename = filename_map.get(format, format)
+            filename = FORMAT_FILENAMES.get(format, format)
             return json.dumps({
                 "success": True,
-                "content": content,
+                "pack": pack,
+                "format": format,
                 "filename": filename,
+                "content": result,
             })
-    except FileNotFoundError as e:
-        return json.dumps({"success": False, "error": str(e)})
     except (KeyboardInterrupt, SystemExit):
         raise
-    except ValueError as e:
-        return json.dumps({"success": False, "error": str(e)})
-    except Exception as e:
+    except (ValueError, KeyError, OSError) as e:
         return json.dumps({"success": False, "error": str(e), "type": type(e).__name__})
 
 
@@ -1616,21 +2536,35 @@ def call_tool(name: str, arguments: Dict[str, Any]) -> str:
     """Dispatch a tool call to the appropriate guild function. Returns JSON string.
     
     All code paths return a JSON string (never raises). Tool execution is
-    protected by a timeout to prevent hangs.
+    protected by a timeout to prevent hangs and rate limiting.
     """
+    # Check rate limit first
+    if not _check_rate_limit():
+        return json.dumps({
+            "success": False,
+            "error": "Rate limit exceeded: maximum 60 requests per minute",
+            "type": "RateLimitError"
+        })
+
     try:
-        # Install timeout alarm (Unix only)
-        if hasattr(signal, "SIGALRM"):
+        # Try SIGALRM timeout first (main thread only)
+        if hasattr(signal, "SIGALRM") and threading.current_thread() is threading.main_thread():
             old_handler = signal.signal(signal.SIGALRM, _timeout_handler)
             signal.alarm(TOOL_TIMEOUT_SEC)
+            use_signal_timeout = True
+        else:
+            use_signal_timeout = False
 
         try:
             result = _call_tool_impl(name, arguments)
         finally:
-            # Cancel alarm and restore handler
-            if hasattr(signal, "SIGALRM"):
+            if use_signal_timeout:
                 signal.alarm(0)
                 signal.signal(signal.SIGALRM, old_handler)
+
+        # Feed tool call into trace capture (skip borg internal tools to avoid noise)
+        if name not in ("borg_search", "borg_observe", "borg_suggest", "borg_feedback", "borg_publish"):
+            _feed_trace_capture(name, arguments, result)
 
         return result
 
@@ -1645,7 +2579,11 @@ def call_tool(name: str, arguments: Dict[str, Any]) -> str:
 def _call_tool_impl(name: str, arguments: Dict[str, Any]) -> str:
     """Inner implementation of call_tool — may raise exceptions (caught by call_tool)."""
     if name == "borg_search":
-        return borg_search(query=arguments.get("query", ""))
+        return borg_search(
+            query=arguments.get("query", ""),
+            mode=arguments.get("mode", "text"),
+            task_context=arguments.get("task_context"),
+        )
 
     elif name == "borg_pull":
         return borg_pull(uri=arguments.get("uri", ""))
@@ -1686,6 +2624,10 @@ def _call_tool_impl(name: str, arguments: Dict[str, Any]) -> str:
             session_id=arguments.get("session_id", ""),
             what_changed=arguments.get("what_changed", ""),
             where_to_reuse=arguments.get("where_to_reuse", ""),
+            success=arguments.get("success"),
+            tokens_used=arguments.get("tokens_used", 0),
+            time_taken=arguments.get("time_taken", 0.0),
+            task_context=arguments.get("task_context"),
         )
 
     elif name == "borg_suggest":
@@ -1703,6 +2645,12 @@ def _call_tool_impl(name: str, arguments: Dict[str, Any]) -> str:
             output_dir=arguments.get("output_dir"),
         )
 
+    elif name == "borg_generate":
+        return _borg_generate_handler(
+            pack=arguments.get("pack", ""),
+            format=arguments.get("format", "cursorrules"),
+        )
+
     elif name == "borg_context":
         return borg_context(
             project_path=arguments.get("project_path", "."),
@@ -1712,6 +2660,23 @@ def _call_tool_impl(name: str, arguments: Dict[str, Any]) -> str:
     elif name == "borg_recall":
         return borg_recall(
             error_message=arguments.get("error_message", ""),
+            agent_id=arguments.get("agent_id", "default"),
+        )
+
+    elif name == "borg_record_failure":
+        return borg_record_failure(
+            error_pattern=arguments.get("error_pattern", ""),
+            pack_id=arguments.get("pack_id", ""),
+            phase=arguments.get("phase", ""),
+            approach=arguments.get("approach", ""),
+            outcome=arguments.get("outcome", ""),
+            agent_id=arguments.get("agent_id", "default"),
+        )
+
+    elif name == "borg_delete_failure":
+        return borg_delete_failure(
+            error_pattern=arguments.get("error_pattern", ""),
+            agent_id=arguments.get("agent_id", "default"),
         )
 
     elif name == "borg_reputation":
@@ -1721,18 +2686,32 @@ def _call_tool_impl(name: str, arguments: Dict[str, Any]) -> str:
             pack_id=arguments.get("pack_id"),
         )
 
+    elif name == "borg_analytics":
+        return borg_analytics(
+            action=arguments.get("action", ""),
+            pack_id=arguments.get("pack_id"),
+            metric=arguments.get("metric"),
+            period=arguments.get("period", "daily"),
+            days=arguments.get("days", 30),
+        )
+
+    elif name == "borg_dojo":
+        return borg_dojo(
+            action=arguments.get("action", ""),
+            days=arguments.get("days", 7),
+            report_format=arguments.get("report_format", "telegram"),
+        )
+
     elif name == "borg_observe":
         return borg_observe(
             task=arguments.get("task", ""),
             context=arguments.get("context", ""),
             context_dict=arguments.get("context_dict"),
+            project_path=arguments.get("project_path"),
         )
 
-    elif name == "borg_generate":
-        return borg_generate(
-            pack=arguments.get("pack", ""),
-            format=arguments.get("format", "cursorrules"),
-        )
+    elif name == "borg_dashboard":
+        return borg_dashboard()
 
     else:
         return json.dumps({"success": False, "error": f"Unknown tool: {name}"})
@@ -1763,6 +2742,9 @@ def handle_request(request: Dict[str, Any]) -> Optional[Dict[str, Any]]:
     params = request.get("params", {})
 
     if method == "initialize":
+        # Extract agent_id from params if provided
+        agent_id = params.get("agent_id", "unknown")
+        _current_agent_id.set(agent_id)
         return make_response(req_id, {
             "protocolVersion": "2024-11-05",
             "serverInfo": SERVER_INFO,
@@ -1809,6 +2791,8 @@ def handle_request(request: Dict[str, Any]) -> Optional[Dict[str, Any]]:
 
 def main() -> None:
     """Run the MCP server on stdio. Reads JSON-RPC requests from stdin, writes responses to stdout."""
+    from borg import __version__
+    print(f"borg-mcp-server v{__version__} ready (stdio transport)", file=sys.stderr, flush=True)
     for line in sys.stdin:
         line = line.strip()
         if not line:

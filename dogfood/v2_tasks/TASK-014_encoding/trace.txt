@@ -1,0 +1,47 @@
+## Reasoning Trace for UTF-8 BOM Bug
+
+### The Bug Location
+
+The bug is in `TextProcessor._load_config()`. When loading the JSON file, the code doesn't specify encoding, which can cause issues with BOM (Byte Order Mark) handling.
+
+### Hint 1: Compare Opening Modes
+
+Look at `save_config()`:
+```python
+with open(self.config_path, 'w', encoding='utf-8') as f:
+```
+
+Now look at `_load_config()`:
+```python
+with open(self.config_path, 'r') as f:
+```
+
+Notice the difference?
+
+### Hint 2: BOM Background
+
+UTF-8 files can have a BOM (3 bytes: EF BB BF) at the beginning. When writing with `encoding='utf-8'`, Python may write a BOM. When reading without specifying encoding, some platforms don't strip the BOM automatically.
+
+### Hint 3: Effects of BOM
+
+If the BOM bytes remain in the string:
+- `"admin"` becomes `"\xef\xbb\xbfadmin"` internally
+- When comparing with `"admin"`, they don't match
+- `len()` would show different lengths
+
+### Hint 4: String Inspection
+
+In the failing case:
+- `original = "admin"` has length 5
+- `from_file = "\xef\xbb\xbfadmin"` has length 8
+- Direct comparison `==` returns False
+
+### Approach
+
+1. Look at the difference between how files are opened for read vs write
+2. Add `encoding='utf-8'` to the `open()` call in `_load_config()`
+3. Consider using `encoding='utf-8-sig'` which automatically handles BOM stripping
+
+### Key Insight
+
+The fix is simple: add the correct encoding parameter when opening the file for reading, just like is done when writing.

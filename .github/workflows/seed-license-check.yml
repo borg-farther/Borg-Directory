@@ -1,0 +1,49 @@
+name: Seed Pack License Check
+
+on:
+  push:
+    branches:
+      - main
+      - master
+      - develop
+    paths:
+      - 'borg/seeds_data/packs/**'
+      - 'scripts/check_seed_licenses.py'
+      - '.github/workflows/seed-license-check.yml'
+  pull_request:
+    paths:
+      - 'borg/seeds_data/packs/**'
+      - 'scripts/check_seed_licenses.py'
+      - '.github/workflows/seed-license-check.yml'
+
+jobs:
+  license-check:
+    name: Validate Seed Pack Licenses
+    runs-on: ubuntu-latest
+    
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+      
+      - name: Set up Python
+        uses: actions/setup-python@v5
+        with:
+          python-version: '3.10'
+      
+      - name: Install dependencies
+        run: |
+          python -m pip install --upgrade pip
+          pip install pyyaml
+      
+      - name: Run license check
+        run: |
+          python scripts/check_seed_licenses.py
+      
+      - name: Upload failure logs
+        if: failure()
+        uses: actions/upload-artifact@v4
+        with:
+          name: license-check-failures
+          path: |
+            scripts/check_seed_licenses.py
+          retention-days: 7

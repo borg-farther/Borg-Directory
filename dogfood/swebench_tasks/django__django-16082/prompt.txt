@@ -1,0 +1,16 @@
+Fix the following Django bug. The code is in the repo at /workspace/django.
+
+BUG REPORT:
+Resolve output_field when combining numeric expressions with MOD operator.
+Description
+	
+When writing a Django expression for a query that does MOD, if the types of the query are different (Decimal and Integer), it doesn't resolve the result to a Decimal type, like it does for other mathematical operators.
+
+
+The fix should make these tests pass:
+[
+  "test_resolve_output_field_number (expressions.tests.CombinedExpressionTests)",
+  "test_resolve_output_field_with_null (expressions.tests.CombinedExpressionTests)"
+]
+
+After fixing, verify with: cd /workspace && python -m pytest test_resolve_output_field_number (expressions.tests.CombinedExpressionTests) test_resolve_output_field_with_null (expressions.tests.CombinedExpressionTests) --no-header -q

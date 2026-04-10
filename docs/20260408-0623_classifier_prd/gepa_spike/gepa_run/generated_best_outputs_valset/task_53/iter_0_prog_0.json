@@ -1,0 +1,5 @@
+{
+    "expected": "js_json_parse_error",
+    "actual": null,
+    "kind": "correct_no_match"
+}

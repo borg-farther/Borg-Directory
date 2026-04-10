@@ -1,0 +1,16 @@
+REASONING TRACE FOR: Graph traversal visited set bug
+
+PROBLEM DECOMPOSITION:
+- BFS needs a visited set to avoid processing the same node twice
+- Without it, diamond graphs produce duplicates and cycles cause infinite loops
+
+WHAT WAS TRIED:
+- Both methods need a visited set initialized before the loop
+- Nodes should be marked visited when ENQUEUED, not when dequeued
+
+KEY INSIGHT:
+- Mark as visited when adding to queue, not when popping — this prevents the same node from being added multiple times
+- Start node must be in visited set initially
+
+PITFALLS:
+- If you mark visited on dequeue instead of enqueue, you still get duplicates (node gets enqueued multiple times before first dequeue)

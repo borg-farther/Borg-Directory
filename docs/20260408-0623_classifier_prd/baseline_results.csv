@@ -1,0 +1,188 @@
+id,language,framework,family,expected_problem_class,actual_problem_class,is_correct,is_silent_miss,is_false_confident,is_correct_no_match,text
+e0001,python,,null_deref,null_pointer_chain,null_pointer_chain,1,0,0,0,AttributeError: 'NoneType' object has no attribute 'split'
+e0002,python,,null_deref,null_pointer_chain,null_pointer_chain,1,0,0,0,TypeError: 'NoneType' object is not iterable
+e0003,python,,null_deref,null_pointer_chain,null_pointer_chain,1,0,0,0,AttributeError: 'NoneType' object has no attribute 'get'
+e0004,python,,missing_module,missing_dependency,missing_dependency,1,0,0,0,ModuleNotFoundError: No module named 'requests'
+e0005,python,,missing_module,missing_dependency,import_cycle,0,0,1,0,ImportError: cannot import name 'soft_unicode' from 'markupsafe'
+e0006,python,,missing_module,missing_dependency,missing_dependency,1,0,0,0,ModuleNotFoundError: No module named 'numpy'
+e0007,python,,type_mismatch,type_mismatch,type_mismatch,1,0,0,0,TypeError: unsupported operand type(s) for +: 'int' and 'str'
+e0008,python,,type_mismatch,type_mismatch,type_mismatch,1,0,0,0,"TypeError: list indices must be integers or slices, not str"
+e0009,python,,import_cycle,import_cycle,import_cycle,1,0,0,0,ImportError: cannot import name 'User' from partially initialized module 'app.models' (most likely due to a circular import)
+e0010,python,,key_error,python_key_error,,0,0,0,1,KeyError: 'user_id'
+e0011,python,,index_error,python_index_error,,0,0,0,1,IndexError: list index out of range
+e0012,python,,value_error,python_value_error,,0,0,0,1,ValueError: invalid literal for int() with base 10: 'abc'
+e0013,python,,value_error,python_value_error,,0,0,0,1,ValueError: too many values to unpack (expected 2)
+e0014,python,,syntax_error,python_syntax_error,,0,0,0,1,SyntaxError: invalid syntax
+e0015,python,,indentation,python_syntax_error,,0,0,0,1,IndentationError: unexpected indent
+e0016,python,,recursion,python_recursion_error,,0,0,0,1,RecursionError: maximum recursion depth exceeded while calling a Python object
+e0017,python,,file_not_found,python_file_not_found,,0,0,0,1,FileNotFoundError: [Errno 2] No such file or directory: 'config.yaml'
+e0018,python,,permission,permission_denied,permission_denied,1,0,0,0,PermissionError: [Errno 13] Permission denied: '/var/log/app.log'
+e0019,python,,encoding,python_encoding_error,,0,0,0,1,UnicodeDecodeError: 'utf-8' codec can't decode byte 0xff in position 0: invalid start byte
+e0020,python,,timeout,timeout_hang,timeout_hang,1,0,0,0,socket.timeout: timed out
+e0021,python,,assertion,python_assertion_error,,0,0,0,1,AssertionError
+e0022,python,django,django_settings,configuration_error,configuration_error,1,0,0,0,django.core.exceptions.ImproperlyConfigured: The SECRET_KEY setting must not be empty.
+e0023,python,django,django_settings,configuration_error,configuration_error,1,0,0,0,django.core.exceptions.DisallowedHost: Invalid HTTP_HOST header. You may need to add to ALLOWED_HOSTS.
+e0024,python,django,django_migration,schema_drift,schema_drift,1,0,0,0,django.db.utils.OperationalError: no such column: auth_user.is_active
+e0025,python,django,django_migration,migration_state_desync,,0,0,0,1,"You have 3 unapplied migration(s). Your project may not work properly until you apply the migrations for app(s): admin, auth, contenttypes."
+e0026,python,django,django_migration,migration_state_desync,,0,0,0,1,django.db.migrations.exceptions.InconsistentMigrationHistory: Migration admin.0001_initial is applied before its dependency auth.0001_initial
+e0027,python,django,django_orm,missing_foreign_key,missing_foreign_key,1,0,0,0,django.db.utils.IntegrityError: FOREIGN KEY constraint failed
+e0028,python,django,django_orm,python_field_error,,0,0,0,1,"django.core.exceptions.FieldError: Cannot resolve keyword 'usernam' into field. Choices are: username, email, ..."
+e0029,python,django,django_orm,python_does_not_exist,,0,0,0,1,MyModel.DoesNotExist: MyModel matching query does not exist.
+e0030,python,flask,flask_routing,python_routing_error,,0,0,0,1,werkzeug.routing.exceptions.BuildError: Could not build url for endpoint 'index'. Did you mean 'main.index' instead?
+e0031,python,flask,flask_context,python_flask_context,,0,0,0,1,RuntimeError: Working outside of application context.
+e0032,python,fastapi,pydantic_validation,python_pydantic_validation,,0,0,0,1,"pydantic.error_wrappers.ValidationError: 1 validation error for User
+age
+  value is not a valid integer (type=type_error.integer)"
+e0033,python,fastapi,pydantic_validation,python_pydantic_validation,,0,0,0,1,"fastapi.exceptions.RequestValidationError: [{'loc': ['body', 'email'], 'msg': 'field required', 'type': 'value_error.missing'}]"
+e0034,python,fastapi,async_error,python_async_error,,0,0,0,1,RuntimeError: asyncio.run() cannot be called from a running event loop
+e0035,javascript,,undefined_access,js_undefined_property,,0,0,0,1,TypeError: Cannot read properties of undefined (reading 'map')
+e0036,javascript,,undefined_access,js_undefined_property,,0,0,0,1,TypeError: Cannot read property 'length' of null
+e0037,javascript,,reference_error,js_reference_error,,0,0,0,1,ReferenceError: foo is not defined
+e0038,javascript,,reference_error,js_ssr_reference_error,,0,0,0,1,ReferenceError: window is not defined
+e0039,javascript,,reference_error,js_ssr_reference_error,,0,0,0,1,ReferenceError: document is not defined
+e0040,javascript,,syntax_error,js_syntax_error,,0,0,0,1,SyntaxError: Unexpected token '<'
+e0041,javascript,,syntax_error,js_json_parse_error,,0,0,0,1,SyntaxError: Unexpected end of JSON input
+e0042,javascript,,type_error,js_type_error,,0,0,0,1,TypeError: foo.map is not a function
+e0043,javascript,,type_error,js_type_error,,0,0,0,1,TypeError: Assignment to constant variable.
+e0044,javascript,,type_error,js_json_circular,,0,0,0,1,TypeError: Converting circular structure to JSON
+e0045,javascript,,async_unhandled,js_unhandled_promise,,0,0,0,1,UnhandledPromiseRejectionWarning: Unhandled promise rejection.
+e0046,javascript,node,module_not_found,js_module_not_found,,0,0,0,1,Error: Cannot find module 'express'
+e0047,javascript,node,module_not_found,js_module_not_found,,0,0,0,1,Error [ERR_MODULE_NOT_FOUND]: Cannot find package 'lodash' imported from /app/index.mjs
+e0048,javascript,node,esm_cjs,js_esm_cjs_mismatch,,0,0,0,1,Error [ERR_REQUIRE_ESM]: require() of ES Module /node_modules/chalk/source/index.js not supported.
+e0049,javascript,node,port_in_use,js_port_in_use,,0,0,0,1,Error: listen EADDRINUSE: address already in use :::3000
+e0050,javascript,node,connection_refused,timeout_hang,,0,0,0,1,Error: connect ECONNREFUSED 127.0.0.1:5432
+e0051,javascript,,cors_error,js_cors_error,,0,0,0,1,Access to fetch at 'https://api.example.com' from origin 'http://localhost:3000' has been blocked by CORS policy: No 'Access-Control-Allow-Origin' header is present on the requested resource.
+e0052,javascript,,promise_await,js_missing_await,,0,0,0,1,TypeError: Cannot read properties of undefined (reading 'then')
+e0053,javascript,,memory,js_heap_oom,,0,0,0,1,FATAL ERROR: Reached heap limit Allocation failed - JavaScript heap out of memory
+e0054,javascript,,encoding,js_json_parse_error,,0,0,0,1,SyntaxError: JSON.parse: unexpected character at line 1 column 1 of the JSON data
+e0055,javascript,,stack_overflow,js_stack_overflow,,0,0,0,1,RangeError: Maximum call stack size exceeded
+e0056,javascript,node,fs_error,js_file_not_found,,0,0,0,1,"Error: ENOENT: no such file or directory, open '/app/config.json'"
+e0057,typescript,,ts_type_assign,ts_type_error,,0,0,0,1,TS2322: Type 'string' is not assignable to type 'number'.
+e0058,typescript,,ts_type_assign,ts_null_check,,0,0,0,1,TS2322: Type 'null' is not assignable to type 'string'.
+e0059,typescript,,ts_prop_missing,ts_property_missing,,0,0,0,1,TS2339: Property 'name' does not exist on type '{}'.
+e0060,typescript,,ts_prop_missing,ts_property_missing,,0,0,0,1,TS2551: Property 'lenght' does not exist on type 'string'. Did you mean 'length'?
+e0061,typescript,,ts_implicit_any,ts_implicit_any,,0,0,0,1,TS7006: Parameter 'req' implicitly has an 'any' type.
+e0062,typescript,,ts_arg_count,ts_argument_error,,0,0,0,1,"TS2554: Expected 2 arguments, but got 1."
+e0063,typescript,,ts_arg_type,ts_type_error,,0,0,0,1,TS2345: Argument of type 'string' is not assignable to parameter of type 'number'.
+e0064,typescript,,ts_strict_null,ts_null_check,,0,0,0,1,TS2531: Object is possibly 'null'.
+e0065,typescript,,ts_strict_null,ts_null_check,,0,0,0,1,TS2532: Object is possibly 'undefined'.
+e0066,typescript,,ts_strict_null,ts_null_check,,0,0,0,1,TS18048: 'user' is possibly 'undefined'.
+e0067,typescript,,ts_module,ts_module_resolution,,0,0,0,1,TS2307: Cannot find module 'foo' or its corresponding type declarations.
+e0068,typescript,,ts_module,ts_module_resolution,,0,0,0,1,TS2691: An import path cannot end with a '.ts' extension.
+e0069,typescript,,ts_generic,ts_generic_constraint,,0,0,0,1,TS2344: Type 'X' does not satisfy the constraint 'Y'.
+e0070,typescript,,ts_declaration,ts_module_resolution,,0,0,0,1,"TS1192: Module '""./foo""' has no default export."
+e0071,typescript,,ts_jsx,ts_module_resolution,,0,0,0,1,TS2304: Cannot find name 'React'.
+e0072,typescript,,ts_never,ts_type_error,,0,0,0,1,TS2367: This condition will always return 'false' since the types have no overlap.
+e0073,typescript,,ts_return,ts_type_error,,0,0,0,1,TS7030: Not all code paths return a value.
+e0074,typescript,,ts_config,ts_config_error,,0,0,0,1,TS5023: Unknown compiler option 'strictNullCkecks'. Did you mean 'strictNullChecks'?
+e0075,typescript,,ts_never_narrow,ts_exhaustiveness,,0,0,0,1,TS2322: Type 'X' is not assignable to type 'never'.
+e0076,typescript,,ts_unused,ts_lint_error,,0,0,0,1,TS6133: 'foo' is declared but its value is never read.
+e0077,javascript,react,hydration,react_hydration_mismatch,,0,0,0,1,Error: Hydration failed because the initial UI does not match what was rendered on the server.
+e0078,javascript,react,hydration,react_hydration_mismatch,,0,0,0,1,"Warning: Text content did not match. Server: ""0"" Client: ""1"""
+e0079,javascript,react,hooks_rule,react_hooks_rule_violation,,0,0,0,1,Error: Invalid hook call. Hooks can only be called inside of the body of a function component.
+e0080,javascript,react,hooks_rule,react_hooks_deps,,0,0,0,1,React Hook useEffect has a missing dependency: 'fetchData'. Either include it or remove the dependency array. (react-hooks/exhaustive-deps)
+e0081,javascript,react,missing_key,react_missing_key,,0,0,0,1,"Warning: Each child in a list should have a unique ""key"" prop."
+e0082,javascript,react,state_after_unmount,react_unmounted_state,,0,0,0,1,"Warning: Can't perform a React state update on an unmounted component. This is a no-op, but it indicates a memory leak in your application."
+e0083,javascript,react,infinite_rerender,react_infinite_rerender,,0,0,0,1,Error: Too many re-renders. React limits the number of renders to prevent an infinite loop.
+e0084,javascript,react,missing_provider,react_missing_provider,,0,0,0,1,Error: useContext must be used within a Provider
+e0085,javascript,react,controlled_component,react_controlled_input,,0,0,0,1,Warning: A component is changing an uncontrolled input to be controlled.
+e0086,javascript,nextjs,nextjs_use_client,nextjs_use_client,,0,0,0,1,"Error: You're importing a component that needs useState. It only works in a Client Component but none of its parents are marked with ""use client"""
+e0087,javascript,nextjs,nextjs_use_client,nextjs_use_client,,0,0,0,1,"Error: useRouter only works in Client Components. Add the ""use client"" directive at the top of the file to use it."
+e0088,javascript,nextjs,nextjs_build,nextjs_build_error,,0,0,0,1,Error: Failed to collect page data for /api/foo
+e0089,javascript,nextjs,nextjs_routing,nextjs_routing_error,,0,0,0,1,"Error: No router instance found. You should only use ""next/router"" inside the client side of your app."
+e0090,javascript,nextjs,nextjs_image,nextjs_image_config,,0,0,0,1,"Error: Invalid src prop (https://foo.com/a.png) on `next/image`, hostname ""foo.com"" is not configured under images in your `next.config.js`"
+e0091,javascript,react,suspense,react_suspense_sync,,0,0,0,1,Error: A component suspended while responding to synchronous input. This will cause the UI to be replaced with a loading indicator.
+e0092,javascript,react,key_warning_detail,react_missing_key,,0,0,0,1,"Warning: Encountered two children with the same key, `foo`. Keys should be unique so that components maintain their identity across updates."
+e0093,rust,,borrow_checker,rust_borrow_checker,,0,0,0,1,error[E0382]: borrow of moved value: `x`
+e0094,rust,,borrow_checker,rust_borrow_checker,,0,0,0,1,error[E0382]: use of moved value: `s`
+e0095,rust,,borrow_checker,rust_borrow_checker,,0,0,0,1,error[E0502]: cannot borrow `v` as mutable because it is also borrowed as immutable
+e0096,rust,,borrow_checker,rust_borrow_checker,,0,0,0,1,error[E0499]: cannot borrow `self` as mutable more than once at a time
+e0097,rust,,lifetime,rust_lifetime_error,,0,0,0,1,error[E0106]: missing lifetime specifier
+e0098,rust,,lifetime,rust_lifetime_error,,0,0,0,1,error[E0597]: `data` does not live long enough
+e0099,rust,,lifetime,rust_lifetime_error,,0,0,0,1,error[E0621]: explicit lifetime required in the type of `x`
+e0100,rust,,trait_bound,rust_trait_bound,,0,0,0,1,error[E0277]: the trait bound `MyType: Send` is not satisfied
+e0101,rust,,trait_bound,rust_trait_bound,,0,0,0,1,error[E0277]: `Rc<T>` cannot be sent between threads safely
+e0102,rust,,trait_bound,rust_trait_bound,,0,0,0,1,error[E0277]: the trait bound `T: std::fmt::Display` is not satisfied
+e0103,rust,,async_send,rust_async_send,,0,0,0,1,"error: future cannot be sent between threads safely within `impl Future`, the trait `Send` is not implemented for `Rc<...>`"
+e0104,rust,,async_pin,rust_async_pin,,0,0,0,1,error[E0277]: `from_generator::GenFuture<...>` cannot be unpinned
+e0105,rust,,mismatched_types,rust_mismatched_types,,0,0,0,1,"error[E0308]: mismatched types: expected `&str`, found `String`"
+e0106,rust,,mismatched_types,rust_mismatched_types,,0,0,0,1,"error[E0308]: mismatched types: expected `u32`, found `i32`"
+e0107,rust,,unwrap_panic,rust_unwrap_panic,,0,0,0,1,thread 'main' panicked at 'called `Option::unwrap()` on a `None` value'
+e0108,rust,,unwrap_panic,rust_unwrap_panic,,0,0,0,1,thread 'main' panicked at 'called `Result::unwrap()` on an `Err` value: Error { ... }'
+e0109,rust,,move_closure,rust_closure_move,,0,0,0,1,"error[E0373]: closure may outlive the current function, but it borrows `s`, which is owned by the current function"
+e0110,rust,,cargo_build,rust_toolchain_error,,0,0,0,1,error: linker `cc` not found
+e0111,rust,,cargo_build,rust_toolchain_error,,0,0,0,1,error: could not compile `openssl-sys` due to previous error
+e0112,rust,,cargo_resolve,cargo_resolve_error,,0,0,0,1,"error: failed to select a version for the requirement `tokio = ""^2.0""`"
+e0113,rust,,pattern_match,rust_non_exhaustive,,0,0,0,1,error[E0004]: non-exhaustive patterns: `None` not covered
+e0114,rust,,type_inference,rust_type_annotation,,0,0,0,1,error[E0282]: type annotations needed
+e0115,go,,nil_deref,go_nil_pointer,,0,0,0,1,panic: runtime error: invalid memory address or nil pointer dereference
+e0116,go,,nil_deref,go_nil_pointer,,0,0,0,1,panic: runtime error: invalid memory address or nil pointer dereference [signal SIGSEGV: segmentation violation code=0x1 addr=0x0 pc=0x]
+e0117,go,,slice_bounds,go_index_out_of_range,,0,0,0,1,panic: runtime error: index out of range [5] with length 3
+e0118,go,,type_assertion,go_type_assertion,,0,0,0,1,"panic: interface conversion: interface {} is string, not int"
+e0119,go,,data_race,go_data_race,,0,0,0,1,"WARNING: DATA RACE
+Read at 0x00c0000a8010 by goroutine 7:
+Previous write at 0x00c0000a8010 by goroutine 6:"
+e0120,go,,deadlock,go_deadlock,,0,0,0,1,fatal error: all goroutines are asleep - deadlock!
+e0121,go,,goroutine_leak,go_goroutine_leak,,0,0,0,1,"goroutine 123 [chan receive, 5 minutes]:
+main.worker(...)"
+e0122,go,,import_cycle,go_import_cycle,,0,0,0,1,"import cycle not allowed
+package foo imports bar imports foo"
+e0123,go,,module_error,go_module_error,,0,0,0,1,go: module github.com/foo/bar: reading https://proxy.golang.org/...: 404 Not Found
+e0124,go,,module_error,go_module_error,,0,0,0,1,"go: cannot find main module, but found .git/config in /home/me/proj"
+e0125,go,,compile_error,go_compile_error,,0,0,0,1,./main.go:10:2: undefined: fmt.Printl
+e0126,go,,compile_error,go_type_mismatch,,0,0,0,1,./main.go:15:9: cannot use x (type string) as type int in return argument
+e0127,go,,http_error,go_nil_pointer,,0,0,0,1,http: panic serving 127.0.0.1:54321: runtime error: invalid memory address or nil pointer dereference
+e0128,go,,channel_closed,go_channel_error,,0,0,0,1,panic: send on closed channel
+e0129,go,,unused_import,go_unused_import,,0,0,0,1,"./main.go:3:8: imported and not used: ""fmt"""
+e0130,go,,context_cancel,timeout_hang,,0,0,0,1,context deadline exceeded
+e0131,shell,docker,disk_full,docker_disk_full,,0,0,0,1,Error processing tar file(exit status 1): write /foo: no space left on device
+e0132,shell,docker,disk_full,docker_disk_full,,0,0,0,1,failed to register layer: Error processing tar file(exit status 1): write /usr/lib: no space left on device
+e0133,shell,docker,build_context,docker_build_context,,0,0,0,1,"ERROR: failed to solve: failed to compute cache key: failed to calculate checksum of ref ...: ""/app"": not found"
+e0134,shell,docker,build_error,docker_build_error,,0,0,0,1,The command '/bin/sh -c apt-get install -y curl' returned a non-zero code: 100
+e0135,shell,docker,image_not_found,docker_image_not_found,,0,0,0,1,"Unable to find image 'nginx:latest' locally
+docker: Error response from daemon: pull access denied for nginx, repository does not exist or may require 'docker login'"
+e0136,shell,docker,image_not_found,docker_image_not_found,,0,0,0,1,Error response from daemon: manifest for myimage:v2 not found: manifest unknown
+e0137,shell,docker,port_conflict,docker_port_conflict,,0,0,0,1,docker: Error response from daemon: driver failed programming external connectivity on endpoint foo: Bind for 0.0.0.0:80 failed: port is already allocated.
+e0138,shell,docker,volume_permission,docker_volume_permission,,0,0,0,1,chown: changing ownership of '/var/lib/postgresql/data': Operation not permitted
+e0139,shell,docker,daemon_error,docker_daemon_error,,0,0,0,1,Cannot connect to the Docker daemon at unix:///var/run/docker.sock. Is the docker daemon running?
+e0140,shell,docker,network,docker_network_error,,0,0,0,1,docker: Error response from daemon: network with name bridge0 already exists
+e0141,shell,docker,exit_code,docker_oom_killed,,0,0,0,1,container exited with code 137
+e0142,shell,docker,build_layer,docker_auth_error,,0,0,0,1,failed to solve with frontend dockerfile.v0: failed to create LLB definition: failed to authorize
+e0143,shell,docker,compose,docker_compose_error,,0,0,0,1,"ERROR: Version in ""./docker-compose.yml"" is unsupported."
+e0144,shell,docker,platform,docker_platform_mismatch,,0,0,0,1,WARNING: The requested image's platform (linux/amd64) does not match the detected host platform (linux/arm64/v8) and no specific platform was requested
+e0145,shell,docker,build_error,docker_build_error,,0,0,0,1,"Step 5/10 : RUN pip install -r requirements.txt
+ ---> Running in abc123
+ERROR: Could not find a version that satisfies the requirement foo"
+e0146,shell,docker,overlay,docker_layer_error,,0,0,0,1,failed to register layer: ApplyLayer exit status 1 stdout: stderr: archive/tar: invalid tar header
+e0147,shell,kubernetes,crashloop,k8s_crashloop,,0,0,0,1,"NAME           READY   STATUS             RESTARTS   AGE
+app-5df7c-xk2   0/1     CrashLoopBackOff   8          10m"
+e0148,shell,kubernetes,crashloop,k8s_crashloop,,0,0,0,1,Back-off restarting failed container app in pod app-5df7c-xk2_default
+e0149,shell,kubernetes,image_pull,k8s_image_pull_auth,,0,0,0,1,"Failed to pull image ""myrepo/app:v1"": rpc error: code = Unknown desc = Error response from daemon: pull access denied"
+e0150,shell,kubernetes,image_pull,k8s_image_pull,,0,0,0,1,ImagePullBackOff
+e0151,shell,kubernetes,image_pull,k8s_image_not_found,,0,0,0,1,"ErrImagePull: rpc error: code = NotFound desc = failed to pull and unpack image ""myrepo/app:v1"": not found"
+e0152,shell,kubernetes,oom_killed,k8s_oom_killed,,0,0,0,1,"Last State:     Terminated
+  Reason:       OOMKilled
+  Exit Code:    137"
+e0153,shell,kubernetes,evicted,k8s_evicted,,0,0,0,1,"Status: Failed
+Reason: Evicted
+Message: The node was low on resource: ephemeral-storage. Container app was using 5Gi, which exceeds its request of 0."
+e0154,shell,kubernetes,config_missing,k8s_config_missing,,0,0,0,1,Error: couldn't find key db-password in Secret default/app-secrets
+e0155,shell,kubernetes,config_missing,k8s_config_missing,,0,0,0,1,"MountVolume.SetUp failed for volume ""config"" : configmap ""app-config"" not found"
+e0156,shell,kubernetes,rbac,k8s_rbac_denied,,0,0,0,1,"Error from server (Forbidden): pods is forbidden: User ""system:serviceaccount:default:app-sa"" cannot list resource ""pods"" in API group """" in the namespace ""default"""
+e0157,shell,kubernetes,probe_failed,k8s_probe_failed,,0,0,0,1,"Readiness probe failed: Get ""http://10.0.0.5:8080/health"": dial tcp 10.0.0.5:8080: connect: connection refused"
+e0158,shell,kubernetes,pvc_pending,k8s_pvc_pending,,0,0,0,1,pod has unbound immediate PersistentVolumeClaims
+e0159,shell,kubernetes,scheduling,k8s_unschedulable,,0,0,0,1,0/3 nodes are available: 3 Insufficient cpu.
+e0160,shell,kubernetes,scheduling,k8s_unschedulable,,0,0,0,1,0/3 nodes are available: 3 node(s) had untolerated taint {node.kubernetes.io/unreachable: }
+e0161,shell,kubernetes,dns,k8s_dns_error,,0,0,0,1,"Error: failed to do request: Head ""https://registry-1.docker.io/v2/library/nginx/manifests/latest"": dial tcp: lookup registry-1.docker.io on 10.96.0.10:53: no such host"
+e0162,shell,kubernetes,quota,k8s_resource_quota,,0,0,0,1,"Error creating: pods ""app-"" is forbidden: exceeded quota: compute-resources, requested: limits.memory=2Gi, used: limits.memory=8Gi, limited: limits.memory=8Gi"
+e0163,shell,,command_not_found,shell_command_not_found,,0,0,0,1,bash: jq: command not found
+e0164,shell,,command_not_found,shell_command_not_found,,0,0,0,1,zsh: command not found: python
+e0165,shell,,permission,permission_denied,permission_denied,1,0,0,0,bash: ./deploy.sh: Permission denied
+e0166,shell,,disk_full,shell_disk_full,,0,0,0,1,cp: error writing '/backup/db.dump': No space left on device
+e0167,shell,,port_in_use,shell_port_in_use,,0,0,0,1,bind: address already in use
+e0168,shell,,dns,shell_dns_error,,0,0,0,1,curl: (6) Could not resolve host: api.example.com
+e0169,shell,,ssl,shell_ssl_error,,0,0,0,1,curl: (60) SSL certificate problem: unable to get local issuer certificate
+e0170,shell,,file_not_found,shell_file_not_found,,0,0,0,1,cat: config.yaml: No such file or directory
+e0171,shell,,oom,shell_oom_killed,,0,0,0,1,Killed
+e0172,shell,,segfault,shell_segfault,,0,0,0,1,Segmentation fault (core dumped)
+e0173,shell,,exit_code,shell_build_error,,0,0,0,1,make: *** [Makefile:42: build] Error 2

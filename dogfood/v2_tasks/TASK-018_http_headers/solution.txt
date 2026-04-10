@@ -1,0 +1,36 @@
+## Solution for HTTP Header Case Sensitivity Bug
+
+### The Bug
+
+Headers are stored with original case but retrieved with case-sensitive lookups. Per RFC 7230, HTTP header names are case-insensitive.
+
+### The Fix
+
+Normalize header names to lowercase when storing and retrieving:
+
+```python
+def set_header(self, name: str, value: str):
+    """Set a header value."""
+    # Store with lowercase key for case-insensitive lookups
+    self.headers[name.lower()] = value
+
+def get_header(self, name: str) -> Optional[str]:
+    """Get a header value by name (case-insensitive)."""
+    return self.headers.get(name.lower())
+
+def has_header(self, name: str) -> bool:
+    """Check if a header exists (case-insensitive)."""
+    return name.lower() in self.headers
+```
+
+### Why This Works
+
+1. When setting: `Content-Type` → stored as `content-type`
+2. When getting: `content-type` → looks up `content-type` → finds value
+3. When getting: `CONTENT-TYPE` → looks up `content-type` → finds value
+
+All case variations map to the same lowercase key, achieving case-insensitive lookups.
+
+### Alternative Solution
+
+Use a case-insensitive dictionary wrapper or `collections.defaultdict`, but normalizing keys is simpler and more explicit.

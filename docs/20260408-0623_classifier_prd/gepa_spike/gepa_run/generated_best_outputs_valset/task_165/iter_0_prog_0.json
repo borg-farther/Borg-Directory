@@ -1,0 +1,5 @@
+{
+    "expected": "shell_disk_full",
+    "actual": null,
+    "kind": "correct_no_match"
+}
