@@ -554,7 +554,7 @@ class TestMCPToolsList:
         # borg_apply, borg_publish, borg_feedback, borg_suggest, borg_observe,
         # borg_convert, borg_generate x2, borg_context, borg_recall, borg_record_failure,
         # borg_delete_failure, borg_reputation, borg_analytics, borg_dashboard, borg_dojo)
-        assert len(resp["result"]["tools"]) == 20
+        assert len(resp["result"]["tools"]) == 21
 
 
 class TestBorgV3EndToEnd:
