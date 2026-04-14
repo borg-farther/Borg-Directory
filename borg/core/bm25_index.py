@@ -57,7 +57,7 @@ class BM25Index:
                 row['error_patterns'] or '',
                 row['root_cause'] or '',
                 row['approach_summary'] or '',
-                row.get('synthetic_queries', '') or '',
+                row['synthetic_queries'] if 'synthetic_queries' in row.keys() else '',
             ]))
             self.add_document(row['id'], doc_text)
 
