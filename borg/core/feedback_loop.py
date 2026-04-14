@@ -82,6 +82,60 @@ class QualityWeightedAggregator:
         if signal.pack_id not in self._pack_signals:
             self._pack_signals[signal.pack_id] = []
         self._pack_signals[signal.pack_id].append(signal)
+        self._persist_signal(signal)
+
+
+    # --- SQLite Persistence ---
+
+    def _ensure_signals_table(self):
+        import sqlite3
+        try:
+            db = sqlite3.connect(self._db_path)
+            db.execute("""CREATE TABLE IF NOT EXISTS feedback_signals (
+                id INTEGER PRIMARY KEY AUTOINCREMENT,
+                agent_id TEXT, pack_id TEXT NOT NULL, signal_type TEXT,
+                value REAL, timestamp TEXT, quality_score REAL DEFAULT 0.5,
+                success_rate_trend REAL DEFAULT 0.0)""")
+            db.execute("CREATE INDEX IF NOT EXISTS idx_fs_pack ON feedback_signals(pack_id)")
+            db.commit(); db.close()
+        except Exception as e:
+            import logging; logging.getLogger(__name__).warning("FeedbackLoop: signals table: %s", e)
+
+    def _persist_signal(self, signal):
+        import sqlite3
+        try:
+            db = sqlite3.connect(self._db_path)
+            db.execute("INSERT INTO feedback_signals (agent_id,pack_id,signal_type,value,timestamp,quality_score,success_rate_trend) VALUES (?,?,?,?,?,?,?)",
+                (signal.agent_id, signal.pack_id,
+                 signal.signal_type.name if hasattr(signal.signal_type,'name') else str(signal.signal_type),
+                 1.0 if signal.value else 0.0, signal.timestamp.isoformat(),
+                 signal.quality_score, signal.success_rate_trend))
+            db.commit(); db.close()
+        except Exception as e:
+            import logging; logging.getLogger(__name__).warning("FeedbackLoop: persist signal: %s", e)
+
+    def _load_signals(self):
+        import sqlite3
+        from datetime import datetime
+        try:
+            db = sqlite3.connect(self._db_path)
+            rows = db.execute("SELECT agent_id,pack_id,signal_type,value,timestamp,quality_score,success_rate_trend FROM feedback_signals").fetchall()
+            db.close()
+            for r in rows:
+                try:
+                    st = SignalType[r[2]] if r[2] in SignalType.__members__ else SignalType.EXPLICIT_REPORT
+                    sig = FeedbackSignal(agent_id=r[0] or "", pack_id=r[1], signal_type=st,
+                        value=bool(r[3]), timestamp=datetime.fromisoformat(r[4]),
+                        quality_score=r[5] or 0.5, success_rate_trend=r[6] or 0.0)
+                    if sig.pack_id not in self._pack_signals:
+                        self._pack_signals[sig.pack_id] = []
+                    self._pack_signals[sig.pack_id].append(sig)
+                except Exception:
+                    continue
+            n = sum(len(v) for v in self._pack_signals.values())
+            if n: import logging; logging.getLogger(__name__).info("FeedbackLoop: loaded %d signals from disk", n)
+        except Exception as e:
+            import logging; logging.getLogger(__name__).debug("FeedbackLoop: no signals on disk: %s", e)
 
     def aggregate(self, pack_id: str) -> QualityReport:
         """
@@ -486,6 +540,11 @@ class FeedbackLoop:
         self.auto_feedback = auto_feedback or AutoFeedbackDetector()
 
         self._signals: List[FeedbackSignal] = []
+        # SQLite persistence for signals
+        import os as _os
+        self._db_path = _os.path.expanduser("~/.borg/traces.db")
+        self._fl_ensure_table()
+        self._fl_load_signals()
 
     def record_signal(self, signal: FeedbackSignal) -> None:
         """
@@ -506,6 +565,54 @@ class FeedbackLoop:
             signal.value,
             signal.timestamp
         )
+
+    def _fl_ensure_table(self):
+        import sqlite3
+        try:
+            db = sqlite3.connect(self._db_path)
+            db.execute("""CREATE TABLE IF NOT EXISTS feedback_signals (
+                id INTEGER PRIMARY KEY AUTOINCREMENT,
+                agent_id TEXT, pack_id TEXT NOT NULL, signal_type TEXT,
+                value REAL, timestamp TEXT, quality_score REAL DEFAULT 0.5,
+                success_rate_trend REAL DEFAULT 0.0)""")
+            db.execute("CREATE INDEX IF NOT EXISTS idx_fs_pack ON feedback_signals(pack_id)")
+            db.commit(); db.close()
+        except Exception as e:
+            import logging; logging.getLogger(__name__).warning("FeedbackLoop: table init: %s", e)
+
+    def _fl_persist(self, signal):
+        import sqlite3
+        try:
+            db = sqlite3.connect(self._db_path)
+            db.execute("INSERT INTO feedback_signals (agent_id,pack_id,signal_type,value,timestamp,quality_score,success_rate_trend) VALUES (?,?,?,?,?,?,?)",
+                (signal.agent_id, signal.pack_id,
+                 signal.signal_type.name if hasattr(signal.signal_type,'name') else str(signal.signal_type),
+                 1.0 if signal.value else 0.0, signal.timestamp.isoformat(),
+                 signal.quality_score, signal.success_rate_trend))
+            db.commit(); db.close()
+        except Exception as e:
+            import logging; logging.getLogger(__name__).warning("FeedbackLoop: persist: %s", e)
+
+    def _fl_load_signals(self):
+        import sqlite3
+        from datetime import datetime
+        try:
+            db = sqlite3.connect(self._db_path)
+            rows = db.execute("SELECT agent_id,pack_id,signal_type,value,timestamp,quality_score,success_rate_trend FROM feedback_signals").fetchall()
+            db.close()
+            for r in rows:
+                try:
+                    st = SignalType[r[2]] if r[2] in SignalType.__members__ else SignalType.EXPLICIT_REPORT
+                    sig = FeedbackSignal(agent_id=r[0] or "", pack_id=r[1], signal_type=st,
+                        value=bool(r[3]), timestamp=datetime.fromisoformat(r[4]),
+                        quality_score=r[5] or 0.5, success_rate_trend=r[6] or 0.0)
+                    self._signals.append(sig)
+                except Exception:
+                    continue
+            if self._signals:
+                import logging; logging.getLogger(__name__).info("FeedbackLoop: loaded %d signals from disk", len(self._signals))
+        except Exception as e:
+            import logging; logging.getLogger(__name__).debug("FeedbackLoop: no signals on disk: %s", e)
 
     def record(
         self,
