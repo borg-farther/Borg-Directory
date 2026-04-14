@@ -23,6 +23,7 @@ borg/core/__init__.py
 borg/core/agentskills_converter.py
 borg/core/aggregator.py
 borg/core/apply.py
+borg/core/bm25_index.py
 borg/core/causal.py
 borg/core/changes.py
 borg/core/clustering.py

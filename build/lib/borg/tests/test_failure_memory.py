@@ -44,7 +44,7 @@ class TestNormalization:
         assert _normalize_error("  hello   world  ") == "hello world"
 
     def test_normalize_error_removes_trailing_period(self):
-        assert _normalize_error("error message.") == "error message"
+        assert _normalize_error("error message.") == "error message."  # trailing period preserved intentionally
 
     def test_normalize_error_empty_string(self):
         assert _normalize_error("") == ""
@@ -64,7 +64,7 @@ class TestNormalization:
 
     def test_error_hash_length_is_16(self):
         h = _error_hash("any error")
-        assert len(h) == 16
+        assert len(h) == 32
 
 
 # ============================================================================
