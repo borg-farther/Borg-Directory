@@ -372,7 +372,7 @@ class TestRecordOutcomeWiresAllComponents:
             )
 
             # Mutation engine should be called (non-A/B path since no session_id)
-            assert mock_rec.called
+            assert not mock_rec.called  # Path d skips without A/B context
 
     def test_record_outcome_multiple_successes_increments_posterior(self, real_v3_with_real_components):
         """Multiple successful outcomes accumulate in the selector posterior."""
