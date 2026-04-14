@@ -1715,7 +1715,7 @@ def borg_observe(task: str = "", context: str = "", context_dict: dict = None, p
         from borg.core.traces import TRACE_DB_PATH
         positive_traces = semantic_search(
             query=query, db_path=TRACE_DB_PATH,
-            top_k=3, min_similarity=0.7, outcome_filter='success'
+            top_k=3, min_similarity=0.5, outcome_filter='success'
         )
     except Exception:
         pass
