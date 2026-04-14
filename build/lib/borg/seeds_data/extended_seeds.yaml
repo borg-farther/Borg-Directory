@@ -1,0 +1,697 @@
+name: django-migration-error
+problem_class: django_migration_error
+description: |
+  Django migration errors: CharField max_length, missing column, duplicate
+  migration, or migration dependency issues. Common with fresh DB or schema changes.
+solution: |
+  1. Check migration state: python manage.py showmigrations
+  2. Identify missing migrations: python manage.py makemigrations --check
+  3. Apply pending migrations: python manage.py migrate
+  4. If conflict: python manage.py migrate --fake <app> <migration>
+  5. For CharField max_length: add max_length to field definition then makemigrations
+  6. Check for circular dependencies in models
+  7. Verify database connection in settings.py
+source_url: https://docs.djangoproject.com/en/stable/topics/migrations/
+tier: SEED
+tags: [django, migration, database, python]
+---
+name: python-import-error
+problem_class: python_import_error
+description: |
+  Python ImportError or ModuleNotFoundError. Missing package, wrong venv,
+  circular import, or typo in import path.
+solution: |
+  1. Verify package installed: pip show <package-name>
+  2. Check correct venv activated: which python, which pip
+  3. Fix circular import: move import to bottom of file or use TYPE_CHECKING
+  4. Check __init__.py exists in package directory
+  5. Verify PYTHONPATH includes the module parent directory
+  6. Try: python -c "import <module>" to isolate the error
+source_url: https://docs.python.org/3/reference/import.html
+tier: SEED
+tags: [python, import, module, error]
+---
+name: python-type-error
+problem_class: python_type_error
+description: |
+  Python TypeError: unsupported operand type(s), not callable, argument type
+  mismatches, NoneType has no attribute.
+solution: |
+  1. Identify the exact types involved in the operation
+  2. Check if a variable is None when it shouldn't be
+  3. Verify function arguments are in the correct order
+  4. Add type hints to function signatures to catch mismatch
+  5. Use isinstance() to validate types before operations
+  6. Check if a method was called on an object vs the class
+source_url: https://docs.python.org/3/library/exceptions.html#TypeError
+tier: SEED
+tags: [python, type-error, debugging, exception]
+---
+name: docker-build-failure
+problem_class: docker_build_failure
+description: |
+  Docker build fails: missing Dockerfile, bad base image, RUN command error,
+  network timeout fetching packages, or layer cache invalidation.
+solution: |
+  1. Check Dockerfile exists and path is correct: docker build -f Dockerfile .
+  2. Verify base image exists: docker pull <image>
+  3. Increase timeout for package installs: RUN pip install --timeout 300 ...
+  4. Use --no-cache-cache: docker build --no-cache -t <tag> .
+  5. Fix layer order: put rarely changing layers first
+  6. Check multi-stage build syntax if using --target
+  7. Verify build context doesn't include .dockerignore
+source_url: https://docs.docker.com/engine/reference/builder/
+tier: SEED
+tags: [docker, build, container, devops]
+---
+name: docker-no-space
+problem_class: docker_no_space
+description: |
+  Docker runs out of disk space: no space left on device, volume fill,
+  build cache too large, or dangling images accumulating.
+solution: |
+  1. Check disk space: docker system df
+  2. Remove unused images: docker image prune -a
+  3. Remove build cache: docker builder prune
+  4. Remove stopped containers: docker container prune
+  5. Remove dangling volumes: docker volume prune
+  6. Full system cleanup: docker system prune -a --volumes
+  7. Set storage limits in /etc/docker/daemon.json
+source_url: https://docs.docker.com/config/format/docker-system-commands/
+tier: SEED
+tags: [docker, disk-space, cleanup, devops]
+---
+name: api-rate-limit
+problem_class: api_rate_limit
+description: |
+  API returns 429 Too Many Requests or rate limit exceeded. Client hitting
+  server-imposed request quotas.
+solution: |
+  1. Read Retry-After header from 429 response
+  2. Implement exponential backoff: wait 2^n * base seconds
+  3. Add jitter to prevent thundering herd
+  4. Use rate-limiting library: tenacity, backoff
+  5. Cache responses to reduce redundant API calls
+  6. Batch requests where the API supports it
+  7. Check for concurrent requests that could be serialized
+source_url: https://developer.mozilla.org/en-US/docs/Web/HTTP/Status/429
+tier: SEED
+tags: [api, rate-limit, retry, http]
+---
+name: database-connection-error
+problem_class: database_connection_error
+description: |
+  Cannot connect to database: ConnectionRefused, timeout, authentication
+  failed, or database server not running.
+solution: |
+  1. Verify database server is running: systemctl status postgresql/mysql
+  2. Check connection string/URI for typos
+  3. Verify host/port is reachable: telnet <host> <port>
+  4. Check firewall rules allow connection to DB port
+  5. Verify credentials: password, username, database name
+  6. Confirm database exists: list DBs with psql -l / mysql -e SHOW DATABASES
+  7. Check connection pool exhaustion if using a pooler
+source_url: https://docs.python.org/3/library/sqlite3.html
+tier: SEED
+tags: [database, connection, postgres, mysql, sqlite]
+---
+name: memory-leak
+problem_class: memory_leak
+description: |
+  Process memory grows unbounded: RAM usage increases over time, OOM kills,
+  system becomes unresponsive. Usually from unclosed resources or caching.
+solution: |
+  1. Confirm leak with repeated memory measurements over time
+  2. Profile with: memory_profiler, objgraph, or tracemalloc
+  3. Check for unclosed file handles or DB connections
+  4. Look for unbounded caches or growing lists/dicts
+  5. Check for circular references preventing GC
+  6. Verify iterators/generators are being consumed
+  7. Use weakref for cache entries where appropriate
+source_url: https://docs.python.org/3/library/tracemalloc.html
+tier: SEED
+tags: [memory, leak, profiling, performance]
+---
+name: authentication-failure
+problem_class: authentication_failure
+description: |
+  Login/auth failed: wrong credentials, token expired, session invalid,
+  401/403 responses from API or web service.
+solution: |
+  1. Verify credentials are correct (no typos in username/password)
+  2. Check if token has expired: decode JWT or check expiry field
+  3. Verify auth headers are being sent correctly
+  4. Check CORS settings if browser-based
+  5. Confirm user account is active/not locked
+  6. Verify API key environment variable is set correctly
+  7. Check if 2FA/MFA is required but not provided
+source_url: https://developer.mozilla.org/en-US/docs/Web/HTTP/Status/401
+tier: SEED
+tags: [auth, login, token, jwt, security]
+---
+name: ssl-certificate-error
+problem_class: ssl_certificate_error
+description: |
+  SSL/TLS certificate error: certificate verify failed, self-signed cert,
+  expired certificate, hostname mismatch.
+solution: |
+  1. Verify certificate hasn't expired: openssl x509 -in cert.pem -noout -dates
+  2. Check hostname matches CN/SAN: openssl x509 -in cert.pem -noout -subject
+  3. For self-signed: add cert to trusted store or disable verify (dev only)
+  4. Update CA bundle: pip install --upgrade certifi
+  5. Check proxy is intercepting HTTPS traffic
+  6. Verify certificate chain is complete
+  7. Use ssl.get_server_certificate to debug
+source_url: https://docs.python.org/3/library/ssl.html
+tier: SEED
+tags: [ssl, tls, certificate, https, security]
+---
+name: dependency-version-conflict
+problem_class: dependency_version_conflict
+description: |
+  Python package version conflict: incompatible versions, broken requirements,
+  pip install fails due to conflicting dependencies.
+solution: |
+  1. Run: pip check to identify conflicting packages
+  2. Check requirements.txt / setup.py for version specifiers
+  3. Use pip-compile for deterministic builds
+  4. Pin compatible versions: package>=1.0,<2.0
+  5. Check if using the correct pip for your Python version
+  6. Try in a fresh virtualenv to isolate the issue
+  7. Use pipdeptree to visualize dependency tree
+source_url: https://pip.pypa.io/en/latest/user_guide/#fixing-conflicting-dependencies
+tier: SEED
+tags: [python, dependencies, version, pip, conflict]
+---
+name: file-permission-error
+problem_class: file_permission_error
+description: |
+  Permission denied errors reading/writing files or directories. Unix file
+  mode restrictions or Windows ACL issues.
+solution: |
+  1. Check file permissions: ls -la <path>
+  2. Verify ownership: chown user:group <path>
+  3. For directories, ensure execute bit is set for traversal
+  4. Check if running as correct user
+  5. Use chmod to fix: chmod 644 (files), chmod 755 (dirs)
+  6. Check ACLs on Windows: icacls <path>
+  7. Verify parent directory is writable
+source_url: https://docs.python.org/3/library/stat.html
+tier: SEED
+tags: [file, permissions, linux, unix, error]
+---
+name: environment-variable-missing
+problem_class: environment_variable_missing
+description: |
+  Environment variable not set: KeyError, None returned, or application
+  crashes on startup due to missing ENV var.
+solution: |
+  1. Check if var is set: echo $VAR_NAME (Linux) or echo %VAR_NAME% (Windows)
+  2. List all env vars: env | grep <pattern>
+  3. Add to .env file or export in shell profile
+  4. For Docker: add -e VAR_NAME=value or .env file
+  5. Provide sensible defaults where possible
+  6. Document required environment variables clearly
+  7. Use os.environ.get() with defaults to prevent crashes
+source_url: https://docs.python.org/3/library/os.html#os.environ
+tier: SEED
+tags: [environment, env, variables, configuration]
+---
+name: json-parse-error
+problem_class: json_parse_error
+description: |
+  JSON parsing fails: JSONDecodeError, unexpected token, malformed JSON
+  from API response or config file.
+solution: |
+  1. Validate JSON: python -m json.tool < file.json
+  2. Check for trailing commas or single quotes (use double quotes)
+  3. Verify encoding is UTF-8, not latin-1 or ASCII
+  4. Add error handling: try/except json.JSONDecodeError
+  5. Print the raw response text to identify the issue
+  6. Use json.loads() incrementally: json.JSONDecoder
+  7. Check for BOM characters at file start
+source_url: https://docs.python.org/3/library/json.html
+tier: SEED
+tags: [json, parsing, api, configuration, error]
+---
+name: async-timeout-error
+problem_class: async_timeout_error
+description: |
+  Async operation times out: asyncio.TimeoutError, aiohttp.ClientTimeout,
+  or requests timeout waiting for response.
+solution: |
+  1. Check network connectivity: ping <host>
+  2. Increase timeout: timeout=30 (aiohttp), requests.get(timeout=30)
+  3. Set explicit loop: asyncio.run(coro(), loop=loop)
+  4. Use asyncio.wait_for() with try/except asyncio.TimeoutError
+  5. Check if server is overloaded or rate-limiting
+  6. Verify DNS resolution: await aiohttp.get('http://<ip>')
+  7. Add retry logic with backoff for transient timeouts
+source_url: https://docs.python.org/3/library/asyncio.html
+tier: SEED
+tags: [async, timeout, asyncio, network, error]
+---
+name: typescript-type-error
+problem_class: typescript_type_error
+description: |
+  TypeScript type mismatch: 'any' type issues, interface mismatches, type
+  arguments incompatible, spread of incompatible types.
+solution: |
+  1. Enable strict mode in tsconfig.json: "strict": true
+  2. Identify the exact type expected vs received
+  3. Use explicit type annotations instead of 'any'
+  4. Define interfaces/type aliases for complex objects
+  5. Use type guards: if (obj is Foo) { ... }
+  6. Check generic type parameters are consistent
+  7. Run tsc with --noImplicitAny to catch all 'any' inferred types
+  8. Use satisfies operator to validate without widening
+source_url: https://www.typescriptlang.org/docs/handbook/2/everyday-types.html
+tier: SEED
+tags: [typescript, type-error, type-safety, microsoft]
+---
+name: typescript-module-not-found
+problem_class: typescript_module_not_found
+description: |
+  Cannot find module, moduleResolution errors, path mappings incorrect,
+  or package.json exports field misconfigured.
+solution: |
+  1. Check module exists in node_modules or dependency path
+  2. Verify tsconfig paths or baseUrl is configured correctly
+  3. Check package.json type field and exports field
+  4. Ensure moduleResolution mode matches: node16, nodenext, bundler
+  5. Add .js extension for relative imports in ESM
+  6. Check for case-sensitive path mismatches (Linux only)
+  7. Run: npm ls <package> to check actual installed version
+  8. Try deleting node_modules and reinstalling
+source_url: https://www.typescriptlang.org/docs/handbook/modules/appendices/module-resolution.html
+tier: SEED
+tags: [typescript, module, import, resolution, node]
+---
+name: rust-borrow-checker
+problem_class: rust_borrow_checker
+description: |
+  Cannot borrow as mutable, ownership conflicts, multiple mutable references,
+  borrowed value moved out, E0501/E0502/E0505 errors.
+solution: |
+  1. Read the specific borrow checker error code (E0501-E0505)
+  2. Understand ownership: each value has exactly one owner
+  3. Use Clone or derive(Clone) when sharing is needed
+  4. Use Rc<RefCell<T>> for multiple mutable references
+  5. Use slices (&[T]) instead of borrowing full collection
+  6. Restructure code to have clear ownership scopes
+  7. Use Cow<'a, T> for lazy cloning
+  8. Consider using a linter: rust-analyzer diagnostic hints
+source_url: https://doc.rust-lang.org/book/ch04-00-understanding-ownership.html
+tier: SEED
+tags: [rust, borrow-checker, ownership, memory, lifetime]
+---
+name: rust-lifetime-error
+problem_class: rust_lifetime_error
+description: |
+  Lifetime specifiers missing, 'static lifetime issues, lifetime mismatch
+  between references, E0101/E0102/E0515 errors.
+solution: |
+  1. Identify which lifetimes the compiler cannot infer
+  2. Add explicit lifetime annotations: fn foo<'a>(...)
+  3. Use 'static only when data truly lives for program duration
+  4. Apply lifetime elision rules: input lifetimes become output lifetimes
+  5. Use trait bounds instead of explicit lifetimes where possible
+  6. Check if 'static is needed vs owned data (String, Vec<T>)
+  7. Use 'a: 'b syntax for lifetime subtyping constraints
+  8. Run: rustc --edition 2021 to get better error messages
+source_url: https://doc.rust-lang.org/book/ch10-03-lifetime-annotation-syntax.html
+tier: SEED
+tags: [rust, lifetime, borrowing, ownership, memory]
+---
+name: docker-container-networking
+problem_class: docker_container_networking
+description: |
+  Container cannot reach host services, port mapping not working,
+  DNS resolution fails inside container, network isolation issues.
+solution: |
+  1. Verify port is published: docker ps, check PORTS column
+  2. Use host.docker.internal to reach host from container
+  3. For Linux: add --network=host or create user-network
+  4. Check container firewall: iptables -L inside container
+  5. Verify service on host is listening on 0.0.0.0 not 127.0.0.1
+  6. Use: docker inspect <container> to check NetworkSettings
+  7. Test connectivity: docker exec <container> curl <host-ip>:<port>
+  8. Check docker-compose networks are correctly defined
+source_url: https://docs.docker.com/compose/networking/
+tier: SEED
+tags: [docker, networking, container, port, dns]
+---
+name: github-actions-failure
+problem_class: github_actions_failure
+description: |
+  Workflow YAML syntax errors, secret not found, permission denied,
+  step fails, action not found, workflow_dispatch errors.
+solution: |
+  1. Validate YAML syntax: yamllint .github/workflows/
+  2. Check secret names match GitHub repo Secrets exactly
+  3. Verify GITHUB_TOKEN permissions for the job
+  4. Use actions/checkout@v4, avoid deprecated action versions
+  5. Check if action exists: search GitHub Marketplace
+  6. Use if: success() / if: failure() to control step execution
+  7. Enable debug logging: run: echo "::debug::message"
+  8. View workflow run logs at github.com/<owner>/<repo>/actions
+source_url: https://docs.github.com/en/actions/using-workflows/workflow-syntax-for-github-actions
+tier: SEED
+tags: [github, ci-cd, actions, workflow, yaml]
+---
+name: github-actions-node-version
+problem_class: github_actions_node_version
+description: |
+  Node version mismatch in CI, deprecated actions, engine version conflict,
+  .nvmrc ignored, wrong npm version used.
+solution: |
+  1. Create .nvmrc or .node-version file in repo root
+  2. Use actions/setup-node@v4 with correct version/range
+  3. Pin Node major version: node-version: '20'
+  4. Use .npmrc with engine-strict: true cautiously
+  5. Run npm ci instead of npm install for CI reproducibility
+  6. Check engines field in package.json
+  7. Use actions/setup-node@v4 cache: 'npm' for caching
+  8. Verify nvmrc is being read: run: nvmrc && echo "ok"
+source_url: https://github.com/actions/setup-node/blob/main/docs/advanced-usage.md
+tier: SEED
+tags: [github, node, npm, ci-cd, version]
+---
+name: oauth-token-expired
+problem_class: oauth_token_expired
+description: |
+  JWT expired, refresh token flow broken, 401 on API calls after short time,
+  token not being refreshed, expired access_token errors.
+solution: |
+  1. Check token expiry: decode JWT payload at jwt.io
+  2. Implement token refresh before making API calls
+  3. Store refresh token securely (httpOnly cookie or secure storage)
+  4. Use axios interceptor to catch 401 and refresh token
+  5. Check token expiry time vs time since last use (clock skew)
+  6. Verify refresh token hasn't been revoked
+  7. Set appropriate expiration: short for access, longer for refresh
+  8. Implement token rotation for refresh tokens if supported
+source_url: https://auth0.com/docs/secure/tokens/refresh-tokens
+tier: SEED
+tags: [oauth, jwt, token, auth, api, security]
+---
+name: database-migration-conflict
+problem_class: database_migration_conflict
+description: |
+  Alembic/Flyway migration conflict, duplicate migration version numbers,
+  dependency graph issues, baseline migration errors.
+solution: |
+  1. List migrations: alembic history, flyway info
+  2. Check for duplicate version identifiers
+  3. For Alembic: alembic upgrade <parent-version> to reset branch point
+  4. Mark migration as baseline: alembic stamp <migration-hash>
+  5. Resolve dependency chains: depends_on parameter in migration
+  6. Never modify an already-applied migration file
+  7. Use --autogenerate to regenerate migration after model change
+  8. Check migration table: SELECT * FROM alembic_version ORDER BY version_num DESC
+source_url: https://alembic.sqlalchemy.org/en/latest/
+tier: SEED
+tags: [database, migration, alembic, flyway, schema]
+---
+name: npm-dependency-conflict
+problem_class: npm_dependency_conflict
+description: |
+  Peer dependency conflict, npm install fails, version resolution failure,
+  ERESOLVE overrides, npm ci produces different tree.
+solution: |
+  1. Run: npm ls to visualize the dependency tree
+  2. Check peer dependency errors: npm install --legacy-peer-deps
+  3. Use npm why <package> to see why a version is installed
+  4. Clean install: rm -rf node_modules package-lock.json && npm install
+  5. Use overrides in package.json to force a compatible version
+  6. Check npm version: npm --version, try updating npm
+  7. Use npm dedupe to flatten the dependency tree
+  8. Pin exact versions in package.json for reproducible builds
+source_url: https://docs.npmjs.com/cli/v10/commands/npm-install
+tier: SEED
+tags: [npm, node, dependencies, package, conflict]
+---
+name: python-virtual-env
+problem_class: python_virtual_env
+description: |
+  Wrong Python version active, venv not activated, pip installs globally,
+  ModuleNotFoundError despite package installed, pyenv version mismatch.
+solution: |
+  1. Check Python in use: which python, python --version
+  2. Activate venv: source venv/bin/activate (Linux) or venv\Scripts\activate (Windows)
+  3. Verify venv is active: prompt should show (venv)
+  4. Use pyenv to manage Python versions: pyenv versions
+  5. Set local Python: pyenv local 3.11.5
+  6. Install packages with python -m pip install <package>
+  7. Check site-packages: python -c "import site; print(site.getsitepackages())"
+  8. Recreate venv: python -m venv venv --clear
+source_url: https://docs.python.org/3/library/venv.html
+tier: SEED
+tags: [python, virtualenv, venv, pyenv, environment]
+---
+name: cors-error
+problem_class: cors_error
+description: |
+  CORS policy blocked, Access-Control-Allow-Origin missing, preflight OPTIONS
+  request failing, CORS error in browser console.
+solution: |
+  1. Identify the blocked origin from browser console error
+  2. Configure server to send Access-Control-Allow-Origin header
+  3. For Express: app.use(cors({ origin: 'https://your-domain.com' }))
+  4. For Flask: @cross_origin(origins='https://your-domain.com')
+  5. Handle preflight: allow methods GET,POST,PUT,DELETE,OPTIONS
+  6. Allow credentials if needed: Access-Control-Allow-Credentials: true
+  7. Set Access-Control-Allow-Headers for custom headers
+  8. Check proxy is not stripping CORS headers (nginx, Cloudflare)
+source_url: https://developer.mozilla.org/en-US/docs/Web/HTTP/CORS
+tier: SEED
+tags: [cors, http, headers, api, browser, security]
+---
+name: async-event-loop
+problem_class: async_event_loop
+description: |
+  Event loop is closed, cannot run coroutine, RuntimeError in async context,
+  asyncio.run() called while event loop is running, async generator not consumed.
+solution: |
+  1. Never nest asyncio.run() calls — use await directly instead
+  2. Store reference to running loop: loop = asyncio.get_running_loop()
+  3. For nested calls: use asyncio.create_task() instead of run()
+  4. Consume async generators: async for item in async_generator
+  5. In Jupyter: use asyncio.get_event_loop() instead of asyncio.run()
+  6. Check for await missing on async function call
+  7. Use asyncio.ensure_future() for fire-and-forget coroutines
+  8. Call loop.close() only after all tasks complete
+source_url: https://docs.python.org/3/library/asyncio-eventloop.html
+tier: SEED
+tags: [async, event-loop, asyncio, python, concurrency]
+---
+name: memory-out-of-memory
+problem_class: memory_out_of_memory
+description: |
+  OOM killed: process killed by kernel, heap size exceeded, memory leak
+  in long-running process, Docker container memory limit reached.
+solution: |
+  1. Confirm OOM: dmesg | grep -i "out of memory", check exit code 137
+  2. For Docker: increase --memory limit or remove limit for dev
+  3. Profile memory: tracemalloc, memory_profiler, pympler
+  4. Check for large data structures held in global scope
+  5. Stream data instead of loading all into memory
+  6. Use generators/iterators for large file processing
+  7. For subprocess: limit buffer sizes or use streaming
+  8. Set GOGC or --max-old-space-size (Node) to tune garbage collection
+source_url: https://docs.python.org/3/library/tracemalloc.html
+tier: SEED
+tags: [memory, oom, heap, performance, process]
+---
+name: git-merge-conflict
+problem_class: git_merge_conflict
+description: |
+  Conflict markers in files, rebase conflict, cannot merge branches,
+  both modified same file, auto-merge failed.
+solution: |
+  1. Identify conflicting files: git status (shows "both modified:")
+  2. Open conflicting file and search for <<<<<<< HEAD
+  3. Choose or combine changes, remove conflict markers
+  4. For all conflicts: git checkout --ours/--theirs file to keep one version
+  5. After resolving: git add <file> then git commit or git rebase --continue
+  6. For rebase: git rebase --abort to cancel and start over
+  7. Use git mergetool or VS Code merge editor for visual resolution
+  8. Prevent: do git pull --rebase and resolve each commit
+source_url: https://git-scm.com/book/en/v2/Git-Branching-Basic-Branching-and-Merging
+tier: SEED
+tags: [git, merge, conflict, version-control, branch]
+---
+name: regex-catastrophic-backtracking
+problem_class: regex_catastrophic_backtracking
+description: |
+  Regex timeout, catastrophic backtracking, ReDoS attack vulnerability,
+  exponential time complexity on certain inputs.
+solution: |
+  1. Identify the problematic regex: test with long input strings
+  2. Use atomic groups or possessive quantifiers: (?=) or ++
+  3. Avoid nested quantifiers: (a+)+ or (a*b*)* pattern
+  4. Simplify regex: break into multiple smaller patterns
+  5. Use regex time limits if available (re module has no limit — consider regex module)
+  6. Test with: python -c "import re, time; s='a'*30; re.search(pattern,s); print(time.time()-t)"
+  7. Replace (.*) with ([^}]*) or non-greedy (.+?) where possible
+  8. Use finite-match patterns: {0,10} instead of * or +
+source_url: https://en.wikipedia.org/wiki/ReDoS
+tier: SEED
+tags: [regex, performance, security, backtracking, redos]
+---
+name: api-rate-limit
+problem_class: api_rate_limit
+description: |
+  API returns 429 Too Many Requests or rate limit exceeded. Client hitting
+  server-imposed request quotas, exponential backoff needed.
+solution: |
+  1. Read Retry-After header from 429 response
+  2. Implement exponential backoff: wait 2^n * base seconds
+  3. Add jitter to prevent thundering herd
+  4. Use rate-limiting library: tenacity, backoff
+  5. Cache responses to reduce redundant API calls
+  6. Batch requests where the API supports it
+  7. Check for concurrent requests that could be serialized
+source_url: https://developer.mozilla.org/en-US/docs/Web/HTTP/Status/429
+tier: SEED
+tags: [api, rate-limit, retry, http, 429]
+---
+name: ssl-certificate-error
+problem_class: ssl_certificate_error
+description: |
+  SSL/TLS certificate error: certificate verify failed, self-signed cert,
+  expired certificate, hostname mismatch, CA bundle issues.
+solution: |
+  1. Verify certificate hasn't expired: openssl x509 -in cert.pem -noout -dates
+  2. Check hostname matches CN/SAN: openssl x509 -in cert.pem -noout -subject
+  3. For self-signed: add cert to trusted store or disable verify (dev only)
+  4. Update CA bundle: pip install --upgrade certifi
+  5. Check proxy is intercepting HTTPS traffic
+  6. Verify certificate chain is complete
+  7. Use ssl.get_server_certificate to debug certificate issues
+source_url: https://docs.python.org/3/library/ssl.html
+tier: SEED
+tags: [ssl, tls, certificate, https, security]
+---
+name: file-encoding-error
+problem_class: file_encoding_error
+description: |
+  UnicodeDecodeError, encoding mismatch, BOM character at file start,
+  or wrong encoding specified when reading/writing text files.
+solution: |
+  1. Identify the file encoding: chardet <file> or file --mime-encoding <file>
+  2. Specify correct encoding when opening: open(path, encoding='utf-8')
+  3. Remove BOM: open(path, encoding='utf-8-sig') automatically strips UTF-8 BOM
+  4. Convert file encoding: iconv -f ISO-8859-1 -t UTF-8 input.txt > output.txt
+  5. Set default encoding in Python: PYTHONIOENCODING=utf-8
+  6. Check for encoding declarations in file (XML, HTML meta tags)
+  7. Use errors='ignore' or errors='replace' only as last resort
+source_url: https://docs.python.org/3/library/codecs.html#standard-encodings
+tier: SEED
+tags: [encoding, unicode, utf-8, bom, file, python]
+---
+name: port-already-in-use
+problem_class: port_already_in_use
+description: |
+  EADDRINUSE error, port already bound by another process, cannot bind to port,
+  address already in use when starting server.
+solution: |
+  1. Find process using port: lsof -i :<port> or ss -tlnp | grep <port>
+  2. Kill the process: kill -9 <PID>
+  3. Use SO_REUSEADDR: setsockopt(server_fd, SOL_SOCKET, SO_REUSEADDR, 1, 1)
+  4. Change to a different port if available
+  5. Check for multiple instances of the same server running
+  6. Verify no zombie processes holding the port
+  7. For Docker: expose different host port or use --network=host
+source_url: https://docs.python.org/3/library/socket.html#socket.socket.setsockopt
+tier: SEED
+tags: [network, port, socket, eaddrinuse, server, docker]
+---
+name: test-flaky-timing
+problem_class: test_flaky_timing
+description: |
+  Intermittent test failures, setTimeout race conditions, async test setup/teardown
+  issues, tests pass sometimes and fail others due to timing.
+solution: |
+  1. Increase test timeouts: jest --testTimeout=30000 or pytest timeout plugin
+  2. Use async test frameworks properly: await promises, async/await in test functions
+  3. Add explicit waits: await page.waitForSelector() or time.sleep() after actions
+  4. Mock timers: jest.useFakeTimers(), pytest-async timeout
+  5. Use retry mechanisms for flaky assertions with retry libraries
+  6. Isolate tests: ensure each test has its own setup/teardown
+  7. Check for shared state between tests causing interference
+  8. Run tests sequentially if parallel execution causes race conditions
+source_url: https://jestjs.io/docs/asynchronous
+tier: SEED
+tags: [testing, flaky, timing, async, jest, pytest, race-condition]
+---
+name: database-connection-refused
+problem_class: database_connection_refused
+description: |
+  Connection refused on database startup, wrong host/port combination,
+  database server not running, authentication failed.
+solution: |
+  1. Verify database server is running: systemctl status postgresql/mysql
+  2. Check connection string/URI for typos
+  3. Verify host/port is reachable: telnet <host> <port>
+  4. Check firewall rules allow connection to DB port
+  5. Verify credentials: password, username, database name
+  6. Confirm database exists: list DBs with psql -l / mysql -e SHOW DATABASES
+  7. Check connection pool exhaustion if using a pooler
+  8. Try localhost instead of 127.0.0.1 or vice versa
+source_url: https://docs.python.org/3/library/sqlite3.html
+tier: SEED
+tags: [database, connection, refused, postgres, mysql, sqlite]
+---
+name: python-virtual-env
+problem_class: python_virtual_env
+description: |
+  Wrong Python version active, venv not activated, pip installs globally,
+  ModuleNotFoundError despite package installed, pyenv version mismatch.
+solution: |
+  1. Check Python in use: which python, python --version
+  2. Activate venv: source venv/bin/activate (Linux) or venv\Scripts\activate (Windows)
+  3. Verify venv is active: prompt should show (venv)
+  4. Use pyenv to manage Python versions: pyenv versions
+  5. Set local Python: pyenv local 3.11.5
+  6. Install packages with python -m pip install <package>
+  7. Check site-packages: python -c "import site; print(site.getsitepackages())"
+  8. Recreate venv: python -m venv venv --clear
+source_url: https://docs.python.org/3/library/venv.html
+tier: SEED
+tags: [python, virtualenv, venv, pyenv, environment]
+---
+name: environment-variable-missing
+problem_class: environment_variable_missing
+description: |
+  Environment variable not set: KeyError, None returned, or application
+  crashes on startup due to missing ENV var.
+solution: |
+  1. Check if var is set: echo $VAR_NAME (Linux) or echo %VAR_NAME% (Windows)
+  2. List all env vars: env | grep <pattern>
+  3. Add to .env file or export in shell profile
+  4. For Docker: add -e VAR_NAME=value or .env file
+  5. Provide sensible defaults where possible
+  6. Document required environment variables clearly
+  7. Use os.environ.get() with defaults to prevent crashes
+source_url: https://docs.python.org/3/library/os.html#os.environ
+tier: SEED
+tags: [environment, env, variables, configuration, dotenv]
+---
+name: npm-dependency-conflict
+problem_class: npm_dependency_conflict
+description: |
+  Peer dependency conflict, npm install fails, version resolution failure,
+  ERESOLVE overrides, npm ci produces different tree.
+solution: |
+  1. Run: npm ls to visualize the dependency tree
+  2. Check peer dependency errors: npm install --legacy-peer-deps
+  3. Use npm why <package> to see why a version is installed
+  4. Clean install: rm -rf node_modules package-lock.json && npm install
+  5. Use overrides in package.json to force a compatible version
+  6. Check npm version: npm --version, try updating npm
+  7. Use npm dedupe to flatten the dependency tree
+  8. Pin exact versions in package.json for reproducible builds
+source_url: https://docs.npmjs.com/cli/v10/commands/npm-install
+tier: SEED
+tags: [npm, node, dependencies, package, conflict, peer-deps]

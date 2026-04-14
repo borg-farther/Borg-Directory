@@ -1,0 +1,11 @@
+Metadata-Version: 2.4
+Name: agent-borg
+Version: 3.3.1
+Summary: Collective memory MCP server for AI coding agents
+Requires-Python: >=3.10
+Requires-Dist: sentence-transformers>=2.2.0
+Requires-Dist: pyyaml>=6.0
+Provides-Extra: semantic
+Requires-Dist: sentence-transformers>=2.2.0; extra == "semantic"
+Requires-Dist: numpy>=1.24.0; extra == "semantic"
+Requires-Dist: scikit-learn>=1.3.0; extra == "semantic"

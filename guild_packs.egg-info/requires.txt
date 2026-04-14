@@ -1,0 +1,15 @@
+pyyaml>=6.0
+
+[all]
+guild-packs[crypto,dev,embeddings]
+
+[crypto]
+pynacl>=1.5.0
+
+[dev]
+pytest>=7.0
+pytest-cov>=4.0
+
+[embeddings]
+sentence-transformers>=2.2.0
+numpy>=1.24.0

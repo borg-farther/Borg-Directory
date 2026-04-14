@@ -1,0 +1,3 @@
+[console_scripts]
+guild-mcp = guild.integrations.mcp_server:main
+guildpacks = guild.cli:main

@@ -180,6 +180,25 @@ def generate_report_for_dir(borg_dir: Path) -> dict[str, Any]:
     # Load data
     store = AgentStore(db_path=str(borg_dir / "guild.db"))
     feedbacks = store.list_feedback(limit=10000)
+
+    # Also ingest yaml feedback files from guild/feedback/ (the actual Hermy output)
+    import yaml as _yaml
+    import os as _os; _fb_dir = Path(_os.environ.get('HOME', '/root')) / '.hermes' / 'guild' / 'feedback'
+    if _fb_dir.exists():
+        _loaded = 0
+        for _f in sorted(_fb_dir.glob('fb-*.yaml')):
+            try:
+                _d = _yaml.safe_load(_f.read_text())
+                if isinstance(_d, dict):
+                    _d.setdefault('type', 'feedback')
+                    if 'outcome' not in _d:
+                        _d['outcome'] = (_d.get('after') or {}).get('outcome', 'success')
+                    feedbacks.append(_d)
+                    _loaded += 1
+            except Exception:
+                pass
+        if _loaded:
+            print(f"  Loaded {_loaded} yaml feedback files from {_fb_dir}")
     telemetry = _load_telemetry(borg_dir)
 
     # Group by pack

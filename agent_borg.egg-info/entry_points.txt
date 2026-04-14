@@ -1,0 +1,4 @@
+[console_scripts]
+borg = borg.cli:main
+borg-doctor = borg.cli.doctor:run_doctor
+borg-install = borg.cli.install:main

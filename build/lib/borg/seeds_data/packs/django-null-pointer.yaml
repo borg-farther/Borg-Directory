@@ -1,0 +1,22 @@
+name: django-null-pointer
+problem_class: null_pointer_chain
+license: MIT
+description: |
+  Django template or view fails with "NoneType is not iterable" or
+  "'NoneType' object has no attribute".
+solution: |
+  Add null checks before accessing attributes or iterating.
+  Use default filters in templates: {{ value|default:""|safesequence }}
+  In views, validate objects exist before passing to template context.
+source_url: https://docs.djangoproject.com/en/stable/topics/templates/
+tier: SEED
+tags:
+  - django
+  - null
+  - template
+required_inputs:
+  - name: error_message
+    type: string
+escalation_rules:
+  - condition: "'NoneType' in error_message"
+    action: check which object is None and add null guard

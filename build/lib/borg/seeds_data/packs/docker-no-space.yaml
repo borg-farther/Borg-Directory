@@ -1,0 +1,25 @@
+name: docker-no-space
+problem_class: docker_no_space
+license: MIT
+description: |
+  Docker fails with "no space left on device" or "ENOSPC" error
+  when building images or running containers.
+solution: |
+  1. Clean up unused images: docker image prune -a
+  2. Clean up dangling images: docker image prune
+  3. Remove stopped containers: docker container prune
+  4. Clean up build cache: docker builder prune
+  5. Remove all unused volumes: docker volume prune
+  6. Check disk space: df -h
+source_url: https://docs.docker.com/config/pruning/
+tier: SEED
+tags:
+  - docker
+  - disk
+  - space
+required_inputs:
+  - name: error_message
+    type: string
+escalation_rules:
+  - condition: "'no space left' in error_message or 'ENOSPC' in error_message"
+    action: prune docker resources and clean up disk space
