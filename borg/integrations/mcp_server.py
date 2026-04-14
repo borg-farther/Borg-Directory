@@ -37,6 +37,9 @@ from borg.core.traces import TraceCapture, save_trace
 # Thread-safe session tracking via contextvars
 _current_session_id: contextvars.ContextVar[str] = contextvars.ContextVar('session_id', default='')
 _current_agent_id: contextvars.ContextVar[str] = contextvars.ContextVar('agent_id', default='unknown')
+_last_shown_trace_id: contextvars.ContextVar[Optional[str]] = contextvars.ContextVar(
+    '_last_shown_trace_id', default=None
+)
 
 # Global trace captures — one per session_id
 _trace_captures: Dict[str, TraceCapture] = {}
@@ -775,6 +778,41 @@ TOOLS: List[Dict[str, Any]] = [
             "required": ["action"],
         },
     },
+    {
+        "name": "borg_clusters",
+        "description": (
+            "Discover problem clusters in Borg's trace database. "
+            "Uses KMeans clustering when sklearn is available, keyword grouping as fallback. "
+            "Finds: common failure patterns, related error types, recurring problems. "
+            "Returns clusters with size, success/failure counts, root causes, and sample traces."
+        ),
+        "inputSchema": {
+            "type": "object",
+            "properties": {
+                "action": {
+                    "type": "string",
+                    "enum": ["discover", "detail", "by_technology"],
+                    "description": "'discover' finds problem clusters; 'detail' gets traces in a cluster; 'by_technology' groups by tech stack.",
+                    "default": "discover",
+                },
+                "cluster_id": {
+                    "type": "string",
+                    "description": "Cluster ID for 'detail' action (e.g. 'cluster_0' or 'tech:python').",
+                },
+                "n_clusters": {
+                    "type": "integer",
+                    "description": "Target number of clusters for 'discover' (default: 8).",
+                    "default": 8,
+                },
+                "min_trace_count": {
+                    "type": "integer",
+                    "description": "Minimum traces per cluster for 'discover' (default: 3).",
+                    "default": 3,
+                },
+            },
+            "required": ["action"],
+        },
+    },
 ]
 
 # ---------------------------------------------------------------------------
@@ -1295,13 +1333,53 @@ def borg_feedback(
             capture = _trace_captures.get(session_id_from_ctx)
             if capture is not None:
                 if capture.tool_calls > 5:
+                    # TASK 2: Extract error-driven task_description from tool call outputs
+                    import re
+                    error_pattern = re.compile(
+                        r'(\w+Error|\w+Exception|SyntaxError|TypeError|ValueError|ImportError|AttributeError)\s*[:\-]?\s*(.{10,60})',
+                        re.IGNORECASE
+                    )
+                    task_description = ''
+                    tool_calls = capture.calls
+                    for call in tool_calls[-3:]:
+                        output = str(call.get('result', ''))
+                        match = error_pattern.search(output)
+                        if match:
+                            task_description = f"{match.group(1)}: {match.group(2)}"
+                            break
+
+                    # TASK 1: Infer outcome from last 3 tool call outputs
+                    last_outputs = ' '.join(
+                        str(c.get('result', '')).lower() for c in tool_calls[-3:]
+                    )
+                    success_signals = ['ok:', 'passed', 'success', '0 failed', 'done', 'fixed', 'test passed']
+                    failure_signals = ['error:', 'traceback', 'exception', 'failed', 'fatal', 'assert']
+                    has_success = any(s in last_outputs for s in success_signals)
+                    has_failure = any(s in last_outputs for s in failure_signals)
+                    if has_failure:
+                        inferred_outcome = 'failure'
+                    elif has_success:
+                        inferred_outcome = 'success'
+                    else:
+                        inferred_outcome = 'unknown'
+
+                    # TASK 2: Set error-driven task_description on capture before extraction
+                    if task_description:
+                        capture.task = task_description
+
                     trace = capture.extract_trace(
-                        outcome="success",
+                        outcome=inferred_outcome,
                         root_cause=what_changed[:200] if what_changed else "",
                         approach_summary=where_to_reuse[:200] if where_to_reuse else ""
                     )
-                    save_trace(trace)
-                del _trace_captures[session_id_from_ctx]
+                    if not trace.get('root_cause') or len(str(trace.get('root_cause',''))) < 10:
+                        print('borg: skipped hollow trace')
+                        return
+                    trace_id = save_trace(trace)
+                    del _trace_captures[session_id_from_ctx]
+
+                    # TASK 3: Close feedback loop
+                    borg_feedback(session_id=session_id, success=(inferred_outcome == 'success'))
 
         import uuid
         import yaml
@@ -1400,6 +1478,18 @@ def borg_feedback(
             except Exception:
                 # Never let V3 recording break feedback generation
                 pass
+
+        # Close the trace feedback loop — record whether the shown trace helped
+        _shown_trace = _last_shown_trace_id.get()
+        if _shown_trace:
+            try:
+                from borg.core.trace_matcher import TraceMatcher
+                _success_val = success if success is not None else True
+                TraceMatcher().record_outcome(_shown_trace, helped=_success_val)
+                logger.debug("Trace %s helpfulness recorded: %s", _shown_trace, _success_val)
+            except Exception:
+                pass
+            _last_shown_trace_id.set(None)
 
         # Periodic maintenance: run every N invocations (counter persisted in V3 DB)
         try:
@@ -1521,335 +1611,451 @@ def borg_suggest(
         return json.dumps({"success": False, "error": str(e), "type": type(e).__name__})
 
 
-def borg_observe(task: str = "", context: str = "", context_dict: dict = None, project_path: str = None) -> str:
-    """Silent observation: return structural guidance for a task if a relevant pack exists.
 
-    Uses classify_task to extract keywords from the task description, then searches
-    borg packs using text mode (no embeddings needed). Returns a concise phase-by-phase
-    guide when a relevant pack is found. Returns empty string if no relevant pack found.
+def _format_action_output(conf_header, worked, failed):
+    """Format borg output: stop warning, action, confirmation, detail."""
+    out = []
+    # Stop warning - only if 2+ real failure traces
+    if len(failed) >= 2:
+        bad = next((t.get('approach_summary') or t.get('root_cause','') for t in failed if t.get('approach_summary') or t.get('root_cause')), None)
+        if bad:
+            out.append(f"STOP AVOID: {str(bad)[:100]}")
+            out.append(f"  {len(failed)} agents tried this. Most failed.")
+            out.append("")
+    # Primary action
+    if worked:
+        action = worked[0].get('approach_summary') or worked[0].get('root_cause','')
+        if action:
+            out.append(f"ACTION: {str(action)[:120]}")
+            out.append("")
+    # Confirmation from header
+    real_line = next((l for l in conf_header.split("\n") if "Real traces:" in l), "")
+    conf_line = next((l for l in conf_header.split("\n") if "BORG [" in l), "")
+    if conf_line:
+        out.append(f"CONFIRMED: {real_line.strip()} | {conf_line.strip()}")
+        out.append("")
+    out.append("-- DETAIL --")
+    out.append(conf_header)
+    # Assemble final output
+    full_output = "\n".join(out)
 
-    Args:
-        task: Task description (required).
-        context: Optional additional context (environment, language, constraints).
-        context_dict: Optional runtime context dict for conditional phase evaluation.
-            Keys: error_message (str), error_type (str), attempts (int),
-            has_recent_changes (bool), error_in_test (bool).
-        project_path: Optional path to the project for change awareness.
-            If provided and context contains an error, cross-references the error
-            with recently changed files.
+    # Short form: ACTION + CONFIDENCE only (~80 tokens) for pre_llm_call injection
+    if short:
+        action_line = next((l for l in out if l.startswith('ACTION:')), '')
+        conf_line = next((l for l in out if l.startswith('CONFIDENCE:')), '')
+        if action_line:
+            return action_line[:120] + ('\n' + conf_line[:80] if conf_line else '')
+        # Fallback: first 200 chars
+        return full_output[:200]
 
-    Returns:
-        A concise structural guide string, or empty string if no relevant pack found.
-    """
+    return full_output
+
+
+def _maybe_rebuild_index():
+    """Rebuild semantic index if traces DB is newer than index cache."""
     try:
-        if not task:
-            return ""
+        import os as _os
+        db_path = _os.path.expanduser(_os.environ.get('BORG_HOME', '~/.borg') + '/traces.db')
+        idx_path = _os.path.expanduser(_os.environ.get('BORG_HOME', '~/.borg') + '/embeddings_index.pkl')
+        if not _os.path.exists(idx_path):
+            return  # Will be built on first semantic search
+        db_mtime = _os.path.getmtime(db_path)
+        idx_mtime = _os.path.getmtime(idx_path)
+        if db_mtime > idx_mtime + 60:  # DB modified >60s after index
+            import threading as _th
+            from borg.core.embeddings import build_index_from_db
+            from borg.core.traces import TRACE_DB_PATH
+            def _rebuild():
+                try:
+                    build_index_from_db(TRACE_DB_PATH, force_rebuild=True)
+                    logger.info('borg: index auto-rebuilt')
+                except Exception as _e:
+                    logger.debug('borg: index rebuild failed: %s', _e)
+            _th.Thread(target=_rebuild, daemon=True).start()
+    except Exception:
+        pass
 
-        # Normalize context_dict
-        eval_context = context_dict or {}
+def borg_observe(task: str = "", context: str = "", context_dict: dict = None, project_path: str = None, short: bool = False) -> str:
+    _maybe_rebuild_index()
+    # Auto-seed collective traces on first use
+    try:
+        from borg.core.seed_loader import ensure_seeded
+        ensure_seeded()
+    except Exception:
+        pass
+    """Silent observation: return structured guidance for a task if a relevant pack exists.
 
-        # Import classify_task here to avoid circular imports and to allow
-        # the function to work even if the search module changes
+    Returns a string with:
+    - BORG [confidence] header with real/synthetic trace counts
+    - SYNTHESIS: 2-3 sentence mentor paragraph (on-demand LLM)
+    - DETAIL: WHAT WORKED, WHAT FAILED, PACK GUIDANCE
+
+    Returns empty string only if no guidance found at all.
+    """
+    import json as _json
+    from borg.core.trace_matcher import TraceMatcher
+    from borg.core.negative_traces import get_dead_end_patterns
+
+    _last_shown_trace_id.set(None)
+    output_parts = []
+    has_guidance = False
+    query = f"{task} {context}".strip()
+
+    # Detect technology for confidence stats
+    tech = _detect_technology(task, context)
+
+    # ---- Build detail text (raw bullets) first ----
+    raw_detail_parts = []
+
+    # Positive traces (semantic search first, then keyword fallback)
+    positive_traces = []
+    try:
+        from borg.core.embeddings import semantic_search
+        from borg.core.traces import TRACE_DB_PATH
+        positive_traces = semantic_search(
+            query=query, db_path=TRACE_DB_PATH,
+            top_k=3, min_similarity=0.7, outcome_filter='success'
+        )
+    except Exception:
+        pass
+    if not positive_traces:
         try:
-            from borg.core.search import classify_task, borg_search as _core_search
-        except ImportError:
-            return ""
+            positive_traces = TraceMatcher().find_relevant(task=task, error=context, top_k=3)
+        except Exception:
+            pass
 
-        # Extract search keywords from task description
-        # e.g. "fix TypeError in auth module" -> ["debug"]
-        # e.g. "pytest tests failing" -> ["test"]
-        search_terms = classify_task(task)
-        if not search_terms:
-            # Fallback keywords for common task types
-            search_terms = ["debug"]
-
-        # ITEM 3.3: Use V3 search path when context_dict provides rich error context.
-        # This properly forwards error_type to classify_task for better task classification.
-        all_matches = []
-        if context_dict and isinstance(context_dict, dict) and (context_dict.get("error_type") or context_dict.get("error_message")):
-            try:
-                v3 = _get_borg_v3()
-                keywords = _extract_keywords(task) if task else []
-                task_type = search_terms[0] if search_terms else ""
-                task_context = {
-                    "task_type": task_type,
-                    "keywords": keywords,
-                    "error_type": context_dict.get("error_type", ""),
-                    "error_message": context_dict.get("error_message", ""),
-                    "attempts": context_dict.get("attempts", 0),
-                }
-                v3_results = v3.search(task, task_context=task_context)
-                if v3_results:
-                    all_matches = v3_results
-            except Exception:
-                pass  # Fall back to V2 search below
-
-        # V2 search fallback (or if no rich context available)
-        if not all_matches:
-            for term in search_terms:
-                search_result = _core_search(term, mode="text")
-                try:
-                    parsed = json.loads(search_result)
-                    if parsed.get("success") and parsed.get("matches"):
-                        all_matches.extend(parsed["matches"])
-                except (json.JSONDecodeError, TypeError):
-                    continue
-
-        if not all_matches:
-            return ""
-
-        # Deduplicate by name, preferring higher confidence
-        seen_names: set = set()
-        unique_matches: list = []
-        for match in all_matches:
-            name = match.get("name", "")
-            if name and name not in seen_names:
-                seen_names.add(name)
-                unique_matches.append(match)
-
-        if not unique_matches:
-            return ""
-
-        # Pick the best match (prefer "tested" confidence, then any non-none tier)
-        best_match = None
-        for match in unique_matches:
-            tier = match.get("tier", "unknown")
-            confidence = match.get("confidence", "")
-            if tier not in ("none", "") and best_match is None:
-                best_match = match
-            if confidence == "tested" and best_match is not match:
-                # Prefer tested packs
-                best_match = match
-
-        if best_match is None:
-            return ""
-
-        pack_name = best_match.get("name", best_match.get("id", ""))
-
-        # ---------------------------------------------------------------------
-        # 1. FIND THE BEST LOCAL PACK: Scan ALL local packs for the richest
-        # match. Prefer packs with start_signals and conditions over plain ones.
-        # This overrides the search result if a better local pack exists.
-        # ---------------------------------------------------------------------
-        import yaml
-        HERMES_HOME = Path(os.getenv("HERMES_HOME", Path.home() / ".hermes"))
-        guild_dir = HERMES_HOME / "guild"
-        pack_name = best_match.get("name", "")
-        
-        full_pack = None
-        best_pack_score = -1
-        if guild_dir.exists():
-            for pack_yaml in guild_dir.glob("*/pack.yaml"):
-                try:
-                    candidate = yaml.safe_load(pack_yaml.read_text(encoding="utf-8"))
-                    if not isinstance(candidate, dict):
-                        continue
-                    candidate_id = candidate.get("id", "")
-                    candidate_name = candidate_id.split("/")[-1]
-                    problem_class_str = str(candidate.get("problem_class", "")).lower()
-                    dir_name = pack_yaml.parent.name.lower()
-                    
-                    # Score: does this pack match the search terms?
-                    score = 0
-                    matched = False
-                    for term in search_terms:
-                        term_l = term.lower()
-                        if term_l in candidate_name or term_l in dir_name or term_l in problem_class_str:
-                            matched = True
-                            score += 10
-                    
-                    # Bonus: packs with start_signals and conditions are richer
-                    if candidate.get("start_signals"):
-                        score += 20  # strongly prefer packs with signals
-                    if any(p.get("skip_if") for p in candidate.get("phases", []) if isinstance(p, dict)):
-                        score += 10
-                    # Prefer clean dir names
-                    if "guild:--" not in dir_name and "converted" not in dir_name:
-                        score += 5
-                    
-                    if matched and score > best_pack_score:
-                        full_pack = candidate
-                        best_pack_score = score
-                        pack_name = candidate_name or pack_yaml.parent.name
-                except Exception:
-                    continue
-
-        # Use local pack data if available, otherwise fall back to search metadata
-        if full_pack and isinstance(full_pack, dict):
-            problem_class = full_pack.get("problem_class", best_match.get("problem_class", ""))
-            phases_data = full_pack.get("phases", best_match.get("phases", []))
-            anti_patterns = full_pack.get("anti_patterns", best_match.get("anti_patterns", []))
-            checkpoint = full_pack.get("checkpoint", best_match.get("checkpoint", ""))
-            start_signals = full_pack.get("start_signals", [])
-            # Prefer local pack confidence if available
-            local_confidence = full_pack.get("provenance", {}).get("confidence") if full_pack.get("provenance") else None
-            confidence = local_confidence or best_match.get("confidence", "unknown")
-        else:
-            problem_class = best_match.get("problem_class", "")
-            phases_data = best_match.get("phases", [])
-            anti_patterns = best_match.get("anti_patterns", [])
-            checkpoint = best_match.get("checkpoint", "")
-            start_signals = best_match.get("start_signals", [])
-            confidence = best_match.get("confidence", "unknown")
-
-        # Build condensed guide with human-visible attribution
-        lines = []
-        lines.append(f"🧠 Borg found a proven approach: **{pack_name}** (confidence: {confidence})")
-        lines.append(f"This approach has been tested across multiple agents. Telling the user:")
-        lines.append(f"\"Using a community-proven {confidence} approach for this type of task.\"")
-        lines.append("")
-        lines.append(f"For this type of task, follow this structure:")
-
-        # Check for matching start signals based on error context
-        if start_signals and context:
-            from borg.core.signals import match_start_signal
-            matched_signal = match_start_signal(start_signals, context)
-            if matched_signal:
-                start_here = matched_signal.get("start_here", [])
-                avoid = matched_signal.get("avoid", [])
-                reasoning = matched_signal.get("reasoning", "")
-                if start_here:
-                    lines.append("")
-                    lines.append(f"🎯 Start here: {', '.join(start_here)}")
-                if avoid:
-                    lines.append(f"⚠️ Avoid: {', '.join(avoid)}")
-                if reasoning:
-                    lines.append(f"Why: {reasoning}")
-
-        # Check failure memory and add collective intelligence warnings
-        if context:
-            try:
-                from borg.core.failure_memory import FailureMemory
-                fm = FailureMemory()
-                memory = fm.recall(context)
-                if memory and (memory.get("wrong_approaches") or memory.get("correct_approaches")):
-                    lines.append("")
-                    wrong = memory.get("wrong_approaches", [])
-                    correct = memory.get("correct_approaches", [])
-                    if wrong:
-                        top_wrong = wrong[0]
-                        lines.append(
-                            f"⚠️ Other agents tried: {top_wrong.get('approach', 'unknown')} "
-                            f"and failed ({top_wrong.get('failure_count', 0)} times). "
-                            f"Try a different approach."
-                        )
-                    if correct:
-                        top_correct = correct[0]
-                        lines.append(
-                            f"✅ Instead, try: {top_correct.get('approach', 'unknown')} "
-                            f"(succeeded {top_correct.get('success_count', 0)} times)."
-                        )
-            except Exception:
-                # Never let failure memory break observe
-                pass
-
-        if phases_data:
-            lines.append("Phases:")
-            if isinstance(phases_data, list):
-                # Import conditions functions once, before filtering
-                from borg.core.conditions import (
-                    evaluate_skip_conditions,
-                    evaluate_inject_conditions,
-                    evaluate_context_prompts,
+    #  Dead-end intent override 
+    # If agent explicitly mentions a known dead-end in their query,
+    # force a STOP warning as the lead result regardless of semantic rank
+    try:
+        _dead_ends_detected = _detect_dead_end_intent(task)
+    except NameError:
+        _dead_ends_detected = []
+    if _dead_ends_detected:
+        try:
+            from borg.core.retrieval import semantic_search as _ss
+            for _de in _dead_ends_detected:
+                _stop_hits = _ss(
+                    query=_de['keyword'] + ' permission denied',
+                    db_path=TRACE_DB_PATH, top_k=5,
+                    min_similarity=0.2, outcome_filter='failure'
                 )
+                if _stop_hits:
+                    # Found a matching STOP trace  add it to front of positive_traces
+                    # so it appears in the "WHAT FAILED" section prominently
+                    _stop_t = _stop_hits[0]
+                    _stop_t['_forced_stop'] = True
+                    positive_traces = [_stop_t] + positive_traces
+                    break
+        except Exception:
+            pass
 
-                # Filter phases BEFORE rendering — skip_if should REMOVE phases, not just mark them
-                filtered_phases = []
-                for phase in phases_data:
-                    if isinstance(phase, dict):
-                        should_skip, skip_reason = evaluate_skip_conditions(phase, eval_context)
-                        if not should_skip:
-                            filtered_phases.append(phase)
-                    else:
-                        # String phases pass through unchanged
-                        filtered_phases.append(phase)
-
-                # Now iterate over FILTERED phases (skipped ones never appear)
-                for i, phase in enumerate(filtered_phases, 1):
-                    if isinstance(phase, dict):
-                        phase_name = phase.get("name", f"phase-{i}")
-                        phase_desc = phase.get("description", "")
-
-                        lines.append(f"  Phase {i}: {phase_name} — {phase_desc}")
-
-                        # Evaluate inject_if and append messages
-                        inject_messages = evaluate_inject_conditions(phase, eval_context)
-                        for msg in inject_messages:
-                            lines.append(f"    → {msg}")
-
-                        # Evaluate context_prompts and append prompts
-                        context_prompts = evaluate_context_prompts(phase, eval_context)
-                        for cp in context_prompts:
-                            lines.append(f"    📌 {cp}")
-                    elif isinstance(phase, str):
-                        lines.append(f"  Phase {i}: {phase}")
-            elif isinstance(phases_data, int):
-                # Just a count — show phase names if available
-                phase_names = best_match.get("phase_names", [])
-                if phase_names:
-                    for i, name in enumerate(phase_names[:8], 1):  # Limit to 8 phases
-                        lines.append(f"  Phase {i}: {name}")
-                else:
-                    lines.append(f"  ({phases_data} phases — run guild_try for full details)")
-
-        if anti_patterns:
-            if isinstance(anti_patterns, list):
-                anti_str = "; ".join(str(a) for a in anti_patterns)
-            else:
-                anti_str = str(anti_patterns)
-            lines.append(f"Key anti-patterns to avoid: {anti_str}")
-
-        if checkpoint:
-            lines.append(f"Checkpoint before fixing: {checkpoint}")
-
-        # Extract error_message from context for TraceMatcher lookup
-        error_msg = ""
-        if context_dict and isinstance(context_dict, dict):
-            error_msg = context_dict.get("error_message", "")
-        
-        # Use TraceMatcher to find relevant prior traces
-        if task:
+    if positive_traces:
+        best = positive_traces[0]
+        trace_id = best.get('id', '')
+        if trace_id:
+            _last_shown_trace_id.set(trace_id)
             try:
-                from borg.core.trace_matcher import TraceMatcher
-                matcher = TraceMatcher()
-                relevant_traces = matcher.find_relevant(task, error=error_msg, top_k=2)
-                if relevant_traces:
-                    lines.append("")
-                    lines.append("📜 Prior investigations:")
-                    for trace in relevant_traces:
-                        trace_info = matcher.format_for_agent(trace)
-                        if trace_info:
-                            lines.append(f"  • {trace_info}")
+                TraceMatcher().record_shown(trace_id)
             except Exception:
-                pass  # Never let TraceMatcher break observe
-
-        # Change awareness: cross-reference error with recent changes
-        if project_path and context:
-            try:
-                from borg.core.changes import detect_recent_changes, cross_reference_error
-                changes = detect_recent_changes(project_path=project_path, hours=24)
-                if changes.get('is_git_repo'):
-                    note = cross_reference_error(changes, context)
-                    if note:
-                        lines.append(f"\n📝 Note: {note}")
-            except Exception:
-                # Don't fail on change awareness errors
                 pass
+        section = [f"WHAT WORKED ({len(positive_traces)} prior session{'s' if len(positive_traces)>1 else ''})"]
+        if best.get('root_cause', '').strip():
+            section.append(f"   Root cause: {best['root_cause'][:300]}")
+        if best.get('approach_summary', '').strip():
+            section.append(f"   Approach: {best['approach_summary'][:300]}")
+        causal = best.get('causal_intervention', '')
+        if causal:
+            section.append(f"   → What fixed it: {causal}")
+        tool_seq = best.get('tool_sequence', [])
+        if isinstance(tool_seq, str):
+            try:
+                tool_seq = _json.loads(tool_seq)
+            except Exception:
+                tool_seq = []
+        if tool_seq:
+            section.append(f"   Tool sequence: {' → '.join(tool_seq[:4])}")
+        sim = best.get('similarity', 0)
+        if sim > 0:
+            section.append(f"   Confidence: {sim:.0%} semantic match")
+        raw_detail_parts.append('\n'.join(section))
+        has_guidance = True
 
-        guidance = "\n".join(lines)
-        return json.dumps({
-            "success": True,
-            "observed": True,
-            "guidance": guidance,
-        })
-
-    except (KeyboardInterrupt, SystemExit):
-        raise
+    # Negative traces
+    try:
+        dead_ends = get_dead_end_patterns(task=task, error=context)
+        if dead_ends.get('dead_ends'):
+            section = [f"WHAT FAILED ({dead_ends['total_failure_sessions']} prior sessions)"]
+            section.append("   Skip these approaches:")
+            for de in dead_ends['dead_ends']:
+                section.append(f"   • {de['count']} agent{'s' if de['count']>1 else ''} tried: {de['approach'][:150]}")
+                if de.get('root_cause'):
+                    section.append(f"     Why it failed: {de['root_cause'][:100]}")
+            raw_detail_parts.append('\n'.join(section))
+            has_guidance = True
     except Exception as e:
-        # Fail silently — guild_observe should never break an agent's flow
-        # But still return valid JSON so the MCP transport is not broken
-        return json.dumps({"success": True, "observed": False, "guidance": ""})
+        logger.debug(f"borg_observe: negative traces failed: {e}")
 
+    # Pack guidance
+    try:
+        from borg.core.search import borg_search
+        search_result = _json.loads(borg_search(task[:100]))
+        pack_matches_all = [m for m in search_result.get('matches', []) if m.get('type') == 'pack' or m.get('source') == 'seed']
+        # Filter packs to same technology domain  avoid cross-domain contamination
+        pack_matches = [m for m in pack_matches_all if not tech or
+                       tech in str(m.get('technology', '')).lower() or
+                       tech in str(m.get('name', '')).lower() or
+                       tech in str(m.get('solution', '')).lower()[:100]]
+        if not pack_matches:  # fall back to all if tech filter eliminates everything
+            pack_matches = pack_matches_all
+        if pack_matches:
+            best_pack = pack_matches[0]
+            solution = best_pack.get('solution', '').strip()
+            if solution:
+                section = [f"PACK GUIDANCE ({best_pack.get('name', 'unknown')})"]
+                section.append(solution[:400])
+                raw_detail_parts.append('\n'.join(section))
+                has_guidance = True
+    except Exception as e:
+        logger.debug(f"borg_observe: pack guidance failed: {e}")
+
+    if not has_guidance:
+        tech_display = tech or 'this domain'
+        return (
+            f"BORG: No collective data for {tech_display} yet  proceeding without guidance.\n"
+            f"After resolving this issue: call borg_rate(helpful=True) to contribute.\n"
+            f"Your session will seed guidance for future agents."
+        )
+
+    # ---- Build confidence header ----
+    raw_detail_text = '\n'.join(raw_detail_parts)
+    header = _build_confidence_header(tech, task)
+
+    # ---- Attempt LLM synthesis ----
+    synthesis = None
+    try:
+        from borg.core.synthesis import synthesise
+        synthesis = synthesise(raw_detail_text)
+    except Exception as e:
+        logger.debug(f"synthesis integration error: {e}")
+
+    # ---- Assemble final response  action-first ----
+    divider = "-" * 60
+    out = []
+
+    # 1. BEST ACTION  most important, goes first
+    if positive_traces:
+        _best = positive_traces[0]
+        _action = (
+            _best.get('causal_intervention') or
+            _best.get('approach_summary') or
+            _best.get('root_cause') or ''
+        ).strip()
+        # SQL fallback if semantic search returned empty fields
+        if not _action and tech:
+            try:
+                import sqlite3 as _sq2
+                from borg.core.traces import TRACE_DB_PATH as _DBP2
+                _db3 = _sq2.connect(_DBP2)
+                _row = _db3.execute(
+                    "SELECT causal_intervention, approach_summary, root_cause FROM traces "
+                    "WHERE technology=? AND outcome IN ('success','fixed','partial') "
+                    "AND (causal_intervention!='' OR approach_summary!='' OR root_cause!='') "
+                    "AND (source IS NULL OR source NOT IN ('seed_pack','e2e_test')) "
+                    "ORDER BY helpfulness_score DESC LIMIT 1", (tech,)).fetchone()
+                _db3.close()
+                if _row:
+                    _action = (_row[0] or _row[1] or _row[2] or '').strip()
+            except Exception:
+                pass
+        if _action:
+            out.append(f"ACTION: {_action[:150]}")
+            out.append("")
+
+    # 2. STOP WARNING  only real failure patterns
+    try:
+        import sqlite3 as _sq
+        from borg.core.traces import TRACE_DB_PATH as _DBP
+        _db2 = _sq.connect(_DBP)
+        _fails = _db2.execute(
+            "SELECT approach_summary, root_cause FROM traces "
+            "WHERE technology=? AND outcome='failure' "
+            "AND (source IS NULL OR source NOT IN ('seed_pack','e2e_test')) "
+            "AND (approach_summary IS NOT NULL OR root_cause IS NOT NULL) LIMIT 3",
+            (tech,)).fetchall()
+        _db2.close()
+        if len(_fails) >= 2:
+            _bad = next((_r[0] or _r[1] for _r in _fails if _r[0] or _r[1]), None)
+            if _bad:
+                out.append(f"STOP  {len(_fails)} agents tried this approach and failed:")
+                out.append(f"  {str(_bad)[:120]}")
+                out.append("")
+    except Exception:
+        pass
+
+    # 3. CONFIDENCE signal
+    _conf_line = next((l for l in header.split("\n") if "BORG [" in l), "")
+    _real_line = next((l for l in header.split("\n") if "Real traces:" in l), "")
+    if _conf_line:
+        out.append(f"CONFIDENCE: {_real_line.strip()} | {_conf_line.strip()}")
+        out.append("")
+
+    # 4. Full detail
+    out.append(divider)
+    if synthesis:
+        out.extend(["SYNTHESIS", synthesis, divider, "DETAIL", raw_detail_text])
+    else:
+        out.append(raw_detail_text)
+    out.append(divider)
+
+    #  Deterministic STOP injection (correct location) 
+    import re as _re3
+    _HARD = {
+        r'sudo\s+npm': 'STOP: sudo npm creates root-owned node_modules, breaks ALL future npm. Fix: npm config set prefix ~/.npm-global',
+        r'sudo\s+pip': 'STOP: sudo pip damages system Python. Use venv or pip install --user instead.',
+        r'--no-cache\b': 'STOP: --no-cache skips package sources, cannot fix package-not-found. Run apt-get update in a separate layer.',
+        r'\bas\s+any\b|cast.*\bany\b': 'STOP: Casting to any hides the error. Fix the actual type mismatch instead.',
+        r'chmod\s+777': 'STOP: chmod 777 is a security hole. Identify the actual user/group needing access.',
+    }
+    _joined = "\n".join(out)
+    _tl = task.lower()
+    if 'STOP' not in _joined and 'AVOID' not in _joined:
+        for _p, _msg in _HARD.items():
+            if _re3.search(_p, _tl):
+                _joined = _msg + '\n' + ''*50 + '\n' + _joined
+                break
+    return _joined
+
+
+
+def borg_rate(helpful: bool, trace_id: str = None, comment: str = "") -> str:
+    """
+    Rate the most recent Borg guidance. Call this after attempting the suggested fix.
+    helpful=True if it worked, False if it didn't.
+    This improves Borg confidence scoring over time.
+    """
+    import sqlite3 as _sql, os as _os
+    from datetime import datetime as _dt
+    try:
+        _db_path = _os.path.expanduser(_os.environ.get('BORG_HOME', '~/.borg') + '/traces.db')
+        _db = _sql.connect(_db_path)
+        
+        # Get the most recently shown trace
+        if trace_id:
+            _tid = trace_id
+        else:
+            _tid = _last_shown_trace_id.get()  # ContextVar  set by borg_observe
+        if _tid:
+            if helpful:
+                _db.execute("UPDATE traces SET helpfulness_score = MIN(1.0, helpfulness_score + 0.05), times_helped = times_helped + 1 WHERE id=?", (_tid,))
+            else:
+                _db.execute("UPDATE traces SET helpfulness_score = MAX(0.0, helpfulness_score - 0.05), times_shown = times_shown + 1 WHERE id=?", (_tid,))
+            _db.commit()
+            _db.close()
+            status = "worked" if helpful else "didn't work"
+            return f"BORG: Feedback recorded  guidance {status}. Score updated for trace {_tid[:8]}."
+        else:
+            # Rate by technology if no specific trace
+            _db.close()
+            return "BORG: No recent trace to rate. Call borg_observe first."
+    except Exception as _e:
+        return f"BORG: Rate error: {_e}"
+
+def _detect_technology(task: str, context: str) -> str:
+    """Infer the primary technology domain from task + context text."""
+    text = f"{task} {context}".lower()
+    tech_map = {
+        'django': ['django', 'django.db', 'makemigrations', 'migrate'],
+        'python': ['python', 'pip', 'venv', 'virtualenv'],
+        'typescript': ['typescript', 'ts error', 'tsc', 'tsconfig', '.ts file', 'cannot find module', 'type script', 'argument of type', 'not assignable to type'],
+    'nodejs': ['node.js', 'nodejs', 'npm err', 'eacces', 'node_modules', 'require(', 'module not found'],
+        'javascript': ['javascript', 'typescript', 'node', 'npm', 'js', 'ts'],
+        'rust': ['rust', 'cargo', 'borrow checker', 'lifetime'],
+        'docker': ['docker', 'container', 'dockerfile', 'docker-compose'],
+        'git': ['git', 'commit', 'branch', 'merge'],
+        'postgres': ['postgresql', 'postgres', 'psql'],
+        'mysql': ['mysql', 'mariadb'],
+        'auth': ['jwt', 'oauth', 'auth', 'token', 'session'],
+        'ci': ['github actions', 'gitlab ci', 'workflow', 'yaml'],
+        'fastapi': ['fastapi', 'fast api', 'starlette', 'uvicorn', 'pydantic', '422 unprocessable'],
+        'typescript': ['typescript', 'ts error', 'tsc', 'tsconfig', '.ts file', 'type error', 'cannot find module', 'type script'],
+        'nodejs': ['node.js', 'nodejs', 'npm err', 'eacces', 'node_modules', 'require(', 'module not found', 'package.json'],
+        'github-actions': ['github actions', 'github action', 'workflow yaml', '.github/workflows', 'actions/'],
+        'docker': ['docker', 'dockerfile', 'docker build', 'container', 'docker-compose', 'apt-get', 'unable to locate package'],
+        'rust': ['rust', 'cargo', 'rustc', 'borrow checker', 'lifetime', 'ownership', 'borrowing'],
+    }
+    for tech, keywords in tech_map.items():
+        if any(kw in text for kw in keywords):
+            return tech
+    return ''
+
+
+def _build_confidence_header(tech: str, task: str) -> str:
+    """Build the BORG confidence header with real/synthetic trace stats."""
+    from datetime import datetime, timezone
+    import sqlite3 as _sqlite3, os as _os
+
+    # Guard: empty tech = SYNTHETIC ONLY, do not query all traces
+    if not tech or not tech.strip():
+        return "BORG [SYNTHETIC ONLY]\nReal traces: 0 | Synthetic: 0\nNo domain detected.\n" + "\u2500" * 50
+
+    db_path = _os.path.expanduser('~/.borg/traces.db')
+    try:
+        _db = _sqlite3.connect(db_path)
+        _db.row_factory = _sqlite3.Row
+        _stats = _db.execute("""
+            SELECT
+                COUNT(*) as total,
+                SUM(CASE WHEN source IS NULL OR source NOT IN ('seed', 'seed_pack', 'e2e_test', 'hermy-bootstrap') THEN 1 ELSE 0 END) as real_count,
+                ROUND(AVG(helpfulness_score), 2) as avg_helpfulness,
+                MAX(created_at) as most_recent
+            FROM traces
+            WHERE technology = ?
+                OR technology = CASE WHEN ? = 'javascript' THEN 'typescript'
+                                     WHEN ? = 'typescript' THEN 'javascript'
+                                     ELSE NULL END
+                OR keywords LIKE ?
+        """, (tech, tech, tech, f'%{tech}%')).fetchone()
+        _db.close()
+    except Exception:
+        return f"BORG [UNKNOWN]\nReal traces: 0 | Synthetic: 0\n" + "\u2500" * 50
+
+    total = _stats[0] if _stats else 0
+    real_count = _stats[1] if _stats else 0
+    avg_help = _stats[2] if _stats else 0.0
+    most_recent = _stats[3] if _stats else None
+    synthetic_count = max(0, total - (real_count or 0))
+
+    # Recency
+    recency_note = ""
+    if most_recent:
+        try:
+            ts = datetime.fromisoformat(most_recent.replace('Z', '+00:00'))
+            days_ago = (datetime.now(timezone.utc) - ts).days
+            recency_note = f"Most recent: {days_ago}d ago"
+        except Exception:
+            pass
+
+    # Confidence label
+    if (real_count or 0) == 0:
+        label = "SYNTHETIC ONLY"
+        note = "No real agent sessions -- guidance is from seed packs, unverified"
+    elif (real_count or 0) < 3:
+        label = "LOW CONFIDENCE"
+        note = f"Only {real_count} real agent session(s) -- treat as preliminary"
+    elif (real_count or 0) < 10:
+        label = "MODERATE CONFIDENCE"
+        note = f"{real_count} real sessions, avg helpfulness {avg_help}"
+    else:
+        label = "HIGH CONFIDENCE"
+        note = f"{real_count} real sessions, avg helpfulness {avg_help}"
+
+    return (
+        f"BORG [{label}]\n"
+        f"Real traces: {real_count or 0} | Synthetic: {synthetic_count} | {recency_note}\n"
+        f"{note}\n"
+        + "\u2500" * 50
+    )
 
 def borg_context(project_path: str = ".", hours: int = 24) -> str:
     """Detect recent git changes in a project directory.
@@ -2702,6 +2908,22 @@ def _call_tool_impl(name: str, arguments: Dict[str, Any]) -> str:
             report_format=arguments.get("report_format", "telegram"),
         )
 
+    elif name == "borg_clusters":
+        from borg.core.clustering import discover_clusters, get_cluster_detail, get_technology_clusters
+        action = arguments.get("action", "discover")
+        if action == "discover":
+            result = discover_clusters(
+                n_clusters=arguments.get("n_clusters", 8),
+                min_trace_count=arguments.get("min_trace_count", 3),
+            )
+        elif action == "detail":
+            result = get_cluster_detail(cluster_id=arguments.get("cluster_id", ""))
+        elif action == "by_technology":
+            result = get_technology_clusters()
+        else:
+            result = {"error": f"Unknown action: {action}"}
+        return json.dumps({"success": True, "result": result})
+
     elif name == "borg_observe":
         return borg_observe(
             task=arguments.get("task", ""),
@@ -2791,6 +3013,13 @@ def handle_request(request: Dict[str, Any]) -> Optional[Dict[str, Any]]:
 
 def main() -> None:
     """Run the MCP server on stdio. Reads JSON-RPC requests from stdin, writes responses to stdout."""
+    # Cold start — runs once on first install
+    try:
+        from borg.core.cold_start import run_if_needed
+        run_if_needed()
+    except Exception:
+        pass  # never block startup
+
     from borg import __version__
     print(f"borg-mcp-server v{__version__} ready (stdio transport)", file=sys.stderr, flush=True)
     for line in sys.stdin:
@@ -2814,3 +3043,35 @@ def main() -> None:
 
 if __name__ == "__main__":
     main()
+
+
+# Short-form wrapper  guarantees short=True returns concise output
+_borg_observe_orig = borg_observe
+def borg_observe(task: str = "", context: str = "", context_dict: dict = None, project_path: str = None, short: bool = False) -> str:
+    _maybe_rebuild_index()
+    """Wrapper that ensures short=True returns concise ACTION+CONFIDENCE."""
+    result = _borg_observe_orig(task=task, context=context, context_dict=context_dict, project_path=project_path, short=False)
+    if not short:
+        return result
+    lines = result.split("\n")
+    action = next((l for l in lines if l.startswith("ACTION:")), "")
+    conf = next((l for l in lines if l.startswith("CONFIDENCE:")), "")
+    if action:
+        return action[:120] + ("\n" + conf[:80] if conf else "")
+    #  Deterministic dead-end STOP injection 
+    # These rules override semantic ranking  known anti-patterns
+    # that ALWAYS fail, regardless of what positive traces say
+    import re as _re
+    _HARD_STOPS = {
+        r'sudo\s+npm': "STOP: sudo npm creates root-owned node_modules breaking ALL future npm. NEVER use sudo with npm.",
+        r'sudo\s+pip': "STOP: sudo pip damages system Python. Use venv or pip install --user instead.",
+        r'--no-cache\b': "STOP: --no-cache skips source lists  won't fix 'unable to locate package'. Run apt-get update separately.",
+        r'\bas any\b|cast.*\bany\b': "STOP: Casting to any destroys type safety. Fix the actual type mismatch.",
+        r'chmod\s+777': "STOP: chmod 777 is a security risk. Find the actual user/group needing access.",
+    }
+    _task_l = task.lower()
+    for _pat, _stop_msg in _HARD_STOPS.items():
+        if _re.search(_pat, _task_l) and 'STOP' not in result and 'AVOID' not in result:
+            result = _stop_msg + '\n' + ''*50 + '\n' + result
+            break
+        return result[:200]
