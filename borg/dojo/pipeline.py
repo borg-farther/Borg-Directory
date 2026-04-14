@@ -38,7 +38,7 @@ from .skill_gap_detector import detect_skill_gaps
 
 logger = logging.getLogger(__name__)
 
-BORG_DOJO_ENABLED = os.getenv("BORG_DOJO_ENABLED", "false").lower() == "true"
+BORG_DOJO_ENABLED = os.getenv("BORG_DOJO_ENABLED", "true").lower() == "true"
 REAL_DB_PATH = Path.home() / ".hermes" / "state.db"
 SCHEMA_VERSION = 1
 _cached_analysis: Optional[SessionAnalysis] = None
@@ -287,7 +287,7 @@ class DojoPipeline:
             from borg.core.contextual_selector import ContextualSelector
             from borg.core.v3_integration import _StubFeedbackLoop
             selector = ContextualSelector(feedback_loop=_StubFeedbackLoop())
-            for outcome in (self._analysis.outcomes or []):
+            for outcome in getattr(self._analysis, "outcomes", []):
                 selector.record_outcome(outcome.pack_id, outcome.category, outcome.successful)
         except ImportError:
             logger.debug("ContextualSelector unavailable -- skipping")
