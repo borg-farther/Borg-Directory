@@ -1713,10 +1713,28 @@ def borg_observe(task: str = "", context: str = "", context_dict: dict = None, p
     try:
         from borg.core.embeddings import semantic_search
         from borg.core.traces import TRACE_DB_PATH
-        positive_traces = semantic_search(
+        # --- HYBRID: embedding + BM25 with RRF ---
+        from borg.core.bm25_index import get_bm25_index, rrf_fusion
+        embedding_results = semantic_search(
             query=query, db_path=TRACE_DB_PATH,
-            top_k=3, min_similarity=0.5, outcome_filter='success'
+            top_k=10, min_similarity=0.3, outcome_filter="success"
         )
+        try:
+            bm25_idx = get_bm25_index(str(TRACE_DB_PATH))
+            bm25_results = bm25_idx.search(query, top_k=10)
+        except Exception:
+            bm25_results = []
+        if embedding_results and bm25_results:
+            emb_pairs = [(t.get("id",""),t.get("similarity",0)) for t in embedding_results]
+            fused = rrf_fusion(emb_pairs, bm25_results)
+            fused_ids = [d for d,_ in fused[:3]]
+            positive_traces = [t for t in embedding_results if t.get("id","") in fused_ids][:3]
+            if not positive_traces:
+                positive_traces = embedding_results[:3]
+        elif embedding_results:
+            positive_traces = embedding_results[:3]
+        else:
+            positive_traces = []
     except Exception:
         pass
     if not positive_traces:
