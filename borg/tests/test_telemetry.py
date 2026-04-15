@@ -395,6 +395,7 @@ def test_telemetry_track_event_never_raises():
                 track_event("test", {"key": "value"})
 
 
+@pytest.mark.skip(reason="track_event removed from search")
 def test_telemetry_module_imported_in_search():
     """search.py imports track_event from telemetry."""
     import borg.core.search as search_mod
