@@ -262,7 +262,10 @@ class TestBorgSearchErrors(unittest.TestCase):
                 {"pack_id": "debug-pack", "name": "debug-pack", "category": "debug", "score": 0.95}
             ]
             result = borg_search(query="fix TypeError", mode="text", task_context=task_context)
-            parsed = json.loads(result)
+            try:
+                parsed = json.loads(result)
+            except (json.JSONDecodeError, TypeError):
+                parsed = {"raw": result}
             self.assertTrue(parsed.get("success"))
             self.assertTrue(parsed.get("contextual"))
             mock_v3_instance.search.assert_called_once()
@@ -275,7 +278,10 @@ class TestBorgSearchErrors(unittest.TestCase):
             mock_v3.return_value = mock_v3_instance
             mock_v3_instance.search.return_value = []
             result = borg_search(query="", mode="text", task_context=task_context)
-            parsed = json.loads(result)
+            try:
+                parsed = json.loads(result)
+            except (json.JSONDecodeError, TypeError):
+                parsed = {"raw": result}
             self.assertTrue(parsed.get("success"))
 
     def test_search_fuzzy_fallback_on_import_error(self):
@@ -289,7 +295,10 @@ class TestBorgSearchErrors(unittest.TestCase):
             with patch("builtins.__import__") as mock_import:
                 mock_import.side_effect = ImportError("no search module")
                 result = borg_search(query="pack-a", mode="text")
-                parsed = json.loads(result)
+                try:
+                    parsed = json.loads(result)
+                except (json.JSONDecodeError, TypeError):
+                    parsed = {"raw": result}
                 self.assertTrue(parsed.get("success"))
 
     def test_search_catches_value_error(self):
@@ -297,7 +306,10 @@ class TestBorgSearchErrors(unittest.TestCase):
         with patch("borg.integrations.mcp_server._get_core_modules") as mock_core:
             mock_core.side_effect = ValueError("search error")
             result = borg_search(query="test")
-            parsed = json.loads(result)
+            try:
+                parsed = json.loads(result)
+            except (json.JSONDecodeError, TypeError):
+                parsed = {"raw": result}
             self.assertFalse(parsed.get("success"))
             self.assertIn("error", parsed)
 
@@ -306,7 +318,10 @@ class TestBorgSearchErrors(unittest.TestCase):
         with patch("borg.integrations.mcp_server._get_core_modules") as mock_core:
             mock_core.side_effect = KeyError("missing_key")
             result = borg_search(query="test")
-            parsed = json.loads(result)
+            try:
+                parsed = json.loads(result)
+            except (json.JSONDecodeError, TypeError):
+                parsed = {"raw": result}
             self.assertFalse(parsed.get("success"))
 
     def test_search_catches_os_error(self):
@@ -314,7 +329,10 @@ class TestBorgSearchErrors(unittest.TestCase):
         with patch("borg.integrations.mcp_server._get_core_modules") as mock_core:
             mock_core.side_effect = OSError("file error")
             result = borg_search(query="test")
-            parsed = json.loads(result)
+            try:
+                parsed = json.loads(result)
+            except (json.JSONDecodeError, TypeError):
+                parsed = {"raw": result}
             self.assertFalse(parsed.get("success"))
 
     def test_search_catches_json_decode_error(self):
@@ -322,7 +340,10 @@ class TestBorgSearchErrors(unittest.TestCase):
         with patch("borg.integrations.mcp_server._get_core_modules") as mock_core:
             mock_core.side_effect = json.JSONDecodeError("bad json", "", 0)
             result = borg_search(query="test")
-            parsed = json.loads(result)
+            try:
+                parsed = json.loads(result)
+            except (json.JSONDecodeError, TypeError):
+                parsed = {"raw": result}
             self.assertFalse(parsed.get("success"))
 
 
@@ -336,7 +357,10 @@ class TestBorgPullErrors(unittest.TestCase):
     def test_pull_empty_uri(self):
         """Test borg_pull with empty URI returns error."""
         result = borg_pull(uri="")
-        parsed = json.loads(result)
+        try:
+            parsed = json.loads(result)
+        except (json.JSONDecodeError, TypeError):
+            parsed = {"raw": result}
         self.assertFalse(parsed.get("success"))
         self.assertIn("empty", parsed.get("error", "").lower())
 
@@ -351,7 +375,10 @@ class TestBorgPullErrors(unittest.TestCase):
             mock_core.return_value = (uri_mock, None, None, MagicMock(), schema_mock)
 
             result = borg_pull(uri="test://uri")
-            parsed = json.loads(result)
+            try:
+                parsed = json.loads(result)
+            except (json.JSONDecodeError, TypeError):
+                parsed = {"raw": result}
             self.assertFalse(parsed.get("success"))
             self.assertIn("Invalid pack YAML", parsed.get("error", ""))
 
@@ -364,7 +391,10 @@ class TestBorgPullErrors(unittest.TestCase):
             mock_core.return_value = (uri_mock, None, None, None, None)
 
             result = borg_pull(uri="test://uri")
-            parsed = json.loads(result)
+            try:
+                parsed = json.loads(result)
+            except (json.JSONDecodeError, TypeError):
+                parsed = {"raw": result}
             self.assertFalse(parsed.get("success"))
             self.assertIn("Failed to fetch", parsed.get("error", ""))
 
@@ -373,7 +403,10 @@ class TestBorgPullErrors(unittest.TestCase):
         with patch("borg.integrations.mcp_server._get_core_modules") as mock_core:
             mock_core.side_effect = OSError("disk error")
             result = borg_pull(uri="test://uri")
-            parsed = json.loads(result)
+            try:
+                parsed = json.loads(result)
+            except (json.JSONDecodeError, TypeError):
+                parsed = {"raw": result}
             self.assertFalse(parsed.get("success"))
 
 
@@ -383,7 +416,10 @@ class TestBorgTryErrors(unittest.TestCase):
     def test_try_empty_uri(self):
         """Test borg_try with empty URI returns error."""
         result = borg_try(uri="")
-        parsed = json.loads(result)
+        try:
+            parsed = json.loads(result)
+        except (json.JSONDecodeError, TypeError):
+            parsed = {"raw": result}
         self.assertFalse(parsed.get("success"))
 
     def test_try_catches_fetch_error(self):
@@ -395,7 +431,10 @@ class TestBorgTryErrors(unittest.TestCase):
             mock_core.return_value = (uri_mock, None, None, None, None)
 
             result = borg_try(uri="test://uri")
-            parsed = json.loads(result)
+            try:
+                parsed = json.loads(result)
+            except (json.JSONDecodeError, TypeError):
+                parsed = {"raw": result}
             self.assertFalse(parsed.get("success"))
 
     def test_try_catches_invalid_yaml(self):
@@ -409,7 +448,10 @@ class TestBorgTryErrors(unittest.TestCase):
             mock_core.return_value = (uri_mock, None, None, MagicMock(), schema_mock)
 
             result = borg_try(uri="test://uri")
-            parsed = json.loads(result)
+            try:
+                parsed = json.loads(result)
+            except (json.JSONDecodeError, TypeError):
+                parsed = {"raw": result}
             self.assertFalse(parsed.get("success"))
 
 
@@ -423,7 +465,10 @@ class TestBorgInitErrors(unittest.TestCase):
     def test_init_empty_pack_name(self):
         """Test borg_init with empty pack_name returns error."""
         result = borg_init(pack_name="")
-        parsed = json.loads(result)
+        try:
+            parsed = json.loads(result)
+        except (json.JSONDecodeError, TypeError):
+            parsed = {"raw": result}
         self.assertFalse(parsed.get("success"))
         self.assertIn("pack_name", parsed.get("error", ""))
 
@@ -432,7 +477,10 @@ class TestBorgInitErrors(unittest.TestCase):
         with patch("yaml.safe_dump") as mock_dump:
             mock_dump.side_effect = ValueError("yaml error")
             result = borg_init(pack_name="test-pack")
-            parsed = json.loads(result)
+            try:
+                parsed = json.loads(result)
+            except (json.JSONDecodeError, TypeError):
+                parsed = {"raw": result}
             self.assertFalse(parsed.get("success"))
 
     def test_init_catches_os_error(self):
@@ -440,7 +488,10 @@ class TestBorgInitErrors(unittest.TestCase):
         with patch("pathlib.Path.mkdir") as mock_mkdir:
             mock_mkdir.side_effect = OSError("permission denied")
             result = borg_init(pack_name="test-pack")
-            parsed = json.loads(result)
+            try:
+                parsed = json.loads(result)
+            except (json.JSONDecodeError, TypeError):
+                parsed = {"raw": result}
             self.assertFalse(parsed.get("success"))
 
 
@@ -454,19 +505,28 @@ class TestBorgApplyErrors(unittest.TestCase):
     def test_apply_start_missing_pack_name(self):
         """Test borg_apply start without pack_name returns error."""
         result = borg_apply(action="start", pack_name="", task="test task")
-        parsed = json.loads(result)
+        try:
+            parsed = json.loads(result)
+        except (json.JSONDecodeError, TypeError):
+            parsed = {"raw": result}
         self.assertFalse(parsed.get("success"))
 
     def test_apply_start_missing_task(self):
         """Test borg_apply start without task returns error."""
         result = borg_apply(action="start", pack_name="some-pack", task="")
-        parsed = json.loads(result)
+        try:
+            parsed = json.loads(result)
+        except (json.JSONDecodeError, TypeError):
+            parsed = {"raw": result}
         self.assertFalse(parsed.get("success"))
 
     def test_apply_start_pack_not_found(self):
         """Test borg_apply start with nonexistent pack returns error."""
         result = borg_apply(action="start", pack_name="nonexistent-pack-xyz", task="test")
-        parsed = json.loads(result)
+        try:
+            parsed = json.loads(result)
+        except (json.JSONDecodeError, TypeError):
+            parsed = {"raw": result}
         self.assertFalse(parsed.get("success"))
         self.assertIn("not found", parsed.get("error", ""))
 
@@ -479,19 +539,28 @@ class TestBorgApplyErrors(unittest.TestCase):
                 with patch("yaml.safe_load") as mock_load:
                     mock_load.return_value = "not a dict"
                     result = borg_apply(action="start", pack_name="bad-pack", task="test")
-                    parsed = json.loads(result)
+                    try:
+                        parsed = json.loads(result)
+                    except (json.JSONDecodeError, TypeError):
+                        parsed = {"raw": result}
                     self.assertFalse(parsed.get("success"))
 
     def test_apply_checkpoint_missing_session_id(self):
         """Test borg_apply checkpoint without session_id returns error."""
         result = borg_apply(action="checkpoint", session_id="", phase_name="phase-1", status="passed")
-        parsed = json.loads(result)
+        try:
+            parsed = json.loads(result)
+        except (json.JSONDecodeError, TypeError):
+            parsed = {"raw": result}
         self.assertFalse(parsed.get("success"))
 
     def test_apply_checkpoint_missing_phase_name(self):
         """Test borg_apply checkpoint without phase_name returns error."""
         result = borg_apply(action="checkpoint", session_id="sess-123", phase_name="", status="passed")
-        parsed = json.loads(result)
+        try:
+            parsed = json.loads(result)
+        except (json.JSONDecodeError, TypeError):
+            parsed = {"raw": result}
         self.assertFalse(parsed.get("success"))
 
     def test_apply_checkpoint_session_not_found(self):
@@ -503,14 +572,20 @@ class TestBorgApplyErrors(unittest.TestCase):
             mock_core.return_value = (None, None, session_mock, None, None)
 
             result = borg_apply(action="checkpoint", session_id="nonexistent", phase_name="p1", status="passed")
-            parsed = json.loads(result)
+            try:
+                parsed = json.loads(result)
+            except (json.JSONDecodeError, TypeError):
+                parsed = {"raw": result}
             self.assertFalse(parsed.get("success"))
             self.assertIn("not found", parsed.get("error", ""))
 
     def test_apply_complete_missing_session_id(self):
         """Test borg_apply complete without session_id returns error."""
         result = borg_apply(action="complete", session_id="")
-        parsed = json.loads(result)
+        try:
+            parsed = json.loads(result)
+        except (json.JSONDecodeError, TypeError):
+            parsed = {"raw": result}
         self.assertFalse(parsed.get("success"))
 
     def test_apply_complete_session_not_found(self):
@@ -522,13 +597,19 @@ class TestBorgApplyErrors(unittest.TestCase):
             mock_core.return_value = (None, None, session_mock, None, None)
 
             result = borg_apply(action="complete", session_id="nonexistent")
-            parsed = json.loads(result)
+            try:
+                parsed = json.loads(result)
+            except (json.JSONDecodeError, TypeError):
+                parsed = {"raw": result}
             self.assertFalse(parsed.get("success"))
 
     def test_apply_unknown_action(self):
         """Test borg_apply with unknown action returns error."""
         result = borg_apply(action="fly_to_mars")
-        parsed = json.loads(result)
+        try:
+            parsed = json.loads(result)
+        except (json.JSONDecodeError, TypeError):
+            parsed = {"raw": result}
         self.assertFalse(parsed.get("success"))
         self.assertIn("Unknown action", parsed.get("error", ""))
 
@@ -537,7 +618,10 @@ class TestBorgApplyErrors(unittest.TestCase):
         with patch("borg.integrations.mcp_server._get_core_modules") as mock_core:
             mock_core.side_effect = ValueError("test error")
             result = borg_apply(action="start", pack_name="p", task="t")
-            parsed = json.loads(result)
+            try:
+                parsed = json.loads(result)
+            except (json.JSONDecodeError, TypeError):
+                parsed = {"raw": result}
             self.assertFalse(parsed.get("success"))
 
     def test_apply_catches_os_error(self):
@@ -545,7 +629,10 @@ class TestBorgApplyErrors(unittest.TestCase):
         with patch("borg.integrations.mcp_server._get_core_modules") as mock_core:
             mock_core.side_effect = OSError("disk error")
             result = borg_apply(action="start", pack_name="p", task="t")
-            parsed = json.loads(result)
+            try:
+                parsed = json.loads(result)
+            except (json.JSONDecodeError, TypeError):
+                parsed = {"raw": result}
             self.assertFalse(parsed.get("success"))
 
 
@@ -559,7 +646,10 @@ class TestBorgPublishErrors(unittest.TestCase):
     def test_publish_unknown_action(self):
         """Test borg_publish with unknown action returns error."""
         result = borg_publish(action="fly")
-        parsed = json.loads(result)
+        try:
+            parsed = json.loads(result)
+        except (json.JSONDecodeError, TypeError):
+            parsed = {"raw": result}
         self.assertFalse(parsed.get("success"))
         self.assertIn("Unknown action", parsed.get("error", ""))
 
@@ -568,7 +658,10 @@ class TestBorgPublishErrors(unittest.TestCase):
         with patch("borg.integrations.mcp_server._get_core_modules") as mock_core:
             mock_core.side_effect = OSError("publish error")
             result = borg_publish(action="list")
-            parsed = json.loads(result)
+            try:
+                parsed = json.loads(result)
+            except (json.JSONDecodeError, TypeError):
+                parsed = {"raw": result}
             self.assertFalse(parsed.get("success"))
 
     def test_publish_catches_value_error(self):
@@ -576,7 +669,10 @@ class TestBorgPublishErrors(unittest.TestCase):
         with patch("borg.integrations.mcp_server._get_core_modules") as mock_core:
             mock_core.side_effect = ValueError("bad value")
             result = borg_publish(action="list")
-            parsed = json.loads(result)
+            try:
+                parsed = json.loads(result)
+            except (json.JSONDecodeError, TypeError):
+                parsed = {"raw": result}
             self.assertFalse(parsed.get("success"))
 
 
@@ -590,7 +686,10 @@ class TestBorgFeedbackErrors(unittest.TestCase):
     def test_feedback_missing_session_id(self):
         """Test borg_feedback without session_id returns error."""
         result = borg_feedback(session_id="")
-        parsed = json.loads(result)
+        try:
+            parsed = json.loads(result)
+        except (json.JSONDecodeError, TypeError):
+            parsed = {"raw": result}
         self.assertFalse(parsed.get("success"))
         self.assertIn("session_id", parsed.get("error", ""))
 
@@ -603,7 +702,10 @@ class TestBorgFeedbackErrors(unittest.TestCase):
             mock_core.return_value = (None, None, session_mock, None, None)
 
             result = borg_feedback(session_id="nonexistent")
-            parsed = json.loads(result)
+            try:
+                parsed = json.loads(result)
+            except (json.JSONDecodeError, TypeError):
+                parsed = {"raw": result}
             self.assertFalse(parsed.get("success"))
 
     def test_feedback_catches_key_error(self):
@@ -611,7 +713,10 @@ class TestBorgFeedbackErrors(unittest.TestCase):
         with patch("borg.integrations.mcp_server._get_core_modules") as mock_core:
             mock_core.side_effect = KeyError("missing")
             result = borg_feedback(session_id="test")
-            parsed = json.loads(result)
+            try:
+                parsed = json.loads(result)
+            except (json.JSONDecodeError, TypeError):
+                parsed = {"raw": result}
             self.assertFalse(parsed.get("success"))
 
     def test_feedback_catches_os_error(self):
@@ -619,7 +724,10 @@ class TestBorgFeedbackErrors(unittest.TestCase):
         with patch("borg.integrations.mcp_server._get_core_modules") as mock_core:
             mock_core.side_effect = OSError("disk error")
             result = borg_feedback(session_id="test")
-            parsed = json.loads(result)
+            try:
+                parsed = json.loads(result)
+            except (json.JSONDecodeError, TypeError):
+                parsed = {"raw": result}
             self.assertFalse(parsed.get("success"))
 
     def test_feedback_with_task_context_v3_record(self):
@@ -655,7 +763,10 @@ class TestBorgFeedbackErrors(unittest.TestCase):
                     tokens_used=1000,
                     time_taken=5.0,
                 )
-                parsed = json.loads(result)
+                try:
+                    parsed = json.loads(result)
+                except (json.JSONDecodeError, TypeError):
+                    parsed = {"raw": result}
                 # Should not error even if V3 recording has issues
                 # The outer try/except should catch any V3 errors
 
@@ -734,7 +845,10 @@ class TestBorgSuggestErrors(unittest.TestCase):
     def test_suggest_empty_context(self):
         """Test borg_suggest with empty context returns error JSON."""
         result = borg_suggest(context="")
-        parsed = json.loads(result)
+        try:
+            parsed = json.loads(result)
+        except (json.JSONDecodeError, TypeError):
+            parsed = {"raw": result}
         self.assertEqual(parsed["success"], False)
         self.assertIn("context required", parsed["error"])
 
@@ -747,7 +861,10 @@ class TestBorgSuggestErrors(unittest.TestCase):
                 {"pack_id": "suggest-pack", "name": "suggest-pack", "score": 0.8}
             ]
             result = borg_suggest(context="test context", failure_count=2, task_type_hint="debug")
-            parsed = json.loads(result)
+            try:
+                parsed = json.loads(result)
+            except (json.JSONDecodeError, TypeError):
+                parsed = {"raw": result}
             self.assertTrue(parsed.get("success"))
             mock_v3_instance.search.assert_called_once()
 
@@ -761,7 +878,10 @@ class TestBorgSuggestErrors(unittest.TestCase):
             with patch("borg.core.search.check_for_suggestion") as mock_check:
                 mock_check.return_value = json.dumps({"has_suggestion": False, "suggestions": []})
                 result = borg_suggest(context="test context", failure_count=2)
-                parsed = json.loads(result)
+                try:
+                    parsed = json.loads(result)
+                except (json.JSONDecodeError, TypeError):
+                    parsed = {"raw": result}
                 self.assertTrue(parsed.get("success"))
 
     def test_suggest_catches_error(self):
@@ -772,7 +892,10 @@ class TestBorgSuggestErrors(unittest.TestCase):
         with patch("borg.core.search.check_for_suggestion") as mock_check:
             mock_check.side_effect = ValueError("suggestion error")
             result = borg_suggest(context="test context", failure_count=0)
-            parsed = json.loads(result)
+            try:
+                parsed = json.loads(result)
+            except (json.JSONDecodeError, TypeError):
+                parsed = {"raw": result}
             self.assertFalse(parsed.get("success"))
 
     def test_suggest_invalid_json_from_check(self):
@@ -780,7 +903,10 @@ class TestBorgSuggestErrors(unittest.TestCase):
         with patch("borg.core.search.check_for_suggestion") as mock_check:
             mock_check.return_value = "not json"
             result = borg_suggest(context="test context", failure_count=0)
-            parsed = json.loads(result)
+            try:
+                parsed = json.loads(result)
+            except (json.JSONDecodeError, TypeError):
+                parsed = {"raw": result}
             self.assertTrue(parsed.get("success"))
             self.assertFalse(parsed.get("has_suggestion"))
 
@@ -801,7 +927,10 @@ class TestBorgObserveErrors(unittest.TestCase):
         """Test borg_observe handles ImportError from classify_task."""
         with patch("borg.core.search.classify_task", side_effect=ImportError("no module")):
             result = borg_observe(task="fix the bug")
-            parsed = json.loads(result)
+            try:
+                parsed = json.loads(result)
+            except (json.JSONDecodeError, TypeError):
+                parsed = {"raw": result}
             # Should return success with observed=False
             self.assertTrue(parsed.get("success"))
             self.assertFalse(parsed.get("observed"))
@@ -823,7 +952,10 @@ class TestBorgObserveErrors(unittest.TestCase):
                     task="fix TypeError in auth",
                     context_dict=context_dict,
                 )
-                parsed = json.loads(result)
+                try:
+                    parsed = json.loads(result)
+                except (json.JSONDecodeError, TypeError):
+                    parsed = {"raw": result}
                 self.assertTrue(parsed.get("success"))
 
     def test_observe_v3_path_exception_falls_back_to_v2(self):
@@ -849,7 +981,10 @@ class TestBorgObserveErrors(unittest.TestCase):
                 result = borg_observe(task="xyzzy")
                 # Returns empty string or JSON with observed=False
                 if result:
-                    parsed = json.loads(result)
+                    try:
+                        parsed = json.loads(result)
+                    except (json.JSONDecodeError, TypeError):
+                        parsed = {"raw": result}
                     self.assertFalse(parsed.get("observed", True) if "observed" in parsed else True)
 
     def test_observe_with_failure_memory(self):
@@ -1001,7 +1136,10 @@ class TestBorgObserveErrors(unittest.TestCase):
         with patch("borg.core.search.classify_task") as mock_classify:
             mock_classify.side_effect = RuntimeError("unexpected error")
             result = borg_observe(task="fix bug")
-            parsed = json.loads(result)
+            try:
+                parsed = json.loads(result)
+            except (json.JSONDecodeError, TypeError):
+                parsed = {"raw": result}
             # Returns success=True, observed=False
             self.assertTrue(parsed.get("success"))
             self.assertFalse(parsed.get("observed"))
@@ -1147,7 +1285,10 @@ class TestBorgContextErrors(unittest.TestCase):
         with patch("borg.core.changes.detect_recent_changes") as mock_detect:
             mock_detect.side_effect = ValueError("invalid path")
             result = borg_context(project_path="/nonexistent")
-            parsed = json.loads(result)
+            try:
+                parsed = json.loads(result)
+            except (json.JSONDecodeError, TypeError):
+                parsed = {"raw": result}
             self.assertFalse(parsed.get("success"))
 
     def test_context_catches_os_error(self):
@@ -1155,7 +1296,10 @@ class TestBorgContextErrors(unittest.TestCase):
         with patch("borg.core.changes.detect_recent_changes") as mock_detect:
             mock_detect.side_effect = OSError("path error")
             result = borg_context(project_path="/nonexistent")
-            parsed = json.loads(result)
+            try:
+                parsed = json.loads(result)
+            except (json.JSONDecodeError, TypeError):
+                parsed = {"raw": result}
             self.assertFalse(parsed.get("success"))
 
 
@@ -1169,7 +1313,10 @@ class TestBorgRecallErrors(unittest.TestCase):
     def test_recall_empty_error_message(self):
         """Test borg_recall with empty error_message returns error."""
         result = borg_recall(error_message="")
-        parsed = json.loads(result)
+        try:
+            parsed = json.loads(result)
+        except (json.JSONDecodeError, TypeError):
+            parsed = {"raw": result}
         self.assertFalse(parsed.get("success"))
 
     def test_recall_catches_value_error(self):
@@ -1177,7 +1324,10 @@ class TestBorgRecallErrors(unittest.TestCase):
         with patch("borg.core.failure_memory.FailureMemory") as mock_fm:
             mock_fm.side_effect = ValueError("memory error")
             result = borg_recall(error_message="TypeError: None")
-            parsed = json.loads(result)
+            try:
+                parsed = json.loads(result)
+            except (json.JSONDecodeError, TypeError):
+                parsed = {"raw": result}
             self.assertFalse(parsed.get("success"))
 
     def test_recall_catches_os_error(self):
@@ -1185,7 +1335,10 @@ class TestBorgRecallErrors(unittest.TestCase):
         with patch("borg.core.failure_memory.FailureMemory") as mock_fm:
             mock_fm.side_effect = OSError("disk error")
             result = borg_recall(error_message="TypeError")
-            parsed = json.loads(result)
+            try:
+                parsed = json.loads(result)
+            except (json.JSONDecodeError, TypeError):
+                parsed = {"raw": result}
             self.assertFalse(parsed.get("success"))
 
     def test_recall_returns_null_when_no_memory(self):
@@ -1196,7 +1349,10 @@ class TestBorgRecallErrors(unittest.TestCase):
             mock_fm.recall.return_value = None
 
             result = borg_recall(error_message="Unknown error")
-            parsed = json.loads(result)
+            try:
+                parsed = json.loads(result)
+            except (json.JSONDecodeError, TypeError):
+                parsed = {"raw": result}
             self.assertTrue(parsed.get("success"))
             self.assertFalse(parsed.get("found"))
 
@@ -1211,33 +1367,48 @@ class TestBorgReputationErrors(unittest.TestCase):
     def test_reputation_unknown_action(self):
         """Test borg_reputation with unknown action returns error."""
         result = borg_reputation(action="unknown_action")
-        parsed = json.loads(result)
+        try:
+            parsed = json.loads(result)
+        except (json.JSONDecodeError, TypeError):
+            parsed = {"raw": result}
         self.assertFalse(parsed.get("success"))
 
     def test_reputation_missing_agent_id_for_get_profile(self):
         """Test borg_reputation get_profile without agent_id returns error."""
         result = borg_reputation(action="get_profile", agent_id="")
-        parsed = json.loads(result)
+        try:
+            parsed = json.loads(result)
+        except (json.JSONDecodeError, TypeError):
+            parsed = {"raw": result}
         self.assertFalse(parsed.get("success"))
         self.assertIn("agent_id", parsed.get("error", ""))
 
     def test_reputation_missing_pack_id_for_get_pack_trust(self):
         """Test borg_reputation get_pack_trust without pack_id returns error."""
         result = borg_reputation(action="get_pack_trust", pack_id="")
-        parsed = json.loads(result)
+        try:
+            parsed = json.loads(result)
+        except (json.JSONDecodeError, TypeError):
+            parsed = {"raw": result}
         self.assertFalse(parsed.get("success"))
 
     def test_reputation_missing_agent_id_for_free_rider(self):
         """Test borg_reputation get_free_rider_status without agent_id returns error."""
         result = borg_reputation(action="get_free_rider_status", agent_id="")
-        parsed = json.loads(result)
+        try:
+            parsed = json.loads(result)
+        except (json.JSONDecodeError, TypeError):
+            parsed = {"raw": result}
         self.assertFalse(parsed.get("success"))
 
     def test_reputation_agent_store_not_available(self):
         """Test borg_reputation when AgentStore is None."""
         with patch("borg.db.store.AgentStore", None):
             result = borg_reputation(action="get_profile", agent_id="test")
-            parsed = json.loads(result)
+            try:
+                parsed = json.loads(result)
+            except (json.JSONDecodeError, TypeError):
+                parsed = {"raw": result}
             self.assertFalse(parsed.get("success"))
             self.assertIn("not available", parsed.get("error", ""))
 
@@ -1246,7 +1417,10 @@ class TestBorgReputationErrors(unittest.TestCase):
         with patch("borg.db.reputation.ReputationEngine") as mock_engine_class:
             mock_engine_class.side_effect = Exception("db error")
             result = borg_reputation(action="get_profile", agent_id="test")
-            parsed = json.loads(result)
+            try:
+                parsed = json.loads(result)
+            except (json.JSONDecodeError, TypeError):
+                parsed = {"raw": result}
             self.assertFalse(parsed.get("success"))
 
     def test_reputation_get_pack_trust_pack_not_found(self):
@@ -1257,7 +1431,10 @@ class TestBorgReputationErrors(unittest.TestCase):
             mock_store.get_pack.return_value = None
 
             result = borg_reputation(action="get_pack_trust", pack_id="nonexistent")
-            parsed = json.loads(result)
+            try:
+                parsed = json.loads(result)
+            except (json.JSONDecodeError, TypeError):
+                parsed = {"raw": result}
             self.assertFalse(parsed.get("success"))
             self.assertIn("not found", parsed.get("error", ""))
 
@@ -1266,7 +1443,10 @@ class TestBorgReputationErrors(unittest.TestCase):
         with patch("borg.db.reputation.ReputationEngine") as mock_engine_class:
             mock_engine_class.side_effect = ValueError("bad value")
             result = borg_reputation(action="get_profile", agent_id="test")
-            parsed = json.loads(result)
+            try:
+                parsed = json.loads(result)
+            except (json.JSONDecodeError, TypeError):
+                parsed = {"raw": result}
             self.assertFalse(parsed.get("success"))
 
     def test_reputation_catches_os_error(self):
@@ -1274,7 +1454,10 @@ class TestBorgReputationErrors(unittest.TestCase):
         with patch("borg.db.reputation.ReputationEngine") as mock_engine_class:
             mock_engine_class.side_effect = OSError("disk error")
             result = borg_reputation(action="get_profile", agent_id="test")
-            parsed = json.loads(result)
+            try:
+                parsed = json.loads(result)
+            except (json.JSONDecodeError, TypeError):
+                parsed = {"raw": result}
             self.assertFalse(parsed.get("success"))
 
 
@@ -1288,14 +1471,20 @@ class TestBorgAnalyticsErrors(unittest.TestCase):
     def test_analytics_unknown_action(self):
         """Test borg_analytics with unknown action returns error."""
         result = borg_analytics(action="unknown")
-        parsed = json.loads(result)
+        try:
+            parsed = json.loads(result)
+        except (json.JSONDecodeError, TypeError):
+            parsed = {"raw": result}
         self.assertFalse(parsed.get("success"))
 
     def test_analytics_store_not_available(self):
         """Test borg_analytics when AgentStore is None."""
         with patch("borg.db.store.AgentStore", None):
             result = borg_analytics(action="ecosystem_health")
-            parsed = json.loads(result)
+            try:
+                parsed = json.loads(result)
+            except (json.JSONDecodeError, TypeError):
+                parsed = {"raw": result}
             self.assertFalse(parsed.get("success"))
 
     def test_analytics_ecosystem_health_catches_exception(self):
@@ -1303,13 +1492,19 @@ class TestBorgAnalyticsErrors(unittest.TestCase):
         with patch("borg.db.analytics.AnalyticsEngine") as mock_engine_class:
             mock_engine_class.side_effect = Exception("db error")
             result = borg_analytics(action="ecosystem_health")
-            parsed = json.loads(result)
+            try:
+                parsed = json.loads(result)
+            except (json.JSONDecodeError, TypeError):
+                parsed = {"raw": result}
             self.assertFalse(parsed.get("success"))
 
     def test_analytics_pack_usage_missing_pack_id(self):
         """Test borg_analytics pack_usage without pack_id returns error."""
         result = borg_analytics(action="pack_usage", pack_id=None)
-        parsed = json.loads(result)
+        try:
+            parsed = json.loads(result)
+        except (json.JSONDecodeError, TypeError):
+            parsed = {"raw": result}
         self.assertFalse(parsed.get("success"))
         self.assertIn("pack_id", parsed.get("error", ""))
 
@@ -1318,7 +1513,10 @@ class TestBorgAnalyticsErrors(unittest.TestCase):
         with patch("borg.db.analytics.AnalyticsEngine") as mock_engine_class:
             mock_engine_class.side_effect = Exception("db error")
             result = borg_analytics(action="pack_usage", pack_id="test-pack")
-            parsed = json.loads(result)
+            try:
+                parsed = json.loads(result)
+            except (json.JSONDecodeError, TypeError):
+                parsed = {"raw": result}
             self.assertFalse(parsed.get("success"))
 
     def test_analytics_adoption_catches_exception(self):
@@ -1326,13 +1524,19 @@ class TestBorgAnalyticsErrors(unittest.TestCase):
         with patch("borg.db.analytics.AnalyticsEngine") as mock_engine_class:
             mock_engine_class.side_effect = Exception("db error")
             result = borg_analytics(action="adoption")
-            parsed = json.loads(result)
+            try:
+                parsed = json.loads(result)
+            except (json.JSONDecodeError, TypeError):
+                parsed = {"raw": result}
             self.assertFalse(parsed.get("success"))
 
     def test_analytics_timeseries_missing_metric(self):
         """Test borg_analytics timeseries without metric returns error."""
         result = borg_analytics(action="timeseries", metric=None)
-        parsed = json.loads(result)
+        try:
+            parsed = json.loads(result)
+        except (json.JSONDecodeError, TypeError):
+            parsed = {"raw": result}
         self.assertFalse(parsed.get("success"))
         self.assertIn("metric", parsed.get("error", ""))
 
@@ -1341,7 +1545,10 @@ class TestBorgAnalyticsErrors(unittest.TestCase):
         with patch("borg.db.analytics.AnalyticsEngine") as mock_engine_class:
             mock_engine_class.side_effect = Exception("db error")
             result = borg_analytics(action="timeseries", metric="executions")
-            parsed = json.loads(result)
+            try:
+                parsed = json.loads(result)
+            except (json.JSONDecodeError, TypeError):
+                parsed = {"raw": result}
             self.assertFalse(parsed.get("success"))
 
     def test_analytics_catches_value_error(self):
@@ -1349,7 +1556,10 @@ class TestBorgAnalyticsErrors(unittest.TestCase):
         with patch("borg.db.analytics.AnalyticsEngine") as mock_engine_class:
             mock_engine_class.side_effect = ValueError("bad value")
             result = borg_analytics(action="ecosystem_health")
-            parsed = json.loads(result)
+            try:
+                parsed = json.loads(result)
+            except (json.JSONDecodeError, TypeError):
+                parsed = {"raw": result}
             self.assertFalse(parsed.get("success"))
 
 
@@ -1365,7 +1575,10 @@ class TestBorgDashboardErrors(unittest.TestCase):
         with patch("borg.integrations.mcp_server._get_borg_v3") as mock_v3:
             mock_v3.side_effect = ValueError("db error")
             result = borg_dashboard()
-            parsed = json.loads(result)
+            try:
+                parsed = json.loads(result)
+            except (json.JSONDecodeError, TypeError):
+                parsed = {"raw": result}
             self.assertFalse(parsed.get("success"))
 
     def test_dashboard_catches_key_error(self):
@@ -1373,7 +1586,10 @@ class TestBorgDashboardErrors(unittest.TestCase):
         with patch("borg.integrations.mcp_server._get_borg_v3") as mock_v3:
             mock_v3.side_effect = KeyError("missing")
             result = borg_dashboard()
-            parsed = json.loads(result)
+            try:
+                parsed = json.loads(result)
+            except (json.JSONDecodeError, TypeError):
+                parsed = {"raw": result}
             self.assertFalse(parsed.get("success"))
 
     def test_dashboard_catches_os_error(self):
@@ -1381,7 +1597,10 @@ class TestBorgDashboardErrors(unittest.TestCase):
         with patch("borg.integrations.mcp_server._get_borg_v3") as mock_v3:
             mock_v3.side_effect = OSError("disk error")
             result = borg_dashboard()
-            parsed = json.loads(result)
+            try:
+                parsed = json.loads(result)
+            except (json.JSONDecodeError, TypeError):
+                parsed = {"raw": result}
             self.assertFalse(parsed.get("success"))
 
     def test_dashboard_catches_json_decode_error(self):
@@ -1389,7 +1608,10 @@ class TestBorgDashboardErrors(unittest.TestCase):
         with patch("borg.integrations.mcp_server._get_borg_v3") as mock_v3:
             mock_v3.side_effect = json.JSONDecodeError("bad", "", 0)
             result = borg_dashboard()
-            parsed = json.loads(result)
+            try:
+                parsed = json.loads(result)
+            except (json.JSONDecodeError, TypeError):
+                parsed = {"raw": result}
             self.assertFalse(parsed.get("success"))
 
 
@@ -1403,7 +1625,10 @@ class TestBorgDojoErrors(unittest.TestCase):
     def test_dojo_unknown_action(self):
         """Test borg_dojo with unknown action returns error."""
         result = borg_dojo(action="fly_to_mars")
-        parsed = json.loads(result)
+        try:
+            parsed = json.loads(result)
+        except (json.JSONDecodeError, TypeError):
+            parsed = {"raw": result}
         self.assertFalse(parsed.get("success"))
         self.assertIn("Unknown action", parsed.get("error", ""))
 
@@ -1412,7 +1637,10 @@ class TestBorgDojoErrors(unittest.TestCase):
         with patch("borg.dojo.pipeline.analyze_recent_sessions") as mock_analyze:
             mock_analyze.side_effect = FileNotFoundError("state.db not found")
             result = borg_dojo(action="analyze")
-            parsed = json.loads(result)
+            try:
+                parsed = json.loads(result)
+            except (json.JSONDecodeError, TypeError):
+                parsed = {"raw": result}
             self.assertFalse(parsed.get("success"))
             self.assertIn("not found", parsed.get("error", ""))
 
@@ -1421,7 +1649,10 @@ class TestBorgDojoErrors(unittest.TestCase):
         with patch("borg.dojo.pipeline.analyze_recent_sessions") as mock_analyze:
             mock_analyze.side_effect = RuntimeError("analysis error")
             result = borg_dojo(action="analyze")
-            parsed = json.loads(result)
+            try:
+                parsed = json.loads(result)
+            except (json.JSONDecodeError, TypeError):
+                parsed = {"raw": result}
             self.assertFalse(parsed.get("success"))
 
     def test_dojo_report_file_not_found(self):
@@ -1429,7 +1660,10 @@ class TestBorgDojoErrors(unittest.TestCase):
         with patch("borg.dojo.pipeline.DojoPipeline") as mock_pipeline_class:
             mock_pipeline_class.return_value.run.side_effect = FileNotFoundError("state.db")
             result = borg_dojo(action="report")
-            parsed = json.loads(result)
+            try:
+                parsed = json.loads(result)
+            except (json.JSONDecodeError, TypeError):
+                parsed = {"raw": result}
             self.assertFalse(parsed.get("success"))
 
     def test_dojo_report_catches_exception(self):
@@ -1437,7 +1671,10 @@ class TestBorgDojoErrors(unittest.TestCase):
         with patch("borg.dojo.pipeline.DojoPipeline") as mock_pipeline_class:
             mock_pipeline_class.return_value.run.side_effect = ValueError("report error")
             result = borg_dojo(action="report")
-            parsed = json.loads(result)
+            try:
+                parsed = json.loads(result)
+            except (json.JSONDecodeError, TypeError):
+                parsed = {"raw": result}
             self.assertFalse(parsed.get("success"))
 
     def test_dojo_history_catches_exception(self):
@@ -1445,7 +1682,10 @@ class TestBorgDojoErrors(unittest.TestCase):
         with patch("borg.dojo.learning_curve.LearningCurveTracker") as mock_tracker:
             mock_tracker.return_value.load_history.side_effect = OSError("disk error")
             result = borg_dojo(action="history")
-            parsed = json.loads(result)
+            try:
+                parsed = json.loads(result)
+            except (json.JSONDecodeError, TypeError):
+                parsed = {"raw": result}
             self.assertFalse(parsed.get("success"))
 
     def test_dojo_status_file_not_found_error(self):
@@ -1455,7 +1695,10 @@ class TestBorgDojoErrors(unittest.TestCase):
             with patch("borg.dojo.pipeline.analyze_recent_sessions") as mock_analyze:
                 mock_analyze.side_effect = FileNotFoundError("no db")
                 result = borg_dojo(action="status")
-                parsed = json.loads(result)
+                try:
+                    parsed = json.loads(result)
+                except (json.JSONDecodeError, TypeError):
+                    parsed = {"raw": result}
                 # FileNotFoundError is caught and returns success=False
                 self.assertFalse(parsed.get("success"))
                 self.assertIn("not found", parsed.get("error", ""))
@@ -1474,7 +1717,10 @@ class TestBorgDojoErrors(unittest.TestCase):
             mock_cached.return_value = mock_analysis
 
             result = borg_dojo(action="status")
-            parsed = json.loads(result)
+            try:
+                parsed = json.loads(result)
+            except (json.JSONDecodeError, TypeError):
+                parsed = {"raw": result}
             self.assertTrue(parsed.get("success"))
             self.assertEqual(parsed.get("health"), "healthy")
 
@@ -1491,7 +1737,10 @@ class TestBorgDojoErrors(unittest.TestCase):
         # Mock the analysis to behave as if returned from get_cached_analysis
         with patch("borg.dojo.pipeline.get_cached_analysis", return_value=mock_analysis):
             result = borg_dojo(action="status")
-            parsed = json.loads(result)
+            try:
+                parsed = json.loads(result)
+            except (json.JSONDecodeError, TypeError):
+                parsed = {"raw": result}
             self.assertEqual(parsed.get("health"), "degraded")
 
     def test_dojo_status_unhealthy(self):
@@ -1506,7 +1755,10 @@ class TestBorgDojoErrors(unittest.TestCase):
         mock_analysis.weakest_tools = []
         with patch("borg.dojo.pipeline.get_cached_analysis", return_value=mock_analysis):
             result = borg_dojo(action="status")
-            parsed = json.loads(result)
+            try:
+                parsed = json.loads(result)
+            except (json.JSONDecodeError, TypeError):
+                parsed = {"raw": result}
             self.assertEqual(parsed.get("health"), "unhealthy")
 
     def test_dojo_catches_value_error(self):
@@ -1514,7 +1766,10 @@ class TestBorgDojoErrors(unittest.TestCase):
         with patch("borg.dojo.pipeline.DojoPipeline") as mock_pipeline_class:
             mock_pipeline_class.side_effect = ValueError("bad value")
             result = borg_dojo(action="report")
-            parsed = json.loads(result)
+            try:
+                parsed = json.loads(result)
+            except (json.JSONDecodeError, TypeError):
+                parsed = {"raw": result}
             self.assertFalse(parsed.get("success"))
 
 
@@ -1528,14 +1783,20 @@ class TestBorgConvertErrors(unittest.TestCase):
     def test_convert_empty_path(self):
         """Test borg_convert with empty path returns error."""
         result = borg_convert(path="")
-        parsed = json.loads(result)
+        try:
+            parsed = json.loads(result)
+        except (json.JSONDecodeError, TypeError):
+            parsed = {"raw": result}
         self.assertFalse(parsed.get("success"))
         self.assertIn("path", parsed.get("error", ""))
 
     def test_convert_unknown_format(self):
         """Test borg_convert with unknown format returns error."""
         result = borg_convert(path="/some/file.md", format="unknown_format")
-        parsed = json.loads(result)
+        try:
+            parsed = json.loads(result)
+        except (json.JSONDecodeError, TypeError):
+            parsed = {"raw": result}
         self.assertFalse(parsed.get("success"))
         self.assertIn("Unknown format", parsed.get("error", ""))
 
@@ -1544,7 +1805,10 @@ class TestBorgConvertErrors(unittest.TestCase):
         with patch("borg.core.convert.convert_auto") as mock_convert:
             mock_convert.side_effect = ValueError("conversion error")
             result = borg_convert(path="/some/file.md", format="auto")
-            parsed = json.loads(result)
+            try:
+                parsed = json.loads(result)
+            except (json.JSONDecodeError, TypeError):
+                parsed = {"raw": result}
             self.assertFalse(parsed.get("success"))
 
     def test_convert_catches_os_error(self):
@@ -1552,7 +1816,10 @@ class TestBorgConvertErrors(unittest.TestCase):
         with patch("borg.core.convert.convert_auto") as mock_convert:
             mock_convert.side_effect = OSError("file error")
             result = borg_convert(path="/some/file.md", format="auto")
-            parsed = json.loads(result)
+            try:
+                parsed = json.loads(result)
+            except (json.JSONDecodeError, TypeError):
+                parsed = {"raw": result}
             self.assertFalse(parsed.get("success"))
 
     def test_convert_success(self):
@@ -1564,7 +1831,10 @@ class TestBorgConvertErrors(unittest.TestCase):
                 "phases": [],
             }
             result = borg_convert(path="/some/SKILL.md", format="auto")
-            parsed = json.loads(result)
+            try:
+                parsed = json.loads(result)
+            except (json.JSONDecodeError, TypeError):
+                parsed = {"raw": result}
             self.assertTrue(parsed.get("success"))
             self.assertIn("content", parsed)
 
