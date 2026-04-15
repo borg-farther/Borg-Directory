@@ -3,3 +3,13 @@
 *.db-shm
 *.db-wal
 borg.db
+
+# Python cache
+__pycache__/
+*.pyc
+*.pyo
+
+# Runtime
+embeddings.pkl
+telemetry.jsonl
+.cold_start_done
