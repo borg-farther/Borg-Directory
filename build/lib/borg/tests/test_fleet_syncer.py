@@ -84,13 +84,13 @@ class TestFleetSyncerNodeRegistration:
         nodes = [
             NodeConfig(ip="147.93.72.73"),
             NodeConfig(ip="72.61.53.248"),
-            NodeConfig(ip="76.13.198.23"),
+            NodeConfig(ip="10.0.0.1"),
         ]
         syncer = FleetSyncer(nodes=nodes, central_db_path="~/.borg/test_fleet.db")
         assert len(syncer.nodes) == 3
         assert "147.93.72.73" in syncer.nodes
         assert "72.61.53.248" in syncer.nodes
-        assert "76.13.198.23" in syncer.nodes
+        assert "10.0.0.1" in syncer.nodes
 
     def test_ping_mocked_node_reaches(self):
         nodes = [NodeConfig(ip="192.168.1.1")]

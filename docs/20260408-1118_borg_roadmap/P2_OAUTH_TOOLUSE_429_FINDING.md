@@ -111,7 +111,7 @@ Ranked by ROI:
 
 ## Provenance
 
-All probes were done from this VPS (`srv1353853`), Python 3.12.3, raw `httpx` against `https://api.anthropic.com/v1/messages` to remove the runner as a confound. Captured request IDs for the 429 cases:
+All probes were done from this VPS (`example-server`), Python 3.12.3, raw `httpx` against `https://api.anthropic.com/v1/messages` to remove the runner as a confound. Captured request IDs for the 429 cases:
 
 ```
 req_011CZtGWp4Fyn9BeUD7Rv3Vj

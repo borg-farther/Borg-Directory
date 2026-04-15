@@ -117,7 +117,7 @@ fabrication on top of the honest pilot number.
 
 ```
 commit 8a43f8a57de6c2d2636e4840d380242a6255a5a4
-Author: root <root@srv1353853.hstgr.cloud>
+Author: root <root@example.server>
 Date:   Thu Apr 2 12:44:24 2026 +0000
 
     feat: E2E learning loop v2 — all 8 PRD items implemented and verified
