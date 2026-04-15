@@ -84,7 +84,7 @@ class TestRecordFailure:
 
         # Verify file was created
         assert tmp_path.exists()
-        packs_dir = tmp_path / "debug-pack"
+        packs_dir = tmp_path / "default" / "debug-pack"
         assert packs_dir.exists()
         yaml_files = list(packs_dir.glob("*.yaml"))
         assert len(yaml_files) == 1
@@ -110,7 +110,7 @@ class TestRecordFailure:
         fm.record_failure(err, "pack1", "phase1", "approach A", "failure")
         fm.record_failure(err, "pack1", "phase1", "approach A", "failure")
 
-        packs_dir = tmp_path / "pack1"
+        packs_dir = tmp_path / "default" / "pack1"
         yaml_files = list(packs_dir.glob("*.yaml"))
         import yaml
 
@@ -129,7 +129,7 @@ class TestRecordFailure:
         fm.record_failure(err, "pack1", "phase1", "approach B", "failure")
         fm.record_failure(err, "pack1", "phase1", "approach C", "failure")
 
-        packs_dir = tmp_path / "pack1"
+        packs_dir = tmp_path / "default" / "pack1"
         yaml_files = list(packs_dir.glob("*.yaml"))
         import yaml
 
@@ -145,7 +145,7 @@ class TestRecordFailure:
         fm.record_failure(err, "pack1", "phase1", "traced upstream", "success")
         fm.record_failure(err, "pack1", "phase1", "traced upstream", "success")
 
-        packs_dir = tmp_path / "pack1"
+        packs_dir = tmp_path / "default" / "pack1"
         yaml_files = list(packs_dir.glob("*.yaml"))
         import yaml
 
@@ -163,7 +163,7 @@ class TestRecordFailure:
         fm.record_failure(err, "p", "ph", "another wrong", "failure")
         fm.record_failure(err, "p", "ph", "correct approach", "success")
 
-        packs_dir = tmp_path / "p"
+        packs_dir = tmp_path / "default" / "p"
         yaml_files = list(packs_dir.glob("*.yaml"))
         import yaml
 
@@ -187,7 +187,7 @@ class TestRecordFailure:
             "TypeError: None", "p", "ph", "app2", "failure"
         )
 
-        packs_dir = tmp_path / "p"
+        packs_dir = tmp_path / "default" / "p"
         yaml_files = list(packs_dir.glob("*.yaml"))
         import yaml
 

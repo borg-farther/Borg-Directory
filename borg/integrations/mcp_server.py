@@ -1918,6 +1918,25 @@ def borg_observe(task: str = "", context: str = "", context_dict: dict = None, p
     if _conf_line:
         out.append(f"CONFIDENCE: {_real_line.strip()} | {_conf_line.strip()}")
         out.append("")
+        # 2b. Surface dead_ends from matched traces
+        try:
+            import json as _de_json
+            _de_items = []
+            for _pt in (positive_traces[:3] + (embedding_results[:10] if embedding_results else [])):
+                _de_raw = _pt.get("dead_ends", "[]") if isinstance(_pt, dict) else ""
+                if _de_raw and _de_raw != "[]":
+                    try:
+                        _de_list = _de_json.loads(_de_raw) if isinstance(_de_raw, str) else (_de_raw or [])
+                    except Exception:
+                        _de_list = []
+                    for _d in _de_list:
+                        if _d and str(_d).strip():
+                            _de_items.append(str(_d).strip())
+            if _de_items:
+                out.append("AVOID: " + "; ".join(_de_items))
+                out.append("")
+        except Exception:
+            pass
 
     # 4. Full detail
     out.append(divider)

@@ -43,7 +43,8 @@ class BM25Index:
         conn.row_factory = sqlite3.Row
         rows = conn.execute(
             "SELECT id, task_description, keywords, technology, "
-            "error_patterns, root_cause, approach_summary "
+            "error_patterns, root_cause, approach_summary, "
+            "COALESCE(synthetic_queries, '') as synthetic_queries "
             "FROM traces"
         ).fetchall()
         conn.close()
@@ -56,6 +57,7 @@ class BM25Index:
                 row['error_patterns'] or '',
                 row['root_cause'] or '',
                 row['approach_summary'] or '',
+                row['synthetic_queries'] if 'synthetic_queries' in row.keys() else '',
             ]))
             self.add_document(row['id'], doc_text)
 

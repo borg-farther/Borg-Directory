@@ -242,7 +242,7 @@ def semantic_search(
             SELECT id, task_description, technology, outcome,
                    root_cause, approach_summary, keywords,
                    helpfulness_score, times_shown,
-                   times_helped, created_at
+                   times_helped, created_at, dead_ends
             FROM traces WHERE id IN ({placeholders})
         """
         params = list(top_ids)

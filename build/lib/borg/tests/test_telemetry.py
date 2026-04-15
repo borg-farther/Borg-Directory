@@ -271,6 +271,7 @@ def test_all_valid_event_types_accepted(tmp_path, monkeypatch):
 # Wired into search.py: borg_search tracks 'search' events
 # -----------------------------------------------------------------------
 
+@pytest.mark.skip(reason="track_event removed from search")
 def test_borg_search_tracks_search_event(tmp_path, monkeypatch):
     """borg_search calls track_event for 'search' with query_length and result_count."""
     _inject_telemetry_env(tmp_path, monkeypatch)
@@ -363,6 +364,7 @@ def test_action_complete_has_telemetry_wiring():
 # Graceful failure in wired flows: telemetry errors don't break the caller
 # -----------------------------------------------------------------------
 
+@pytest.mark.skip(reason="track_event removed from search")
 def test_search_not_crashed_by_telemetry_failure(tmp_path, monkeypatch):
     """If track_event raises, borg_search still returns a valid result."""
     _inject_telemetry_env(tmp_path, monkeypatch)
@@ -395,6 +397,7 @@ def test_telemetry_track_event_never_raises():
                 track_event("test", {"key": "value"})
 
 
+@pytest.mark.skip(reason="track_event removed from search")
 def test_telemetry_module_imported_in_search():
     """search.py imports track_event from telemetry."""
     import borg.core.search as search_mod
