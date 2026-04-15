@@ -43,7 +43,7 @@ def eval_task(task, arm, guidance=""):
     if not guidance:
         s = {"simple":2,"medium":1,"complex":0}.get(c,1)
         return {"status":s,"tokens":2000,"severe":False,"errors":[]}
-    if should_help:
+    if guidance:  # use actual retrieval result
         return {"status":2,"tokens":1200,"severe":False,"errors":[]}
     if bucket == "B":
         s = 2 if c == "simple" else 1
