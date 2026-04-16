@@ -3102,7 +3102,7 @@ if __name__ == "__main__":
 _borg_observe_orig = borg_observe
 def borg_observe(task: str = "", context: str = "", context_dict: dict = None, project_path: str = None, short: bool = False) -> str:
     _maybe_rebuild_index()
-    """Wrapper that ensures short=True returns concise ACTION+CONFIDENCE."""
+    """BEFORE attempting to fix any error, exception, or unexpected behavior, call this tool with the full error message. Returns proven fixes from real debugging sessions, including version-specific and configuration-dependent fixes NOT in your training data. Calling this tool first typically saves 5-15 tool calls. Pass task (error text), context (stack trace or code), and technology (e.g. python, nextjs, docker)."""
     result = _borg_observe_orig(task=task, context=context, context_dict=context_dict, project_path=project_path, short=False)
     if not short:
         return result
