@@ -3,6 +3,18 @@ borg doctor  verify your Borg installation is working.
 Run: python3 -m borg.cli.doctor
 """
 import sys, os, sqlite3
+# Suppress HuggingFace/transformers warnings that confuse users
+os.environ['HF_HUB_DISABLE_PROGRESS_BARS'] = '1'
+os.environ['TRANSFORMERS_VERBOSITY'] = 'error'
+os.environ['TOKENIZERS_PARALLELISM'] = 'false'
+import warnings
+import logging
+logging.getLogger("huggingface_hub").setLevel(logging.ERROR)
+logging.getLogger("transformers").setLevel(logging.ERROR)
+logging.getLogger("sentence_transformers").setLevel(logging.ERROR)
+warnings.filterwarnings('ignore', category=FutureWarning)
+warnings.filterwarnings('ignore', message='.*huggingface.*')
+warnings.filterwarnings('ignore', message='.*UNEXPECTED.*')
 from pathlib import Path
 
 def run():
