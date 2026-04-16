@@ -8,25 +8,53 @@ import sys
 from datetime import datetime
 from pathlib import Path
 
-# Platform-specific Claude Desktop config paths
-PLATFORM_PATHS = {
-    "darwin": Path.home() / "Library" / "Application Support" / "Claude" / "claude_desktop_config.json",
-    "linux": Path.home() / ".config" / "claude" / "claude_desktop_config.json",
-    "windows": Path.home() / "AppData" / "Roaming" / "Claude" / "claude_desktop_config.json",
+# Multi-client MCP config paths per platform
+CLIENT_PATHS = {
+    "claude": {
+        "darwin": Path.home() / "Library" / "Application Support" / "Claude" / "claude_desktop_config.json",
+        "linux": Path.home() / ".config" / "claude" / "claude_desktop_config.json",
+        "windows": Path.home() / "AppData" / "Roaming" / "Claude" / "claude_desktop_config.json",
+    },
+    "cursor": {
+        "darwin": Path.home() / ".cursor" / "mcp.json",
+        "linux": Path.home() / ".cursor" / "mcp.json",
+        "windows": Path.home() / ".cursor" / "mcp.json",
+    },
+    "cline": {
+        "darwin": Path.home() / "Library" / "Application Support" / "Code" / "User" / "globalStorage" / "saoudrizwan.claude-dev" / "settings" / "cline_mcp_settings.json",
+        "linux": Path.home() / ".config" / "Code" / "User" / "globalStorage" / "saoudrizwan.claude-dev" / "settings" / "cline_mcp_settings.json",
+        "windows": Path.home() / "AppData" / "Roaming" / "Code" / "User" / "globalStorage" / "saoudrizwan.claude-dev" / "settings" / "cline_mcp_settings.json",
+    },
+    "claude-code": {
+        "darwin": Path.home() / ".claude" / "mcp.json",
+        "linux": Path.home() / ".claude" / "mcp.json",
+        "windows": Path.home() / ".claude" / "mcp.json",
+    },
 }
 
+# Backward compat
+PLATFORM_PATHS = CLIENT_PATHS["claude"]
 
-def _get_config_path() -> Path:
-    """Detect Claude Desktop config path for current platform."""
+
+def _get_config_path(client: str = None) -> Path:
+    """Detect MCP config path for the specified client and platform."""
     system = platform.system().lower()
-    if system == "darwin":
-        return PLATFORM_PATHS["darwin"]
-    elif system == "linux":
-        return PLATFORM_PATHS["linux"]
-    elif system == "windows":
-        return PLATFORM_PATHS["windows"]
-    else:
-        raise RuntimeError(f"Unsupported platform: {system}")
+    if client:
+        paths = CLIENT_PATHS.get(client)
+        if not paths:
+            raise RuntimeError(f"Unknown client: {client}. Supported: {', '.join(CLIENT_PATHS.keys())}")
+        if system not in paths:
+            raise RuntimeError(f"Unsupported platform {system} for {client}")
+        return paths[system]
+    # Auto-detect: try each client, return first that exists
+    for name, paths in CLIENT_PATHS.items():
+        if system in paths and paths[system].exists():
+            print(f"  Auto-detected: {name}")
+            return paths[system]
+    # Default to Claude Desktop
+    if system in CLIENT_PATHS["claude"]:
+        return CLIENT_PATHS["claude"][system]
+    raise RuntimeError(f"Unsupported platform: {system}")
 
 
 def _find_borg_executable() -> str:
@@ -115,7 +143,7 @@ def main() -> int:
 
     _save_config(config_path, config)
     print(f"\n✅ 'borg' MCP server registered.")
-    print(f"   Restart Claude Desktop to activate.")
+    print(f"   Restart your IDE/agent to activate.")
     return 0
 
 
