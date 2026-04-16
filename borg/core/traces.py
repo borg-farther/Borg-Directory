@@ -207,6 +207,12 @@ def save_trace(trace: Dict[str, Any], db_path: str = None) -> str:
             f"save_trace() refuses non-organic source={trace.get('source')!r}. "
             "Non-organic traces must go to seed_traces (invariant I3)."
         )
+    # Quality gate: reject hollow traces (competitive review #6)
+    from borg.core.quality_gate import check_trace_quality
+    passed, reason, qscore = check_trace_quality(trace)
+    if not passed:
+        raise ValueError(f'Trace rejected by quality gate: {reason}')
+
     db = _get_db(db_path)
     trace_id = trace.get("id", str(uuid.uuid4())[:8])
     
