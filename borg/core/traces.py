@@ -201,6 +201,12 @@ class TraceCapture:
 
 def save_trace(trace: Dict[str, Any], db_path: str = None) -> str:
     """Save a trace to the database. Returns trace ID."""
+    # Invariant I3: real traces only. Synthetic goes to seed_traces.
+    if trace.get("source") in ("seed_pack", "golden_seed", "curated"):
+        raise ValueError(
+            f"save_trace() refuses non-organic source={trace.get('source')!r}. "
+            "Non-organic traces must go to seed_traces (invariant I3)."
+        )
     db = _get_db(db_path)
     trace_id = trace.get("id", str(uuid.uuid4())[:8])
     

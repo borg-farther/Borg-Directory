@@ -288,10 +288,39 @@ class TraceMatcher:
 
 #  Module-level API (matches Engineering Spec Section 2.3) 
 def find_relevant(task: str, technology: str = None, limit: int = 5) -> list:
-    """Module-level wrapper for TraceMatcher.find_relevant().
-    Maps the public API (task, technology) to the internal API (task, error, top_k)."""
+    """Tiered retrieval: traces (organic) first, seed_traces (synthetic) as fallback.
+    Each result labelled with source_tier: 'real' or 'synthetic'."""
+    import os, sqlite3
     tm = TraceMatcher()
-    return tm.find_relevant(task=task, error=task, top_k=limit)
+    real = tm.find_relevant(task=task, error=task, top_k=limit)
+    for r in real:
+        r['source_tier'] = 'real'
+    if len(real) >= limit:
+        return real
+    # Fallback to seed_traces via simple error-class match
+    need = limit - len(real)
+    synth = []
+    try:
+        db_path = os.path.expanduser(os.environ.get('BORG_HOME', '~/.borg') + '/traces.db')
+        # Extract raw error class name (e.g., "ModuleNotFoundError") not the classified category.
+        import re as _re
+        _m = _re.search(r'\b(\w*Error|\w*Exception)\b', task or '')
+        err = _m.group(0) if _m else (task.split(':')[0].strip() if task and ':' in task else (task.split()[0] if task else ''))
+        if err:
+            with sqlite3.connect(db_path) as db:
+                db.row_factory = sqlite3.Row
+                rows = db.execute(
+                    "SELECT * FROM seed_traces WHERE task_description LIKE ? "
+                    "ORDER BY helpfulness_score DESC, created_at DESC LIMIT ?",
+                    (f'%{err}%', need)
+                ).fetchall()
+                for r in rows:
+                    d = dict(r)
+                    d['source_tier'] = 'synthetic'
+                    synth.append(d)
+    except Exception:
+        pass
+    return real + synth
 
 
 def extract_error_class(task: str) -> str:
