@@ -34,6 +34,7 @@ from typing import Any, Dict, List, Optional
 logging.basicConfig(stream=sys.stderr, level=logging.WARNING)
 
 from borg.core.traces import TraceCapture, save_trace
+from borg.core.status import get_status
 from borg.core.rate_limiter import check_rate_limit, RateLimitExceeded
 
 # Thread-safe session tracking via contextvars
@@ -3085,6 +3086,13 @@ def main() -> None:
             sys.stdout.write(json.dumps(response) + "\n")
             sys.stdout.flush()
 
+
+
+
+def borg_status(agent_id: str = '') -> str:
+    """Show Borg collective status  total traces, top domains, your contributions."""
+    from borg.core.status import get_status
+    return get_status(agent_id=agent_id or None)
 
 if __name__ == "__main__":
     main()
