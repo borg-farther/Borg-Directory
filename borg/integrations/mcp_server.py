@@ -34,6 +34,7 @@ from typing import Any, Dict, List, Optional
 logging.basicConfig(stream=sys.stderr, level=logging.WARNING)
 
 from borg.core.traces import TraceCapture, save_trace
+from borg.core.rate_limiter import check_rate_limit, RateLimitExceeded
 
 # Thread-safe session tracking via contextvars
 _current_session_id: contextvars.ContextVar[str] = contextvars.ContextVar('session_id', default='')
@@ -1677,6 +1678,12 @@ def _maybe_rebuild_index():
         pass
 
 def borg_observe(task: str = "", context: str = "", context_dict: dict = None, project_path: str = None, short: bool = False) -> str:
+    # M6/G5 rate limit  raises RateLimitExceeded on burst exhaustion
+    try:
+        _agent = (context_dict or {}).get("agent_id", "anonymous") if context_dict else "anonymous"
+        check_rate_limit("borg_observe", agent_id=_agent)
+    except RateLimitExceeded as _rle:
+        return f"RATE_LIMIT: {_rle}"
     _maybe_rebuild_index()
     # Auto-seed collective traces on first use
     try:
