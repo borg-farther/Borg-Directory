@@ -10,11 +10,15 @@ Borg is an MCP server that gives AI coding agents a shared cache of debugging tr
 - 4 live invariant tests (I3 real/synthetic separation at read + write; I4 PII gate; source-tier retrieval contract)
 - Not yet ready for public launch. See `Borg_PRD_v4.md` 11 for launch gates.
 
-## Install (experimental, private beta only)
+## Install (private beta)
+
+Requires repo access  ask the maintainer.
 
 ```bash
-pip install --user agent-borg
+pip install git+ssh://git@github.com/bensargotest-sys/borg.git
 ```
+
+See [docs/GETTING_STARTED.md](docs/GETTING_STARTED.md) for full setup (MCP config for Claude Desktop / Cursor / Claude Code / Cline).
 
 MCP config (Claude Desktop / Cursor / Cline / Claude Code):
 
