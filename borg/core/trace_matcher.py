@@ -21,6 +21,8 @@ _FTS5_SPECIAL = re.compile(r'["\'\*\(\)\-\+\:\^]')
 _MULTI_SPACE = re.compile(r'\s+')
 _FTS_KEYWORDS = {'NEAR', 'NOT', 'AND', 'OR'}
 
+from borg.core.sanitizer import sanitize_result
+
 def _sanitize_fts(query: str) -> str:
     """Sanitize query for safe FTS5 MATCH. Strips operators, keywords, limits length."""
     if not query or not isinstance(query, str):
@@ -296,7 +298,7 @@ def find_relevant(task: str, technology: str = None, limit: int = 5) -> list:
     for r in real:
         r['source_tier'] = 'real'
     if len(real) >= limit:
-        return real
+        return [sanitize_result(r) for r in real]
     # Fallback to seed_traces via simple error-class match
     need = limit - len(real)
     synth = []
@@ -320,7 +322,8 @@ def find_relevant(task: str, technology: str = None, limit: int = 5) -> list:
                     synth.append(d)
     except Exception:
         pass
-    return real + synth
+    # B1/G4: sanitize before returning text that will flow to a calling agent
+    return [sanitize_result(r) for r in (real + synth)]
 
 
 def extract_error_class(task: str) -> str:
