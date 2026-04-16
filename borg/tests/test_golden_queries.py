@@ -32,7 +32,7 @@ def setup_test_db():
     db_path = os.path.join(test_home, "traces.db")
     db = sqlite3.connect(db_path)
     db.execute("""CREATE TABLE IF NOT EXISTS traces (
-        trace_id TEXT PRIMARY KEY, task_description TEXT, root_cause TEXT,
+        id TEXT PRIMARY KEY, task_description TEXT, root_cause TEXT,
         approach_summary TEXT, outcome TEXT, technology TEXT,
         helpfulness_score REAL DEFAULT 0.75, times_shown INTEGER DEFAULT 0,
         times_helped INTEGER DEFAULT 0, source TEXT, agent_id TEXT,
@@ -43,7 +43,7 @@ def setup_test_db():
         error_class TEXT)""")
     try:
         db.execute("""CREATE VIRTUAL TABLE IF NOT EXISTS traces_fts
-            USING fts5(trace_id, task_description, approach_summary, root_cause)""")
+            USING fts5(id, task_description, approach_summary, root_cause)""")
     except Exception: pass
     for task, tech, approach, outcome in GOLDEN_TRACES:
         tid = str(uuid.uuid4())
