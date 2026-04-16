@@ -1,157 +1,118 @@
-# Borg — Roadmap & Status
+# Borg Roadmap
 
-## What Borg Is
+Source of truth for launch gates, invariants, design review state, and phase scope. Updated 2026-04-16 (v3.4.0-honest).
 
-Your agent's connective brain tissue. A shared cache of proven approaches
-that gets smarter with every failure. When your agent gets stuck, it connects
-to the borg. When it solves something new, every agent benefits.
+## Project thesis
 
-## Current State (v2.1.1 — 2026-03-27)
+Borg is an **open commons for agent error-recovery traces**, delivered as an MCP server. Agents query before burning tool calls on known errors; Borg surfaces what worked in prior sessions. The thesis is that recovery knowledge is more valuable shared than siloed per-agent, and that a read-through cache architecture beats per-agent memory for this class of problem.
 
-### Working End-to-End
-- pip install guild-packs → guildpacks CLI + guild-mcp MCP server
-- 10 MCP tools: search, pull, try, init, apply, publish, feedback, suggest, observe, convert
-- 23 packs on GitHub (debugging, code review, TDD, planning, GitHub workflows)
-- Flagship pack (systematic-debugging) with 4 phases, real checkpoints, anti-patterns
-- Full apply cycle: start → checkpoint → complete → feedback
-- Auto-suggest after 2+ failures
-- guild_observe: passive structural guidance at task start
-- Pack aggregator: auto anti-pattern discovery, confidence promotion
-- Safety scanning (13 injection + 11 privacy patterns)
-- Proof gates with confidence tiers (guessed → inferred → tested → validated)
-- 848+ tests, 5-user concurrent verification
+## Current status (2026-04-16)
 
-### Platforms Supported
-- Hermes Agent (Nous Research) — config.yaml + autopilot skill
-- Claude Code — MCP config + CLAUDE.md instructions
-- Cursor — MCP config + .cursorrules
-- Cline — MCP config
-- OpenClaw — MCP config
-- Any MCP-compatible agent
+| Layer | State |
+|---|---|
+| DB | 172 organic in `traces`, 156 non-organic in `seed_traces`, invariants I3/I4 live |
+| Retrieval | Tiered: organic first, synthetic fallback, `source_tier` labelled |
+| Write path | `save_trace` rejects non-organic sources with `ValueError` |
+| MCP server | `borg_observe` / `borg_rate` / `borg_status` live; no rate limiting yet |
+| Bench harness | Not built. All public performance claims pending. |
+| PII gate | Live, zero offenders on real data |
 
-## Friction Points (honest assessment)
+## Five Invariants
 
-### NAMING
-- Package is "guild-packs" but concept is "borg"
-- CLI is "guildpacks" — should be "borg"
-- MCP tools prefixed "guild_" — should be "borg_"
-- Decision: rename AFTER first real users (don't break what works for branding)
+| # | Invariant | Status | Blocker if red |
+|---|---|---|---|
+| I1 | First query hits in <30s on fresh install | Pending Phase 1 harness | Launch |
+| I2 | README performance numbers reproducible from `borg-bench` | Pending Phase 1 harness | Launch |
+| I3 | `traces` and `seed_traces` architecturally separate | **LIVE** |  |
+| I4 | PII never ships | **LIVE** |  |
+| I5 | Exported traces validate against `BORG_TRACE_FORMAT_v1` | Pending JSON schema | Phase 2 |
 
-### ONBOARDING (4 steps → should be 1)
-1. pip install — fine
-2. MCP config — manual JSON editing, error-prone
-3. Agent instructions — CLAUDE.md editing, optional but needed for auto-behavior
-4. First search — user must initiate
+## Launch Gates (G1G10)
 
-Goal: `borg autopilot` does 1-3 in one command. Step 4 happens automatically.
+All must be green before public launch.
 
-### FIRST VALUE
-- Current: user tells agent to search → agent finds pack → user says "try it"
-- Goal: agent hits wall → automatically checks borg → follows proven approach
-- guild_observe exists but agents don't call it automatically yet
-- CLAUDE.md instructions help but require user to add them
+| # | Gate | Status |
+|---|---|---|
+| G1 | All 5 invariants passing in CI | I3, I4 green; I1/I2/I5 pending |
+| G2 | `borg-bench` harness built with WILD-200 held-out set | Not started |
+| G3 | Published performance numbers reproducible from G2 harness | Pending G2 |
+| G4 | Prompt-injection sanitizer on retrieval output path | Not started (B1) |
+| G5 | Rate limiting on MCP server | Not started (M6) |
+| G6 | Invited beta with 3 external users, 1 week stable | Not started |
+| G7 | `BORG_TRACE_FORMAT_v1` JSON schema published | Not started |
+| G8 | Trust schema (agent_reputation) populated + used in retrieval | Tables exist, unused |
+| G9 | Dead-end re-ranker live in retrieval | Not started |
+| G10 | MCP tool rename (`borg_observe`  `error_lookup`) with alias | Not started (this roadmap) |
 
-### THE LOOP (built but not running)
-- Aggregator code exists: auto anti-pattern discovery, confidence promotion
-- Never run on real data (zero external users)
-- No cron/CI to trigger aggregation
-- Improved packs not auto-published as PRs
+## Design Review State
 
-## Priority Roadmap
+From Borg_Spec_Adversarial_Review.md (2026-04-15) + post-Phase-0 updates.
 
-### P0 — Ship & Get First User (NOW)
-- [x] Core engine (834 tests)
-- [x] 23 packs on GitHub
-- [x] PyPI published (guild-packs 2.1.1)
-- [x] Flagship pack rewritten with real checkpoints
-- [x] guild_observe passive tool
-- [x] Autopilot command for Hermes
-- [x] Discord #ai-guild pinned message
-- [x] Setup guides for all platforms
-- [ ] First external user completes full loop
-- [ ] First real execution log generated by non-us agent
-- [ ] First real feedback artifact
+**Blockers (B1B4):**
 
-### P1 — Make It Automatic
-- [ ] guildpacks/borg autopilot for Claude Code (auto-create MCP config)
-- [ ] guildpacks/borg autopilot for Cursor (auto-create .cursor/mcp.json)
-- [ ] Agent auto-calls guild_observe on first message (Hermes plugin patch)
-- [ ] Measure: time from install to first visible behavior change
+- **B1  Prompt injection via stored trace text.** Borg feeds trace content back to agents. A malicious trace could inject instructions. **Not fixed.** Needs sanitization layer on retrieval output. Pre-launch blocker.
+- **B2  Unfalsifiable I2.** "README numbers reproducible from bench" was unfalsifiable as written. **Resolved**  Build Spec v2 now specifies exact WILD-200 methodology.
+- **B3  WILD-50 / PII bootstrapping contradiction.** Held-out real traffic eval requires real user traces, but PII gate blocks committing them to repo. **Resolved in spec**  WILD-50 split into PUBLIC (sanitized, committed) and PRIVATE (runs locally, never committed). Implementation pending Phase 1.
+- **B4  `intervention_type` backfill.** Column `causal_intervention` exists but 172 organic traces have no backfill schedule. **Plan pending** (see `docs/backfill_plan.md`).
 
-### P2 — Close the Loop
-- [ ] Run aggregator on real execution data
-- [ ] Auto-generate pack improvement PRs
-- [ ] Confidence auto-promotion (inferred → tested after 10+ executions >70%)
-- [ ] Anti-pattern auto-discovery from clustered failures
-- [ ] Dashboard: pack quality trending over time
+**High-severity (H1H3)  all closed:**
 
-### P3 — Rename to Borg
-- [ ] Reserve borg PyPI package name (agent-borg available)
-- [ ] Rename CLI: guildpacks → borg
-- [ ] Rename MCP tools: guild_* → borg_*
-- [ ] New domain (agentborg.dev available)
-- [ ] Update all docs, Discord, GitHub
+- H1 Hook firing verified live in production (9 stderr markers in 33s, 2026-04-16).
+- H2 Pattern ordering corrected (specific `EADDRINUSE`/`ENOMEM` before generic `\w+Error`).
+- H3 FTS5 injection prevented via `_sanitize_fts()`.
 
-### P4 — Distribution & Growth
-- [ ] Claude plugin marketplace (learn from MiniMax's approach)
-- [ ] Convert 3 MiniMax skills to borg packs as proof of concept
-- [ ] agentskills.io compatibility
-- [ ] Cline community post
-- [ ] Video demo: before/after debugging with borg
-- [ ] Hermes agent PR for native borg integration
+**Medium-severity (M1M6):**
 
-### P5 — Scale
-- [ ] Wire reputation to access (computed but not enforced)
-- [ ] Beta pairwise trust + EigenTrust global
-- [ ] Coordinator bot for external agent publishing
-- [ ] Private borgs (company-internal knowledge exchange)
-- [ ] CI on guild-tools repo
+- M1 Playground CORS  Phase 2, not blocking.
+- M2 DB context managers  deferred to Phase 1.
+- M3 Source-tier labelling  **resolved** (Phase 0 Day 2).
+- M4 Trigger reintroduction with `OLD.id`  Phase 1.
+- M5 Seed audit (credibility risk: 156/328 synthetic with some passed off)  **resolved in Phase 0** via real/synthetic separation.
+- M6 Rate limiting on MCP server  launch gate G5.
 
-## Key Metrics
+## Phase scope
 
-### North Star
-Second-pack activation within 7 days: ≥40%
+### Phase 0  Data hygiene (shipped v3.4.0-honest, 2026-04-16)
 
-### Leading
-- Install → first guild_observe: < 60 seconds
-- guild_try → guild_apply conversion: > 60%
-- Apply completion rate: > 75%
-- Auto-suggest acceptance: > 30%
+Done:
+- Real/synthetic table split
+- Write-path guard (I3)
+- Tiered retrieval with `source_tier`
+- 4 live invariant tests
+- Honest README, prior claims withdrawn
+- Migration log + state snapshot
 
-### Proving the Loop
-- Pack improvement rate: > 50% of active packs improve per month
-- Avg iterations with borg vs without: measurable reduction
-- Anti-patterns auto-discovered per week
-- Confidence promotions per month
+### Phase 1  Launch-ready (6 weeks, not started)
 
-## Architecture
+Critical path:
+1. `borg-bench` harness with WILD-200 held-out set ( G2, G3, I1, I2)
+2. Prompt injection sanitizer on retrieval ( G4, B1)
+3. Rate limiting on MCP server ( G5, M6)
+4. MCP tool rename `borg_observe`  `error_lookup` with 90-day alias ( G10)
+5. `BORG_TRACE_FORMAT_v1` JSON schema + I5 test ( G7, I5)
+6. Trust schema wiring in retrieval ranker ( G8)
+7. Dead-end re-ranker ( G9)
+8. Invited beta 3 external users ( G6)
 
-```
-User's Agent
-    ↓ MCP
-guild-mcp (10 tools)
-    ↓
-guild.core/
-├── search.py      → find packs
-├── apply.py       → execute phases
-├── aggregator.py  → improve from usage  ← THE LOOP
-├── safety.py      → scan for threats
-├── proof_gates.py → validate confidence
-├── publish.py     → share to network
-└── ...
-    ↓
-guild.db/
-├── store.py       → SQLite + FTS5
-├── reputation.py  → contribution scores
-└── analytics.py   → usage metrics
-    ↓
-GitHub: guild-packs repo (23 packs)
-```
+Nice-to-have:
+- Reintroduce `cascade_delete_trace_index` trigger with `OLD.id` fix (M4)
+- DB context managers refactor (M2)
+- `causal_intervention` backfill execution (B4)
 
-## Open Questions
+### Phase 2  Public launch (after all G1G10 green)
 
-1. Rename now or after first users?
-2. Should guild_observe be called automatically by MCP clients, or does the agent need instructions?
-3. How to handle conflicting feedback (Agent A says phase worked, Agent B says it failed)?
-4. Should the aggregator run locally per-user or centrally?
-5. When to build the coordinator bot for external publishing?
+- Public GitHub announcement
+- PyPI publish under final name (pending G10)
+- Playground CORS fix (M1)
+- Trace format adoption outreach to agent-framework maintainers
+- Governance model (single-maintainer  transition plan)
+
+## Non-goals (explicit)
+
+- **Not** a universal agent memory. Borg is scoped to error-recovery traces only.
+- **Not** claiming per-agent personalization. Trust schema exists but Phase 1 scope is collective reputation, not per-user.
+- **Not** building our own agent framework. Borg is a read-through cache that any framework can wire up via MCP.
+
+## Bus factor
+
+Single maintainer. No redundancy. If this matters to a downstream user, fork.
