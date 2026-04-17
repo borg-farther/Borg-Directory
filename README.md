@@ -5,7 +5,8 @@ Borg is an MCP server that gives AI coding agents a shared cache of debugging tr
 ## Status (2026-04-16, Phase 0 complete)
 
 - 172 organic agent-authored traces in `traces`
-- 156 non-organic traces (seed pack + golden seed + curated sprint) in `seed_traces`
+- 293 non-organic traces (seed pack + golden seed + curated sprint) in `seed_traces`
+- 465 total corpus entries
 - Tiered retrieval: organic first, synthetic fallback, each result labelled with `source_tier`
 - 4 live invariant tests (I3 real/synthetic separation at read + write; I4 PII gate; source-tier retrieval contract)
 - Not yet ready for public launch. See `Borg_PRD_v4.md` 11 for launch gates.

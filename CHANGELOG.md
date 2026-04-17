@@ -1,5 +1,50 @@
 # Changelog
 
+## Unreleased (post-3.2.4) — consolidation audit + remediation
+
+This entry documents work shipped since 3.2.4 that lacked its own
+version bump. The next release should consolidate these into a
+single semver-correct version tag.
+
+### Phase 1 — Collective attribution (2026-04-16)
+- `borg_observe` response appends "Source: Borg collective" (fdd8dda, 6318146).
+- `borg_status` tool exposes collective state to agents (807b221).
+
+### Security hardening (2026-04-16)
+- B1/G4 prompt-injection sanitizer on retrieval output (7fd1f5f).
+- M6/G5 rate limiter module + integration (9364f91, 4da7493).
+- Trust session-quality gate on save_trace (d33332b).
+- Multi-client MCP install for Claude / Cursor / Cline / Claude Code (5484e3b).
+
+### Phase 2 — TRUST and outcome feedback (2026-04-17)
+- TRUST line surfaces top-match reliability (UNTESTED/LOW/MEDIUM/HIGH)
+  via Laplace-smoothed `times_helped / (times_shown + 2)` (db7b89e).
+- Dead-end detection: 3 calls in a 300s window triggers a WARNING
+  and decrements `helpfulness_score` by 0.1 on the top-3 matched
+  traces. Sessions tracked in-memory with 1800s TTL (ccabd1a).
+- Short-format response is the new default.
+
+### Audit remediation pass 1 (2026-04-17)
+- **F-01** decoupled trace lookup from the `BORG_DIR` legacy-directory
+  gate in `borg/core/search.py`. Prior version raised `RuntimeError`
+  if `~/.hermes/guild` was absent, silently producing empty retrieval
+  on any cold-start environment (17c429f).
+- **F-05** narrowed bare `except: pass` in `response_formatter.py`
+  and `telemetry.py` to the expected JSON/type errors only (75f7340).
+- **F-06** untracked ~20MB of committed build artefacts 
+  (`build/`, `dist/`, `*.egg-info/`) plus `__pycache__` bytecode.
+  Extended `.gitignore`; filesystem copies unchanged (7bf4b4a).
+
+### Follow-ups tracked separately
+- `tests/test_reputation_integration.py` still patches
+  `borg.core.search.BORG_DIR` to `/nonexistent` at 4 sites; post-F-01
+  those assertions describe the wrong contract and must be inverted.
+- `docs/eliza_cloned/` (53M), `dogfood/` (8.5M), `borg/defi/` pending
+  deletion decisions.
+- F-02 (state-root unification via `borg.config.paths`) and F-16
+  (timeout enforcement off the main thread) are architectural items
+  for a future release, not this remediation pass.
+
 ## 3.2.4 — 20260408 — Observe→search roundtrip fix
 
 Fixes a production bug discovered by the P1.1 MiniMax experiment
