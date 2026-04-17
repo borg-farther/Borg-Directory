@@ -14,3 +14,15 @@ embeddings.pkl
 telemetry.jsonl
 .cold_start_done
 *.pre-ratelimit
+
+# Audit F-06: build and test artefacts
+build/
+dist/
+*.egg-info/
+.pytest_cache/
+
+# Audit remediation backup files (do not commit)
+*.py.phase2-pre
+*.py.phase2full-pre
+*.py.f01-pre
+*.py.f05-pre
