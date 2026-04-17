@@ -350,13 +350,12 @@ def borg_search(query: str, mode: str = "text", requesting_agent_id: str = None,
         # the P1.1 experiment. We now add trace hits as synthetic matches with
         # source="trace" so callers can tell them apart from packs.
         #
-        # Gate: only surface traces if BORG_DIR is a real directory. Tests that
-        # mock BORG_DIR to /nonexistent will skip this path, preserving their
-        # pre-3.2.4 expectations. Production code paths hit the real directory
-        # and get trace surfacing.
+        # F-01 FIX (audit remediation): trace lookup no longer gated on BORG_DIR.
+        # Prior version raised RuntimeError when BORG_DIR (legacy pack store)
+        # was absent, which was silently swallowed by the outer except,
+        # producing empty retrieval on any cold-start without ~/.hermes/guild.
+        # Trace lookup depends only on trace-system readiness (traces.db).
         try:
-            if not (BORG_DIR and Path(BORG_DIR).is_dir()):
-                raise RuntimeError("BORG_DIR not present — skipping trace lookup")
             from borg.core.trace_matcher import TraceMatcher
             matcher = TraceMatcher()
             trace_hits = matcher.find_relevant(query, top_k=10)
