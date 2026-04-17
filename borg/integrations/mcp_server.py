@@ -3200,3 +3200,109 @@ def borg_observe(task: str = "", context: str = "", context_dict: dict = None,
 # ==================================================================
 # END PHASE2_TRUST_MARKER
 # ==================================================================
+
+
+# ==================================================================
+# PHASE2_FULL_MARKER — dead-end detection + outcome feedback + short default
+# Added by phase2_full_apply.py. Remove this block to revert.
+# ==================================================================
+import time as _time_p2f
+
+_P2F_THRESHOLD = 3        # N same-task calls in window = dead-end
+_P2F_WINDOW = 300          # 5-minute active session window
+_P2F_TTL = 1800            # purge state older than 30 min
+_p2f_sessions = {}         # task_key -> {count, first, last, trace_ids}
+
+def _p2f_session_key(task):
+    return (task or "")[:40].lower().strip()
+
+def _p2f_top_traces(task, context, k=3):
+    """Return up to k trace ids matching task, ordered by helpfulness."""
+    try:
+        import re as _rx
+        db = _os_p2.path.expanduser("~/.borg/traces.db")
+        kws = _rx.findall(r"[a-zA-Z_]{4,}", (task or "") + " " + (context or ""))[:6]
+        if not kws:
+            return []
+        con = _sqlite3_p2.connect(db, timeout=2.0)
+        where = " OR ".join(["task_description LIKE ?"] * len(kws))
+        rows = con.execute(
+            "SELECT id FROM traces WHERE (" + where + ") "
+            "AND COALESCE(quarantine_flag,0)=0 "
+            "ORDER BY helpfulness_score DESC, "
+            "(CAST(times_helped AS REAL)/(times_shown+1)) DESC LIMIT ?",
+            [f"%{w}%" for w in kws] + [k],
+        ).fetchall()
+        con.close()
+        return [r[0] for r in rows]
+    except Exception:
+        return []
+
+def _p2f_track(task, context):
+    """Track call. Returns (count, surfaced_trace_ids_if_dead_end)."""
+    now = _time_p2f.time()
+    for k in [k for k, v in _p2f_sessions.items() if now - v["last"] > _P2F_TTL]:
+        _p2f_sessions.pop(k, None)
+    key = _p2f_session_key(task)
+    if not key:
+        return 1, []
+    s = _p2f_sessions.get(key)
+    if s is None or now - s["last"] > _P2F_WINDOW:
+        tids = _p2f_top_traces(task, context, k=3)
+        _p2f_sessions[key] = {"count": 1, "first": now, "last": now, "tids": tids}
+        return 1, []
+    s["count"] += 1
+    s["last"] = now
+    if not s.get("tids"):
+        s["tids"] = _p2f_top_traces(task, context, k=3)
+    return s["count"], (s["tids"] if s["count"] >= _P2F_THRESHOLD else [])
+
+def _p2f_penalize(trace_ids):
+    """Decrement helpfulness_score on surfaced traces that didn't help."""
+    if not trace_ids:
+        return 0
+    try:
+        db = _os_p2.path.expanduser("~/.borg/traces.db")
+        con = _sqlite3_p2.connect(db, timeout=2.0)
+        placeholders = ",".join(["?"] * len(trace_ids))
+        con.execute(
+            "UPDATE traces SET helpfulness_score = MAX(0.0, helpfulness_score - 0.1) "
+            "WHERE id IN (" + placeholders + ")",
+            trace_ids,
+        )
+        con.commit()
+        con.close()
+        return len(trace_ids)
+    except Exception:
+        return 0
+
+_phase2_min_borg_observe = borg_observe  # capture Phase 2 min wrapper
+
+def borg_observe(task: str = "", context: str = "", context_dict: dict = None,
+                 project_path: str = None, short=None) -> str:
+    """Phase 2 FULL: dead-end detection, outcome feedback, short default."""
+    if short is None:
+        short = True  # short-default for agent traffic
+    out = _phase2_min_borg_observe(
+        task=task, context=context, context_dict=context_dict,
+        project_path=project_path, short=short,
+    )
+    try:
+        count, penalize_ids = _p2f_track(task or "", context or "")
+        if count >= _P2F_THRESHOLD:
+            n_penalized = _p2f_penalize(penalize_ids)
+            warn = (
+                f"DEAD-END WARNING: You've queried Borg on this task {count} "
+                f"times in the last {_P2F_WINDOW // 60} min. Previous suggestions "
+                f"are not converging — consider reframing the problem, "
+                f"checking a different stack layer, or asking a human. "
+                f"({n_penalized} prior fixes marked less helpful.)\n\n"
+            )
+            if "DEAD-END WARNING:" not in out:
+                out = warn + out
+    except Exception:
+        pass
+    return out
+# ==================================================================
+# END PHASE2_FULL_MARKER
+# ==================================================================
