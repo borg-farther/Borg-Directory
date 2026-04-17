@@ -3105,7 +3105,7 @@ def borg_observe(task: str = "", context: str = "", context_dict: dict = None, p
     """BEFORE attempting to fix any error, exception, or unexpected behavior, call this tool with the full error message. Returns proven fixes from real debugging sessions, including version-specific and configuration-dependent fixes NOT in your training data. Calling this tool first typically saves 5-15 tool calls. Pass task (error text), context (stack trace or code), and technology (e.g. python, nextjs, docker)."""
     result = _borg_observe_orig(task=task, context=context, context_dict=context_dict, project_path=project_path, short=False)
     if not short:
-        return result
+        return result + "\n\nSource: Borg collective -- error knowledge from real agent sessions"
     lines = result.split("\n")
     action = next((l for l in lines if l.startswith("ACTION:")), "")
     conf = next((l for l in lines if l.startswith("CONFIDENCE:")), "")

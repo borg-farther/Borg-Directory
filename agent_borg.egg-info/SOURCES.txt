@@ -45,7 +45,9 @@ borg/core/pack_taxonomy.py
 borg/core/privacy.py
 borg/core/proof_gates.py
 borg/core/publish.py
+borg/core/rate_limiter.py
 borg/core/safety.py
+borg/core/sanitizer.py
 borg/core/schema.py
 borg/core/search.py
 borg/core/seed_loader.py
@@ -240,6 +242,8 @@ borg/tests/test_feedback_loop.py
 borg/tests/test_fleet_syncer.py
 borg/tests/test_generate.py
 borg/tests/test_generator.py
+borg/tests/test_golden_queries.py
+borg/tests/test_invariants.py
 borg/tests/test_mcp_hardening.py
 borg/tests/test_mcp_server.py
 borg/tests/test_mcp_server_extended.py
