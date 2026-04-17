@@ -3128,3 +3128,75 @@ def borg_observe(task: str = "", context: str = "", context_dict: dict = None, p
             result = _stop_msg + '\n' + ''*50 + '\n' + result
             break
         return result[:200]
+
+
+# ==================================================================
+# PHASE2_TRUST_MARKER — surface success rate based on prior outcomes
+# Added by phase2_apply.py. Remove this block to revert.
+# ==================================================================
+import sqlite3 as _sqlite3_p2
+import re as _re_p2
+import os as _os_p2
+
+_phase1_borg_observe = borg_observe  # capture Phase 1 wrapper
+
+def _phase2_trust(task, context, limit=5):
+    """Return a TRUST line summarising priors for the top candidate trace."""
+    try:
+        db = _os_p2.path.expanduser("~/.borg/traces.db")
+        kws = _re_p2.findall(r"[a-zA-Z_]{4,}", (task or "") + " " + (context or ""))[:6]
+        if not kws:
+            return ""
+        con = _sqlite3_p2.connect(db, timeout=2.0)
+        con.row_factory = _sqlite3_p2.Row
+        where = " OR ".join(["task_description LIKE ?"] * len(kws))
+        params = [f"%{k}%" for k in kws] + [limit]
+        sql = (
+            "SELECT times_shown, times_helped, helpfulness_score "
+            "FROM traces "
+            f"WHERE ({where}) "
+            "AND COALESCE(quarantine_flag,0)=0 "
+            "AND times_shown>=1 "
+            "ORDER BY (CAST(times_helped AS REAL)/(times_shown+1)) DESC, "
+            "         helpfulness_score DESC "
+            "LIMIT ?"
+        )
+        rows = con.execute(sql, params).fetchall()
+        con.close()
+        if not rows:
+            return ""
+        shown = max(int(rows[0]["times_shown"]), 1)
+        helped = int(rows[0]["times_helped"])
+        rate = int(round(100 * (helped + 1) / (shown + 2)))  # Laplace-smoothed
+        if shown < 3:
+            label = "UNTESTED"
+        elif rate >= 75 and shown >= 5:
+            label = "HIGH"
+        elif rate >= 50:
+            label = "MEDIUM"
+        else:
+            label = "LOW"
+        return f"\nTRUST: {label} — top match helped {helped}/{shown} sessions ({rate}% Laplace-smoothed)"
+    except Exception:
+        return ""
+
+def borg_observe(task: str = "", context: str = "", context_dict: dict = None,
+                 project_path: str = None, short: bool = False) -> str:
+    """Phase 2 wrapper: Phase 1 output + trust line from DB priors."""
+    out = _phase1_borg_observe(
+        task=task, context=context, context_dict=context_dict,
+        project_path=project_path, short=short,
+    )
+    try:
+        trust = _phase2_trust(task or "", context or "")
+        if trust and "TRUST:" not in out:
+            if "Source: Borg collective" in out:
+                out = out.replace("\n\nSource: Borg collective", f"{trust}\n\nSource: Borg collective")
+            else:
+                out = out.rstrip() + trust
+    except Exception:
+        pass
+    return out
+# ==================================================================
+# END PHASE2_TRUST_MARKER
+# ==================================================================
