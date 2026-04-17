@@ -16,7 +16,8 @@ def format_response(traces, query="", technology=""):
             ends=json.loads(de)
             if isinstance(ends,list):
                 for e in ends[:3]: lines.append(f"SKIP: {e}")
-        except: pass
+        except (json.JSONDecodeError, ValueError, TypeError, AttributeError, KeyError):  # F-05 FIX
+            pass
     lines.append(f"\nConfidence: {sl} | {tech}")
     lines.append("Source: Borg collective  error knowledge from real agent sessions")
     if n>=2:

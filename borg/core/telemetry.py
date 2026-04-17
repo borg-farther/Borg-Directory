@@ -44,6 +44,7 @@ def get_usage_rate(last_n=50):
             e = json.loads(l)
             if e.get("event")=="recall": recalled.update(e.get("result_ids",[]))
             elif e.get("event")=="usage": used.add(e.get("trace_id",""))
-        except: pass
+        except (json.JSONDecodeError, ValueError, TypeError, AttributeError, KeyError):  # F-05 FIX
+            pass
     recalled.discard(""); used.discard("")
     return len(used & recalled) / max(len(recalled), 1)
