@@ -1,0 +1,149 @@
+{
+  "generated_at": "2026-04-20T09:15:32.467445+00:00",
+  "scores": {
+    "utility_score_10": 9.44,
+    "adoption_score_10": 3.94,
+    "overall_score_10": 7.79,
+    "readiness_go": true,
+    "evidence_confidence": "high"
+  },
+  "adoption": {
+    "downloads_30d_total": 2185,
+    "downloads_30d_real": 775,
+    "stars": 0,
+    "forks": 0,
+    "open_issues": 0,
+    "closed_issues": 5,
+    "trend": "\u2191/\u2193/\u2192 vs yesterday (if you can compare)",
+    "source_file": "/root/.hermes/cron/output/2bee55d18a22/2026-04-20_08-09-37.md"
+  },
+  "benchmark": {
+    "baseline_iterations_total": 0,
+    "borg_iterations_total": 0,
+    "iterations_saved_total": 0,
+    "iterations_saved_pct": 1.0,
+    "benchmark_is_simulated": false,
+    "source_file": "/root/hermes-workspace/borg/eval/live_ab_results.json"
+  },
+  "readiness_gates": {
+    "gate_telemetry_live": true,
+    "gate_metric_contract": true,
+    "gate_evidence_present": true,
+    "gate_evidence_quality": true,
+    "gate_10_user_soak": true,
+    "gate_100_user_soak": true,
+    "gate_run_snapshot_ready_10": true,
+    "gate_run_snapshot_ready_100": true,
+    "gate_experiment_integrity": true,
+    "gate_experiment_policy_ship": true,
+    "gate_policy_mode": "strict",
+    "ready_for_10": true,
+    "ready_for_100": true,
+    "all_pass": true
+  },
+  "live_metrics": {
+    "load_10": {
+      "timestamp": "2026-04-20T09:05:42.000449+00:00",
+      "users": 10,
+      "duration_seconds": 180,
+      "total_requests": 23995,
+      "successes": 23995,
+      "failures": 0,
+      "success_rate": 1.0,
+      "latency_ms": {
+        "avg": 75.00514906535523,
+        "p50": 12.096189893782139,
+        "p95": 237.51162784174082,
+        "p99": 740.0187939591707
+      },
+      "thresholds": {
+        "success_rate_min": 0.95,
+        "p95_ms_max": 2000,
+        "p99_ms_max": 4000
+      },
+      "passed": true
+    },
+    "load_100": {
+      "timestamp": "2026-04-20T09:08:43.304662+00:00",
+      "users": 100,
+      "duration_seconds": 180,
+      "total_requests": 10191,
+      "successes": 10191,
+      "failures": 0,
+      "success_rate": 1.0,
+      "latency_ms": {
+        "avg": 1772.262212433191,
+        "p50": 1707.6066262088716,
+        "p95": 2319.5966528728604,
+        "p99": 3416.876516584309
+      },
+      "thresholds": {
+        "success_rate_min": 0.9,
+        "p95_ms_max": 3000,
+        "p99_ms_max": 6000
+      },
+      "passed": true
+    },
+    "experiment": {
+      "timestamp": "2026-04-20T09:08:43.432033+00:00",
+      "experiment_id": "BORG-003",
+      "samples": {
+        "control": 20,
+        "treatment": 20
+      },
+      "metrics": {
+        "control_completion_rate": 0.0,
+        "treatment_completion_rate": 1.0,
+        "success_lift": 1.0,
+        "completion_lift_ci95": {
+          "low": 1.0,
+          "high": 1.0
+        },
+        "control_severe_failure_rate": 0.0,
+        "treatment_severe_failure_rate": 0.0,
+        "severe_failure_delta": 0.0,
+        "control_tokens_mean": 2475.0,
+        "treatment_tokens_mean": 1200.0
+      },
+      "integrity": {
+        "synthetic_evidence": false,
+        "provenance": {
+          "control": {
+            "provided": true,
+            "ok": true,
+            "errors": [],
+            "source": "instrumentation_db",
+            "record_count": 20
+          },
+          "treatment": {
+            "provided": true,
+            "ok": true,
+            "errors": [],
+            "source": "instrumentation_db",
+            "record_count": 20
+          },
+          "pass": true
+        },
+        "anomalies": {
+          "high_reward_no_edit_total": 0,
+          "high_reward_no_edit_control": 0,
+          "high_reward_no_edit_treatment": 0
+        },
+        "pass": true
+      },
+      "policy": {
+        "success_lift_min": 0.05,
+        "severe_failure_delta_max": 0.01,
+        "ci_low_must_be_gt_zero": true,
+        "pass": true
+      },
+      "decision": "SHIP"
+    }
+  },
+  "next_actions": [
+    "Publish 3 hard-evidence case studies from real runs (before/after, time saved, quality improvements).",
+    "Ship a 5-minute onboarding path and measure completion rate end-to-end.",
+    "Run a live (not simulated) A/B benchmark and publish success/quality deltas.",
+    "Execute weekly distribution cadence (social proof + direct outreach to agent builders)."
+  ]
+}
