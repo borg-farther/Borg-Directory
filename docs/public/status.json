@@ -1,0 +1,13 @@
+{
+  "generated_at": "2026-04-20T15:53:04.276181+00:00",
+  "source": "eval/gate_run_snapshot.json",
+  "snapshot_timestamp": "2026-04-20T15:02:21.988588+00:00",
+  "ready_for_10": true,
+  "ready_for_100": true,
+  "all_pass": true,
+  "scoreboard_gates": {
+    "ready_for_10": true,
+    "ready_for_100": true,
+    "error": null
+  }
+}

@@ -2,21 +2,30 @@
 
 Borg is an MCP server that gives AI coding agents a shared cache of debugging traces. Before an agent burns tool calls on an error, Borg surfaces what worked in prior sessions.
 
-## Status (2026-04-16, Phase 0 complete)
+## Status (live-gated)
 
-- 172 organic agent-authored traces in `traces`
-- 293 non-organic traces (seed pack + golden seed + curated sprint) in `seed_traces`
-- 465 total corpus entries
-- Tiered retrieval: organic first, synthetic fallback, each result labelled with `source_tier`
-- 4 live invariant tests (I3 real/synthetic separation at read + write; I4 PII gate; source-tier retrieval contract)
-- Not yet ready for public launch. See `Borg_PRD_v4.md` 11 for launch gates.
+Borg production readiness is decided by hard gates, not static README text.
+Canonical artifacts:
 
-## Install (private beta)
+- `PROJECT_STATUS.md` (scoreboard + gate breakdown)
+- `GO_NO_GO_DECISION.md` (binary rollout verdict)
+- `eval/gate_run_snapshot.json` and `eval/uat_scoreboard_snapshot.json` (machine-readable source of truth)
+- `docs/VALUE_ANALYSIS_REPORT.md` and `eval/value_analysis_snapshot.json` (plain-English value/adoption report + machine snapshot)
 
-Requires repo access  ask the maintainer.
+Gate policy defaults to **strict** for experiment evidence (packet required + integrity pass + SHIP policy). Relaxed mode is only for local debugging via `BORG_ALLOW_RELAXED_EXPERIMENT_PACKET=1` and must never be used for production claims.
+
+## Install (first-user path)
 
 ```bash
-pip install git+ssh://git@github.com/bensargotest-sys/borg.git
+pip install agent-borg
+```
+
+If you need to run from source instead:
+
+```bash
+git clone https://github.com/bensargotest-sys/borg.git
+cd borg
+pip install -e .
 ```
 
 See [docs/GETTING_STARTED.md](docs/GETTING_STARTED.md) for full setup (MCP config for Claude Desktop / Cursor / Claude Code / Cline).

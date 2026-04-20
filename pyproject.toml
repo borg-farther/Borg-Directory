@@ -4,9 +4,18 @@ build-backend = "setuptools.build_meta"
 
 [project]
 name = "agent-borg"
-version = "3.3.1"
+version = "3.3.2"
 description = "Collective memory MCP server for AI coding agents"
+license = {text = "MIT"}
 requires-python = ">=3.10"
+readme = "README.md"
+keywords = ["mcp", "ai-agents", "debugging", "collective-memory", "workflow"]
+classifiers = [
+    "Programming Language :: Python :: 3",
+    "Programming Language :: Python :: 3 :: Only",
+    "License :: OSI Approved :: MIT License",
+    "Operating System :: OS Independent",
+]
 dependencies = [
     "sentence-transformers>=2.2.0",
   "pyyaml>=6.0"
@@ -23,6 +32,12 @@ semantic = [
 borg = "borg.cli:main"
 borg-doctor = "borg.cli.doctor:run_doctor"
 borg-install = "borg.cli.install:main"
+
+[project.urls]
+Homepage = "https://github.com/bensargotest-sys/borg"
+Repository = "https://github.com/bensargotest-sys/borg"
+Issues = "https://github.com/bensargotest-sys/borg/issues"
+Documentation = "https://github.com/bensargotest-sys/borg/tree/main/docs"
 
 [tool.setuptools.packages.find]
 where = ["."]

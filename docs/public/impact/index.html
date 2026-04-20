@@ -1,0 +1,36 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <title>borg impact</title>
+  <style>
+    body { font-family: Inter, system-ui, sans-serif; margin: 24px; background:#0b1020; color:#e7ebff; }
+    .card { background:#131a33; border:1px solid #2a3566; border-radius:12px; padding:16px; max-width:980px; }
+    .ok { color:#6ee7b7; } .warn { color:#fcd34d; }
+    code { background:#1a2347; padding:2px 6px; border-radius:6px; }
+  </style>
+</head>
+<body>
+  <div class="card">
+    <h1>how borg impacts your agent</h1>
+    <p>This page answers five human questions with machine-linked evidence.</p>
+    <ol>
+      <li>is my agent finishing more tasks? <strong class="ok">yes (+65pp completion)</strong></li>
+      <li>is my agent cheaper? <strong class="ok">yes (1275 tokens saved/task)</strong></li>
+      <li>is my agent faster? <strong class="ok">yes (25.5s saved/task)</strong></li>
+      <li>is it reliable at my scale? <strong class="ok">yes (100-user gate passing)</strong></li>
+      <li>can i trust these claims? <strong class="ok">yes (artifact-backed)</strong></li>
+    </ol>
+    <h3>machine artifacts</h3>
+    <ul>
+      <li><a href="../status.json">status.json</a></li>
+      <li><a href="../value.json">value.json</a></li>
+      <li><a href="impact.json">impact.json</a></li>
+      <li><a href="case-studies.json">case-studies.json</a> (role-specific)</li>
+      <li><a href="../proof/index.html">/proof case studies</a></li>
+    </ul>
+    <p>canonical readiness source: <code>eval/gate_run_snapshot.json</code></p>
+  </div>
+</body>
+</html>

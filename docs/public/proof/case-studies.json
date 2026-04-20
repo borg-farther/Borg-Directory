@@ -1,0 +1,54 @@
+{
+  "generated_at": "2026-04-20T15:53:04.373543+00:00",
+  "source_registry": "eval/human_impact_trace_registry.json",
+  "canonical_readiness_source": "eval/gate_run_snapshot.json",
+  "readiness": {
+    "ready_for_10": true,
+    "ready_for_100": true,
+    "all_pass": true
+  },
+  "case_studies": [
+    {
+      "role": "operator",
+      "headline": "production sweep reaches stable green at 100-user readiness",
+      "human_question": "can i trust the system under real operational load?",
+      "focus": "run full sweep, enforce safety checks, and verify 10/100 readiness truth",
+      "session_id": "session_cron_915e26e1d752_20260420_135113.json",
+      "trace_exists": true,
+      "proof_summary": {
+        "passed_tests_max": 32,
+        "failed_tests_max": 0,
+        "status": "complete"
+      },
+      "impact_statement": "Readiness stayed green at scale (ready_for_10=True, ready_for_100=True) with max 32 passing checks."
+    },
+    {
+      "role": "builder",
+      "headline": "external comms contradiction tests lock public claims to canonical truth",
+      "human_question": "how do i prevent docs from drifting away from real gate truth?",
+      "focus": "validate external comms alignment tests and enforce source-of-truth wiring",
+      "session_id": "session_cron_3765b9812711_20260420_150723.json",
+      "trace_exists": true,
+      "proof_summary": {
+        "passed_tests_max": 5,
+        "failed_tests_max": 0,
+        "status": "complete"
+      },
+      "impact_statement": "Contradiction guard run reached status=complete with 5 passing tests to keep public claims anchored to canonical truth."
+    },
+    {
+      "role": "executive",
+      "headline": "dashboard quality gates pass cleanly with explicit complete marker",
+      "human_question": "is this reliable enough to report upward without narrative risk?",
+      "focus": "verify lint + test + completion marker for externally-visible dashboard claims",
+      "session_id": "session_cron_1f594e40f497_20260420_150706.json",
+      "trace_exists": true,
+      "proof_summary": {
+        "passed_tests_max": 8,
+        "failed_tests_max": 0,
+        "status": "complete"
+      },
+      "impact_statement": "Reporting pipeline showed status=complete with 8 passing checks, reducing executive narrative risk."
+    }
+  ]
+}

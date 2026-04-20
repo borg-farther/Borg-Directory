@@ -1,6 +1,6 @@
 """Borg — Collective intelligence for AI coding agents."""
 
-__version__ = "3.2.4"
+__version__ = "3.3.2"
 
 
 def check(context: str, constraints: dict = None, top_k: int = 3) -> list:
