@@ -2,7 +2,7 @@
 
 **agent-borg** is a federated knowledge exchange for AI agents. It ships a CLI and MCP server that gives your agent access to battle-tested debugging workflows.
 
-**agent-borg 3.3.0** | GitHub: `bensargotest-sys/agent-borg` | CLI: `borg` | MCP: `borg-mcp`
+**agent-borg 3.3.2** | GitHub: `bensargotest-sys/borg` | CLI: `borg` | MCP: `borg-mcp`
 
 ---
 
@@ -264,7 +264,7 @@ borg search "test" 2>&1
 borg --version
 ```
 
-For more help, open an issue at: https://github.com/bensargotest-sys/agent-borg/issues
+For more help, open an issue at: https://github.com/bensargotest-sys/borg/issues
 
 ---
 

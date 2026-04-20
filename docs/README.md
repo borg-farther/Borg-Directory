@@ -67,6 +67,101 @@ borg_try("borg://hermes/systematic-debugging")
 borg_pull("borg://hermes/systematic-debugging")
 ```
 
+### Growth Execution System
+
+If you're working adoption and distribution in production, use:
+- `docs/WORLD_CLASS_GROWTH_EXECUTION_SYSTEM.md` (human runbook)
+- `docs/DISTRIBUTION_CHANNEL_EXECUTION_BOARD.md` (ranked channel board + kill/scale rules)
+- `eval/growth_execution_plan.json` (machine-readable operating spec)
+- `eval/distribution_channel_execution_board.json` (machine-readable distribution board)
+- `eval/growth_plan_lint.py` (quality gates)
+- `eval/tests/test_growth_execution_plan.py` (test enforcement)
+- `eval/tests/test_distribution_channel_execution_board.py` (distribution-board test enforcement)
+
+### Security Hardening Baseline (Pre-Distribution)
+
+Security-first controls that must stay green before channel expansion:
+- `docs/SECURITY_HARDENING_BASELINE.md` (human baseline + operating policy)
+- `eval/security_hardening_baseline.json` (machine-readable baseline spec)
+- `scripts/security_gate_check.py` (policy linter used by CI)
+- `.github/workflows/security-gates.yml` (secret/dependency/static/policy security gates)
+- `eval/tests/test_security_hardening_baseline.py` (test enforcement)
+
+### Public Launch Master Plan (Brand + Org + Trust)
+
+World-class launch architecture for moving from test-branding to production-grade public trust:
+- `docs/PUBLIC_LAUNCH_MASTER_PLAN.md` (human runbook)
+- `docs/PUBLIC_LAUNCH_NEXT_ACTIONS.md` (simple operator checklist: done vs you)
+- `docs/DISCREET_PILOT_CHECKLIST.md` (private pre-launch pilot gate + feedback criteria)
+- `eval/public_launch_master_plan.json` (machine-readable launch specification)
+- `scripts/public_launch_plan_lint.py` (launch-plan quality + consistency linter)
+- `eval/tests/test_public_launch_master_plan.py` (test enforcement)
+- `eval/tests/test_public_branding_cutover_runtime.py` (old-org regression prevention)
+
+### Value + Economics Communication Dashboard
+
+Human-readable and machine-readable value framing (API/token/time/economic savings):
+- `docs/VALUE_COMMUNICATION_DASHBOARD.md` (plain-English narrative)
+- `docs/VALUE_COMMUNICATION_DASHBOARD.html` (public-facing visual dashboard)
+- `docs/public/value-dashboard/index.html` (stable alias URL that does not change)
+- `docs/PUBLIC_DASHBOARD_URLS.md` (current public URL + refresh workflow)
+- `eval/value_communication_dashboard.json` (machine-readable dashboard)
+- `scripts/value_dashboard_lint.py` (quality guard)
+- `eval/tests/test_value_communication_dashboard.py` (test enforcement)
+
+### 100-User Performance Hardening Plan
+
+Execution plan to move `ready_for_100=false` to sustained pass:
+- `docs/PERFORMANCE_100_USER_HARDENING_PLAN.md` (human runbook)
+- `eval/performance_100_user_hardening_plan.json` (machine plan)
+- `scripts/performance_hardening_plan_lint.py` (quality guard)
+- `eval/tests/test_value_communication_dashboard.py` (includes hardening plan tests)
+
+### Illumi Stack Operating System Integration
+
+Systematic adoption of Illumi architecture into Hermes + Borg with safety gates:
+- `docs/ILLUMI_STACK_SYSTEM_SPEC.md` (human operating spec)
+- `eval/illumi_stack_system_baseline.json` (machine baseline)
+- `scripts/illumi_stack_lint.py` (baseline/schema/no-placeholder lint)
+- `eval/tests/test_illumi_stack_operating_system.py` (test enforcement)
+- `docs/ILLUMI_STACK_OPTIMIZATION_SCORECARD.md` (optimal-use score and gap)
+- `eval/illumi_stack_optimization_scorecard.json` (machine scorecard)
+- `docs/ILLUMI_EMBODIED_LAYER_HARDENING.md` (embodied-layer security model)
+- `eval/illumi_embodied_layer_policy.json` (machine policy for embodied actions)
+- `scripts/illumi_embodied_abuse_checks.py` (abuse simulation checks)
+- `eval/tests/test_illumi_embodied_layer_hardening.py` (embodied-layer test enforcement)
+- `docs/ILLUMI_10_USER_READINESS_SCORECARD.md` (latest 10-user readiness verdict)
+- `eval/illumi_10_user_readiness_scorecard.json` (machine readiness scorecard)
+- `scripts/illumi_10_user_readiness_report.py` (readiness scorecard generator)
+- `docs/ILLUMI_100_USER_BLOCKER_FIXES.md` (documented permanent fixes for 100-user tail-latency blockers)
+- `docs/ILLUMI_10_USER_PILOT_PACKET.md` (pilot operating packet)
+- `eval/illumi_10_user_pilot_packet.json` (machine pilot packet)
+- `eval/illumi_10_user_pilot_status.json` (live pilot state)
+- `scripts/illumi_final_sweep.sh` (one-command operator pack)
+- `borg/core/canonical_truth.py` (canonical conflict resolver)
+- `borg/core/outcome_ledger.py` (durable outcome ledger + metrics)
+- `borg/core/action_policy.py` (high-risk action gating)
+- `borg/core/provider_router.py` (task-to-provider routing)
+
+### External Communications + Public Status (Canonical)
+
+- `docs/EXTERNAL_COMMUNICATION_STANDARD.md` (claim policy + canonical truth rules)
+- `scripts/sync_public_status.py` (generates canonical public artifacts)
+- `docs/public/index.html` (public status landing)
+- `docs/public/status.json` (machine-readable readiness truth)
+- `docs/public/value.json` (machine-readable value + readiness payload)
+- `eval/tests/test_external_comms_alignment.py` (no-contradiction enforcement)
+- `docs/BORG_HUMAN_IMPACT_UTILITY_SYSTEM.md` (human-first impact/utility explanation)
+- `eval/borg_human_impact_os.json` (machine-readable impact utility scorecard)
+- `scripts/borg_human_impact_lint.py` (impact artifact quality checks)
+- `scripts/generate_human_impact_case_studies.py` (builds role-based proof narratives from live trace sessions)
+- `eval/human_impact_trace_registry.json` (canonical trace inputs for operator/builder/executive stories)
+- `eval/tests/test_human_impact_utility_system.py` (impact-system test enforcement)
+- `eval/tests/test_human_impact_case_studies.py` (case-study pipeline enforcement)
+- `eval/tests/test_first_user_external_readiness.py` (PyPI/GitHub first-user install + metadata consistency checks)
+- `docs/public/impact/index.html` + `docs/public/impact/impact.json` + `docs/public/impact/case-studies.json` (public impact endpoint + machine case studies)
+- `docs/public/proof/index.html` + `docs/public/proof/case-studies.json` (public proof surface for role-specific evidence)
+
 ---
 
 ## What It Actually Does

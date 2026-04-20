@@ -1,0 +1,36 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <title>borg proof case studies</title>
+  <style>
+    body { font-family: Inter, system-ui, sans-serif; margin: 24px; background:#0b1020; color:#e7ebff; }
+    .card { background:#131a33; border:1px solid #2a3566; border-radius:12px; padding:16px; margin: 0 0 14px 0; max-width:980px; }
+    code { background:#1a2347; padding:2px 6px; border-radius:6px; }
+    a { color:#89b4ff; }
+  </style>
+</head>
+<body>
+  <h1>borg role-specific proof case studies</h1>
+  <p>Generated: <code>2026-04-20T15:53:04.373543+00:00</code></p>
+  <p>Canonical readiness: <code>ready_for_10=true</code>, <code>ready_for_100=true</code></p>
+  <section class="card">
+  <h2>operator: production sweep reaches stable green at 100-user readiness</h2>
+  <p><strong>Question:</strong> can i trust the system under real operational load?</p>
+  <p><strong>Impact:</strong> Readiness stayed green at scale (ready_for_10=True, ready_for_100=True) with max 32 passing checks.</p>
+  <p><strong>Trace:</strong> <code>session_cron_915e26e1d752_20260420_135113.json</code> | status=<code>complete</code> | passed=<code>32</code></p>
+</section><section class="card">
+  <h2>builder: external comms contradiction tests lock public claims to canonical truth</h2>
+  <p><strong>Question:</strong> how do i prevent docs from drifting away from real gate truth?</p>
+  <p><strong>Impact:</strong> Contradiction guard run reached status=complete with 5 passing tests to keep public claims anchored to canonical truth.</p>
+  <p><strong>Trace:</strong> <code>session_cron_3765b9812711_20260420_150723.json</code> | status=<code>complete</code> | passed=<code>5</code></p>
+</section><section class="card">
+  <h2>executive: dashboard quality gates pass cleanly with explicit complete marker</h2>
+  <p><strong>Question:</strong> is this reliable enough to report upward without narrative risk?</p>
+  <p><strong>Impact:</strong> Reporting pipeline showed status=complete with 8 passing checks, reducing executive narrative risk.</p>
+  <p><strong>Trace:</strong> <code>session_cron_1f594e40f497_20260420_150706.json</code> | status=<code>complete</code> | passed=<code>8</code></p>
+</section>
+  <p>Machine payload: <a href="case-studies.json">case-studies.json</a></p>
+</body>
+</html>

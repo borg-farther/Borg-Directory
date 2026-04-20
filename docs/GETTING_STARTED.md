@@ -4,19 +4,17 @@ Borg gives your AI coding agent a shared memory of error fixes. Before your agen
 
 ## 1. Install (one command)
 
-You need repo access  ask Alesh to add you as a collaborator.
-
 ```bash
-pip install git+ssh://git@github.com/bensargotest-sys/borg.git
+pip install agent-borg
 ```
 
-This installs `agent-borg` and its dependencies (~500MB total, mostly PyTorch for embeddings). Takes 2-3 minutes on a decent connection.
+This installs `agent-borg` and its dependencies.
 
-**Lighter install** (no embeddings, uses keyword matching only):
+**Lighter install** (no optional extras):
 
 ```bash
-pip install --no-deps git+ssh://git@github.com/bensargotest-sys/borg.git
-pip install click typer pyyaml  # minimal deps only
+pip install --no-deps agent-borg
+pip install click typer pyyaml
 ```
 
 ## 2. Add to your agent's MCP config

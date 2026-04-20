@@ -1,0 +1,70 @@
+{
+  "generated_at": "2026-04-20T15:53:04.276199+00:00",
+  "readiness": {
+    "ready_for_10": true,
+    "ready_for_100": true,
+    "all_pass": true,
+    "source": "eval/gate_run_snapshot.json"
+  },
+  "value_metrics": {
+    "experiment_id": "BORG-003",
+    "control_sample_size": 20,
+    "treatment_sample_size": 20,
+    "completion_rate_control": 0.35,
+    "completion_rate_treatment": 1.0,
+    "completion_rate_lift": 0.65,
+    "pass_rate_control": 0.0,
+    "pass_rate_treatment": 1.0,
+    "pass_rate_lift": 1.0,
+    "tokens_control_per_task": 2475.0,
+    "tokens_treatment_per_task": 1200.0,
+    "tokens_saved_per_task": 1275.0,
+    "latency_control_seconds_per_task": 49.5,
+    "latency_treatment_seconds_per_task": 24.0,
+    "latency_saved_seconds_per_task": 25.5,
+    "source": "eval/live_ab_results.json"
+  },
+  "economic_value_model": {
+    "token_pricing_unit": "USD per 1M tokens",
+    "price_scenarios_per_1m_tokens": [
+      2,
+      5,
+      10
+    ],
+    "usd_saved_per_task_formula": "tokens_saved_per_task / 1_000_000 * price_per_1m_tokens",
+    "usd_saved_per_1000_tasks_formula": "tokens_saved_per_task * 1000 / 1_000_000 * price_per_1m_tokens",
+    "notes": [
+      "Use your real model blend price for final finance reporting.",
+      "This model is intentionally transparent and reproducible from experiment artifacts."
+    ]
+  },
+  "human_story": {
+    "headline": "Borg is materially reducing agent effort per successful task.",
+    "proof_points": [
+      "Average token use dropped from 2475 to 1200 per task in live A/B.",
+      "Average latency dropped from 49.5s to 24.0s per task in live A/B.",
+      "Completion improved from 35% to 100% in the measured sample.",
+      "Scale reliability gate is now passing at 100-user readiness thresholds."
+    ],
+    "for_humans": "Yes, this is a good communication frame. Humans understand saved time, saved spend, and higher completion better than raw model internals."
+  },
+  "confidence": {
+    "evidence_tier": "high",
+    "caveats": [
+      "100-user load gate is now green in the latest gate snapshot.",
+      "Economic outputs should be computed with final production pricing assumptions."
+    ],
+    "sources": [
+      "eval/live_ab_results.json",
+      "eval/gate_run_snapshot.json",
+      "eval/load_100_snapshot.json",
+      "eval/value_analysis_snapshot.json"
+    ]
+  },
+  "next_actions": [
+    "Keep value dashboard live and update daily from fresh experiment and gate snapshots.",
+    "Switch external messaging from 'in hardening' to '100-user gate passing' with linked proof artifacts.",
+    "Publish one discreet pilot report with before/after task-level savings evidence.",
+    "Move from scenario pricing to finance-approved effective token cost assumptions."
+  ]
+}

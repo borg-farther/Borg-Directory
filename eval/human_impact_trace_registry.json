@@ -1,0 +1,26 @@
+{
+  "generated_for": "role-specific human impact case studies",
+  "roles": [
+    {
+      "role": "operator",
+      "session_id": "session_cron_915e26e1d752_20260420_135113.json",
+      "headline": "production sweep reaches stable green at 100-user readiness",
+      "question": "can i trust the system under real operational load?",
+      "focus": "run full sweep, enforce safety checks, and verify 10/100 readiness truth"
+    },
+    {
+      "role": "builder",
+      "session_id": "session_cron_3765b9812711_20260420_150723.json",
+      "headline": "external comms contradiction tests lock public claims to canonical truth",
+      "question": "how do i prevent docs from drifting away from real gate truth?",
+      "focus": "validate external comms alignment tests and enforce source-of-truth wiring"
+    },
+    {
+      "role": "executive",
+      "session_id": "session_cron_1f594e40f497_20260420_150706.json",
+      "headline": "dashboard quality gates pass cleanly with explicit complete marker",
+      "question": "is this reliable enough to report upward without narrative risk?",
+      "focus": "verify lint + test + completion marker for externally-visible dashboard claims"
+    }
+  ]
+}
