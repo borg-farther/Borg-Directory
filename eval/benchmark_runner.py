@@ -3,7 +3,28 @@
 import json, os, sys, time, sqlite3, argparse
 from pathlib import Path
 sys.path.insert(0, str(Path(__file__).parent))
-from instrumentation_schema import BorgTaskRecord, BorgExperimentMetrics, BorgExperimentComparison, record_task, load_experiment, _ensure_db, DB_PATH
+try:
+    # Package-style imports (pytest, module execution)
+    from eval.instrumentation_schema import (
+        BorgTaskRecord,
+        BorgExperimentMetrics,
+        BorgExperimentComparison,
+        record_task,
+        load_experiment,
+        _ensure_db,
+        DB_PATH,
+    )
+except ModuleNotFoundError:
+    # Script-style imports (python eval/benchmark_runner.py)
+    from instrumentation_schema import (
+        BorgTaskRecord,
+        BorgExperimentMetrics,
+        BorgExperimentComparison,
+        record_task,
+        load_experiment,
+        _ensure_db,
+        DB_PATH,
+    )
 
 BORG_VERSION = "3.3.1"
 EXPERIMENT_ID = "BORG-000"
