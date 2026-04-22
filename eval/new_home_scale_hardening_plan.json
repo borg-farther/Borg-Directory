@@ -1,0 +1,75 @@
+{
+  "plan_id": "borg-new-home-scale-hardening-20260421",
+  "repo": {
+    "active": "https://github.com/borg-farther/Borg-Directory.git",
+    "legacy_archive": "https://github.com/bensargotest-sys/borg.git",
+    "local_path": "/root/hermes-workspace/borg"
+  },
+  "operating_model": {
+    "write_target": "origin_only",
+    "legacy_policy": "read_only_archive",
+    "release_source": "origin",
+    "rollback_source": "legacy"
+  },
+  "hard_gates": [
+    {
+      "id": "remote-parity",
+      "description": "No branch/tag drift between origin and legacy at cutover completion.",
+      "proof_artifact": "eval/git_remote_parity_report.json",
+      "pass_condition": "status == pass"
+    },
+    {
+      "id": "migration-consistency-tests",
+      "description": "Canonical docs/metadata point at new home and old canonical URL is absent.",
+      "proof_artifact": "eval/tests/test_git_home_migration_consistency.py",
+      "pass_condition": "pytest pass"
+    },
+    {
+      "id": "security-baseline",
+      "description": "Secret/dependency/static/policy gates are enforced and green.",
+      "proof_artifact": ".github/workflows/security-gates.yml",
+      "pass_condition": "workflow + policy test pass"
+    },
+    {
+      "id": "first-user-readiness",
+      "description": "Public install path + metadata + docs consistency remain green.",
+      "proof_artifact": "eval/tests/test_first_user_external_readiness.py",
+      "pass_condition": "pytest pass"
+    }
+  ],
+  "branch_protection_standard": {
+    "target_branch": "main",
+    "require_pull_request": true,
+    "required_approvals": 1,
+    "dismiss_stale_reviews": true,
+    "require_status_checks": true,
+    "required_checks": [
+      "test",
+      "security-gates"
+    ],
+    "require_conversation_resolution": true,
+    "block_force_pushes": true,
+    "block_deletions": true,
+    "signed_commits_required": false
+  },
+  "scale_architecture_controls": {
+    "api_core_plus_mcp_adapter": true,
+    "distributed_rate_limiter_required": true,
+    "runtime_contract_canary_required": true,
+    "idempotent_async_jobs_required": true,
+    "slo_contract": {
+      "read_p95_ms": 300,
+      "read_p99_ms": 1000,
+      "write_accept_p95_ms": 500,
+      "availability_target": "99.9%"
+    }
+  },
+  "operator_actions_required": [
+    "Enable branch protection on origin/main using the stated controls.",
+    "Lock legacy repo to read-only/archive mode.",
+    "Set default branch to main in origin if not already.",
+    "Confirm release automation uses only origin remote.",
+    "Ensure repository secrets are present in new repo actions settings."
+  ],
+  "status": "complete"
+}

@@ -1,0 +1,22 @@
+{
+  "timestamp_utc": "2026-04-22T09:13:36.431362Z",
+  "pytest_rc": 0,
+  "pytest_summary": "18 passed in 0.09s",
+  "security_gate_check_rc": 0,
+  "new_home_gate_check_rc": 0,
+  "parity_status": "pass",
+  "operational_ready": true,
+  "unmet_conditions": [],
+  "warnings": [
+    "legacy_repo_not_accessible_from_current_token; treated as external archive"
+  ],
+  "sync_status": "fail",
+  "evidence": {
+    "operational_audit": "eval/new_home_operational_audit.json",
+    "governance_enforcement": "eval/new_home_governance_enforcement.json",
+    "parity_report": "eval/git_remote_parity_report.json",
+    "test_gate_report": "eval/new_home_test_gate_report.json",
+    "sync_result": "eval/git_remote_sync_result.json"
+  },
+  "overall_status": "pass"
+}

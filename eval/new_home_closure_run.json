@@ -1,0 +1,14 @@
+{
+  "timestamp_utc": "2026-04-22T09:13:23.812391Z",
+  "governance_apply_rc": 0,
+  "pytest_rc": 0,
+  "security_gate_check_rc": 0,
+  "contract_gate_rc": 0,
+  "build_readiness_report_rc": 0,
+  "final_status": "pass",
+  "artifacts": {
+    "test_gate_report": "eval/new_home_test_gate_report.json",
+    "closure_run": "eval/new_home_closure_run.json",
+    "build_readiness_report": "eval/new_home_build_readiness_report.json"
+  }
+}

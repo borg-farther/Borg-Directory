@@ -1,0 +1,9 @@
+{
+  "timestamp_utc": "2026-04-22T09:13:23.812391Z",
+  "governance_apply_rc": 0,
+  "pytest_rc": 0,
+  "pytest_summary": "18 passed in 0.09s",
+  "security_gate_check_rc": 0,
+  "new_home_gate_check_rc": 0,
+  "status": "pass"
+}
