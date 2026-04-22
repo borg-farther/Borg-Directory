@@ -1,0 +1,27 @@
+{
+  "timestamp_utc": "2026-04-22T09:10:41.220083Z",
+  "origin_url": "https://github.com/borg-farther/Borg-Directory.git",
+  "legacy_url": "https://github.com/bensargotest-sys/borg.git",
+  "auth_login": "borg-farther",
+  "repo_info": {
+    "defaultBranchRef": {
+      "name": "main"
+    },
+    "isPrivate": false,
+    "nameWithOwner": "borg-farther/Borg-Directory",
+    "url": "https://github.com/borg-farther/Borg-Directory",
+    "viewerPermission": "ADMIN",
+    "visibility": "PUBLIC"
+  },
+  "default_branch_rest": "main",
+  "default_branch_graphql": "main",
+  "main_branch_protection_rc": 0,
+  "main_branch_protection_raw": "{\"url\":\"https://api.github.com/repos/borg-farther/Borg-Directory/branches/main/protection\",\"required_status_checks\":{\"url\":\"https://api.github.com/repos/borg-farther/Borg-Directory/branches/main/protection/required_status_checks\",\"strict\":true,\"contexts\":[\"test\",\"security-gates\"],\"contexts_url\":\"https://api.github.com/repos/borg-farther/Borg-Directory/branches/main/protection/required_status_checks/contexts\",\"checks\":[{\"context\":\"test\",\"app_id\":null},{\"context\":\"security-gates\",\"app_id\":null}]},\"required_pull_request_reviews\":{\"url\":\"https://api.github.com/repos/borg-farther/Borg-Directory/branches/main/protection/required_pull_request_reviews\",\"dismiss_stale_reviews\":true,\"require_code_owner_reviews\":false,\"require_last_push_approval\":false,\"required_approving_review_count\":1},\"required_signatures\":{\"url\":\"https://api.github.com/repos/borg-farther/Borg-Directory/branches/main/protection/required_signatures\",\"enabled\":false},\"enforce_admins\":{\"url\":\"https://api.github.com/repos/borg-farther/Borg-Directory/branches/main/protection/enforce_admins\",\"enabled\":true},\"required_linear_history\":{\"enabled\":true},\"allow_force_pushes\":{\"enabled\":false},\"allow_deletions\":{\"enabled\":false},\"block_creations\":{\"enabled\":false},\"required_conversation_resolution\":{\"enabled\":true},\"lock_branch\":{\"enabled\":false},\"allow_fork_syncing\":{\"enabled\":false}}",
+  "legacy_archived_rc": 1,
+  "legacy_archived_raw": "{\"message\":\"Not Found\",\"documentation_url\":\"https://docs.github.com/rest/repos/repos#get-a-repository\",\"status\":\"404\"}",
+  "ready_for_operations": true,
+  "unmet_conditions": [],
+  "warnings": [
+    "legacy_repo_not_accessible_from_current_token; treated as external archive"
+  ]
+}
