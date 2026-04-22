@@ -1,0 +1,76 @@
+{
+  "generated_at": "2026-04-21T15:09:18.121683+00:00",
+  "overall_pass": true,
+  "checks": [
+    {
+      "name": "runtime_fingerprint_tool",
+      "passed": true,
+      "details": "success=True error="
+    },
+    {
+      "name": "schema_declares_output_dir",
+      "passed": true,
+      "details": "schema_has_output_dir=True"
+    },
+    {
+      "name": "convert_openclaw_accepts_output_dir",
+      "passed": true,
+      "details": "success=True error="
+    }
+  ],
+  "fingerprint": {
+    "success": true,
+    "package_version": "3.3.2",
+    "module_path": "/root/hermes-workspace/borg/borg/integrations/mcp_server.py",
+    "module_sha256": "cd152dcc13ccf2fb7e9f00da457bfa29b702c342724ec865a8619332abc4f077",
+    "schema_sha256": "6964b8df3672fdcd16fffbd21118993ae7051f3a92043c36605898ee94ef9e74",
+    "pid": 2669075,
+    "process_start_ts": "2026-04-21T15:09:17.800987+00:00",
+    "python_version": "3.12.3 (main, Mar  3 2026, 12:15:18) [GCC 13.3.0]",
+    "platform": "Linux-6.8.0-106-generic-x86_64-with-glibc2.39",
+    "tool_count": 21
+  },
+  "convert_probe": {
+    "success": true,
+    "pack_count": 36,
+    "output_dir": "/tmp/borg-runtime-canary-49w4q_s0/skills",
+    "files_written": 36,
+    "skill_md_lines": 116,
+    "pack_slugs": [
+      "quick-debug",
+      "test-pack-xyz",
+      "systematic-debugging",
+      "my-test-e2e-pack",
+      "my-skill",
+      "fresh-pack",
+      "test-driven-development",
+      "smoke-test-pack-686293",
+      "wf-test-apply",
+      "test-call-tool",
+      "plan",
+      "smoke-test-pack-686891",
+      "my-test-pack2",
+      "my-pack",
+      "smoke-test-pack-686695",
+      "old-pack",
+      "my-first-pack",
+      "test-scaffold-pack",
+      "code-review",
+      "github-repo-management",
+      "plan-rubric",
+      "github-issues",
+      "code-review-rubric",
+      "jupyter-live-kernel",
+      "ascii-art",
+      "codebase-inspection",
+      "requesting-code-review",
+      "systematic-debugging-rubric",
+      "subagent-driven-development",
+      "github-auth",
+      "github-pr-workflow",
+      "writing-plans",
+      "github-code-review",
+      "excalidraw"
+    ]
+  }
+}

@@ -12,6 +12,9 @@ Canonical artifacts:
 - `eval/gate_run_snapshot.json` and `eval/uat_scoreboard_snapshot.json` (machine-readable source of truth)
 - `docs/VALUE_ANALYSIS_REPORT.md` and `eval/value_analysis_snapshot.json` (plain-English value/adoption report + machine snapshot)
 
+Archive location for generated rollout/readiness reports: `archive/reports/<date>/`.
+See `docs/REPO_HYGIENE.md` for canonical-vs-archival policy.
+
 Gate policy defaults to **strict** for experiment evidence (packet required + integrity pass + SHIP policy). Relaxed mode is only for local debugging via `BORG_ALLOW_RELAXED_EXPERIMENT_PACKET=1` and must never be used for production claims.
 
 ## Install (first-user path)
@@ -23,7 +26,7 @@ pip install agent-borg
 If you need to run from source instead:
 
 ```bash
-git clone https://github.com/bensargotest-sys/borg.git
+git clone https://github.com/borg-farther/Borg-Directory.git
 cd borg
 pip install -e .
 ```

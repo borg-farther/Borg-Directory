@@ -1,0 +1,54 @@
+{
+  "generated_at": "2026-04-21T15:09:18.893762+00:00",
+  "overall_pass": true,
+  "success_rate": 1.0,
+  "threshold": {
+    "required_success_rate": 1.0
+  },
+  "channels_covered": [
+    "runtime_contract_canary",
+    "cursor_rules",
+    "cline_rules",
+    "claude_cli_rules",
+    "windsurf_rules",
+    "openclaw_skill_distribution",
+    "hermes_mcp_dispatch"
+  ],
+  "checks": [
+    {
+      "name": "distribution_runtime_canary",
+      "passed": true,
+      "details": "overall_pass=True generated_at=2026-04-21T15:09:18.121683+00:00"
+    },
+    {
+      "name": "mcp_generate_all_formats",
+      "passed": true,
+      "details": "success=True keys=['.clinerules', '.cursorrules', '.windsurfrules', 'CLAUDE.md']"
+    },
+    {
+      "name": "generator_api_all_formats",
+      "passed": true,
+      "details": "type=dict keys=['claude-md', 'clinerules', 'cursorrules', 'windsurfrules']"
+    },
+    {
+      "name": "mcp_convert_openclaw",
+      "passed": true,
+      "details": "success=True error="
+    },
+    {
+      "name": "mcp_dispatch_convert_openclaw",
+      "passed": true,
+      "details": "success=True error="
+    },
+    {
+      "name": "openclaw_output_structure",
+      "passed": true,
+      "details": "output_dir=/tmp/borg-openclaw-uat-k3t576wg/openclaw-skills skill_md=True pack_index=True ref_count=34"
+    },
+    {
+      "name": "local_pack_corpus_available",
+      "passed": true,
+      "details": "pack_count=8"
+    }
+  ]
+}
