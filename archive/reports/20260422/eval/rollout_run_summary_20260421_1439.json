@@ -1,0 +1,41 @@
+{
+  "report_path": "/root/hermes-workspace/borg/EXTERNAL_ROLLOUT_REPORT_20260421-1439.md",
+  "logs_dir": "/root/hermes-workspace/borg/eval/rollout_logs_20260421_1439",
+  "failed_commands": [
+    7,
+    8,
+    9,
+    10,
+    11,
+    12,
+    13
+  ],
+  "verdict": "GO",
+  "publish_outcomes": [
+    {
+      "command": "cd /root/hermes-workspace/borg && borg publish list",
+      "exit_code": 1,
+      "status": "failure",
+      "error_text": "Error (publish failed): Artifact not found. Looked for: path=list, pack=, feedback=\n"
+    },
+    {
+      "command": "cd /root/hermes-workspace/borg && borg publish systematic-debugging --repo borg-farther/Borg-Directory",
+      "exit_code": 2,
+      "status": "failure",
+      "error_text": "usage: borg [-h] [--version]\n            {search,pull,try,init,apply,publish,feedback,feedback-v3,debug,recall,convert,generate,list,observe,version,autopilot,setup-claude,setup-cursor,start}\n            ...\nborg: error: unrecognized arguments: --repo borg-farther/Borg-Directory\n"
+    },
+    {
+      "command": "cd /root/hermes-workspace/borg && borg publish test-driven-development --repo borg-farther/Borg-Directory",
+      "exit_code": 2,
+      "status": "failure",
+      "error_text": "usage: borg [-h] [--version]\n            {search,pull,try,init,apply,publish,feedback,feedback-v3,debug,recall,convert,generate,list,observe,version,autopilot,setup-claude,setup-cursor,start}\n            ...\nborg: error: unrecognized arguments: --repo borg-farther/Borg-Directory\n"
+    },
+    {
+      "command": "cd /root/hermes-workspace/borg && borg publish plan --repo borg-farther/Borg-Directory",
+      "exit_code": 2,
+      "status": "failure",
+      "error_text": "usage: borg [-h] [--version]\n            {search,pull,try,init,apply,publish,feedback,feedback-v3,debug,recall,convert,generate,list,observe,version,autopilot,setup-claude,setup-cursor,start}\n            ...\nborg: error: unrecognized arguments: --repo borg-farther/Borg-Directory\n"
+    }
+  ],
+  "artifact_count": 0
+}

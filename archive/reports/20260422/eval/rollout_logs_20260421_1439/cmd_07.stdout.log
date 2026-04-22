@@ -1,0 +1,5 @@
+{
+  "success": false,
+  "error": "Artifact not found. Looked for: path=list, pack=, feedback=",
+  "hint": "Use borg_publish(action='list') to see available artifacts."
+}

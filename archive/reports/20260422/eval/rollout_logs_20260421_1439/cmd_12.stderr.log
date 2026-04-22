@@ -1,0 +1,4 @@
+usage: borg [-h] [--version]
+            {search,pull,try,init,apply,publish,feedback,feedback-v3,debug,recall,convert,generate,list,observe,version,autopilot,setup-claude,setup-cursor,start}
+            ...
+borg: error: unrecognized arguments: all

@@ -26,3 +26,14 @@ dist/
 *.py.phase2full-pre
 *.py.f01-pre
 *.py.f05-pre
+
+# Repo hygiene: keep generated readiness/rollout reports out of repo root
+/READINESS_PROOF_*.md
+/READINESS_FINAL_PROOF_*.md
+/EXTERNAL_ROLLOUT_REPORT_*.md
+/EXTERNAL_ROLLOUT_EXECUTION_*.md
+/UNBLOCK_EXTERNAL_PUBLISH_RUNBOOK_*.md
+
+# Repo hygiene: eval rollout run artefacts are archived by date
+/eval/rollout_logs_*/
+/eval/rollout_run_summary_*.json
