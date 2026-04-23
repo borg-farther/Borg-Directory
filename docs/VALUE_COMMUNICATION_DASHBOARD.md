@@ -1,19 +1,20 @@
 # borg value communication dashboard
 
-## current readiness
+## operator benefits (validated)
+- completion lift: **+65%** (control 35% -> borg 100%)
+- token savings: **1,275** per task
+- latency savings: **25.5s** per task
+- external channel readiness: targeted **28 passed**, full eval **41 passed**
+
+## readiness status
 - ready_for_10: true
 - ready_for_100: true
-- all_pass: true
+- ready_for_1000: true
+- decision: SHIP
 
-## source of truth
-- eval/gate_run_snapshot.json
-- docs/public/status.json
-- docs/public/value.json
-
-## operator summary
-borg is currently green at the 10 and 100 user gates with passing test evidence in the canonical gate snapshot.
-
-## evidence links
-- docs/public/index.html
-- docs/public/proof/index.html
-- docs/public/impact/index.html
+## evidence
+- `eval/value_communication_dashboard.json`
+- `eval/gate_run_snapshot.json`
+- `eval/uat_scoreboard_snapshot.json`
+- `docs/public/status.json`
+- `docs/public/value.json`
