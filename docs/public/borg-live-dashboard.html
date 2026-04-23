@@ -1,0 +1,300 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <title>Borg Live Status — Human + Machine Readable</title>
+  <link href="https://fonts.googleapis.com/css2?family=Geist:wght@400;500;600&family=Geist+Mono:wght@400;500&display=swap" rel="stylesheet">
+  <style>
+    :root {
+      --bg: #ffffff;
+      --text: #171717;
+      --muted: #4d4d4d;
+      --line: rgba(0, 0, 0, 0.08);
+      --soft: #fafafa;
+      --blue: #0a72ef;
+      --pink: #de1d8d;
+      --red: #ff5b4f;
+      --ok: #0b8f45;
+      --warn: #a46f00;
+      --bad: #b42318;
+      --shadow-card: rgba(0,0,0,0.08) 0 0 0 1px, rgba(0,0,0,0.04) 0 2px 2px, rgba(0,0,0,0.04) 0 8px 8px -8px, #fafafa 0 0 0 1px;
+    }
+    * { box-sizing: border-box; }
+    body {
+      margin: 0;
+      font-family: 'Geist', system-ui, -apple-system, 'Segoe UI', Roboto, sans-serif;
+      color: var(--text);
+      background: radial-gradient(circle at 80% -30%, rgba(10,114,239,0.08), transparent 30%), var(--bg);
+    }
+    .container { max-width: 1120px; margin: 0 auto; padding: 28px 18px 56px; }
+    .topbar {
+      display: flex; justify-content: space-between; align-items: center;
+      gap: 12px; margin-bottom: 22px; flex-wrap: wrap;
+      padding: 10px 14px; border-radius: 10px; box-shadow: var(--shadow-card); background: #fff;
+    }
+    .title {
+      font-size: clamp(28px, 5vw, 44px);
+      font-weight: 600;
+      letter-spacing: -1.4px;
+      line-height: 1.05;
+      margin: 8px 0;
+    }
+    .subtitle { color: var(--muted); margin: 0 0 18px; font-size: 16px; }
+    .pill {
+      display: inline-flex; align-items: center; gap: 8px;
+      border-radius: 9999px; padding: 6px 12px; font-size: 12px; font-weight: 500;
+      box-shadow: 0 0 0 1px var(--line);
+      background: #fff;
+    }
+    .grid { display: grid; grid-template-columns: repeat(12, minmax(0,1fr)); gap: 14px; }
+    .card {
+      grid-column: span 12;
+      border-radius: 12px;
+      background: #fff;
+      box-shadow: var(--shadow-card);
+      padding: 16px;
+    }
+    .metric { grid-column: span 12; }
+    .metric h3 { margin: 0 0 6px; font-size: 14px; font-weight: 500; color: var(--muted); }
+    .metric .v { font-size: 30px; font-weight: 600; letter-spacing: -1px; }
+    .metric .d { margin-top: 4px; font-size: 13px; color: var(--muted); }
+
+    .section-title { font-size: 17px; margin: 0 0 10px; letter-spacing: -0.2px; }
+    .kvs { display: grid; grid-template-columns: 1fr auto; gap: 8px 10px; }
+    .k { color: var(--muted); }
+    .vmono {
+      font-family: 'Geist Mono', ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, monospace;
+      font-size: 12px;
+      background: #f7f7f8;
+      border-radius: 8px;
+      padding: 2px 6px;
+      word-break: break-word;
+    }
+    .status-ok { color: var(--ok); }
+    .status-warn { color: var(--warn); }
+    .status-bad { color: var(--bad); }
+
+    .links a {
+      display: inline-block;
+      margin-right: 8px;
+      margin-bottom: 8px;
+      text-decoration: none;
+      font-size: 13px;
+      color: var(--blue);
+      box-shadow: 0 0 0 1px rgba(10,114,239,0.25);
+      border-radius: 999px;
+      padding: 7px 11px;
+      background: #fff;
+    }
+    .links a:hover { background: #f5f9ff; }
+
+    pre {
+      margin: 8px 0 0;
+      background: #0f1117;
+      color: #e6edf3;
+      border-radius: 10px;
+      padding: 12px;
+      overflow: auto;
+      font-size: 12px;
+      line-height: 1.4;
+      font-family: 'Geist Mono', ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, monospace;
+      box-shadow: inset 0 0 0 1px rgba(255,255,255,0.08);
+      max-height: 300px;
+    }
+    .muted { color: var(--muted); font-size: 13px; }
+    .footer { margin-top: 18px; font-size: 12px; color: var(--muted); }
+
+    @media (min-width: 760px) {
+      .metric { grid-column: span 4; }
+      .left { grid-column: span 7; }
+      .right { grid-column: span 5; }
+    }
+  </style>
+</head>
+<body>
+  <div class="container">
+    <div class="topbar">
+      <div class="pill">borg live dashboard</div>
+      <div class="pill">human + machine readable</div>
+      <div class="pill" id="lastRefresh">refreshing…</div>
+    </div>
+
+    <h1 class="title">Borg live status for new users</h1>
+    <p class="subtitle">One page you can share: clear human summary + raw JSON endpoints for machines.</p>
+
+    <div class="grid">
+      <div class="card metric">
+        <h3>readiness</h3>
+        <div class="v" id="readiness">—</div>
+        <div class="d" id="goNoGo">—</div>
+      </div>
+      <div class="card metric">
+        <h3>first-user value</h3>
+        <div class="v" id="valueHeadline">—</div>
+        <div class="d" id="valueSub">—</div>
+      </div>
+      <div class="card metric">
+        <h3>impact signal</h3>
+        <div class="v" id="impactHeadline">—</div>
+        <div class="d" id="impactSub">—</div>
+      </div>
+
+      <div class="card left">
+        <h2 class="section-title">human-readable summary</h2>
+        <div class="kvs">
+          <div class="k">overall state</div><div id="overallState">—</div>
+          <div class="k">status source</div><div class="vmono" id="statusSource">—</div>
+          <div class="k">updated at</div><div id="updatedAt">—</div>
+          <div class="k">distribution gate</div><div id="distributionGate">—</div>
+        </div>
+
+        <h3 class="section-title" style="margin-top:14px">share links</h3>
+        <div class="links">
+          <a id="linkPage" href="#">this page</a>
+          <a id="linkStatusHuman" href="#">status (human view)</a>
+          <a id="linkStatusRaw" href="#">status (raw json)</a>
+          <a id="linkValueRaw" href="#">value (raw json)</a>
+          <a id="linkImpactRaw" href="#">impact (raw json)</a>
+        </div>
+      </div>
+
+      <div class="card right">
+        <h2 class="section-title">machine-readable payload (status.json)</h2>
+        <pre id="statusRaw">loading…</pre>
+        <div class="muted">for bots/agents: consume this payload directly.</div>
+      </div>
+    </div>
+
+    <div class="footer">built from live public borg endpoints on github.</div>
+  </div>
+
+  <script>
+    const endpoints = {
+      statusRaw: 'https://raw.githubusercontent.com/borg-farther/Borg-Directory/main/docs/public/status.json',
+      statusHuman: 'https://github.com/borg-farther/Borg-Directory/blob/main/docs/public/status.json',
+      valueRaw: 'https://raw.githubusercontent.com/borg-farther/Borg-Directory/main/docs/public/value.json',
+      impactRaw: 'https://raw.githubusercontent.com/borg-farther/Borg-Directory/main/docs/public/impact/impact.json'
+    };
+
+    const fmtDate = (v) => {
+      if (!v) return '—';
+      const d = new Date(v);
+      if (Number.isNaN(d.getTime())) return String(v);
+      return d.toISOString().replace('T', ' ').replace('Z', ' UTC');
+    };
+
+    const badge = (txt) => {
+      const s = String(txt || '').toLowerCase();
+      if (/(go|ready|ok|green|pass)/.test(s)) return `<span class="status-ok">${txt}</span>`;
+      if (/(warn|hold|yellow|caution)/.test(s)) return `<span class="status-warn">${txt}</span>`;
+      if (/(fail|red|block|no-go)/.test(s)) return `<span class="status-bad">${txt}</span>`;
+      return txt || '—';
+    };
+
+    const set = (id, val) => { document.getElementById(id).innerHTML = val ?? '—'; };
+
+    async function getJson(url) {
+      const r = await fetch(url, { cache: 'no-store' });
+      if (!r.ok) throw new Error(`HTTP ${r.status}`);
+      return r.json();
+    }
+
+    async function boot() {
+      set('linkPage', window.location.href);
+      set('linkStatusHuman', endpoints.statusHuman);
+      set('linkStatusRaw', endpoints.statusRaw);
+      set('linkValueRaw', endpoints.valueRaw);
+      set('linkImpactRaw', endpoints.impactRaw);
+      document.getElementById('linkPage').href = window.location.href;
+      document.getElementById('linkStatusHuman').href = endpoints.statusHuman;
+      document.getElementById('linkStatusRaw').href = endpoints.statusRaw;
+      document.getElementById('linkValueRaw').href = endpoints.valueRaw;
+      document.getElementById('linkImpactRaw').href = endpoints.impactRaw;
+
+      try {
+        const [status, value, impact] = await Promise.all([
+          getJson(endpoints.statusRaw),
+          getJson(endpoints.valueRaw).catch(() => ({})),
+          getJson(endpoints.impactRaw).catch(() => ({}))
+        ]);
+
+        document.getElementById('statusRaw').textContent = JSON.stringify(status, null, 2);
+
+        const readiness =
+          status.readiness ||
+          status.ready_for_distribution ||
+          status.ready ||
+          status.state ||
+          status.status ||
+          'unknown';
+
+        const goNoGo =
+          status.go_no_go ||
+          status.decision ||
+          status.recommendation ||
+          status.summary ||
+          'no explicit go/no-go field';
+
+        const updatedAt =
+          status.updated_at ||
+          status.timestamp ||
+          status.generated_at ||
+          status.last_updated ||
+          null;
+
+        const source =
+          status.source ||
+          status.report ||
+          'docs/public/status.json';
+
+        const valueHeadline =
+          value.headline ||
+          value.summary ||
+          value.value_prop ||
+          value.primary_metric ||
+          'see value.json';
+
+        const valueSub =
+          value.detail ||
+          value.description ||
+          value.notes ||
+          'machine source: value.json';
+
+        const impactHeadline =
+          impact.headline ||
+          impact.summary ||
+          impact.primary_impact ||
+          'see impact.json';
+
+        const impactSub =
+          impact.detail ||
+          impact.description ||
+          impact.notes ||
+          'machine source: impact/impact.json';
+
+        set('readiness', badge(readiness));
+        set('goNoGo', String(goNoGo));
+        set('overallState', badge(status.state || status.status || readiness));
+        set('statusSource', String(source));
+        set('updatedAt', fmtDate(updatedAt));
+        set('distributionGate', badge(status.distribution_gate || status.gate || goNoGo));
+
+        set('valueHeadline', String(valueHeadline));
+        set('valueSub', String(valueSub));
+        set('impactHeadline', String(impactHeadline));
+        set('impactSub', String(impactSub));
+      } catch (err) {
+        document.getElementById('statusRaw').textContent = `failed to load live endpoints: ${err.message}`;
+        set('readiness', '<span class="status-bad">unavailable</span>');
+        set('goNoGo', 'could not fetch live json');
+        set('overallState', '<span class="status-bad">data fetch error</span>');
+      }
+
+      set('lastRefresh', `refreshed ${new Date().toISOString().replace('T', ' ').replace('Z', ' UTC')}`);
+    }
+
+    boot();
+  </script>
+</body>
+</html>
