@@ -10,3 +10,12 @@ Thu Apr 23 11:59:25 UTC 2026
  M eval/google_tier_uat_scoreboard.json
  M eval/google_tier_uat_snapshot.json
 ?? docs/20260423-1140_FINAL_SHARE_CLOSURE.md
+=== status --short (after round2) ===
+ M GO_NO_GO_DECISION.md
+ M PROJECT_STATUS.md
+ M UAT_RESULTS.md
+ M eval/20260423_share_release_proof_round2.txt
+ M eval/google_tier_uat_scoreboard.json
+ M eval/google_tier_uat_snapshot.json
+=== commit ===
+3fec23c7024a01ebb8b6d0a8e16eb52f8d9a6219
