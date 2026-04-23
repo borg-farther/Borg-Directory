@@ -1,0 +1,66 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <title>Borg Value Dashboard</title>
+  <style>
+    :root{--bg:#0b1020;--card:#131a33;--border:#2a3566;--txt:#e7ebff;--muted:#9fb2e8;--ok:#6ee7b7;--accent:#89b4ff}
+    body{font-family:Inter,system-ui,-apple-system,Segoe UI,Roboto,sans-serif;background:var(--bg);color:var(--txt);margin:0;padding:24px}
+    .wrap{max-width:980px;margin:0 auto}
+    .card{background:var(--card);border:1px solid var(--border);border-radius:14px;padding:18px;margin-bottom:14px}
+    h1,h2{margin:0 0 10px 0}
+    p{margin:8px 0;color:var(--muted)}
+    .grid{display:grid;grid-template-columns:repeat(auto-fit,minmax(220px,1fr));gap:10px}
+    .kpi{border:1px solid var(--border);border-radius:12px;padding:12px;background:#101830}
+    .num{font-size:1.5rem;font-weight:700;color:var(--ok)}
+    ul{margin:8px 0 0 18px}
+    li{margin:6px 0}
+    code{background:#1a2347;padding:2px 6px;border-radius:6px;color:#c9d9ff}
+    a{color:var(--accent)}
+    .ok{color:var(--ok);font-weight:600}
+  </style>
+</head>
+<body>
+  <main class="wrap">
+    <section class="card">
+      <h1>borg value dashboard</h1>
+      <p><span class="ok">distribution gates: green</span> — ready_for_10=true, ready_for_100=true, ready_for_1000=true, decision=SHIP</p>
+      <p>this page summarizes concrete borg benefits from validated artifacts.</p>
+    </section>
+
+    <section class="card">
+      <h2>operator benefits (what borg buys you)</h2>
+      <div class="grid">
+        <article class="kpi"><div>completion lift</div><div class="num">+65%</div><p>control 35% → borg 100%</p></article>
+        <article class="kpi"><div>token savings</div><div class="num">1,275</div><p>avg tokens saved per task</p></article>
+        <article class="kpi"><div>latency savings</div><div class="num">25.5s</div><p>avg faster per task</p></article>
+        <article class="kpi"><div>external uat</div><div class="num">41 passed</div><p>full eval suite in external channel run</p></article>
+      </div>
+    </section>
+
+    <section class="card">
+      <h2>why this matters</h2>
+      <ul>
+        <li><strong>higher task completion:</strong> borg guidance materially raises finish rate under real eval conditions.</li>
+        <li><strong>lower run cost:</strong> fewer wasted tokens and retries from dead-end avoidance.</li>
+        <li><strong>faster operator loop:</strong> lower latency per task compounds at scale.</li>
+        <li><strong>distribution confidence:</strong> cross-channel uat and readiness gates are green.</li>
+      </ul>
+    </section>
+
+    <section class="card">
+      <h2>evidence + links</h2>
+      <ul>
+        <li>machine value: <code>eval/value_communication_dashboard.json</code></li>
+        <li>gate snapshot: <code>eval/gate_run_snapshot.json</code></li>
+        <li>scoreboard: <code>eval/uat_scoreboard_snapshot.json</code></li>
+        <li>public status JSON: <a href="/Borg-Directory/docs/public/status.json">status.json</a></li>
+        <li>public value JSON: <a href="/Borg-Directory/docs/public/value.json">value.json</a></li>
+        <li>impact page: <a href="/Borg-Directory/docs/public/impact/index.html">impact/index.html</a></li>
+        <li>proof index: <a href="/Borg-Directory/docs/public/proof/index.html">proof/index.html</a></li>
+      </ul>
+    </section>
+  </main>
+</body>
+</html>
