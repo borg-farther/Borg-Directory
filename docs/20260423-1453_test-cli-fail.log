@@ -1,0 +1,293 @@
+============================= test session starts ==============================
+platform linux -- Python 3.11.15, pytest-9.0.2, pluggy-1.6.0 -- /root/.hermes/hermes-agent/venv/bin/python3
+cachedir: .pytest_cache
+rootdir: /root/hermes-workspace/borg
+configfile: pyproject.toml
+plugins: cov-7.1.0, requests-mock-1.12.1, timeout-2.4.0, anyio-4.12.1, asyncio-1.3.0, xdist-3.8.0
+asyncio: mode=Mode.STRICT, debug=False, asyncio_default_fixture_loop_scope=None, asyncio_default_test_loop_scope=function
+collecting ... collected 38 items
+
+borg/tests/test_cli.py::test_search_dispatches_to_borg_search PASSED     [  2%]
+borg/tests/test_cli.py::test_pull_dispatches_to_borg_pull PASSED         [  5%]
+borg/tests/test_cli.py::test_try_dispatches_to_borg_try PASSED           [  7%]
+borg/tests/test_cli.py::test_init_scaffolds_new_pack PASSED              [ 10%]
+borg/tests/test_cli.py::test_apply_dispatches_to_apply_handler FAILED    [ 13%]
+borg/tests/test_cli.py::test_publish_dispatches_to_action_publish PASSED [ 15%]
+borg/tests/test_cli.py::test_feedback_dispatches_to_generate_feedback PASSED [ 18%]
+borg/tests/test_cli.py::test_list_dispatches_to_action_list PASSED       [ 21%]
+borg/tests/test_cli.py::test_help_text_shows_all_commands PASSED         [ 23%]
+borg/tests/test_cli.py::test_help_short_flag PASSED                      [ 26%]
+borg/tests/test_cli.py::test_unknown_command_shows_help PASSED           [ 28%]
+borg/tests/test_cli.py::test_missing_subcommand_shows_help PASSED        [ 31%]
+borg/tests/test_cli.py::test_version_prints_version PASSED               [ 34%]
+borg/tests/test_cli.py::test_version_does_not_print_help PASSED          [ 36%]
+borg/tests/test_cli.py::test_apply_requires_task PASSED                  [ 39%]
+borg/tests/test_cli.py::test_convert_dispatches_to_convert_auto PASSED   [ 42%]
+borg/tests/test_cli.py::test_convert_with_explicit_format_dispatches_correctly PASSED [ 44%]
+borg/tests/test_cli.py::test_setup_claude_creates_config_and_claude_md PASSED [ 47%]
+borg/tests/test_cli.py::test_setup_claude_idempotent_no_reinstall PASSED [ 50%]
+borg/tests/test_cli.py::test_setup_claude_appends_to_existing_claude_md PASSED [ 52%]
+borg/tests/test_cli.py::test_setup_claude_updates_existing_guild_section PASSED [ 55%]
+borg/tests/test_cli.py::test_setup_cursor_creates_mcp_json_and_cursorrules PASSED [ 57%]
+borg/tests/test_cli.py::test_setup_cursor_idempotent_no_reinstall PASSED [ 60%]
+borg/tests/test_cli.py::test_setup_cursor_appends_to_existing_cursorrules PASSED [ 63%]
+borg/tests/test_cli.py::test_setup_cursor_updates_existing_guild_section PASSED [ 65%]
+borg/tests/test_cli.py::test_setup_cursor_merges_with_existing_other_mcp_servers PASSED [ 68%]
+borg/tests/test_cli.py::test_setup_claude_merges_with_existing_other_mcp_servers PASSED [ 71%]
+borg/tests/test_cli.py::test_setup_claude_user_scope_writes_dot_claude_json PASSED [ 73%]
+borg/tests/test_cli.py::test_setup_claude_requires_fix_for_missing_borg_home PASSED [ 76%]
+borg/tests/test_cli.py::test_setup_claude_verify_runs_handshake PASSED   [ 78%]
+borg/tests/test_cli.py::test_borg_mcp_entry_uses_empty_args_when_borg_mcp_exists PASSED [ 81%]
+borg/tests/test_cli.py::test_help_text_shows_setup_commands PASSED       [ 84%]
+borg/tests/test_cli.py::test_reputation_calls_build_profile FAILED       [ 86%]
+borg/tests/test_cli.py::test_reputation_shows_all_profile_fields FAILED  [ 89%]
+borg/tests/test_cli.py::test_status_shows_borg_dir_and_db FAILED         [ 92%]
+borg/tests/test_cli.py::test_status_shows_pack_and_agent_counts FAILED   [ 94%]
+borg/tests/test_cli.py::test_status_shows_running_sessions FAILED        [ 97%]
+borg/tests/test_cli.py::test_status_dispatches_to_subcommand FAILED      [100%]
+
+=================================== FAILURES ===================================
+____________________ test_apply_dispatches_to_apply_handler ____________________
+
+args = (), keywargs = {}
+
+    @wraps(func)
+    def patched(*args, **keywargs):
+>       with self.decoration_helper(patched,
+                                    args,
+                                    keywargs) as (newargs, newkeywargs):
+
+/root/.local/share/uv/python/cpython-3.11.15-linux-x86_64-gnu/lib/python3.11/unittest/mock.py:1375: 
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ 
+/root/.local/share/uv/python/cpython-3.11.15-linux-x86_64-gnu/lib/python3.11/contextlib.py:137: in __enter__
+    return next(self.gen)
+           ^^^^^^^^^^^^^^
+/root/.local/share/uv/python/cpython-3.11.15-linux-x86_64-gnu/lib/python3.11/unittest/mock.py:1357: in decoration_helper
+    arg = exit_stack.enter_context(patching)
+          ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+/root/.local/share/uv/python/cpython-3.11.15-linux-x86_64-gnu/lib/python3.11/contextlib.py:517: in enter_context
+    result = _enter(cm)
+             ^^^^^^^^^^
+/root/.local/share/uv/python/cpython-3.11.15-linux-x86_64-gnu/lib/python3.11/unittest/mock.py:1430: in __enter__
+    self.target = self.getter()
+                  ^^^^^^^^^^^^^
+/root/.local/share/uv/python/cpython-3.11.15-linux-x86_64-gnu/lib/python3.11/pkgutil.py:715: in resolve_name
+    result = getattr(result, p)
+             ^^^^^^^^^^^^^^^^^^
+borg/core/__init__.py:22: in __getattr__
+    module = import_module(f"borg.core.{name}")
+             ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+/root/.local/share/uv/python/cpython-3.11.15-linux-x86_64-gnu/lib/python3.11/importlib/__init__.py:126: in import_module
+    return _bootstrap._gcd_import(name[level:], package, level)
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ 
+
+    """
+    Guild Apply Module (T1.9) — Bundled execution engine for Guild v2.
+    
+    Multi-action handler:
+      action="start"      — Load pack, safety-scan, create execution session, return approval summary
+      action="checkpoint"  — Log a phase checkpoint result (pass/fail/skip)
+      action="complete"    — Finalize execution, write summary, generate feedback draft
+      action="resume"      — Resume an interrupted execution from the last completed phase
+      action="status"      — Check current session state
+    
+    Session persistence: {GUILD_DIR}/sessions/{session_id}.json
+    Execution logs:      {GUILD_DIR}/executions/{session_id}.jsonl
+    
+    Zero imports from tools.* or guild_mcp.* — uses borg.core.* sibling modules.
+    """
+    
+    from __future__ import annotations
+    
+    import hashlib
+    import json
+    import logging
+    import os
+    from datetime import datetime, timezone
+    from pathlib import Path
+    from typing import Any, Dict, List, Optional
+    
+    import yaml
+    
+    from borg.core import safety as _safety_mod
+    from borg.core import schema as _schema_mod
+    from borg.core import session as _session_mod
+    from borg.core.dirs import get_borg_dir
+    from borg.core.uri import resolve_guild_uri, fetch_with_retry
+    from borg.core.privacy import privacy_redact
+    from borg.core.proof_gates import check_confidence_decay
+>   from borg.core.telemetry import track_event
+E   ImportError: cannot import name 'track_event' from 'borg.core.telemetry' (/root/hermes-workspace/borg/borg/core/telemetry.py)
+
+borg/core/apply.py:36: ImportError
+_____________________ test_reputation_calls_build_profile ______________________
+
+mock_engine_cls = <MagicMock name='ReputationEngine' id='124895832754832'>
+mock_store_cls = <MagicMock name='AgentStore' id='124895842214416'>
+
+    @patch("borg.cli.AgentStore")
+    @patch("borg.cli.ReputationEngine")
+    def test_reputation_calls_build_profile(mock_engine_cls, mock_store_cls):
+        """reputation command calls ReputationEngine.build_profile with agent_id."""
+        mock_engine = MagicMock()
+        mock_engine_cls.return_value = mock_engine
+        mock_engine.build_profile.return_value = ReputationProfile(
+            agent_id="agent-42",
+            contribution_score=0.0,
+            access_tier=AccessTier.COMMUNITY,
+            free_rider_status=FreeRiderStatus.OK,
+            packs_published=0,
+            packs_consumed=0,
+            last_active_at=None,
+        )
+    
+        code, out, err = capture_main(["reputation", "agent-42"])
+    
+>       assert code == 0
+E       assert 2 == 0
+
+borg/tests/test_cli.py:616: AssertionError
+___________________ test_reputation_shows_all_profile_fields ___________________
+
+mock_engine_cls = <MagicMock name='ReputationEngine' id='124895842225552'>
+mock_store_cls = <MagicMock name='AgentStore' id='124895832821776'>
+
+    @patch("borg.cli.AgentStore")
+    @patch("borg.cli.ReputationEngine")
+    def test_reputation_shows_all_profile_fields(mock_engine_cls, mock_store_cls):
+        """reputation command displays contribution score, tier, free-rider, packs, last active."""
+        mock_engine = MagicMock()
+        mock_engine_cls.return_value = mock_engine
+        mock_engine.build_profile.return_value = ReputationProfile(
+            agent_id="agent-99",
+            contribution_score=25.5,
+            access_tier=AccessTier.VALIDATED,
+            free_rider_status=FreeRiderStatus.FLAGGED,
+            packs_published=3,
+            packs_consumed=7,
+            last_active_at=datetime(2025, 6, 15, 12, 0, tzinfo=timezone.utc),
+        )
+    
+        code, out, err = capture_main(["reputation", "agent-99"])
+    
+>       assert code == 0
+E       assert 2 == 0
+
+borg/tests/test_cli.py:640: AssertionError
+______________________ test_status_shows_borg_dir_and_db _______________________
+
+mock_get_borg_dir = <MagicMock name='get_borg_dir' id='124895833158672'>
+mock_load_sessions = <MagicMock name='load_persisted_sessions' id='124895833161168'>
+mock_store_cls = <MagicMock name='AgentStore' id='124895833149456'>
+
+    @patch("borg.cli.AgentStore")
+    @patch("borg.cli.load_persisted_sessions")
+    @patch("borg.cli.get_borg_dir")
+    def test_status_shows_borg_dir_and_db(mock_get_borg_dir, mock_load_sessions, mock_store_cls):
+        """status command displays BORG_DIR and database path."""
+        mock_get_borg_dir.return_value.__str__ = MagicMock(return_value="/fake/guild")
+        mock_get_borg_dir.return_value.__truediv__ = lambda self, x: f"/fake/guild/{x}"
+        mock_load_sessions.return_value = []
+        mock_store = MagicMock()
+        mock_store.list_packs.return_value = []
+        mock_store.list_agents.return_value = []
+        mock_store_cls.return_value = mock_store
+    
+        code, out, err = capture_main(["status"])
+    
+>       assert code == 0
+E       assert 2 == 0
+
+borg/tests/test_cli.py:668: AssertionError
+___________________ test_status_shows_pack_and_agent_counts ____________________
+
+mock_get_borg_dir = <MagicMock name='get_borg_dir' id='124895834337552'>
+mock_load_sessions = <MagicMock name='load_persisted_sessions' id='124895834334992'>
+mock_store_cls = <MagicMock name='AgentStore' id='124895834325456'>
+
+    @patch("borg.cli.AgentStore")
+    @patch("borg.cli.load_persisted_sessions")
+    @patch("borg.cli.get_borg_dir")
+    @patch("borg.cli._active_sessions", {})
+    def test_status_shows_pack_and_agent_counts(mock_get_borg_dir, mock_load_sessions, mock_store_cls):
+        """status command shows number of packs and agents."""
+        mock_get_borg_dir.return_value.__str__ = MagicMock(return_value="/fake/guild")
+        mock_get_borg_dir.return_value.__truediv__ = lambda self, x: f"/fake/guild/{x}"
+        mock_load_sessions.return_value = []
+        mock_store = MagicMock()
+        mock_store.list_packs.return_value = [{"id": "p1"}, {"id": "p2"}, {"id": "p3"}]
+        mock_store.list_agents.return_value = [{"agent_id": "a1"}, {"agent_id": "a2"}]
+        mock_store_cls.return_value = mock_store
+    
+        code, out, err = capture_main(["status"])
+    
+>       assert code == 0
+E       assert 2 == 0
+
+borg/tests/test_cli.py:689: AssertionError
+______________________ test_status_shows_running_sessions ______________________
+
+mock_get_borg_dir = <MagicMock name='get_borg_dir' id='124895833017488'>
+mock_load_sessions = <MagicMock name='load_persisted_sessions' id='124895833022032'>
+mock_store_cls = <MagicMock name='AgentStore' id='124895832950928'>
+
+    @patch("borg.cli.AgentStore")
+    @patch("borg.cli.load_persisted_sessions")
+    @patch("borg.cli.get_borg_dir")
+    def test_status_shows_running_sessions(mock_get_borg_dir, mock_load_sessions, mock_store_cls):
+        """status command lists running sessions with their state."""
+        mock_get_borg_dir.return_value.__str__ = MagicMock(return_value="/fake/guild")
+        mock_get_borg_dir.return_value.__truediv__ = lambda self, x: f"/fake/guild/{x}"
+    
+        running_session = {
+            "session_id": "sess-abc",
+            "pack_name": "debug-pack",
+            "status": "running",
+        }
+        mock_load_sessions.return_value = [running_session]
+        mock_store = MagicMock()
+        mock_store.list_packs.return_value = []
+        mock_store.list_agents.return_value = []
+        mock_store_cls.return_value = mock_store
+    
+        code, out, err = capture_main(["status"])
+    
+>       assert code == 0
+E       assert 2 == 0
+
+borg/tests/test_cli.py:715: AssertionError
+_____________________ test_status_dispatches_to_subcommand _____________________
+
+mock_get_borg_dir = <MagicMock name='get_borg_dir' id='124895842117200'>
+mock_load_sessions = <MagicMock name='load_persisted_sessions' id='124895833072272'>
+mock_store_cls = <MagicMock name='AgentStore' id='124895833070864'>
+
+    @patch("borg.cli.AgentStore")
+    @patch("borg.cli.load_persisted_sessions")
+    @patch("borg.cli.get_borg_dir")
+    def test_status_dispatches_to_subcommand(mock_get_borg_dir, mock_load_sessions, mock_store_cls):
+        """status command is registered and callable."""
+        mock_get_borg_dir.return_value.__str__ = MagicMock(return_value="/fake/guild")
+        mock_get_borg_dir.return_value.__truediv__ = lambda self, x: f"/fake/guild/{x}"
+        mock_load_sessions.return_value = []
+        mock_store = MagicMock()
+        mock_store.list_packs.return_value = []
+        mock_store.list_agents.return_value = []
+        mock_store_cls.return_value = mock_store
+    
+        code, out, err = capture_main(["status"])
+>       assert code == 0
+E       assert 2 == 0
+
+borg/tests/test_cli.py:735: AssertionError
+=========================== short test summary info ============================
+FAILED borg/tests/test_cli.py::test_apply_dispatches_to_apply_handler - Impor...
+FAILED borg/tests/test_cli.py::test_reputation_calls_build_profile - assert 2...
+FAILED borg/tests/test_cli.py::test_reputation_shows_all_profile_fields - ass...
+FAILED borg/tests/test_cli.py::test_status_shows_borg_dir_and_db - assert 2 == 0
+FAILED borg/tests/test_cli.py::test_status_shows_pack_and_agent_counts - asse...
+FAILED borg/tests/test_cli.py::test_status_shows_running_sessions - assert 2 ...
+FAILED borg/tests/test_cli.py::test_status_dispatches_to_subcommand - assert ...
+========================= 7 failed, 31 passed in 6.39s =========================
+EXIT:1

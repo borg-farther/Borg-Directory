@@ -4,7 +4,7 @@ This guide provides exact copy-paste MCP configurations for Claude Code, Cursor,
 
 **The recommended setup is:**
 ```bash
-borg setup-claude   # automated setup for Claude Code
+borg setup-claude --scope user --verify --fix
 ```
 
 The config below is what `borg setup-claude` writes automatically. You only need this if you're configuring manually.
@@ -13,9 +13,9 @@ The config below is what `borg setup-claude` writes automatically. You only need
 
 ## Claude Code
 
-**Config file:** `~/.config/claude/claude_desktop_config.json`
+**Config file (recommended scope):** `~/.claude.json`
 
-> Note: Claude Code stores MCP settings in a JSON file. The default location is `~/.config/claude/claude_desktop_config.json` on Linux/macOS.
+> Note: `--scope desktop` still supports `~/.config/claude/claude_desktop_config.json` for legacy installs.
 
 ### Single borg server (recommended: use borg-mcp)
 
@@ -68,6 +68,10 @@ If you already have other MCP servers configured, merge the borg entry:
 
 After restarting Claude Code, ask:
 > "What MCP tools do you have available from borg?"
+
+### Critical gotcha
+
+Use absolute `BORG_HOME` paths in MCP env. Do not use `~/.borg` in manual JSON entries — some Claude launch paths do not shell-expand `~`.
 
 You should see tools like `borg_search`, `borg_observe`, `borg_try`, `borg_apply`, `borg_feedback`, `borg_suggest`, and `borg_debug`.
 

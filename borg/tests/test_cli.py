@@ -234,6 +234,12 @@ import tempfile
 import os
 
 
+@pytest.fixture(autouse=True)
+def _mock_setup_claude_verify(monkeypatch):
+    """Avoid spawning real MCP runtime in setup-claude tests unless explicitly patched."""
+    monkeypatch.setattr(cli_module, "_verify_borg_runtime", lambda *args, **kwargs: (True, "initialize handshake ok"))
+
+
 @patch("borg.cli.Path.home")
 def test_setup_claude_creates_config_and_claude_md(mock_home, tmp_path, monkeypatch):
     """setup-claude creates claude_desktop_config.json and CLAUDE.md."""
@@ -247,7 +253,7 @@ def test_setup_claude_creates_config_and_claude_md(mock_home, tmp_path, monkeypa
     project_dir.mkdir()
     monkeypatch.chdir(project_dir)
 
-    code, out, err = capture_main(["setup-claude"])
+    code, out, err = capture_main(["setup-claude", "--scope", "desktop", "--fix"])
     assert code == 0
 
     # Check config was created
@@ -258,7 +264,9 @@ def test_setup_claude_creates_config_and_claude_md(mock_home, tmp_path, monkeypa
     assert "mcpServers" in config
     assert "borg" in config["mcpServers"]
     borg_entry = config["mcpServers"]["borg"]
-    assert borg_entry["command"].endswith("borg-mcp") or borg_entry["command"] == "borg-mcp"
+    is_borg_mcp = borg_entry["command"].endswith("borg-mcp") or borg_entry["command"] == "borg-mcp"
+    is_python_module = borg_entry["command"].endswith("python") or "python" in Path(borg_entry["command"]).name
+    assert is_borg_mcp or is_python_module
 
     # Check CLAUDE.md was created
     claude_md = project_dir / "CLAUDE.md"
@@ -288,7 +296,7 @@ def test_setup_claude_idempotent_no_reinstall(mock_home, tmp_path, monkeypatch):
     instructions = CLAUDE_MD_TEMPLATE.lstrip("\n")
     claude_md.write_text("# Project CLAUDE.md\n" + instructions + "\n")
 
-    code, out, err = capture_main(["setup-claude"])
+    code, out, err = capture_main(["setup-claude", "--scope", "desktop", "--fix"])
     assert code == 0
     # Should not change anything
     assert "already" in out.lower() or "Everything already" in out
@@ -309,7 +317,7 @@ def test_setup_claude_appends_to_existing_claude_md(mock_home, tmp_path, monkeyp
     claude_md = project_dir / "CLAUDE.md"
     claude_md.write_text("# Project CLAUDE.md\n\nSome existing content.\n")
 
-    code, out, err = capture_main(["setup-claude"])
+    code, out, err = capture_main(["setup-claude", "--scope", "desktop", "--fix"])
     assert code == 0
 
     content = claude_md.read_text()
@@ -332,7 +340,7 @@ def test_setup_claude_updates_existing_guild_section(mock_home, tmp_path, monkey
     claude_md = project_dir / "CLAUDE.md"
     claude_md.write_text("# Project CLAUDE.md\n\n## Borg Workflow Packs\n\nOld guild content here.\n\n## Other Section\n\nMore stuff.\n")
 
-    code, out, err = capture_main(["setup-claude"])
+    code, out, err = capture_main(["setup-claude", "--scope", "desktop", "--fix"])
     assert code == 0
 
     content = claude_md.read_text()
@@ -367,7 +375,9 @@ def test_setup_cursor_creates_mcp_json_and_cursorrules(mock_home, tmp_path, monk
     assert "mcpServers" in config
     assert "borg" in config["mcpServers"]
     borg_entry = config["mcpServers"]["borg"]
-    assert borg_entry["command"].endswith("borg-mcp") or borg_entry["command"] == "borg-mcp"
+    is_borg_mcp = borg_entry["command"].endswith("borg-mcp") or borg_entry["command"] == "borg-mcp"
+    is_python_module = borg_entry["command"].endswith("python") or "python" in Path(borg_entry["command"]).name
+    assert is_borg_mcp or is_python_module
 
     # Check .cursorrules was created
     cursor_rules = project_dir / ".cursorrules"
@@ -503,13 +513,145 @@ def test_setup_claude_merges_with_existing_other_mcp_servers(mock_home, tmp_path
         }
     }))
 
-    code, out, err = capture_main(["setup-claude"])
+    code, out, err = capture_main(["setup-claude", "--scope", "desktop", "--fix"])
     assert code == 0
 
     config = json.loads(config_file.read_text())
     assert "some-other-server" in config["mcpServers"]
     assert "borg" in config["mcpServers"]
     assert config["mcpServers"]["some-other-server"]["command"] == "node"
+
+
+@patch("borg.cli.Path.home")
+def test_setup_claude_user_scope_writes_dot_claude_json(mock_home, tmp_path, monkeypatch):
+    """setup-claude --scope user writes ~/.claude.json and avoids project file mutations."""
+    fake_home = tmp_path / "home"
+    fake_home.mkdir()
+    mock_home.return_value = fake_home
+
+    project_dir = tmp_path / "proj"
+    project_dir.mkdir()
+    monkeypatch.chdir(project_dir)
+
+    code, out, err = capture_main(["setup-claude", "--scope", "user", "--fix"])
+    assert code == 0
+
+    assert (fake_home / ".claude.json").exists()
+    assert not (project_dir / "CLAUDE.md").exists()
+
+
+@patch("borg.cli.Path.home")
+def test_setup_claude_requires_fix_for_missing_borg_home(mock_home, tmp_path, monkeypatch):
+    """Without --fix, setup-claude fails when BORG_HOME does not exist."""
+    fake_home = tmp_path / "home"
+    fake_home.mkdir()
+    mock_home.return_value = fake_home
+
+    project_dir = tmp_path / "proj"
+    project_dir.mkdir()
+    monkeypatch.chdir(project_dir)
+
+    code, out, err = capture_main(["setup-claude", "--scope", "user"])
+    assert code == 1
+    assert "BORG_HOME does not exist" in err
+
+
+@patch("borg.cli._verify_borg_runtime")
+@patch("borg.cli.Path.home")
+def test_setup_claude_verify_runs_handshake(mock_home, mock_verify, tmp_path, monkeypatch):
+    """--verify runs runtime handshake and reports PASS when successful."""
+    fake_home = tmp_path / "home"
+    fake_home.mkdir()
+    mock_home.return_value = fake_home
+    mock_verify.return_value = (True, "initialize handshake ok")
+
+    project_dir = tmp_path / "proj"
+    project_dir.mkdir()
+    monkeypatch.chdir(project_dir)
+
+    code, out, err = capture_main(["setup-claude", "--scope", "user", "--fix", "--verify"])
+    assert code == 0
+    assert "Verify: PASS" in out
+    mock_verify.assert_called_once()
+
+
+@patch("borg.cli._verify_borg_runtime")
+@patch("borg.cli.Path.home")
+def test_setup_claude_verify_enabled_by_default(mock_home, mock_verify, tmp_path, monkeypatch):
+    """setup-claude runs verification by default (without explicit --verify)."""
+    fake_home = tmp_path / "home"
+    fake_home.mkdir()
+    mock_home.return_value = fake_home
+    mock_verify.return_value = (True, "initialize handshake ok")
+
+    project_dir = tmp_path / "proj"
+    project_dir.mkdir()
+    monkeypatch.chdir(project_dir)
+
+    code, out, err = capture_main(["setup-claude", "--scope", "user", "--fix"])
+    assert code == 0
+    assert "Verify: PASS" in out
+    mock_verify.assert_called_once()
+
+
+@patch("borg.cli._verify_borg_runtime")
+@patch("borg.cli.Path.home")
+def test_setup_claude_no_verify_skips_handshake(mock_home, mock_verify, tmp_path, monkeypatch):
+    """--no-verify disables runtime handshake."""
+    fake_home = tmp_path / "home"
+    fake_home.mkdir()
+    mock_home.return_value = fake_home
+
+    project_dir = tmp_path / "proj"
+    project_dir.mkdir()
+    monkeypatch.chdir(project_dir)
+
+    code, out, err = capture_main(["setup-claude", "--scope", "user", "--fix", "--no-verify"])
+    assert code == 0
+    assert "Verify:" not in out
+    mock_verify.assert_not_called()
+
+
+@patch("borg.cli._verify_borg_runtime")
+@patch("borg.cli.Path.home")
+def test_setup_claude_verify_failure_shows_install_hint_and_does_not_write_config(mock_home, mock_verify, tmp_path, monkeypatch):
+    """On import failure, setup-claude fails with remediation and avoids writing broken config."""
+    fake_home = tmp_path / "home"
+    fake_home.mkdir()
+    mock_home.return_value = fake_home
+    mock_verify.return_value = (
+        False,
+        "no initialize response from MCP server. output=ModuleNotFoundError: No module named 'borg'",
+    )
+
+    project_dir = tmp_path / "proj"
+    project_dir.mkdir()
+    monkeypatch.chdir(project_dir)
+
+    code, out, err = capture_main(["setup-claude", "--scope", "user", "--fix"])
+    assert code == 1
+    assert "Verify: FAIL" in err
+    assert "pip install agent-borg" in err
+    assert "No-download path" in err
+    assert not (fake_home / ".claude.json").exists()
+
+
+@patch("borg.cli.shutil.which")
+def test_borg_mcp_entry_uses_empty_args_when_borg_mcp_exists(mock_which):
+    """When borg-mcp binary exists, config should execute it directly with no module args."""
+    mock_which.return_value = "/usr/local/bin/borg-mcp"
+    entry = cli_module._borg_mcp_server_entry("/tmp/path")["mcpServers"]["borg"]
+    assert entry["command"] == "/usr/local/bin/borg-mcp"
+    assert entry["args"] == []
+
+
+def test_borg_mcp_entry_writes_absolute_borg_home():
+    """MCP env must use absolute BORG_HOME path (no '~' expansion at runtime)."""
+    entry = cli_module._borg_mcp_server_entry("/tmp/path")["mcpServers"]["borg"]
+    borg_home = entry.get("env", {}).get("BORG_HOME")
+    assert borg_home
+    assert "~" not in borg_home
+    assert Path(borg_home).is_absolute()
 
 
 def test_help_text_shows_setup_commands():

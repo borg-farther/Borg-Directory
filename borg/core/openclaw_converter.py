@@ -40,14 +40,14 @@ BRIDGE_SKILL_TEMPLATE = """\
 name: borg
 description: "{description}"
 user-invocable: true
-metadata: {{"openclaw":{{"emoji":"{emoji}","homepage":"https://github.com/bensargotest-sys/guild-tools","always":false}}}}
+metadata: {{"openclaw":{{"emoji":"{emoji}","homepage":"https://github.com/borg-farther/Borg-Directory","always":false}}}}
 ---
 
 # 🧠 Borg — Collective Intelligence for AI Agents
 
 {body}
 ---
-*Powered by [borg](https://github.com/bensargotest-sys/guild-tools) — collective intelligence for AI agents.*
+*Powered by [borg](https://github.com/borg-farther/Borg-Directory) — collective intelligence for AI agents.*
 """
 
 

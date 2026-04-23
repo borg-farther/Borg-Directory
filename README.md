@@ -6,20 +6,43 @@ Before an agent burns tool calls on a known error, Borg surfaces what worked for
 ## Install
 
 ```bash
-pip install http://76.13.46.217:8899/agent_borg-3.3.1-py3-none-any.whl --break-system-packages
+pip install agent-borg
 ```
+
+## Claude Onboarding (one command)
+
+```bash
+borg setup-claude --scope user --verify --fix
+```
+
+This command now performs deterministic onboarding in one pass:
+- writes MCP config to `~/.claude.json`
+- creates `~/.borg` if missing (`--fix`)
+- runs an MCP initialize handshake (`--verify`)
+
+No-download install path (air-gapped / controlled env):
+```bash
+python3 -m pip install --no-index --find-links /path/to/wheels agent-borg
+borg setup-claude --scope user --verify --fix
+```
+
+## Provenance
+
+- package: `agent-borg` (PyPI)
+- canonical repository: https://github.com/borg-farther/Borg-Directory
+- issues: https://github.com/borg-farther/Borg-Directory/issues
 
 ## MCP Config
 
-Add to your agent's MCP config (`~/.cursor/mcp.json`, Claude Desktop, or Hermes `config.yaml`):
+Add to your agent's MCP config (`~/.claude.json`, `.mcp.json`, `~/.cursor/mcp.json`, or Hermes `config.yaml`):
 
 ```json
 {
   "mcpServers": {
     "borg": {
-      "command": "python3",
-      "args": ["-m", "borg.integrations.mcp_server"],
-      "env": { "BORG_HOME": "~/.borg" }
+      "command": "borg-mcp",
+      "args": [],
+      "env": { "BORG_HOME": "/absolute/path/to/.borg" }
     }
   }
 }

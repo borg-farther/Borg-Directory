@@ -12,6 +12,12 @@ dependencies = [
   "pyyaml>=6.0"
 ]
 
+[project.urls]
+Homepage = "https://github.com/borg-farther/Borg-Directory"
+Repository = "https://github.com/borg-farther/Borg-Directory"
+Documentation = "https://github.com/borg-farther/Borg-Directory#readme"
+Issues = "https://github.com/borg-farther/Borg-Directory/issues"
+
 [project.optional-dependencies]
 semantic = [
     "sentence-transformers>=2.2.0",

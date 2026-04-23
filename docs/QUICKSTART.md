@@ -2,7 +2,7 @@
 
 **agent-borg** is collective intelligence for AI agents — a CLI and MCP server that gives your agent access to battle-tested debugging and workflow knowledge. This guide gets you from zero to running your first pack in under 2 minutes.
 
-**agent-borg 3.3.0** | GitHub: `bensargotest-sys/agent-borg` | CLI: `borg` | MCP: `borg-mcp`
+**agent-borg 3.3.0** | GitHub: `borg-farther/Borg-Directory` | CLI: `borg` | MCP: `borg-mcp`
 
 ---
 
@@ -33,26 +33,37 @@ export PATH="$HOME/.local/bin:$PATH"      # Linux/macOS
 
 ## 2. CLAUDE CODE SETUP (MCP)
 
-Run the automated setup:
+Run the one-command onboarding flow:
 ```bash
-borg setup-claude
+borg setup-claude --scope user --verify --fix
 ```
 
-This writes the correct MCP configuration to `~/.config/claude/claude_desktop_config.json`.
+What this does:
+1. writes MCP config to `~/.claude.json` (`--scope user`)
+2. creates `~/.borg` if missing (`--fix`)
+3. runs an MCP initialize handshake to confirm runtime wiring (`--verify`)
 
-After `borg setup-claude`, your config contains:
+Equivalent config entry:
 ```json
 {
   "mcpServers": {
     "borg": {
       "command": "borg-mcp",
-      "args": []
+      "args": [],
+      "env": {
+        "BORG_HOME": "/absolute/path/to/.borg"
+      }
     }
   }
 }
 ```
 
 **Then fully restart Claude Code** (not just the chat). The borg MCP tools will appear in your available tools.
+
+### Scope options
+- `--scope user` → `~/.claude.json` (recommended default)
+- `--scope project` → `./.mcp.json` (repo-local)
+- `--scope desktop` → `~/.config/claude/claude_desktop_config.json` (legacy compatibility)
 
 ### What you get:
 

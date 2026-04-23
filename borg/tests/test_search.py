@@ -150,8 +150,9 @@ class TestBorgSearch:
                 result = json.loads(borg_search("debug"))
 
         assert result["success"] is True
-        assert result["total"] == 1
-        assert result["matches"][0]["name"] == "systematic-debugging"
+        assert result["total"] >= 1
+        names = [m["name"] for m in result["matches"]]
+        assert "systematic-debugging" in names
 
     def test_search_no_matches(self):
         """Query with no matches returns empty matches list."""

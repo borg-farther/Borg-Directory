@@ -642,7 +642,7 @@ def debug_error(error_message: str, show_evidence: bool = True) -> str:
             "  " + ", ".join(PROBLEM_CLASSES) + "\n"
             "\n"
             "Help us add coverage for your language:\n"
-            "  https://github.com/bensargotest-sys/agent-borg/issues/new\n"
+            "  https://github.com/borg-farther/Borg-Directory/issues/new\n"
             "============================================================"
         )
 
