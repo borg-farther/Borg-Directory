@@ -5,7 +5,7 @@
 This guide provides step-by-step instructions for listing **agent-borg** (a Python MCP server with 14 tools) on Smithery.ai and other MCP registries/directories.
 
 **agent-borg Details:**
-- **GitHub:** https://github.com/bensargotest-sys/guild-tools
+- **GitHub:** https://github.com/borg-farther/guild-tools
 - **PyPI:** https://pypi.org/project/agent-borg/
 - **Tools:** 14 MCP tools for AI agent workflows
 
@@ -287,7 +287,7 @@ smithery mcp publish https://your-server.com/mcp -n @your-org/agent-borg
 - **Smithery Discord:** https://discord.gg/Afd38S5p9A
 - **Smithery GitHub:** https://github.com/smithery-ai
 - **MCP Specification:** https://modelcontextprotocol.io
-- **agent-borg GitHub:** https://github.com/bensargotest-sys/guild-tools
+- **agent-borg GitHub:** https://github.com/borg-farther/guild-tools
 - **agent-borg PyPI:** https://pypi.org/project/agent-borg/
 
 ---

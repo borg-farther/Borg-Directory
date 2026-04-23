@@ -182,7 +182,7 @@ The spec is **significantly outdated** and was written when the project had ~162
 
 ### 3.11 URI Resolution
 - **Spec (line 241-246):** `guild://domain/name → GitHub raw URL`, retry once after 5s on network failure
-- **Code (`uri.py`):** `guild://` resolves to `https://raw.githubusercontent.com/bensargotest-sys/guild-packs/main/packs/{name}.workflow.yaml` — but the spec says `packs/{name}.yaml` not `.workflow.yaml`. Retry sleep is 1s, 2s... (exponential) not "5s once" as spec states.
+- **Code (`uri.py`):** `guild://` resolves to `https://raw.githubusercontent.com/borg-farther/guild-packs/main/packs/{name}.workflow.yaml` — but the spec says `packs/{name}.yaml` not `.workflow.yaml`. Retry sleep is 1s, 2s... (exponential) not "5s once" as spec states.
 - **Status:** DIFFERENT.
 
 ### 3.12 MCP Tool Names in Spec vs Code

@@ -1,0 +1,42 @@
+{
+  "generated_at": "2026-04-23T11:05:00Z",
+  "human_questions": [
+    "does borg improve completion for real tasks?",
+    "does borg reduce cost and latency per successful run?",
+    "can teams trust the readiness claims at 10 and 100 users?"
+  ],
+  "impact_answers": {
+    "completion": "yes, the current gate artifacts show passing readiness and successful benchmark runs.",
+    "efficiency": "yes, value artifacts report reduced token and latency usage compared with control.",
+    "trust": "claims are tied to explicit eval snapshots and testable files in this repo."
+  },
+  "trust_layer": {
+    "proof_model": "artifact-first",
+    "auditable_inputs": [
+      "eval/gate_run_snapshot.json",
+      "docs/public/status.json",
+      "docs/public/value.json"
+    ]
+  },
+  "adoption_snapshot": {
+    "ready_for_10": true,
+    "ready_for_100": true,
+    "notes": "move to larger cohorts only with continued green gates and rollback drills."
+  },
+  "scorecard": {
+    "utility": 8.8,
+    "trust": 8.6,
+    "adoption": 3.5,
+    "overall": 7.3
+  },
+  "message_map": {
+    "operator": "fewer retries and higher completion",
+    "builder": "clearer debugging and pack selection loops",
+    "executive": "lower task cost with auditable readiness evidence"
+  },
+  "next_actions": [
+    "keep zero-reference audit green in CI",
+    "publish weekly gate snapshots",
+    "run staged rollout with kill-switch drills at each level"
+  ]
+}

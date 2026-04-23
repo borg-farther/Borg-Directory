@@ -228,7 +228,7 @@ class TestBorgTryPreviewsPacks:
         content = read_pack_yaml(pack_name)
         fname = get_pack_file_path(pack_name).name
         resolved_url = (
-            f"https://raw.githubusercontent.com/bensargotest-sys/guild-packs/main"
+            f"https://raw.githubusercontent.com/borg-farther/guild-packs/main"
             f"/packs/{fname}"
         )
         with patch("borg.core.search.resolve_guild_uri", return_value=resolved_url):
@@ -261,7 +261,7 @@ class TestTop5PacksPullAndValidate:
         content = read_pack_yaml(pack_name)
         fname = get_pack_file_path(pack_name).name
         resolved_url = (
-            f"https://raw.githubusercontent.com/bensargotest-sys/guild-packs/main"
+            f"https://raw.githubusercontent.com/borg-farther/guild-packs/main"
             f"/packs/{fname}"
         )
 
@@ -323,7 +323,7 @@ class TestTop5PacksTryVerdict:
         content = read_pack_yaml(pack_name)
         fname = get_pack_file_path(pack_name).name
         resolved_url = (
-            f"https://raw.githubusercontent.com/bensargotest-sys/guild-packs/main"
+            f"https://raw.githubusercontent.com/borg-farther/guild-packs/main"
             f"/packs/{fname}"
         )
         with patch("borg.core.search.resolve_guild_uri", return_value=resolved_url):

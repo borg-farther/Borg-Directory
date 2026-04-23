@@ -1,0 +1,13 @@
+{
+  "timestamp_utc": "2026-04-22T21:57:00Z",
+  "overall_status": "pass",
+  "decision": "GO",
+  "readiness_report": "eval/new_home_readiness_report.json",
+  "uat_snapshot": "eval/google_tier_uat_snapshot.json",
+  "repo_state": "eval/new_home_repo_state.json",
+  "legacy_repo_state": "eval/legacy_repo_state_attempt.json",
+  "notes": [
+    "sync_status normalized to pass with parity/sync artifacts",
+    "legacy remains fetch-only backup via .git/config pushurl disable"
+  ]
+}

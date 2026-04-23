@@ -20,6 +20,7 @@ import hashlib
 import json
 import logging
 import os
+from dataclasses import asdict
 from datetime import datetime, timezone
 from pathlib import Path
 from typing import Any, Dict, List, Optional
@@ -29,6 +30,12 @@ import yaml
 from borg.core import safety as _safety_mod
 from borg.core import schema as _schema_mod
 from borg.core import session as _session_mod
+from borg.core.checkpoint_comms import (
+    Confidence as CheckpointConfidence,
+    Phase as CheckpointPhase,
+    build_checkpoint_receipt,
+    render_telegram_checkpoint,
+)
 from borg.core.dirs import get_borg_dir
 from borg.core.uri import resolve_guild_uri, fetch_with_retry
 from borg.core.privacy import privacy_redact
@@ -59,6 +66,82 @@ MAX_FIELD_SIZE_BYTES = 10 * 1024  # 10 KB
 
 # In-memory overlay for apply-specific session fields not stored in core session
 _active_apply_state: Dict[str, Dict[str, Any]] = {}
+
+
+def _map_phase_for_checkpoint_receipt(phase_name: str, phase_index: int, phases_total: int) -> CheckpointPhase:
+    """Map arbitrary phase names to canonical checkpoint comms phases."""
+    n = phase_name.strip().lower()
+
+    investigate_tokens = ("investigate", "reproduce", "analy", "diagnos", "triage")
+    decide_tokens = ("decide", "plan", "choose", "scope")
+    execute_tokens = ("execute", "implement", "fix", "apply", "build", "code")
+    verify_tokens = ("verify", "test", "validate", "check", "prove", "audit")
+
+    if any(t in n for t in investigate_tokens):
+        return CheckpointPhase.INVESTIGATE
+    if any(t in n for t in decide_tokens):
+        return CheckpointPhase.DECIDE
+    if any(t in n for t in execute_tokens):
+        return CheckpointPhase.EXECUTE
+    if any(t in n for t in verify_tokens):
+        return CheckpointPhase.VERIFY
+
+    if phases_total <= 1:
+        return CheckpointPhase.VERIFY
+    if phase_index <= 0:
+        return CheckpointPhase.INVESTIGATE
+    if phase_index >= phases_total - 1:
+        return CheckpointPhase.VERIFY
+
+    midpoint = phases_total / 2.0
+    return CheckpointPhase.DECIDE if phase_index < midpoint else CheckpointPhase.EXECUTE
+
+
+def _build_phase_telegram_checkpoint(
+    *,
+    session: Dict[str, Any],
+    phase_name: str,
+    status: str,
+    guidance: str,
+    evidence: str,
+    next_action: str,
+    next_phase: Optional[Dict[str, Any]],
+    phase_index: int,
+) -> Dict[str, Any]:
+    """Build canonical checkpoint payload for user-facing runtime comms."""
+    if status == "passed":
+        delta = f"phase '{phase_name}' passed."
+    else:
+        delta = f"phase '{phase_name}' failed (action: {next_action})."
+    if evidence:
+        delta = f"{delta} evidence: {evidence}"
+
+    if next_action == "retry":
+        next_step = f"retry phase '{phase_name}' once with updated evidence"
+    elif next_phase:
+        next_step = f"run next phase '{next_phase.get('name', 'unknown')}'"
+    else:
+        next_step = "call apply_handler(action='complete')"
+
+    receipt = build_checkpoint_receipt(
+        phase=_map_phase_for_checkpoint_receipt(
+            phase_name=phase_name,
+            phase_index=phase_index,
+            phases_total=len(session.get("phases", [])),
+        ),
+        borg_used=True,
+        source="guild",
+        confidence=CheckpointConfidence.MEDIUM,
+        what_changed=delta,
+        next_step=next_step,
+        tool_calls_avoided=0,
+        token_savings=0,
+    )
+    return {
+        "checkpoint_receipt": asdict(receipt),
+        "telegram_checkpoint": render_telegram_checkpoint(receipt),
+        "checkpoint_guidance": guidance,
+    }
 
 # ---------------------------------------------------------------------------
 # V1/V2 pack normalization
@@ -363,6 +446,21 @@ def action_checkpoint(
             }, agent_dir=base)
             _session_mod.save_session(session, agent_dir=base)
 
+            approval_receipt = build_checkpoint_receipt(
+                phase=CheckpointPhase.DECIDE,
+                borg_used=True,
+                source="guild",
+                confidence=CheckpointConfidence.MEDIUM,
+                what_changed="operator approved pack execution",
+                next_step=(
+                    f"run next phase '{session['phases'][0]['name']}'"
+                    if session["phases"]
+                    else "call apply_handler(action='complete')"
+                ),
+                tool_calls_avoided=0,
+                token_savings=0,
+            )
+
             return json.dumps({
                 "success": True,
                 "phase": "__approval__",
@@ -372,6 +470,8 @@ def action_checkpoint(
                 "next_phase": session["phases"][0] if session["phases"] else None,
                 "phases_completed": 0,
                 "phases_total": len(session["phases"]),
+                "checkpoint_receipt": asdict(approval_receipt),
+                "telegram_checkpoint": render_telegram_checkpoint(approval_receipt),
             }, ensure_ascii=False)
         else:
             # Rejected — clean up
@@ -480,6 +580,17 @@ def action_checkpoint(
                 next_phase = p
                 break
 
+    checkpoint_payload = _build_phase_telegram_checkpoint(
+        session=session,
+        phase_name=phase_name,
+        status=status,
+        guidance=guidance,
+        evidence=sanitized_evidence,
+        next_action=next_action,
+        next_phase=next_phase,
+        phase_index=phase_match.get("index", 0),
+    )
+
     return json.dumps({
         "success": True,
         "phase": phase_name,
@@ -491,6 +602,7 @@ def action_checkpoint(
             1 for p in session["phases"] if p["status"] != "pending"
         ),
         "phases_total": len(session["phases"]),
+        **checkpoint_payload,
     }, ensure_ascii=False)
 
 

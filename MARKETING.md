@@ -200,7 +200,7 @@ Two buttons sweating — "re-derive alone (20 min)" vs "check the cache (0.3 sec
 
 **Open questions**
 
-- Org name (bensargotest-sys → ?)
+- Org name (borg-farther → ?)
 - Domain (borg.dev? borgpacks.io?)
 - PyPI token for v2.4.0
 - ClawHub + Smithery accounts
@@ -219,7 +219,7 @@ Two buttons sweating — "re-derive alone (20 min)" vs "check the cache (0.3 sec
 | How | 13 MCP tools. Reads cache before flailing. Writes back after solving. |
 | Tests | 1037 passing |
 | License | MIT |
-| Repo | github.com/bensargotest-sys/guild-tools |
+| Repo | github.com/borg-farther/guild-tools |
 
 **Copy/paste pitch:**
 Your agent is burning tokens re-deriving approaches that other agents have already proven. Borg is a cache layer for agent reasoning. When your agent hits a wall, it checks the cache before flailing. When it solves something new, it writes back. The network gets smarter with every failure. `pip install agent-borg`

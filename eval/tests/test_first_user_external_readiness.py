@@ -36,10 +36,10 @@ def test_pypi_metadata_urls_exist_and_are_consistent() -> None:
     pyproject = _text(REPO / 'pyproject.toml')
     required_lines = [
         '[project.urls]',
-        'Homepage = "https://github.com/bensargotest-sys/borg"',
-        'Repository = "https://github.com/bensargotest-sys/borg"',
-        'Issues = "https://github.com/bensargotest-sys/borg/issues"',
-        'Documentation = "https://github.com/bensargotest-sys/borg/tree/main/docs"',
+        'Homepage = "https://github.com/borg-farther/Borg-Directory"',
+        'Repository = "https://github.com/borg-farther/Borg-Directory"',
+        'Issues = "https://github.com/borg-farther/Borg-Directory/issues"',
+        'Documentation = "https://github.com/borg-farther/Borg-Directory/tree/main/docs"',
         'readme = "README.md"',
     ]
     for line in required_lines:

@@ -82,7 +82,7 @@ Worst-of-both-worlds: zero cold-user coverage *and* warm-user privacy risk.
 
 ### Option C — Federated fetch on first run from a public `agent-borg-seeds` repo
 
-On first run, `borg` downloads a signed pack bundle from `github.com/bensargotest-sys/agent-borg-seeds/releases/latest/seeds.tar.zst`, verifies a minisign signature, unpacks to `~/.hermes/guild/seeds/`.
+On first run, `borg` downloads a signed pack bundle from `github.com/borg-farther/agent-borg-seeds/releases/latest/seeds.tar.zst`, verifies a minisign signature, unpacks to `~/.hermes/guild/seeds/`.
 
 - **Pros:** seeds decouple from binary release cadence; updatable without re-releasing `agent-borg`; lower wheel size.
 - **Cons:** requires network on first run (CI sandboxes and air-gapped laptops break); introduces a signing key management + rotation story with no current owner; supply-chain dependency (the seeds repo becomes a CDN that must stay up); adds latency to first `borg search`; PyPI's offline-install guarantee is gone; we do not know which bundle a given user actually has.
@@ -116,7 +116,7 @@ Reasoning (devil's-advocate passed):
 3. **Option Z is the correct evolution.** Ship A first; add the federated update channel (C) as a second-phase enhancement behind an explicit `borg seeds update` command, once A is proven and a signing story exists.
 4. **Accepted trade-off:** wheel size grows by ≤ 5 MiB; seed freshness is tied to release cadence (quarterly). Both are cheap prices for determinism and offline install.
 
-Devil's advocate: "Why not rely on the remote `bensargotest-sys/guild-packs/index.json`?" — Because `_fetch_index()` silently returns `{"packs": []}` on any network error, and the index as of 2026-04-09 contains fewer than 30 packs, many test-scaffolded. The remote index is a manifest, not a corpus.
+Devil's advocate: "Why not rely on the remote `borg-farther/guild-packs/index.json`?" — Because `_fetch_index()` silently returns `{"packs": []}` on any network error, and the index as of 2026-04-09 contains fewer than 30 packs, many test-scaffolded. The remote index is a manifest, not a corpus.
 
 ---
 
@@ -164,7 +164,7 @@ Exact files to modify (all under `/root/hermes-workspace/borg/`):
 ### 5.6 Privacy, versioning, deletion
 
 - **Privacy:** seeds are public and author-independent by construction. No user data ever enters them. They are read-only under `site-packages/borg/seeds_data/`, never under `~/.hermes/`.
-- **Versioning:** seeds ship with the wheel. `borg/seeds_data/VERSION` is a line of the form `seeds-1.0.0-2026-04-09` which `borg --version` (`cli.py` line 1039) prints alongside the package version. Release cadence matches `agent-borg` (quarterly). Upgrade path to Option Z (deferred): a future `borg seeds update` subcommand fetches a signed bundle from `github.com/bensargotest-sys/agent-borg-seeds/releases/latest`, unpacks to `~/.hermes/guild/seeds-update/`, which `_load_seed_index()` prefers over wheel seeds. Not in scope for v1.
+- **Versioning:** seeds ship with the wheel. `borg/seeds_data/VERSION` is a line of the form `seeds-1.0.0-2026-04-09` which `borg --version` (`cli.py` line 1039) prints alongside the package version. Release cadence matches `agent-borg` (quarterly). Upgrade path to Option Z (deferred): a future `borg seeds update` subcommand fetches a signed bundle from `github.com/borg-farther/agent-borg-seeds/releases/latest`, unpacks to `~/.hermes/guild/seeds-update/`, which `_load_seed_index()` prefers over wheel seeds. Not in scope for v1.
 - **Deletion / overwrite:** seeds cannot be deleted via CLI (they live in the wheel); use `--no-seeds`. If a user pulls or authors a pack with the same ID as a seed, the existing dedup in `borg/core/search.py` lines 151–182 prefers the local copy; no behavioral change.
 
 ### 5.7 Relationship to the Borg Wiki and to `borg-auto-observe`

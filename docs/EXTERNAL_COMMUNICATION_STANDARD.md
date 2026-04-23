@@ -56,7 +56,7 @@ This document defines what we are allowed to claim publicly and how those claims
 - [ ] Run `python scripts/generate_human_impact_case_studies.py`
 - [ ] Run `python scripts/value_dashboard_lint.py`
 - [ ] Run `python scripts/borg_human_impact_lint.py`
-- [ ] Run `pytest -q eval/tests/test_value_communication_dashboard.py eval/tests/test_external_comms_alignment.py eval/tests/test_human_impact_case_studies.py eval/tests/test_first_user_external_readiness.py`
+- [ ] Run `pytest -q eval/tests/test_value_communication_dashboard.py eval/tests/test_external_comms_alignment.py eval/tests/test_human_impact_case_studies.py eval/tests/test_first_user_external_readiness.py eval/tests/test_external_channel_uat_matrix.py`
 - [ ] Confirm `docs/public/index.html` reflects current gate values
 - [ ] Confirm canonical install path is `pip install agent-borg` in README + getting-started docs
 - [ ] Confirm no stale NO-GO phrasing in canonical public docs

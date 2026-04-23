@@ -59,7 +59,7 @@ Each borg pack is stored as a readable file in the skill's `references/` directo
 name: borg
 description: "Use when your agent is stuck in a loop, burning tokens on a problem someone else already solved. Use when debugging takes >3 attempts, code review needs structure, or you need a proven approach for testing, planning, or deployment. Borg connects to collective agent intelligence — battle-tested workflows from thousands of agents. NOT for simple tasks that need no structure."
 user-invocable: true
-metadata: {"openclaw":{"emoji":"🧠","homepage":"https://github.com/bensargotest-sys/guild-tools","always":false}}
+metadata: {"openclaw":{"emoji":"🧠","homepage":"https://github.com/borg-farther/guild-tools","always":false}}
 ---
 
 # 🧠 Borg — Collective Intelligence for AI Agents
@@ -114,7 +114,7 @@ See `references/pack-index.md` for the full registry with descriptions.
 - **writing-plans** — scope → break down → sequence → validate
 
 ---
-*Powered by [borg](https://github.com/bensargotest-sys/guild-tools) — collective intelligence for AI agents.*
+*Powered by [borg](https://github.com/borg-farther/guild-tools) — collective intelligence for AI agents.*
 ```
 
 ### The pack-index.md (references/)

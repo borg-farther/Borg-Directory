@@ -36,6 +36,12 @@ logging.basicConfig(stream=sys.stderr, level=logging.WARNING)
 from borg.core.traces import TraceCapture, save_trace
 from borg.core.status import get_status
 from borg.core.rate_limiter import check_rate_limit, RateLimitExceeded
+from borg.core.checkpoint_comms import (
+    Confidence as CheckpointConfidence,
+    Phase as CheckpointPhase,
+    build_checkpoint_receipt,
+    render_telegram_checkpoint,
+)
 
 # Thread-safe session tracking via contextvars
 _current_session_id: contextvars.ContextVar[str] = contextvars.ContextVar('session_id', default='')
@@ -68,6 +74,30 @@ def _check_rate_limit() -> bool:
             return False
         _rate_requests.append(now)
         return True
+
+
+def _map_phase_for_checkpoint_receipt(phase_name: str, phase_index: int, phases_total: int) -> CheckpointPhase:
+    """Map phase names/position to canonical comms phases."""
+    name = (phase_name or "").strip().lower()
+    if phase_name == "__approval__":
+        return CheckpointPhase.DECIDE
+
+    if any(k in name for k in ("investigate", "reproduce", "analy", "diagnos", "triage")):
+        return CheckpointPhase.INVESTIGATE
+    if any(k in name for k in ("decide", "plan", "choose", "scope")):
+        return CheckpointPhase.DECIDE
+    if any(k in name for k in ("execute", "implement", "fix", "apply", "build", "code")):
+        return CheckpointPhase.EXECUTE
+    if any(k in name for k in ("verify", "test", "validate", "check", "prove", "audit")):
+        return CheckpointPhase.VERIFY
+
+    if phases_total <= 1:
+        return CheckpointPhase.VERIFY
+    if phase_index <= 0:
+        return CheckpointPhase.INVESTIGATE
+    if phase_index >= phases_total - 1:
+        return CheckpointPhase.VERIFY
+    return CheckpointPhase.DECIDE if phase_index < (phases_total / 2.0) else CheckpointPhase.EXECUTE
 
 
 # -------------------------------------------------------------------------
@@ -341,7 +371,7 @@ TOOLS: List[Dict[str, Any]] = [
                 },
                 "repo": {
                     "type": "string",
-                    "description": "Target GitHub repo (defaults to bensargotest-sys/guild-packs)",
+                    "description": "Target GitHub repo (defaults to borg-farther/Borg-Directory)",
                 },
             },
             "required": ["action"],
@@ -712,8 +742,8 @@ TOOLS: List[Dict[str, Any]] = [
             "properties": {
                 "action": {
                     "type": "string",
-                    "enum": ["ecosystem_health", "pack_usage", "adoption", "timeseries"],
-                    "description": "Action: 'ecosystem_health' for overall ecosystem metrics, 'pack_usage' for a specific pack's stats, 'adoption' for adoption metrics, 'timeseries' for time-series data.",
+                    "enum": ["ecosystem_health", "pack_usage", "adoption", "timeseries", "reconcile"],
+                    "description": "Action: 'ecosystem_health' for overall ecosystem metrics, 'pack_usage' for a specific pack's stats, 'adoption' for adoption metrics, 'timeseries' for time-series data, 'reconcile' for cross-plane consistency checks.",
                 },
                 "pack_id": {
                     "type": "string",
@@ -1222,12 +1252,63 @@ def borg_apply(
                 session["approved"] = True
                 session_module.save_session(session)
 
+            phase_index = 0
+            for idx, p in enumerate(phases):
+                if isinstance(p, dict) and p.get("name") == phase_name:
+                    phase_index = idx
+                    break
+
+            if phase_name == "__approval__" and status == "passed":
+                next_step = (
+                    f"run next phase '{phases[0].get('name', 'unknown')}'"
+                    if phases
+                    else "call guild_apply(action='complete')"
+                )
+                what_changed = "operator approved pack execution"
+            elif status == "passed":
+                next_step = "continue to next phase"
+                what_changed = f"phase '{phase_name}' passed"
+            else:
+                next_step = "retry or update evidence and re-check"
+                what_changed = f"phase '{phase_name}' failed"
+
+            if evidence:
+                what_changed = f"{what_changed}. evidence: {evidence}"
+
+            checkpoint_receipt = build_checkpoint_receipt(
+                phase=_map_phase_for_checkpoint_receipt(phase_name, phase_index, len(phases)),
+                borg_used=True,
+                source="guild",
+                confidence=CheckpointConfidence.MEDIUM,
+                what_changed=what_changed,
+                next_step=next_step,
+                tool_calls_avoided=0,
+                token_savings=0,
+            )
+            telegram_checkpoint = render_telegram_checkpoint(checkpoint_receipt)
+
             response = {
                 "success": True,
                 "session_id": session_id,
                 "phase_name": phase_name,
                 "status": status,
                 "approved": approved,
+                "checkpoint_receipt": {
+                    "phase": checkpoint_receipt.phase.value,
+                    "borg_used": checkpoint_receipt.borg_used,
+                    "source": checkpoint_receipt.source,
+                    "confidence": checkpoint_receipt.confidence.value,
+                    "what_changed": checkpoint_receipt.what_changed,
+                    "next_step": checkpoint_receipt.next_step,
+                    "estimate": {
+                        "tool_calls_avoided": checkpoint_receipt.estimate.tool_calls_avoided,
+                        "seconds_saved": checkpoint_receipt.estimate.seconds_saved,
+                        "token_savings": checkpoint_receipt.estimate.token_savings,
+                        "usd_low": checkpoint_receipt.estimate.usd_low,
+                        "usd_high": checkpoint_receipt.estimate.usd_high,
+                    },
+                },
+                "telegram_checkpoint": telegram_checkpoint,
             }
             if inject_messages:
                 response["inject_messages"] = inject_messages
@@ -1582,18 +1663,39 @@ def borg_suggest(
 
             results = v3.search(context, task_context=task_context)
             if results:
-                top = results[0]
-                return json.dumps({
-                    "success": True,
-                    "has_suggestion": True,
-                    "contextual": True,
-                    "suggestions": [{
-                        "pack_id": top.get("pack_id", top.get("name", "")),
-                        "name": top.get("name", ""),
-                        "score": top.get("score", 0.0),
-                        "reason": f"Based on your {task_type} context",
-                    }],
-                })
+                # Quality gate: avoid low-confidence and overly-generic pack picks
+                # on high-specificity error contexts.
+                specificity_markers = (
+                    "error", "exception", "traceback", "module", "docker", "django", "pytest", "npm", "typeerror"
+                )
+                has_specific_error_context = any(m in context.lower() for m in specificity_markers)
+                generic_names = {"my-first-pack", "starter-pack", "example-pack"}
+                min_score = 0.45
+
+                best = None
+                for cand in results:
+                    cand_name = str(cand.get("name", "")).strip().lower()
+                    cand_score = float(cand.get("score", 0.0) or 0.0)
+                    if cand_score < min_score:
+                        continue
+                    if has_specific_error_context and cand_name in generic_names:
+                        continue
+                    best = cand
+                    break
+
+                if best:
+                    return json.dumps({
+                        "success": True,
+                        "has_suggestion": True,
+                        "contextual": True,
+                        "suggestions": [{
+                            "pack_id": best.get("pack_id", best.get("name", "")),
+                            "name": best.get("name", ""),
+                            "score": best.get("score", 0.0),
+                            "reason": f"Based on your {task_type} context",
+                        }],
+                    })
+                # No candidate passed quality gate; fall through to V2 suggestion path.
 
         result = _check_for_suggestion(
             conversation_context=context,
@@ -2364,9 +2466,11 @@ def borg_analytics(
     """Query ecosystem health metrics and analytics from the AnalyticsEngine.
 
     Args:
-        action: The action to perform - 'ecosystem_health', 'pack_usage', 'adoption', or 'timeseries'.
+        action: The action to perform - 'ecosystem_health', 'pack_usage', 'adoption',
+            'timeseries', or 'reconcile'.
         pack_id: Pack ID to query (for pack_usage and adoption actions).
-        metric: Metric name for timeseries action: 'pack_publishes', 'executions', 'avg_quality_score', or 'active_agents'.
+        metric: Metric name for timeseries action: 'pack_publishes', 'executions',
+            'avg_quality_score', or 'active_agents'.
         period: Time period for timeseries: 'daily', 'weekly', or 'monthly'. Defaults to 'daily'.
         days: Number of days to look back for timeseries. Defaults to 30.
 
@@ -2477,8 +2581,57 @@ def borg_analytics(
             except Exception as e:
                 return json.dumps({"success": False, "error": str(e), "type": type(e).__name__})
 
+        elif action == "reconcile":
+            # Cross-plane consistency check: dojo vs dashboard vs analytics vs traces.
+            try:
+                def _safe_int(v, default=0):
+                    try:
+                        return int(v)
+                    except Exception:
+                        try:
+                            return int(float(v))
+                        except Exception:
+                            return default
+
+                from borg.core.clustering import discover_clusters
+
+                dojo = json.loads(borg_dojo(action="status"))
+                dash = json.loads(borg_dashboard())
+                clusters = discover_clusters(n_clusters=8, min_trace_count=3)
+
+                dojo_sessions = _safe_int(dojo.get("sessions_analyzed", 0))
+                dashboard_outcomes = _safe_int(dash.get("total_outcomes", 0))
+                analytics_total_agents = _safe_int((json.loads(borg_analytics(action="ecosystem_health"))).get("total_agents", 0))
+                trace_total = _safe_int((clusters or {}).get("total_traces", 0))
+
+                # Consistency score in [0,1]: penalize impossible inactivity patterns.
+                penalties = []
+                if dojo_sessions > 0 and dashboard_outcomes == 0:
+                    penalties.append("dojo_active_but_no_outcomes")
+                if dojo_sessions > 0 and trace_total == 0:
+                    penalties.append("dojo_active_but_no_traces")
+                if analytics_total_agents == 0:
+                    penalties.append("analytics_no_agents")
+
+                consistency_score = max(0.0, 1.0 - (len(penalties) / 3.0))
+
+                return json.dumps({
+                    "success": True,
+                    "action": "reconcile",
+                    "consistency_score": consistency_score,
+                    "penalties": penalties,
+                    "counters": {
+                        "dojo_sessions_analyzed": dojo_sessions,
+                        "dashboard_total_outcomes": dashboard_outcomes,
+                        "analytics_total_agents": analytics_total_agents,
+                        "trace_total": trace_total,
+                    },
+                })
+            except Exception as e:
+                return json.dumps({"success": False, "error": str(e), "type": type(e).__name__})
+
         else:
-            return json.dumps({"success": False, "error": f"Unknown action: {action}. Use ecosystem_health, pack_usage, adoption, or timeseries."})
+            return json.dumps({"success": False, "error": f"Unknown action: {action}. Use ecosystem_health, pack_usage, adoption, timeseries, or reconcile."})
 
     except (KeyboardInterrupt, SystemExit):
         raise

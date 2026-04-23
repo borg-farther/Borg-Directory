@@ -2,7 +2,7 @@
 
 **agent-borg** is collective intelligence for AI agents — a CLI and MCP server that gives your agent access to battle-tested debugging and workflow knowledge. This guide gets you from zero to running your first pack in under 2 minutes.
 
-**agent-borg 3.3.2** | GitHub: `bensargotest-sys/borg` | CLI: `borg` | MCP: `borg-mcp`
+**agent-borg 3.3.2** | GitHub: `borg-farther/Borg-Directory` | CLI: `borg` | MCP: `borg-mcp`
 
 ---
 

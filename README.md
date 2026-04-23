@@ -56,6 +56,10 @@ Agent calls `borg_observe(task, context)` before attempting a fix. Borg returns 
 
 After the fix, `borg_rate(helpful=True/False)` updates helpfulness scoring.
 
+For user-facing Telegram communication, use the checkpoint receipt standard:
+- `docs/BORG_TELEGRAM_CHECKPOINT_STANDARD.md`
+- `borg/core/checkpoint_comms.py`
+
 ## What's real vs what's not
 
 Phase 0 (this commit) enforces a hard separation:

@@ -664,9 +664,52 @@ class TestContextualSelector:
             selector.select(debug_task_context, sample_candidates, seed=42)
 
         stats = selector.get_stats()
-        # Should be approximately 20%
+        # Deterministic scheduler should track configured budget closely.
         rate = stats["exploration_selections"] / stats["total_selections"]
-        assert 0.10 <= rate <= 0.30  # Allow some variance
+        assert 0.18 <= rate <= 0.22
+
+    def test_exploration_rate_respects_non_default_budget(self, sample_candidates, debug_task_context):
+        """Exploration rate must honor arbitrary budgets, not hardcode 20%."""
+        selector = ContextualSelector(exploration_budget=0.30)
+
+        for _ in range(100):
+            selector.select(debug_task_context, sample_candidates, seed=42)
+
+        stats = selector.get_stats()
+        rate = stats["exploration_selections"] / stats["total_selections"]
+        assert 0.28 <= rate <= 0.32
+
+    def test_cold_start_similarity_prior_is_applied(self):
+        """Similarity prior should affect first ranking without mutating stored posterior."""
+        selector = ContextualSelector(prior_alpha=1.0, prior_beta=1.0, exploration_budget=0.0)
+        task_context = {
+            "task_type": "debug",
+            "keywords": ["auth", "login", "jwt", "error"],
+        }
+        candidates = [
+            PackDescriptor(
+                pack_id="similar-pack",
+                name="Similar Pack",
+                keywords=["auth", "login", "jwt", "error"],
+                supported_tasks=["debug"],
+            ),
+            PackDescriptor(
+                pack_id="distant-pack",
+                name="Distant Pack",
+                keywords=["kubernetes", "helm", "deploy"],
+                supported_tasks=["deploy"],
+            ),
+        ]
+
+        ranked = selector.select(task_context, candidates, limit=2, seed=42)
+        assert ranked[0].pack_id == "similar-pack"
+
+        sim_post = selector.get_posterior("similar-pack", "debug")
+        far_post = selector.get_posterior("distant-pack", "debug")
+        assert sim_post is not None and far_post is not None
+        # Stored posteriors remain unbiased; similarity prior is virtual for sampling only.
+        assert sim_post.alpha == 1.0 and sim_post.beta == 1.0
+        assert far_post.alpha == 1.0 and far_post.beta == 1.0
 
     def test_posterior_after_selection(self, sample_candidates, debug_task_context):
         """Test that posteriors are created after selection."""

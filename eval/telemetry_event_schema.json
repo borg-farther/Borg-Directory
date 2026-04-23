@@ -1,0 +1,31 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://borg.dev/schemas/telemetry-event/v1.json",
+  "title": "Borg Telemetry Event",
+  "type": "object",
+  "required": [
+    "event_version",
+    "event_name",
+    "event_time",
+    "run_id",
+    "agent_id",
+    "task_type",
+    "success",
+    "latency_ms",
+    "tokens_used",
+    "source"
+  ],
+  "properties": {
+    "event_version": {"type": "string"},
+    "event_name": {"type": "string"},
+    "event_time": {"type": "string", "format": "date-time"},
+    "run_id": {"type": "string"},
+    "agent_id": {"type": "string"},
+    "task_type": {"type": "string"},
+    "success": {"type": "boolean"},
+    "latency_ms": {"type": "number", "minimum": 0},
+    "tokens_used": {"type": "integer", "minimum": 0},
+    "source": {"type": "string", "enum": ["real", "synthetic"]}
+  },
+  "additionalProperties": true
+}

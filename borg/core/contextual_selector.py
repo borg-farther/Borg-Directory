@@ -427,6 +427,9 @@ class ContextualSelector:
         # Total selection calls (for exploration budget tracking)
         self._selection_count = 0
         self._exploration_count = 0
+        # Deterministic accumulator so arbitrary exploration_budget in (0,1)
+        # is honored over time (e.g. 0.30 => ~30% explore), without RNG drift.
+        self._exploration_accumulator = 0.0
 
     def _get_posterior(
         self,
@@ -499,20 +502,26 @@ class ContextualSelector:
     def _should_explore(self) -> bool:
         """Determine if this call should be an exploration call.
 
-        Returns True with probability = exploration_budget.
-        Uses a simple counter-based approach for deterministic behavior.
+        Deterministic budget-respecting policy:
+        - budget <= 0.0  => never explore
+        - budget >= 1.0  => always explore
+        - 0 < budget < 1 => accumulator schedule that matches requested budget
+          over time (e.g. 0.30 -> ~30% exploration), without RNG variance.
         """
+        self._selection_count += 1
+
         if self.exploration_budget <= 0.0:
             return False
         if self.exploration_budget >= 1.0:
-            self._selection_count += 1
             self._exploration_count += 1
             return True
-        # 20% of calls are exploration (every 5th call)
-        self._selection_count += 1
-        if self._selection_count % 5 == 0:  # Every 5th call
+
+        self._exploration_accumulator += float(self.exploration_budget)
+        if self._exploration_accumulator >= 1.0:
+            self._exploration_accumulator -= 1.0
             self._exploration_count += 1
             return True
+
         return False
 
     def select(
@@ -565,22 +574,23 @@ class ContextualSelector:
         is_exploration = self._should_explore()
 
         for pack in candidates:
-            # Get posterior (or create with similarity-adjusted prior)
-            posterior = self._get_posterior(pack.pack_id, category, create=True)
+            # Stored posterior stays on global prior; similarity prior is applied only
+            # to sampling as virtual pseudo-counts. This preserves outcome accounting.
+            posterior = self._get_posterior(pack.pack_id, category, create=False)
+            if posterior is None:
+                posterior = self._get_posterior(pack.pack_id, category, create=True)
 
-            if posterior:
-                alpha = posterior.alpha
-                beta_param = posterior.beta
-                uncertainty = posterior.uncertainty
-                reputation = posterior.mean
-            else:
-                # Cold-start: use similarity prior
-                alpha, beta_param = sim_priors.get(
-                    pack.pack_id,
-                    (self.prior_alpha, self.prior_beta),
-                )
-                uncertainty = 1.0  # max uncertainty for unseen
-                reputation = alpha / (alpha + beta_param) if (alpha + beta_param) > 0 else 0.5
+            cold_alpha, cold_beta = sim_priors.get(
+                pack.pack_id,
+                (self.prior_alpha, self.prior_beta),
+            )
+            virtual_alpha = max(0.0, cold_alpha - self.prior_alpha)
+            virtual_beta = max(0.0, cold_beta - self.prior_beta)
+
+            alpha = posterior.alpha + virtual_alpha
+            beta_param = posterior.beta + virtual_beta
+            uncertainty = posterior.uncertainty
+            reputation = posterior.mean
 
             # Thompson sample
             sampled = thompson_sample(alpha, beta_param, seed=seed)

@@ -590,6 +590,34 @@ class TestBorgApplyWorkflow:
         assert parsed["success"] is False
         assert "not found" in parsed["error"]
 
+    def test_apply_checkpoint_includes_telegram_checkpoint_block(self):
+        init_result = mcp_module.call_tool("borg_init", {
+            "pack_name": "wf-test-checkpoint-comms",
+            "problem_class": "reasoning",
+        })
+        assert json.loads(init_result)["success"] is True
+
+        start_result = mcp_module.call_tool("borg_apply", {
+            "action": "start",
+            "pack_name": "wf-test-checkpoint-comms",
+            "task": "validate runtime checkpoint comms",
+        })
+        session_id = json.loads(start_result)["session_id"]
+
+        cp_result = mcp_module.call_tool("borg_apply", {
+            "action": "checkpoint",
+            "session_id": session_id,
+            "phase_name": "__approval__",
+            "status": "passed",
+            "evidence": "approved",
+        })
+        cp = json.loads(cp_result)
+        assert cp["success"] is True
+        assert "telegram_checkpoint" in cp
+        assert "[borg checkpoint]" in cp["telegram_checkpoint"]
+        assert "checkpoint_receipt" in cp
+        assert cp["checkpoint_receipt"]["phase"] == "decide"
+
     def test_apply_complete_unknown_session_returns_error(self):
         result = mcp_module.call_tool("borg_apply", {
             "action": "complete",

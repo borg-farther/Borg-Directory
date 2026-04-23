@@ -868,6 +868,25 @@ class TestBorgSuggestErrors(unittest.TestCase):
             self.assertTrue(parsed.get("success"))
             mock_v3_instance.search.assert_called_once()
 
+    def test_suggest_filters_generic_pack_for_specific_error_context(self):
+        """Generic starter packs should be filtered for specific technical errors."""
+        with patch("borg.integrations.mcp_server._get_borg_v3") as mock_v3:
+            mock_v3_instance = MagicMock()
+            mock_v3.return_value = mock_v3_instance
+            mock_v3_instance.search.return_value = [
+                {"pack_id": "my-first-pack", "name": "my-first-pack", "score": 0.99},
+                {"pack_id": "systematic-debugging", "name": "systematic-debugging", "score": 0.77},
+            ]
+            result = borg_suggest(
+                context="Docker build failed with apt-get error and traceback in logs",
+                failure_count=3,
+                task_type_hint="debug",
+            )
+            parsed = json.loads(result)
+            self.assertTrue(parsed.get("success"))
+            self.assertTrue(parsed.get("has_suggestion"))
+            self.assertEqual(parsed["suggestions"][0]["name"], "systematic-debugging")
+
     def test_suggest_v3_path_no_results(self):
         """Test borg_suggest V3 path with no results falls through."""
         with patch("borg.integrations.mcp_server._get_borg_v3") as mock_v3:
@@ -1550,6 +1569,70 @@ class TestBorgAnalyticsErrors(unittest.TestCase):
             except (json.JSONDecodeError, TypeError):
                 parsed = {"raw": result}
             self.assertFalse(parsed.get("success"))
+
+    def test_analytics_reconcile_returns_consistency_payload(self):
+        """Test reconcile action returns consistency score and counters."""
+        with patch("borg.integrations.mcp_server.borg_dojo") as mock_dojo, \
+             patch("borg.integrations.mcp_server.borg_dashboard") as mock_dash, \
+             patch("borg.core.clustering.discover_clusters") as mock_discover_clusters, \
+             patch("borg.db.analytics.AnalyticsEngine") as mock_engine_class:
+
+            mock_dojo.return_value = json.dumps({"sessions_analyzed": 100})
+            mock_dash.return_value = json.dumps({"total_outcomes": 10})
+            mock_discover_clusters.return_value = {"total_traces": 15}
+
+            mock_engine = MagicMock()
+            mock_engine_class.return_value = mock_engine
+            mock_engine.ecosystem_health.return_value = MagicMock(
+                total_agents=5,
+                active_contributors=1,
+                active_consumers=1,
+                contributor_ratio=0.2,
+                avg_quality_score=0.0,
+                avg_quality_trend=0.0,
+                domain_coverage={},
+                total_packs=1,
+                tier_distribution={},
+            )
+
+            result = borg_analytics(action="reconcile")
+            parsed = json.loads(result)
+            self.assertTrue(parsed.get("success"))
+            self.assertEqual(parsed.get("action"), "reconcile")
+            self.assertIn("consistency_score", parsed)
+            self.assertIn("counters", parsed)
+
+    def test_analytics_reconcile_flags_inconsistent_planes(self):
+        """Reconcile should flag impossible inactivity patterns."""
+        with patch("borg.integrations.mcp_server.borg_dojo") as mock_dojo, \
+             patch("borg.integrations.mcp_server.borg_dashboard") as mock_dash, \
+             patch("borg.core.clustering.discover_clusters") as mock_discover_clusters, \
+             patch("borg.db.analytics.AnalyticsEngine") as mock_engine_class:
+
+            mock_dojo.return_value = json.dumps({"sessions_analyzed": 120})
+            mock_dash.return_value = json.dumps({"total_outcomes": 0})
+            mock_discover_clusters.return_value = {"total_traces": 0}
+
+            mock_engine = MagicMock()
+            mock_engine_class.return_value = mock_engine
+            mock_engine.ecosystem_health.return_value = MagicMock(
+                total_agents=3,
+                active_contributors=0,
+                active_consumers=0,
+                contributor_ratio=0.0,
+                avg_quality_score=0.0,
+                avg_quality_trend=0.0,
+                domain_coverage={},
+                total_packs=0,
+                tier_distribution={},
+            )
+
+            result = borg_analytics(action="reconcile")
+            parsed = json.loads(result)
+            self.assertTrue(parsed.get("success"))
+            penalties = parsed.get("penalties", [])
+            self.assertIn("dojo_active_but_no_outcomes", penalties)
+            self.assertIn("dojo_active_but_no_traces", penalties)
 
     def test_analytics_catches_value_error(self):
         """Test borg_analytics catches ValueError."""

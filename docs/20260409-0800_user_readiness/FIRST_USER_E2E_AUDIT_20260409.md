@@ -30,7 +30,7 @@ one of them is recoverable with small, mechanical fixes:
 | **SB-01** | `borg setup-claude` emits `"command": "python"` in the MCP config. Ubuntu 24 (and macOS with the stock Python.org installer, and any pyenv user) ships **no `python` binary** — only `python3`. Claude Code will try to spawn `python`, fail with ENOENT, and every `borg_*` tool will be invisible. This is the *exact* 120-second hang we already documented on this same VPS. | **SHIP_BLOCKER** | 1 line: `borg/integrations/setup_claude.py` — use `sys.executable`. |
 | **SB-02** | `docs/EXTERNAL_TESTER_GUIDE.md` is the file we ship external testers to, and it contains **49 hits for the old name** (`guildpacks`, `guild-packs`, `guild-mcp`, `pip install guild-packs`, `import guild`). Every single command in that guide is wrong. This is the literal "old name is a ship-blocker" clause from the audit spec. | **SHIP_BLOCKER** | Delete or rewrite `docs/EXTERNAL_TESTER_GUIDE.md`. |
 | **SB-03** | `README.md` documents `borg generate ... --format claude` and `--format cursor`. Both fail with `argparse.ArgumentError: invalid choice`. The real values are `claude-md` and `cursorrules`. A user who copies the README verbatim is told they typed their own tool wrong. | **SHIP_BLOCKER** | Either rename the `--format` enum to `claude`/`cursor` (aliasing the old names) or fix the README. |
-| **SB-04** | Project URLs in the wheel metadata still point at `https://github.com/bensargotest-sys/guild-packs` (three of them: Homepage, Repository, Documentation). A user who clicks "Homepage" on PyPI lands on a repository whose name contradicts the tool name — the single-most-common legitimacy signal is broken. | **SHIP_BLOCKER** | `pyproject.toml` `[project.urls]`. |
+| **SB-04** | Project URLs in the wheel metadata still point at `https://github.com/borg-farther/guild-packs` (three of them: Homepage, Repository, Documentation). A user who clicks "Homepage" on PyPI lands on a repository whose name contradicts the tool name — the single-most-common legitimacy signal is broken. | **SHIP_BLOCKER** | `pyproject.toml` `[project.urls]`. |
 
 **Ship verdict:** agent-borg v3.2.4 is **fine as a CLI for a Python/Django
 developer running `borg debug` on their own machine**, but **not fit** for the
@@ -125,9 +125,9 @@ Name:            agent-borg
 Version:         3.2.4
 Summary:         Collective memory for AI coding agents — your agent learns from every session
 Requires-Python: >=3.10
-Project-URL:     Homepage,     https://github.com/bensargotest-sys/guild-packs   ← STALE (SB-04)
-                 Repository,   https://github.com/bensargotest-sys/guild-packs   ← STALE (SB-04)
-                 Documentation,https://github.com/bensargotest-sys/guild-packs#readme ← STALE (SB-04)
+Project-URL:     Homepage,     https://github.com/borg-farther/guild-packs   ← STALE (SB-04)
+                 Repository,   https://github.com/borg-farther/guild-packs   ← STALE (SB-04)
+                 Documentation,https://github.com/borg-farther/guild-packs#readme ← STALE (SB-04)
 ```
 
 ### Dependency tree (direct, from `Requires-Dist`)
@@ -475,7 +475,7 @@ Line 3: "This guide is for evaluating the guild-v2 system from an external
 Line 5: "- **CLI**: `guildpacks` (renamed from `guild` to avoid conflicts)"
 Line 6: "- **Python API**: `import guild`"
 Line 7: "- **MCP Server**: `guild-mcp`"
-Line 8: "- **Repo**: `bensargotest-sys/guild-packs`"
+Line 8: "- **Repo**: `borg-farther/guild-packs`"
 Line 19: "- [ ] `pip install guild-packs` installs without errors"
 Line 22: "- [ ] `guildpacks version` shows a version number"
 Line 23: "- [ ] `guildpacks search debugging` returns results"
@@ -633,7 +633,7 @@ I picked three famously-good `pip install` experiences as reference points:
 | Wall-clock install | ~2 s | ~3 s | ~3 s | **5.4 s** |
 | Deps | 0 (Rust binary) | 0 (Rust binary) | 4 (httpcore, anyio, certifi, idna) | **21** |
 | First command works with zero config | `ruff check .` — yes | `uv venv` — yes | `python -c "import httpx; httpx.get(...)"` — yes | `borg debug "..."` — **yes** ✅ |
-| Home-page URL matches tool name | `astral-sh/ruff` ✅ | `astral-sh/uv` ✅ | `encode/httpx` ✅ | **`bensargotest-sys/guild-packs`** ❌ (SB-04) |
+| Home-page URL matches tool name | `astral-sh/ruff` ✅ | `astral-sh/uv` ✅ | `encode/httpx` ✅ | **`borg-farther/guild-packs`** ❌ (SB-04) |
 | README example commands work verbatim | ✅ | ✅ | ✅ | **❌ — 4 broken `--format` lines** (SB-03) |
 | `--help` under 200 ms | ✅ (10 ms) | ✅ (3 ms) | N/A (library) | ✅ (50 ms) |
 | Ships usable data on first install | N/A (ruff is a linter) | N/A (uv is a tool) | N/A (httpx is a library) | **❌ — empty-DB cold-start** (HIGH-01) |
@@ -662,7 +662,7 @@ will veto the release note that says 'ready for users'". MEDIUM is
 | **SB-01** | SHIP_BLOCKER | `setup-claude` config emission | `borg setup-claude; cat ~/.config/claude/claude_desktop_config.json` | `"command": "python"` | Every Ubuntu 24 / pyenv / macOS-stock-installer user gets a broken MCP server that fails with ENOENT, agent integration is invisible | Replace hard-coded `"python"` with `sys.executable`. File: `borg/integrations/setup_claude.py` (or wherever the config dict is built — grep for the literal string `"command": "python"`). See fix below. | **30 min** |
 | **SB-02** | SHIP_BLOCKER | `docs/EXTERNAL_TESTER_GUIDE.md` | `grep -c guild docs/EXTERNAL_TESTER_GUIDE.md` → 49; every example command is broken | Every external tester we hand this file to hits `pip install guild-packs` → 404, concludes project is dead | Delete the file, or rewrite it head-to-toe using the borg/agent-borg/borg-mcp names. Recommend delete + redirect link in README to a short new `docs/TRYING_BORG.md`. | **1 h** |
 | **SB-03** | SHIP_BLOCKER | `borg generate --format` vs README | `borg generate systematic-debugging --format claude` → `argparse: invalid choice` | Every `Platform Setup` snippet in the README is a broken copy-paste | Rename argparse choices from `{cursorrules, clinerules, claude-md, windsurfrules}` to `{cursor, cline, claude, windsurf}` and alias the old ones for back-compat. Alternative: fix 4 lines in README.md (lines 138, 144, 150, 156). Recommend rename — `claude` is what a user will guess. | **45 min** |
-| **SB-04** | SHIP_BLOCKER | `pyproject.toml` project URLs | `pip show agent-borg` → 3× `https://github.com/bensargotest-sys/guild-packs` | PyPI Homepage link leads to a repo whose name contradicts the tool name | Update `[project.urls]` in `pyproject.toml` to the real `agent-borg` repo URL, cut a 3.2.5 metadata-only release or roll into 3.3.0 | **15 min** |
+| **SB-04** | SHIP_BLOCKER | `pyproject.toml` project URLs | `pip show agent-borg` → 3× `https://github.com/borg-farther/guild-packs` | PyPI Homepage link leads to a repo whose name contradicts the tool name | Update `[project.urls]` in `pyproject.toml` to the real `agent-borg` repo URL, cut a 3.2.5 metadata-only release or roll into 3.3.0 | **15 min** |
 | **HIGH-01** | HIGH | Cold-start seed corpus | `HOME=/tmp/x HERMES_HOME=/tmp/x/.hermes borg search debugging` → `No packs found.` | First-user cold-start returns empty results; the tool looks broken | On first run, copy `borg/seeds_data/*.md` (already shipped in wheel) into `$HERMES_HOME/guild/` as pack skeletons, OR make `borg search` fall back to `seeds_data` when `HERMES_HOME/guild` is empty. Emit an "initialized starter pack library (N packs)" one-liner on the first non-empty search. | **2 h** |
 | **HIGH-02** | HIGH | Stale `guild://` URI scheme in user-facing text | `borg pull --help` → `"Pack URI (guild://, https://, or local path)"` | Users see the old product name in tool output every time they ask for help | Global search/replace in CLI help strings: `guild://` → `borg://`, keep accepting both schemes in the parser. File: `borg/cli.py` + any HelpFormatter strings. | **30 min** |
 | **HIGH-03** | HIGH | `feedback-v3 --success` validation | `borg feedback-v3 --pack foo --success maybe` → accepted | Garbage data reaches the feedback DB | Change the argparse `type=` to a function that accepts only `{yes,no,y,n,true,false,1,0}`, rejects everything else with a clear error. File: `borg/cli.py` around the `feedback-v3` subparser. | **15 min** |
@@ -819,9 +819,9 @@ borg generate systematic-debugging --format claude-md | head -1 # exit 0
 ```toml
 # BEFORE
 [project.urls]
-Homepage      = "https://github.com/bensargotest-sys/guild-packs"
-Repository    = "https://github.com/bensargotest-sys/guild-packs"
-Documentation = "https://github.com/bensargotest-sys/guild-packs#readme"
+Homepage      = "https://github.com/borg-farther/guild-packs"
+Repository    = "https://github.com/borg-farther/guild-packs"
+Documentation = "https://github.com/borg-farther/guild-packs#readme"
 
 # AFTER
 [project.urls]
@@ -936,7 +936,7 @@ directly — only the broken Python shim does.)
 **NO — not in v3.2.4.** A security-conscious engineering director who does
 due diligence on a new tool will:
 
-1. Click the PyPI homepage link → land on `bensargotest-sys/guild-packs` →
+1. Click the PyPI homepage link → land on `borg-farther/guild-packs` →
    name mismatch → ⚠️
 2. Open `docs/EXTERNAL_TESTER_GUIDE.md` → every command is wrong → ❌
 3. Try the README's `borg generate --format cursor` → error → ❌

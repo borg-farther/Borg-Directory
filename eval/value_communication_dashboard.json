@@ -1,0 +1,25 @@
+{
+  "readiness": {
+    "ready_for_10": true,
+    "ready_for_100": true,
+    "all_pass": true,
+    "source": "eval/gate_run_snapshot.json"
+  },
+  "value_metrics": {
+    "experiment_id": "BORG-003",
+    "completion_rate_control": 0.35,
+    "completion_rate_treatment": 1.0,
+    "completion_rate_lift": 0.65,
+    "tokens_saved_per_task": 1275.0,
+    "latency_saved_seconds_per_task": 25.5,
+    "source": "eval/live_ab_results.json"
+  },
+  "confidence": {
+    "evidence_tier": "high",
+    "sources": [
+      "eval/experiment_packet.json",
+      "eval/gate_run_snapshot.json",
+      "eval/uat_scoreboard_snapshot.json"
+    ]
+  }
+}

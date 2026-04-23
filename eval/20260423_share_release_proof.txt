@@ -1,0 +1,119 @@
+=== UTC ===
+Thu Apr 23 11:52:24 UTC 2026
+=== git remote -v ===
+origin	https://github.com/borg-farther/Borg-Directory.git (fetch)
+origin	https://github.com/borg-farther/Borg-Directory.git (push)
+=== branch (before) ===
+chore/repo-diet-safe-archive-20260422
+=== status --short (before) ===
+ M .github/DISCUSSION_TEMPLATE/classifier-feedback.yml
+ M BORG_MARKETING_UNIFIED.md
+ M GAP_ANALYSIS.md
+ M MARKETING.md
+ M PACK_AUDIT_RESULTS.md
+ M README.md
+ M ROADMAP.md
+ M UAT_RESULTS.md
+ M borg/core/apply.py
+ M borg/core/contextual_selector.py
+ M borg/core/convert.py
+ M borg/core/openclaw_converter.py
+ M borg/core/pack_taxonomy.py
+ M borg/core/publish.py
+ M borg/core/telemetry.py
+ M borg/core/uri.py
+ M borg/integrations/mcp_server.py
+ M borg/seeds_data/borg/SKILL.md
+ M borg/tests/test_apply.py
+ M borg/tests/test_contextual_selector.py
+ M borg/tests/test_convert_openclaw.py
+ M borg/tests/test_mcp_server.py
+ M borg/tests/test_mcp_server_extended.py
+ M borg/tests/test_pack_compatibility.py
+ M borg/tests/test_pull_network.py
+ M borg/tests/test_search.py
+ M borg/tests/test_uri.py
+ M docs/20260408-0623_classifier_prd/HERMES_FORGE_INTEGRATION_PLAN.md
+ M docs/20260408-0623_classifier_prd/PHASE0_SHIP_REPORT.md
+ M docs/20260408-0623_classifier_prd/dogfood_responses.md
+ M docs/20260408-0623_classifier_prd/github_discussion_url.txt
+ M docs/20260408-0623_classifier_prd/housekeeping_20260408_0832.md
+ M docs/20260408-0623_classifier_prd/wiki_ingest_report.md
+ M docs/20260408-1118_borg_roadmap/BORG_TESTING_ROADMAP_20260408.md
+ M docs/20260409-0800_user_readiness/COLD_START_SEED_CORPUS_DESIGN.md
+ M docs/20260409-0800_user_readiness/FIRST_USER_E2E_AUDIT_20260409.md
+ M docs/20260409-0800_user_readiness/SYNTHESIS_AND_SHIP_PLAN_20260409.md
+ M docs/20260409-1020_god_tier_borg_ship/CONTEXT_DOSSIER.md
+ M docs/20260409-1020_god_tier_borg_ship/RED_TEAM_REVIEW.md
+ M docs/20260409-1020_god_tier_borg_ship/SYNTHESIS_AND_PRD.md
+ M docs/AWESOME_HERMES_PR_DRAFT.md
+ M docs/DISTRIBUTION_INFRA_DESIGN.md
+ M docs/EXTERNAL_COMMUNICATION_STANDARD.md
+ M docs/GETTING_STARTED.md
+ M docs/OPENCLAW_IMPLEMENTATION_SPEC.md
+ M docs/PRD_OPENCLAW_CONVERTER.md
+ M docs/PRD_OPENCLAW_CONVERTER_v2.md
+ M docs/QUICKSTART.md
+ M docs/README.md
+ M docs/SMITHERY_LISTING_GUIDE.md
+ M docs/TESTER_MESSAGE.md
+ M docs/TRYING_BORG.md
+ M docs/landing-page/index.html
+ M dogfood/firstuser_audit.md
+ M dogfood/sync_fleet.sh
+ M eval/new_home_operational_audit.json
+ M eval/new_home_readiness_report.json
+ M eval/new_home_scale_hardening_plan.json
+ M eval/tests/test_first_user_external_readiness.py
+ M openclaw-skill/SKILL.md
+ M pyproject.toml
+?? GO_NO_GO_DECISION.md
+?? PROJECT_STATUS.md
+?? borg/core/checkpoint_comms.py
+?? borg/tests/test_checkpoint_comms.py
+?? docs/20260420-1512_human_impact_team/
+?? docs/20260422-0909_NEW_HOME_PRODUCTION_CLOSURE.md
+?? docs/20260422-1017_BORG_TELEGRAM_COMMS_TLDR.md
+?? docs/20260423-1023_BORG_DISTRIBUTION_CLOSURE.md
+?? docs/20260423-1122_EXTERNAL_CHANNEL_UAT_CLOSURE.md
+?? docs/BORG_DISCORD_CHECKPOINT_STANDARD.md
+?? docs/BORG_TELEGRAM_CHECKPOINT_STANDARD.md
+?? docs/EXTERNAL_CHANNEL_UAT.md
+?? docs/GOOGLE_TIER_UAT_READINESS.md
+?? docs/VALUE_COMMUNICATION_DASHBOARD.html
+?? docs/VALUE_COMMUNICATION_DASHBOARD.md
+?? eval/20260423_external_channel_uat_report.json
+?? eval/20260423_fix_validation_summary.json
+?? eval/20260423_git_closure_proof.txt
+?? eval/20260423_share_release_proof.txt
+?? eval/borg_discord_checkpoint_contract.json
+?? eval/borg_human_impact_os.json
+?? eval/borg_telegram_checkpoint_contract.json
+?? eval/cron_run_smoke.txt
+?? eval/experiment_packet.json
+?? eval/external_channel_uat_matrix.json
+?? eval/final_closure_pytest.log
+?? eval/final_closure_summary.json
+?? eval/gate_run_snapshot.json
+?? eval/git_remote_parity_report.json
+?? eval/git_remote_sync_result.json
+?? eval/google_tier_uat_plan.json
+?? eval/google_tier_uat_runner_stdout.json
+?? eval/google_tier_uat_scoreboard.json
+?? eval/google_tier_uat_snapshot.json
+?? eval/legacy_repo_state_attempt.json
+?? eval/new_home_gate_run_latest.json
+?? eval/new_home_repo_state.json
+?? eval/telemetry_event_schema.json
+?? eval/tests/test_borg_telegram_checkpoint_contract.py
+?? eval/tests/test_external_channel_uat_matrix.py
+?? eval/tests/test_git_home_migration_consistency.py
+?? eval/tests/test_google_tier_uat_system.py
+?? eval/tests/test_new_home_readiness_contract.py
+?? eval/tests/test_new_home_scale_hardening_plan.py
+?? eval/uat_scoreboard_snapshot.json
+?? eval/value_communication_dashboard.json
+?? scripts/borg_checkpoint_lint.py
+?? scripts/google_tier_uat_runner.py
+?? scripts/new_home_build_readiness_report.py
+?? scripts/new_home_readiness_gate_check.py

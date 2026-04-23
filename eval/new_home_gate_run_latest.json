@@ -1,0 +1,17 @@
+{
+  "status": "pass",
+  "checks": {
+    "origin_new_home": true,
+    "legacy_backup_present": true,
+    "legacy_push_disabled": true,
+    "required_files_present": true,
+    "legacy_url_absent_from_canonical_files": true
+  },
+  "required_files": [
+    "docs/20260422-0909_NEW_HOME_PRODUCTION_CLOSURE.md",
+    "eval/tests/test_git_home_migration_consistency.py",
+    "eval/tests/test_new_home_scale_hardening_plan.py",
+    "eval/tests/test_new_home_readiness_contract.py",
+    "eval/new_home_scale_hardening_plan.json"
+  ]
+}

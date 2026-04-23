@@ -1,0 +1,65 @@
+{
+  "timestamp_utc": "2026-04-23T10:23:00Z",
+  "scope": "contextual selector + mcp suggest/analytics reconcile fixes",
+  "implementation_files": [
+    "borg/core/contextual_selector.py",
+    "borg/integrations/mcp_server.py",
+    "borg/tests/test_contextual_selector.py",
+    "borg/tests/test_mcp_server_extended.py"
+  ],
+  "targeted_test_run": {
+    "session_artifact": "/root/.hermes/sessions/session_cron_d8a8aab0392c_20260423_101115.json",
+    "commands": [
+      {
+        "cmd": "python -m pytest borg/tests/test_contextual_selector.py -q",
+        "result": "pass",
+        "summary": "80 passed in 0.16s"
+      },
+      {
+        "cmd": "python -m pytest borg/tests/test_mcp_server_extended.py -q -k \"suggest or analytics\"",
+        "result": "pass",
+        "summary": "19 passed, 124 deselected in 6.18s"
+      },
+      {
+        "cmd": "python -m pytest borg/tests/test_v3_integration.py -q -k \"suggest\"",
+        "result": "pass",
+        "summary": "3 passed, 37 deselected in 5.32s"
+      }
+    ],
+    "aggregate": {
+      "commands_passed": 3,
+      "commands_failed": 0
+    }
+  },
+  "cutover_state": {
+    "origin": "https://github.com/borg-farther/Borg-Directory.git",
+    "legacy_fetch": "<removed>",
+    "legacy_push": "DISABLED_LEGACY_BACKUP_REMOTE",
+    "origin_repo": {
+      "nameWithOwner": "borg-farther/Borg-Directory",
+      "visibility": "PUBLIC",
+      "isPrivate": false,
+      "defaultBranch": "main"
+    },
+    "legacy_repo_access": {
+      "status": "not_found_or_not_accessible",
+      "private_toggle_attempt": {
+        "session_artifact": "/root/.hermes/sessions/session_cron_2e32f3f68eaa_20260423_102147.json",
+        "view_result": "GraphQL repository not found",
+        "patch_result": "REST Not Found"
+      },
+      "evidence": [
+        "eval/git_remote_parity_report.json",
+        "eval/legacy_repo_state_attempt.json",
+        "eval/new_home_operational_audit.json"
+      ]
+    }
+  },
+  "distribution_gates": {
+    "ready_for_10": true,
+    "ready_for_100": true,
+    "ready_for_1000": true,
+    "source": "eval/uat_scoreboard_snapshot.json"
+  },
+  "overall": "pass_with_legacy_repo_inaccessibility_warning"
+}

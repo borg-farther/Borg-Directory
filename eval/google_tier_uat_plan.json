@@ -1,0 +1,67 @@
+{
+  "plan_id": "borg-google-tier-uat-20260422",
+  "objective": "Prove Borg is production-ready from new git home with strict scale, utility, security, and operational gates.",
+  "repo": {
+    "active": "https://github.com/borg-farther/Borg-Directory.git",
+    "legacy_backup": "external-archival-remote (owner redacted)",
+    "local_path": "/root/hermes-workspace/borg"
+  },
+  "hard_gates": [
+    {
+      "id": "git-home-cutover",
+      "severity": "critical",
+      "pass_condition": "origin points to borg-farther/Borg-Directory and legacy pushurl is disabled"
+    },
+    {
+      "id": "governance-enforcement",
+      "severity": "critical",
+      "pass_condition": "eval/new_home_governance_enforcement.json success=true"
+    },
+    {
+      "id": "readiness-contract",
+      "severity": "critical",
+      "pass_condition": "eval/new_home_readiness_report.json overall_status=pass and operational_ready=true"
+    },
+    {
+      "id": "test-gate",
+      "severity": "critical",
+      "pass_condition": "eval/new_home_test_gate_report.json status=pass and pytest_rc=0"
+    },
+    {
+      "id": "scale-gates",
+      "severity": "critical",
+      "pass_condition": "eval/uat_scoreboard_snapshot.json gates ready_for_10, ready_for_100, ready_for_1000, all_pass all true"
+    },
+    {
+      "id": "utility-and-savings",
+      "severity": "critical",
+      "pass_condition": "experiment packet shows positive completion lift and treatment tokens mean lower than control"
+    },
+    {
+      "id": "anti-theater-artifacts",
+      "severity": "high",
+      "pass_condition": "required artifacts exist, are non-empty, and do not contain TODO/TBD/placeholder markers"
+    },
+    {
+      "id": "legacy-access-warning",
+      "severity": "warning",
+      "pass_condition": "legacy archive API accessibility proven OR warning explicitly recorded"
+    }
+  ],
+  "concurrency_targets": {
+    "baseline": 10,
+    "production": 100,
+    "stretch": 1000
+  },
+  "utility_targets": {
+    "min_completion_lift": 0.05,
+    "must_reduce_tokens": true
+  },
+  "canonical_outputs": [
+    "eval/google_tier_uat_snapshot.json",
+    "eval/google_tier_uat_scoreboard.json",
+    "PROJECT_STATUS.md",
+    "GO_NO_GO_DECISION.md",
+    "UAT_RESULTS.md"
+  ]
+}

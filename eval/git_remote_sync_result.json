@@ -1,0 +1,15 @@
+{
+  "timestamp_utc": "2026-04-23T11:04:02.838870Z",
+  "status": "pass",
+  "checks": {
+    "origin_configured": true,
+    "legacy_configured": true,
+    "legacy_push_disabled": false,
+    "origin_probe_ok": true,
+    "legacy_probe_non_blocking": true
+  },
+  "legacy_probe": {
+    "rc": null,
+    "stderr": "legacy remote intentionally removed"
+  }
+}

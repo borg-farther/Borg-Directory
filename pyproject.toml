@@ -34,10 +34,10 @@ borg-doctor = "borg.cli.doctor:run_doctor"
 borg-install = "borg.cli.install:main"
 
 [project.urls]
-Homepage = "https://github.com/bensargotest-sys/borg"
-Repository = "https://github.com/bensargotest-sys/borg"
-Issues = "https://github.com/bensargotest-sys/borg/issues"
-Documentation = "https://github.com/bensargotest-sys/borg/tree/main/docs"
+Homepage = "https://github.com/borg-farther/Borg-Directory"
+Repository = "https://github.com/borg-farther/Borg-Directory"
+Issues = "https://github.com/borg-farther/Borg-Directory/issues"
+Documentation = "https://github.com/borg-farther/Borg-Directory/tree/main/docs"
 
 [tool.setuptools.packages.find]
 where = ["."]

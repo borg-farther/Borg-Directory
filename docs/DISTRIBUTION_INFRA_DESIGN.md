@@ -15,7 +15,7 @@ from publishers to consumers across the network, at scale from 0 to thousands of
 simultaneous agents.
 
 **Current state (as-is):**
-- Packs are YAML files stored in a single GitHub repo (`bensargotest-sys/guild-packs`)
+- Packs are YAML files stored in a single GitHub repo (`borg-farther/guild-packs`)
 - Pack index is a single `index.json` at repo root (flat key-value map, ~20 packs)
 - `guild://` URIs resolve to GitHub raw URLs via `uri.py`
 - Publishing is a GitHub PR via `gh` CLI, with a local outbox fallback
@@ -139,9 +139,9 @@ The current `index.json` is a flat key-value map at repo root:
     {
       "source_id": "guild-packs",
       "type": "github",
-      "repo": "bensargotest-sys/guild-packs",
+      "repo": "borg-farther/guild-packs",
       "branch": "main",
-      "base_url": "https://raw.githubusercontent.com/bensargotest-sys/guild-packs/main"
+      "base_url": "https://raw.githubusercontent.com/borg-farther/guild-packs/main"
     }
   ],
   "packs": [
@@ -151,7 +151,7 @@ The current `index.json` is a flat key-value map at repo root:
       "versions": {
         "1.0.0": {
           "version": "1.0.0",
-          "pack_url": "https://raw.githubusercontent.com/bensargotest-sys/guild-packs/main/packs/systematic-debugging.workflow.yaml",
+          "pack_url": "https://raw.githubusercontent.com/borg-farther/guild-packs/main/packs/systematic-debugging.workflow.yaml",
           "sha256": "abc123...",
           "confidence": "tested",
           "tier": "validated",
@@ -163,7 +163,7 @@ The current `index.json` is a flat key-value map at repo root:
         },
         "1.1.0": {
           "version": "1.1.0",
-          "pack_url": "https://raw.githubusercontent.com/bensargotest-sys/guild-packs/main/packs/systematic-debugging.workflow.v1.1.0.yaml",
+          "pack_url": "https://raw.githubusercontent.com/borg-farther/guild-packs/main/packs/systematic-debugging.workflow.v1.1.0.yaml",
           "sha256": "def456...",
           "confidence": "tested",
           "tier": "validated",
@@ -252,7 +252,7 @@ packs/{pack-id}.workflow.v{ver}.yaml # versioned copies (preserved)
 Agent calls borg pull guild://hermes/systematic-debugging
 
 1. resolve_guild_uri("guild://hermes/systematic-debugging")
-   → https://raw.githubusercontent.com/bensargotest-sys/guild-packs/main/packs/systematic-debugging.workflow.yaml
+   → https://raw.githubusercontent.com/borg-farther/guild-packs/main/packs/systematic-debugging.workflow.yaml
 
 2. Fetch index from /v1/packs/hermes/systematic-debugging
    → get latest version info + SHA256

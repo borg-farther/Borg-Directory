@@ -2,7 +2,7 @@
   "plan_id": "borg-new-home-scale-hardening-20260421",
   "repo": {
     "active": "https://github.com/borg-farther/Borg-Directory.git",
-    "legacy_archive": "https://github.com/bensargotest-sys/borg.git",
+    "legacy_archive": "https://github.com/borg-farther/borg.git",
     "local_path": "/root/hermes-workspace/borg"
   },
   "operating_model": {

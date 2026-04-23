@@ -1,0 +1,48 @@
+{
+  "generated_at": "2026-04-23T11:15:00Z",
+  "overall_status": "pass",
+  "channels": {
+    "telegram": {
+      "enabled": true,
+      "uat_status": "pass",
+      "independent": true,
+      "proof_artifacts": [
+        "eval/borg_telegram_checkpoint_contract.json",
+        "docs/BORG_TELEGRAM_CHECKPOINT_STANDARD.md",
+        "eval/tests/test_borg_telegram_checkpoint_contract.py"
+      ]
+    },
+    "discord": {
+      "enabled": true,
+      "uat_status": "pass",
+      "independent": true,
+      "proof_artifacts": [
+        "eval/borg_discord_checkpoint_contract.json",
+        "docs/BORG_DISCORD_CHECKPOINT_STANDARD.md"
+      ]
+    },
+    "public_web": {
+      "enabled": true,
+      "uat_status": "pass",
+      "independent": true,
+      "proof_artifacts": [
+        "docs/public/index.html",
+        "docs/public/status.json",
+        "docs/public/value.json",
+        "docs/public/proof/index.html",
+        "docs/public/impact/index.html",
+        "eval/tests/test_external_comms_alignment.py"
+      ]
+    },
+    "github_repo": {
+      "enabled": true,
+      "uat_status": "pass",
+      "independent": true,
+      "proof_artifacts": [
+        "README.md",
+        "pyproject.toml",
+        "eval/tests/test_first_user_external_readiness.py"
+      ]
+    }
+  }
+}

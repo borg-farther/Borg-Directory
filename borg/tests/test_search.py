@@ -256,7 +256,7 @@ class TestBorgPull:
         monkeypatch.setattr(search_module, "BORG_DIR", fake_guild)
 
         resolved_url = (
-            "https://raw.githubusercontent.com/bensargotest-sys/guild-packs/main"
+            "https://raw.githubusercontent.com/borg-farther/guild-packs/main"
             "/packs/my-pack.workflow.yaml"
         )
 
@@ -341,7 +341,7 @@ class TestBorgTry:
         monkeypatch.setattr(search_module, "BORG_DIR", fake_guild)
 
         resolved_url = (
-            "https://raw.githubusercontent.com/bensargotest-sys/guild-packs/main"
+            "https://raw.githubusercontent.com/borg-farther/guild-packs/main"
             "/packs/my-pack.workflow.yaml"
         )
 
@@ -1261,7 +1261,7 @@ class TestBorgPullReputationLogging:
         monkeypatch.setattr(search_module, "AgentStore", lambda: mock_store)
 
         resolved_url = (
-            "https://raw.githubusercontent.com/bensargotest-sys/guild-packs/main"
+            "https://raw.githubusercontent.com/borg-farther/guild-packs/main"
             "/packs/my-pack.workflow.yaml"
         )
 
@@ -1293,7 +1293,7 @@ class TestBorgPullReputationLogging:
         monkeypatch.setattr(search_module, "AgentStore", lambda: mock_store)
 
         resolved_url = (
-            "https://raw.githubusercontent.com/bensargotest-sys/guild-packs/main"
+            "https://raw.githubusercontent.com/borg-farther/guild-packs/main"
             "/packs/my-pack.workflow.yaml"
         )
 
@@ -1316,7 +1316,7 @@ class TestBorgPullReputationLogging:
         monkeypatch.setattr(search_module, "AgentStore", None)
 
         resolved_url = (
-            "https://raw.githubusercontent.com/bensargotest-sys/guild-packs/main"
+            "https://raw.githubusercontent.com/borg-farther/guild-packs/main"
             "/packs/my-pack.workflow.yaml"
         )
 

@@ -189,6 +189,9 @@ class TestActionCheckpoint:
         assert data["phase"] == "__approval__"
         assert data["status"] == "passed"
         assert data["next_action"] == "continue"
+        assert "telegram_checkpoint" in data
+        assert "[borg checkpoint]" in data["telegram_checkpoint"]
+        assert data["checkpoint_receipt"]["phase"] == "decide"
 
     def test_checkpoint_approval_fail_rejects(self, tmp_agent_dir):
         start_result = apply_mod.action_start("test-pack", "Task", agent_dir=tmp_agent_dir)
@@ -235,6 +238,9 @@ class TestActionCheckpoint:
         assert data["status"] == "passed"
         assert data["next_action"] == "continue"
         assert data["phases_completed"] == 1
+        assert "telegram_checkpoint" in data
+        assert "[borg checkpoint]" in data["telegram_checkpoint"]
+        assert "next step:" in data["telegram_checkpoint"]
 
     def test_checkpoint_phase_fail_triggers_retry(self, tmp_agent_dir):
         start_result = apply_mod.action_start("test-pack", "Task", agent_dir=tmp_agent_dir)
