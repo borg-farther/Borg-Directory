@@ -77,7 +77,7 @@ This is the **only** OpenClaw skill. Its description is trigger-optimized to fir
 name: borg
 description: "When your agent is stuck in a loop, burning tokens on a problem someone else already solved. Use when debugging takes >3 attempts, code review needs structure, or you need a proven approach for testing, planning, or deployment. Borg connects to collective agent intelligence — battle-tested workflows from thousands of agents. NOT for simple tasks that need no structure."
 user-invocable: true
-metadata: {"openclaw":{"emoji":"🧠","homepage":"https://github.com/bensargotest-sys/guild-tools","always":false}}
+metadata: {"openclaw":{"emoji":"🧠","homepage":"https://github.com/borg-farther/guild-tools","always":false}}
 ---
 
 # 🧠 Borg — Collective Intelligence for AI Agents
@@ -134,7 +134,7 @@ See `references/pack-index.md` for the full registry with descriptions.
 - **writing-plans** — scope → break down → sequence → validate
 
 ---
-*Powered by [borg](https://github.com/bensargotest-sys/guild-tools) — collective intelligence for AI agents.*
+*Powered by [borg](https://github.com/borg-farther/guild-tools) — collective intelligence for AI agents.*
 ```
 
 ### The Pack Index (references/pack-index.md)
@@ -255,14 +255,14 @@ BRIDGE_SKILL_TEMPLATE = """\
 name: borg
 description: "{description}"
 user-invocable: true
-metadata: {{"openclaw":{{"emoji":"{emoji}","homepage":"https://github.com/bensargotest-sys/guild-tools","always":false}}}}
+metadata: {{"openclaw":{{"emoji":"{emoji}","homepage":"https://github.com/borg-farther/guild-tools","always":false}}}}
 ---
 
 # 🧠 Borg — Collective Intelligence for AI Agents
 
 {body}
 ---
-*Powered by [borg](https://github.com/bensargotest-sys/guild-tools) — collective intelligence for AI agents.*
+*Powered by [borg](https://github.com/borg-farther/guild-tools) — collective intelligence for AI agents.*
 """
 
 
@@ -777,11 +777,11 @@ def borg_sync(action: str = "sync", openclaw_dir: str = "~/.openclaw/skills") ->
             # Load all packs from registry
             packs = []
             pack_urls = [
-                "https://raw.githubusercontent.com/bensargotest-sys/guild-packs/main/index.json"
+                "https://raw.githubusercontent.com/borg-farther/guild-packs/main/index.json"
             ]
 
             # Fetch index to get pack list
-            index_url = "https://raw.githubusercontent.com/bensargotest-sys/guild-packs/main/index.json"
+            index_url = "https://raw.githubusercontent.com/borg-farther/guild-packs/main/index.json"
             index_content, err = fetch_with_retry(index_url)
             if err:
                 return json.dumps({"success": False, "error": f"Failed to fetch index: {err}"})
@@ -792,7 +792,7 @@ def borg_sync(action: str = "sync", openclaw_dir: str = "~/.openclaw/skills") ->
             # Load each pack
             for pack_entry in pack_list:
                 pack_name = pack_entry.get("name", "")
-                pack_url = f"https://raw.githubusercontent.com/bensargotest-sys/guild-packs/main/packs/{pack_name}.workflow.yaml"
+                pack_url = f"https://raw.githubusercontent.com/borg-farther/guild-packs/main/packs/{pack_name}.workflow.yaml"
                 content, err = fetch_with_retry(pack_url)
                 if err:
                     continue  # Skip failed packs, don't fail the whole sync
@@ -913,7 +913,7 @@ def _cmd_openclaw_sync(args) -> int:
     openclaw_path = Path(args.openclaw_dir).expanduser()
 
     # Fetch index
-    index_url = "https://raw.githubusercontent.com/bensargotest-sys/guild-packs/main/index.json"
+    index_url = "https://raw.githubusercontent.com/borg-farther/guild-packs/main/index.json"
     index_content, err = fetch_with_retry(index_url)
     if err:
         print(f"Error: Failed to fetch pack index: {err}", file=sys.stderr)
@@ -928,7 +928,7 @@ def _cmd_openclaw_sync(args) -> int:
     packs = []
     for pack_entry in pack_list:
         pack_name = pack_entry.get("name", "")
-        pack_url = f"https://raw.githubusercontent.com/bensargotest-sys/guild-packs/main/packs/{pack_name}.workflow.yaml"
+        pack_url = f"https://raw.githubusercontent.com/borg-farther/guild-packs/main/packs/{pack_name}.workflow.yaml"
         content, err = fetch_with_retry(pack_url)
         if err:
             print(f"  Skipping {pack_name}: {err}", file=sys.stderr)
@@ -1043,7 +1043,7 @@ def _cmd_openclaw_list(args) -> int:
                                        ▼
 ┌──────────────────────────────────────────────────────────────────────────────┐
 │                       Borg Pack Registry                                      │
-│  Bensargotest-sys/guild-packs on GitHub                                      │
+│  borg-farther/Borg-Directory on GitHub                                       │
 │  index.json + 23 *.workflow.yaml packs                                       │
 └──────────────────────────────────────────────────────────────────────────────┘
 ```

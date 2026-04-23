@@ -106,15 +106,25 @@ test_connectivity() {
 # ---------------------------------------------------------------------------
 sync_vps() {
     local ip="$1"
-    local remote_db="/root/.borg/borg_v3.db"
+    local remote_db=""
     local tmpfile
     tmpfile=$(mktemp /tmp/vps_db_${ip}_XXXXXX.sqlite)
 
     log "Syncing ${ip} ..."
 
-    # Check if remote DB exists
-    if ! ssh -i "${SSH_KEY}" ${SSH_OPTS} "root@${ip}" "test -f ${remote_db}" &>/dev/null; then
-        warn "  No DB at ${ip}:${remote_db} — skipping"
+    # Resolve remote DB location (legacy + current layouts)
+    remote_db=$(ssh -i "${SSH_KEY}" ${SSH_OPTS} "root@${ip}" "
+        for p in /root/.borg/borg_v3.db /root/.hermes/guild/borg_v3.db /root/.hermes/borg/borg_v3.db; do
+            if [ -f \"\$p\" ]; then
+                echo \"\$p\"
+                exit 0
+            fi
+        done
+        exit 1
+    " 2>/dev/null || true)
+
+    if [[ -z "${remote_db}" ]]; then
+        warn "  No Borg V3 DB found on ${ip} (checked /root/.borg + /root/.hermes/*) — skipping"
         return 0
     fi
 
@@ -127,7 +137,7 @@ sync_vps() {
 
     local size
     size=$(wc -c < "${tmpfile}")
-    log "  Downloaded ${size} bytes from ${ip}"
+    log "  Downloaded ${size} bytes from ${ip} (${remote_db})"
 
     # Get hostname from remote VPS
     local remote_hostname

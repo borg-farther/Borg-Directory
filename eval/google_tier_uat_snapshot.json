@@ -1,0 +1,151 @@
+{
+  "timestamp_utc": "2026-04-23T11:18:57+00:00",
+  "plan_id": "borg-google-tier-uat-20260422",
+  "overall_status": "pass",
+  "decision": "GO",
+  "summary": {
+    "total_checks": 8,
+    "critical_failed": 0,
+    "high_failed": 0,
+    "warnings_count": 0
+  },
+  "checks": [
+    {
+      "id": "git-home-cutover",
+      "severity": "critical",
+      "passed": true,
+      "detail": "origin_ok=True, legacy_remote_present=False, legacy_push_disabled=False",
+      "evidence": [
+        ".git/config"
+      ]
+    },
+    {
+      "id": "governance-enforcement",
+      "severity": "critical",
+      "passed": true,
+      "detail": "success=True",
+      "evidence": [
+        "eval/new_home_governance_enforcement.json"
+      ]
+    },
+    {
+      "id": "readiness-contract",
+      "severity": "critical",
+      "passed": true,
+      "detail": "overall_status=pass, operational_ready=True, sync_status=pass",
+      "evidence": [
+        "eval/new_home_readiness_report.json"
+      ]
+    },
+    {
+      "id": "test-gate",
+      "severity": "critical",
+      "passed": true,
+      "detail": "status=pass, pytest_rc=0, summary=18 passed in 0.09s",
+      "evidence": [
+        "eval/new_home_test_gate_report.json"
+      ]
+    },
+    {
+      "id": "scale-gates",
+      "severity": "critical",
+      "passed": true,
+      "detail": "ready_for_10=True, ready_for_100=True, ready_for_1000=True, all_pass=True",
+      "evidence": [
+        "eval/uat_scoreboard_snapshot.json"
+      ]
+    },
+    {
+      "id": "utility-and-savings",
+      "severity": "critical",
+      "passed": true,
+      "detail": "success_lift=0.6500, control_completion=0.3500, treatment_completion=1.0000, control_tokens_mean=2475.00, treatment_tokens_mean=1200.00",
+      "evidence": [
+        "eval/experiment_packet.json"
+      ]
+    },
+    {
+      "id": "anti-theater-artifacts",
+      "severity": "high",
+      "passed": true,
+      "detail": "all required artifacts exist, are non-empty, and contain no placeholder markers",
+      "evidence": [
+        "docs/20260422-0909_NEW_HOME_PRODUCTION_CLOSURE.md",
+        "eval/gate_run_snapshot.json",
+        "eval/experiment_packet.json",
+        "eval/uat_scoreboard_snapshot.json",
+        "eval/new_home_readiness_report.json",
+        "eval/new_home_test_gate_report.json"
+      ]
+    },
+    {
+      "id": "legacy-access-warning",
+      "severity": "warning",
+      "passed": true,
+      "detail": "no legacy access warning reported",
+      "evidence": [
+        "eval/new_home_readiness_report.json"
+      ]
+    }
+  ],
+  "warnings": [],
+  "artifact_quality": [
+    {
+      "path": "docs/20260422-0909_NEW_HOME_PRODUCTION_CLOSURE.md",
+      "exists": true,
+      "size_bytes": 1650,
+      "placeholder_markers": [],
+      "sha256": "d027c43bd8e43ad2309192f6c610ef2a7fe8513d17355af3b9c9e7c0991f8621"
+    },
+    {
+      "path": "eval/gate_run_snapshot.json",
+      "exists": true,
+      "size_bytes": 349,
+      "placeholder_markers": [],
+      "sha256": "1fcc6cc91dbb722240dd954323ffe0c58ddfd9984d9e1bf9f421f01c2d2ee371"
+    },
+    {
+      "path": "eval/experiment_packet.json",
+      "exists": true,
+      "size_bytes": 1135,
+      "placeholder_markers": [],
+      "sha256": "e0f13bbedb0f4f8be6b8a4837fff25d3110f6776ccd84c7aef82195ac262ce00"
+    },
+    {
+      "path": "eval/uat_scoreboard_snapshot.json",
+      "exists": true,
+      "size_bytes": 817,
+      "placeholder_markers": [],
+      "sha256": "881513ac6b3391ee0dd33d095830754079eacb9ce4844ebf0be4d9f8ae616e4e"
+    },
+    {
+      "path": "eval/new_home_readiness_report.json",
+      "exists": true,
+      "size_bytes": 665,
+      "placeholder_markers": [],
+      "sha256": "08214ae72a8c3b95eb6a25b4ccc647c3ca623e61d545fb35030486e09f0eb41b"
+    },
+    {
+      "path": "eval/new_home_test_gate_report.json",
+      "exists": true,
+      "size_bytes": 223,
+      "placeholder_markers": [],
+      "sha256": "33832ebc43b076e5717c5804d281576c58948fd25418470f4832d5326411543c"
+    }
+  ],
+  "metrics": {
+    "success_lift": 0.65,
+    "control_completion_rate": 0.35,
+    "treatment_completion_rate": 1.0,
+    "control_tokens_mean": 2475.0,
+    "treatment_tokens_mean": 1200.0
+  },
+  "sources": {
+    "git_config": ".git/config",
+    "governance": "eval/new_home_governance_enforcement.json",
+    "readiness": "eval/new_home_readiness_report.json",
+    "test_gate": "eval/new_home_test_gate_report.json",
+    "scoreboard": "eval/uat_scoreboard_snapshot.json",
+    "experiment_packet": "eval/experiment_packet.json"
+  }
+}

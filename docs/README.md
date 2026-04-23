@@ -212,12 +212,23 @@ Systematic adoption of Illumi architecture into Hermes + Borg with safety gates:
 - `eval/tests/test_git_home_migration_consistency.py` (canonical Git home URL consistency across metadata/docs)
 - `docs/20260421-1617_BORG_NEW_HOME_SCALE_HARDENING.md` (new-home hardening runbook for origin/legacy operating model)
 - `docs/20260422-0909_NEW_HOME_PRODUCTION_CLOSURE.md` (production closure proof + fetch-only legacy backup posture)
+- `docs/GOOGLE_TIER_UAT_READINESS.md` (google-tier UAT gate definitions + operator runbook)
+- `eval/google_tier_uat_plan.json` (machine-readable hard-gate UAT plan)
+- `scripts/google_tier_uat_runner.py` (one-command UAT gate compiler + canonical decision artifact emitter)
+- `eval/google_tier_uat_snapshot.json` + `eval/google_tier_uat_scoreboard.json` (canonical machine-readable UAT evidence)
+- `eval/tests/test_google_tier_uat_system.py` (strict UAT execution + consistency enforcement)
 - `eval/new_home_scale_hardening_plan.json` (machine hardening plan for new-home scale governance)
 - `eval/tests/test_new_home_scale_hardening_plan.py` (hardening-plan test enforcement)
 - `scripts/new_home_readiness_gate_check.py` (strict new-home gate consistency checker)
 - `eval/tests/test_new_home_readiness_contract.py` (no false-pass guard for parity/readiness/sync artifacts)
 - `docs/public/impact/index.html` + `docs/public/impact/impact.json` + `docs/public/impact/case-studies.json` (public impact endpoint + machine case studies)
 - `docs/public/proof/index.html` + `docs/public/proof/case-studies.json` (public proof surface for role-specific evidence)
+- `docs/BORG_TELEGRAM_CHECKPOINT_STANDARD.md` (operator-facing standard for simple Telegram value receipts)
+- `docs/20260422-1017_BORG_TELEGRAM_COMMS_TLDR.md` (critical reflection + 3-lens mechanism-selection TL;DR)
+- `eval/borg_telegram_checkpoint_contract.json` (machine contract for checkpoint format + mechanism selection)
+- `scripts/borg_checkpoint_lint.py` (quality gate for checkpoint docs/contract consistency)
+- `eval/tests/test_borg_telegram_checkpoint_contract.py` (checkpoint contract enforcement)
+- `borg/core/checkpoint_comms.py` + `borg/tests/test_checkpoint_comms.py` (rendering + estimation primitives with unit tests)
 
 ---
 

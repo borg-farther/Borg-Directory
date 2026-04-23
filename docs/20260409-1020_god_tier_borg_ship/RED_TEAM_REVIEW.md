@@ -155,7 +155,7 @@ The existing seed files are NOT `workflow_pack` YAML files. They are SKILL-forma
 - `borg/seeds_data/borg/SKILL.md` (5178 bytes) contains:
   - Line: `homepage: https://github.com/punkrocker/agent-borg`
   - This is shipped inside the wheel.
-- The correct repo is `https://github.com/bensargotest-sys/agent-borg`.
+- The correct repo is `https://github.com/borg-farther/agent-borg`.
 
 This is a separate instance of the stale naming problem (different from `guild-packs` but same category). It shipped in v3.2.4.
 
@@ -450,7 +450,7 @@ The 12h figure only covers the ship blockers, not the cold-start fix or the HIGH
 | 12 | HIGH | Architecture | `all_packs` dedup has no explicit seed-vs-remote priority policy | Document dedup policy | 1h |
 | 13 | HIGH | Failure Mode | No incident-response for misleading seed packs already installed | Add recall procedure + `borg doctor` | 2h + 1 PRD para |
 | 14 | HIGH | SB Completeness | `guild://` still in CLI help strings (HIGH-02 unfixed) | 30 min | 30 min |
-| 15 | MEDIUM | Cold-Start | `borg/seeds_data/borg/SKILL.md` has wrong repo URL (punkrocker not bensargotest) | Fix URL | 5 min |
+| 15 | MEDIUM | Cold-Start | `borg/seeds_data/borg/SKILL.md` has wrong repo URL (not canonical new home) | Fix URL | 5 min |
 | 16 | MEDIUM | Eval | C3 prototype uses proxy metric not task pass rate | Add behavioral secondary metric | 0 |
 | 17 | MEDIUM | Eval | 50-query benchmark "pre-registered" is not actually pre-registered or in repo | Commit fixture + external pre-reg | 2-3h |
 | 18 | MEDIUM | Eval | G1 "relevant" defined by token overlap, not semantic relevance | Acknowledge limitation + calibration sample | 1h |

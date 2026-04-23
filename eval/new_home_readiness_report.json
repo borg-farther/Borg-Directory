@@ -1,5 +1,5 @@
 {
-  "timestamp_utc": "2026-04-22T09:13:36.431362Z",
+  "timestamp_utc": "2026-04-23T11:04:02.839392Z",
   "pytest_rc": 0,
   "pytest_summary": "18 passed in 0.09s",
   "security_gate_check_rc": 0,
@@ -7,10 +7,8 @@
   "parity_status": "pass",
   "operational_ready": true,
   "unmet_conditions": [],
-  "warnings": [
-    "legacy_repo_not_accessible_from_current_token; treated as external archive"
-  ],
-  "sync_status": "fail",
+  "warnings": [],
+  "sync_status": "pass",
   "evidence": {
     "operational_audit": "eval/new_home_operational_audit.json",
     "governance_enforcement": "eval/new_home_governance_enforcement.json",

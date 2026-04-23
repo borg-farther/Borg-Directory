@@ -1,0 +1,16 @@
+{
+  "status": "pass",
+  "channels": [
+    "telegram",
+    "discord",
+    "public_web",
+    "github_repo"
+  ],
+  "matrix": "eval/external_channel_uat_matrix.json",
+  "docs": [
+    "docs/EXTERNAL_CHANNEL_UAT.md",
+    "docs/EXTERNAL_COMMUNICATION_STANDARD.md",
+    "docs/BORG_TELEGRAM_CHECKPOINT_STANDARD.md",
+    "docs/BORG_DISCORD_CHECKPOINT_STANDARD.md"
+  ]
+}

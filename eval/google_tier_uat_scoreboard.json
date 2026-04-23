@@ -1,0 +1,17 @@
+{
+  "timestamp_utc": "2026-04-23T11:18:57+00:00",
+  "overall_status": "pass",
+  "decision": "GO",
+  "critical_failures": [],
+  "high_failures": [],
+  "checks": {
+    "git-home-cutover": true,
+    "governance-enforcement": true,
+    "readiness-contract": true,
+    "test-gate": true,
+    "scale-gates": true,
+    "utility-and-savings": true,
+    "anti-theater-artifacts": true,
+    "legacy-access-warning": true
+  }
+}

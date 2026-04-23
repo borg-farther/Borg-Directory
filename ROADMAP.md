@@ -22,7 +22,7 @@
 **Added:** 2026-03-28
 **Status:** IDEA — blocks Phase 2+
 **Priority:** HIGH
-**Summary:** Pack distribution beyond single GitHub URL. CDN, mirrors, offline bundles, fallback when GitHub is down. Currently hardcoded to bensargotest-sys/guild-packs — single point of failure, test org name undermines credibility.
+**Summary:** Pack distribution beyond single GitHub URL. CDN, mirrors, offline bundles, fallback when GitHub is down. Currently hardcoded to borg-farther/guild-packs — single point of failure, test org name undermines credibility.
 **Open questions:**
 - CDN provider? (Cloudflare R2, GitHub Pages, npm-style?)
 - Offline bundle format?
@@ -35,7 +35,7 @@
 **Added:** 2026-03-28
 **Status:** DECISION NEEDED
 **Priority:** HIGH (blocks credibility)
-**Summary:** bensargotest-sys is a test org name that undermines credibility. Need real GitHub org + domain (borg.dev? borgpacks.io? agent-borg.dev?). Blocks README fix, distribution, and all external-facing work.
+**Summary:** borg-farther is a test org name that undermines credibility. Need real GitHub org + domain (borg.dev? borgpacks.io? agent-borg.dev?). Blocks README fix, distribution, and all external-facing work.
 
 ---
 

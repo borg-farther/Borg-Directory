@@ -495,7 +495,7 @@ All paths from the 20260408 session:
 - BORG_TESTING_ROADMAP_20260408.md (this document)
 
 **External artifacts:**
-- GitHub Discussion #1: https://github.com/bensargotest-sys/guild-tools/discussions/1
+- GitHub Discussion #1: https://github.com/borg-farther/guild-tools/discussions/1
 - PyPI: https://pypi.org/project/agent-borg/3.2.3/
 - Git tags: v3.2.2, v3.2.3
 - Cron: borg-v323-dogfood-followup (fires 20260410-0700)

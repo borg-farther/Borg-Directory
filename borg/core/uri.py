@@ -30,7 +30,7 @@ logger = logging.getLogger(__name__)
 # Constants
 # ---------------------------------------------------------------------------
 
-DEFAULT_REPO = os.environ.get('BORG_REPO', 'bensargotest-sys/guild-packs')
+DEFAULT_REPO = os.environ.get('BORG_REPO', 'borg-farther/Borg-Directory')
 DEFAULT_BRANCH = "main"
 BORG_DIR = get_borg_dir()
 INDEX_URL = f"https://raw.githubusercontent.com/{DEFAULT_REPO}/{DEFAULT_BRANCH}/index.json"

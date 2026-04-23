@@ -45,8 +45,8 @@
 
 ### Step 6: PyPI page description
 - **Summary:** "Proven workflows for AI agents — execution-proven, safety-scanned, feedback-improving"
-- **Homepage:** https://github.com/bensargotest-sys/guild-packs
-- **Impression:** Summary is clear but the GitHub URL looks like a test account ("bensargotest-sys"). This hurts credibility for a new user.
+- **Homepage:** https://github.com/borg-farther/guild-packs
+- **Impression:** Summary is clear but the GitHub URL looks like a test account ("borg-farther"). This hurts credibility for a new user.
 - **Friction:** No License field set. No long description visible via pip. A new user checking PyPI would want to see examples, quickstart, and what "packs" are.
 
 ### Step 7: borg search debugging
@@ -164,7 +164,7 @@ The core CLI experience is surprisingly polished. Commands are fast, output is c
 
 | Issue | Severity | Notes |
 |-------|----------|-------|
-| GitHub URL uses "bensargotest-sys" | P2 | Looks like test account, hurts credibility |
+| GitHub URL uses "borg-farther" | P2 | Looks like test account, hurts credibility |
 | No License in metadata | P2 | pip show shows no license |
 | `borg setup-claude` may overwrite existing config | P2 | No backup, no warning |
 | `borg autopilot` says "Skill already installed" on first run | P3 | Confusing for new users |

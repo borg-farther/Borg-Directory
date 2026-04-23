@@ -1,0 +1,7 @@
+{
+  "timestamp_utc": "2026-04-22T21:57:00Z",
+  "repo": "legacy-home/borg",
+  "verification": "not_accessible_from_current_token",
+  "status_code_hint": 404,
+  "conclusion": "treat as external archived backup; fetch-only local remote enforced"
+}

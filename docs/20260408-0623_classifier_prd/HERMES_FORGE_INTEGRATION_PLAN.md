@@ -255,7 +255,7 @@ This is fundamentally a corpus-level evaluator, not an example-level one. **GEPA
 
 ### 3.6 Where the PR lands
 
-`bensargotest-sys/guild-tools`, branch `borg/gepa-evolved-packs/{pack_name}`. **Forge has no PR generation code** (the promised `evolution/core/pr_builder.py` does not exist on disk; PLAN.md:151 lists it but `git/trees/main?recursive=1` confirms it is not in the tree). Borg has to build this itself — but it's ~30 lines of `subprocess.run(["gh", "pr", "create", ...])` and trivial. Suggested PR body: baseline FCR per language, evolved FCR per language, the unified diff of the mutated frontmatter, the e1c report, and a link to the spike output directory.
+`borg-farther/guild-tools`, branch `borg/gepa-evolved-packs/{pack_name}`. **Forge has no PR generation code** (the promised `evolution/core/pr_builder.py` does not exist on disk; PLAN.md:151 lists it but `git/trees/main?recursive=1` confirms it is not in the tree). Borg has to build this itself — but it's ~30 lines of `subprocess.run(["gh", "pr", "create", ...])` and trivial. Suggested PR body: baseline FCR per language, evolved FCR per language, the unified diff of the mutated frontmatter, the e1c report, and a link to the spike output directory.
 
 ---
 
@@ -339,7 +339,7 @@ This is fundamentally a corpus-level evaluator, not an example-level one. **GEPA
 
 6. **[~1.5 h]** Run the spike on three packs in priority order: (a) `schema-drift.md` (the bug source — high signal because the baseline FCR is 95.5% on Rust), (b) `null-pointer-chain.md` (well-shaped Python pack — sanity check), (c) a placeholder Rust pack synthesized by hand (`rust-borrow-checker.md` from Phase-3 PRD list). Record per-pack baseline-vs-evolved FCR + pack diff size. **Exit criteria:** at least one of the three shows a measurable FCR delta (positive or negative — both are signal). If all three show zero delta, the corpus is too small or GEPA is misconfigured.
 
-7. **[~1 h]** Build a minimal PR generator: `borg/evolution/pr.py` calls `gh pr create` against `bensargotest-sys/guild-tools` on branch `borg/gepa-evolved-packs/<pack_name>`. PR body includes the e1c table (baseline vs evolved per language), the unified diff of the frontmatter, the evolved pack text, total cost (sum of OpenAI/Anthropic API spend during the run), and a link to the spike output directory. **Exit criteria:** one real PR posted (probably WIP/draft) for the schema-drift pack with the spike result.
+7. **[~1 h]** Build a minimal PR generator: `borg/evolution/pr.py` calls `gh pr create` against `borg-farther/guild-tools` on branch `borg/gepa-evolved-packs/<pack_name>`. PR body includes the e1c table (baseline vs evolved per language), the unified diff of the frontmatter, the evolved pack text, total cost (sum of OpenAI/Anthropic API spend during the run), and a link to the spike output directory. **Exit criteria:** one real PR posted (probably WIP/draft) for the schema-drift pack with the spike result.
 
 8. **[~30 min]** Write `borg/evolution/README.md` with: how to run the spike, where vendored code came from, how to upgrade vendored constraints from upstream, and the cost-per-iteration measured in step 6. Commit. Hand to AB.
 

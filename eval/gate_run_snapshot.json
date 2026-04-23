@@ -1,0 +1,16 @@
+{
+  "timestamp": "2026-04-22T21:00:42+00:00",
+  "ready_for_10": true,
+  "ready_for_100": true,
+  "ready_for_1000": true,
+  "all_pass": true,
+  "scoreboard_gates": {
+    "ready_for_10": true,
+    "ready_for_100": true,
+    "ready_for_1000": true,
+    "error": null
+  },
+  "decision": "SHIP",
+  "canonical": true,
+  "source": "fleet_readiness_gates"
+}

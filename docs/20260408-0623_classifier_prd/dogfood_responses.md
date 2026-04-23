@@ -32,7 +32,7 @@ Appendix B — Phase 1–4 starts when ≥2 of these flip):
   (copy the reply bodies into `## Respondent` blocks below).
 - **GitHub issue template** (enabled 20260408-0923): any new
   issue tagged `classifier-feedback` against
-  `bensargotest-sys/guild-tools` counts as a response. The
+  `borg-farther/guild-tools` counts as a response. The
   cron cross-references the issue body against the template
   and extracts the 5 answers automatically.
 - **DM draft** at `DOGFOOD_TEAM_DM_DRAFT.md`: AB to send

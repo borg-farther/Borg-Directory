@@ -1,0 +1,37 @@
+{
+  "timestamp": "2026-04-22T21:00:42+00:00",
+  "gates": {
+    "ready_for_10": true,
+    "ready_for_100": true,
+    "ready_for_1000": true,
+    "all_pass": true
+  },
+  "execution_snapshots": {
+    "derived": {
+      "gate_ready_for_10": true,
+      "gate_ready_for_100": true,
+      "gate_ready_for_1000": true
+    },
+    "snapshots": {
+      "gate_run_snapshot": {
+        "payload": {
+          "ready_for_10": true,
+          "ready_for_100": true,
+          "ready_for_1000": true,
+          "scoreboard_gates": {
+            "ready_for_10": true,
+            "ready_for_100": true,
+            "ready_for_1000": true
+          }
+        }
+      },
+      "experiment_packet": {
+        "payload": {
+          "decision": "SHIP",
+          "integrity_pass": true
+        }
+      }
+    }
+  },
+  "decision": "SHIP"
+}

@@ -1,0 +1,30 @@
+{
+  "version": "1.0.0",
+  "name": "borg_telegram_checkpoint_contract",
+  "required_lines": [
+    "[borg checkpoint]",
+    "phase:",
+    "borg used:",
+    "what changed:",
+    "estimated save:",
+    "next step:"
+  ],
+  "phase_values": ["investigate", "decide", "execute", "verify"],
+  "source_values": ["borg", "guild", "none"],
+  "confidence_values": ["high", "medium", "low"],
+  "risk_to_checkpoint_count": {
+    "low": 1,
+    "medium": 2,
+    "high": 4
+  },
+  "estimation_defaults": {
+    "avg_seconds_per_tool_call": 25,
+    "usd_per_million_tokens_low": 3,
+    "usd_per_million_tokens_high": 15
+  },
+  "notes": [
+    "Estimated savings must be shown as a low-high USD range.",
+    "what changed must describe decision delta, not tool activity.",
+    "source=none requires borg used=no."
+  ]
+}

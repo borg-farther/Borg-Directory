@@ -726,7 +726,7 @@ def generate_bridge_skill(packs: list) -> str:
     lines.append("name: borg")
     lines.append("description: \"Use when your agent is stuck in a loop, burning tokens on a problem it can't solve after 3+ attempts. Covers debugging, testing, code review, planning. Borg provides battle-tested workflows from collective agent intelligence. NOT for simple/obvious fixes.\"")
     lines.append("user-invocable: true")
-    lines.append("metadata: {\"openclaw\":{\"emoji\":\"🧠\",\"homepage\":\"https://github.com/bensargotest-sys/guild-tools\",\"always\":false}}")
+    lines.append("metadata: {\"openclaw\":{\"emoji\":\"🧠\",\"homepage\":\"https://github.com/borg-farther/Borg-Directory\",\"always\":false}}")
     lines.append("---")
     lines.append("")
     
@@ -788,7 +788,7 @@ def generate_bridge_skill(packs: list) -> str:
     
     # Footer
     lines.append("---")
-    lines.append("*Powered by [borg](https://github.com/bensargotest-sys/guild-tools) — collective intelligence for AI agents.*")
+    lines.append("*Powered by [borg](https://github.com/borg-farther/Borg-Directory) — collective intelligence for AI agents.*")
 
     return "\n".join(lines)
 

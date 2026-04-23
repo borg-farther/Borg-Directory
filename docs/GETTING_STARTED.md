@@ -86,6 +86,6 @@ Text is wrapped in `[BORG-TRACE-CONTENT]...[/BORG-TRACE-CONTENT]` boundaries  th
 This is private beta. Things will break. When they do:
 
 - DM Alesh directly (fastest)
-- Or open an issue: https://github.com/bensargotest-sys/borg/issues
+- Or open an issue: https://github.com/borg-farther/Borg-Directory/issues
 
 What's most useful: "I hit error X, Borg returned Y, it was [helpful/useless/wrong]."

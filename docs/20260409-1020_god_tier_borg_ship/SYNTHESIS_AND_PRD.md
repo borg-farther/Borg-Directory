@@ -44,7 +44,7 @@ Every command in the file is wrong (`pip install guild-packs` → 404). Users co
 README documents `--format claude` and `--format cursor`. Argparse choices are `claude-md` and `cursorrules`. User copies README verbatim and gets an immediate failure. Fix: rename argparse choices to `{cursor, cline, claude, windsurf, all}` with backward-compatible aliases. Effort: 45 min.
 
 **SB-04 — `pyproject.toml` URLs point at `guild-packs` (CRITICAL)**
-Homepage/Repository/Documentation point at `https://github.com/bensargotest-sys/guild-packs`. PyPI homepage link leads to wrong repo. Fix: update all URLs to `agent-borg`, grep entire file for any remaining stale naming. Effort: 15 min.
+Homepage/Repository/Documentation point at `https://github.com/borg-farther/guild-packs`. PyPI homepage link leads to wrong repo. Fix: update all URLs to `agent-borg`, grep entire file for any remaining stale naming. Effort: 15 min.
 
 **SB-05 — `borg autopilot` cli.py:973 has the same `"command": "python"` bug as SB-01 (CRITICAL, RED addition)**
 `borg/cli.py` line 973 inside `_cmd_autopilot()` builds an MCP config entry with `"command": "python"`. This is the same failure mode as SB-01. Users who run `borg autopilot` get the identical 120-second hang. Fix: same one-line fix as SB-01. Effort: 5 min.

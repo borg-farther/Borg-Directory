@@ -87,7 +87,7 @@ These are the v3.3.0 release gate. Stop counting commits as releases until all f
 - **Effort:** 45 min.
 - **Why this is blocker #3:** every Platform Setup snippet in the README is a broken copy-paste. README leads with this section.
 
-### SB-04 — `pyproject.toml` project URLs point at `bensargotest-sys/guild-packs`
+### SB-04 — `pyproject.toml` project URLs point at `borg-farther/guild-packs`
 
 - **Files:** `pyproject.toml` `[project.urls]` AND a full grep of `pyproject.toml` for any other stale naming (per A2).
 - **Fix:** update Homepage / Repository / Documentation / Issues to the real `agent-borg` repo.

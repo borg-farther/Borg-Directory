@@ -1,0 +1,22 @@
+{
+  "version": "1.0.0",
+  "required_lines": [
+    "[borg checkpoint]",
+    "phase:",
+    "source: discord",
+    "confidence:",
+    "next_checkpoint_minutes:"
+  ],
+  "phase_values": ["investigate", "implement", "validate", "release"],
+  "source_values": ["discord"],
+  "confidence_values": ["low", "medium", "high"],
+  "risk_to_checkpoint_count": {
+    "low": 1,
+    "medium": 2,
+    "high": 3
+  },
+  "estimation_defaults": {
+    "minutes": 20,
+    "max_minutes": 90
+  }
+}

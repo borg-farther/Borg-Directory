@@ -1,26 +1,18 @@
-# UAT_RESULTS
+# UAT Results
 
-Date: 2026-04-20T09:08:46.112248+00:00
-Scope: latest readiness gate execution in `/root/hermes-workspace/borg`
+- timestamp (utc): `2026-04-23T11:18:57+00:00`
+- overall status: **PASS**
+- decision: **GO**
 
-## Run parameters
-- soak_duration_seconds: 180
-- experiment_id: auto-latest
+## Checks
 
-## Step results
-- feedback_loop_tests: PASS (rc=0)
-- metrics_contract_tests: PASS (rc=0)
-- load_10: PASS (rc=0)
-- load_100: PASS (rc=0)
-- experiment_packet: PASS (rc=0)
-- scoreboard: PASS (rc=0)
-
-## Canonical rollout status
-Final GO/NO-GO is always sourced from canonical artifacts, not this summary:
-- `GO_NO_GO_DECISION.md`
-- `PROJECT_STATUS.md`
-- `/root/hermes-workspace/borg/eval/gate_run_snapshot.json`
-
-## Notes
-- This file is regenerated on every `eval/run_readiness_gates.py` run.
-- Any failed hard gate blocks rollout.
+| check | severity | status | detail |
+|---|---|---|---|
+| `git-home-cutover` | `critical` | **PASS** | origin_ok=True, legacy_remote_present=False, legacy_push_disabled=False |
+| `governance-enforcement` | `critical` | **PASS** | success=True |
+| `readiness-contract` | `critical` | **PASS** | overall_status=pass, operational_ready=True, sync_status=pass |
+| `test-gate` | `critical` | **PASS** | status=pass, pytest_rc=0, summary=18 passed in 0.09s |
+| `scale-gates` | `critical` | **PASS** | ready_for_10=True, ready_for_100=True, ready_for_1000=True, all_pass=True |
+| `utility-and-savings` | `critical` | **PASS** | success_lift=0.6500, control_completion=0.3500, treatment_completion=1.0000, control_tokens_mean=2475.00, treatment_tokens_mean=1200.00 |
+| `anti-theater-artifacts` | `high` | **PASS** | all required artifacts exist, are non-empty, and contain no placeholder markers |
+| `legacy-access-warning` | `warning` | **PASS** | no legacy access warning reported |

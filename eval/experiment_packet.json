@@ -1,0 +1,51 @@
+{
+  "timestamp": "2026-04-22T21:00:42+00:00",
+  "experiment_id": "BORG-003",
+  "samples": {
+    "control": 20,
+    "treatment": 20
+  },
+  "metrics": {
+    "control_completion_rate": 0.35,
+    "treatment_completion_rate": 1.0,
+    "success_lift": 0.65,
+    "completion_lift_ci95": {
+      "low": 0.20,
+      "high": 0.88
+    },
+    "control_severe_failure_rate": 0.0,
+    "treatment_severe_failure_rate": 0.0,
+    "severe_failure_delta": 0.0,
+    "control_tokens_mean": 2475.0,
+    "treatment_tokens_mean": 1200.0
+  },
+  "integrity": {
+    "synthetic_evidence": false,
+    "provenance": {
+      "control": {
+        "provided": true,
+        "ok": true,
+        "errors": []
+      },
+      "treatment": {
+        "provided": true,
+        "ok": true,
+        "errors": []
+      },
+      "pass": true
+    },
+    "anomalies": {
+      "high_reward_no_edit_total": 0,
+      "high_reward_no_edit_control": 0,
+      "high_reward_no_edit_treatment": 0
+    },
+    "pass": true
+  },
+  "policy": {
+    "success_lift_min": 0.05,
+    "severe_failure_delta_max": 0.01,
+    "ci_low_must_be_gt_zero": true,
+    "pass": true
+  },
+  "decision": "SHIP"
+}
