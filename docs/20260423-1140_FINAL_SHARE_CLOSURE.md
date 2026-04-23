@@ -19,8 +19,9 @@ ship-ready for external sharing.
 
 ### 3) cross-channel comms delivery reliability
 - delivery target hard-set to explicit telegram chat id for previously failing recurring jobs:
-  - `c2d53e76ad9d` -> `telegram:8417397353`
-  - `0a772376df6d` -> `telegram:8417397353`
+  - `c2d53e76ad9d` -> `telegram:8417397353` (manual run `2026-04-23T11:55:18Z`, `last_status=ok`)
+  - `0a772376df6d` -> `telegram:8417397353` (manual run `2026-04-23T11:56:02Z`, `last_status=ok`)
+- note: scheduler keeps previous `last_delivery_error` text as historical metadata even after successful runs.
 - independent canary jobs executed:
   - telegram session: `/root/.hermes/sessions/session_cron_ef343e3fcfce_20260423_115005.json`
     - payload: `CANARY_OK telegram 20260423-1130`
