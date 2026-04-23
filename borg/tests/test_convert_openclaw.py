@@ -362,7 +362,7 @@ class TestF3QuickValidate:
 name: {name}
 description: {full_desc[:1024]}
 user-invocable: true
-metadata: {{"openclaw": {{"emoji": "🧠", "homepage": "https://github.com/bensargotest-sys/guild-packs"}}}}
+metadata: {{"openclaw": {{"emoji": "🧠", "homepage": "https://github.com/borg-farther/Borg-Directory"}}}}
 ---
 
 {ref}
@@ -693,7 +693,7 @@ class TestBridgeSkill:
 name: {bridge_name}
 description: Bridge skill for borg workflow packs. {len(packs)} packs available.
 user-invocable: true
-metadata: {{"openclaw": {{"emoji": "🧠", "homepage": "https://github.com/bensargotest-sys/guild-packs"}}}}
+metadata: {{"openclaw": {{"emoji": "🧠", "homepage": "https://github.com/borg-farther/Borg-Directory"}}}}
 ---
 
 {bridge}

@@ -2,7 +2,7 @@
 
 **agent-borg** is a federated knowledge exchange for AI agents. It ships a CLI and MCP server that gives your agent access to battle-tested debugging workflows.
 
-**agent-borg 3.3.0** | GitHub: `bensargotest-sys/agent-borg` | CLI: `borg` | MCP: `borg-mcp`
+**agent-borg 3.3.0** | GitHub: `borg-farther/Borg-Directory` | CLI: `borg` | MCP: `borg-mcp`
 
 ---
 
@@ -35,46 +35,32 @@ export PATH="$HOME/.local/bin:$PATH"      # Linux/macOS
 
 Borg works as an MCP server, giving Claude Code access to borg tools.
 
-### Step 1: Configure MCP
+### one command (canonical)
 
-Run the automated setup:
 ```bash
-borg setup-claude
+borg setup-claude --scope user --verify --fix
 ```
 
-This writes the correct MCP configuration to `~/.config/claude/claude_desktop_config.json` using `borg-mcp` (the CLI entry point) or your current Python interpreter.
+what this does in one pass:
+- writes/merges `mcpServers.borg` into `~/.claude.json`
+- enforces absolute `BORG_HOME` (never `~`)
+- creates `BORG_HOME` if missing (`--fix`)
+- runs initialize handshake before writing config (`--verify`) so broken runtime is rejected early
 
-**Config file location:** `~/.config/claude/claude_desktop_config.json`
+### if setup fails
 
-After running `borg setup-claude`, your config should contain:
-```json
-{
-  "mcpServers": {
-    "borg": {
-      "command": "borg-mcp",
-      "args": []
-    }
-  }
-}
-```
+you now get direct remediation output from setup itself (for example `pip install agent-borg` when import fails).
 
-Or if `borg-mcp` is not in PATH, the setup uses your Python executable directly:
-```json
-{
-  "mcpServers": {
-    "borg": {
-      "command": "python3",
-      "args": ["-m", "borg.integrations.mcp_server"]
-    }
-  }
-}
-```
+### avoid this anti-pattern
 
-### Step 2: Restart Claude Code
+do **not** manually run `claude mcp add-json` with `BORG_HOME=~/.borg` unless you know exactly why — `~` may not expand in claude's spawn environment.
+use the command above instead.
 
-After editing the config, **fully restart Claude Code** (not just the chat). The borg MCP tools will appear in your available tools.
+### restart claude code
 
-### What you get:
+after setup, **fully restart Claude Code** (not just chat tabs).
+
+### what you get:
 
 | Tool | Description |
 |------|-------------|
@@ -264,7 +250,7 @@ borg search "test" 2>&1
 borg --version
 ```
 
-For more help, open an issue at: https://github.com/bensargotest-sys/agent-borg/issues
+For more help, open an issue at: https://github.com/borg-farther/Borg-Directory/issues
 
 ---
 

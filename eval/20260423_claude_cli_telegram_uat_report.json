@@ -1,0 +1,44 @@
+{
+  "timestamp_utc": "2026-04-23T13:33:00Z",
+  "scope": "Claude CLI + Telegram channel UAT readiness",
+  "status": "NO-GO",
+  "summary": {
+    "artifact_contract_tests": "PASS",
+    "regression_suite": "FAIL",
+    "runtime_smoke": "PENDING_ARTIFACT"
+  },
+  "evidence": {
+    "red_session": "/root/.hermes/sessions/session_cron_9c6214ac3d60_20260423_132349.json",
+    "green_session": "/root/.hermes/sessions/session_cron_6672c0603a9a_20260423_132613.json",
+    "regression_session": "/root/.hermes/sessions/session_cron_b8399c710a20_20260423_132828.json",
+    "contract_file": "/root/hermes-workspace/borg/eval/claude_cli_telegram_uat_contract.json",
+    "runbook_file": "/root/hermes-workspace/borg/docs/CLAUDE_CLI_TELEGRAM_UAT.md",
+    "test_file": "/root/hermes-workspace/borg/eval/tests/test_claude_cli_telegram_uat_contract.py"
+  },
+  "test_results": [
+    {
+      "id": "RED",
+      "command": "pytest -q eval/tests/test_claude_cli_telegram_uat_contract.py || true",
+      "result": "5 failed, 1 passed",
+      "notes": "Expected red state before creating contract + runbook"
+    },
+    {
+      "id": "GREEN",
+      "command": "pytest -q eval/tests/test_claude_cli_telegram_uat_contract.py && echo UAT_TARGET_GREEN",
+      "result": "6 passed",
+      "notes": "Contract and runbook now satisfy enforced schema + content gates"
+    },
+    {
+      "id": "REGRESSION",
+      "command": "pytest -q borg/tests/test_search.py && echo UAT_REGRESSION_B_GREEN",
+      "result": "1 failed, 52 passed",
+      "notes": "Blocking failure at borg/tests/test_search.py::TestBorgSearch::test_search_with_matching_packs"
+    }
+  ],
+  "blocking_items": [
+    "Fix or formally triage failing regression test in borg/tests/test_search.py",
+    "Complete runtime smoke artifact capture for borg/borg-mcp binaries and Claude MCP config",
+    "Re-run regression and runtime smoke with all-green proof"
+  ],
+  "go_criteria": "All blocking_items cleared with session evidence"
+}

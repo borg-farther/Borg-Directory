@@ -22,11 +22,19 @@ from __future__ import annotations
 
 import argparse
 import json
+import os
+import select
 import shutil
+import subprocess
 import sys
+import time
 from pathlib import Path
 
 from borg import __version__
+from borg.core.dirs import get_borg_dir
+from borg.core.session import _active_sessions, load_persisted_sessions, load_session
+from borg.db.reputation import ReputationEngine
+from borg.db.store import AgentStore
 
 
 # ---------------------------------------------------------------------------
@@ -320,8 +328,7 @@ def _cmd_publish(args: argparse.Namespace) -> int:
 
 
 def _cmd_feedback(args: argparse.Namespace) -> int:
-    """Generate feedback from a session."""
-    from borg.core.session import load_session
+    """Generate feedback from a completed apply session."""
     from borg.core.search import generate_feedback as _core_generate_feedback
 
     session = load_session(args.session_id)
@@ -798,27 +805,135 @@ def _get_python_path() -> str:
     return str(BORG_ROOT_DIR)
 
 
-def _get_python_executable() -> str:
-    """Return the python executable to use in MCP config (prefer borg-mcp if available)."""
+def _resolve_borg_mcp_command() -> tuple[str, list[str]]:
+    """Resolve command+args used to start the borg MCP server.
+
+    Prefer the installed console script `borg-mcp` when available.
+    Fall back to the current interpreter + module invocation.
+    """
     borg_mcp = shutil.which("borg-mcp")
     if borg_mcp:
-        return borg_mcp
-    return sys.executable
+        return borg_mcp, []
+    return sys.executable, ["-m", "borg.integrations.mcp_server"]
 
 
 def _borg_mcp_server_entry(python_path: str) -> dict:
     """Return the mcpServers entry for the borg MCP server (camelCase for Claude/Cursor)."""
-    python_exec = _get_python_executable()
+    command, args = _resolve_borg_mcp_command()
+    borg_home = str((Path.home() / ".borg").expanduser())
     return {
         "mcpServers": {
             "borg": {
                 "enabled": True,
-                "command": python_exec,
-                "args": ["-m", "borg.integrations.mcp_server"],
-                "env": {"PYTHONPATH": python_path},
+                "command": command,
+                "args": args,
+                "env": {
+                    "PYTHONPATH": python_path,
+                    # Keep this absolute for MCP clients that do not expand '~' in env values.
+                    "BORG_HOME": borg_home,
+                },
             }
         }
     }
+
+
+def _claude_setup_config_path(scope: str) -> Path:
+    """Return config path for setup-claude scope."""
+    if scope == "user":
+        return Path.home() / ".claude.json"
+    if scope == "project":
+        return Path.cwd() / ".mcp.json"
+    # Back-compat with Claude Desktop config path
+    return Path.home() / ".config" / "claude" / "claude_desktop_config.json"
+
+
+def _verify_borg_runtime(command: str, args: list[str], env: dict[str, str]) -> tuple[bool, str]:
+    """Best-effort runtime check that borg MCP can initialize.
+
+    Returns (ok, detail).
+    """
+    init_msg = json.dumps({
+        "jsonrpc": "2.0",
+        "id": 1,
+        "method": "initialize",
+        "params": {
+            "protocolVersion": "2024-11-05",
+            "capabilities": {},
+            "clientInfo": {"name": "borg-setup-claude", "version": __version__},
+        },
+    }) + "\n"
+
+    proc: subprocess.Popen[str] | None = None
+    output_chunks: list[str] = []
+    try:
+        proc = subprocess.Popen(
+            [command, *args],
+            stdin=subprocess.PIPE,
+            stdout=subprocess.PIPE,
+            stderr=subprocess.PIPE,
+            text=True,
+            env=env,
+        )
+        if not proc.stdin or not proc.stdout or not proc.stderr:
+            return False, "failed to open MCP process stdio"
+
+        proc.stdin.write(init_msg)
+        proc.stdin.flush()
+
+        deadline = time.monotonic() + 8.0
+        while time.monotonic() < deadline:
+            ready, _, _ = select.select([proc.stdout, proc.stderr], [], [], 0.5)
+            for stream in ready:
+                line = stream.readline()
+                if line:
+                    output_chunks.append(line)
+                    if '"result"' in line and '"serverInfo"' in line:
+                        return True, "initialize handshake ok"
+
+            if proc.poll() is not None and not ready:
+                break
+
+        combined = "".join(output_chunks).strip()
+        return False, f"no initialize response from MCP server. output={combined[:300]}"
+    except Exception as e:
+        return False, f"failed to spawn MCP server: {e}"
+    finally:
+        if proc is not None:
+            try:
+                proc.terminate()
+                proc.wait(timeout=1)
+            except Exception:
+                try:
+                    proc.kill()
+                except Exception:
+                    pass
+
+
+def _setup_claude_verify_hints(detail: str, borg_entry: dict) -> list[str]:
+    """Return actionable remediation hints for setup-claude verification failures."""
+    lower = detail.lower()
+    command = str(borg_entry.get("command", "python3"))
+    args = borg_entry.get("args", [])
+
+    hints: list[str] = []
+    if "no module named 'borg'" in lower or "modulenotfounderror" in lower:
+        pip_cmd = f"{command} -m pip install agent-borg"
+        if args == [] and (command.endswith("borg-mcp") or Path(command).name == "borg-mcp"):
+            pip_cmd = "python3 -m pip install agent-borg"
+        hints.extend([
+            "[setup-claude] Remediation: borg package is not importable in the configured runtime.",
+            f"[setup-claude] Run: {pip_cmd}",
+            "[setup-claude] No-download path: python3 -m pip install --no-index --find-links <wheel_dir> agent-borg",
+            "[setup-claude] Then rerun: borg setup-claude --scope user --verify --fix",
+        ])
+    elif "no initialize response" in lower:
+        hints.extend([
+            "[setup-claude] Remediation: MCP process started but did not answer initialize.",
+            f"[setup-claude] Check command: {command} {' '.join(args)}",
+            "[setup-claude] Re-run with --verify and inspect stderr output for import/runtime errors.",
+        ])
+
+    return hints
 
 
 # ---------------------------------------------------------------------------
@@ -860,7 +975,7 @@ If Claude Code has the guild MCP server configured, these tools are available:
 
 If the guild MCP server isn't configured yet, run:
 ```bash
-borg setup-claude
+borg setup-claude --scope user --verify --fix
 ```
 """
 
@@ -914,19 +1029,51 @@ borg setup-cursor
 # ---------------------------------------------------------------------------
 
 def _cmd_setup_claude(args: argparse.Namespace) -> int:
-    """Configure guild MCP server for Claude Code.
+    """Configure borg MCP server for Claude with selectable scope and verification.
 
-    Creates (or updates) ~/.config/claude/claude_desktop_config.json with the guild
-    MCP server entry, and appends borg instructions to ./CLAUDE.md in the current
-    directory.
+    Scope mapping:
+      - user    -> ~/.claude.json
+      - project -> ./.mcp.json
+      - desktop -> ~/.config/claude/claude_desktop_config.json (legacy)
     """
-    home = Path.home()
-    claude_config_dir = home / ".config" / "claude"
-    claude_config_file = claude_config_dir / "claude_desktop_config.json"
+    claude_config_file = _claude_setup_config_path(args.scope)
+    claude_config_dir = claude_config_file.parent
 
     python_path = _get_python_path()
     new_entry = _borg_mcp_server_entry(python_path)
+    borg_entry = new_entry["mcpServers"]["borg"]
+    borg_home = Path(borg_entry.get("env", {}).get("BORG_HOME", str(Path.home() / ".borg")))
     changes: list[str] = []
+
+    # Preflight / fix: ensure BORG_HOME exists when requested
+    if not borg_home.exists():
+        if args.fix:
+            borg_home.mkdir(parents=True, exist_ok=True)
+            changes.append(f"  • created BORG_HOME directory → {borg_home}")
+        else:
+            print(
+                f"[setup-claude] Preflight: BORG_HOME does not exist: {borg_home}\n"
+                f"[setup-claude] Re-run with --fix to create it automatically.",
+                file=sys.stderr,
+            )
+            return 1
+
+    # Verify runtime before mutating config, so we don't write broken onboarding state.
+    if args.verify:
+        verify_env = os.environ.copy()
+        verify_env.update(borg_entry.get("env", {}))
+        ok, detail = _verify_borg_runtime(
+            command=borg_entry["command"],
+            args=borg_entry.get("args", []),
+            env=verify_env,
+        )
+        if ok:
+            print(f"[setup-claude] Verify: PASS ({detail})")
+        else:
+            print(f"[setup-claude] Verify: FAIL ({detail})", file=sys.stderr)
+            for hint in _setup_claude_verify_hints(detail, borg_entry):
+                print(hint, file=sys.stderr)
+            return 1
 
     # 1. Install Claude Code MCP config
     claude_config_dir.mkdir(parents=True, exist_ok=True)
@@ -941,41 +1088,45 @@ def _cmd_setup_claude(args: argparse.Namespace) -> int:
         config = {}
 
     existing_servers = config.get("mcpServers", {})
-    borg_entry = new_entry["mcpServers"]["borg"]
     entry_changed = existing_servers.get("borg") != borg_entry
 
     if entry_changed:
+        if claude_config_file.exists():
+            backup = claude_config_file.with_suffix(claude_config_file.suffix + ".bak")
+            shutil.copy2(claude_config_file, backup)
+            changes.append(f"  • backup created → {backup}")
         config["mcpServers"] = {**existing_servers, "borg": borg_entry}
         claude_config_file.write_text(json.dumps(config, indent=2) + "\n")
-        changes.append(f"  • claude_desktop_config.json → {claude_config_file}")
+        changes.append(f"  • MCP config updated → {claude_config_file}")
     else:
-        print("[setup-claude] MCP server already configured in claude_desktop_config.json")
+        print(f"[setup-claude] MCP server already configured in {claude_config_file}")
 
-    # 2. Install CLAUDE.md in current directory
-    claude_md = Path.cwd() / "CLAUDE.md"
-    instructions = CLAUDE_MD_TEMPLATE.lstrip("\n")
+    # 2. Install CLAUDE.md only for project scope (avoid side-effects in user/home setup)
+    if args.scope in {"project", "desktop"}:
+        claude_md = Path.cwd() / "CLAUDE.md"
+        instructions = CLAUDE_MD_TEMPLATE.lstrip("\n")
 
-    if claude_md.exists():
-        existing = claude_md.read_text()
-        if instructions in existing:
-            print("[setup-claude] CLAUDE.md already contains borg instructions — skipping")
-        elif "# Guild" in existing or "## Guild" in existing or "# Borg" in existing or "## Borg" in existing:
-            # Guild section exists but content differs — replace the whole section
-            import re
-            # Remove any existing Guild/Borg Workflow Packs section (handles leading newline optional)
-            pattern = r"(\n)?## (?:Guild|Borg) Workflow Packs.*?(?=\n## |\Z)"
-            new_content = re.sub(pattern, "\n" + instructions, existing, flags=re.DOTALL)
-            if new_content == existing:
-                # Pattern didn't match (e.g. it's at the end without another header) — just append
-                new_content = existing.rstrip() + "\n" + instructions + "\n"
-            claude_md.write_text(new_content)
-            changes.append(f"  • CLAUDE.md (updated guild section) → {claude_md.resolve()}")
+        if claude_md.exists():
+            existing = claude_md.read_text()
+            if instructions in existing:
+                print("[setup-claude] CLAUDE.md already contains borg instructions — skipping")
+            elif "# Guild" in existing or "## Guild" in existing or "# Borg" in existing or "## Borg" in existing:
+                # Guild section exists but content differs — replace the whole section
+                import re
+                # Remove any existing Guild/Borg Workflow Packs section (handles leading newline optional)
+                pattern = r"(\n)?## (?:Guild|Borg) Workflow Packs.*?(?=\n## |\Z)"
+                new_content = re.sub(pattern, "\n" + instructions, existing, flags=re.DOTALL)
+                if new_content == existing:
+                    # Pattern didn't match (e.g. it's at the end without another header) — just append
+                    new_content = existing.rstrip() + "\n" + instructions + "\n"
+                claude_md.write_text(new_content)
+                changes.append(f"  • CLAUDE.md (updated borg section) → {claude_md.resolve()}")
+            else:
+                claude_md.write_text(existing.rstrip() + "\n" + instructions + "\n")
+                changes.append(f"  • CLAUDE.md (appended) → {claude_md.resolve()}")
         else:
-            claude_md.write_text(existing.rstrip() + "\n" + instructions + "\n")
-            changes.append(f"  • CLAUDE.md (appended) → {claude_md.resolve()}")
-    else:
-        claude_md.write_text("# Project CLAUDE.md\n" + instructions + "\n")
-        changes.append(f"  • CLAUDE.md (created) → {claude_md.resolve()}")
+            claude_md.write_text("# Project CLAUDE.md\n" + instructions + "\n")
+            changes.append(f"  • CLAUDE.md (created) → {claude_md.resolve()}")
 
     if not changes:
         print("[setup-claude] Everything already set up! Borg is ready.")
@@ -986,9 +1137,9 @@ def _cmd_setup_claude(args: argparse.Namespace) -> int:
         print(c)
     print()
     print("Next steps:")
-    print("  1. Restart Claude Code (or reload the MCP server config)")
-    print("  2. Borg MCP tools (borg_observe, borg_search, borg_suggest) will be available")
-    print("  3. Run 'borg search <query>' to find relevant packs")
+    print(f"  1. Restart Claude (scope={args.scope}) so it reloads MCP config")
+    print("  2. Confirm Borg tools appear (borg_observe, borg_search, borg_suggest)")
+    print("  3. Run 'borg search <query>' to validate end-to-end")
     return 0
 
 
@@ -1211,11 +1362,11 @@ def _cmd_autopilot(args: argparse.Namespace) -> int:
     else:
         config = {}
 
-    python_exec = _get_python_executable()
+    mcp_command, mcp_args = _resolve_borg_mcp_command()
     mcp_entry = {
         "enabled": True,
-        "command": python_exec,
-        "args": ["-m", "borg.integrations.mcp_server"],
+        "command": mcp_command,
+        "args": mcp_args,
         "env": {"PYTHONPATH": python_path},
     }
 
@@ -1236,9 +1387,17 @@ def _cmd_autopilot(args: argparse.Namespace) -> int:
         except yaml.YAMLError as e:
             print(f"[autopilot] Warning: could not preserve config.yaml formatting: {e}")
             # Fall back: just rewrite entirely
-            hermes_config.write_text(
-                f"mcp_servers:\n  guild:\n    enabled: true\n    command: {python_exec}\n    args:\n      - -m\n      - borg.integrations.mcp_server\n    env:\n      PYTHONPATH: {python_path}\n"
-            )
+            fallback_cfg = {
+                "mcp_servers": {
+                    "guild": {
+                        "enabled": True,
+                        "command": mcp_command,
+                        "args": mcp_args,
+                        "env": {"PYTHONPATH": python_path},
+                    }
+                }
+            }
+            hermes_config.write_text(yaml.safe_dump(fallback_cfg, default_flow_style=False, sort_keys=False))
         changes.append(f"  • config.yaml → {hermes_config}")
 
     if not changes:
@@ -1587,6 +1746,21 @@ in v3.2.4 to fix the observe→search roundtrip bug from the P1.1 experiment."""
     p.add_argument("--json", action="store_true", help="Output raw JSON")
     p.set_defaults(func=_cmd_observe)
 
+    # guild reputation <agent_id>
+    p = sub.add_parser("reputation", help="Show agent reputation profile",
+        formatter_class=argparse.RawDescriptionHelpFormatter,
+        epilog="""Examples:
+  borg reputation agent-42""")
+    p.add_argument("agent_id", help="Agent ID")
+    p.set_defaults(func=_cmd_reputation)
+
+    # guild status
+    p = sub.add_parser("status", help="Show local Borg runtime status",
+        formatter_class=argparse.RawDescriptionHelpFormatter,
+        epilog="""Examples:
+  borg status""")
+    p.set_defaults(func=_cmd_status)
+
     # guild version
     p = sub.add_parser("version", help="Show version",
         formatter_class=argparse.RawDescriptionHelpFormatter,
@@ -1602,10 +1776,20 @@ in v3.2.4 to fix the observe→search roundtrip bug from the P1.1 experiment."""
     p.set_defaults(func=_cmd_autopilot)
 
     # guild setup-claude
-    p = sub.add_parser("setup-claude", help="Configure guild MCP server for Claude Code",
+    p = sub.add_parser("setup-claude", help="Configure borg MCP server for Claude",
         formatter_class=argparse.RawDescriptionHelpFormatter,
         epilog="""Examples:
-  borg setup-claude""")
+  borg setup-claude --scope user --verify --fix
+  borg setup-claude --scope project --verify
+  borg setup-claude --scope desktop""")
+    p.add_argument("--scope", choices=["user", "project", "desktop"], default="user",
+                   help="Where to write MCP config: user (~/.claude.json), project (./.mcp.json), or desktop (legacy claude_desktop_config.json)")
+    p.add_argument("--verify", dest="verify", action="store_true", default=True,
+                   help="Run an MCP initialize handshake (default: enabled)")
+    p.add_argument("--no-verify", dest="verify", action="store_false",
+                   help="Skip runtime handshake verification")
+    p.add_argument("--fix", action="store_true",
+                   help="Auto-create missing BORG_HOME directory before writing config")
     p.set_defaults(func=_cmd_setup_claude)
 
     # guild setup-cursor

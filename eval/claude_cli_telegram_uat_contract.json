@@ -1,0 +1,132 @@
+{
+  "artifact_version": "20260423-1322",
+  "scope": "Claude CLI onboarding and first-use UAT for Borg in Telegram channel delivery flow",
+  "channel": "telegram",
+  "entrypoint": {
+    "tool": "claude-cli",
+    "mode": "mcp + borg cli",
+    "minimum_version": "claude code with mcp support"
+  },
+  "acceptance_gates": [
+    {
+      "id": "G1",
+      "name": "Install + binary availability",
+      "pass_criteria": "`borg --version` and `borg-mcp --help` both exit 0",
+      "fail_criteria": "Either command missing or non-zero exit"
+    },
+    {
+      "id": "G2",
+      "name": "MCP config wiring",
+      "pass_criteria": "Claude config contains a borg server entry using borg-mcp or python -m borg.integrations.mcp_server",
+      "fail_criteria": "Missing/invalid mcpServers.borg entry"
+    },
+    {
+      "id": "G3",
+      "name": "Cold search",
+      "pass_criteria": "`borg search debugging` returns >=1 pack",
+      "fail_criteria": "No packs or hard error"
+    },
+    {
+      "id": "G4",
+      "name": "Observe guidance",
+      "pass_criteria": "`borg_observe` returns actionable guidance for a supplied task",
+      "fail_criteria": "Tool unavailable or empty response"
+    },
+    {
+      "id": "G5",
+      "name": "Apply lifecycle",
+      "pass_criteria": "start/checkpoint/complete cycle executes without schema errors",
+      "fail_criteria": "Any lifecycle action fails"
+    },
+    {
+      "id": "G6",
+      "name": "Feedback writeback",
+      "pass_criteria": "feedback submission accepted for completed session",
+      "fail_criteria": "feedback rejected or silent no-op"
+    },
+    {
+      "id": "G7",
+      "name": "Telegram-safe output",
+      "pass_criteria": "Message payloads are concise, markdown-safe, and include deterministic status markers",
+      "fail_criteria": "Broken formatting, missing status markers, or excessively long unsafe output"
+    },
+    {
+      "id": "G8",
+      "name": "Failure-mode clarity",
+      "pass_criteria": "Known blocker classes map to clear user-facing remediation text",
+      "fail_criteria": "Ambiguous errors or no remediation guidance"
+    },
+    {
+      "id": "G9",
+      "name": "No legacy-home dependency",
+      "pass_criteria": "No runtime links or guidance depend on old/legacy home URLs",
+      "fail_criteria": "Any UAT-critical path references retired host as required dependency"
+    }
+  ],
+  "test_plan": [
+    {
+      "id": "T1",
+      "name": "Installation verification",
+      "method": "command",
+      "commands": [
+        "borg --version",
+        "borg-mcp --help"
+      ],
+      "expected": "exit code 0"
+    },
+    {
+      "id": "T2",
+      "name": "MCP config validation for Claude",
+      "method": "file-check",
+      "commands": [
+        "cat ~/.config/claude/claude_desktop_config.json"
+      ],
+      "expected": "valid JSON containing mcpServers.borg"
+    },
+    {
+      "id": "T3",
+      "name": "Cold search + suggest",
+      "method": "command",
+      "commands": [
+        "borg search debugging",
+        "borg search oauth"
+      ],
+      "expected": "non-empty pack results"
+    },
+    {
+      "id": "T4",
+      "name": "MCP observe/apply/feedback cycle",
+      "method": "integration",
+      "commands": [
+        "call borg_observe",
+        "call borg_apply(start)",
+        "call borg_apply(checkpoint)",
+        "call borg_apply(complete)",
+        "call borg_feedback"
+      ],
+      "expected": "all calls succeed with session continuity"
+    },
+    {
+      "id": "T5",
+      "name": "Telegram channel acceptance",
+      "method": "channel-uat",
+      "commands": [
+        "send canary formatted update",
+        "send failure remediation message",
+        "send completion summary"
+      ],
+      "expected": "messages render correctly and remain operator-readable"
+    }
+  ],
+  "release_blockers": [
+    "any failed acceptance gate",
+    "missing mcp tool discovery in claude cli",
+    "non-deterministic or malformed telegram message format",
+    "runtime dependency on retired legacy home"
+  ],
+  "go_no_go_policy": {
+    "go": "All gates G1-G9 pass and test evidence exists in session artifacts",
+    "no_go": "Any single gate fails or evidence is missing",
+    "ship_condition": "Only ship externally when GO; otherwise block release and remediate"
+  }
+}

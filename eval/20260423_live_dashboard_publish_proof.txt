@@ -1,0 +1,10 @@
+main_commit:
+2845fd8c62fc8196c94da22a5f82a58ed0edc043
+local_head_commit:
+f8385b3e24cd9342fb69ef03e7779e897b6c276e
+publish_branch:
+main
+pr_url:
+https://github.com/borg-farther/Borg-Directory/pull/3
+timestamp:
+2026-04-23T13:02:34Z

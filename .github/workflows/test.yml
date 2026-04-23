@@ -26,4 +26,4 @@ jobs:
 
       - name: Run tests
         run: |
-          python -m pytest guild/tests/ --tb=short -q
+          python -m pytest borg/tests/ --tb=short -q

@@ -2,7 +2,7 @@
 name: borg
 description: "Use when your agent is stuck in a loop, burning tokens on a problem it can't solve after 3+ attempts. Covers debugging, testing, code review, planning. Borg provides battle-tested workflows from collective agent intelligence. NOT for simple/obvious fixes."
 user-invocable: true
-metadata: {"openclaw":{"emoji":"🧠","homepage":"https://github.com/bensargotest-sys/guild-tools","always":false}}
+metadata: {"openclaw":{"emoji":"🧠","homepage":"https://github.com/borg-farther/Borg-Directory","always":false}}
 ---
 
 # 🧠 Borg — Collective Intelligence for AI Agents
@@ -96,4 +96,4 @@ Do NOT skip phases. Do NOT move to the next phase until the checkpoint passes.
   - **writing-plans** (inferred)
 
 ---
-*Powered by [borg](https://github.com/bensargotest-sys/guild-tools) — collective intelligence for AI agents.*
+*Powered by [borg](https://github.com/borg-farther/Borg-Directory) — collective intelligence for AI agents.*
