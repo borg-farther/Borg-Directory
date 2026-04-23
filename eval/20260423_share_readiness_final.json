@@ -1,0 +1,10 @@
+{
+  "status": "warn",
+  "is_clean_worktree_after": false,
+  "proof_file": "eval/20260423_share_release_proof.txt",
+  "channel_uat_matrix": "eval/external_channel_uat_matrix.json",
+  "external_uat_report": "eval/20260423_external_channel_uat_report.json",
+  "scoreboard_snapshot": "eval/uat_scoreboard_snapshot.json",
+  "legacy_owner_attestation": "eval/20260423_legacy_home_owner_view.json",
+  "legacy_owner_attestation_stderr": "eval/20260423_legacy_home_owner_view.stderr"
+}

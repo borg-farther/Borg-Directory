@@ -117,3 +117,23 @@ chore/repo-diet-safe-archive-20260422
 ?? scripts/google_tier_uat_runner.py
 ?? scripts/new_home_build_readiness_report.py
 ?? scripts/new_home_readiness_gate_check.py
+=== branch (after) ===
+chore/repo-diet-safe-archive-20260422
+=== status --short (after) ===
+ M GO_NO_GO_DECISION.md
+ M PROJECT_STATUS.md
+ M UAT_RESULTS.md
+ M eval/20260423_share_release_proof.txt
+ M eval/git_remote_parity_report.json
+ M eval/git_remote_sync_result.json
+ M eval/google_tier_uat_scoreboard.json
+ M eval/google_tier_uat_snapshot.json
+ M eval/new_home_readiness_report.json
+?? eval/20260423_legacy_home_owner_view.json
+?? eval/20260423_legacy_home_owner_view.stderr
+=== commit ===
+2bc5d1db51dfa8dd31b25b0430e76b8dfca6df4d
+=== tag ===
+share-ready-20260423-115226
+=== legacy owner view status ===
+not_accessible

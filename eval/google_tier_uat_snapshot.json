@@ -1,5 +1,5 @@
 {
-  "timestamp_utc": "2026-04-23T11:18:57+00:00",
+  "timestamp_utc": "2026-04-23T11:52:29+00:00",
   "plan_id": "borg-google-tier-uat-20260422",
   "overall_status": "pass",
   "decision": "GO",
@@ -123,7 +123,7 @@
       "exists": true,
       "size_bytes": 665,
       "placeholder_markers": [],
-      "sha256": "08214ae72a8c3b95eb6a25b4ccc647c3ca623e61d545fb35030486e09f0eb41b"
+      "sha256": "0595a3077baa90f3f319313fe616d64008b2ab57235f691e3b44ace04a83cfc0"
     },
     {
       "path": "eval/new_home_test_gate_report.json",
