@@ -1,1 +1,1 @@
-GraphQL: Could not resolve to a Repository with the name 'bensargotest-sys/borg'. (repository)
+GraphQL: Could not resolve to a Repository with the configured legacy home identifier. (repository)

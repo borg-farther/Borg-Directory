@@ -1,6 +1,6 @@
 # PROJECT STATUS
 
-- updated: `2026-04-23T11:52:29+00:00`
+- updated: `2026-04-23T11:56:35+00:00`
 - production readiness (new home): **PASS**
 - decision: **GO**
 - canonical evidence: `eval/google_tier_uat_snapshot.json`

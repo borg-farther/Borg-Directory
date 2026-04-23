@@ -1,16 +1,12 @@
 === UTC ===
-Thu Apr 23 11:56:33 UTC 2026
+Thu Apr 23 11:59:25 UTC 2026
 === status --short (before round2) ===
  M GO_NO_GO_DECISION.md
  M PROJECT_STATUS.md
  M UAT_RESULTS.md
- M eval/20260423_share_release_proof.txt
- M eval/git_remote_parity_report.json
- M eval/git_remote_sync_result.json
+ M eval/20260423_legacy_home_owner_view.stderr
+ M eval/20260423_share_readiness_final.json
+ M eval/20260423_share_release_proof_round2.txt
  M eval/google_tier_uat_scoreboard.json
  M eval/google_tier_uat_snapshot.json
- M eval/new_home_readiness_report.json
-?? eval/20260423_legacy_home_owner_view.json
-?? eval/20260423_legacy_home_owner_view.stderr
-?? eval/20260423_share_readiness_final.json
-?? eval/20260423_share_release_proof_round2.txt
+?? docs/20260423-1140_FINAL_SHARE_CLOSURE.md
