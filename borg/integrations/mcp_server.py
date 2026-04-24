@@ -3086,17 +3086,11 @@ if __name__ == "__main__":
 # Short-form wrapper  guarantees short=True returns concise output
 _borg_observe_orig = borg_observe
 def borg_observe(task: str = "", context: str = "", context_dict: dict = None, project_path: str = None, short: bool = False) -> str:
-    _maybe_rebuild_index()
-    """Wrapper that ensures short=True returns concise ACTION+CONFIDENCE."""
-    result = _borg_observe_orig(task=task, context=context, context_dict=context_dict, project_path=project_path, short=False)
-    if not short:
-        return result
-    lines = result.split("\n")
-    action = next((l for l in lines if l.startswith("ACTION:")), "")
-    conf = next((l for l in lines if l.startswith("CONFIDENCE:")), "")
-    if action:
-        return action[:120] + ("\n" + conf[:80] if conf else "")
-    #  Deterministic dead-end STOP injection 
+    """Wrapper: inject deterministic hard-stops for known-bad task patterns,
+    then optionally reduce to short-form ACTION+CONFIDENCE."""
+    result = _borg_observe_orig(task=task, context=context, context_dict=context_dict, project_path=project_path, short=short)
+
+    #  Deterministic dead-end STOP injection
     # These rules override semantic ranking  known anti-patterns
     # that ALWAYS fail, regardless of what positive traces say
     import re as _re
@@ -3110,6 +3104,18 @@ def borg_observe(task: str = "", context: str = "", context_dict: dict = None, p
     _task_l = task.lower()
     for _pat, _stop_msg in _HARD_STOPS.items():
         if _re.search(_pat, _task_l) and 'STOP' not in result and 'AVOID' not in result:
-            result = _stop_msg + '\n' + ''*50 + '\n' + result
+            result = _stop_msg + '\n' + '-'*50 + '\n' + result
             break
-        return result[:200]
+
+    if not short:
+        return result
+
+    lines = result.split("\n")
+    stop_line = next((l for l in lines if l.startswith("STOP:")), "")
+    if stop_line:
+        return stop_line[:200]
+    action = next((l for l in lines if l.startswith("ACTION:")), "")
+    conf = next((l for l in lines if l.startswith("CONFIDENCE:")), "")
+    if action:
+        return action[:120] + ("\n" + conf[:80] if conf else "")
+    return result[:200]
