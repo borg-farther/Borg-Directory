@@ -13,3 +13,7 @@ __pycache__/
 embeddings.pkl
 telemetry.jsonl
 .cold_start_done
+
+# Python packaging artifacts
+*.egg-info/
+*.egg

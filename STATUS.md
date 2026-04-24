@@ -54,7 +54,7 @@ None of these block shipping. Total ~45 hours of polish to fully complete Phase 
 
 ## Infrastructure notes for resuming work
 
-- **Gateway:** Runs on Hostinger VPS srv1353853 (76.13.46.217). Process auto-restarts via systemd user unit `hermes-gateway`. Note: systemctl tracking is unreliable (reports `inactive` even when process is alive)  use `ps -ef | grep "gateway run"` for truth.
+- **Gateway:** Runs on the project VPS. Process auto-restarts via systemd user unit `hermes-gateway`. Note: systemctl tracking is unreliable (reports `inactive` even when process is alive)  use `ps -ef | grep "gateway run"` for truth.
 - **Plugin path:** `/root/.hermes/hermes-agent/hermes_cli/plugins/borg_auto_trace/__init__.py` (hardlinked to `/root/.hermes/plugins/borg_auto_trace/__init__.py`)
 - **Firings log:** `/var/log/borg_firings.log` (direct file write, uncached)
 - **Gateway log:** `/var/log/hermes-gateway.log` (stdout+stderr both redirect here)
