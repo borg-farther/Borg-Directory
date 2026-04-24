@@ -49,3 +49,21 @@ Do NOT fix at the end of a long session.
 - origin/public-live-dashboard-20260423-1245: still 3739b5b (not pushed)
 - Stashes: 4 (unchanged from session start)
 - Tree: clean
+
+
+---
+
+## Additional work same day (2026-04-24)
+
+Beyond Phase 0 cleanup, completed:
+
+- **7217d2a** `docs: classifier audit` — reproduced baseline.py, found
+  framing misleads (Python subset n=34 is honest denominator). See
+  `CLASSIFIER_AUDIT.md`.
+- **30fdc14** `docs: patch PRD classifier claims` — 5 PRD sites updated
+  with audited framing.
+- **this commit** CHANGELOG correction banner + P2.1 formal deferral.
+
+**Session state at close:** tree clean, 8+ commits local, origin still at
+3739b5b. Nothing pushed. Handoff to next session: read `CLASSIFIER_AUDIT.md`
+first — it's the most important document produced today.

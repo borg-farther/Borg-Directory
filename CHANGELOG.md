@@ -1,3 +1,14 @@
+> **CORRECTION NOTE (2026-04-24):** Earlier entries below describe the 173-row
+> classifier corpus as "Python/Django" and quote FCR 53.8% → 0.58% and
+> precision 13.1% → 93.8%. A 2026-04-24 audit (see `CLASSIFIER_AUDIT.md`)
+> found these numbers reproduce exactly but the framing misleads: the corpus
+> is 6 languages (173 rows total, Python n=34), and the classifier fires on
+> only 16 of 173 rows. Honest current-state figures, Python subset (n=34):
+> recall 41.2%, precision 93.3%, FCR 2.9%. Historical entries below are
+> preserved as-is; `BORG_PRD_FINAL.md` has been updated to the audited framing.
+
+---
+
 # Changelog
 
 ## 3.2.4 — 20260408 — Observe→search roundtrip fix

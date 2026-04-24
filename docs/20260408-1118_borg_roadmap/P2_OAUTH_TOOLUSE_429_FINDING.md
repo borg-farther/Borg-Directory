@@ -128,3 +128,24 @@ req_011CZtGsu6hunVTfK3JbUwCn
 ```
 
 Anthropic Trust & Safety can use these IDs to confirm or refute the OAuth-scope hypothesis.
+
+
+---
+
+## Session close-out (2026-04-24)
+
+P2.1 Sonnet is formally deferred, not in progress. Verified during Phase 0
+reconciliation:
+
+- Finding doc diagnosis stands: OAuth scope refusal on Sonnet 4.5 tool-use
+  with long prompts. Not a rate limit. Opus 4.6 succeeds on same token/shape.
+- Given OpenSpace (github.com/HKUDS/OpenSpace) shipped most of the
+  collective-intelligence thesis in 2026-03, the ROI on $25 + fresh API key
+  for cross-model validation has dropped substantially.
+- Recommendation: close-out as **deferred pending API key availability**.
+  If a first-party `sk-ant-api03-*` key becomes available, revisit.
+  Otherwise, pivot to classifier audit (done 2026-04-24, see
+  `CLASSIFIER_AUDIT.md`) as the more honest foundation claim.
+
+No state change in the experiment: 3 Phase A seeding traces still in DB,
+0 eval rows in JSONL, orchestrator not running.
