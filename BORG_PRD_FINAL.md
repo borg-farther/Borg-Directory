@@ -41,10 +41,11 @@ hand-authored packs and a classifier that routes errors to the right pack —
 or refuses when nothing matches.
 
 **What is measured (v3.2.4, 2026-04-08):**
-- **Classifier FCR** (false confident routes) on the 173-row Python/Django
-  evaluation corpus: **53.8% → 0.58%** (measured, reproducible via
-  `pytest tests/test_classifier_*.py`).
-- **Classifier precision** on the same corpus: **13.1% → 93.8%**.
+- **Classifier** (Python subset, n=34 of 173-row multi-language PRD corpus):
+  recall 41.2%, precision 93.3%, FCR 2.9% (1/34). Non-Python rows (shell,
+  JS, TS, Rust, Go) intentionally return None. Reproducible via
+  `python3.12 docs/20260408-0623_classifier_prd/run_baseline.py`.
+  See `CLASSIFIER_AUDIT.md` (2026-04-24).
 - **Test suite:** 1708 tests passing on v3.2.4 at the time of this revision.
 - **v3.2.4 patch:** fixes a broken `borg observe → borg search` roundtrip
   where observe would emit query strings that search could not index. This
@@ -68,7 +69,7 @@ or refuses when nothing matches.
 
 | Product | Status | Evidence |
 |---------|--------|----------|
-| A. Failure Memory (reasoning traces) | SHIPPING classifier, AGENT-LEVEL EFFECT UNPROVEN | Classifier: FCR 0.58%, precision 93.8% on 173-row corpus (measured). Agent-level: n=7 directional-only (p=0.125) + 1 model P1.1 floor-effect null. Sonnet P2.1 in progress. See corrections #1 and #2 above. |
+| A. Failure Memory (reasoning traces) | SHIPPING classifier, AGENT-LEVEL EFFECT UNPROVEN | Classifier (Python subset n=34): precision 93.3%, recall 41.2%, FCR 2.9%. See CLASSIFIER_AUDIT.md. Agent-level: n=7 directional-only (p=0.125) + 1 model P1.1 floor-effect null. Sonnet P2.1 halted (OAuth scope — see P2_OAUTH_TOOLUSE_429_FINDING.md). |
 | B. Codebase Navigation Cache | DESIGNED | Architecture complete, not tested |
 | C. Collective DeFi Intelligence | DESIGNED | Thompson Sampling built, no real users |
 
@@ -77,9 +78,11 @@ or refuses when nothing matches.
 ## 2. WHAT'S PROVEN vs WHAT'S CLAIMED
 
 ### MEASURED (v3.2.4, reproducible)
-- **Classifier FCR:** 53.8% → 0.58% on the 173-row Python/Django evaluation
-  corpus. Reproducible via the classifier test suite.
-- **Classifier precision:** 13.1% → 93.8% on the same corpus.
+- **Classifier performance** (Python subset, n=34 of the 173-row multi-language
+  PRD corpus): recall 41.2%, precision 93.3%, FCR 2.9% (1/34). The 1 false-
+  confident row is a genuinely ambiguous Flask/markupsafe version mismatch.
+  Non-Python rows return None by design. Reproducible via
+  `docs/20260408-0623_classifier_prd/run_baseline.py`. See `CLASSIFIER_AUDIT.md`.
 - **Test suite:** 1708 tests passing at the v3.2.4 tag.
 - **Non-Python language guard** (v3.2.2+): Borg now refuses Python answers
   for Rust / Go / JS / Docker errors instead of mis-routing them to the
@@ -150,10 +153,11 @@ When Agent B hits the same problem, Borg provides Agent A's investigation notes.
 Stores structured investigation notes from agent sessions (both successes and failures). Matches incoming problems to relevant prior investigations. Serves investigation context to agents, reducing redundant exploration.
 
 ### What is measured vs. what is still open
-**Measured (classifier layer, reproducible on the 173-row corpus):**
-- FCR 53.8% → 0.58%
-- Precision 13.1% → 93.8%
-- 1708 tests passing at the v3.2.4 tag
+**Measured (classifier layer, reproducible on the Python subset of the PRD corpus):**
+- Python subset: n=34, recall 41.2%, precision 93.3%, FCR 2.9%
+- Corpus is multi-language (173 rows, 6 languages); non-Python rows return None
+- 1708 tests passing at the v3.2.4 tag (not re-audited 2026-04-24)
+- Full audit: CLASSIFIER_AUDIT.md
 
 **Directional only (n=7 SWE-bench Django paired run):**
 - A=3/7 → B=6/7, McNemar exact p=0.125 (NOT statistically significant)
@@ -362,9 +366,12 @@ SWE-agent, Devin, Cursor, Windsurf, Claude Code — these all need Borg. They're
 As of v3.2.4 (2026-04-08):
 
 **What is real and measured:**
-- The classifier is meaningfully better. FCR 53.8% → 0.58% and precision
-  13.1% → 93.8% on a 173-row Python/Django corpus, with 1708 passing tests.
+- The classifier is Python-specialized and honest. On the Python subset
+  (n=34 of the 173-row multi-language PRD corpus): recall 41.2%, precision
+  93.3%, FCR 2.9%. It returns None on non-Python inputs by design rather
+  than mis-classifying. 1708 tests passing at v3.2.4 (not re-audited).
   This is the only layer of Borg with reproducible quantitative evidence.
+  See CLASSIFIER_AUDIT.md.
 - The non-Python guard and the observe→search roundtrip fix are correctness
   wins, not marketing claims.
 
