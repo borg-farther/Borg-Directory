@@ -17,3 +17,6 @@ telemetry.jsonl
 # Python packaging artifacts
 *.egg-info/
 *.egg
+
+# Broken submodule artifact (removed 2026-04-24)
+docs/agenti/
