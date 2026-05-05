@@ -1,0 +1,28 @@
+{
+  "concurrency_model": "asyncio_logical_users",
+  "duration_seconds": 5.0,
+  "failures": 0,
+  "latency_ms": {
+    "avg": 0.47556916532380583,
+    "max": 1.7244392074644566,
+    "p50": 0.4644892178475857,
+    "p95": 0.6138130091130733,
+    "p99": 0.6562628224492074
+  },
+  "operation": "learning_atom_retrieval_firewall_privacy_prompt_scan",
+  "passed": true,
+  "per_user_min_requests": 10,
+  "requests_per_second": 2024.6,
+  "sample_failures": [],
+  "success_rate": 1.0,
+  "successes": 10123,
+  "thresholds": {
+    "min_requests_per_user": 1.0,
+    "p95_ms_max": 500.0,
+    "p99_ms_max": 1500.0,
+    "success_rate_min": 0.99
+  },
+  "timestamp": "2026-05-04T12:08:00.350199+00:00",
+  "total_requests": 10123,
+  "users": 1000
+}

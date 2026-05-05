@@ -235,11 +235,17 @@ def save_trace(trace: Dict[str, Any], db_path: str = None) -> str:
             db.execute("INSERT INTO trace_file_index (trace_id, file_path, role) VALUES (?, ?, 'modified')",
                        (trace_id, f))
     
-    # Index errors
+    # Index errors. Store both raw error tokens (e.g. TypeError) and Borg's
+    # normalized class form (e.g. type-error) so retrieval remains stable across
+    # older traces and classifier-based queries.
     for pattern in trace.get("error_patterns", "").split():
         if pattern:
             db.execute("INSERT INTO trace_error_index (trace_id, error_type, error_context) VALUES (?, ?, ?)",
                        (trace_id, pattern, ""))
+            normalized = _normalize_error_type_for_index(pattern)
+            if normalized and normalized != pattern:
+                db.execute("INSERT INTO trace_error_index (trace_id, error_type, error_context) VALUES (?, ?, ?)",
+                           (trace_id, normalized, ""))
     
     # Update FTS
     try:
@@ -304,6 +310,27 @@ def _normalize_errors(errors: List[str]) -> str:
         if match:
             types.add(match.group(1))
     return " ".join(sorted(types))
+
+
+def _normalize_error_type_for_index(error_type: str) -> str:
+    """Normalize common Python/JS error class names to Borg error-class slugs."""
+    if not error_type:
+        return ""
+    explicit = {
+        "TypeError": "type-error",
+        "KeyError": "key-error",
+        "SyntaxError": "syntax-error",
+        "ModuleNotFoundError": "python-import-error",
+        "ImportError": "python-import-error",
+        "JSONDecodeError": "json-parse-error",
+    }
+    if error_type in explicit:
+        return explicit[error_type]
+    # CamelCase FooError -> foo-error; FooException -> foo-exception.
+    words = re.findall(r"[A-Z]?[a-z]+|[A-Z]+(?=[A-Z]|$)|\d+", error_type)
+    if words:
+        return "-".join(w.lower() for w in words)
+    return error_type.lower()
 
 
 # ---------------------------------------------------------------------------

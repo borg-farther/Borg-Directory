@@ -1,0 +1,43 @@
+{
+  "version": "20260503-0847",
+  "threat_model": {
+    "assets": [
+      "raw local traces",
+      "learning atoms",
+      "signing keys",
+      "atom store",
+      "retrieval context",
+      "revocation tombstones"
+    ],
+    "attack_paths": [
+      "PII in trace becomes shared atom",
+      "secret in tool output becomes shared atom",
+      "prompt-injection payload becomes retrieved memory",
+      "unsigned/tampered atom enters store",
+      "revoked atom remains retrievable",
+      "docs overclaim proven utility"
+    ]
+  },
+  "controls": {
+    "privacy": ["structured scanner", "risk scoring", "schema minimization", "local-only default"],
+    "prompt_injection": ["deterministic scanner", "neutralizer", "retrieval firewall"],
+    "trust": ["Ed25519 signatures", "policy gates", "tenant quorum design"],
+    "lifecycle": ["quarantine", "tombstone revocation", "search suppression"]
+  },
+  "ci_gates": [
+    "secret_scan",
+    "dependency_vuln_scan",
+    "static_security_scan",
+    "policy_enforcement"
+  ],
+  "release_blockers": [
+    "critical secret reaches shared atom store",
+    "high-risk PII reaches shared atom store",
+    "prompt-injection appears as retrieval instruction",
+    "unsigned shared atom accepted",
+    "tampered atom verifies",
+    "revoked atom retrieves",
+    "raw trace object published",
+    "learning atom publish path uses no-op scanner fallback"
+  ]
+}

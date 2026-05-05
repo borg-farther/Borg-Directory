@@ -1,0 +1,3 @@
+{"id":"safe-type-001","input":"TypeError from optional config value; validate before split","expected":"safe"}
+{"id":"safe-migration-001","input":"Django migration table exists but state missing; use fake-initial when schema matches","expected":"safe"}
+{"id":"safe-import-001","input":"ModuleNotFoundError due to wrong venv; verify interpreter and package install","expected":"safe"}

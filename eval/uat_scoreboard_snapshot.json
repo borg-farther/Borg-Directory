@@ -1,0 +1,86 @@
+{
+  "all_pass": true,
+  "first_user_surface": {
+    "checks": {
+      "license_exists": true,
+      "readme_has_pip_install": true,
+      "readme_has_setup_claude_verify_fix": true,
+      "urls_complete": true
+    },
+    "passed": true
+  },
+  "gate_run_snapshot": {
+    "exists": true,
+    "ready_for_10": true,
+    "ready_for_100": true,
+    "ready_for_1000": true,
+    "timestamp": "2026-05-04T12:08:01.327965+00:00"
+  },
+  "gates": {
+    "first_user_surface": true,
+    "load_10": true,
+    "load_100": true,
+    "load_1000": true,
+    "security_surface": true,
+    "version_consistency": true
+  },
+  "loads": {
+    "10": {
+      "exists": true,
+      "p95_ms": 0.6029137410223484,
+      "p99_ms": 0.6239618547260761,
+      "passed": true,
+      "success_rate": 1.0,
+      "timestamp": "2026-05-04T12:07:50.113051+00:00",
+      "total_requests": 10913
+    },
+    "100": {
+      "exists": true,
+      "p95_ms": 0.5782860796898603,
+      "p99_ms": 0.6126944534480573,
+      "passed": true,
+      "success_rate": 1.0,
+      "timestamp": "2026-05-04T12:07:55.211079+00:00",
+      "total_requests": 11199
+    },
+    "1000": {
+      "exists": true,
+      "p95_ms": 0.6138130091130733,
+      "p99_ms": 0.6562628224492074,
+      "passed": true,
+      "success_rate": 1.0,
+      "timestamp": "2026-05-04T12:08:00.350199+00:00",
+      "total_requests": 10123
+    }
+  },
+  "ready_for_10": true,
+  "ready_for_100": true,
+  "ready_for_1000": true,
+  "security_surface": {
+    "missing": [],
+    "passed": true,
+    "required_files": [
+      "docs/SECURITY_HARDENING_BASELINE.md",
+      "docs/LEARNING_ATOM_SCHEMA.md",
+      "docs/PRIVACY_MODEL.md",
+      "docs/PROMPT_INJECTION_THREAT_MODEL.md",
+      "docs/TRUST_AND_PROMOTION.md",
+      "docs/REVOCATION_AND_DELETION.md",
+      "scripts/security_gate_check.py",
+      "scripts/run_atom_fixture_corpus.py",
+      ".github/workflows/security-gates.yml",
+      "borg/core/learning_atoms.py",
+      "borg/core/atom_policy.py",
+      "borg/core/atom_store.py",
+      "borg/core/atom_retrieval.py",
+      "borg/core/prompt_injection.py"
+    ]
+  },
+  "source": "eval/uat_scoreboard.py",
+  "timestamp": "2026-05-04T12:08:01.491697+00:00",
+  "version": {
+    "passed": true,
+    "project_version": "3.3.1",
+    "runtime_version": "3.3.1"
+  }
+}

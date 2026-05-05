@@ -427,6 +427,34 @@ TOOLS: List[Dict[str, Any]] = [
         },
     },
     {
+        "name": "borg_rescue",
+        "description": (
+            "Agent-ready day-one rescue packet. Given an error, failing command output, or agent transcript, "
+            "returns ACTION, STOP, VERIFY, human receipt, automation policy, and optional full guidance. "
+            "Use this when the agent is about to debug or has hit a technical failure."
+        ),
+        "inputSchema": {
+            "type": "object",
+            "properties": {
+                "input": {
+                    "type": "string",
+                    "description": "Error, failing command output, task text, or recent agent transcript.",
+                },
+                "source": {
+                    "type": "string",
+                    "description": "Caller provenance tag (default: mcp).",
+                    "default": "mcp",
+                },
+                "show_guidance": {
+                    "type": "boolean",
+                    "description": "Include full legacy guidance block (default: true).",
+                    "default": True,
+                },
+            },
+            "required": ["input"],
+        },
+    },
+    {
         "name": "borg_observe",
         "description": (
             "Silent observation: analyzes the current task and returns structural guidance from proven approaches. "
@@ -1676,6 +1704,17 @@ def _maybe_rebuild_index():
     except Exception:
         pass
 
+def borg_rescue(input: str = "", source: str = "mcp", show_guidance: bool = True) -> str:
+    """Return an agent-ready day-one rescue packet as JSON."""
+    try:
+        from borg.core.rescue import rescue
+
+        result = rescue(input, source=source or "mcp", show_guidance=bool(show_guidance))
+        return json.dumps(result.to_dict(), ensure_ascii=False)
+    except Exception as e:
+        return json.dumps({"success": False, "error": str(e), "type": type(e).__name__})
+
+
 def borg_observe(task: str = "", context: str = "", context_dict: dict = None, project_path: str = None, short: bool = False) -> str:
     _maybe_rebuild_index()
     # Auto-seed collective traces on first use
@@ -2807,7 +2846,7 @@ def call_tool(name: str, arguments: Dict[str, Any]) -> str:
                 signal.signal(signal.SIGALRM, old_handler)
 
         # Feed tool call into trace capture (skip borg internal tools to avoid noise)
-        if name not in ("borg_search", "borg_observe", "borg_suggest", "borg_feedback", "borg_publish"):
+        if name not in ("borg_search", "borg_observe", "borg_rescue", "borg_suggest", "borg_feedback", "borg_publish"):
             _feed_trace_capture(name, arguments, result)
 
         return result
@@ -2880,6 +2919,13 @@ def _call_tool_impl(name: str, arguments: Dict[str, Any]) -> str:
             failure_count=arguments.get("failure_count", 0),
             task_type_hint=arguments.get("task_type_hint", ""),
             tried_packs=arguments.get("tried_packs"),
+        )
+
+    elif name == "borg_rescue":
+        return borg_rescue(
+            input=arguments.get("input", ""),
+            source=arguments.get("source", "mcp"),
+            show_guidance=arguments.get("show_guidance", True),
         )
 
     elif name == "borg_convert":

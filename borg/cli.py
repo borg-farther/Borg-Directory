@@ -10,6 +10,7 @@ Usage:
     borg publish <path>       — publish pack to GitHub
     borg feedback <session_id> — generate feedback from session
     borg debug <error>        — get structured guidance for an error
+    borg rescue <error>       — agent-ready rescue packet: ACTION / STOP / VERIFY / receipt
     borg generate <pack>      — export pack to .cursorrules / .clinerules / CLAUDE.md / .windsurfrules
     borg list                 — list local packs
     borg autopilot            — zero-config setup (install MCP + skill + auto-suggest)
@@ -497,6 +498,33 @@ def _cmd_debug(args: argparse.Namespace) -> int:
     return 0
 
 
+def _cmd_rescue(args: argparse.Namespace) -> int:
+    """Return an agent-ready ACTION / STOP / VERIFY rescue packet."""
+    from borg.core.rescue import rescue, render_rescue_text
+
+    text = " ".join(args.input or []).strip()
+    if not text:
+        # Non-interactive agent path: accept piped stderr/stdout/transcript.
+        try:
+            if not sys.stdin.isatty():
+                text = sys.stdin.read().strip()
+        except Exception:
+            text = ""
+    if not text:
+        try:
+            print("Paste the exact error, failing command, or agent transcript:")
+            text = input("> ").strip()
+        except (EOFError, KeyboardInterrupt):
+            text = ""
+
+    result = rescue(text, source="cli", show_guidance=not args.short)
+    if args.json:
+        print(json.dumps(result.to_dict(), indent=2, ensure_ascii=False))
+    else:
+        print(render_rescue_text(result))
+    return 0 if result.success else 1
+
+
 def _cmd_start(args: argparse.Namespace) -> int:
     """Interactive onboarding — get value from borg in 30 seconds."""
     print()
@@ -525,11 +553,11 @@ def _cmd_start(args: argparse.Namespace) -> int:
         print()
         return 0
 
-    # Run debug
-    from borg.core.pack_taxonomy import debug_error
+    # Run the same rescue engine used by agents/MCP so onboarding cannot drift.
+    from borg.core.rescue import rescue, render_rescue_text
     print()
-    result = debug_error(error, show_evidence=True)
-    print(result)
+    result = rescue(error, source="start", show_guidance=True)
+    print(render_rescue_text(result))
 
     # Auto-record feedback
     try:
@@ -779,6 +807,85 @@ def _cmd_observe(args: argparse.Namespace) -> int:
     except Exception as e:
         print(f"Error recording observation: {e}", file=sys.stderr)
         return 1
+
+
+def _cmd_atom(args: argparse.Namespace) -> int:
+    """Learning atom utilities: distill, validate, search, revoke."""
+    import yaml as _yaml
+
+    if args.atom_action == "validate":
+        from borg.core.learning_atoms import validate_learning_atom, verify_signed_atom
+        data = _yaml.safe_load(Path(args.path).read_text(encoding="utf-8"))
+        payload = data.get("payload") if isinstance(data, dict) and isinstance(data.get("payload"), dict) else data
+        result = validate_learning_atom(payload)
+        sig = verify_signed_atom(data) if isinstance(data, dict) and "signature" in data else None
+        out = {"success": result.valid and (sig.valid if sig else True), "valid": result.valid, "errors": result.errors}
+        if sig:
+            out["signature_valid"] = sig.valid
+            out["signature_error"] = sig.error
+        print(json.dumps(out, indent=2))
+        return 0 if out["success"] else 1
+
+    if args.atom_action == "search":
+        from borg.core.atom_store import AtomStore
+        from borg.core.atom_retrieval import format_atom_for_agent
+        store = AtomStore(getattr(args, "db", None))
+        atoms = store.search_atoms(" ".join(args.query), limit=args.limit)
+        if args.json:
+            print(json.dumps({"success": True, "atoms": atoms, "total": len(atoms)}, indent=2))
+        else:
+            if not atoms:
+                print("No learning atoms found.")
+            for atom in atoms:
+                print(format_atom_for_agent(atom))
+                print("---")
+        return 0
+
+    if args.atom_action == "revoke":
+        from borg.core.atom_store import AtomStore
+        store = AtomStore(getattr(args, "db", None))
+        store.revoke(args.atom_id, args.reason)
+        print(json.dumps({"success": True, "revoked": args.atom_id, "reason": args.reason}, indent=2))
+        return 0
+
+    if args.atom_action == "distill":
+        from borg.core.traces import _get_db
+        from borg.core.learning_atoms import distill_trace_to_atom, sign_learning_atom
+        from borg.core.crypto import load_signing_key
+        db = _get_db(getattr(args, "trace_db", None))
+        row = db.execute("SELECT * FROM traces WHERE id = ?", (args.trace_id,)).fetchone()
+        db.close()
+        if not row:
+            print(f"Error: trace not found: {args.trace_id}", file=sys.stderr)
+            return 1
+        atom = distill_trace_to_atom(dict(row), scope=args.scope, tenant_identifier=getattr(args, "tenant", ""))
+        if args.sign_agent:
+            key = load_signing_key(args.sign_agent)
+            if key is None:
+                print(f"Error: signing key not found for {args.sign_agent}", file=sys.stderr)
+                return 1
+            output = sign_learning_atom(atom, key)
+        else:
+            output = atom
+        text = _yaml.safe_dump(output, sort_keys=False)
+        if args.output:
+            Path(args.output).write_text(text, encoding="utf-8")
+            print(f"Wrote learning atom to {args.output}")
+        else:
+            print(text)
+        return 0
+
+    if args.atom_action == "publish":
+        from borg.core.publish import action_publish
+        raw = action_publish(path=args.path)
+        _print_json(raw)
+        try:
+            return 0 if json.loads(raw).get("success") else 1
+        except Exception:
+            return 1
+
+    print("Error: unknown atom action", file=sys.stderr)
+    return 1
 
 
 def _cmd_version(args: argparse.Namespace) -> int:
@@ -1666,6 +1773,18 @@ def main() -> int:
     )
     p.set_defaults(func=_cmd_debug)
 
+    # borg rescue <error>
+    p = sub.add_parser("rescue", help="Agent-ready rescue packet: ACTION / STOP / VERIFY / human receipt",
+        formatter_class=argparse.RawDescriptionHelpFormatter,
+        epilog="""Examples:
+  borg rescue 'ModuleNotFoundError: No module named flask'
+  pytest -q 2>&1 | borg rescue --json
+  borg rescue 'PermissionError: [Errno 13] permission denied' --short""")
+    p.add_argument("input", nargs="*", help="Error, failing command output, or agent transcript. Reads stdin when omitted.")
+    p.add_argument("--json", action="store_true", help="Output machine-readable rescue packet")
+    p.add_argument("--short", action="store_true", help="Omit full legacy guidance block")
+    p.set_defaults(func=_cmd_rescue)
+
     # borg recall <error> — query FailureMemory for prior failure/success approaches
     p = sub.add_parser("recall", help="Query prior failure memory for an error message",
         formatter_class=argparse.RawDescriptionHelpFormatter,
@@ -1745,6 +1864,53 @@ in v3.2.4 to fix the observe→search roundtrip bug from the P1.1 experiment."""
     p.add_argument("--agent", default="cli", help="Agent id for provenance (default: cli)")
     p.add_argument("--json", action="store_true", help="Output raw JSON")
     p.set_defaults(func=_cmd_observe)
+
+    # borg atom — privacy-safe learning atom utilities
+    p = sub.add_parser("atom", help="Manage signed, sanitized, revocable learning atoms",
+        description="Manage signed, sanitized, revocable learning atoms for privacy-safe collective intelligence.",
+        formatter_class=argparse.RawDescriptionHelpFormatter,
+        epilog="""Publish uses fail-closed policy gates and publishes no raw traces.
+
+Examples:
+  borg atom distill --trace-id abc123 --scope local
+  borg atom distill --trace-id abc123 --scope org --tenant acme
+  borg atom validate ./atom.yaml
+  borg atom publish ./signed-atom.yaml
+  borg atom search 'TypeError optional config'
+  borg atom revoke sha256:abc --reason 'privacy request'""")
+    atom_sub = p.add_subparsers(dest="atom_action", required=True)
+
+    ap = atom_sub.add_parser("distill", help="Distill a local trace into a learning atom")
+    ap.add_argument("--trace-id", required=True, help="Trace ID from traces.db")
+    ap.add_argument("--scope", choices=["local", "org", "global_candidate", "global"], default="local")
+    ap.add_argument("--trace-db", default=None, help="Optional trace DB path")
+    ap.add_argument("--tenant", default="", help="Optional local tenant id; stored only as HMAC pseudonym in non-local atoms")
+    ap.add_argument("--sign-agent", default="", help="Optional agent id whose Ed25519 key signs the atom")
+    ap.add_argument("--output", "-o", default="", help="Optional output YAML path")
+    ap.set_defaults(func=_cmd_atom)
+
+    ap = atom_sub.add_parser("validate", help="Validate a learning atom YAML file")
+    ap.add_argument("path", help="Path to atom YAML/envelope")
+    ap.set_defaults(func=_cmd_atom)
+
+    ap = atom_sub.add_parser("publish", help="Publish a signed sanitized atom; fail-closed, no raw traces",
+        description="Publish a signed, sanitized learning atom through fail-closed policy gates. Raw traces are never published.",
+        formatter_class=argparse.RawDescriptionHelpFormatter)
+    ap.add_argument("path", help="Path to signed atom YAML/envelope")
+    ap.set_defaults(func=_cmd_atom)
+
+    ap = atom_sub.add_parser("search", help="Search local learning atoms")
+    ap.add_argument("query", nargs="+", help="Search query")
+    ap.add_argument("--limit", type=int, default=5)
+    ap.add_argument("--db", default=None, help="Optional atom DB path")
+    ap.add_argument("--json", action="store_true")
+    ap.set_defaults(func=_cmd_atom)
+
+    ap = atom_sub.add_parser("revoke", help="Revoke a learning atom by tombstone")
+    ap.add_argument("atom_id", help="Atom ID to revoke")
+    ap.add_argument("--reason", required=True, help="Revocation reason")
+    ap.add_argument("--db", default=None, help="Optional atom DB path")
+    ap.set_defaults(func=_cmd_atom)
 
     # guild reputation <agent_id>
     p = sub.add_parser("reputation", help="Show agent reputation profile",

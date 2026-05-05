@@ -113,19 +113,18 @@ or refuses when nothing matches.
   floor-effect interpretation is confirmed; if Sonnet shows signal either
   way the mechanism can finally be measured.
 
-### CLAIMED BUT UNPROVEN
-- Collective learning in DeFi (zero real users)
-- Navigation cache (designed, never built)
-- Circuit breaker (claimed in README, NOT IMPLEMENTED)
-- Ed25519 signing (listed as feature, ZERO code)
-- Multi-node fleet learning loop (designed, not built)
-- Cross-vertical generalization (only Python/Django classifier tested)
+### CLAIMED BUT UNPROVEN / LIMITED
+- Collective learning in DeFi (scanner exists; collective learning has zero real users)
+- Navigation cache (designed, not shipped as a first-user runtime surface)
+- Circuit breaker (implemented in DeFi subsystem tests/code, but not part of the core failure-memory promise)
+- Multi-node fleet learning loop (designed, not proven with real external agents)
+- Cross-vertical generalization (only Python/Django classifier tested rigorously)
 
 ### CRITICAL GAPS TO FIX
-1. **Remove Ed25519 claim** from README until implemented
-2. **Remove circuit breaker claim** or implement it
-3. **Mark DeFi collective data as SYNTHETIC** prominently
-4. **Don't claim navigation cache** until built
+1. **Keep README claims scoped to measured install/search/observe/atom-safety behavior**
+2. **Do not market DeFi collective intelligence as proven; mark demos/synthetic data clearly**
+3. **Do not market navigation cache until it is available in the first-user CLI/MCP path**
+4. **Keep Ed25519 wording precise: implemented for signing primitives/learning atoms; pack-signature enforcement is optional/backward-compatible, not a universal trust guarantee**
 
 ---
 

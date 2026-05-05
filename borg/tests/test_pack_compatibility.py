@@ -72,9 +72,20 @@ def _build_pack_list() -> List[tuple]:
     """
     index = _load_index()
 
-    # Build index lookup: id -> entry
+    # Build index lookup: id -> entry. Support both legacy
+    # {"packs": [...]} and URI-keyed {"guild://...": pack_data} indexes.
+    raw_entries = index.get("packs")
+    if raw_entries is None:
+        raw_entries = []
+        for uri, pack_data in index.items():
+            if isinstance(pack_data, dict):
+                entry = dict(pack_data)
+                entry.setdefault("name", uri.split("/")[-1] if "/" in uri else uri)
+                entry.setdefault("id", pack_data.get("id", uri))
+                raw_entries.append(entry)
+
     id_to_entry: Dict[str, dict] = {}
-    for entry in index.get("packs", []):
+    for entry in raw_entries:
         pid = entry.get("id", "")
         if pid:
             id_to_entry[pid] = entry
@@ -123,6 +134,9 @@ ALL_PACK_FILES: List[str] = [item[1] for item in _PACK_LIST]  # filenames
 # Filter deprecated packs: code-review removed in v3.0.0 (d=-2.83, actively hurts)
 _DEPRECATED_PACKS = {"code-review"}
 ALL_PACK_NAMES: List[str] = [item[0] for item in _PACK_LIST if item[0] not in _DEPRECATED_PACKS]
+# Search tests must deduplicate by name because the registry can contain multiple
+# files/variants for the same canonical pack name.
+UNIQUE_PACK_NAMES: List[str] = list(dict.fromkeys(ALL_PACK_NAMES))
 
 
 def get_pack_file_path(pack_name: str) -> Path:
@@ -205,7 +219,8 @@ class TestBorgSearchFindsPacks:
         fake_index = _load_index()
         with patch("borg.core.search._fetch_index", return_value=fake_index):
             with patch("borg.core.uri.BORG_DIR", Path("/nonexistent")):
-                result = json.loads(borg_search(pack_name))
+                with patch("borg.core.search.BORG_DIR", Path("/nonexistent")):
+                    result = json.loads(borg_search(pack_name))
 
         assert result["success"] is True, f"borg_search failed: {result.get('error')}"
         matched_names = [m.get("name") for m in result["matches"]]
