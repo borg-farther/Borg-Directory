@@ -122,7 +122,6 @@ class TraceMatcher:
         # Signal 1: FTS5 text search (with keyword fallback on FTS failure)
         search_terms = _sanitize_fts(self._extract_search_terms(task, error))
         if search_terms:
-            fts_rows = []
             try:
                 rows = db.execute(
                     "SELECT rowid, rank FROM traces_fts WHERE traces_fts MATCH ? ORDER BY rank LIMIT 20",
@@ -134,19 +133,11 @@ class TraceMatcher:
                     ).fetchone()
                     if trace_row:
                         candidates[trace_row[0]] = abs(row[1])
+                if not rows:
+                    self._keyword_fallback(db, search_terms, candidates)
             except Exception as _fts_err:
                 logger.debug("FTS search failed, using keyword fallback: %s", _fts_err)
-                # Keyword fallback: search task keywords in traces table
-                for word in search_terms.split(' OR ')[:5]:
-                    word = word.strip()
-                    if len(word) > 2:
-                        kw_rows = db.execute(
-                            "SELECT id FROM traces WHERE "
-                            "LOWER(task_description) LIKE ? OR LOWER(keywords) LIKE ?",
-                            (f"%{word}%", f"%{word}%")
-                        ).fetchall()
-                        for kw_row in kw_rows:
-                            candidates[kw_row[0]] = candidates.get(kw_row[0], 0) + 1.0
+                self._keyword_fallback(db, search_terms, candidates)
 
         # Signal 2: Error type matching
         if error:
@@ -279,6 +270,23 @@ class TraceMatcher:
         if not words:
             return ""
         return " OR ".join(words[:8])
+
+    def _keyword_fallback(self, db: sqlite3.Connection, search_terms: str, candidates: Dict[str, float]) -> None:
+        """Broad LIKE fallback when FTS is unavailable or over-constrained."""
+        seen = set()
+        for word in re.findall(r"\w+", search_terms.lower())[:8]:
+            if len(word) <= 2 or word in seen:
+                continue
+            seen.add(word)
+            kw_rows = db.execute(
+                "SELECT id FROM traces WHERE "
+                "LOWER(task_description) LIKE ? OR LOWER(root_cause) LIKE ? OR "
+                "LOWER(approach_summary) LIKE ? OR LOWER(keywords) LIKE ? OR "
+                "LOWER(error_patterns) LIKE ?",
+                (f"%{word}%", f"%{word}%", f"%{word}%", f"%{word}%", f"%{word}%"),
+            ).fetchall()
+            for kw_row in kw_rows:
+                candidates[kw_row[0]] = candidates.get(kw_row[0], 0) + 1.0
 
     def _extract_error_type(self, error: str) -> Optional[str]:
         """Extract error type from error message."""

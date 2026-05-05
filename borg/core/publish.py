@@ -472,40 +472,92 @@ def action_publish(
                         "filing bug reports, or contributing documentation.",
             })
 
-    # Proof gate validation (from sibling module)
-    gate_errors = validate_proof_gates(artifact)
-    if gate_errors:
-        return json.dumps({
-            "success": False,
-            "error": "Proof gate validation failed",
-            "gate_errors": gate_errors,
-            "hint": "Fix these issues in the artifact before publishing.",
-        })
+    # Learning atoms are the shared-safe collective memory primitive.
+    # They must fail closed: no proof-gate/privacy fallback may silently sanitize and continue.
+    if artifact_type == "learning_atom":
+        try:
+            from borg.core.learning_atoms import validate_learning_atom, verify_signed_atom
+            from borg.core.atom_policy import classify_atom_policy, AtomDecision
+        except Exception as e:
+            return json.dumps({
+                "success": False,
+                "error": "Learning atom safety modules unavailable; refusing to publish fail-closed",
+                "reason": str(e),
+            })
 
-    # Safety scan
-    safety_threats = scan_pack_safety(artifact)
-    if safety_threats:
-        return json.dumps({
-            "success": False,
-            "error": "Safety scan failed",
-            "threats": safety_threats,
-        })
+        envelope = artifact
+        payload = envelope.get("payload") if isinstance(envelope.get("payload"), dict) else artifact
+        signature_valid = False
+        if "signature" not in envelope:
+            return json.dumps({
+                "success": False,
+                "error": "Learning atom publication requires a signed atom envelope",
+            })
+        sig_check = verify_signed_atom(envelope)
+        signature_valid = sig_check.valid
+        if not signature_valid:
+            return json.dumps({
+                "success": False,
+                "error": "Learning atom signature verification failed",
+                "reason": sig_check.error,
+            })
 
-    # Privacy scan (sanitize before publishing)
-    sanitized_artifact, privacy_findings = privacy_scan_artifact(artifact)
-    if privacy_findings:
-        logger.warning(
-            "Privacy scan found %d issues, redacting before publish",
-            len(privacy_findings),
-        )
+        validation = validate_learning_atom(payload)
+        if not validation.valid:
+            return json.dumps({
+                "success": False,
+                "error": "Learning atom validation failed",
+                "validation_errors": validation.errors,
+            })
 
-    sanitized_yaml = yaml.dump(sanitized_artifact, default_flow_style=False, sort_keys=False)
+        policy = classify_atom_policy(payload, has_valid_signature=signature_valid)
+        if policy.decision not in {AtomDecision.LOCAL_SAFE, AtomDecision.ORG_SAFE, AtomDecision.GLOBAL_CANDIDATE}:
+            return json.dumps({
+                "success": False,
+                "error": "Learning atom policy rejected publication",
+                "decision": policy.decision.value,
+                "reasons": policy.reasons,
+            })
 
-    safe_id = re.sub(r"[^a-zA-Z0-9_-]", "-", str(artifact_id).split("/")[-1])
-    if artifact_type == "feedback":
-        filename = f"{safe_id}.feedback.yaml"
+        sanitized_artifact = envelope
+        sanitized_yaml = yaml.dump(sanitized_artifact, default_flow_style=False, sort_keys=False)
+        safe_id = re.sub(r"[^a-zA-Z0-9_-]", "-", str(payload.get("atom_id", artifact_id)).split(":")[-1])
+        filename = f"{safe_id}.learning-atom.yaml"
     else:
-        filename = f"{safe_id}.workflow.yaml"
+        # Proof gate validation (from sibling module)
+        gate_errors = validate_proof_gates(artifact)
+        if gate_errors:
+            return json.dumps({
+                "success": False,
+                "error": "Proof gate validation failed",
+                "gate_errors": gate_errors,
+                "hint": "Fix these issues in the artifact before publishing.",
+            })
+
+        # Safety scan
+        safety_threats = scan_pack_safety(artifact)
+        if safety_threats:
+            return json.dumps({
+                "success": False,
+                "error": "Safety scan failed",
+                "threats": safety_threats,
+            })
+
+        # Privacy scan (sanitize before publishing)
+        sanitized_artifact, privacy_findings = privacy_scan_artifact(artifact)
+        if privacy_findings:
+            logger.warning(
+                "Privacy scan found %d issues, redacting before publish",
+                len(privacy_findings),
+            )
+
+        sanitized_yaml = yaml.dump(sanitized_artifact, default_flow_style=False, sort_keys=False)
+
+        safe_id = re.sub(r"[^a-zA-Z0-9_-]", "-", str(artifact_id).split("/")[-1])
+        if artifact_type == "feedback":
+            filename = f"{safe_id}.feedback.yaml"
+        else:
+            filename = f"{safe_id}.workflow.yaml"
 
     # Always save to outbox first (durable fallback)
     outbox_path = save_to_outbox(sanitized_artifact, sanitized_yaml, filename)

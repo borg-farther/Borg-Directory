@@ -1,0 +1,107 @@
+{
+  "evidence_files": {
+    "gate_run": true,
+    "privacy_scanner": true,
+    "privacy_tests": true,
+    "prompt_injection_scanner": true,
+    "prompt_injection_tests": true,
+    "readme": true,
+    "rescue_engine": true,
+    "rescue_tests": true,
+    "security_baseline": true,
+    "security_gate": true,
+    "uat_scoreboard": true
+  },
+  "forbidden_overclaims_checked": [
+    "zero risk",
+    "fully safe",
+    "guaranteed secure",
+    "proven external lift",
+    "statistically significant external agent-level lift"
+  ],
+  "gaps_to_close_before_broad_public_launch": [
+    "real external first-user outcome lift is not yet statistically proven",
+    "network effects are not yet proven with independent external agents",
+    "broad non-Python rescue coverage is intentionally limited/fail-closed",
+    "served-runtime MCP reload must be verified in each host environment before claiming that host is green"
+  ],
+  "missing_evidence": [],
+  "proof_summary": {
+    "gate_run_timestamp": "2026-05-04T12:08:01.327965+00:00",
+    "load_10": {
+      "exists": true,
+      "p95_ms": 0.6029137410223484,
+      "p99_ms": 0.6239618547260761,
+      "passed": true,
+      "success_rate": 1.0,
+      "timestamp": "2026-05-04T12:07:50.113051+00:00",
+      "total_requests": 10913
+    },
+    "load_100": {
+      "exists": true,
+      "p95_ms": 0.5782860796898603,
+      "p99_ms": 0.6126944534480573,
+      "passed": true,
+      "success_rate": 1.0,
+      "timestamp": "2026-05-04T12:07:55.211079+00:00",
+      "total_requests": 11199
+    },
+    "load_1000": {
+      "exists": true,
+      "p95_ms": 0.6138130091130733,
+      "p99_ms": 0.6562628224492074,
+      "passed": true,
+      "success_rate": 1.0,
+      "timestamp": "2026-05-04T12:08:00.350199+00:00",
+      "total_requests": 10123
+    },
+    "ready_for_10": true,
+    "ready_for_100": true,
+    "ready_for_1000": true,
+    "security_ci_gates": [
+      "secret_scan",
+      "dependency_vuln_scan",
+      "static_security_scan",
+      "policy_enforcement"
+    ],
+    "security_release_blockers": [
+      "critical secret reaches shared atom store",
+      "high-risk PII reaches shared atom store",
+      "prompt-injection appears as retrieval instruction",
+      "unsigned shared atom accepted",
+      "tampered atom verifies",
+      "revoked atom retrieves",
+      "raw trace object published",
+      "learning atom publish path uses no-op scanner fallback"
+    ],
+    "version": {
+      "passed": true,
+      "project_version": "3.3.1",
+      "runtime_version": "3.3.1"
+    }
+  },
+  "security": {
+    "local_default": "local-first; shared memory path accepts signed, sanitized, revocable learning atoms",
+    "pii_raw_trace_policy": "raw traces/conversations/tool outputs/source/env are not acceptable shared-memory payloads",
+    "prompt_injection_policy": "scan and neutralize retrieval poisoning/tool coercion/instruction override before retrieval/export",
+    "residual_risk": [
+      "scanner coverage is deterministic and test-backed, not a mathematical proof of no PII",
+      "untrusted packs still require source/trust verification and safety scan context",
+      "host MCP configs must set the correct absolute BORG_HOME to avoid split-brain stores"
+    ],
+    "status": "GREEN_FOR_CONTROLLED_FIRST_USERS"
+  },
+  "timestamp": "2026-05-05T12:49:43.492946+00:00",
+  "value": {
+    "expected_time_to_visible_value_seconds": "30-90 for a known Python/Django class after install",
+    "expected_value_type": "avoided debugging dead-end, next command/check, verification step, outcome feedback path",
+    "first_visible_value_path": "pip install agent-borg -> borg rescue '<error>' -> ACTION/STOP/VERIFY + human receipt",
+    "north_star_metric": "percent of first sessions where the user can name one specific dead-end Borg prevented",
+    "proven_example": "ModuleNotFoundError maps to missing_dependency with tested confidence and 42/45 seed evidence in the rescue smoke"
+  },
+  "verdict": {
+    "broad_public_production": "NO_GO",
+    "controlled_first_users": "GO",
+    "why": "local gates, security surface, first-user surface, and rescue surface are green; external outcome lift remains unproven"
+  }
+}

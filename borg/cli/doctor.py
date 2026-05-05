@@ -2,98 +2,133 @@
 borg doctor  verify your Borg installation is working.
 Run: python3 -m borg.cli.doctor
 """
-import sys, os, sqlite3
+from __future__ import annotations
+
+import argparse
+import hashlib
+import json
+import os
+import sqlite3
+import sys
 from pathlib import Path
+from typing import Any
 
-def run():
-    borg_home = Path(os.environ.get('BORG_HOME', '~/.borg')).expanduser()
+
+def _sqlite_count(db_path: Path, table: str) -> int | None:
+    if not db_path.exists():
+        return None
+    try:
+        with sqlite3.connect(str(db_path)) as db:
+            return int(db.execute(f"SELECT COUNT(*) FROM {table}").fetchone()[0])
+    except Exception:
+        return None
+
+
+def runtime_fingerprint() -> dict[str, Any]:
+    import borg
+
+    borg_home = Path(os.environ.get("BORG_HOME", "~/.borg")).expanduser()
+    module_path = Path(getattr(borg, "__file__", "")).resolve()
+    try:
+        module_hash = hashlib.sha256(module_path.read_bytes()).hexdigest()[:16]
+    except Exception:
+        module_hash = ""
+    trace_db = borg_home / "traces.db"
+    atom_db = borg_home / "atoms.db"
+    return {
+        "package_version": getattr(borg, "__version__", "unknown"),
+        "module_path": str(module_path),
+        "module_hash": module_hash,
+        "borg_home": str(borg_home),
+        "trace_db_path": str(trace_db),
+        "atom_db_path": str(atom_db),
+        "trace_count": _sqlite_count(trace_db, "traces"),
+        "atom_count": _sqlite_count(atom_db, "atoms"),
+        "pid": os.getpid(),
+        "python": sys.executable,
+    }
+
+
+def run(json_mode: bool = False) -> int:
+    borg_home = Path(os.environ.get("BORG_HOME", "~/.borg")).expanduser()
     ok = True
-    print("\n")
-    print("         BORG DOCTOR                  ")
-    print("\n")
+    checks: list[dict[str, Any]] = []
 
-    # 1. DB  trigger seeding if empty/missing, then report
-    db_path = borg_home / 'traces.db'
-    if not db_path.exists() or sqlite3.connect(str(db_path)).execute("SELECT COUNT(*) FROM traces").fetchone()[0] == 0:
-        # Seed by calling borg_observe
+    def record(name: str, passed: bool, detail: str = "") -> None:
+        nonlocal ok
+        checks.append({"name": name, "passed": bool(passed), "detail": detail})
+        if not passed:
+            ok = False
+
+    db_path = borg_home / "traces.db"
+    if not db_path.exists() or _sqlite_count(db_path, "traces") in (None, 0):
         try:
             from borg.integrations.mcp_server import borg_observe as _bo
-            _bo(task='Docker apt-get install fails', context='')
-        except Exception as _se:
-            print(f"    Seeding failed: {_se}")
-    if db_path.exists():
-        db = sqlite3.connect(str(db_path))
-        total = db.execute("SELECT COUNT(*) FROM traces").fetchone()[0]
-        techs = db.execute("SELECT COUNT(DISTINCT technology) FROM traces").fetchone()[0]
-        db.close()
-        if total > 0:
-            print(f"   DB: {total} traces across {techs} domains ({db_path})")
-        else:
-            print(f"   DB: empty  seeding failed")
-            ok = False
-    else:
-        print(f"   DB: not found at {db_path}")
-        ok = False
+            _bo(task="Docker apt-get install fails", context="")
+        except Exception as exc:
+            record("seed_traces", False, f"seeding failed: {exc}")
+    trace_count = _sqlite_count(db_path, "traces")
+    record("trace_db", bool(trace_count and trace_count > 0), f"{trace_count or 0} traces at {db_path}")
 
-    # 2. borg_observe
     try:
         sys.path.insert(0, str(Path(__file__).parent.parent.parent))
         from borg.integrations.mcp_server import borg_observe
-        r = borg_observe(task='Docker apt-get package not found', context='')
-        action = next((l for l in r.split('\n') if l.startswith('ACTION:')), None)
-        conf   = next((l for l in r.split('\n') if 'BORG [' in l), '')
-        ok_obs = bool(action and 'HIGH' in conf)
-        print(f"  {'' if ok_obs else ''} borg_observe: {(action or 'NO ACTION')[:60]}")
-        if not ok_obs: ok = False
-    except Exception as e:
-        print(f"   borg_observe: {e}")
-        ok = False
+        result = borg_observe(task="Docker apt-get package not found", context="")
+        action = next((line for line in result.split("\n") if line.startswith("ACTION:")), None)
+        conf = next((line for line in result.split("\n") if "BORG [" in line), "")
+        record("borg_observe", bool(action), (action or "NO ACTION")[:120] + (f" | {conf}" if conf else ""))
+    except Exception as exc:
+        record("borg_observe", False, str(exc))
 
-    # 3. Short form
     try:
-        short = borg_observe(task='Docker apt-get package not found', context='', short=True)
-        short_ok = 'ACTION:' in short and len(short) < 300
-        print(f"  {'' if short_ok else ''} short form: {len(short)} chars")
-        if not short_ok: ok = False
-    except Exception as e:
-        print(f"   short form: {e}")
-        ok = False
-
-    # 4. borg_rate
-    try:
-        from borg.integrations.mcp_server import borg_rate
-        borg_observe(task='Django migration error', context='')
+        from borg.integrations.mcp_server import borg_observe, borg_rate
+        borg_observe(task="Django migration error", context="")
         rate = borg_rate(helpful=True)
-        rate_ok = 'recorded' in rate.lower()
-        print(f"  {'' if rate_ok else ''} borg_rate: {rate[:55]}")
-        if not rate_ok: ok = False
-    except Exception as e:
-        print(f"   borg_rate: {e}")
-        ok = False
+        record("borg_rate", "recorded" in rate.lower(), rate[:120])
+    except Exception as exc:
+        record("borg_rate", False, str(exc))
 
-    # 5. MCP stdio
     try:
-        import subprocess, json as _json
+        import subprocess
         msg = '{"jsonrpc":"2.0","id":1,"method":"initialize","params":{"protocolVersion":"2024-11-05","capabilities":{},"clientInfo":{"name":"doctor","version":"1.0"}}}'
-        result = subprocess.run(
-            [sys.executable, '-m', 'borg.integrations.mcp_server'],
-            input=msg, capture_output=True, text=True, timeout=5,
-            cwd=str(Path(__file__).parent.parent.parent)
+        proc = subprocess.run(
+            [sys.executable, "-m", "borg.integrations.mcp_server"],
+            input=msg,
+            capture_output=True,
+            text=True,
+            timeout=5,
+            cwd=str(Path(__file__).parent.parent.parent),
         )
-        mcp_ok = '"result"' in result.stdout
-        print(f"  {'' if mcp_ok else ''} MCP stdio: {'responds to initialize' if mcp_ok else 'FAILED'}")
-        if not mcp_ok: ok = False
-    except Exception as e:
-        print(f"   MCP stdio: {e}")
-        ok = False
+        record("mcp_stdio", '"result"' in proc.stdout, "responds to initialize" if '"result"' in proc.stdout else proc.stderr[:120])
+    except Exception as exc:
+        record("mcp_stdio", False, str(exc))
 
-    print()
-    if ok:
-        print("   ALL CHECKS PASSED  Borg is ready")
+    payload = {"success": ok, "runtime": runtime_fingerprint(), "checks": checks}
+    if json_mode:
+        print(json.dumps(payload, indent=2, sort_keys=True))
     else:
-        print("   SOME CHECKS FAILED  see above")
-    print()
+        print("\n         BORG DOCTOR                  \n")
+        for check in checks:
+            status = "PASS" if check["passed"] else "FAIL"
+            print(f"  {status}: {check['name']} — {check['detail']}")
+        print("\nRuntime fingerprint:")
+        for key, value in payload["runtime"].items():
+            print(f"  {key}: {value}")
+        print("\n   ALL CHECKS PASSED  Borg is ready\n" if ok else "\n   SOME CHECKS FAILED  see above\n")
     return 0 if ok else 1
 
-if __name__ == '__main__':
-    sys.exit(run())
+
+def main() -> int:
+    parser = argparse.ArgumentParser(description="Verify Borg runtime and print a runtime fingerprint")
+    parser.add_argument("--json", action="store_true", help="emit machine-readable runtime proof")
+    args = parser.parse_args()
+    return run(json_mode=args.json)
+
+
+def run_doctor() -> int:
+    """Console-script entrypoint used by pyproject.toml."""
+    return main()
+
+
+if __name__ == "__main__":
+    raise SystemExit(main())

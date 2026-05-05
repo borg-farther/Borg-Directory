@@ -551,10 +551,15 @@ class TestMCPToolsList:
         req = minimal_request("tools/list", {}, req_id=4)
         resp = mcp_module.handle_request(req)
         # Count tools from TOOLS list (borg_search, borg_pull, borg_try, borg_init,
-        # borg_apply, borg_publish, borg_feedback, borg_suggest, borg_observe,
-        # borg_convert, borg_generate x2, borg_context, borg_recall, borg_record_failure,
-        # borg_delete_failure, borg_reputation, borg_analytics, borg_dashboard, borg_dojo)
-        assert len(resp["result"]["tools"]) == 21
+        # borg_apply, borg_publish, borg_feedback, borg_suggest, borg_rescue,
+        # borg_observe, borg_convert, borg_generate x2, borg_context, borg_recall,
+        # borg_record_failure, borg_delete_failure, borg_reputation, borg_analytics,
+        # borg_dashboard, borg_dojo)
+        assert len(resp["result"]["tools"]) == 22
+
+
+class TestMCPToolsV3Schema(TestMCPToolsList):
+    """Backward-compatible test class name for exact node-id gates."""
 
 
 class TestBorgV3EndToEnd:

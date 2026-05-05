@@ -140,6 +140,27 @@ def test_list_dispatches_to_action_list(mock_list):
     mock_list.assert_called_once()
 
 
+def test_rescue_command_returns_agent_visible_packet():
+    code, out, err = capture_main(["rescue", "ModuleNotFoundError: No module named flask", "--short"])
+
+    assert code == 0
+    assert "BORG RESCUE" in out
+    assert "ACTION" in out
+    assert "STOP" in out
+    assert "VERIFY" in out
+    assert "HUMAN RECEIPT" in out
+
+
+def test_rescue_command_json_fails_closed_on_unknown():
+    code, out, err = capture_main(["rescue", "error[E0382]: borrow of moved value", "--json", "--short"])
+    data = json.loads(out)
+
+    assert code == 1
+    assert data["success"] is False
+    assert data["status"] == "no_confident_match"
+    assert data["automation_policy"]["fail_closed"] is True
+
+
 # ---------------------------------------------------------------------------
 # Help text tests
 # ---------------------------------------------------------------------------
@@ -147,7 +168,7 @@ def test_list_dispatches_to_action_list(mock_list):
 def test_help_text_shows_all_commands():
     code, out, err = capture_main(["--help"])
     assert code == 0
-    for cmd in ["search", "pull", "try", "init", "apply", "publish", "feedback", "convert", "list", "autopilot", "version"]:
+    for cmd in ["search", "pull", "try", "init", "apply", "publish", "feedback", "debug", "rescue", "convert", "list", "autopilot", "version"]:
         assert cmd in out, f"'{cmd}' not found in help output"
 
 

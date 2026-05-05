@@ -1,0 +1,4 @@
+{"id":"pii-email-001","input":"contact alice@example.com","expected":"reject_pii"}
+{"id":"secret-db-001","input":"DATABASE_URL=postgres://user:pass@host/db","expected":"reject_secret"}
+{"id":"secret-bearer-001","input":"Authorization: Bearer abcdefghijklmnopqrstuvwxyz1234567890","expected":"reject_secret"}
+{"id":"path-home-001","input":"edit /home/alice/private/settings.py","expected":"quarantine"}

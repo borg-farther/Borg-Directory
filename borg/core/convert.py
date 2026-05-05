@@ -22,6 +22,7 @@ import yaml
 from typing import Any, Dict, List, Tuple
 
 from borg.core.schema import parse_skill_frontmatter, sections_to_phases
+from borg.core.privacy import privacy_redact
 
 
 # --------------------------------------------------------------------------
@@ -617,7 +618,9 @@ def convert_pack_to_openclaw_ref(pack: dict) -> str:
                 lines.append(pl)
             lines.append("")
 
-    return "\n".join(lines)
+    # OpenClaw reference files are distribution artifacts; redact accidental
+    # emails/tokens/secrets even if source packs contain illustrative examples.
+    return privacy_redact("\n".join(lines))
 
 
 def generate_pack_index(packs: list) -> str:
@@ -635,7 +638,11 @@ def generate_pack_index(packs: list) -> str:
     lines.append("| Pack | Problem Class | Confidence | Use When |")
     lines.append("|------|-------------|-----------|----------|")
 
-    for pack in packs:
+    for item in packs:
+        # Accept both raw pack dicts and (path, pack) pairs from test/load helpers.
+        pack = item[1] if isinstance(item, tuple) and len(item) >= 2 else item
+        if not isinstance(pack, dict):
+            continue
         slug = _extract_slug(pack.get("id", ""))
         
         # Problem class
@@ -684,7 +691,11 @@ def _generate_quick_reference(packs: list) -> str:
     
     # Group by problem class for a cleaner presentation
     by_class: Dict[str, list] = {}
-    for pack in packs:
+    for item in packs:
+        # Accept both raw pack dicts and (path, pack) pairs from test/load helpers.
+        pack = item[1] if isinstance(item, tuple) and len(item) >= 2 else item
+        if not isinstance(pack, dict):
+            continue
         slug = _extract_slug(pack.get("id", ""))
         provenance = pack.get("provenance", {})
         confidence = "unknown"
@@ -840,7 +851,11 @@ def convert_registry_to_openclaw(packs: list, output_dir: str) -> dict:
     
     # 3. Convert each pack to a reference file
     pack_refs: Dict[str, str] = {}
-    for pack in packs:
+    for item in packs:
+        # Accept both raw pack dicts and (path, pack) pairs from test/load helpers.
+        pack = item[1] if isinstance(item, tuple) and len(item) >= 2 else item
+        if not isinstance(pack, dict):
+            continue
         pack_id = pack.get("id", "")
         slug = _extract_slug(pack_id)
         

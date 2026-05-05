@@ -1,0 +1,154 @@
+{
+  "all_pass": true,
+  "ready_for_10": true,
+  "ready_for_100": true,
+  "ready_for_1000": true,
+  "run_parameters": {
+    "soak_duration_seconds": 5.0
+  },
+  "steps": [
+    {
+      "cmd": [
+        "/root/.hermes/hermes-agent/venv/bin/python",
+        "-m",
+        "pytest",
+        "-q",
+        "borg/tests/test_version_consistency.py",
+        "borg/tests/test_distribution_readiness.py",
+        "borg/tests/test_runtime_doctor.py"
+      ],
+      "name": "version_distribution_tests",
+      "rc": 0,
+      "started": "2026-05-04T12:07:43.452326+00:00",
+      "stderr": "",
+      "stdout": "......                                                                   [100%]\n6 passed in 0.06s\n"
+    },
+    {
+      "cmd": [
+        "/root/.hermes/hermes-agent/venv/bin/python",
+        "-m",
+        "pytest",
+        "-q",
+        "borg/tests/test_atom_tenant.py",
+        "borg/tests/test_atom_policy.py",
+        "borg/tests/test_learning_atoms.py",
+        "borg/tests/test_atom_store.py",
+        "borg/tests/test_atom_retrieval_firewall.py",
+        "borg/tests/test_learning_atom_publish.py",
+        "borg/tests/test_cli_atom.py",
+        "borg/tests/test_privacy_structured.py",
+        "borg/tests/test_prompt_injection.py",
+        "borg/tests/test_privacy.py"
+      ],
+      "name": "atom_security_tests",
+      "rc": 0,
+      "started": "2026-05-04T12:07:44.070343+00:00",
+      "stderr": "",
+      "stdout": "........................................................................ [ 82%]\n...............                                                          [100%]\n87 passed in 0.29s\n"
+    },
+    {
+      "cmd": [
+        "/root/.hermes/hermes-agent/venv/bin/python",
+        "scripts/security_gate_check.py"
+      ],
+      "name": "security_gate",
+      "rc": 0,
+      "started": "2026-05-04T12:07:44.888454+00:00",
+      "stderr": "",
+      "stdout": "PASS: Borg security hardening policy gate\n"
+    },
+    {
+      "cmd": [
+        "/root/.hermes/hermes-agent/venv/bin/python",
+        "scripts/run_atom_fixture_corpus.py"
+      ],
+      "name": "atom_fixture_corpus",
+      "rc": 0,
+      "started": "2026-05-04T12:07:44.945472+00:00",
+      "stderr": "",
+      "stdout": "{\n  \"success\": true,\n  \"total\": 10,\n  \"failed\": []\n}\n"
+    },
+    {
+      "cmd": [
+        "/root/.hermes/hermes-agent/venv/bin/python",
+        "eval/load_soak.py",
+        "--users",
+        "10",
+        "--duration",
+        "5.0"
+      ],
+      "name": "load_10",
+      "rc": 0,
+      "started": "2026-05-04T12:07:45.032511+00:00",
+      "stderr": "",
+      "stdout": "{\n  \"concurrency_model\": \"asyncio_logical_users\",\n  \"duration_seconds\": 5.0,\n  \"failures\": 0,\n  \"latency_ms\": {\n    \"avg\": 0.4510107580075684,\n    \"max\": 0.8086608722805977,\n    \"p50\": 0.4216190427541733,\n    \"p95\": 0.6029137410223484,\n    \"p99\": 0.6239618547260761\n  },\n  \"operation\": \"learning_atom_retrieval_firewall_privacy_prompt_scan\",\n  \"passed\": true,\n  \"per_user_min_requests\": 1091,\n  \"requests_per_second\": 2182.6,\n  \"sample_failures\": [],\n  \"success_rate\": 1.0,\n  \"successes\": 10913,\n  \"thresholds\": {\n    \"min_requests_per_user\": 1.0,\n    \"p95_ms_max\": 2000.0,\n    \"p99_ms_max\": 4000.0,\n    \"success_rate_min\": 0.95\n  },\n  \"timestamp\": \"2026-05-04T12:07:50.113051+00:00\",\n  \"total_requests\": 10913,\n  \"users\": 10\n}\n"
+    },
+    {
+      "cmd": [
+        "/root/.hermes/hermes-agent/venv/bin/python",
+        "eval/load_soak.py",
+        "--users",
+        "100",
+        "--duration",
+        "5.0"
+      ],
+      "name": "load_100",
+      "rc": 0,
+      "started": "2026-05-04T12:07:50.128599+00:00",
+      "stderr": "",
+      "stdout": "{\n  \"concurrency_model\": \"asyncio_logical_users\",\n  \"duration_seconds\": 5.0,\n  \"failures\": 0,\n  \"latency_ms\": {\n    \"avg\": 0.4317989712260868,\n    \"max\": 1.608048565685749,\n    \"p50\": 0.40837982669472694,\n    \"p95\": 0.5782860796898603,\n    \"p99\": 0.6126944534480573\n  },\n  \"operation\": \"learning_atom_retrieval_firewall_privacy_prompt_scan\",\n  \"passed\": true,\n  \"per_user_min_requests\": 111,\n  \"requests_per_second\": 2239.8,\n  \"sample_failures\": [],\n  \"success_rate\": 1.0,\n  \"successes\": 11199,\n  \"thresholds\": {\n    \"min_requests_per_user\": 1.0,\n    \"p95_ms_max\": 1000.0,\n    \"p99_ms_max\": 3000.0,\n    \"success_rate_min\": 0.95\n  },\n  \"timestamp\": \"2026-05-04T12:07:55.211079+00:00\",\n  \"total_requests\": 11199,\n  \"users\": 100\n}\n"
+    },
+    {
+      "cmd": [
+        "/root/.hermes/hermes-agent/venv/bin/python",
+        "eval/load_soak.py",
+        "--users",
+        "1000",
+        "--duration",
+        "5.0"
+      ],
+      "name": "load_1000",
+      "rc": 0,
+      "started": "2026-05-04T12:07:55.228073+00:00",
+      "stderr": "",
+      "stdout": "{\n  \"concurrency_model\": \"asyncio_logical_users\",\n  \"duration_seconds\": 5.0,\n  \"failures\": 0,\n  \"latency_ms\": {\n    \"avg\": 0.47556916532380583,\n    \"max\": 1.7244392074644566,\n    \"p50\": 0.4644892178475857,\n    \"p95\": 0.6138130091130733,\n    \"p99\": 0.6562628224492074\n  },\n  \"operation\": \"learning_atom_retrieval_firewall_privacy_prompt_scan\",\n  \"passed\": true,\n  \"per_user_min_requests\": 10,\n  \"requests_per_second\": 2024.6,\n  \"sample_failures\": [],\n  \"success_rate\": 1.0,\n  \"successes\": 10123,\n  \"thresholds\": {\n    \"min_requests_per_user\": 1.0,\n    \"p95_ms_max\": 500.0,\n    \"p99_ms_max\": 1500.0,\n    \"success_rate_min\": 0.99\n  },\n  \"timestamp\": \"2026-05-04T12:08:00.350199+00:00\",\n  \"total_requests\": 10123,\n  \"users\": 1000\n}\n"
+    },
+    {
+      "cmd": [
+        "/root/.hermes/hermes-agent/venv/bin/python",
+        "-m",
+        "pytest",
+        "-q",
+        "eval/tests/test_readiness_1000.py"
+      ],
+      "name": "readiness_1000_tests",
+      "rc": 0,
+      "started": "2026-05-04T12:08:00.374067+00:00",
+      "stderr": "",
+      "stdout": ".....                                                                    [100%]\n5 passed in 0.03s\n"
+    },
+    {
+      "cmd": [
+        "/root/.hermes/hermes-agent/venv/bin/python",
+        "eval/uat_scoreboard.py"
+      ],
+      "name": "scoreboard_final",
+      "rc": 0,
+      "started": "2026-05-04T12:08:01.215079+00:00",
+      "stderr": "",
+      "stdout": "/root/hermes-workspace/borg/PROJECT_STATUS.md\n/root/hermes-workspace/borg/eval/uat_scoreboard_snapshot.json\n"
+    },
+    {
+      "cmd": [
+        "/root/.hermes/hermes-agent/venv/bin/python",
+        "eval/uat_scoreboard.py"
+      ],
+      "name": "scoreboard_after_decision",
+      "rc": 0,
+      "started": "2026-05-04T12:08:01.330786+00:00",
+      "stderr": "",
+      "stdout": "/root/hermes-workspace/borg/PROJECT_STATUS.md\n/root/hermes-workspace/borg/eval/uat_scoreboard_snapshot.json\n"
+    }
+  ],
+  "timestamp": "2026-05-04T12:08:01.327965+00:00"
+}
