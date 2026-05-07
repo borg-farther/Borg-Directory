@@ -1704,6 +1704,111 @@ def _maybe_rebuild_index():
     except Exception:
         pass
 
+def _no_confident_match_response(tech: str = "") -> str:
+    """Honest fail-closed response when Borg has no trustworthy match."""
+    tech_display = tech or "this task"
+    return (
+        f"ACTION: proceed with normal debugging for {tech_display}; Borg has no proven cache hit.\n\n"
+        "STOP: do not force a weak or unrelated pack onto this task.\n\n"
+        "VERIFY: collect the exact failing command/output and rerun borg_observe or borg_rescue only if new evidence appears.\n\n"
+        "CONFIDENCE: BORG [NO CONFIDENT MATCH] -- no relevant traces, synthetic hits, or pack matches.\n\n"
+        f"NO_CONFIDENT_MATCH: No confident Borg match for {tech_display}.\n"
+        "Borg found no relevant real traces, synthetic hits, or exact pack class match.\n"
+        "Proceed with normal reasoning; do not treat Borg as evidence for this task.\n"
+        "After resolving: call borg_rate(helpful=True) only if Borg guidance was actually useful."
+    )
+
+
+def _trace_match_is_confident(trace: dict, min_similarity: float = 0.45) -> bool:
+    """Reject explicit low-similarity or content-free hits before rendering guidance."""
+    if not isinstance(trace, dict):
+        return False
+    similarity = trace.get("similarity")
+    if similarity is not None:
+        try:
+            if float(similarity) < min_similarity:
+                return False
+        except (TypeError, ValueError):
+            return False
+    match_score = trace.get("match_score")
+    if match_score is not None:
+        try:
+            if float(match_score) <= 0:
+                return False
+        except (TypeError, ValueError):
+            return False
+    return bool(
+        str(trace.get("causal_intervention") or "").strip()
+        or str(trace.get("approach_summary") or "").strip()
+        or str(trace.get("root_cause") or "").strip()
+    )
+
+
+def _trace_db_path() -> str:
+    """Return the trace database path using the same source of truth as traces.py."""
+    from borg.core.traces import TRACE_DB_PATH
+    return str(TRACE_DB_PATH)
+
+
+def _extract_verify_from_trace(trace: dict) -> str:
+    """Produce a deterministic verification step from a matched trace."""
+    if not isinstance(trace, dict):
+        return "rerun the exact failing command and the smallest regression test"
+    files_modified = trace.get("files_modified") or trace.get("key_files") or ""
+    if isinstance(files_modified, list) and files_modified:
+        return f"rerun the failing command and inspect changed file {files_modified[0]}"
+    if isinstance(files_modified, str) and files_modified.strip() and files_modified.strip() != "[]":
+        return "rerun the failing command and verify the touched files still match the fix"
+    errors = trace.get("errors_encountered") or trace.get("error_patterns") or ""
+    if errors:
+        return "rerun the exact command that produced the matched error pattern"
+    return "rerun the exact failing command and the smallest regression test"
+
+
+def _pack_match_is_confident(query: str, pack: dict) -> bool:
+    """Return True only for exact/lexically strong pack matches."""
+    import re as _re
+
+    if not isinstance(pack, dict):
+        return False
+    query_l = (query or "").lower()
+    if not query_l.strip():
+        return False
+
+    name = str(pack.get("name") or pack.get("id") or "").lower()
+    problem_class = str(pack.get("problem_class") or "").lower()
+    tags = " ".join(str(t).lower() for t in (pack.get("tags") or []))
+    class_text = " ".join([name.replace("-", " "), problem_class.replace("_", " "), tags])
+
+    permission_pack = (
+        "permission" in class_text
+        or "eacces" in class_text
+        or "operation not permitted" in class_text
+    )
+    if permission_pack:
+        return bool(_re.search(
+            r"permission\s+denied|eacces|operation\s+not\s+permitted|read[- ]only\s+file\s*system|chmod\b|access\s+denied",
+            query_l,
+        ))
+
+    stopwords = {
+        "a", "an", "the", "all", "for", "to", "of", "in", "on", "and", "or",
+        "build", "fix", "audit", "make", "create", "update", "task", "error",
+    }
+    query_terms = {
+        t for t in _re.findall(r"[a-z0-9_+-]{3,}", query_l)
+        if t not in stopwords
+    }
+    pack_terms = {
+        t for t in _re.findall(r"[a-z0-9_+-]{3,}", class_text)
+        if t not in stopwords
+    }
+    if not query_terms or not pack_terms:
+        return False
+    overlap = query_terms & pack_terms
+    return len(overlap) >= 2
+
+
 def borg_rescue(input: str = "", source: str = "mcp", show_guidance: bool = True) -> str:
     """Return an agent-ready day-one rescue packet as JSON."""
     try:
@@ -1781,6 +1886,10 @@ def borg_observe(task: str = "", context: str = "", context_dict: dict = None, p
             positive_traces = TraceMatcher().find_relevant(task=task, error=context, top_k=3)
         except Exception:
             pass
+
+    # Fail closed on explicit low-confidence semantic trace hits before any
+    # rendering path can turn them into ACTION/WHAT WORKED guidance.
+    positive_traces = [t for t in (positive_traces or []) if _trace_match_is_confident(t)]
 
     #  Dead-end intent override 
     # If agent explicitly mentions a known dead-end in their query,
@@ -1864,8 +1973,9 @@ def borg_observe(task: str = "", context: str = "", context_dict: dict = None, p
                        tech in str(m.get('technology', '')).lower() or
                        tech in str(m.get('name', '')).lower() or
                        tech in str(m.get('solution', '')).lower()[:100]]
-        if not pack_matches:  # fall back to all if tech filter eliminates everything
-            pack_matches = pack_matches_all
+        # Do not fall back to all packs when the domain filter eliminates them:
+        # that is exactly how unrelated seed guidance leaked into observe.
+        pack_matches = [m for m in pack_matches if _pack_match_is_confident(query, m)]
         if pack_matches:
             best_pack = pack_matches[0]
             solution = best_pack.get('solution', '').strip()
@@ -1878,12 +1988,7 @@ def borg_observe(task: str = "", context: str = "", context_dict: dict = None, p
         logger.debug(f"borg_observe: pack guidance failed: {e}")
 
     if not has_guidance:
-        tech_display = tech or 'this domain'
-        return (
-            f"BORG: No collective data for {tech_display} yet  proceeding without guidance.\n"
-            f"After resolving this issue: call borg_rate(helpful=True) to contribute.\n"
-            f"Your session will seed guidance for future agents."
-        )
+        return _no_confident_match_response(tech)
 
     # ---- Build confidence header ----
     raw_detail_text = '\n'.join(raw_detail_parts)
@@ -1913,8 +2018,7 @@ def borg_observe(task: str = "", context: str = "", context_dict: dict = None, p
         if not _action and tech:
             try:
                 import sqlite3 as _sq2
-                from borg.core.traces import TRACE_DB_PATH as _DBP2
-                _db3 = _sq2.connect(_DBP2)
+                _db3 = _sq2.connect(_trace_db_path())
                 _row = _db3.execute(
                     "SELECT causal_intervention, approach_summary, root_cause FROM traces "
                     "WHERE technology=? AND outcome IN ('success','fixed','partial') "
@@ -1930,11 +2034,21 @@ def borg_observe(task: str = "", context: str = "", context_dict: dict = None, p
             out.append(f"ACTION: {_action[:150]}")
             out.append("")
 
-    # 2. STOP WARNING  only real failure patterns
+    # 2. VERIFY  always present for first-user contract
+    pack_matches_available = bool(locals().get('pack_matches'))
+    if positive_traces:
+        _verify = _extract_verify_from_trace(positive_traces[0])
+    elif pack_matches_available:
+        _verify = "execute the pack's first checkpoint, then rerun the exact failing command"
+    else:
+        _verify = "rerun the exact failing command and the smallest regression test"
+    out.append(f"VERIFY: {_verify[:150]}")
+    out.append("")
+
+    # 3. STOP WARNING  only real failure patterns
     try:
         import sqlite3 as _sq
-        from borg.core.traces import TRACE_DB_PATH as _DBP
-        _db2 = _sq.connect(_DBP)
+        _db2 = _sq.connect(_trace_db_path())
         _fails = _db2.execute(
             "SELECT approach_summary, root_cause FROM traces "
             "WHERE technology=? AND outcome='failure' "
@@ -2076,8 +2190,8 @@ def _build_confidence_header(tech: str, task: str) -> str:
     if not tech or not tech.strip():
         return "BORG [SYNTHETIC ONLY]\nReal traces: 0 | Synthetic: 0\nNo domain detected.\n" + "\u2500" * 50
 
-    db_path = _os.path.expanduser('~/.borg/traces.db')
     try:
+        db_path = _trace_db_path()
         _db = _sqlite3.connect(db_path)
         _db.row_factory = _sqlite3.Row
         _stats = _db.execute("""
