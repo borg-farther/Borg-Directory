@@ -919,9 +919,15 @@ class TestBorgObserveErrors(unittest.TestCase):
     """Test borg_observe error paths and branches."""
 
     def test_observe_empty_task_returns_empty_string(self):
-        """Test borg_observe with empty task returns empty string."""
+        """Empty task has no signal; borg_observe returns the NO_CONFIDENT_MATCH envelope.
+
+        Pre-slice-(a) contract was empty-string return; current contract is the
+        ACTION/STOP/VERIFY/CONFIDENCE/NO_CONFIDENT_MATCH text envelope. Test name
+        retained for git-history continuity.
+        """
         result = borg_observe(task="")
-        self.assertEqual(result, "")
+        self.assertIsInstance(result, str)
+        self.assertIn("NO_CONFIDENT_MATCH", result)
 
     def test_observe_classify_task_import_error(self):
         """Test borg_observe handles ImportError from classify_task."""
@@ -952,11 +958,15 @@ class TestBorgObserveErrors(unittest.TestCase):
                     task="fix TypeError in auth",
                     context_dict=context_dict,
                 )
-                try:
-                    parsed = json.loads(result)
-                except (json.JSONDecodeError, TypeError):
-                    parsed = {"raw": result}
-                self.assertTrue(parsed.get("success"))
+                # Post-slice-(a) contract: borg_observe returns a text envelope,
+                # not JSON. The v3 path may render seed-corpus guidance (with
+                # VERIFY+CONFIDENCE+WHAT_FAILED) or fall through to the no-match
+                # envelope; both are valid current behavior. Just assert no
+                # exception leak and a coherent string with the VERIFY+CONFIDENCE
+                # markers that all current paths emit.
+                self.assertIsInstance(result, str)
+                self.assertIn("VERIFY:", result)
+                self.assertIn("CONFIDENCE:", result)
 
     def test_observe_v3_path_exception_falls_back_to_v2(self):
         """Test borg_observe falls back to V2 search when V3 raises."""
@@ -979,13 +989,10 @@ class TestBorgObserveErrors(unittest.TestCase):
             with patch("borg.core.search.borg_search") as mock_search:
                 mock_search.return_value = json.dumps({"success": True, "matches": []})
                 result = borg_observe(task="xyzzy")
-                # Returns empty string or JSON with observed=False
-                if result:
-                    try:
-                        parsed = json.loads(result)
-                    except (json.JSONDecodeError, TypeError):
-                        parsed = {"raw": result}
-                    self.assertFalse(parsed.get("observed", True) if "observed" in parsed else True)
+                # Post-slice-(a) contract: empty matches → NO_CONFIDENT_MATCH envelope
+                # (text, not JSON).
+                self.assertIsInstance(result, str)
+                self.assertIn("NO_CONFIDENT_MATCH", result)
 
     def test_observe_with_failure_memory(self):
         """Test borg_observe includes failure memory warnings."""
@@ -1132,17 +1139,21 @@ class TestBorgObserveErrors(unittest.TestCase):
                         # Should not raise
 
     def test_observe_general_exception_returns_json(self):
-        """Test borg_observe catches general Exception and returns JSON (not raising)."""
+        """borg_observe catches a general Exception without propagating; returns text envelope.
+
+        Pre-slice-(a) contract was a JSON `{"success": true, "observed": false}`
+        object on caught exceptions. Current contract is a text envelope
+        (the exception path may surface seed-corpus guidance or the no-match
+        envelope depending on what completed before classify_task raised; both
+        emit VERIFY + CONFIDENCE markers). Test name retained for git-history
+        continuity.
+        """
         with patch("borg.core.search.classify_task") as mock_classify:
             mock_classify.side_effect = RuntimeError("unexpected error")
             result = borg_observe(task="fix bug")
-            try:
-                parsed = json.loads(result)
-            except (json.JSONDecodeError, TypeError):
-                parsed = {"raw": result}
-            # Returns success=True, observed=False
-            self.assertTrue(parsed.get("success"))
-            self.assertFalse(parsed.get("observed"))
+            self.assertIsInstance(result, str)
+            self.assertIn("VERIFY:", result)
+            self.assertIn("CONFIDENCE:", result)
 
     def test_observe_with_context_prompts(self):
         """Test borg_observe evaluates context_prompts in phases."""
