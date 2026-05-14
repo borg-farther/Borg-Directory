@@ -1,0 +1,57 @@
+{
+  "generated_at_utc": "2026-05-14T14:48:00Z",
+  "outstanding_public_launch_blockers": [
+    {
+      "id": "PL-01",
+      "name": "live_mcp_runtime_identity",
+      "status": "BLOCKED",
+      "can_be_completed_autonomously": false,
+      "reason": "Requires explicit supervised reload/canary of live MCP; autonomous mode must not restart/kill/signal gateway or MCP."
+    },
+    {
+      "id": "PL-02",
+      "name": "repo_hygiene_release_branch",
+      "status": "BLOCKED",
+      "can_be_completed_autonomously": "partially",
+      "reason": "Current tree has unrelated dirty/generated changes; safe artifacts/runbook created, but destructive cleanup and staging require review."
+    },
+    {
+      "id": "PL-03",
+      "name": "first_10_real_users",
+      "status": "BLOCKED",
+      "can_be_completed_autonomously": false,
+      "reason": "Requires real external users; fabricated/simulated rows are forbidden. Scoreboard template created with verified_external_users=0."
+    },
+    {
+      "id": "PL-04",
+      "name": "external_clean_install_pipx_proof",
+      "status": "OPEN",
+      "can_be_completed_autonomously": "needs clean external host/container availability",
+      "reason": "Local fresh venv passed; external pipx/PyPI path still needs proof."
+    },
+    {
+      "id": "PL-05",
+      "name": "github_admin_push_path",
+      "status": "OPEN",
+      "can_be_completed_autonomously": false,
+      "reason": "Prior GitHub operations hit 403; needs correct borg-farther token/admin scope and operator approval before push/visibility operations."
+    },
+    {
+      "id": "PL-06",
+      "name": "manual_claims_review",
+      "status": "OPEN",
+      "can_be_completed_autonomously": "partially",
+      "reason": "Automated scan passed with review-needed findings; final public copy needs human review before launch."
+    }
+  ],
+  "implemented_this_turn": [
+    "eval/first_10_user_scoreboard.json",
+    "docs/20260514_BORG_PUBLIC_LAUNCH_BLOCKER_BOARD.md",
+    "docs/20260514_BORG_RELEASE_BRANCH_CLEANUP_RUNBOOK.md"
+  ],
+  "current_launch_verdict": {
+    "supervised_first_user": "YES_WITH_CAVEATS",
+    "public_waitlist_narrow_beta": "NO",
+    "public_self_serve_launch": "NO"
+  }
+}

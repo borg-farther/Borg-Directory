@@ -1,0 +1,171 @@
+{
+  "generated_at_utc": "2026-05-14T14:41:45Z",
+  "source_plan": ".hermes/plans/2026-05-14_1436-borg-public-launch-readiness.md",
+  "verdicts": {
+    "PUBLIC_WAITLIST_NARROW_BETA": "NO",
+    "PUBLIC_SELF_SERVE_LAUNCH": "NO"
+  },
+  "gates": {
+    "live_mcp_runtime_identity": {
+      "status": "BLOCKED",
+      "evidence": [
+        "Source/fresh-process tests pass: True",
+        "Fresh-process source canary pass: True",
+        "No live MCP reload/canary was performed by design."
+      ],
+      "blockers": [
+        "Requires explicit approved live MCP/Hermes reload window and live served canary; do not claim live MCP fixed without reload."
+      ],
+      "exact_next_action": "Get explicit approval for a supervised reload, reload live MCP without killing gateway, then run live borg_runtime_fingerprint plus live borg_observe unrelated/permission canaries."
+    },
+    "repo_hygiene_release_branch": {
+      "status": "BLOCKED",
+      "evidence": [
+        "git status/diff captured in command log; working tree has many modified/deleted build/dist files and staged generated files.",
+        "git diff --stat reports large build/lib and dist deletions; git diff --cached --stat includes generated dashboard/security files."
+      ],
+      "blockers": [
+        "Dirty tree is not a surgical public-readiness release branch; build/dist side effects need review/restoration; no push/admin check performed."
+      ],
+      "exact_next_action": "Create/checkout a clean release branch, restore accidental build/dist deletions or deliberately ignore generated dirs, stage only reviewed public-readiness docs/eval/source changes, then rerun git status/diff."
+    },
+    "self_serve_install_proof": {
+      "status": "PASS",
+      "evidence": [
+        "eval/run_first_user_release_gate.py rc=0",
+        "Fresh venv local wheel install, borg --version, borg rescue text/json, borg-doctor --json, setup-claude verify all passed in release gate output."
+      ],
+      "blockers": [],
+      "exact_next_action": "Repeat from a clean external clone/PyPI or pipx path before broad public claim; record full transcript and version consistency."
+    },
+    "public_security_baseline": {
+      "status": "PASS",
+      "evidence": [
+        "python scripts/security_gate_check.py rc=0",
+        "privacy/prompt-injection/atom policy/firewall pytest rc=0"
+      ],
+      "blockers": [],
+      "exact_next_action": "Before public launch, add/attach reviewed external dependency/static/secret scan artifacts and confirm consent/redaction/revocation language in onboarding."
+    },
+    "claims_docs_scrub": {
+      "status": "PASS",
+      "evidence": [
+        "Claim scrub found 13 review-needed phrase occurrences; no clearly unsupported launch/adoption claim was identified by automated review.",
+        "Hits for \u201chundreds of users\u201d and \u201cproven collective intelligence\u201d occur in the new plan as forbidden examples (\u201cno \u2026\u201d), not as claims.",
+        "Hits for \u201cpublic launch ready\u201d/\u201cproduction ready\u201d are mostly negative caveats; docs/DEFI_AGENT_RESEARCH.md \u201cDaily Active Users\u201d is a DeFi research note and should be manually reviewed before public packaging."
+      ],
+      "blockers": [],
+      "exact_next_action": "Manually review scan findings and keep public copy saying controlled beta / supervised only until live and first-10 gates pass."
+    },
+    "first_10_real_users": {
+      "status": "BLOCKED",
+      "evidence": [
+        "eval/borg_proof_dashboard.json metrics.verified_external_users=0",
+        "docs/FIRST_10_BETA_READINESS.md present; status says pre-first-user beta contract, not real-user evidence",
+        "Verified real users kept at 0; no hard evidence artifact proving real external users was found."
+      ],
+      "blockers": [
+        "No first-10 real-user outcomes exist. Simulated/logical users are excluded."
+      ],
+      "exact_next_action": "Invite first external users under consented narrow beta, record install/rescue/MCP outcomes in first-10 scoreboard, require >=8/10 install success and >=6/10 useful rescue before self-serve launch."
+    }
+  },
+  "fresh_process_source_canary": {
+    "unrelated_readiness": {
+      "first_1000_chars": "ACTION: proceed with normal debugging for python; Borg has no proven cache hit.\n\nSTOP: do not force a weak or unrelated pack onto this task.\n\nVERIFY: collect the exact failing command/output and rerun borg_observe or borg_rescue only if new evidence appears.\n\nCONFIDENCE: BORG [NO CONFIDENT MATCH] -- no relevant traces, synthetic hits, or pack matches.\n\nNO_CONFIDENT_MATCH: No confident Borg match for python.\nBorg found no relevant real traces, synthetic hits, or exact pack class match.\nProceed with normal reasoning; do not treat Borg as evidence for this task.\nAfter resolving: call borg_rate(helpful=True) only if Borg guidance was actually useful.",
+      "length": 654,
+      "stale_guidance": false,
+      "no_confident_match": true,
+      "permission_guidance": false
+    },
+    "permission_denied": {
+      "first_1000_chars": "VERIFY: execute the pack's first checkpoint, then rerun the exact failing command\n\nCONFIDENCE: Real traces: 0 | Synthetic: 0 | BORG [SYNTHETIC ONLY]\n\n------------------------------------------------------------\nPACK GUIDANCE (bash-permission-denied)\n1. Check file permissions: ls -la <file>\n2. Add execute permission: chmod +x <script.sh>\n3. For directories: chmod +x <directory>\n4. Check ownership: ls -ln <file>\n5. Run as appropriate user: sudo <command>\n6. For SSH keys: chmod 600 ~/.ssh/id_rsa\n------------------------------------------------------------",
+      "length": 558,
+      "stale_guidance": false,
+      "no_confident_match": false,
+      "permission_guidance": true
+    }
+  },
+  "claims_scrub_findings": [
+    {
+      "path": "docs/20260504-0635_BORG_CURRENT_STATE_AND_OUTSTANDING_DEEP_DIVE.md",
+      "line": 20,
+      "phrase": "production ready",
+      "text": "   The safe atom substrate exists, but global/tenant promotion, sybil resistance, live adoption proof, full-suite green state, clean release packaging, and controlled utility eval are not done. Do not market as \u201cmassive-agent production ready\u201d or \u201cagent-level improvement proven.\u201d"
+    },
+    {
+      "path": "docs/20260513_BORG_MULTI_REPO_PRODUCTION_CLEANUP_CUTOVER_PROPOSAL.md",
+      "line": 337,
+      "phrase": "production ready",
+      "text": "Borg is **not done** and not broad-production ready."
+    },
+    {
+      "path": "docs/20260514_BORG_PRODUCTION_REBUILD_MASTER_PLAN.md",
+      "line": 725,
+      "phrase": "public launch ready",
+      "text": "- \u201cFully autonomous broad public launch ready.\u201d"
+    },
+    {
+      "path": "docs/20260514_BORG_PUBLIC_LAUNCH_READINESS_PLAN.md",
+      "line": 66,
+      "phrase": "proven collective intelligence",
+      "text": "  - no \u201cproven collective intelligence\u201d"
+    },
+    {
+      "path": "docs/20260514_BORG_PUBLIC_LAUNCH_READINESS_PLAN.md",
+      "line": 67,
+      "phrase": "hundreds of users",
+      "text": "  - no \u201chundreds of users\u201d unless verified"
+    },
+    {
+      "path": "docs/20260514_BORG_PUBLIC_LAUNCH_READINESS_PLAN.md",
+      "line": 68,
+      "phrase": "production ready",
+      "text": "  - no \u201cpublic production ready\u201d before Gate 6"
+    },
+    {
+      "path": "docs/BORG_PROOF_DASHBOARD.html",
+      "line": 6,
+      "phrase": "public launch ready",
+      "text": "<p class=\"note\"><strong>Ready to share Git now?</strong> YES, supervised only. Do not present as unattended or public launch ready. Capture real first-user outcome evidence immediately.</p>"
+    },
+    {
+      "path": "docs/BORG_PROOF_DASHBOARD.html",
+      "line": 26,
+      "phrase": "public launch ready",
+      "text": "**Ready to share Git now?** YES, supervised only \u2014 Do not present as unattended or public launch ready.; Capture real first-user outcome evidence immediately."
+    },
+    {
+      "path": "docs/BORG_PROOF_DASHBOARD.md",
+      "line": 14,
+      "phrase": "public launch ready",
+      "text": "**Ready to share Git now?** YES, supervised only \u2014 Do not present as unattended or public launch ready.; Capture real first-user outcome evidence immediately."
+    },
+    {
+      "path": "docs/DEFI_AGENT_RESEARCH.md",
+      "line": 249,
+      "phrase": "active users",
+      "text": "  - Daily Active Users: 31,172"
+    },
+    {
+      "path": "docs/public/proof-dashboard/index.html",
+      "line": 6,
+      "phrase": "public launch ready",
+      "text": "<p class=\"note\"><strong>Ready to share Git now?</strong> YES, supervised only. Do not present as unattended or public launch ready. Capture real first-user outcome evidence immediately.</p>"
+    },
+    {
+      "path": "docs/public/proof-dashboard/index.html",
+      "line": 26,
+      "phrase": "public launch ready",
+      "text": "**Ready to share Git now?** YES, supervised only \u2014 Do not present as unattended or public launch ready.; Capture real first-user outcome evidence immediately."
+    },
+    {
+      "path": "eval/borg_proof_dashboard.json",
+      "line": 313,
+      "phrase": "public launch ready",
+      "text": "      \"Do not present as unattended or public launch ready.\","
+    }
+  ],
+  "first_10_verified_real_users": 0,
+  "command_log_path": "eval/20260514_borg_public_launch_command_log.json"
+}

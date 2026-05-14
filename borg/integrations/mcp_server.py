@@ -455,6 +455,23 @@ TOOLS: List[Dict[str, Any]] = [
         },
     },
     {
+        "name": "borg_first_10",
+        "description": (
+            "Machine-readable first-10 beta readiness contract: seven gates, clean-user smoke path, "
+            "agent priming paragraph, feedback fields, and GO/NO-GO success metric."
+        ),
+        "inputSchema": {"type": "object", "properties": {}},
+    },
+    {
+        "name": "borg_runtime_fingerprint",
+        "description": (
+            "Report the exact loaded Borg MCP runtime path, source hashes, BORG_HOME, process id, "
+            "and a confidence-gate canary. Use this before any reload/cutover to prove what code "
+            "the served process is actually running. It performs no restart and no mutation."
+        ),
+        "inputSchema": {"type": "object", "properties": {}},
+    },
+    {
         "name": "borg_observe",
         "description": (
             "Silent observation: analyzes the current task and returns structural guidance from proven approaches. "
@@ -554,34 +571,6 @@ TOOLS: List[Dict[str, Any]] = [
                         "'claude-md' → CLAUDE.md (Claude Code), "
                         "'windsurfrules' → .windsurfrules (Windsurf), "
                         "'all' → all four formats at once."
-                    ),
-                    "default": "cursorrules",
-                },
-            },
-            "required": ["pack", "format"],
-        },
-    },
-    {
-        "name": "borg_generate",
-        "description": (
-            "Generate platform-specific rules files from a borg workflow pack. "
-            "Takes a pack name and outputs rules in the specified format native to each AI IDE platform "
-            "(Cursor, Cline, Claude Code, Windsurf)."
-        ),
-        "inputSchema": {
-            "type": "object",
-            "properties": {
-                "pack": {
-                    "type": "string",
-                    "description": "Pack name (e.g. 'systematic-debugging'). Must be available in local registry.",
-                },
-                "format": {
-                    "type": "string",
-                    "enum": ["cursorrules", "clinerules", "claude-md", "windsurfrules", "all"],
-                    "description": (
-                        "Output format. 'cursorrules' -> .cursorrules (Cursor), "
-                        "'clinerules' -> .clinerules (Cline), 'claude-md' -> CLAUDE.md (Claude Code), "
-                        "'windsurfrules' -> .windsurfrules (Windsurf), 'all' -> all four formats at once."
                     ),
                     "default": "cursorrules",
                 },
@@ -1705,43 +1694,13 @@ def _maybe_rebuild_index():
         pass
 
 def _no_confident_match_response(tech: str = "") -> str:
-    """Honest fail-closed response when Borg has no trustworthy match."""
-    tech_display = tech or "this task"
-    return (
-        f"ACTION: proceed with normal debugging for {tech_display}; Borg has no proven cache hit.\n\n"
-        "STOP: do not force a weak or unrelated pack onto this task.\n\n"
-        "VERIFY: collect the exact failing command/output and rerun borg_observe or borg_rescue only if new evidence appears.\n\n"
-        "CONFIDENCE: BORG [NO CONFIDENT MATCH] -- no relevant traces, synthetic hits, or pack matches.\n\n"
-        f"NO_CONFIDENT_MATCH: No confident Borg match for {tech_display}.\n"
-        "Borg found no relevant real traces, synthetic hits, or exact pack class match.\n"
-        "Proceed with normal reasoning; do not treat Borg as evidence for this task.\n"
-        "After resolving: call borg_rate(helpful=True) only if Borg guidance was actually useful."
-    )
+    from borg.core.confidence_gate import no_confident_match_response
+    return no_confident_match_response(tech)
 
 
-def _trace_match_is_confident(trace: dict, min_similarity: float = 0.45) -> bool:
-    """Reject explicit low-similarity or content-free hits before rendering guidance."""
-    if not isinstance(trace, dict):
-        return False
-    similarity = trace.get("similarity")
-    if similarity is not None:
-        try:
-            if float(similarity) < min_similarity:
-                return False
-        except (TypeError, ValueError):
-            return False
-    match_score = trace.get("match_score")
-    if match_score is not None:
-        try:
-            if float(match_score) <= 0:
-                return False
-        except (TypeError, ValueError):
-            return False
-    return bool(
-        str(trace.get("causal_intervention") or "").strip()
-        or str(trace.get("approach_summary") or "").strip()
-        or str(trace.get("root_cause") or "").strip()
-    )
+def _trace_match_is_confident(trace: dict, min_similarity: float = 0.45, query: str = "") -> bool:
+    from borg.core.confidence_gate import trace_match_is_confident
+    return trace_match_is_confident(trace, min_similarity=min_similarity, query=query)
 
 
 def _trace_db_path() -> str:
@@ -1766,47 +1725,23 @@ def _extract_verify_from_trace(trace: dict) -> str:
 
 
 def _pack_match_is_confident(query: str, pack: dict) -> bool:
-    """Return True only for exact/lexically strong pack matches."""
-    import re as _re
+    from borg.core.confidence_gate import pack_match_is_confident
+    return pack_match_is_confident(query, pack)
 
-    if not isinstance(pack, dict):
-        return False
-    query_l = (query or "").lower()
-    if not query_l.strip():
-        return False
 
-    name = str(pack.get("name") or pack.get("id") or "").lower()
-    problem_class = str(pack.get("problem_class") or "").lower()
-    tags = " ".join(str(t).lower() for t in (pack.get("tags") or []))
-    class_text = " ".join([name.replace("-", " "), problem_class.replace("_", " "), tags])
+def _strip_embedded_borg_guidance(message: str) -> str:
+    from borg.core.confidence_gate import strip_embedded_borg_guidance
+    return strip_embedded_borg_guidance(message)
 
-    permission_pack = (
-        "permission" in class_text
-        or "eacces" in class_text
-        or "operation not permitted" in class_text
-    )
-    if permission_pack:
-        return bool(_re.search(
-            r"permission\s+denied|eacces|operation\s+not\s+permitted|read[- ]only\s+file\s*system|chmod\b|access\s+denied",
-            query_l,
-        ))
 
-    stopwords = {
-        "a", "an", "the", "all", "for", "to", "of", "in", "on", "and", "or",
-        "build", "fix", "audit", "make", "create", "update", "task", "error",
-    }
-    query_terms = {
-        t for t in _re.findall(r"[a-z0-9_+-]{3,}", query_l)
-        if t not in stopwords
-    }
-    pack_terms = {
-        t for t in _re.findall(r"[a-z0-9_+-]{3,}", class_text)
-        if t not in stopwords
-    }
-    if not query_terms or not pack_terms:
-        return False
-    overlap = query_terms & pack_terms
-    return len(overlap) >= 2
+def _permission_guidance_matches_task(task: str, context: str = "") -> bool:
+    from borg.core.confidence_gate import permission_guidance_matches_task
+    return permission_guidance_matches_task(task, context)
+
+
+def _guidance_is_safe_to_inject(guidance: str, task: str, context: str = "") -> bool:
+    from borg.core.confidence_gate import guidance_is_safe_to_inject
+    return guidance_is_safe_to_inject(guidance, task, context)
 
 
 def borg_rescue(input: str = "", source: str = "mcp", show_guidance: bool = True) -> str:
@@ -1816,6 +1751,24 @@ def borg_rescue(input: str = "", source: str = "mcp", show_guidance: bool = True
 
         result = rescue(input, source=source or "mcp", show_guidance=bool(show_guidance))
         return json.dumps(result.to_dict(), ensure_ascii=False)
+    except Exception as e:
+        return json.dumps({"success": False, "error": str(e), "type": type(e).__name__})
+
+
+def borg_first_10() -> str:
+    """Return the first-10 beta readiness contract as JSON."""
+    try:
+        from borg.core.first_user_readiness import first_10_readiness_packet
+        return json.dumps(first_10_readiness_packet(), ensure_ascii=False)
+    except Exception as e:
+        return json.dumps({"success": False, "error": str(e), "type": type(e).__name__})
+
+
+def borg_runtime_fingerprint() -> str:
+    """Return exact loaded runtime paths/hashes plus a confidence-gate canary."""
+    try:
+        from borg.core.runtime_fingerprint import runtime_fingerprint_json
+        return runtime_fingerprint_json()
     except Exception as e:
         return json.dumps({"success": False, "error": str(e), "type": type(e).__name__})
 
@@ -1889,9 +1842,9 @@ def borg_observe(task: str = "", context: str = "", context_dict: dict = None, p
 
     # Fail closed on explicit low-confidence semantic trace hits before any
     # rendering path can turn them into ACTION/WHAT WORKED guidance.
-    positive_traces = [t for t in (positive_traces or []) if _trace_match_is_confident(t)]
+    positive_traces = [t for t in (positive_traces or []) if _trace_match_is_confident(t, query=query)]
 
-    #  Dead-end intent override 
+    #  Dead-end intent override
     # If agent explicitly mentions a known dead-end in their query,
     # force a STOP warning as the lead result regardless of semantic rank
     try:
@@ -2099,7 +2052,7 @@ def borg_observe(task: str = "", context: str = "", context_dict: dict = None, p
         out.append(raw_detail_text)
     out.append(divider)
 
-    #  Deterministic STOP injection (correct location) 
+    #  Deterministic STOP injection (correct location)
     import re as _re3
     _HARD = {
         r'sudo\s+npm': 'STOP: sudo npm creates root-owned node_modules, breaks ALL future npm. Fix: npm config set prefix ~/.npm-global',
@@ -2130,7 +2083,7 @@ def borg_rate(helpful: bool, trace_id: str = None, comment: str = "") -> str:
     try:
         _db_path = _os.path.expanduser(_os.environ.get('BORG_HOME', '~/.borg') + '/traces.db')
         _db = _sql.connect(_db_path)
-        
+
         # Get the most recently shown trace
         if trace_id:
             _tid = trace_id
@@ -2931,7 +2884,7 @@ def _timeout_handler(signum, frame):
 
 def call_tool(name: str, arguments: Dict[str, Any]) -> str:
     """Dispatch a tool call to the appropriate guild function. Returns JSON string.
-    
+
     All code paths return a JSON string (never raises). Tool execution is
     protected by a timeout to prevent hangs and rate limiting.
     """
@@ -3041,6 +2994,12 @@ def _call_tool_impl(name: str, arguments: Dict[str, Any]) -> str:
             source=arguments.get("source", "mcp"),
             show_guidance=arguments.get("show_guidance", True),
         )
+
+    elif name == "borg_first_10":
+        return borg_first_10()
+
+    elif name == "borg_runtime_fingerprint":
+        return borg_runtime_fingerprint()
 
     elif name == "borg_convert":
         return borg_convert(
@@ -3266,6 +3225,9 @@ def borg_observe(task: str = "", context: str = "", context_dict: dict = None, p
         if _re.search(_pat, _task_l) and 'STOP' not in result and 'AVOID' not in result:
             result = _stop_msg + '\n' + '-'*50 + '\n' + result
             break
+
+    if not _guidance_is_safe_to_inject(result, task, context):
+        result = _no_confident_match_response(_detect_technology(task, context))
 
     if not short:
         return result
