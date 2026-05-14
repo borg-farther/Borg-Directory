@@ -1,24 +1,24 @@
 # Approved do-it-all final status
 
-Generated: 2026-05-14T18:26:23Z
+Generated: 2026-05-14T18:26:27Z
 
 ## Verdict
 
-- **DONE/PARTIAL/BLOCKED:** IN_PROGRESS
-- **PUBLIC_WAITLIST_NARROW_BETA:** None
-- **PUBLIC_SELF_SERVE_LAUNCH:** None
+- **DONE/PARTIAL/BLOCKED:** DONE_WITH_CAVEATS
+- **PUBLIC_WAITLIST_NARROW_BETA:** YES
+- **PUBLIC_SELF_SERVE_LAUNCH:** NO
 - **live_mcp_runtime_identity:** HUMAN_BLOCKED (no live reload/canary allowed under safety rules)
 - **first_10_real_users:** HUMAN_BLOCKED (verified_external_users=0)
 
 ## Branch / commit / push
 
-- branch: `None`
-- commit attempted: None
-- commit rc: None
-- pushed: None
-- push rc: None
-- HEAD: `None`
-- ls-remote branch: ``
+- branch: `public-waitlist-readiness-20260514`
+- commit attempted: True
+- commit rc: 0
+- pushed: True
+- push rc: 0
+- HEAD: `bdbb4cc888ca465b13b6438153e1fb8f6b81dbd3`
+- ls-remote branch: `bdbb4cc888ca465b13b6438153e1fb8f6b81dbd3	refs/heads/public-waitlist-readiness-20260514`
 
 ## Gates
 
@@ -26,8 +26,8 @@ Generated: 2026-05-14T18:26:23Z
 - source canaries: PASS
 - pipx proof: PASS
 - security gate: PASS
-- staged diff allowlisted: None
-- `git diff --cached --check`: rc=None
+- staged diff allowlisted: True
+- `git diff --cached --check`: rc=0
 
 ## Artifacts
 
