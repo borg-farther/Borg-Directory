@@ -1,0 +1,51 @@
+{
+  "schema_version": 1,
+  "generated_at_utc": "2026-05-14T14:48:00Z",
+  "status": "pre_first_user_no_real_rows",
+  "purpose": "Hard evidence scoreboard for Borg first-10 external beta users. Empty rows are placeholders only and must never be counted as adoption.",
+  "truth_policy": {
+    "simulated_users_count_as_real": false,
+    "internal_sessions_count_as_real": false,
+    "maintainer_runs_count_as_real": false,
+    "verified_external_users": 0,
+    "public_self_serve_launch_allowed_before_thresholds": false
+  },
+  "thresholds": {
+    "min_install_successes_for_public_self_serve": 8,
+    "min_useful_rescue_moments_for_public_self_serve": 6,
+    "max_critical_privacy_security_failures": 0,
+    "required_total_real_users": 10
+  },
+  "columns": [
+    "user_id_pseudonym",
+    "external_user_evidence_uri",
+    "consent_confirmed",
+    "install_method",
+    "install_success",
+    "time_to_first_rescue_minutes",
+    "rescue_input_redacted",
+    "rescue_returned_action_stop_verify",
+    "rescue_useful",
+    "mcp_setup_attempted",
+    "mcp_setup_success",
+    "no_confident_match_when_unknown",
+    "blocker_category",
+    "blocker_notes_redacted",
+    "privacy_security_incident",
+    "repeat_use_within_7_days",
+    "outcome_recorded"
+  ],
+  "rows": [],
+  "current_counts": {
+    "real_users": 0,
+    "install_successes": 0,
+    "useful_rescue_moments": 0,
+    "critical_privacy_security_failures": 0,
+    "repeat_use_within_7_days": 0
+  },
+  "current_verdict": {
+    "first_10_complete": false,
+    "public_self_serve_launch_gate": "BLOCKED",
+    "reason": "No verified external user rows exist yet."
+  }
+}

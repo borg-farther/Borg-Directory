@@ -1,0 +1,332 @@
+{
+  "anti_hype": {
+    "internal_sessions_are_not_adoption": true,
+    "simulated_users_are_not_real_users": true,
+    "text": "Simulated/logical users are not real users. Internal sessions, tool calls, local tests, and maintainer runs are not adoption. Real verified external users are 0 unless a hard evidence artifact proves otherwise; no such artifact was found by this build.",
+    "verified_external_users_default_zero": true
+  },
+  "blockers": {
+    "evidence_gaps": [
+      "No Borg analytics export proving active contributors or consumers was found.",
+      "No first-10-user scoreboard with real outcomes exists yet.",
+      "Host/runtime split-brain was not freshly reproduced by this dashboard build."
+    ],
+    "investor_affecting": [
+      "Verified external users: 0 based on available hard evidence.",
+      "Local/logical load gates prove engineering readiness, not market adoption or retention."
+    ],
+    "release_hygiene": [
+      "Do not publish/push/change repo visibility from this proof build.",
+      "Need one supervised dry run from clean Git clone by a non-author before claiming self-serve readiness."
+    ],
+    "security_privacy": [
+      "Security surface artifacts/gates exist in local snapshots, but no third-party audit or live adversarial user evidence is present.",
+      "Do not collect/share user traces until consent, redaction, revocation, and privacy policy are explicitly confirmed in the onboarding script."
+    ],
+    "user_affecting": [
+      "No real first-user install/rescue outcome has been recorded yet.",
+      "Unattended Git-only onboarding remains unproven until external user can install, configure MCP, and receive a useful rescue without maintainer intervention."
+    ]
+  },
+  "evidence": [
+    {
+      "claim_derived": "first-user release gate all_pass=True",
+      "exists": true,
+      "freshness_timestamp": "2026-05-14T18:25:31Z",
+      "path": "eval/first_user_release_gate_snapshot.json",
+      "sha256": "f9d5f8d1b5ed91c3bfd75b342aaab07e6ecebe8ac63a79594869ab472e297e06"
+    },
+    {
+      "claim_derived": "UAT all_pass=True; ready_for_10=True; ready_for_1000=True",
+      "exists": true,
+      "freshness_timestamp": "2026-05-06T09:32:45.808525+00:00",
+      "path": "eval/uat_scoreboard_snapshot.json",
+      "sha256": "fc16aa0aa9406c3877043d82912c671f1569cf9619afd1beef3c69779f0c78b5"
+    },
+    {
+      "claim_derived": "gate run all_pass=True; ready_for_10=True; ready_for_1000=True",
+      "exists": true,
+      "freshness_timestamp": "2026-05-06T09:32:43.065021+00:00",
+      "path": "eval/gate_run_snapshot.json",
+      "sha256": "8d48892c0ce75f87a10a47c124d4e20d94b457c38f9917c33a06ba1aa22b73fe"
+    },
+    {
+      "claim_derived": "logical load 10: passed=True; total_requests=60070; success_rate=1.0; p95_ms=0.6120754994299205; model=asyncio_logical_users",
+      "exists": true,
+      "freshness_timestamp": "2026-05-06T09:31:42.148143+00:00",
+      "path": "eval/load_10_snapshot.json",
+      "sha256": "63dc32e87a6af35c21da2c5c356652a7583e2a15e363b52d1ad1aa9b7d351781"
+    },
+    {
+      "claim_derived": "logical load 100: passed=True; total_requests=61213; success_rate=1.0; p95_ms=0.610864001646405; model=asyncio_logical_users",
+      "exists": true,
+      "freshness_timestamp": "2026-05-06T09:32:12.279837+00:00",
+      "path": "eval/load_100_snapshot.json",
+      "sha256": "8d8cfe98612638f591ebf0b7d1544124819bb48b4d09f54832b5649485e93485"
+    },
+    {
+      "claim_derived": "logical load 1000: passed=True; total_requests=62409; success_rate=1.0; p95_ms=0.5984217998047825; model=asyncio_logical_users",
+      "exists": true,
+      "freshness_timestamp": "2026-05-06T09:32:42.460236+00:00",
+      "path": "eval/load_1000_snapshot.json",
+      "sha256": "67447035d513c8f7a03a9afb85b57c3aa1d0642904bc14b17ee8b1cfaec068ca"
+    },
+    {
+      "claim_derived": "package version=3.3.1; scripts declared in project metadata",
+      "exists": true,
+      "freshness_timestamp": "2026-05-06T09:28:13Z",
+      "path": "pyproject.toml",
+      "sha256": "facdfad7d1b3b69e409bd71efe613921bb3f58c6e57c4abac10bf23bfee4f2c4"
+    },
+    {
+      "claim_derived": "runtime __version__=3.3.1; top-level check() delegates to search",
+      "exists": true,
+      "freshness_timestamp": "2026-05-04T11:28:12Z",
+      "path": "borg/__init__.py",
+      "sha256": "e96fdfa7cd6352a2df70a102a03bc091dd47c5d075895fd6c45e51193d299f15"
+    },
+    {
+      "claim_derived": "prior local status/readiness narrative used as contextual evidence only, not external adoption proof",
+      "exists": true,
+      "freshness_timestamp": "2026-05-14T18:25:31Z",
+      "path": "PROJECT_STATUS.md",
+      "sha256": "54ec5d54e0d16489277920f97ead9fdf403518e7e8c9bab41d72422b6f88688f"
+    },
+    {
+      "claim_derived": "prior local status/readiness narrative used as contextual evidence only, not external adoption proof",
+      "exists": true,
+      "freshness_timestamp": "2026-05-14T18:25:31Z",
+      "path": "GO_NO_GO_DECISION.md",
+      "sha256": "985124bb4b6e0cac5386bd445e3706f7a674df017466930467cb5e569f1677ea"
+    },
+    {
+      "claim_derived": "prior local status/readiness narrative used as contextual evidence only, not external adoption proof",
+      "exists": true,
+      "freshness_timestamp": "2026-05-14T18:25:31Z",
+      "path": "UAT_RESULTS.md",
+      "sha256": "2e83876cd5966a26bd454631c520032c548a4bf67d7ac1dae71f360eb67ada4a"
+    },
+    {
+      "claim_derived": "prior local status/readiness narrative used as contextual evidence only, not external adoption proof",
+      "exists": true,
+      "freshness_timestamp": "2026-05-04T11:29:44Z",
+      "path": "ROADMAP.md",
+      "sha256": "4a5543ec56f241a35ba0bc86f6fd6a1fd3d635292d0f306c56313d426b9ba475"
+    }
+  ],
+  "first_10_user_scoreboard_template": {
+    "columns": [
+      "user id/pseudonym",
+      "install success",
+      "time to first rescue",
+      "rescue useful yes/no",
+      "MCP setup success",
+      "blocker",
+      "outcome recorded"
+    ],
+    "rows": [
+      {
+        "MCP setup success": "",
+        "blocker": "",
+        "install success": "",
+        "outcome recorded": "",
+        "rescue useful yes/no": "",
+        "time to first rescue": "",
+        "user id/pseudonym": ""
+      },
+      {
+        "MCP setup success": "",
+        "blocker": "",
+        "install success": "",
+        "outcome recorded": "",
+        "rescue useful yes/no": "",
+        "time to first rescue": "",
+        "user id/pseudonym": ""
+      },
+      {
+        "MCP setup success": "",
+        "blocker": "",
+        "install success": "",
+        "outcome recorded": "",
+        "rescue useful yes/no": "",
+        "time to first rescue": "",
+        "user id/pseudonym": ""
+      },
+      {
+        "MCP setup success": "",
+        "blocker": "",
+        "install success": "",
+        "outcome recorded": "",
+        "rescue useful yes/no": "",
+        "time to first rescue": "",
+        "user id/pseudonym": ""
+      },
+      {
+        "MCP setup success": "",
+        "blocker": "",
+        "install success": "",
+        "outcome recorded": "",
+        "rescue useful yes/no": "",
+        "time to first rescue": "",
+        "user id/pseudonym": ""
+      },
+      {
+        "MCP setup success": "",
+        "blocker": "",
+        "install success": "",
+        "outcome recorded": "",
+        "rescue useful yes/no": "",
+        "time to first rescue": "",
+        "user id/pseudonym": ""
+      },
+      {
+        "MCP setup success": "",
+        "blocker": "",
+        "install success": "",
+        "outcome recorded": "",
+        "rescue useful yes/no": "",
+        "time to first rescue": "",
+        "user id/pseudonym": ""
+      },
+      {
+        "MCP setup success": "",
+        "blocker": "",
+        "install success": "",
+        "outcome recorded": "",
+        "rescue useful yes/no": "",
+        "time to first rescue": "",
+        "user id/pseudonym": ""
+      },
+      {
+        "MCP setup success": "",
+        "blocker": "",
+        "install success": "",
+        "outcome recorded": "",
+        "rescue useful yes/no": "",
+        "time to first rescue": "",
+        "user id/pseudonym": ""
+      },
+      {
+        "MCP setup success": "",
+        "blocker": "",
+        "install success": "",
+        "outcome recorded": "",
+        "rescue useful yes/no": "",
+        "time to first rescue": "",
+        "user id/pseudonym": ""
+      }
+    ]
+  },
+  "generated_at_utc": "2026-05-14T18:25:41Z",
+  "metrics": {
+    "active_contributors_consumers": {
+      "honesty_label": "MISSING_BORG_ANALYTICS_ARTIFACT",
+      "provenance": "No Borg analytics export artifact was found under eval/ or docs/.",
+      "value": "UNKNOWN"
+    },
+    "first_user_release_gate": {
+      "honesty_label": "LOCAL_ARTIFACT",
+      "provenance": "eval/first_user_release_gate_snapshot.json",
+      "value": "PASS"
+    },
+    "gate_run": {
+      "honesty_label": "LOCAL_ARTIFACT",
+      "provenance": "eval/gate_run_snapshot.json",
+      "value": "PASS"
+    },
+    "host_runtime_split_brain": {
+      "honesty_label": "EVIDENCE_GAP",
+      "provenance": "Prior docs mention runtime/host issues, but this dashboard build did not run environment probes.",
+      "value": "NOT_REPRODUCED_IN_THIS_BUILD"
+    },
+    "load_gates": {
+      "honesty_label": "LOGICAL_USERS_NOT_REAL_USERS",
+      "provenance": "eval/load_*_snapshot.json and eval/uat_scoreboard_snapshot.json",
+      "value": {
+        "10": {
+          "concurrency_model": "asyncio_logical_users",
+          "exists": true,
+          "p95_ms": 0.6120754994299205,
+          "p99_ms": 0.666747909872356,
+          "passed": true,
+          "success_rate": 1.0,
+          "timestamp": "2026-05-06T09:31:42.148143+00:00",
+          "total_requests": 60070,
+          "users_label": 10
+        },
+        "100": {
+          "concurrency_model": "asyncio_logical_users",
+          "exists": true,
+          "p95_ms": 0.610864001646405,
+          "p99_ms": 0.7458787990617565,
+          "passed": true,
+          "success_rate": 1.0,
+          "timestamp": "2026-05-06T09:32:12.279837+00:00",
+          "total_requests": 61213,
+          "users_label": 100
+        },
+        "1000": {
+          "concurrency_model": "asyncio_logical_users",
+          "exists": true,
+          "p95_ms": 0.5984217998047825,
+          "p99_ms": 0.6205782780307345,
+          "passed": true,
+          "success_rate": 1.0,
+          "timestamp": "2026-05-06T09:32:42.460236+00:00",
+          "total_requests": 62409,
+          "users_label": 1000
+        }
+      }
+    },
+    "packs": {
+      "honesty_label": "REPO_FILE_COUNT",
+      "provenance": "borg/seeds_data/packs/*.yaml",
+      "value": 11
+    },
+    "uat_scoreboard": {
+      "honesty_label": "LOCAL_ARTIFACT",
+      "provenance": "eval/uat_scoreboard_snapshot.json",
+      "value": "PASS"
+    },
+    "verified_external_users": {
+      "honesty_label": "HARD_EVIDENCE_ABSENT_DEFAULT_ZERO",
+      "provenance": "No artifact found that identifies real verified external users; simulated/logical load users are excluded.",
+      "value": 0
+    },
+    "version_package": {
+      "honesty_label": "REPO_SOURCE",
+      "provenance": "pyproject.toml; borg/__init__.py",
+      "value": "pyproject=3.3.1 runtime=3.3.1"
+    }
+  },
+  "next_action_queue_before_sharing_git_with_first_user": [
+    "Share Git only with first user under live supervision and label it as a private proof, not public launch.",
+    "Create a fresh-clone runbook: install package, run borg --version, configure MCP, run one rescue, capture exact timestamps and blockers.",
+    "Record first user in the first-10 scoreboard template using a pseudonym and consented outcome fields.",
+    "If any onboarding step fails, add artifact path/stdout/stderr and keep broad launch at NO-GO.",
+    "Export Borg analytics or explicitly keep contributor/consumer metrics UNKNOWN.",
+    "Before any public claim, replace logical-user load evidence with real external-user evidence or clearly label the distinction."
+  ],
+  "ready_to_share_git_now": {
+    "answer": "YES, supervised only",
+    "conditions": [
+      "Do not present as unattended or public launch ready.",
+      "Capture real first-user outcome evidence immediately."
+    ]
+  },
+  "repo": "/root/hermes-workspace/borg",
+  "top_verdict": {
+    "broad_public_launch": {
+      "verdict": "NO-GO",
+      "why": "No verified external-user adoption evidence, no first-10 real-user scoreboard, and public-launch claims would overstate local/logical evidence."
+    },
+    "supervised_first_user_onboarding": {
+      "verdict": "CONDITIONAL",
+      "why": "Share only with hands-on supervision: install/runtime/security/local logical-load gates pass, but verified external users remain 0 and first-user outcome evidence is uncollected."
+    },
+    "unattended_git_onboarding": {
+      "verdict": "NO-GO",
+      "why": "No verified external install/onboarding evidence yet; Git-only flow should not be treated as self-serve until at least the first-10 scoreboard has real outcomes."
+    }
+  }
+}
