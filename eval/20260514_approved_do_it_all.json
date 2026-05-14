@@ -1,4 +1,18 @@
 {
+  "branch_switch": {
+    "cmd": [
+      "git",
+      "switch",
+      "-c",
+      "public-waitlist-readiness-20260514"
+    ],
+    "ended_at_utc": "2026-05-14T18:26:23Z",
+    "name": "git switch -c public-waitlist-readiness-20260514",
+    "rc": 0,
+    "started_at_utc": "2026-05-14T18:26:23Z",
+    "stderr": "Switched to a new branch 'public-waitlist-readiness-20260514'\n",
+    "stdout": ""
+  },
   "commands": [
     {
       "cmd": [
@@ -174,8 +188,255 @@
       "started_at_utc": "2026-05-14T18:26:23Z",
       "stderr": "",
       "stdout": "BORG RESCUE\n============================================================\nstatus: matched\nmatch: permission_denied [tested]\n\nACTION\n  - chmod \u2014 run/check: chmod 644 file (owner rw, others r) or 600 for secrets\n  - chown \u2014 run/check: chown user:group file\n  - add_to_group \u2014 run/check: usermod -aG group user\n\nSTOP\n  - chmod 777 \u2014 fails because Security risk \u2014 gives everyone full access\n  - Running as root \u2014 fails because Security risk \u2014 creates files owned by root\n  - Disabling SELinux or AppArmor \u2014 fails because Masks the permission problem and creates security risks\n\nVERIFY\n  - rerun the exact failing command\n  - add or run the smallest regression test\n  - only then continue broader changes\n\nAGENT INSTRUCTION\nACTION: chmod \u2014 run/check: chmod 644 file (owner rw, others r) or 600 for secrets\nSTOP: avoid chmod 777 \u2014 fails because Security risk \u2014 gives everyone full access\nVERIFY: rerun the exact failing command\nSHOW HUMAN: say Borg found this rescue path and whether it worked.\n\nHUMAN RECEIPT\nBorg matched `permission_denied` (tested). It gave the agent a next move, a dead-end to avoid, and a verification step.\n\nFULL GUIDANCE\n============================================================\nERROR: bash: ./x: Permission denied; context=bash chmod execute bit\n============================================================\n[permission_denied] (python)\nProblem: The code tried to access a resource it does not have permission for\n\nROOT CAUSE:\n  Category: permission_denied\n  The OS denied access to a resource because the process user does not have the required permissions on that resource.\n\nINVESTIGATION TRAIL:\n  1. [first] django/contrib/admin/templatetags/admin_modify.py\n     \u2192 Admin templatetags show_save_as_new \u2014 check permission checks for save actions\n     grep: permission|has_add_permission|save_as\n\nRESOLUTION SEQUENCE:\n  1. chmod\n     Command: chmod 644 file (owner rw, others r) or 600 for secrets\n     Why: Principle of least privilege \u2014 give only what is needed\n  2. chown\n     Command: chown user:group file\n     Why: Changes ownership so the process user can access the file\n  3. add_to_group\n     Command: usermod -aG group user\n     Why: Adds the user to a group that has access to the resource\n  4. docker_user\n     Command: Ensure Dockerfile USER matches the file owner, or run docker with --user flag\n     Why: Docker containers run as root unless USER is explicitly set\n\nANTI-PATTERNS (don't do these):\n  \u2717 chmod 777\n    Fails because: Security risk \u2014 gives everyone full access\n  \u2717 Running as root\n    Fails because: Security risk \u2014 creates files owned by root\n  \u2717 Disabling SELinux or AppArmor\n    Fails because: Masks the permission problem and creates security risks\n\nEVIDENCE: 34/37 successes (92%) over 37 uses\n         Avg resolve time: 2.0 min\n\n============================================================\n"
+    },
+    {
+      "cmd": [
+        "git",
+        "add",
+        "--",
+        "eval/20260514_approved_do_it_all.json",
+        "docs/20260514_APPROVED_DO_IT_ALL_FINAL_STATUS.md"
+      ],
+      "ended_at_utc": "2026-05-14T18:26:23Z",
+      "name": "git add -- eval/20260514_approved_do_it_all.json docs/20260514_APPROVED_DO_IT_ALL_FINAL_STATUS.md",
+      "rc": 0,
+      "started_at_utc": "2026-05-14T18:26:23Z",
+      "stderr": "",
+      "stdout": ""
+    },
+    {
+      "cmd": [
+        "git",
+        "diff",
+        "--cached",
+        "--check"
+      ],
+      "ended_at_utc": "2026-05-14T18:26:23Z",
+      "name": "git diff --cached --check",
+      "rc": 0,
+      "started_at_utc": "2026-05-14T18:26:23Z",
+      "stderr": "",
+      "stdout": ""
+    },
+    {
+      "cmd": [
+        "git",
+        "diff",
+        "--cached",
+        "--name-only"
+      ],
+      "ended_at_utc": "2026-05-14T18:26:23Z",
+      "name": "git diff --cached --name-only",
+      "rc": 0,
+      "started_at_utc": "2026-05-14T18:26:23Z",
+      "stderr": "",
+      "stdout": "borg/core/confidence_gate.py\nborg/integrations/mcp_server.py\nborg/tests/test_confidence_gate.py\ndocs/20260514_APPROVED_DO_IT_ALL_FINAL_STATUS.md\ndocs/20260514_BORG_GOOGLE_TIER_READINESS_CONTINUATION.md\ndocs/20260514_BORG_PUBLIC_LAUNCH_BLOCKER_BOARD.md\ndocs/20260514_BORG_PUBLIC_LAUNCH_IMPLEMENTATION_REPORT.md\ndocs/20260514_BORG_PUBLIC_LAUNCH_READINESS_PLAN.md\ndocs/20260514_BORG_RELEASE_BRANCH_CLEANUP_RUNBOOK.md\ndocs/BORG_PROOF_DASHBOARD.html\ndocs/BORG_PROOF_DASHBOARD.md\ndocs/public/proof-dashboard/index.html\neval/20260514_approved_do_it_all.json\neval/20260514_borg_google_tier_readiness_continuation.json\neval/20260514_borg_public_launch_command_log.json\neval/20260514_borg_public_launch_outstanding_blockers.json\neval/20260514_borg_public_launch_readiness.json\neval/borg_proof_dashboard.json\neval/first_10_user_scoreboard.json\neval/first_user_release_gate_snapshot.json\neval/tests/test_borg_proof_dashboard.py\nscripts/borg_proof_dashboard_lint.py\nscripts/build_borg_proof_dashboard.py\nscripts/fix_public_launch_blockers_safe.py\n"
+    },
+    {
+      "cmd": [
+        "git",
+        "show-ref",
+        "--verify",
+        "--quiet",
+        "refs/heads/public-waitlist-readiness-20260514"
+      ],
+      "ended_at_utc": "2026-05-14T18:26:23Z",
+      "name": "git show-ref --verify --quiet refs/heads/public-waitlist-readiness-20260514",
+      "rc": 1,
+      "started_at_utc": "2026-05-14T18:26:23Z",
+      "stderr": "",
+      "stdout": ""
+    },
+    {
+      "cmd": [
+        "git",
+        "switch",
+        "-c",
+        "public-waitlist-readiness-20260514"
+      ],
+      "ended_at_utc": "2026-05-14T18:26:23Z",
+      "name": "git switch -c public-waitlist-readiness-20260514",
+      "rc": 0,
+      "started_at_utc": "2026-05-14T18:26:23Z",
+      "stderr": "Switched to a new branch 'public-waitlist-readiness-20260514'\n",
+      "stdout": ""
+    },
+    {
+      "cmd": [
+        "git",
+        "diff",
+        "--cached",
+        "--check"
+      ],
+      "ended_at_utc": "2026-05-14T18:26:23Z",
+      "name": "git diff --cached --check",
+      "rc": 0,
+      "started_at_utc": "2026-05-14T18:26:23Z",
+      "stderr": "",
+      "stdout": ""
+    },
+    {
+      "cmd": [
+        "git",
+        "diff",
+        "--cached",
+        "--name-only"
+      ],
+      "ended_at_utc": "2026-05-14T18:26:23Z",
+      "name": "git diff --cached --name-only",
+      "rc": 0,
+      "started_at_utc": "2026-05-14T18:26:23Z",
+      "stderr": "",
+      "stdout": "borg/core/confidence_gate.py\nborg/integrations/mcp_server.py\nborg/tests/test_confidence_gate.py\ndocs/20260514_APPROVED_DO_IT_ALL_FINAL_STATUS.md\ndocs/20260514_BORG_GOOGLE_TIER_READINESS_CONTINUATION.md\ndocs/20260514_BORG_PUBLIC_LAUNCH_BLOCKER_BOARD.md\ndocs/20260514_BORG_PUBLIC_LAUNCH_IMPLEMENTATION_REPORT.md\ndocs/20260514_BORG_PUBLIC_LAUNCH_READINESS_PLAN.md\ndocs/20260514_BORG_RELEASE_BRANCH_CLEANUP_RUNBOOK.md\ndocs/BORG_PROOF_DASHBOARD.html\ndocs/BORG_PROOF_DASHBOARD.md\ndocs/public/proof-dashboard/index.html\neval/20260514_approved_do_it_all.json\neval/20260514_borg_google_tier_readiness_continuation.json\neval/20260514_borg_public_launch_command_log.json\neval/20260514_borg_public_launch_outstanding_blockers.json\neval/20260514_borg_public_launch_readiness.json\neval/borg_proof_dashboard.json\neval/first_10_user_scoreboard.json\neval/first_user_release_gate_snapshot.json\neval/tests/test_borg_proof_dashboard.py\nscripts/borg_proof_dashboard_lint.py\nscripts/build_borg_proof_dashboard.py\nscripts/fix_public_launch_blockers_safe.py\n"
+    },
+    {
+      "cmd": [
+        "git",
+        "commit",
+        "-m",
+        "chore(borg): public waitlist readiness proof"
+      ],
+      "ended_at_utc": "2026-05-14T18:26:23Z",
+      "name": "git commit -m chore(borg): public waitlist readiness proof",
+      "rc": 0,
+      "started_at_utc": "2026-05-14T18:26:23Z",
+      "stderr": "",
+      "stdout": "[public-waitlist-readiness-20260514 bdbb4cc] chore(borg): public waitlist readiness proof\n 24 files changed, 6182 insertions(+), 106 deletions(-)\n create mode 100644 borg/core/confidence_gate.py\n create mode 100644 borg/tests/test_confidence_gate.py\n create mode 100644 docs/20260514_APPROVED_DO_IT_ALL_FINAL_STATUS.md\n create mode 100644 docs/20260514_BORG_GOOGLE_TIER_READINESS_CONTINUATION.md\n create mode 100644 docs/20260514_BORG_PUBLIC_LAUNCH_BLOCKER_BOARD.md\n create mode 100644 docs/20260514_BORG_PUBLIC_LAUNCH_IMPLEMENTATION_REPORT.md\n create mode 100644 docs/20260514_BORG_PUBLIC_LAUNCH_READINESS_PLAN.md\n create mode 100644 docs/20260514_BORG_RELEASE_BRANCH_CLEANUP_RUNBOOK.md\n create mode 100644 docs/BORG_PROOF_DASHBOARD.html\n create mode 100644 docs/BORG_PROOF_DASHBOARD.md\n create mode 100644 docs/public/proof-dashboard/index.html\n create mode 100644 eval/20260514_approved_do_it_all.json\n create mode 100644 eval/20260514_borg_google_tier_readiness_continuation.json\n create mode 100644 eval/20260514_borg_public_launch_command_log.json\n create mode 100644 eval/20260514_borg_public_launch_outstanding_blockers.json\n create mode 100644 eval/20260514_borg_public_launch_readiness.json\n create mode 100644 eval/borg_proof_dashboard.json\n create mode 100644 eval/first_10_user_scoreboard.json\n create mode 100644 eval/first_user_release_gate_snapshot.json\n create mode 100644 eval/tests/test_borg_proof_dashboard.py\n create mode 100644 scripts/borg_proof_dashboard_lint.py\n create mode 100644 scripts/build_borg_proof_dashboard.py\n create mode 100644 scripts/fix_public_launch_blockers_safe.py\n"
+    },
+    {
+      "cmd": [
+        "git",
+        "push",
+        "-u",
+        "origin",
+        "public-waitlist-readiness-20260514"
+      ],
+      "ended_at_utc": "2026-05-14T18:26:25Z",
+      "name": "git push -u origin public-waitlist-readiness-20260514",
+      "rc": 0,
+      "started_at_utc": "2026-05-14T18:26:23Z",
+      "stderr": "remote: \nremote: Create a pull request for 'public-waitlist-readiness-20260514' on GitHub by visiting:        \nremote:      https://github.com/borg-farther/Borg-Directory/pull/new/public-waitlist-readiness-20260514        \nremote: \nTo https://github.com/borg-farther/Borg-Directory.git\n * [new branch]      public-waitlist-readiness-20260514 -> public-waitlist-readiness-20260514\n",
+      "stdout": "branch 'public-waitlist-readiness-20260514' set up to track 'origin/public-waitlist-readiness-20260514'.\n"
+    },
+    {
+      "cmd": [
+        "git",
+        "rev-parse",
+        "HEAD"
+      ],
+      "ended_at_utc": "2026-05-14T18:26:25Z",
+      "name": "git rev-parse HEAD",
+      "rc": 0,
+      "started_at_utc": "2026-05-14T18:26:25Z",
+      "stderr": "",
+      "stdout": "bdbb4cc888ca465b13b6438153e1fb8f6b81dbd3\n"
+    },
+    {
+      "cmd": [
+        "git",
+        "status",
+        "--short"
+      ],
+      "ended_at_utc": "2026-05-14T18:26:25Z",
+      "name": "git status --short",
+      "rc": 0,
+      "started_at_utc": "2026-05-14T18:26:25Z",
+      "stderr": "",
+      "stdout": " M GO_NO_GO_DECISION.md\n M LOAD_TEST_REPORT_10.md\n M LOAD_TEST_REPORT_100.md\n M LOAD_TEST_REPORT_1000.md\n M PROJECT_STATUS.md\n M README.md\n M UAT_RESULTS.md\n M borg/cli.py\n M borg/cli/doctor.py\n M borg/core/embeddings.py\n M borg/core/feedback_loop.py\n M borg/core/uri.py\n M borg/tests/test_borg_observe_confidence_gate.py\n M borg/tests/test_distribution_readiness.py\n M borg/tests/test_uri.py\n M borg/tests/test_v3_integration.py\n M docs/README.md\n M eval/gate_run_snapshot.json\n M eval/load_1000_snapshot.json\n M eval/load_100_snapshot.json\n M eval/load_10_snapshot.json\n M eval/uat_scoreboard_snapshot.json\n M pyproject.toml\n?? .hermes/\n?? borg/cli/__main__.py\n?? borg/core/first_user_readiness.py\n?? borg/core/runtime_fingerprint.py\n?? borg/seeds_data/packs/systematic-debugging.workflow.yaml\n?? borg/tests/test_embeddings_schema_compat.py\n?? borg/tests/test_first_10_readiness.py\n?? borg/tests/test_first_user_cli_contract.py\n?? borg/tests/test_runtime_fingerprint.py\n?? docs/20260513_BORG_DEEP_CUTOVER_EXECUTION_BOARD.md\n?? docs/20260513_BORG_FULL_AUDIT_AND_OBSERVE_CONFIDENCE_GATE.md\n?? docs/20260513_BORG_MULTI_REPO_PRODUCTION_CLEANUP_CUTOVER_PROPOSAL.md\n?? docs/20260514_BORG_EMBEDDINGS_SCHEMA_COMPAT_VERIFICATION_RAW.md\n?? docs/20260514_BORG_PRODUCTION_REBUILD_MASTER_PLAN.md\n?? docs/20260514_BORG_RUNTIME_FINGERPRINT_CANARY_PROOF.md\n?? docs/20260514_BORG_RUNTIME_FINGERPRINT_VERIFICATION_RAW.md\n?? docs/20260514_BORG_WORLD_CLASS_HARDENING_BOARD.md\n?? docs/20260514_FIRST_10_USER_INVITE_PACKET.md\n?? docs/20260514_FIX_ALL_PUBLIC_LAUNCH_BLOCKERS_REPORT.md\n?? docs/FIRST_10_BETA_READINESS.md\n?? docs/repo-manifest/\n?? eval/20260514_fix_all_preflight.json\n?? eval/20260514_fix_all_public_launch_blockers.json\n?? eval/run_first_user_release_gate.py\n?? scripts/approved_do_it_all_safe.py\n?? scripts/run_embeddings_schema_compat_verification.py\n?? scripts/run_runtime_fingerprint_verification.py\n?? tmp_readiness_audit_20260506/\n"
+    },
+    {
+      "cmd": [
+        "git",
+        "branch",
+        "--show-current"
+      ],
+      "ended_at_utc": "2026-05-14T18:26:25Z",
+      "name": "git branch --show-current",
+      "rc": 0,
+      "started_at_utc": "2026-05-14T18:26:25Z",
+      "stderr": "",
+      "stdout": "public-waitlist-readiness-20260514\n"
+    },
+    {
+      "cmd": [
+        "git",
+        "remote",
+        "-v"
+      ],
+      "ended_at_utc": "2026-05-14T18:26:25Z",
+      "name": "git remote -v",
+      "rc": 0,
+      "started_at_utc": "2026-05-14T18:26:25Z",
+      "stderr": "",
+      "stdout": "origin\thttps://github.com/borg-farther/Borg-Directory.git (fetch)\norigin\thttps://github.com/borg-farther/Borg-Directory.git (push)\n"
+    },
+    {
+      "cmd": [
+        "git",
+        "ls-remote",
+        "--heads",
+        "origin",
+        "public-waitlist-readiness-20260514"
+      ],
+      "ended_at_utc": "2026-05-14T18:26:26Z",
+      "name": "git ls-remote --heads origin public-waitlist-readiness-20260514",
+      "rc": 0,
+      "started_at_utc": "2026-05-14T18:26:25Z",
+      "stderr": "",
+      "stdout": "bdbb4cc888ca465b13b6438153e1fb8f6b81dbd3\trefs/heads/public-waitlist-readiness-20260514\n"
+    },
+    {
+      "cmd": [
+        "gh",
+        "auth",
+        "status"
+      ],
+      "ended_at_utc": "2026-05-14T18:26:26Z",
+      "name": "gh auth status",
+      "rc": 0,
+      "started_at_utc": "2026-05-14T18:26:26Z",
+      "stderr": "",
+      "stdout": "github.com\n  \u2713 Logged in to github.com account borg-farther (/root/.config/gh/hosts.yml)\n  - Active account: true\n  - Git operations protocol: https\n  - Token: github_pat_11CCHSJJA0tkQHABDs5PzP_***********************************************************\n\n  \u2713 Logged in to github.com account bensargotest-sys (/root/.config/gh/hosts.yml)\n  - Active account: false\n  - Git operations protocol: https\n  - Token: ghp_************************************\n  - Token scopes: 'admin:enterprise', 'admin:gpg_key', 'admin:org', 'admin:org_hook', 'admin:public_key', 'admin:repo_hook', 'admin:ssh_signing_key', 'audit_log', 'codespace', 'copilot', 'delete:packages', 'delete_repo', 'gist', 'notifications', 'project', 'repo', 'user', 'workflow', 'write:discussion', 'write:network_configurations', 'write:packages'\n"
+    },
+    {
+      "cmd": [
+        "gh",
+        "api",
+        "user",
+        "--jq",
+        ".login"
+      ],
+      "ended_at_utc": "2026-05-14T18:26:26Z",
+      "name": "gh api user --jq .login",
+      "rc": 0,
+      "started_at_utc": "2026-05-14T18:26:26Z",
+      "stderr": "",
+      "stdout": "borg-farther\n"
+    },
+    {
+      "cmd": [
+        "gh",
+        "repo",
+        "view",
+        "borg-farther/Borg-Directory",
+        "--json",
+        "nameWithOwner,visibility,url,viewerPermission,defaultBranchRef"
+      ],
+      "ended_at_utc": "2026-05-14T18:26:27Z",
+      "name": "gh repo view",
+      "rc": 0,
+      "started_at_utc": "2026-05-14T18:26:26Z",
+      "stderr": "",
+      "stdout": "{\"defaultBranchRef\":{\"name\":\"main\"},\"nameWithOwner\":\"borg-farther/Borg-Directory\",\"url\":\"https://github.com/borg-farther/Borg-Directory\",\"viewerPermission\":\"ADMIN\",\"visibility\":\"PUBLIC\"}\n"
     }
   ],
+  "commit": {
+    "attempted": true,
+    "rc": 0,
+    "stderr": "",
+    "stdout": "[public-waitlist-readiness-20260514 bdbb4cc] chore(borg): public waitlist readiness proof\n 24 files changed, 6182 insertions(+), 106 deletions(-)\n create mode 100644 borg/core/confidence_gate.py\n create mode 100644 borg/tests/test_confidence_gate.py\n create mode 100644 docs/20260514_APPROVED_DO_IT_ALL_FINAL_STATUS.md\n create mode 100644 docs/20260514_BORG_GOOGLE_TIER_READINESS_CONTINUATION.md\n create mode 100644 docs/20260514_BORG_PUBLIC_LAUNCH_BLOCKER_BOARD.md\n create mode 100644 docs/20260514_BORG_PUBLIC_LAUNCH_IMPLEMENTATION_REPORT.md\n create mode 100644 docs/20260514_BORG_PUBLIC_LAUNCH_READINESS_PLAN.md\n create mode 100644 docs/20260514_BORG_RELEASE_BRANCH_CLEANUP_RUNBOOK.md\n create mode 100644 docs/BORG_PROOF_DASHBOARD.html\n create mode 100644 docs/BORG_PROOF_DASHBOARD.md\n create mode 100644 docs/public/proof-dashboard/index.html\n create mode 100644 eval/20260514_approved_do_it_all.json\n create mode 100644 eval/20260514_borg_google_tier_readiness_continuation.json\n create mode 100644 eval/20260514_borg_public_launch_command_log.json\n create mode 100644 eval/20260514_borg_public_launch_outstanding_blockers.json\n create mode 100644 eval/20260514_borg_public_launch_readiness.json\n create mode 100644 eval/borg_proof_dashboard.json\n create mode 100644 eval/first_10_user_scoreboard.json\n create mode 100644 eval/first_user_release_gate_snapshot.json\n create mode 100644 eval/tests/test_borg_proof_dashboard.py\n create mode 100644 scripts/borg_proof_dashboard_lint.py\n create mode 100644 scripts/build_borg_proof_dashboard.py\n create mode 100644 scripts/fix_public_launch_blockers_safe.py\n"
+  },
+  "current_branch_after": "public-waitlist-readiness-20260514",
   "gate_results": [
     {
       "cmd": [
@@ -289,8 +550,76 @@
       "stdout": ""
     }
   ],
+  "gate_statuses": {
+    "PUBLIC_SELF_SERVE_LAUNCH": "NO",
+    "PUBLIC_WAITLIST_NARROW_BETA": "YES",
+    "first_10_real_users": "HUMAN_BLOCKED",
+    "live_mcp_runtime_identity": "HUMAN_BLOCKED",
+    "verified_external_users": 0
+  },
   "gates_ok": true,
   "generated_at_utc": "2026-05-14T18:25:05Z",
+  "gh_auth_status": {
+    "cmd": [
+      "gh",
+      "auth",
+      "status"
+    ],
+    "ended_at_utc": "2026-05-14T18:26:26Z",
+    "name": "gh auth status",
+    "rc": 0,
+    "started_at_utc": "2026-05-14T18:26:26Z",
+    "stderr": "",
+    "stdout": "github.com\n  \u2713 Logged in to github.com account borg-farther (/root/.config/gh/hosts.yml)\n  - Active account: true\n  - Git operations protocol: https\n  - Token: github_pat_11CCHSJJA0tkQHABDs5PzP_***********************************************************\n\n  \u2713 Logged in to github.com account bensargotest-sys (/root/.config/gh/hosts.yml)\n  - Active account: false\n  - Git operations protocol: https\n  - Token: ghp_************************************\n  - Token scopes: 'admin:enterprise', 'admin:gpg_key', 'admin:org', 'admin:org_hook', 'admin:public_key', 'admin:repo_hook', 'admin:ssh_signing_key', 'audit_log', 'codespace', 'copilot', 'delete:packages', 'delete_repo', 'gist', 'notifications', 'project', 'repo', 'user', 'workflow', 'write:discussion', 'write:network_configurations', 'write:packages'\n"
+  },
+  "gh_repo_view": {
+    "cmd": [
+      "gh",
+      "repo",
+      "view",
+      "borg-farther/Borg-Directory",
+      "--json",
+      "nameWithOwner,visibility,url,viewerPermission,defaultBranchRef"
+    ],
+    "ended_at_utc": "2026-05-14T18:26:27Z",
+    "name": "gh repo view",
+    "rc": 0,
+    "started_at_utc": "2026-05-14T18:26:26Z",
+    "stderr": "",
+    "stdout": "{\"defaultBranchRef\":{\"name\":\"main\"},\"nameWithOwner\":\"borg-farther/Borg-Directory\",\"url\":\"https://github.com/borg-farther/Borg-Directory\",\"viewerPermission\":\"ADMIN\",\"visibility\":\"PUBLIC\"}\n"
+  },
+  "gh_user": {
+    "cmd": [
+      "gh",
+      "api",
+      "user",
+      "--jq",
+      ".login"
+    ],
+    "ended_at_utc": "2026-05-14T18:26:26Z",
+    "name": "gh api user --jq .login",
+    "rc": 0,
+    "started_at_utc": "2026-05-14T18:26:26Z",
+    "stderr": "",
+    "stdout": "borg-farther\n"
+  },
+  "head_after": "bdbb4cc888ca465b13b6438153e1fb8f6b81dbd3",
+  "ls_remote_branch": {
+    "cmd": [
+      "git",
+      "ls-remote",
+      "--heads",
+      "origin",
+      "public-waitlist-readiness-20260514"
+    ],
+    "ended_at_utc": "2026-05-14T18:26:26Z",
+    "name": "git ls-remote --heads origin public-waitlist-readiness-20260514",
+    "rc": 0,
+    "started_at_utc": "2026-05-14T18:26:25Z",
+    "stderr": "",
+    "stdout": "bdbb4cc888ca465b13b6438153e1fb8f6b81dbd3\trefs/heads/public-waitlist-readiness-20260514\n"
+  },
+  "overall_status": "DONE_WITH_CAVEATS",
   "pipx_proof": {
     "install": null,
     "rescue": {
@@ -347,6 +676,26 @@
     "stderr": "",
     "stdout": " M GO_NO_GO_DECISION.md\n M LOAD_TEST_REPORT_10.md\n M LOAD_TEST_REPORT_100.md\n M LOAD_TEST_REPORT_1000.md\n M PROJECT_STATUS.md\n M README.md\n M UAT_RESULTS.md\n M borg/cli.py\n M borg/cli/doctor.py\nA  borg/core/confidence_gate.py\n M borg/core/embeddings.py\n M borg/core/feedback_loop.py\n M borg/core/uri.py\nM  borg/integrations/mcp_server.py\n M borg/tests/test_borg_observe_confidence_gate.py\nA  borg/tests/test_confidence_gate.py\n M borg/tests/test_distribution_readiness.py\n M borg/tests/test_uri.py\n M borg/tests/test_v3_integration.py\nA  docs/20260514_BORG_GOOGLE_TIER_READINESS_CONTINUATION.md\nA  docs/20260514_BORG_PUBLIC_LAUNCH_BLOCKER_BOARD.md\nA  docs/20260514_BORG_PUBLIC_LAUNCH_IMPLEMENTATION_REPORT.md\nA  docs/20260514_BORG_PUBLIC_LAUNCH_READINESS_PLAN.md\nA  docs/20260514_BORG_RELEASE_BRANCH_CLEANUP_RUNBOOK.md\nA  docs/BORG_PROOF_DASHBOARD.html\nA  docs/BORG_PROOF_DASHBOARD.md\n M docs/README.md\nA  docs/public/proof-dashboard/index.html\nA  eval/20260514_borg_google_tier_readiness_continuation.json\nA  eval/20260514_borg_public_launch_command_log.json\nA  eval/20260514_borg_public_launch_outstanding_blockers.json\nA  eval/20260514_borg_public_launch_readiness.json\nA  eval/borg_proof_dashboard.json\nA  eval/first_10_user_scoreboard.json\nA  eval/first_user_release_gate_snapshot.json\n M eval/gate_run_snapshot.json\n M eval/load_1000_snapshot.json\n M eval/load_100_snapshot.json\n M eval/load_10_snapshot.json\nA  eval/tests/test_borg_proof_dashboard.py\n M eval/uat_scoreboard_snapshot.json\n M pyproject.toml\nA  scripts/borg_proof_dashboard_lint.py\nA  scripts/build_borg_proof_dashboard.py\nA  scripts/fix_public_launch_blockers_safe.py\n?? .hermes/\n?? borg/cli/__main__.py\n?? borg/core/first_user_readiness.py\n?? borg/core/runtime_fingerprint.py\n?? borg/seeds_data/packs/systematic-debugging.workflow.yaml\n?? borg/tests/test_embeddings_schema_compat.py\n?? borg/tests/test_first_10_readiness.py\n?? borg/tests/test_first_user_cli_contract.py\n?? borg/tests/test_runtime_fingerprint.py\n?? docs/20260513_BORG_DEEP_CUTOVER_EXECUTION_BOARD.md\n?? docs/20260513_BORG_FULL_AUDIT_AND_OBSERVE_CONFIDENCE_GATE.md\n?? docs/20260513_BORG_MULTI_REPO_PRODUCTION_CLEANUP_CUTOVER_PROPOSAL.md\n?? docs/20260514_BORG_EMBEDDINGS_SCHEMA_COMPAT_VERIFICATION_RAW.md\n?? docs/20260514_BORG_PRODUCTION_REBUILD_MASTER_PLAN.md\n?? docs/20260514_BORG_RUNTIME_FINGERPRINT_CANARY_PROOF.md\n?? docs/20260514_BORG_RUNTIME_FINGERPRINT_VERIFICATION_RAW.md\n?? docs/20260514_BORG_WORLD_CLASS_HARDENING_BOARD.md\n?? docs/20260514_FIX_ALL_PUBLIC_LAUNCH_BLOCKERS_REPORT.md\n?? docs/FIRST_10_BETA_READINESS.md\n?? docs/repo-manifest/\n?? eval/20260514_fix_all_preflight.json\n?? eval/20260514_fix_all_public_launch_blockers.json\n?? eval/run_first_user_release_gate.py\n?? scripts/approved_do_it_all_safe.py\n?? scripts/run_embeddings_schema_compat_verification.py\n?? scripts/run_runtime_fingerprint_verification.py\n?? tmp_readiness_audit_20260506/\n"
   },
+  "push": {
+    "pushed": true,
+    "rc": 0,
+    "stderr": "remote: \nremote: Create a pull request for 'public-waitlist-readiness-20260514' on GitHub by visiting:        \nremote:      https://github.com/borg-farther/Borg-Directory/pull/new/public-waitlist-readiness-20260514        \nremote: \nTo https://github.com/borg-farther/Borg-Directory.git\n * [new branch]      public-waitlist-readiness-20260514 -> public-waitlist-readiness-20260514\n",
+    "stdout": "branch 'public-waitlist-readiness-20260514' set up to track 'origin/public-waitlist-readiness-20260514'.\n"
+  },
+  "remote_v": {
+    "cmd": [
+      "git",
+      "remote",
+      "-v"
+    ],
+    "ended_at_utc": "2026-05-14T18:26:25Z",
+    "name": "git remote -v",
+    "rc": 0,
+    "started_at_utc": "2026-05-14T18:26:25Z",
+    "stderr": "",
+    "stdout": "origin\thttps://github.com/borg-farther/Borg-Directory.git (fetch)\norigin\thttps://github.com/borg-farther/Borg-Directory.git (push)\n"
+  },
+  "safe_to_commit": true,
   "scoreboard": {
     "current_counts": {
       "critical_privacy_security_failures": 0,
@@ -368,5 +717,80 @@
       "unrelated_excerpt": "ACTION: proceed with normal debugging for this task; Borg has no proven cache hit.\n\nSTOP: do not force a weak or unrelated pack onto this task.\n\nVERIFY: collect the exact failing command/output and rerun borg_observe or borg_rescue only if new evidence appears.\n\nCONFIDENCE: BORG [NO CONFIDENT MATCH] -- no relevant traces, synthetic hits, or pack matches.\n\nNO_CONFIDENT_MATCH: No confident Borg match for this task.\nBorg found no relevant real traces, synthetic hits, or exact pack class match.\nProceed with normal reasoning; do not treat Borg as evidence for this task.\nAfter resolving: call borg_rate(helpful=True) only if Borg guidance was actually useful."
     },
     "status": "PASS"
+  },
+  "staged_diff": {
+    "allowlisted": true,
+    "check_rc": 0,
+    "names": [
+      "borg/core/confidence_gate.py",
+      "borg/integrations/mcp_server.py",
+      "borg/tests/test_confidence_gate.py",
+      "docs/20260514_APPROVED_DO_IT_ALL_FINAL_STATUS.md",
+      "docs/20260514_BORG_GOOGLE_TIER_READINESS_CONTINUATION.md",
+      "docs/20260514_BORG_PUBLIC_LAUNCH_BLOCKER_BOARD.md",
+      "docs/20260514_BORG_PUBLIC_LAUNCH_IMPLEMENTATION_REPORT.md",
+      "docs/20260514_BORG_PUBLIC_LAUNCH_READINESS_PLAN.md",
+      "docs/20260514_BORG_RELEASE_BRANCH_CLEANUP_RUNBOOK.md",
+      "docs/BORG_PROOF_DASHBOARD.html",
+      "docs/BORG_PROOF_DASHBOARD.md",
+      "docs/public/proof-dashboard/index.html",
+      "eval/20260514_approved_do_it_all.json",
+      "eval/20260514_borg_google_tier_readiness_continuation.json",
+      "eval/20260514_borg_public_launch_command_log.json",
+      "eval/20260514_borg_public_launch_outstanding_blockers.json",
+      "eval/20260514_borg_public_launch_readiness.json",
+      "eval/borg_proof_dashboard.json",
+      "eval/first_10_user_scoreboard.json",
+      "eval/first_user_release_gate_snapshot.json",
+      "eval/tests/test_borg_proof_dashboard.py",
+      "scripts/borg_proof_dashboard_lint.py",
+      "scripts/build_borg_proof_dashboard.py",
+      "scripts/fix_public_launch_blockers_safe.py"
+    ],
+    "unexpected": []
+  },
+  "staged_diff_after_switch": {
+    "allowlisted": true,
+    "check_rc": 0,
+    "names": [
+      "borg/core/confidence_gate.py",
+      "borg/integrations/mcp_server.py",
+      "borg/tests/test_confidence_gate.py",
+      "docs/20260514_APPROVED_DO_IT_ALL_FINAL_STATUS.md",
+      "docs/20260514_BORG_GOOGLE_TIER_READINESS_CONTINUATION.md",
+      "docs/20260514_BORG_PUBLIC_LAUNCH_BLOCKER_BOARD.md",
+      "docs/20260514_BORG_PUBLIC_LAUNCH_IMPLEMENTATION_REPORT.md",
+      "docs/20260514_BORG_PUBLIC_LAUNCH_READINESS_PLAN.md",
+      "docs/20260514_BORG_RELEASE_BRANCH_CLEANUP_RUNBOOK.md",
+      "docs/BORG_PROOF_DASHBOARD.html",
+      "docs/BORG_PROOF_DASHBOARD.md",
+      "docs/public/proof-dashboard/index.html",
+      "eval/20260514_approved_do_it_all.json",
+      "eval/20260514_borg_google_tier_readiness_continuation.json",
+      "eval/20260514_borg_public_launch_command_log.json",
+      "eval/20260514_borg_public_launch_outstanding_blockers.json",
+      "eval/20260514_borg_public_launch_readiness.json",
+      "eval/borg_proof_dashboard.json",
+      "eval/first_10_user_scoreboard.json",
+      "eval/first_user_release_gate_snapshot.json",
+      "eval/tests/test_borg_proof_dashboard.py",
+      "scripts/borg_proof_dashboard_lint.py",
+      "scripts/build_borg_proof_dashboard.py",
+      "scripts/fix_public_launch_blockers_safe.py"
+    ],
+    "unexpected": []
+  },
+  "status_after": {
+    "cmd": [
+      "git",
+      "status",
+      "--short"
+    ],
+    "ended_at_utc": "2026-05-14T18:26:25Z",
+    "name": "git status --short",
+    "rc": 0,
+    "started_at_utc": "2026-05-14T18:26:25Z",
+    "stderr": "",
+    "stdout": " M GO_NO_GO_DECISION.md\n M LOAD_TEST_REPORT_10.md\n M LOAD_TEST_REPORT_100.md\n M LOAD_TEST_REPORT_1000.md\n M PROJECT_STATUS.md\n M README.md\n M UAT_RESULTS.md\n M borg/cli.py\n M borg/cli/doctor.py\n M borg/core/embeddings.py\n M borg/core/feedback_loop.py\n M borg/core/uri.py\n M borg/tests/test_borg_observe_confidence_gate.py\n M borg/tests/test_distribution_readiness.py\n M borg/tests/test_uri.py\n M borg/tests/test_v3_integration.py\n M docs/README.md\n M eval/gate_run_snapshot.json\n M eval/load_1000_snapshot.json\n M eval/load_100_snapshot.json\n M eval/load_10_snapshot.json\n M eval/uat_scoreboard_snapshot.json\n M pyproject.toml\n?? .hermes/\n?? borg/cli/__main__.py\n?? borg/core/first_user_readiness.py\n?? borg/core/runtime_fingerprint.py\n?? borg/seeds_data/packs/systematic-debugging.workflow.yaml\n?? borg/tests/test_embeddings_schema_compat.py\n?? borg/tests/test_first_10_readiness.py\n?? borg/tests/test_first_user_cli_contract.py\n?? borg/tests/test_runtime_fingerprint.py\n?? docs/20260513_BORG_DEEP_CUTOVER_EXECUTION_BOARD.md\n?? docs/20260513_BORG_FULL_AUDIT_AND_OBSERVE_CONFIDENCE_GATE.md\n?? docs/20260513_BORG_MULTI_REPO_PRODUCTION_CLEANUP_CUTOVER_PROPOSAL.md\n?? docs/20260514_BORG_EMBEDDINGS_SCHEMA_COMPAT_VERIFICATION_RAW.md\n?? docs/20260514_BORG_PRODUCTION_REBUILD_MASTER_PLAN.md\n?? docs/20260514_BORG_RUNTIME_FINGERPRINT_CANARY_PROOF.md\n?? docs/20260514_BORG_RUNTIME_FINGERPRINT_VERIFICATION_RAW.md\n?? docs/20260514_BORG_WORLD_CLASS_HARDENING_BOARD.md\n?? docs/20260514_FIRST_10_USER_INVITE_PACKET.md\n?? docs/20260514_FIX_ALL_PUBLIC_LAUNCH_BLOCKERS_REPORT.md\n?? docs/FIRST_10_BETA_READINESS.md\n?? docs/repo-manifest/\n?? eval/20260514_fix_all_preflight.json\n?? eval/20260514_fix_all_public_launch_blockers.json\n?? eval/run_first_user_release_gate.py\n?? scripts/approved_do_it_all_safe.py\n?? scripts/run_embeddings_schema_compat_verification.py\n?? scripts/run_runtime_fingerprint_verification.py\n?? tmp_readiness_audit_20260506/\n"
   }
 }
