@@ -16,6 +16,7 @@ Run non-network tests only:
 """
 
 import json
+import os
 import sys
 from pathlib import Path
 from typing import Dict, List, Optional
@@ -33,8 +34,13 @@ from borg.core.search import borg_search, borg_try, borg_pull
 # Constants
 # ---------------------------------------------------------------------------
 
-PACKS_INDEX_PATH = Path("/root/hermes-workspace/guild-packs/index.json")
-PACKS_DIR = Path("/root/hermes-workspace/guild-packs/packs")
+PACKS_INDEX_PATH = Path(os.environ.get("BORG_TEST_PACKS_INDEX", "/root/hermes-workspace/guild-packs/index.json"))
+PACKS_DIR = Path(os.environ.get("BORG_TEST_PACKS_DIR", "/root/hermes-workspace/guild-packs/packs"))
+if not PACKS_INDEX_PATH.is_file() or not PACKS_DIR.is_dir():
+    pytest.skip(
+        "external guild-packs compatibility fixtures unavailable",
+        allow_module_level=True,
+    )
 TOP_5_PACKS = [
     "systematic-debugging",
     # "code-review",  # Removed in v3.0.0: d=-2.83, actively hurts performance
