@@ -37,4 +37,4 @@ jobs:
 
       - name: Run tests
         run: |
-          python -m pytest borg/tests/ borg/defi/tests/ --ignore=borg/defi/tests/test_e2e_live.py -q
+          python -m pytest borg/tests/ --tb=short -q

@@ -1,6 +1,7 @@
 type: workflow_pack
 version: "1.0"
 id: borg://hermes/systematic-debugging
+license: MIT
 problem_class: systematic_debugging
 mental_model: |
   Reproduce the failure, isolate one cause at a time, make the smallest safe
@@ -34,6 +35,7 @@ escalation_rules:
   - condition: The failure depends on unavailable credentials, services, or network access.
     action: Stop and report the external blocker with the raw failing command and output.
 provenance:
+  source: https://github.com/borg-farther/Borg-Directory
   confidence: tested
   evidence: Packaged first-user fallback for day-one debugging workflows and release-gate validation.
   failure_cases:
