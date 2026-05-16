@@ -2,7 +2,7 @@
 """
 Seed Pack License Compliance Checker
 
-Validates all seed packs in /root/hermes-workspace/borg/borg/seeds_data/packs/ for:
+Validates all seed packs in borg/seeds_data/packs/ for:
 1. License allowlist compliance
 2. Provenance source presence and validity
 3. No forbidden secrets in any field values
@@ -15,8 +15,12 @@ import re
 from pathlib import Path
 from typing import List, Dict, Any, Tuple
 
-# Configuration
-PACKS_DIR = Path("/root/hermes-workspace/borg/borg/seeds_data/packs")
+# Configuration.  Keep this repo-relative so CI, fresh clones, and local
+# worktrees do not inherit the maintainer machine's absolute path.
+ROOT = Path(__file__).resolve().parents[1]
+PACKS_DIR = Path(
+    os.environ.get("BORG_SEED_PACKS_DIR", ROOT / "borg" / "seeds_data" / "packs")
+).expanduser().resolve()
 ALLOWED_LICENSES = {"MIT", "Apache-2.0", "BSD-3-Clause", "CC-BY-4.0", "CC0-1.0"}
 FORBIDDEN_PATTERNS = ["api_key", "secret", "password", "token", "private_key"]
 # URL pattern for validating provenance.source
