@@ -56,7 +56,14 @@ FIXTURES_DIR = Path(__file__).parent / "fixtures" / "openclaw"
 QUICK_VALIDATE_SRC = Path("/tmp/openclaw-analysis/skills/skill-creator/scripts/quick_validate.py")
 QUICK_VALIDATE_FIXTURE = FIXTURES_DIR / "quick_validate.py"
 
-if not PACKS_DIR.is_dir():
+def _is_readable_dir(path: Path) -> bool:
+    try:
+        return path.is_dir()
+    except OSError:
+        return False
+
+
+if not _is_readable_dir(PACKS_DIR):
     pytest.skip(
         f"external guild-packs fixture directory unavailable: {PACKS_DIR}",
         allow_module_level=True,
