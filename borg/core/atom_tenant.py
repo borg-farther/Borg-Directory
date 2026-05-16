@@ -12,8 +12,10 @@ import hmac
 import os
 from pathlib import Path
 
+from borg.core.dirs import get_tenant_secret_path
 
-DEFAULT_TENANT_SECRET_FILE = Path(os.getenv("BORG_HOME", str(Path.home() / ".borg"))) / "tenant_secret"
+
+DEFAULT_TENANT_SECRET_FILE = get_tenant_secret_path()
 
 
 def load_or_create_tenant_secret(path: str | None = None) -> bytes:

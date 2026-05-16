@@ -13,6 +13,8 @@ import sys
 from pathlib import Path
 from typing import Any
 
+from borg.core.dirs import get_atom_db_path, get_borg_home, get_trace_db_path
+
 
 def _sqlite_count(db_path: Path, table: str) -> int | None:
     if not db_path.exists():
@@ -27,14 +29,14 @@ def _sqlite_count(db_path: Path, table: str) -> int | None:
 def runtime_fingerprint() -> dict[str, Any]:
     import borg
 
-    borg_home = Path(os.environ.get("BORG_HOME", "~/.borg")).expanduser()
+    borg_home = get_borg_home()
     module_path = Path(getattr(borg, "__file__", "")).resolve()
     try:
         module_hash = hashlib.sha256(module_path.read_bytes()).hexdigest()[:16]
     except Exception:
         module_hash = ""
-    trace_db = borg_home / "traces.db"
-    atom_db = borg_home / "atoms.db"
+    trace_db = get_trace_db_path()
+    atom_db = get_atom_db_path()
     return {
         "package_version": getattr(borg, "__version__", "unknown"),
         "module_path": str(module_path),
@@ -50,7 +52,7 @@ def runtime_fingerprint() -> dict[str, Any]:
 
 
 def run(json_mode: bool = False) -> int:
-    borg_home = Path(os.environ.get("BORG_HOME", "~/.borg")).expanduser()
+    borg_home = get_borg_home()
     ok = True
     checks: list[dict[str, Any]] = []
 
@@ -60,7 +62,7 @@ def run(json_mode: bool = False) -> int:
         if not passed:
             ok = False
 
-    db_path = borg_home / "traces.db"
+    db_path = get_trace_db_path()
     if not db_path.exists() or _sqlite_count(db_path, "traces") in (None, 0):
         try:
             from borg.integrations.mcp_server import borg_observe as _bo
@@ -89,17 +91,50 @@ def run(json_mode: bool = False) -> int:
         record("borg_rate", False, str(exc))
 
     try:
+        import select
         import subprocess
-        msg = '{"jsonrpc":"2.0","id":1,"method":"initialize","params":{"protocolVersion":"2024-11-05","capabilities":{},"clientInfo":{"name":"doctor","version":"1.0"}}}'
-        proc = subprocess.run(
+        import time
+
+        msg = '{"jsonrpc":"2.0","id":1,"method":"initialize","params":{"protocolVersion":"2024-11-05","capabilities":{},"clientInfo":{"name":"doctor","version":"1.0"}}}\n'
+        proc = subprocess.Popen(
             [sys.executable, "-m", "borg.integrations.mcp_server"],
-            input=msg,
-            capture_output=True,
+            stdin=subprocess.PIPE,
+            stdout=subprocess.PIPE,
+            stderr=subprocess.PIPE,
             text=True,
-            timeout=5,
             cwd=str(Path(__file__).parent.parent.parent),
         )
-        record("mcp_stdio", '"result"' in proc.stdout, "responds to initialize" if '"result"' in proc.stdout else proc.stderr[:120])
+        output: list[str] = []
+        try:
+            assert proc.stdin is not None and proc.stdout is not None and proc.stderr is not None
+            proc.stdin.write(msg)
+            proc.stdin.flush()
+            deadline = time.monotonic() + 8.0
+            while time.monotonic() < deadline:
+                ready, _, _ = select.select([proc.stdout, proc.stderr], [], [], 0.5)
+                for stream in ready:
+                    line = stream.readline()
+                    if line:
+                        output.append(line)
+                        if '"result"' in line and '"serverInfo"' in line:
+                            record("mcp_stdio", True, "responds to initialize")
+                            raise StopIteration
+                if proc.poll() is not None and not ready:
+                    break
+            else:
+                combined = "".join(output).strip()
+                record("mcp_stdio", False, f"no initialize response from MCP server. output={combined[:120]}")
+        except StopIteration:
+            pass
+        finally:
+            try:
+                proc.terminate()
+                proc.wait(timeout=1)
+            except Exception:
+                try:
+                    proc.kill()
+                except Exception:
+                    pass
     except Exception as exc:
         record("mcp_stdio", False, str(exc))
 

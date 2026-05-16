@@ -13,7 +13,9 @@ import sqlite3
 import threading
 import time
 from pathlib import Path
-from typing import Dict, List, Optional, Tuple
+from typing import Any, Dict, List, Optional, Tuple
+
+from borg.core.dirs import get_embedding_cache_path
 
 try:
     import numpy as np
@@ -24,7 +26,7 @@ except ImportError:
 
 logger = logging.getLogger(__name__)
 
-EMBEDDING_CACHE_PATH = os.path.expanduser("~/.borg/embeddings.pkl")
+EMBEDDING_CACHE_PATH = str(get_embedding_cache_path())
 EMBEDDING_DIM = 384
 
 _model = None
@@ -125,9 +127,18 @@ def build_index_from_db(db_path: str, force_rebuild: bool = False) -> Tuple[dict
     try:
         db = sqlite3.connect(db_path, timeout=10)
         db.row_factory = sqlite3.Row
+        columns = {
+            row[1]
+            for row in db.execute("PRAGMA table_info(traces)").fetchall()
+        }
+        optional_columns = []
+        if "causal_intervention" in columns:
+            optional_columns.append("causal_intervention")
+        optional_sql = (", " + ", ".join(optional_columns)) if optional_columns else ""
         rows = db.execute(
-            "SELECT id, task_description, root_cause, approach_summary, causal_intervention, "
-            "technology, keywords FROM traces WHERE outcome IN ('success', 'failure', 'fixed', 'partial')"
+            "SELECT id, task_description, root_cause, approach_summary, "
+            f"technology, keywords{optional_sql} "
+            "FROM traces WHERE outcome IN ('success', 'failure', 'fixed', 'partial')"
         ).fetchall()
         db.close()
     except Exception as e:
@@ -136,16 +147,16 @@ def build_index_from_db(db_path: str, force_rebuild: bool = False) -> Tuple[dict
         _index_cache_size = len(cache)
         return cache, len(cache)
 
-    model = _get_model()
-    if model is None:
-        _index_cache = cache
-        _index_cache_size = len(cache)
-        return cache, len(cache)
-
     new_traces = [dict(r) for r in rows if r['id'] not in cache]
 
     if not new_traces:
         logger.info(f"embeddings: index up to date ({len(cache)} traces)")
+        _index_cache = cache
+        _index_cache_size = len(cache)
+        return cache, len(cache)
+
+    model = _get_model()
+    if model is None:
         _index_cache = cache
         _index_cache_size = len(cache)
         return cache, len(cache)
@@ -181,8 +192,15 @@ def build_index_from_db(db_path: str, force_rebuild: bool = False) -> Tuple[dict
     return cache, len(cache)
 
 
-def _get_index(db_path: str) -> dict:
-    """Get in-memory index, rebuilding from disk if stale."""
+def _get_index(db_path: str, *, allow_rebuild: bool = False) -> dict:
+    """Get in-memory/cached index without surprise model loads.
+
+    `semantic_search()` is on the live MCP hot path. For legacy or fresh DBs with
+    no cached embedding index, it must fail closed to `[]` instead of loading a
+    sentence-transformer synchronously and emitting model/HF noise. Explicit
+    callers can still build the index via `build_index_from_db()` or by passing
+    `allow_rebuild=True`.
+    """
     global _index_cache, _index_cache_size
     try:
         db = sqlite3.connect(db_path, timeout=5)
@@ -193,7 +211,21 @@ def _get_index(db_path: str) -> dict:
     except Exception:
         db_count = 0
 
-    if _index_cache is None or db_count > _index_cache_size + 5:
+    if _index_cache is None:
+        # Fail closed instead of loading a global cache that may belong to a
+        # different trace DB. Explicit builders are responsible for populating
+        # the in-memory index; live semantic_search must not surprise-load a
+        # model or mix cached vectors from another database.
+        if allow_rebuild:
+            build_index_from_db(db_path)
+        else:
+            return {}
+
+    cache = _index_cache or {}
+    if not cache:
+        return {}
+
+    if allow_rebuild and db_count > _index_cache_size + 5:
         build_index_from_db(db_path)
 
     return _index_cache or {}
@@ -207,16 +239,16 @@ def semantic_search(
     outcome_filter: Optional[str] = None
 ) -> List[dict]:
     """Find top-k semantically similar traces. Uses in-memory cache."""
+    cache = _get_index(db_path)
+    if not cache:
+        return []
+
     model = _get_model()
     if model is None:
         return []
 
     query_vec = embed_text(query)
     if query_vec is None:
-        return []
-
-    cache = _get_index(db_path)
-    if not cache:
         return []
 
     trace_ids = list(cache.keys())

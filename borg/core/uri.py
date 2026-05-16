@@ -42,55 +42,88 @@ _index_cache: Tuple[object, float] = (None, 0.0)
 # URI resolution
 # ---------------------------------------------------------------------------
 
-def resolve_guild_uri(uri: str) -> str:
-    """Resolve a guild URI to a fetchable URL or local path.
+def normalize_pack_uri(uri: str, *, canonical_scheme: str = "borg") -> str:
+    """Normalize pack identifiers to one canonical URI spelling.
 
-    Supported schemes:
-      guild://domain/name  -> GitHub raw URL (https://raw.githubusercontent.com/...)
-      https://... or http://... -> passthrough
-      /local/path          -> passthrough (absolute path)
-
-    Args:
-        uri: A guild URI, HTTPS URL, or absolute local path.
-
-    Returns:
-        The resolved URL or path as a string.
-
-    Raises:
-        ValueError: If the URI is empty or has an unsupported scheme.
+    Borg historically used both ``guild://`` and ``borg://`` in docs, tests, and
+    MCP payloads. First users should not pay for that history: all public entry
+    points accept bare names, ``borg://...``, and ``guild://...``. Internally we
+    normalize to ``borg://hermes/<pack>`` unless a caller explicitly requests the
+    legacy ``guild`` scheme for display/back-compat.
     """
-    if not uri or not uri.strip():
+    if not uri or not str(uri).strip():
         raise ValueError("URI cannot be empty")
 
-    uri = uri.strip()
+    raw = str(uri).strip()
+    if raw.startswith(("https://", "http://", "/")):
+        return raw
 
-    if uri.startswith("borg://"):
-        path_part = uri[len("borg://"):]
+    scheme = f"{canonical_scheme}://"
+    if raw.startswith(("borg://", "guild://")):
+        scheme_end = raw.index("://") + 3
+        path_part = raw[scheme_end:]
         if not path_part:
-            raise ValueError(f"Invalid guild URI: {uri}")
+            raise ValueError(f"Invalid guild URI: {raw}")
         parts = path_part.split("/", 1)
-        if len(parts) == 2:
-            _domain, name = parts
-        else:
-            name = parts[0]  # guild://pack-name shorthand (no domain)
-        # Try .workflow.yaml first, fall back to .yaml
-        # Store both URLs so fetch_with_retry can try the fallback
-        return (
-            f"https://raw.githubusercontent.com/{DEFAULT_REPO}/{DEFAULT_BRANCH}"
-            f"/packs/{name}.workflow.yaml"
+        name = parts[1] if len(parts) == 2 else parts[0]
+    elif re.match(r'^[\w-]+$', raw):
+        name = raw
+    else:
+        raise ValueError(
+            f"Unsupported URI scheme: {raw}. Use: borg://domain/pack-name, "
+            "guild://domain/pack-name, or a bare pack name."
         )
 
-    if uri.startswith("https://") or uri.startswith("http://"):
-        return uri
+    if not name or name in {".", ".."} or "/" in name or "\\" in name:
+        raise ValueError(f"Invalid guild URI: {raw}")
+    return f"{scheme}hermes/{name}"
 
-    if uri.startswith("/"):
-        return uri
 
-    # Bare pack name (no scheme) — try as borg://hermes/<name>
-    if re.match(r'^[\w-]+$', uri):
-        return resolve_guild_uri(f"borg://hermes/{uri}")
+def _pack_name_from_uri(uri: str) -> str:
+    """Return the sanitized pack name from any supported pack identifier."""
+    normalized = normalize_pack_uri(uri)
+    if normalized.startswith(("https://", "http://", "/")):
+        return Path(normalized).stem.replace(".workflow", "")
+    return normalized.rsplit("/", 1)[-1]
 
-    raise ValueError(f"Unsupported URI scheme: {uri}. Use: borg://domain/pack-name or a bare pack name.")
+
+def resolve_guild_uri(uri: str) -> str:
+    """Resolve a Borg/Guild URI to a fetchable URL or local path.
+
+    Supported schemes:
+      borg://domain/name   -> GitHub raw URL (preferred)
+      guild://domain/name  -> GitHub raw URL (legacy alias)
+      bare-pack-name       -> GitHub raw URL for borg://hermes/bare-pack-name
+      https://... or http://... -> passthrough
+      /local/path          -> passthrough (absolute path)
+    """
+    if not uri or not str(uri).strip():
+        raise ValueError("URI cannot be empty")
+
+    raw = str(uri).strip()
+    if raw.startswith("https://") or raw.startswith("http://"):
+        return raw
+    if raw.startswith("/"):
+        return raw
+
+    name = _pack_name_from_uri(raw)
+
+    # Prefer packaged seed packs. This keeps the day-one
+    # `borg try systematic-debugging` path working in fresh installs even when
+    # the remote GitHub index or raw URL is unavailable, without letting a
+    # user's unrelated local BORG_DIR shadow explicit remote URI resolution.
+    local_candidates = [
+        Path(__file__).parent.parent / "seeds_data" / "packs" / f"{name}.workflow.yaml",
+        Path(__file__).parent.parent / "seeds_data" / "packs" / f"{name}.yaml",
+    ]
+    for candidate in local_candidates:
+        if candidate.exists() and candidate.is_file():
+            return str(candidate)
+
+    return (
+        f"https://raw.githubusercontent.com/{DEFAULT_REPO}/{DEFAULT_BRANCH}"
+        f"/packs/{name}.workflow.yaml"
+    )
 
 
 # ---------------------------------------------------------------------------
@@ -236,11 +269,11 @@ def fuzzy_match_pack(name: str) -> List[str]:
         A list of up to 5 similar pack names, or all available if none are close.
         Returns an empty list if no packs are available at all.
     """
-    # Strip guild:// prefix if present
-    if name.startswith("borg://"):
-        parts = name[len("borg://"):].split("/", 1)
-        if len(parts) >= 2:
-            name = parts[1]
+    # Strip borg:// or guild:// prefix if present so suggestions use pack names.
+    try:
+        name = _pack_name_from_uri(name)
+    except ValueError:
+        pass
 
     available = get_available_pack_names()
     if not available:

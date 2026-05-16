@@ -23,6 +23,8 @@ from datetime import datetime, timezone
 from pathlib import Path
 from typing import Any, Dict, List, Optional
 
+from borg.core.dirs import get_borg_home, get_v3_db_path
+
 logger = logging.getLogger(__name__)
 
 # ---------------------------------------------------------------------------
@@ -91,24 +93,24 @@ class FleetSyncer:
     """Synchronize Borg V3 data across a fleet of VPS nodes.
 
     The syncer:
-      1. Pulls collective data (traces, outcomes, pack versions) from local ~/.borg/ files
+      1. Pulls collective data (traces, outcomes, pack versions) from BORG_HOME files
       2. Pushes to remote servers via SSH/rsync
       3. Pulls back remote outcomes
       4. Merges using the V3 SQLite DB
 
     Args:
         nodes: List of NodeConfig objects describing each fleet node.
-        central_db_path: Path to the central V3 SQLite DB. Defaults to ~/.borg/borg_v3.db.
+        central_db_path: Path to the central V3 SQLite DB. Defaults to BORG_HOME/borg_v3.db.
     """
 
     def __init__(
         self,
         nodes: List[NodeConfig],
-        central_db_path: str = "~/.borg/borg_v3.db",
+        central_db_path: str | None = None,
     ):
         self.nodes = {n.identity(): n for n in nodes}
-        self._central_db_path = os.path.expanduser(central_db_path)
-        self._local_borg_path = os.path.expanduser("~/.borg")
+        self._central_db_path = os.path.expanduser(str(central_db_path)) if central_db_path is not None else str(get_v3_db_path())
+        self._local_borg_path = str(get_borg_home())
 
     # -------------------------------------------------------------------------
     # Public API

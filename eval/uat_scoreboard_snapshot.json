@@ -14,7 +14,7 @@
     "ready_for_10": true,
     "ready_for_100": true,
     "ready_for_1000": true,
-    "timestamp": "2026-05-04T12:08:01.327965+00:00"
+    "timestamp": "2026-05-06T09:32:43.065021+00:00"
   },
   "gates": {
     "first_user_surface": true,
@@ -27,30 +27,30 @@
   "loads": {
     "10": {
       "exists": true,
-      "p95_ms": 0.6029137410223484,
-      "p99_ms": 0.6239618547260761,
+      "p95_ms": 0.6120754994299205,
+      "p99_ms": 0.666747909872356,
       "passed": true,
       "success_rate": 1.0,
-      "timestamp": "2026-05-04T12:07:50.113051+00:00",
-      "total_requests": 10913
+      "timestamp": "2026-05-06T09:31:42.148143+00:00",
+      "total_requests": 60070
     },
     "100": {
       "exists": true,
-      "p95_ms": 0.5782860796898603,
-      "p99_ms": 0.6126944534480573,
+      "p95_ms": 0.610864001646405,
+      "p99_ms": 0.7458787990617565,
       "passed": true,
       "success_rate": 1.0,
-      "timestamp": "2026-05-04T12:07:55.211079+00:00",
-      "total_requests": 11199
+      "timestamp": "2026-05-06T09:32:12.279837+00:00",
+      "total_requests": 61213
     },
     "1000": {
       "exists": true,
-      "p95_ms": 0.6138130091130733,
-      "p99_ms": 0.6562628224492074,
+      "p95_ms": 0.5984217998047825,
+      "p99_ms": 0.6205782780307345,
       "passed": true,
       "success_rate": 1.0,
-      "timestamp": "2026-05-04T12:08:00.350199+00:00",
-      "total_requests": 10123
+      "timestamp": "2026-05-06T09:32:42.460236+00:00",
+      "total_requests": 62409
     }
   },
   "ready_for_10": true,
@@ -77,7 +77,7 @@
     ]
   },
   "source": "eval/uat_scoreboard.py",
-  "timestamp": "2026-05-04T12:08:01.491697+00:00",
+  "timestamp": "2026-05-06T09:32:45.808525+00:00",
   "version": {
     "passed": true,
     "project_version": "3.3.1",

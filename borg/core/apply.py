@@ -48,10 +48,10 @@ logger = logging.getLogger(__name__)
 # Constants (mirror PRD §4.3)
 # ---------------------------------------------------------------------------
 
-HERMES_HOME = Path(os.getenv("HERMES_HOME", Path.home() / ".hermes"))
-GUILD_DIR = HERMES_HOME / "guild"
-BORG_DIR = GUILD_DIR  # Alias for backwards compatibility
-EXECUTIONS_DIR = GUILD_DIR / "executions"
+BORG_DIR = get_borg_dir()
+HERMES_HOME = BORG_DIR.parent  # Backwards-compatible alias; not used for path resolution.
+GUILD_DIR = BORG_DIR  # Alias for backwards compatibility
+EXECUTIONS_DIR = BORG_DIR / "executions"
 
 MAX_PHASES = 20
 MAX_PACK_SIZE_BYTES = 500 * 1024  # 500 KB

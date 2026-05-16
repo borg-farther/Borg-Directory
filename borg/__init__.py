@@ -12,7 +12,7 @@ from __future__ import annotations
 import json
 from typing import Any
 
-__version__ = "3.3.1"
+__version__ = "3.3.3"
 
 
 def check(context: str, constraints: dict | None = None, top_k: int = 3) -> list[dict[str, Any]]:

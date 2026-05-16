@@ -5,7 +5,7 @@ Session persistence: {BORG_DIR}/sessions/{session_id}.json
 Execution logs:      {BORG_DIR}/executions/{session_id}.jsonl
 
 All paths are configurable via constructor or environment variable
-HERMES_HOME.  Defaults to ~/.hermes/guild/.
+BORG_DIR. Defaults to BORG_HOME/guild.
 
 Session dict schema (keys required by this module):
     session_id, pack_name, task, phase_index, status, created_at,

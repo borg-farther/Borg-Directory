@@ -1,0 +1,49 @@
+{
+  "generated_at_utc": "2026-05-14T18:39:00Z",
+  "current_state": {
+    "public_waitlist_narrow_beta": "YES",
+    "public_self_serve_launch": "NO",
+    "branch": "public-waitlist-readiness-20260514",
+    "latest_known_pushed_head": "a20921610b7d41bcc7db71361f1271c347ecbc58"
+  },
+  "remaining_blockers": [
+    {
+      "id": "SSL-01",
+      "name": "live_mcp_runtime_identity",
+      "status": "HUMAN_BLOCKED",
+      "why_not_done": "Autonomous agent is prohibited from restarting/killing/signaling Hermes gateway/MCP. Source canary passed, but served-process canary after reload is still required.",
+      "done_criteria": [
+        "served borg_runtime_fingerprint path/hash/version match expected code",
+        "live unrelated readiness borg_observe returns NO_CONFIDENT_MATCH",
+        "live permission-denied borg_observe returns permission guidance",
+        "eval/live_mcp_self_serve_canary.json written with pass=true"
+      ],
+      "next_action": "Schedule supervised reload/cutover and run live canary immediately after."
+    },
+    {
+      "id": "SSL-02",
+      "name": "first_10_real_external_users",
+      "status": "HUMAN_BLOCKED",
+      "why_not_done": "Requires real external users; simulations or fabricated rows are forbidden. Current verified_external_users=0.",
+      "done_criteria": [
+        "10 consented real external user rows recorded",
+        "at least 8 install successes",
+        "at least 6 useful ACTION/STOP/VERIFY rescue moments",
+        "0 critical privacy/security failures",
+        "blockers categorized for all misses",
+        "repeat-use/follow-up signal captured"
+      ],
+      "next_action": "Run first-10 beta using docs/20260514_FIRST_10_USER_INVITE_PACKET.md and update eval/first_10_user_scoreboard.json from real evidence only."
+    }
+  ],
+  "already_done": [
+    "public waitlist branch pushed",
+    "pipx proof passed",
+    "security gate passed",
+    "privacy/prompt-injection/atom/firewall tests passed",
+    "source canaries passed",
+    "first-10 invite packet created",
+    "scoreboard created with verified_external_users=0"
+  ],
+  "go_no_go_rule": "public_self_serve_launch is GO only after SSL-01 and SSL-02 both pass plus existing local/security/pipx/repo gates remain green"
+}

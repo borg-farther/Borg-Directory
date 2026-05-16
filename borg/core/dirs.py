@@ -1,52 +1,124 @@
 """
-Centralized BORG_DIR resolution.
+Centralized Borg storage path resolution.
 
-All Guild v2 code should import get_borg_dir() from here rather than
-hardcoding paths.  BORG_DIR is configurable via the BORG_DIR environment
-variable, defaulting to ~/.hermes/guild.
+BORG_HOME is the product-level home (default: ~/.borg). It owns trace, V3,
+atom, embedding, and failure-memory state. BORG_DIR is the workflow/pack
+subdirectory used by older Guild/Borg code (default: BORG_HOME/guild).
+
+All Borg code should import resolver helpers from this module rather than
+hardcoding ~/.borg, ~/.hermes/borg, or ~/.hermes/guild paths.
 """
 
-import inspect
+from __future__ import annotations
+
 import os
 import sys
 from pathlib import Path
 
-#: Default path used when BORG_DIR env var is not set.
-_DEFAULT_BORG_DIR = Path.home() / ".hermes" / "guild"
 
-#: Module-level BORG_DIR.  Respects BORG_DIR env var if set.
-#: Exposed as a module constant so that code that imports BORG_DIR from
-#: here (e.g. "from borg.core.search import BORG_DIR") remains compatible
-#: with existing tests that patch the symbol directly.
-BORG_DIR = Path(os.environ["BORG_DIR"]) if "BORG_DIR" in os.environ else _DEFAULT_BORG_DIR
+def _expand(path: str | os.PathLike[str]) -> Path:
+    return Path(path).expanduser()
+
+
+_DEFAULT_BORG_HOME = Path.home() / ".borg"
+_DEFAULT_BORG_DIR = _DEFAULT_BORG_HOME / "guild"
+
+# Backward-compatible module constants. Call resolver functions for new code;
+# tests may still patch BORG_DIR on importing modules.
+BORG_HOME = _expand(os.environ["BORG_HOME"]) if "BORG_HOME" in os.environ else _DEFAULT_BORG_HOME
+BORG_DIR = _expand(os.environ["BORG_DIR"]) if "BORG_DIR" in os.environ else BORG_HOME / "guild"
+
+
+def get_borg_home() -> Path:
+    """Return the Borg product home directory.
+
+    Priority:
+    1. BORG_HOME, when explicitly set.
+    2. BORG_DIR, as a backwards-compatible isolation root for older callers/tests.
+    3. ~/.borg.
+    """
+    if "BORG_HOME" in os.environ:
+        return _expand(os.environ["BORG_HOME"])
+    if "BORG_DIR" in os.environ:
+        return _expand(os.environ["BORG_DIR"])
+    # Use Path.home() dynamically so tests and embedded callers that monkeypatch
+    # HOME/Path.home after module import still get isolated storage.  The
+    # module-level BORG_HOME constant is kept only for legacy callers that patch
+    # imported symbols directly.
+    return Path.home() / ".borg"
 
 
 def get_borg_dir() -> Path:
-    """
-    Return the current BORG_DIR path.
+    """Return the workflow/pack store directory.
 
-    Respects the BORG_DIR environment variable.  If set, returns that path.
-    Otherwise returns ~/.hermes/guild.
+    BORG_DIR remains an explicit override. Without it, workflow packs live under
+    BORG_HOME/guild so a single BORG_HOME isolates all Borg state for first users
+    and MCP clients.
 
-    When called from a module that has a module-level BORG_DIR constant
-    (imported from this module), the caller's module-level constant is
-    checked first so that tests patching that symbol take effect.
+    When called from a module that has a module-level BORG_DIR constant, a test
+    patch of that symbol still takes effect if it differs from this module's
+    canonical BORG_DIR.
     """
-    # Fast path: env var always wins (primary configuration mechanism)
     if "BORG_DIR" in os.environ:
-        return Path(os.environ["BORG_DIR"])
+        return _expand(os.environ["BORG_DIR"])
 
-    # Check the calling module's namespace for a patched BORG_DIR.
-    # This allows tests to patch e.g. borg.core.search.BORG_DIR and have
-    # those patches visible to search.py functions that call get_borg_dir().
-    frame = sys._getframe(1)  # caller's frame
+    frame = sys._getframe(1)
     try:
-        caller_globals = frame.f_globals
-        borg_dir = caller_globals.get("BORG_DIR")
-        if borg_dir is not None:
-            return borg_dir
+        caller_borg_dir = frame.f_globals.get("BORG_DIR")
+        if caller_borg_dir is not None and Path(caller_borg_dir) != BORG_DIR:
+            return Path(caller_borg_dir)
     finally:
         del frame
 
-    # Fall back to this module's constant
-    return BORG_DIR
+    return get_borg_home() / "guild"
+
+
+def get_trace_db_path() -> Path:
+    return get_borg_home() / "traces.db"
+
+
+def get_v3_db_path() -> Path:
+    return get_borg_home() / "borg_v3.db"
+
+
+def get_atom_db_path() -> Path:
+    return get_borg_home() / "atoms.db"
+
+
+def get_embedding_cache_path() -> Path:
+    return get_borg_home() / "embeddings.pkl"
+
+
+def get_embedding_index_path() -> Path:
+    return get_borg_home() / "embeddings_index.pkl"
+
+
+def get_failure_memory_dir() -> Path:
+    return get_borg_home() / "failures"
+
+
+def get_feedback_db_path() -> Path:
+    """Feedback signals share the trace DB for backwards-compatible schema use."""
+    return get_trace_db_path()
+
+
+def get_tenant_secret_path() -> Path:
+    return get_borg_home() / "tenant_secret"
+
+
+def get_paths_summary() -> dict[str, str]:
+    """Machine-readable summary for doctor/runtime fingerprint/tests."""
+    borg_home = get_borg_home()
+    borg_dir = get_borg_dir()
+    return {
+        "borg_home": str(borg_home),
+        "borg_dir": str(borg_dir),
+        "trace_db_path": str(get_trace_db_path()),
+        "v3_db_path": str(get_v3_db_path()),
+        "guild_db_path": str(borg_dir / "guild.db"),
+        "atom_db_path": str(get_atom_db_path()),
+        "embedding_cache_path": str(get_embedding_cache_path()),
+        "embedding_index_path": str(get_embedding_index_path()),
+        "failure_memory_dir": str(get_failure_memory_dir()),
+        "tenant_secret_path": str(get_tenant_secret_path()),
+    }

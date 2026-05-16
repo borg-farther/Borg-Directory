@@ -1,0 +1,107 @@
+{
+  "generated_at_utc": "2026-05-15T11:34:00Z",
+  "verdict": "AUTONOMOUS_PRODUCTION_HARDENING_COMPLETE_OPERATOR_AND_REALITY_GATES_REMAIN",
+  "booleans": {
+    "READY_FOR_SUPERVISED_FIRST_USER": true,
+    "READY_FOR_PUBLIC_WAITLIST_OR_NARROW_BETA": true,
+    "READY_FOR_PUBLIC_WAITLIST_OR_NARROW_BETA_CAVEAT": "YES_WITH_CAVEATS",
+    "READY_FOR_SELF_SERVE_PUBLIC_LAUNCH": false,
+    "FRONTIER_BETTER_THAN_PROVEN": false
+  },
+  "files_changed_by_this_continuation": [
+    "scripts/benchmark_evidence_contract.py",
+    "eval/tests/test_benchmark_evidence_contract.py",
+    "eval/20260515_benchmark_evidence_audit.json",
+    "docs/20260514_BORG_PUBLIC_LAUNCH_BLOCKER_BOARD.md",
+    "docs/20260515_BORG_WHOLE_CODEBASE_DAY_ONE_AUDIT.md",
+    "scripts/capture_final_production_hardening.py",
+    "eval/20260515_final_production_hardening_commands.json",
+    "docs/20260515_BORG_FINAL_PRODUCTION_HARDENING_REPORT.md",
+    "eval/20260515_final_production_hardening_report.json"
+  ],
+  "gates": [
+    {
+      "name": "learning_loop_suite",
+      "command": "python -m pytest -q borg/tests/test_e2e_learning_loop_v3.py borg/tests/test_v3_integration.py borg/tests/test_failure_memory.py borg/tests/test_mutation_engine.py borg/tests/test_feedback_loop.py borg/tests/test_contextual_selector.py --tb=short",
+      "returncode": 0,
+      "verdict": "PASS",
+      "summary": "325 passed in 11.35s"
+    },
+    {
+      "name": "core_production_gates",
+      "command": "python -m pytest -q borg/tests/test_rescue.py borg/tests/test_runtime_fingerprint.py borg/tests/test_embeddings_schema_compat.py eval/tests/test_security_hardening_baseline.py borg/tests/test_confidence_gate.py borg/tests/test_borg_observe_confidence_gate.py borg/tests/test_first_10_readiness.py --tb=short",
+      "returncode": 0,
+      "verdict": "PASS",
+      "summary": "49 passed in 5.75s"
+    },
+    {
+      "name": "benchmark_evidence_contract",
+      "command": "python -m pytest -q eval/tests/test_benchmark_evidence_contract.py --tb=short",
+      "returncode": 0,
+      "verdict": "PASS",
+      "summary": "9 passed in 0.07s"
+    },
+    {
+      "name": "first_user_release_gate",
+      "command": "python eval/run_first_user_release_gate.py",
+      "returncode": 0,
+      "verdict": "PASS",
+      "summary": "success=true; fresh venv/build/install/CLI/rescue/doctor checks passed"
+    },
+    {
+      "name": "security_gate_check",
+      "command": "python scripts/security_gate_check.py",
+      "returncode": 0,
+      "verdict": "PASS",
+      "summary": "PASS: Borg security hardening policy gate"
+    },
+    {
+      "name": "mcp_observe_canaries_in_process",
+      "returncode": 0,
+      "verdict": "PASS_LOCAL_SOURCE_NOT_SERVED_GATEWAY_PROOF",
+      "summary": "unrelated NO_CONFIDENT=True STALE=False; permission PERMISSION=True STALE=False"
+    },
+    {
+      "name": "first_10_scoreboard",
+      "returncode": 0,
+      "verdict": "BLOCKED_REALITY",
+      "summary": "real_users=0 install_successes=0 useful_rescue_moments=0 public_self_serve_launch_gate=BLOCKED"
+    },
+    {
+      "name": "git_status_short",
+      "returncode": 0,
+      "verdict": "CAPTURED_DIRTY_TREE",
+      "summary": "exact output in eval/20260515_final_production_hardening_commands.json"
+    }
+  ],
+  "benchmark_evidence_contract": {
+    "status": "ENFORCED_BY_TEST",
+    "permits_no_valid_evidence": true,
+    "rejects_zero_duration": true,
+    "rejects_zero_tokens_without_unavailable_marker": true,
+    "rejects_null_deltas": true,
+    "rejects_frontier_claim_without_controlled_evidence": true,
+    "current_frontier_evidence_status": "NO_VALID_EVIDENCE",
+    "rejects_bogus_token_status_strings": true,
+    "requires_same_task_control_treatment_pairing": true
+  },
+  "remaining_blockers": {
+    "autonomous": [],
+    "operator": [
+      "Directly verify live served MCP runtime through actual configured MCP client/process boundary without unsafe gateway kill/restart/signal.",
+      "Review dirty tree/generated artifacts and commit or clean intended release contents.",
+      "Human review public copy before announcement."
+    ],
+    "reality": [
+      "First-10 real external users are still 0.",
+      "Public self-serve requires 10 real users, >=8 installs, >=6 useful rescues, and 0 critical privacy/security failures.",
+      "Frontier-better-than requires controlled A/B benchmark with matched randomized tasks, current frontier baseline, positive/non-null metrics/deltas, paired rows, and statistical confidence."
+    ]
+  },
+  "evidence_files": {
+    "commands": "eval/20260515_final_production_hardening_commands.json",
+    "human_report": "docs/20260515_BORG_FINAL_PRODUCTION_HARDENING_REPORT.md",
+    "benchmark_contract_test": "eval/tests/test_benchmark_evidence_contract.py",
+    "benchmark_contract_script": "scripts/benchmark_evidence_contract.py"
+  }
+}

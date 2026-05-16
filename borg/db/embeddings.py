@@ -17,6 +17,8 @@ except ImportError:
     SentenceTransformer = None
     _SENTENCE_TRANSFORMERS_AVAILABLE = False
 
+from borg.core.dirs import get_borg_dir
+
 from .migrations import migrate
 from .store import AgentStore
 
@@ -60,7 +62,7 @@ class EmbeddingEngine:
 
     def _default_db_path(self) -> str:
         """Get default database path."""
-        return os.path.expanduser("~/.hermes/guild/guild.db")
+        return str(get_borg_dir() / "guild.db")
 
     def _load_model(self):
         """Lazy load the sentence-transformers model."""

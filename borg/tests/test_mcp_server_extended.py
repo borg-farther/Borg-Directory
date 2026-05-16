@@ -937,9 +937,11 @@ class TestBorgObserveErrors(unittest.TestCase):
                 parsed = json.loads(result)
             except (json.JSONDecodeError, TypeError):
                 parsed = {"raw": result}
-            # Should return success with observed=False
-            self.assertTrue(parsed.get("success"))
-            self.assertFalse(parsed.get("observed"))
+            # Current contract returns a text envelope, not the pre-slice JSON
+            # {success: true, observed: false} shape.
+            self.assertIsInstance(result, str)
+            self.assertIn("VERIFY:", result)
+            self.assertIn("CONFIDENCE:", result)
 
     def test_observe_v3_path_with_context_dict(self):
         """Test borg_observe uses V3 search when context_dict has error_type."""

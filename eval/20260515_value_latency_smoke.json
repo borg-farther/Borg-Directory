@@ -1,0 +1,202 @@
+{
+  "command": "in_process_value_latency_smoke",
+  "rc": 0,
+  "wall_time_s": 6.352,
+  "assert_lt_300s": true,
+  "steps": [
+    {
+      "name": "borg_rescue",
+      "duration_s": 0.0566,
+      "ok": true,
+      "preview": "{\"success\": true, \"status\": \"matched\", \"problem_class\": \"missing_dependency\", \"confidence\": \"tested\", \"action\": [\"pip_install \u2014 run/check: pip install package-name\", \"install_in_venv \u2014 run/check: source venv/bin/activate && pip install package-name\", \"install_editable \u2014 run/check: pip install -e .\"], \"stop\": [\"pip install without a virtualenv \u2014 fails because Pollutes the global Python and causes version conflicts\", \"Manually copying module files to site-packages \u2014 fails because Version conflicts and no automatic updates\", \"Ignoring which virtualenv is activated \u2014 fails because The module is installed but in a different environment\"], \"verify\": [\"rerun the exact failing command\", \"add or run the smallest regression test\", \"only then continue broader changes\"], \"next_command\": \"borg feedback-v3 --pack missing_dependency --success yes\", \"agent_instruction\": \"ACTION: pip_install \u2014 run/check: pip install package-name\\nSTOP: avoid pip install without a virtualenv \u2014 fails because Pollutes the global Python and causes version conflicts\\nVERIFY: rerun the exact failing command\\nSHOW HUMAN: say Borg found this rescue path and whether it worked.\", \"human_receipt\": \"Borg matched `missing_depen",
+      "flags": {
+        "has_ACTION": true,
+        "has_STOP": true,
+        "has_VERIFY": true,
+        "no_confident_match": false,
+        "stale_plugin_guidance": false
+      }
+    },
+    {
+      "name": "borg_observe_permission",
+      "duration_s": 6.051,
+      "ok": true,
+      "preview": "VERIFY: execute the pack's first checkpoint, then rerun the exact failing command\n\nCONFIDENCE: Real traces: 0 | Synthetic: 0 | BORG [SYNTHETIC ONLY]\n\n------------------------------------------------------------\nPACK GUIDANCE (bash-permission-denied)\n1. Check file permissions: ls -la <file>\n2. Add execute permission: chmod +x <script.sh>\n3. For directories: chmod +x <directory>\n4. Check ownership: ls -ln <file>\n5. Run as appropriate user: sudo <command>\n6. For SSH keys: chmod 600 ~/.ssh/id_rsa\n------------------------------------------------------------",
+      "flags": {
+        "has_ACTION": false,
+        "has_STOP": false,
+        "has_VERIFY": true,
+        "no_confident_match": false,
+        "stale_plugin_guidance": false
+      }
+    },
+    {
+      "name": "borg_observe_unknown",
+      "duration_s": 0.1524,
+      "ok": true,
+      "preview": "ACTION: proceed with normal debugging for this task; Borg has no proven cache hit.\n\nSTOP: do not force a weak or unrelated pack onto this task.\n\nVERIFY: collect the exact failing command/output and rerun borg_observe or borg_rescue only if new evidence appears.\n\nCONFIDENCE: BORG [NO CONFIDENT MATCH] -- no relevant traces, synthetic hits, or pack matches.\n\nNO_CONFIDENT_MATCH: No confident Borg match for this task.\nBorg found no relevant real traces, synthetic hits, or exact pack class match.\nProceed with normal reasoning; do not treat Borg as evidence for this task.\nAfter resolving: call borg_rate(helpful=True) only if Borg guidance was actually useful.",
+      "flags": {
+        "has_ACTION": true,
+        "has_STOP": true,
+        "has_VERIFY": true,
+        "no_confident_match": true,
+        "stale_plugin_guidance": false
+      }
+    },
+    {
+      "name": "record_outcome_to_search",
+      "ok": true,
+      "duration_s": 0.0443,
+      "pack_id": "missing-dependency",
+      "before_count": 1,
+      "after_count": 1,
+      "before_top": {
+        "pack_id": "missing-dependency",
+        "name": "missing-dependency",
+        "category": "missing_dependency",
+        "score": 1.0,
+        "match_type": "problem_class_match",
+        "confidence": "tested",
+        "problem_class": "missing_dependency",
+        "investigation_trail": [
+          {
+            "file": "requirements.txt",
+            "position": "FIRST",
+            "what": "Check requirements.txt for missing packages \u2014 particularly recently removed packages",
+            "grep_pattern": ""
+          },
+          {
+            "file": "pyproject.toml",
+            "position": "SECOND",
+            "what": "Check pyproject.toml dependencies for version conflicts or missing packages",
+            "grep_pattern": "dependencies|requirements"
+          }
+        ],
+        "resolution_sequence": [
+          {
+            "action": "pip_install",
+            "command": "pip install package-name",
+            "why": "Installs the package in the current Python environment"
+          },
+          {
+            "action": "install_in_venv",
+            "command": "source venv/bin/activate && pip install package-name",
+            "why": "Ensures the package is installed in the correct virtual environment"
+          },
+          {
+            "action": "install_editable",
+            "command": "pip install -e .",
+            "why": "Installs the local package in editable mode for development"
+          },
+          {
+            "action": "check_python_path",
+            "command": "import sys; print(sys.path)",
+            "why": "Verify Python is looking in the right directories"
+          }
+        ],
+        "anti_patterns": [
+          {
+            "action": "pip install without a virtualenv",
+            "why_fails": "Pollutes the global Python and causes version conflicts"
+          },
+          {
+            "action": "Manually copying module files to site-packages",
+            "why_fails": "Version conflicts and no automatic updates"
+          },
+          {
+            "action": "Ignoring which virtualenv is activated",
+            "why_fails": "The module is installed but in a different environment"
+          }
+        ],
+        "evidence": {
+          "success_count": 42,
+          "failure_count": 3,
+          "success_rate": 0.93,
+          "avg_time_to_resolve_minutes": 1.2,
+          "uses": 45
+        },
+        "is_exploration": false,
+        "reputation": 1.0,
+        "sampled_value": 1.0,
+        "uncertainty": 0.0
+      },
+      "after_top": {
+        "pack_id": "missing-dependency",
+        "name": "missing-dependency",
+        "category": "missing_dependency",
+        "score": 1.0,
+        "match_type": "problem_class_match",
+        "confidence": "tested",
+        "problem_class": "missing_dependency",
+        "investigation_trail": [
+          {
+            "file": "requirements.txt",
+            "position": "FIRST",
+            "what": "Check requirements.txt for missing packages \u2014 particularly recently removed packages",
+            "grep_pattern": ""
+          },
+          {
+            "file": "pyproject.toml",
+            "position": "SECOND",
+            "what": "Check pyproject.toml dependencies for version conflicts or missing packages",
+            "grep_pattern": "dependencies|requirements"
+          }
+        ],
+        "resolution_sequence": [
+          {
+            "action": "pip_install",
+            "command": "pip install package-name",
+            "why": "Installs the package in the current Python environment"
+          },
+          {
+            "action": "install_in_venv",
+            "command": "source venv/bin/activate && pip install package-name",
+            "why": "Ensures the package is installed in the correct virtual environment"
+          },
+          {
+            "action": "install_editable",
+            "command": "pip install -e .",
+            "why": "Installs the local package in editable mode for development"
+          },
+          {
+            "action": "check_python_path",
+            "command": "import sys; print(sys.path)",
+            "why": "Verify Python is looking in the right directories"
+          }
+        ],
+        "anti_patterns": [
+          {
+            "action": "pip install without a virtualenv",
+            "why_fails": "Pollutes the global Python and causes version conflicts"
+          },
+          {
+            "action": "Manually copying module files to site-packages",
+            "why_fails": "Version conflicts and no automatic updates"
+          },
+          {
+            "action": "Ignoring which virtualenv is activated",
+            "why_fails": "The module is installed but in a different environment"
+          }
+        ],
+        "evidence": {
+          "success_count": 42,
+          "failure_count": 3,
+          "success_rate": 0.93,
+          "avg_time_to_resolve_minutes": 1.2,
+          "uses": 45
+        },
+        "is_exploration": false,
+        "reputation": 1.0,
+        "sampled_value": 1.0,
+        "uncertainty": 0.0
+      },
+      "record_stdout": "[E2E-001] record_outcome() CALLED \u2014 pack_id='missing-dependency' success=True category='debug'\n[E2E-001]   PATH-1 (SQLite): attempting write to outcomes table...\n[E2E-001]   PATH-1 (SQLite): SUCCESS \u2014 row written\n[E2E-001]   PATH-2 (ContextualSelector.record_outcome): calling with pack='missing-dependency' cat='debug' success=True\n[E2E-001]   PATH-2 (ContextualSelector): SUCCESS \u2014 Thompson Sampling updated inline\n[E2E-001]   PATH-3 (FeedbackLoop.record): hasattr=True...\n[E2E-001]   PATH-3 (FeedbackLoop.record): SUCCESS\n[E2E-001]   PATH-4 (MutationEngine): hasattr=True ab_ctx=None session_id=None\n[E2E-001]   PATH-4c (MutationEngine): SKIPPED \u2014 no A/B context\n",
+      "sqlite_db": "/tmp/tmprajyen8c.db"
+    }
+  ],
+  "summary": {
+    "action_stop_verify_returned": true,
+    "stale_behavior_correct": true,
+    "unknown_no_match_correct": true
+  }
+}

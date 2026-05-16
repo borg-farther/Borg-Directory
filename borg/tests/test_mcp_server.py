@@ -433,7 +433,8 @@ class TestBorgObserveUnit:
         })):
             with patch("borg.core.search.classify_task", return_value=["some-task"]):
                 result = mcp_module.borg_observe(task="some task")
-                assert "my-pack" in result
+                assert "NO_CONFIDENT_MATCH" in result
+                assert "my-pack" not in result
 
     def test_borg_observe_includes_phases(self):
         with patch("borg.core.search.borg_search", return_value=json.dumps({
@@ -468,8 +469,9 @@ class TestBorgObserveUnit:
             with patch("borg.core.search.classify_task", return_value=["task"]):
                 result = mcp_module.borg_observe(task="task")
                 assert result  # observe returns ACTION+CONFIDENCE format
-                assert "copy-paste" in result
-                assert "skip tests" in result
+                assert "NO_CONFIDENT_MATCH" in result
+                assert "copy-paste" not in result
+                assert "skip tests" not in result
 
     def test_borg_observe_includes_checkpoint(self):
         with patch("borg.core.search.borg_search", return_value=json.dumps({
@@ -485,7 +487,8 @@ class TestBorgObserveUnit:
             with patch("borg.core.search.classify_task", return_value=["task"]):
                 result = mcp_module.borg_observe(task="task")
                 assert result  # observe returns ACTION+CONFIDENCE format
-                assert "review before merging" in result
+                assert "NO_CONFIDENT_MATCH" in result
+                assert "review before merging" not in result
 
     def test_borg_observe_handles_search_error_gracefully(self):
         with patch("borg.core.search.borg_search", return_value='{"success": false, "error": "search failed"}'):

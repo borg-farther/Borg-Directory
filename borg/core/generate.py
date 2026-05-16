@@ -502,23 +502,28 @@ def load_pack(pack_identifier: str) -> Dict[str, Any]:
             return pack
         raise ValueError(f"Pack file does not contain a dict: {pack_identifier}")
 
-    # Try as a pack name in the guild-packs directory
+    # Try as a pack name in the configured Borg workflow directory first.
+    from borg.core.dirs import get_borg_dir
+    borg_dir = get_borg_dir()
+    candidates = [borg_dir / pack_identifier / "pack.yaml"]
+
+    # Then try as a pack name in the bundled/local guild-packs directory.
     guild_packs_dir = pathlib.Path("/root/hermes-workspace/guild-packs/packs")
-    candidates = [
+    candidates.extend([
         guild_packs_dir / f"{pack_identifier}.yaml",
         guild_packs_dir / f"{pack_identifier}.workflow.yaml",
         guild_packs_dir / f"{pack_identifier}.rubric.yaml",
-    ]
+    ])
+
     for candidate in candidates:
         if candidate.exists():
             pack = yaml.safe_load(candidate.read_text(encoding="utf-8"))
             if isinstance(pack, dict):
                 return pack
 
-    # Also try HERMES_HOME
-    hermes_home = pathlib.Path.home() / ".hermes" / "guild"
-    if hermes_home.exists():
-        for pack_yaml in hermes_home.glob("*/pack.yaml"):
+    # Finally scan configured Borg workflow subdirectories for ID/slug matches.
+    if borg_dir.exists():
+        for pack_yaml in borg_dir.glob("*/pack.yaml"):
             if pack_yaml.parent.name == pack_identifier:
                 pack = yaml.safe_load(pack_yaml.read_text(encoding="utf-8"))
                 if isinstance(pack, dict):

@@ -282,7 +282,9 @@ def signing_key_from_string(encoded: str) -> "nacl.signing.SigningKey":
 # Key storage
 # ---------------------------------------------------------------------------
 
-DEFAULT_KEYS_DIR = Path(os.getenv("HERMES_HOME", Path.home() / ".hermes")) / "guild" / "keys"
+from borg.core.dirs import get_borg_dir
+
+DEFAULT_KEYS_DIR = get_borg_dir() / "keys"
 
 
 def store_signing_key(

@@ -20,6 +20,8 @@ from typing import Any, Dict, Optional
 
 import yaml
 
+from borg.core.dirs import get_failure_memory_dir
+
 
 # ---------------------------------------------------------------------------
 # Normalization helpers
@@ -59,7 +61,7 @@ class FailureMemory:
     Path format: <memory_dir>/<agent_id>/<pack_id>/<error_hash>.yaml
     """
 
-    DEFAULT_MEMORY_DIR = Path.home() / ".hermes" / "borg" / "failures"
+    DEFAULT_MEMORY_DIR = get_failure_memory_dir()
 
     def __init__(
         self,
@@ -106,7 +108,7 @@ class FailureMemory:
 
     def _agent_dir(self) -> Path:
         """Return the agent-scoped root directory, creating it if needed."""
-        d = self.memory_dir / self.agent_id
+        d = self.memory_dir / getattr(self, "agent_id", "default")
         d.mkdir(parents=True, exist_ok=True)
         return d
 
@@ -148,8 +150,10 @@ class FailureMemory:
         if outcome not in ("success", "failure"):
             raise ValueError(f"outcome must be 'success' or 'failure', got {outcome!r}")
 
-        # BUG FIX 1: use instance agent_id when param not provided
-        effective_agent_id = agent_id if agent_id is not None else self.agent_id
+        # BUG FIX 1: use instance agent_id when param not provided.  Keep a
+        # defensive default for tests/adapters that monkeypatch __init__ to
+        # redirect storage and therefore skip setting self.agent_id.
+        effective_agent_id = agent_id if agent_id is not None else getattr(self, "agent_id", "default")
 
         # BUG FIX 2: path traversal prevention — validate agent_id and pack_id
         self._validate_path_component(effective_agent_id, "agent_id")

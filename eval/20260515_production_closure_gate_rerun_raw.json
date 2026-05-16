@@ -1,0 +1,114 @@
+{
+  "generated_at_utc": "2026-05-15T09:00:20.127446+00:00",
+  "cwd": "/root/hermes-workspace/borg",
+  "results": [
+    {
+      "step": 1,
+      "command": "pwd; git status --short; git branch --show-current; git rev-parse HEAD",
+      "exit_code": 0,
+      "stdout": "/root/hermes-workspace/borg\n M GO_NO_GO_DECISION.md\n M LOAD_TEST_REPORT_10.md\n M LOAD_TEST_REPORT_100.md\n M LOAD_TEST_REPORT_1000.md\n M PROJECT_STATUS.md\n M README.md\n M UAT_RESULTS.md\n M borg/cli.py\n M borg/cli/doctor.py\n M borg/core/confidence_gate.py\n M borg/core/embeddings.py\n M borg/core/feedback_loop.py\n M borg/core/uri.py\n M borg/tests/test_borg_observe_confidence_gate.py\n M borg/tests/test_confidence_gate.py\n M borg/tests/test_distribution_readiness.py\n M borg/tests/test_uri.py\n M borg/tests/test_v3_integration.py\n M docs/20260514_BORG_PUBLIC_LAUNCH_BLOCKER_BOARD.md\n M docs/README.md\n M eval/gate_run_snapshot.json\n M eval/load_1000_snapshot.json\n M eval/load_100_snapshot.json\n M eval/load_10_snapshot.json\n M eval/uat_scoreboard_snapshot.json\n M pyproject.toml\n?? .hermes/\n?? borg/cli/__main__.py\n?? borg/core/first_user_readiness.py\n?? borg/core/runtime_fingerprint.py\n?? borg/seeds_data/packs/systematic-debugging.workflow.yaml\n?? borg/tests/test_embeddings_schema_compat.py\n?? borg/tests/test_first_10_readiness.py\n?? borg/tests/test_first_user_cli_contract.py\n?? borg/tests/test_runtime_fingerprint.py\n?? docs/20260513_BORG_DEEP_CUTOVER_EXECUTION_BOARD.md\n?? docs/20260513_BORG_FULL_AUDIT_AND_OBSERVE_CONFIDENCE_GATE.md\n?? docs/20260513_BORG_MULTI_REPO_PRODUCTION_CLEANUP_CUTOVER_PROPOSAL.md\n?? docs/20260514_BORG_EMBEDDINGS_SCHEMA_COMPAT_VERIFICATION_RAW.md\n?? docs/20260514_BORG_PRODUCTION_REBUILD_MASTER_PLAN.md\n?? docs/20260514_BORG_RUNTIME_FINGERPRINT_CANARY_PROOF.md\n?? docs/20260514_BORG_RUNTIME_FINGERPRINT_VERIFICATION_RAW.md\n?? docs/20260514_BORG_WORLD_CLASS_HARDENING_BOARD.md\n?? docs/20260514_FIRST_10_USER_INVITE_PACKET.md\n?? docs/20260514_FIX_ALL_PUBLIC_LAUNCH_BLOCKERS_REPORT.md\n?? docs/20260514_PUBLIC_SELF_SERVE_LAUNCH_CLOSURE_PLAN.md\n?? docs/20260515_LIVE_OBSERVE_CANARY_CONTINUATION.md\n?? docs/20260515_PRODUCTION_CLOSURE_GATE.md\n?? docs/FIRST_10_BETA_READINESS.md\n?? docs/repo-manifest/\n?? eval/20260514_fix_all_preflight.json\n?? eval/20260514_fix_all_public_launch_blockers.json\n?? eval/20260514_public_self_serve_launch_closure_plan.json\n?? eval/20260515_production_closure_gate_raw.json\n?? eval/run_first_user_release_gate.py\n?? eval/tests/test_security_hardening_baseline.py\n?? scripts/approved_do_it_all_safe.py\n?? scripts/run_embeddings_schema_compat_verification.py\n?? scripts/run_runtime_fingerprint_verification.py\n?? tmp_readiness_audit_20260506/\npublic-waitlist-readiness-20260514\na20921610b7d41bcc7db71361f1271c347ecbc58\n",
+      "stderr": ""
+    },
+    {
+      "step": 2,
+      "command": "python -m pytest -q borg/tests/test_confidence_gate.py borg/tests/test_borg_observe_confidence_gate.py borg/tests/test_first_10_readiness.py",
+      "exit_code": 0,
+      "stdout": "................................                                         [100%]\n32 passed in 7.92s\n",
+      "stderr": ""
+    },
+    {
+      "step": 3,
+      "command": "python -m pytest -q borg/tests/test_rescue.py borg/tests/test_runtime_fingerprint.py borg/tests/test_embeddings_schema_compat.py",
+      "exit_code": 1,
+      "stdout": "...........F                                                             [100%]\n=================================== FAILURES ===================================\n___ test_semantic_search_skips_model_load_when_legacy_db_has_no_cached_index ___\n\ntmp_path = PosixPath('/tmp/pytest-of-root/pytest-83/test_semantic_search_skips_mod0')\nmonkeypatch = <_pytest.monkeypatch.MonkeyPatch object at 0x75e6d87882d0>\n\n    def test_semantic_search_skips_model_load_when_legacy_db_has_no_cached_index(tmp_path, monkeypatch):\n        db_path = tmp_path / \"legacy_traces.db\"\n        _create_legacy_trace_db(db_path)\n    \n        calls = {\"model\": 0}\n    \n        def fake_get_model():\n            calls[\"model\"] += 1\n            raise AssertionError(\"semantic_search should not load embedding model when no index exists\")\n    \n        monkeypatch.setattr(embeddings, \"_get_model\", fake_get_model)\n        embeddings._index_cache = None\n        embeddings._index_cache_size = 0\n    \n>       assert embeddings.semantic_search(\"fix import bug\", str(db_path)) == []\n               ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^\n\nborg/tests/test_embeddings_schema_compat.py:61: \n_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ \nborg/core/embeddings.py:239: in semantic_search\n    model = _get_model()\n            ^^^^^^^^^^^^\n_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ \n\n    def fake_get_model():\n        calls[\"model\"] += 1\n>       raise AssertionError(\"semantic_search should not load embedding model when no index exists\")\nE       AssertionError: semantic_search should not load embedding model when no index exists\n\nborg/tests/test_embeddings_schema_compat.py:55: AssertionError\n=========================== short test summary info ============================\nFAILED borg/tests/test_embeddings_schema_compat.py::test_semantic_search_skips_model_load_when_legacy_db_has_no_cached_index\n1 failed, 11 passed in 0.30s\n",
+      "stderr": ""
+    },
+    {
+      "step": 4,
+      "command": "python scripts/security_gate_check.py",
+      "exit_code": 0,
+      "stdout": "PASS: Borg security hardening policy gate\n",
+      "stderr": ""
+    },
+    {
+      "step": 5,
+      "command": "python -m pytest -q eval/tests/test_security_hardening_baseline.py",
+      "exit_code": 0,
+      "stdout": ".....                                                                    [100%]\n5 passed in 0.03s\n",
+      "stderr": ""
+    },
+    {
+      "step": 6,
+      "command": "python - <<'PY'\nfrom borg.integrations import mcp_server\ncases=[\n ('unrelated', dict(task='continue Borg readiness/get it there: fix borg_observe irrelevant guidance/runtime mismatch and proceed toward first-user readiness', context='python borg mcp runtime readiness')),\n ('permission', dict(task='Fix bash: ./deploy.sh: Permission denied', context='bash permission denied chmod')),\n]\nfor name,kw in cases:\n    print('---CANARY', name, '---')\n    out=mcp_server.borg_observe(**kw)\n    print(out[:2000])\n    print('HAS_NO_CONFIDENT_MATCH=', 'NO_CONFIDENT_MATCH' in out or 'NO CONFIDENT MATCH' in out)\n    print('HAS_STALE_PLUGIN=', 'Plugin directory ~/.hermes/plugins/' in out or 'BORG_HOME env var' in out)\n    print('HAS_PY_TYPE_PACK=', 'PACK GUIDANCE (python-type-error)' in out)\n    print('HAS_PERMISSION=', 'Permission denied' in out or 'chmod' in out or 'PACK GUIDANCE (bash-permission-denied)' in out)\nPY",
+      "exit_code": 0,
+      "stdout": "---CANARY unrelated ---\nACTION: proceed with normal debugging for python; Borg has no proven cache hit.\n\nSTOP: do not force a weak or unrelated pack onto this task.\n\nVERIFY: collect the exact failing command/output and rerun borg_observe or borg_rescue only if new evidence appears.\n\nCONFIDENCE: BORG [NO CONFIDENT MATCH] -- no relevant traces, synthetic hits, or pack matches.\n\nNO_CONFIDENT_MATCH: No confident Borg match for python.\nBorg found no relevant real traces, synthetic hits, or exact pack class match.\nProceed with normal reasoning; do not treat Borg as evidence for this task.\nAfter resolving: call borg_rate(helpful=True) only if Borg guidance was actually useful.\nHAS_NO_CONFIDENT_MATCH= True\nHAS_STALE_PLUGIN= False\nHAS_PY_TYPE_PACK= False\nHAS_PERMISSION= False\n---CANARY permission ---\nVERIFY: execute the pack's first checkpoint, then rerun the exact failing command\n\nCONFIDENCE: Real traces: 0 | Synthetic: 0 | BORG [SYNTHETIC ONLY]\n\n------------------------------------------------------------\nPACK GUIDANCE (bash-permission-denied)\n1. Check file permissions: ls -la <file>\n2. Add execute permission: chmod +x <script.sh>\n3. For directories: chmod +x <directory>\n4. Check ownership: ls -ln <file>\n5. Run as appropriate user: sudo <command>\n6. For SSH keys: chmod 600 ~/.ssh/id_rsa\n------------------------------------------------------------\nHAS_NO_CONFIDENT_MATCH= False\nHAS_STALE_PLUGIN= False\nHAS_PY_TYPE_PACK= False\nHAS_PERMISSION= True\n",
+      "stderr": "Warning: You are sending unauthenticated requests to the HF Hub. Please set a HF_TOKEN to enable higher rate limits and faster downloads.\nWARNING:huggingface_hub.utils._http:Warning: You are sending unauthenticated requests to the HF Hub. Please set a HF_TOKEN to enable higher rate limits and faster downloads.\n\nLoading weights:   0%|          | 0/103 [00:00<?, ?it/s]\nLoading weights: 100%|\u2588\u2588\u2588\u2588\u2588\u2588\u2588\u2588\u2588\u2588| 103/103 [00:00<00:00, 2675.20it/s]\n\u001b[1mBertModel LOAD REPORT\u001b[0m from: sentence-transformers/all-MiniLM-L6-v2\nKey                     | Status     |  | \n------------------------+------------+--+-\nembeddings.position_ids | UNEXPECTED |  | \n\n\u001b[3mNotes:\n- UNEXPECTED\u001b[3m\t:can be ignored when loading from different task/architecture; not ok if you expect identical arch.\u001b[0m\n"
+    },
+    {
+      "step": 7,
+      "command": "python - <<'PY'\nimport json, pathlib\np=pathlib.Path('eval/first_10_user_scoreboard.json')\nprint('---FIRST10---')\ndata=json.loads(p.read_text())\nprint(json.dumps({\n   'verified_external_users': data.get('truth_policy',{}).get('verified_external_users'),\n   'real_users': data.get('current_counts',{}).get('real_users'),\n   'install_successes': data.get('current_counts',{}).get('install_successes'),\n   'useful_rescue_moments': data.get('current_counts',{}).get('useful_rescue_moments'),\n   'public_self_serve_launch_gate': data.get('current_verdict',{}).get('public_self_serve_launch_gate'),\n }, indent=2))\nPY",
+      "exit_code": 0,
+      "stdout": "---FIRST10---\n{\n  \"verified_external_users\": 0,\n  \"real_users\": 0,\n  \"install_successes\": 0,\n  \"useful_rescue_moments\": 0,\n  \"public_self_serve_launch_gate\": \"BLOCKED\"\n}\n",
+      "stderr": ""
+    }
+  ],
+  "pass_fail": [
+    {
+      "step": 1,
+      "status": "PASS",
+      "exit_code": 0,
+      "command": "pwd; git status --short; git branch --show-current; git rev-parse HEAD"
+    },
+    {
+      "step": 2,
+      "status": "PASS",
+      "exit_code": 0,
+      "command": "python -m pytest -q borg/tests/test_confidence_gate.py borg/tests/test_borg_observe_confidence_gate.py borg/tests/test_first_10_readiness.py"
+    },
+    {
+      "step": 3,
+      "status": "FAIL",
+      "exit_code": 1,
+      "command": "python -m pytest -q borg/tests/test_rescue.py borg/tests/test_runtime_fingerprint.py borg/tests/test_embeddings_schema_compat.py"
+    },
+    {
+      "step": 4,
+      "status": "PASS",
+      "exit_code": 0,
+      "command": "python scripts/security_gate_check.py"
+    },
+    {
+      "step": 5,
+      "status": "PASS",
+      "exit_code": 0,
+      "command": "python -m pytest -q eval/tests/test_security_hardening_baseline.py"
+    },
+    {
+      "step": 6,
+      "status": "PASS",
+      "exit_code": 0,
+      "command": "python - <<'PY'"
+    },
+    {
+      "step": 7,
+      "status": "PASS",
+      "exit_code": 0,
+      "command": "python - <<'PY'"
+    }
+  ],
+  "final_booleans": {
+    "READY_FOR_SUPERVISED_FIRST_USER": "NO",
+    "READY_FOR_PUBLIC_WAITLIST_OR_NARROW_BETA": "NO",
+    "READY_FOR_SELF_SERVE_PUBLIC_LAUNCH": "NO"
+  },
+  "blockers": [
+    "Step 3 failed with exit code 1: python -m pytest -q borg/tests/test_rescue.py borg/tests/test_runtime_fingerprint.py borg/tests/test_embeddings_schema_compat.py",
+    "First-10 verified external/real users are 0.",
+    "Live served MCP canary was not checked; only in-process borg_observe canary ran."
+  ],
+  "notes": [
+    "No SSH commands were run by this capture script.",
+    "No gateway restart/kill/signal was performed by this capture script.",
+    "No packages were installed and venv was not modified by this capture script."
+  ]
+}

@@ -4,7 +4,7 @@
   "ready_for_100": true,
   "ready_for_1000": true,
   "run_parameters": {
-    "soak_duration_seconds": 5.0
+    "soak_duration_seconds": 30.0
   },
   "steps": [
     {
@@ -19,9 +19,9 @@
       ],
       "name": "version_distribution_tests",
       "rc": 0,
-      "started": "2026-05-04T12:07:43.452326+00:00",
+      "started": "2026-05-06T09:31:10.331695+00:00",
       "stderr": "",
-      "stdout": "......                                                                   [100%]\n6 passed in 0.06s\n"
+      "stdout": ".........                                                                [100%]\n9 passed in 0.08s\n"
     },
     {
       "cmd": [
@@ -42,9 +42,9 @@
       ],
       "name": "atom_security_tests",
       "rc": 0,
-      "started": "2026-05-04T12:07:44.070343+00:00",
+      "started": "2026-05-06T09:31:10.942533+00:00",
       "stderr": "",
-      "stdout": "........................................................................ [ 82%]\n...............                                                          [100%]\n87 passed in 0.29s\n"
+      "stdout": "........................................................................ [ 82%]\n...............                                                          [100%]\n87 passed in 0.31s\n"
     },
     {
       "cmd": [
@@ -53,7 +53,7 @@
       ],
       "name": "security_gate",
       "rc": 0,
-      "started": "2026-05-04T12:07:44.888454+00:00",
+      "started": "2026-05-06T09:31:11.881778+00:00",
       "stderr": "",
       "stdout": "PASS: Borg security hardening policy gate\n"
     },
@@ -64,7 +64,7 @@
       ],
       "name": "atom_fixture_corpus",
       "rc": 0,
-      "started": "2026-05-04T12:07:44.945472+00:00",
+      "started": "2026-05-06T09:31:11.951972+00:00",
       "stderr": "",
       "stdout": "{\n  \"success\": true,\n  \"total\": 10,\n  \"failed\": []\n}\n"
     },
@@ -75,13 +75,13 @@
         "--users",
         "10",
         "--duration",
-        "5.0"
+        "30.0"
       ],
       "name": "load_10",
       "rc": 0,
-      "started": "2026-05-04T12:07:45.032511+00:00",
+      "started": "2026-05-06T09:31:12.044557+00:00",
       "stderr": "",
-      "stdout": "{\n  \"concurrency_model\": \"asyncio_logical_users\",\n  \"duration_seconds\": 5.0,\n  \"failures\": 0,\n  \"latency_ms\": {\n    \"avg\": 0.4510107580075684,\n    \"max\": 0.8086608722805977,\n    \"p50\": 0.4216190427541733,\n    \"p95\": 0.6029137410223484,\n    \"p99\": 0.6239618547260761\n  },\n  \"operation\": \"learning_atom_retrieval_firewall_privacy_prompt_scan\",\n  \"passed\": true,\n  \"per_user_min_requests\": 1091,\n  \"requests_per_second\": 2182.6,\n  \"sample_failures\": [],\n  \"success_rate\": 1.0,\n  \"successes\": 10913,\n  \"thresholds\": {\n    \"min_requests_per_user\": 1.0,\n    \"p95_ms_max\": 2000.0,\n    \"p99_ms_max\": 4000.0,\n    \"success_rate_min\": 0.95\n  },\n  \"timestamp\": \"2026-05-04T12:07:50.113051+00:00\",\n  \"total_requests\": 10913,\n  \"users\": 10\n}\n"
+      "stdout": "{\n  \"concurrency_model\": \"asyncio_logical_users\",\n  \"duration_seconds\": 30.0,\n  \"failures\": 0,\n  \"latency_ms\": {\n    \"avg\": 0.4920699694023732,\n    \"max\": 1.9046890010940842,\n    \"p50\": 0.5033304996686638,\n    \"p95\": 0.6120754994299205,\n    \"p99\": 0.666747909872356\n  },\n  \"operation\": \"learning_atom_retrieval_firewall_privacy_prompt_scan\",\n  \"passed\": true,\n  \"per_user_min_requests\": 6007,\n  \"requests_per_second\": 2002.3333333333333,\n  \"sample_failures\": [],\n  \"success_rate\": 1.0,\n  \"successes\": 60070,\n  \"thresholds\": {\n    \"min_requests_per_user\": 1.0,\n    \"p95_ms_max\": 2000.0,\n    \"p99_ms_max\": 4000.0,\n    \"success_rate_min\": 0.95\n  },\n  \"timestamp\": \"2026-05-06T09:31:42.148143+00:00\",\n  \"total_requests\": 60070,\n  \"users\": 10\n}\n"
     },
     {
       "cmd": [
@@ -90,13 +90,13 @@
         "--users",
         "100",
         "--duration",
-        "5.0"
+        "30.0"
       ],
       "name": "load_100",
       "rc": 0,
-      "started": "2026-05-04T12:07:50.128599+00:00",
+      "started": "2026-05-06T09:31:42.166871+00:00",
       "stderr": "",
-      "stdout": "{\n  \"concurrency_model\": \"asyncio_logical_users\",\n  \"duration_seconds\": 5.0,\n  \"failures\": 0,\n  \"latency_ms\": {\n    \"avg\": 0.4317989712260868,\n    \"max\": 1.608048565685749,\n    \"p50\": 0.40837982669472694,\n    \"p95\": 0.5782860796898603,\n    \"p99\": 0.6126944534480573\n  },\n  \"operation\": \"learning_atom_retrieval_firewall_privacy_prompt_scan\",\n  \"passed\": true,\n  \"per_user_min_requests\": 111,\n  \"requests_per_second\": 2239.8,\n  \"sample_failures\": [],\n  \"success_rate\": 1.0,\n  \"successes\": 11199,\n  \"thresholds\": {\n    \"min_requests_per_user\": 1.0,\n    \"p95_ms_max\": 1000.0,\n    \"p99_ms_max\": 3000.0,\n    \"success_rate_min\": 0.95\n  },\n  \"timestamp\": \"2026-05-04T12:07:55.211079+00:00\",\n  \"total_requests\": 11199,\n  \"users\": 100\n}\n"
+      "stdout": "{\n  \"concurrency_model\": \"asyncio_logical_users\",\n  \"duration_seconds\": 30.0,\n  \"failures\": 0,\n  \"latency_ms\": {\n    \"avg\": 0.47420585585584507,\n    \"max\": 4.746927999804029,\n    \"p50\": 0.4521189985098317,\n    \"p95\": 0.610864001646405,\n    \"p99\": 0.7458787990617565\n  },\n  \"operation\": \"learning_atom_retrieval_firewall_privacy_prompt_scan\",\n  \"passed\": true,\n  \"per_user_min_requests\": 612,\n  \"requests_per_second\": 2040.4333333333334,\n  \"sample_failures\": [],\n  \"success_rate\": 1.0,\n  \"successes\": 61213,\n  \"thresholds\": {\n    \"min_requests_per_user\": 1.0,\n    \"p95_ms_max\": 1000.0,\n    \"p99_ms_max\": 3000.0,\n    \"success_rate_min\": 0.95\n  },\n  \"timestamp\": \"2026-05-06T09:32:12.279837+00:00\",\n  \"total_requests\": 61213,\n  \"users\": 100\n}\n"
     },
     {
       "cmd": [
@@ -105,13 +105,13 @@
         "--users",
         "1000",
         "--duration",
-        "5.0"
+        "30.0"
       ],
       "name": "load_1000",
       "rc": 0,
-      "started": "2026-05-04T12:07:55.228073+00:00",
+      "started": "2026-05-06T09:32:12.301703+00:00",
       "stderr": "",
-      "stdout": "{\n  \"concurrency_model\": \"asyncio_logical_users\",\n  \"duration_seconds\": 5.0,\n  \"failures\": 0,\n  \"latency_ms\": {\n    \"avg\": 0.47556916532380583,\n    \"max\": 1.7244392074644566,\n    \"p50\": 0.4644892178475857,\n    \"p95\": 0.6138130091130733,\n    \"p99\": 0.6562628224492074\n  },\n  \"operation\": \"learning_atom_retrieval_firewall_privacy_prompt_scan\",\n  \"passed\": true,\n  \"per_user_min_requests\": 10,\n  \"requests_per_second\": 2024.6,\n  \"sample_failures\": [],\n  \"success_rate\": 1.0,\n  \"successes\": 10123,\n  \"thresholds\": {\n    \"min_requests_per_user\": 1.0,\n    \"p95_ms_max\": 500.0,\n    \"p99_ms_max\": 1500.0,\n    \"success_rate_min\": 0.99\n  },\n  \"timestamp\": \"2026-05-04T12:08:00.350199+00:00\",\n  \"total_requests\": 10123,\n  \"users\": 1000\n}\n"
+      "stdout": "{\n  \"concurrency_model\": \"asyncio_logical_users\",\n  \"duration_seconds\": 30.0,\n  \"failures\": 0,\n  \"latency_ms\": {\n    \"avg\": 0.4644375002452643,\n    \"max\": 3.0564699991373345,\n    \"p50\": 0.4461600001377519,\n    \"p95\": 0.5984217998047825,\n    \"p99\": 0.6205782780307345\n  },\n  \"operation\": \"learning_atom_retrieval_firewall_privacy_prompt_scan\",\n  \"passed\": true,\n  \"per_user_min_requests\": 62,\n  \"requests_per_second\": 2080.3,\n  \"sample_failures\": [],\n  \"success_rate\": 1.0,\n  \"successes\": 62409,\n  \"thresholds\": {\n    \"min_requests_per_user\": 1.0,\n    \"p95_ms_max\": 500.0,\n    \"p99_ms_max\": 1500.0,\n    \"success_rate_min\": 0.99\n  },\n  \"timestamp\": \"2026-05-06T09:32:42.460236+00:00\",\n  \"total_requests\": 62409,\n  \"users\": 1000\n}\n"
     },
     {
       "cmd": [
@@ -123,9 +123,9 @@
       ],
       "name": "readiness_1000_tests",
       "rc": 0,
-      "started": "2026-05-04T12:08:00.374067+00:00",
+      "started": "2026-05-06T09:32:42.479688+00:00",
       "stderr": "",
-      "stdout": ".....                                                                    [100%]\n5 passed in 0.03s\n"
+      "stdout": ".....                                                                    [100%]\n5 passed in 0.02s\n"
     },
     {
       "cmd": [
@@ -134,7 +134,7 @@
       ],
       "name": "scoreboard_final",
       "rc": 0,
-      "started": "2026-05-04T12:08:01.215079+00:00",
+      "started": "2026-05-06T09:32:43.017657+00:00",
       "stderr": "",
       "stdout": "/root/hermes-workspace/borg/PROJECT_STATUS.md\n/root/hermes-workspace/borg/eval/uat_scoreboard_snapshot.json\n"
     },
@@ -145,10 +145,10 @@
       ],
       "name": "scoreboard_after_decision",
       "rc": 0,
-      "started": "2026-05-04T12:08:01.330786+00:00",
+      "started": "2026-05-06T09:32:43.065747+00:00",
       "stderr": "",
       "stdout": "/root/hermes-workspace/borg/PROJECT_STATUS.md\n/root/hermes-workspace/borg/eval/uat_scoreboard_snapshot.json\n"
     }
   ],
-  "timestamp": "2026-05-04T12:08:01.327965+00:00"
+  "timestamp": "2026-05-06T09:32:43.065021+00:00"
 }

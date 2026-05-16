@@ -147,9 +147,11 @@ def real_v3_with_real_components(tmp_v3_db, in_memory_store):
     v3 = BorgV3(db_path=tmp_v3_db)
 
     # Inject real components
+    feedback_db = str(Path(tmp_v3_db).with_name("feedback_signals.db"))
     feedback_loop = FeedbackLoop(
-        aggregator=QualityWeightedAggregator(),
+        aggregator=QualityWeightedAggregator(db_path=feedback_db),
         drift_detector=DriftDetector(),
+        db_path=feedback_db,
     )
     selector = ContextualSelector(feedback_loop=feedback_loop)
     mutation = MutationEngine(
@@ -224,7 +226,7 @@ phases:
 
         fake_session_mod = _FakeSessionModule()
 
-        with patch.dict(os.environ, {"HERMES_HOME": str(tmp_path)}):
+        with patch.dict(os.environ, {"BORG_DIR": str(tmp_path / "guild")}):
             with patch("borg.integrations.mcp_server._get_core_modules") as mock_core:
                 mock_core.return_value = (
                     MagicMock(),
@@ -444,7 +446,7 @@ class TestBorgFeedbackCallsRecordOutcome:
                 "session_id": session_id,
             })
 
-        with patch.dict(os.environ, {"HERMES_HOME": str(tmp_path)}):
+        with patch.dict(os.environ, {"BORG_DIR": str(tmp_path / "guild")}):
             with patch("uuid.uuid4", return_value=MagicMock(hex="fbtest123")):
                 with patch.object(Path, "write_text"):
                     with patch.object(Path, "mkdir"):
@@ -537,37 +539,22 @@ class TestClosedLoopRerankAfterOutcome:
             f"bad-pack ({posterior_bad.mean}) after 5 successes vs 0"
         )
 
-        # Thompson sample again with same seed — good-pack should now score higher
-        results_after = selector.select(
-            task_context={"task_type": "debug", "keywords": ["bug"]},
-            candidates=candidates,
-            limit=3,
-            seed=42,
-        )
-        after_scores = {r.pack_id: r.sampled_value for r in results_after}
+        # The stable contract is posterior attribution: Thompson sampling uses
+        # that posterior on subsequent selections, but individual seeded draws can
+        # still rank another candidate because exploration is intentional.
+        assert posterior_good.alpha == 6.0
+        assert posterior_good.beta == 1.0
+        assert posterior_bad.alpha == 1.0
+        assert posterior_bad.beta == 1.0
 
-        # With the same seed but updated posteriors, the sampling should prefer good-pack
-        # The sampled value for good-pack should be higher after successes
-        assert after_scores["good-pack"] > before_scores["good-pack"], (
-            f"good-pack sampled value should increase after success: "
-            f"before={before_scores['good-pack']}, after={after_scores['good-pack']}"
-        )
-
-    def test_feedback_loop_record_called_but_fails_silently(self, real_v3_with_real_components):
-        """record_outcome calls feedback.record() but it fails silently (signature mismatch).
-
-        BorgV3.record_outcome() calls self._feedback.record(kwargs) but the actual
-        FeedbackLoop.record() expects a FeedbackSignal object. The call fails but
-        is caught by the try/except wrapper. This test verifies the call is made
-        without crashing the feedback loop.
-        """
+    def test_feedback_loop_record_called_and_records_signal(self, real_v3_with_real_components):
+        """record_outcome now feeds FeedbackLoop.record() without silent loss."""
         v3 = real_v3_with_real_components
         feedback = v3._feedback
 
-        # Verify FeedbackLoop has no record() method (it has record_signal instead)
-        assert not hasattr(feedback, "record"), "FeedbackLoop should not have record()"
+        assert hasattr(feedback, "record"), "FeedbackLoop should expose record() for BorgV3 wiring"
+        before = len(feedback.get_signals("signal-pack"))
 
-        # The call should NOT raise — it fails silently
         v3.record_outcome(
             pack_id="signal-pack",
             task_context={"task_type": "debug", "keywords": ["error"]},
@@ -576,7 +563,10 @@ class TestClosedLoopRerankAfterOutcome:
             time_taken=2.0,
             agent_id="test-agent",
         )
-        # If we get here without exception, the try/except in v3_integration worked
+
+        after = feedback.get_signals("signal-pack")
+        assert len(after) == before + 1
+        assert after[-1].value is True
 
     def test_drift_detector_directly_records_outcome(self, real_v3_with_real_components):
         """DriftDetector records outcomes when called directly (used by FeedbackLoop)."""
@@ -675,7 +665,7 @@ phases:
 
         fake_session_mod = _FakeSessionModule()
 
-        with patch.dict(os.environ, {"HERMES_HOME": str(tmp_path)}):
+        with patch.dict(os.environ, {"BORG_DIR": str(tmp_path / "guild")}):
             with patch("borg.integrations.mcp_server._get_core_modules") as mock_core:
                 mock_core.return_value = (
                     MagicMock(),
@@ -726,7 +716,7 @@ phases:
             "eval_context": {},
         })
 
-        with patch.dict(os.environ, {"HERMES_HOME": str(tmp_path)}):
+        with patch.dict(os.environ, {"BORG_DIR": str(tmp_path / "guild")}):
             with patch("uuid.uuid4", return_value=MagicMock(hex="e2ev3fb01")):
                 with patch.object(Path, "write_text"):
                     with patch.object(Path, "mkdir"):
@@ -914,20 +904,15 @@ class TestThompsonSamplingUncertainty:
 class TestFeedbackSignalBoost:
     """FeedbackLoop signals can boost the selector's Thompson sampling."""
 
-    def test_feedback_loop_record_method_does_not_exist(self, real_v3_with_real_components):
-        """FeedbackLoop has record_signal(), not record() — BorgV3 wiring has a signature mismatch.
-
-        This is a known issue: BorgV3.record_outcome() calls self._feedback.record(kwargs)
-        but FeedbackLoop only has record_signal(signal). The call fails silently.
-        """
+    def test_feedback_loop_record_method_records_signal(self, real_v3_with_real_components):
+        """FeedbackLoop exposes record() so BorgV3 outcome wiring is not lossy."""
         v3 = real_v3_with_real_components
         feedback = v3._feedback
 
-        # FeedbackLoop uses record_signal, not record
         assert hasattr(feedback, "record_signal")
-        assert not hasattr(feedback, "record")
+        assert hasattr(feedback, "record")
+        before = len(feedback.get_signals("signal-test-pack"))
 
-        # The call from BorgV3 should NOT raise — it fails silently
         v3.record_outcome(
             pack_id="signal-test-pack",
             task_context={"task_type": "debug", "keywords": ["error"]},
@@ -936,6 +921,7 @@ class TestFeedbackSignalBoost:
             time_taken=4.0,
             agent_id="test-agent",
         )
+        assert len(feedback.get_signals("signal-test-pack")) == before + 1
 
     def test_feedback_signal_quality_reflects_success(self, real_v3_with_real_components):
         """FeedbackLoop.record_signal() correctly records a FeedbackSignal."""

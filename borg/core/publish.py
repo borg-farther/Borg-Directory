@@ -23,14 +23,15 @@ from typing import Any, Dict, List, Tuple
 
 import yaml
 
+from borg.core.dirs import get_borg_dir
+
 logger = logging.getLogger(__name__)
 
 # ============================================================================
 # Configurable constants (can be overridden at runtime via module attrs)
 # ============================================================================
 
-HERMES_HOME = Path(os.getenv("HERMES_HOME", Path.home() / ".hermes"))
-BORG_DIR = HERMES_HOME / "guild"
+BORG_DIR = get_borg_dir()
 FEEDBACK_DIR = BORG_DIR / "feedback"
 OUTBOX_DIR = BORG_DIR / "outbox"
 EXECUTIONS_DIR = BORG_DIR / "executions"

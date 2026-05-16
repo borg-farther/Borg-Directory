@@ -30,7 +30,7 @@ from borg.core.uri import (
     fuzzy_match_pack,
     _fetch_index,
 )
-from borg.core.dirs import get_borg_dir, BORG_DIR
+from borg.core.dirs import get_borg_dir, get_trace_db_path, BORG_DIR
 from borg.core.seeds import is_seeds_disabled, get_seed_packs
 from borg.core.traces import TRACE_DB_PATH
 
@@ -355,10 +355,11 @@ def borg_search(query: str, mode: str = "text", requesting_agent_id: str = None,
         # pre-3.2.4 expectations. Production code paths hit the real directory
         # and get trace surfacing.
         try:
-            if not (BORG_DIR and Path(BORG_DIR).is_dir()):
-                raise RuntimeError("BORG_DIR not present — skipping trace lookup")
+            trace_db_path = Path(get_trace_db_path())
+            if not trace_db_path.exists():
+                raise RuntimeError("trace DB not present — skipping trace lookup")
             from borg.core.trace_matcher import TraceMatcher
-            matcher = TraceMatcher()
+            matcher = TraceMatcher(db_path=str(trace_db_path))
             trace_hits = matcher.find_relevant(query, top_k=10)
             for trace in trace_hits or []:
                 trace_id = str(trace.get("id", ""))

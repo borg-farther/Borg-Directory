@@ -107,3 +107,64 @@ def test_concrete_permission_denied_can_still_return_bash_permission_guidance(mo
     assert "PACK GUIDANCE (bash-permission-denied)" in result
     assert "Use chmod +x" in result
     assert "NO_CONFIDENT_MATCH" not in result
+
+
+def test_guidance_safety_suppresses_no_confident_match():
+    guidance = """
+ACTION: proceed with normal debugging.
+CONFIDENCE: BORG [NO CONFIDENT MATCH]
+NO_CONFIDENT_MATCH: No confident Borg match for this task.
+"""
+    assert mcp_server._guidance_is_safe_to_inject(guidance, "Audit docs", "") is False
+
+
+def test_guidance_safety_suppresses_synthetic_pack_guidance():
+    guidance = """
+CONFIDENCE: Real traces: 0 | Synthetic: 0 | BORG [SYNTHETIC ONLY]
+PACK GUIDANCE (git-merge-conflict)
+Resolve conflict markers.
+"""
+    assert mcp_server._guidance_is_safe_to_inject(
+        guidance,
+        "Complete Borg supervised first-user beta proof package",
+        "",
+    ) is False
+
+
+def test_embedded_borg_guidance_does_not_create_permission_signal():
+    pasted_task = """whats next. Do the whole thing.
+
+=== BORG GUIDANCE ===
+CONFIDENCE: Real traces: 22 | Synthetic: 0 | BORG [HIGH CONFIDENCE]
+PACK GUIDANCE (bash-permission-denied)
+1. Check file permissions
+"""
+    assert "PACK GUIDANCE" not in mcp_server._strip_embedded_borg_guidance(pasted_task)
+    assert mcp_server._permission_guidance_matches_task(pasted_task, "") is False
+
+
+def test_guidance_safety_suppresses_real_traces_zero_pack_guidance():
+    guidance = """
+ACTION: Open conflicting files.
+CONFIDENCE: Real traces: 0 | Synthetic: 0 | BORG [LOW CONFIDENCE]
+PACK GUIDANCE (git-merge-conflict)
+Resolve conflict markers.
+"""
+    assert mcp_server._guidance_is_safe_to_inject(
+        guidance,
+        "Do the whole thing with tests and docs",
+        "",
+    ) is False
+
+
+def test_guidance_safety_allows_real_permission_task():
+    guidance = """
+CONFIDENCE: Real traces: 3 | Synthetic: 0 | BORG [HIGH CONFIDENCE]
+PACK GUIDANCE (bash-permission-denied)
+Run chmod +x deploy.sh.
+"""
+    assert mcp_server._guidance_is_safe_to_inject(
+        guidance,
+        "Fix bash script permission denied when running ./deploy.sh",
+        "bash: ./deploy.sh: Permission denied",
+    ) is True

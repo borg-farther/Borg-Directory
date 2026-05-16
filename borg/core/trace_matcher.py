@@ -13,6 +13,7 @@ import time
 from typing import Any, Dict, List, Optional
 
 from borg.core.traces import _get_db, TRACE_DB_PATH
+from borg.core.dirs import get_trace_db_path
 
 logger = logging.getLogger(__name__)
 
@@ -69,7 +70,9 @@ class TraceMatcher:
     """Match incoming problems to relevant prior investigation traces."""
 
     def __init__(self, db_path: str = None):
-        self.db_path = db_path or TRACE_DB_PATH
+        # Resolve dynamically so tests/embedded callers that set BORG_HOME after
+        # module import still read the intended trace database.
+        self.db_path = db_path or str(get_trace_db_path())
 
     def find_relevant(self, task: str, error: str = "",
                       files: List[str] = None, top_k: int = 3) -> List[Dict]:
