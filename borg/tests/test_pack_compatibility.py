@@ -36,7 +36,22 @@ from borg.core.search import borg_search, borg_try, borg_pull
 
 PACKS_INDEX_PATH = Path(os.environ.get("BORG_TEST_PACKS_INDEX", "/root/hermes-workspace/guild-packs/index.json"))
 PACKS_DIR = Path(os.environ.get("BORG_TEST_PACKS_DIR", "/root/hermes-workspace/guild-packs/packs"))
-if not PACKS_INDEX_PATH.is_file() or not PACKS_DIR.is_dir():
+
+def _readable_file(path: Path) -> bool:
+    try:
+        return path.is_file()
+    except OSError:
+        return False
+
+
+def _readable_dir(path: Path) -> bool:
+    try:
+        return path.is_dir()
+    except OSError:
+        return False
+
+
+if not _readable_file(PACKS_INDEX_PATH) or not _readable_dir(PACKS_DIR):
     pytest.skip(
         "external guild-packs compatibility fixtures unavailable",
         allow_module_level=True,
