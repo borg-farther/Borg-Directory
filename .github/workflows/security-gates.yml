@@ -42,7 +42,7 @@ jobs:
         with:
           python-version: '3.12'
       - run: python -m pip install --upgrade pip
-      - run: python -m pip install -e ".[dev]"
+      - run: python -m pip install -e ".[dev,crypto]"
       - run: python scripts/security_gate_check.py
       - run: python scripts/run_atom_fixture_corpus.py
       - run: python -m pytest -q borg/tests/test_privacy_structured.py borg/tests/test_prompt_injection.py borg/tests/test_learning_atoms.py borg/tests/test_atom_policy.py borg/tests/test_atom_retrieval_firewall.py borg/tests/test_atom_store.py borg/tests/test_learning_atom_publish.py borg/tests/test_cli_atom.py
