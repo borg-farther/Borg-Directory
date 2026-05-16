@@ -36,7 +36,18 @@ from borg.core.generate import (
 # Fixtures
 # ============================================================================
 
-PACKS_DIR = Path("/root/hermes-workspace/guild-packs/packs")
+ROOT = Path(__file__).resolve().parents[2]
+_EXTERNAL_PACKS_DIR = Path(os.environ.get("BORG_TEST_PACKS_DIR", "/root/hermes-workspace/guild-packs/packs"))
+
+
+def _readable_dir(path: Path) -> bool:
+    try:
+        return path.is_dir()
+    except OSError:
+        return False
+
+
+PACKS_DIR = _EXTERNAL_PACKS_DIR if _readable_dir(_EXTERNAL_PACKS_DIR) else ROOT / "borg" / "seeds_data" / "packs"
 
 
 @pytest.fixture
