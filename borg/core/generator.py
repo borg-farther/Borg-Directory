@@ -441,11 +441,19 @@ def load_pack(pack_name: str) -> dict:
     Raises:
         FileNotFoundError: If pack not found.
     """
-    # Check ~/.hermes/guild/<name>/pack.yaml
-    guild_dir = Path.home() / ".hermes" / "guild"
-    pack_path = guild_dir / pack_name / "pack.yaml"
-    if pack_path.exists():
-        return yaml.safe_load(pack_path.read_text(encoding="utf-8"))
+    # Check BORG_HOME/guild/<name>/pack.yaml first, then the legacy
+    # ~/.hermes/guild location for users/tests migrating from pre-3.3 Borg.
+    from borg.core.dirs import get_borg_dir
+    guild_dir = get_borg_dir()
+    legacy_guild_dir = Path.home() / ".hermes" / "guild"
+    guild_dirs = [guild_dir]
+    if legacy_guild_dir != guild_dir:
+        guild_dirs.append(legacy_guild_dir)
+
+    for candidate_guild_dir in guild_dirs:
+        pack_path = candidate_guild_dir / pack_name / "pack.yaml"
+        if pack_path.exists():
+            return yaml.safe_load(pack_path.read_text(encoding="utf-8"))
 
     # Check seeds directory
     seeds_dir = Path(__file__).parent.parent / "seeds"
@@ -455,13 +463,14 @@ def load_pack(pack_name: str) -> dict:
             return data
 
     # Check all guild subdirectories
-    if guild_dir.exists():
-        for subdir in guild_dir.iterdir():
-            if subdir.is_dir():
-                candidate = subdir / "pack.yaml"
-                if candidate.exists():
-                    data = yaml.safe_load(candidate.read_text(encoding="utf-8"))
-                    if data and _slug(data.get("id", "")) == pack_name:
-                        return data
+    for candidate_guild_dir in guild_dirs:
+        if candidate_guild_dir.exists():
+            for subdir in candidate_guild_dir.iterdir():
+                if subdir.is_dir():
+                    candidate = subdir / "pack.yaml"
+                    if candidate.exists():
+                        data = yaml.safe_load(candidate.read_text(encoding="utf-8"))
+                        if data and _slug(data.get("id", "")) == pack_name:
+                            return data
 
     raise FileNotFoundError(f"Pack not found: {pack_name}")

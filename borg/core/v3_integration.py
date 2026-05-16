@@ -7,7 +7,7 @@ BorgV3 class owns:
   - MutationEngine    (A/B tests, drift detection, pack mutation suggestions)
   - FeedbackLoop     (records outcomes, feeds selector + mutation engine)
 
-SQLite DB: ~/.borg/borg_v3.db (separate from V2 ~/.borg/borg.db)
+SQLite DB: BORG_HOME/borg_v3.db (centralized via borg.core.dirs)
 Schema:
   - outcomes:     id, pack_id, agent_id, task_category, success, tokens_used, time_taken, timestamp
   - feedback_signals: id, agent_id, pack_id, signal_type, value, timestamp
@@ -24,6 +24,8 @@ import sqlite3
 import uuid
 from datetime import datetime, timezone
 from pathlib import Path
+
+from borg.core.dirs import get_v3_db_path
 from typing import Any, Dict, List, Optional
 
 logger = logging.getLogger(__name__)
@@ -167,11 +169,11 @@ class _StubFeedbackLoop:
 class BorgV3:
     """Single entry point for V3 contextual selector, mutation engine, and feedback loop.
 
-    DB path: ~/.borg/borg_v3.db (configurable via db_path).
+    DB path: BORG_HOME/borg_v3.db (configurable via db_path).
     """
 
-    def __init__(self, db_path: str = "~/.borg/borg_v3.db"):
-        self._db_path = os.path.expanduser(db_path)
+    def __init__(self, db_path: str | None = None):
+        self._db_path = os.path.expanduser(str(db_path)) if db_path is not None else str(get_v3_db_path())
         self._ensure_db()
 
         # Feedback loop — always try real FeedbackLoop, fall back to stub only on failure
@@ -255,8 +257,6 @@ class BorgV3:
 
         # V3 contextual search path
         candidates = self._get_candidates()
-        if not candidates:
-            return self._v2_search(query)
 
         # Phase 1 Day 8-10: Filter by problem_class BEFORE Thompson Sampling.
         # If error_type is in task_context, derive problem_class and use the
@@ -364,7 +364,9 @@ class BorgV3:
                     "variant": "",
                 }
 
-        return out
+        if out:
+            return out
+        return self._v2_search(query)
 
     def _v2_search(self, query: str) -> List[Dict[str, Any]]:
         """Fallback V2 keyword search via borg.core.search.borg_search."""
@@ -457,16 +459,9 @@ class BorgV3:
                     category = task_context["task_type"]
 
         ts = datetime.now(timezone.utc).isoformat()
-        _e2e_call_id = getattr(self, '_e2e_call_counter', 0) + 1
-        if not hasattr(self, '_e2e_call_counter'):
-            self._e2e_call_counter = 0
-        self._e2e_call_counter = _e2e_call_id
-        _tag = f"[E2E-{_e2e_call_id:03d}]"
-
-        print(f"{_tag} record_outcome() CALLED — pack_id={pack_id!r} success={success} category={category!r}")
+        logger.debug("record_outcome: pack_id=%r success=%r category=%r", pack_id, success, category)
 
         # 1. Persist to SQLite
-        print(f"{_tag}   PATH-1 (SQLite): attempting write to outcomes table...")
         try:
             with self._conn() as conn:
                 conn.execute(
@@ -476,9 +471,9 @@ class BorgV3:
                     (pack_id, agent_id, category, int(success), tokens_used, time_taken, ts),
                 )
                 conn.commit()
-            print(f"{_tag}   PATH-1 (SQLite): SUCCESS — row written")
+            logger.debug("record_outcome: sqlite outcome row written")
         except Exception as e:
-            print(f"{_tag}   PATH-1 (SQLite): FAILED — {type(e).__name__}: {e}")
+            logger.warning("record_outcome: sqlite write failed: %s", e)
 
         # 0.5: Write to FailureMemory on failure
         if not success and self._failure_memory is not None:
@@ -492,22 +487,20 @@ class BorgV3:
                         approach=f"success={success} category={category}",
                         outcome="failure",
                     )
-                    print(f"{_tag}   PATH-0.5 (FailureMemory): recorded failure for error_pattern={error_msg!r}")
+                    logger.debug("record_outcome: failure memory recorded error_pattern=%r", error_msg)
                 except Exception as fm_e:
-                    print(f"{_tag}   PATH-0.5 (FailureMemory): FAILED — {type(fm_e).__name__}: {fm_e}")
+                    logger.debug("record_outcome: failure memory write failed: %s", fm_e)
 
         # 2. Feed the contextual selector (Thompson Sampling — inline, real-time)
         # TASK 4: This fires immediately on every record_outcome() call — no wait
         # for dojo cron. PATH-2 IS the _feed_thompson_sampling() inline wiring.
-        print(f"{_tag}   PATH-2 (ContextualSelector.record_outcome): calling with pack={pack_id!r} cat={category!r} success={success}")
         try:
             self._selector.record_outcome(pack_id, category, success)
-            print(f"{_tag}   PATH-2 (ContextualSelector): SUCCESS — Thompson Sampling updated inline")
+            logger.debug("record_outcome: selector updated")
         except Exception as e:
-            print(f"{_tag}   PATH-2 (ContextualSelector): FAILED — {type(e).__name__}: {e}")
+            logger.warning("ContextualSelector.record_outcome failed: %s", e)
 
         # 3. Feed the feedback loop (defensively check for record method)
-        print(f"{_tag}   PATH-3 (FeedbackLoop.record): hasattr={hasattr(self._feedback, 'record')}...")
         try:
             if hasattr(self._feedback, "record"):
                 try:
@@ -519,12 +512,11 @@ class BorgV3:
                         time_taken=time_taken,
                         agent_id=agent_id,
                     )
-                    print(f"{_tag}   PATH-3 (FeedbackLoop.record): SUCCESS")
+                    logger.debug("record_outcome: feedback loop updated")
                 except Exception as inner_e:
-                    print(f"{_tag}   PATH-3 (FeedbackLoop.record): RAISED — {type(inner_e).__name__}: {inner_e}")
                     raise
             else:
-                print(f"{_tag}   PATH-3 (FeedbackLoop.record): SKIPPED — no .record method")
+                logger.debug("record_outcome: feedback loop has no record method")
         except Exception as e:
             logger.warning("FeedbackLoop.record failed: %s", e)
 
@@ -532,7 +524,6 @@ class BorgV3:
         # Priority: (a) in-memory A/B context from search() →
         #           (b) session_id path (MCP users) →
         #           (c) skip (CLI without prior search)
-        print(f"{_tag}   PATH-4 (MutationEngine): hasattr={hasattr(self._mutation, 'record_outcome')} ab_ctx={self._last_ab_context} session_id={session_id}")
         try:
             if hasattr(self._mutation, "record_outcome"):
                 ab_recorded = False
@@ -542,15 +533,13 @@ class BorgV3:
                     test_id = self._last_ab_context.get("test_id", "")
                     variant = self._last_ab_context.get("variant", "")
                     if test_id and variant:
-                        print(f"{_tag}   PATH-4a (MutationEngine A/B path): test_id={test_id!r} variant={variant!r}")
                         self._mutation.record_outcome(test_id, variant, success)
                         ab_recorded = True
                         self._last_ab_context = None
-                        print(f"{_tag}   PATH-4a: SUCCESS")
+                        logger.debug("record_outcome: mutation A/B context updated")
 
                 # Path (b): fall back to session_id (MCP users)
                 if not ab_recorded and session_id:
-                    print(f"{_tag}   PATH-4b (MutationEngine session_id path): session_id={session_id!r}")
                     try:
                         from borg.core import session as session_module
                         session = session_module.get_active_session(session_id) or {}
@@ -558,23 +547,51 @@ class BorgV3:
                         if sv:
                             self._mutation.record_outcome(sv["test_id"], sv["variant"], success)
                             ab_recorded = True
-                            print(f"{_tag}   PATH-4b: SUCCESS")
+                            logger.debug("record_outcome: mutation session A/B updated")
                         else:
-                            print(f"{_tag}   PATH-4b: no selected_variant in session")
+                            logger.debug("record_outcome: no selected_variant in session")
                     except Exception as e:
-                        print(f"{_tag}   PATH-4b: FAILED — {type(e).__name__}: {e}")
+                        logger.debug("record_outcome: session A/B lookup failed: %s", e)
 
                 # Path (d): no A/B context — feed mutation engine directly for drift tracking
                 if not ab_recorded:
-                    # MutationEngine.record_outcome(test_id, variant, success) is A/B-only.
-                    # No standalone pack drift-tracking method exists — skip explicitly.
-                    print(f"{_tag}   PATH-4c (MutationEngine): SKIPPED — no A/B context")
-                    pass
+                    if self._mutation_record_outcome_accepts_pack_outcome():
+                        self._mutation.record_outcome(pack_id, category, success, tokens_used, time_taken)
+                        logger.debug("record_outcome: mutation pack outcome updated")
+                    else:
+                        logger.debug("record_outcome: mutation engine has no pack-outcome contract; no A/B context")
             else:
-                print(f"{_tag}   PATH-4 (MutationEngine): SKIPPED — no .record_outcome method")
+                logger.debug("record_outcome: mutation engine has no record_outcome method")
         except Exception as e:
-            print(f"{_tag}   PATH-4 (MutationEngine): EXCEPTION — {type(e).__name__}: {e}")
             logger.warning("MutationEngine.record_outcome failed: %s", e)
+
+    def _mutation_record_outcome_accepts_pack_outcome(self) -> bool:
+        """Return True when the injected mutation engine exposes the pack-outcome
+        attribution contract used by unit/fake engines.
+
+        The production MutationEngine.record_outcome(test_id, variant, success)
+        is A/B-only.  Some integrations/tests inject an engine with
+        record_outcome(pack_id, task_category, success, tokens_used, time_taken)
+        for direct drift/outcome attribution.  Dispatch only when the callable can
+        accept five positional arguments so production A/B semantics are not
+        overloaded accidentally.
+        """
+        try:
+            import inspect
+
+            target = self._mutation.record_outcome
+            wrapped = getattr(target, "_mock_wraps", None)
+            if wrapped is not None:
+                target = wrapped
+            sig = inspect.signature(target)
+            positional = [
+                p for p in sig.parameters.values()
+                if p.kind in (p.POSITIONAL_ONLY, p.POSITIONAL_OR_KEYWORD)
+            ]
+            varargs = any(p.kind == p.VAR_POSITIONAL for p in sig.parameters.values())
+            return varargs or len(positional) >= 5
+        except Exception:
+            return False
 
     # -------------------------------------------------------------------------
     # should_mutate — checks if a pack should be mutated

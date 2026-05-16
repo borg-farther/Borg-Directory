@@ -18,12 +18,16 @@ The root README is the canonical first-user and evaluator path for Borg:
 - [MCP setup](MCP_SETUP.md)
 - [Integration guide](INTEGRATION_GUIDE.md)
 - [Security hardening baseline](SECURITY_HARDENING_BASELINE.md)
+- [First-10 beta readiness contract](FIRST_10_BETA_READINESS.md)
 - [Privacy model](PRIVACY_MODEL.md)
 - [Prompt-injection threat model](PROMPT_INJECTION_THREAT_MODEL.md)
 - [Trust and promotion](TRUST_AND_PROMOTION.md)
 - [Revocation and deletion](REVOCATION_AND_DELETION.md)
 - [Learning atom schema](LEARNING_ATOM_SCHEMA.md)
 - [Production / 1000-user readiness status](20260504-1123_BORG_PRODUCTION_1000_READINESS_STATUS.md)
+- [20260513 full audit + observe confidence-gate closure](20260513_BORG_FULL_AUDIT_AND_OBSERVE_CONFIDENCE_GATE.md)
+- [20260513 multi-repo production cleanup / cutover proposal](20260513_BORG_MULTI_REPO_PRODUCTION_CLEANUP_CUTOVER_PROPOSAL.md)
+- [20260513 deeper production cutover execution board](20260513_BORG_DEEP_CUTOVER_EXECUTION_BOARD.md)
 
 ## Current truth source
 

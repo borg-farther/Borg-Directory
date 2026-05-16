@@ -1,0 +1,41 @@
+type: workflow_pack
+version: "1.0"
+id: borg://hermes/systematic-debugging
+problem_class: systematic_debugging
+mental_model: |
+  Reproduce the failure, isolate one cause at a time, make the smallest safe
+  fix, then verify by rerunning the exact failing command before broad changes.
+required_inputs:
+  - name: error_message
+    type: string
+    description: The raw error, failing command, or test failure to debug.
+phases:
+  - name: reproduce
+    description: Capture the exact command, input, output, and environment that fail.
+    checkpoint: The same command fails consistently or the nondeterminism is described.
+    anti_patterns:
+      - changing code before reproducing the failure
+  - name: isolate
+    description: Identify the smallest source, test, or configuration surface responsible.
+    checkpoint: A single concrete blocker is named with file or command evidence.
+    anti_patterns:
+      - rewriting unrelated code while the root cause is still unknown
+  - name: fix
+    description: Apply the smallest patch that addresses the observed blocker only.
+    checkpoint: The patch is limited to the failing behavior and avoids unrelated cleanup.
+    anti_patterns:
+      - masking the failure by weakening tests or ignoring errors
+  - name: verify
+    description: Rerun the exact failing command, then the smallest relevant regression test.
+    checkpoint: The original failure command exits successfully.
+    anti_patterns:
+      - declaring success without rerunning the failing command
+escalation_rules:
+  - condition: The failure depends on unavailable credentials, services, or network access.
+    action: Stop and report the external blocker with the raw failing command and output.
+provenance:
+  confidence: tested
+  evidence: Packaged first-user fallback for day-one debugging workflows and release-gate validation.
+  failure_cases:
+    - External services or credentials are required to reproduce the issue.
+    - The failure cannot be reproduced from the provided command or error.

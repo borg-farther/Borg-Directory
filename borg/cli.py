@@ -74,6 +74,16 @@ def _load_builtin_packs() -> list:
     return packs
 
 
+
+
+def _record_v3_outcome_safe(**kwargs) -> None:
+    """Record a V3 outcome without letting telemetry break CLI commands."""
+    try:
+        from borg.core.v3_integration import BorgV3
+        BorgV3().record_outcome(**kwargs)
+    except Exception:
+        pass
+
 def _require_success(raw: str, ctx: str = "") -> bool:
     """Print error and return False if the JSON result has success=False."""
     try:
@@ -144,14 +154,10 @@ def _cmd_try(args: argparse.Namespace) -> int:
     from borg.core.search import borg_try
 
     raw = borg_try(args.uri)
-    db_path = os.path.expanduser("~/.hermes/guild/borg_v3.db")
-
     # TASK 1: autonomous outcome inference — borg_try completes without exception → success
     try:
-        from borg.core.v3_integration import BorgV3
-        v3 = BorgV3(db_path=db_path)
         success = json.loads(raw).get("success", False)
-        v3.record_outcome(
+        _record_v3_outcome_safe(
             pack_id=json.loads(raw).get("id", args.uri),
             agent_id="borg-cli",
             task_context={"uri": args.uri, "task_category": "try"},
@@ -203,7 +209,7 @@ def _cmd_init(args: argparse.Namespace) -> int:
     problem_class = getattr(args, "problem_class", "general") or "general"
     mental_model = getattr(args, "mental_model", "fast-thinker") or "fast-thinker"
 
-    guild_dir = Path.home() / ".hermes" / "guild"
+    guild_dir = get_borg_dir()
     pack_dir = guild_dir / name
     pack_dir.mkdir(parents=True, exist_ok=True)
 
@@ -236,9 +242,7 @@ def _cmd_init(args: argparse.Namespace) -> int:
 
     # TASK 1: autonomous outcome inference — init succeeds → record success
     try:
-        from borg.core.v3_integration import BorgV3
-        v3 = BorgV3(db_path=os.path.expanduser("~/.hermes/guild/borg_v3.db"))
-        v3.record_outcome(
+        _record_v3_outcome_safe(
             pack_id=name,
             agent_id="borg-cli",
             task_context={"task_category": "init", "problem_class": problem_class},
@@ -257,8 +261,6 @@ def _cmd_apply(args: argparse.Namespace) -> int:
 
     pack_name = args.pack
     task = args.task
-    db_path = os.path.expanduser("~/.hermes/guild/borg_v3.db")
-
     try:
         raw = apply_handler(
             action="start",
@@ -282,9 +284,7 @@ def _cmd_apply(args: argparse.Namespace) -> int:
 
         # TASK 1: autonomous outcome inference — record success when apply completes cleanly
         try:
-            from borg.core.v3_integration import BorgV3
-            v3 = BorgV3(db_path=db_path)
-            v3.record_outcome(
+            _record_v3_outcome_safe(
                 pack_id=pack_name,
                 agent_id="borg-cli",
                 task_context={"task": task, "task_category": "apply"},
@@ -299,9 +299,7 @@ def _cmd_apply(args: argparse.Namespace) -> int:
     except Exception as e:
         # TASK 1: autonomous outcome inference — record failure with exception as error_message
         try:
-            from borg.core.v3_integration import BorgV3
-            v3 = BorgV3(db_path=db_path)
-            v3.record_outcome(
+            _record_v3_outcome_safe(
                 pack_id=pack_name,
                 agent_id="borg-cli",
                 task_context={"task": task, "task_category": "apply", "error_message": str(e)},
@@ -381,8 +379,7 @@ def _cmd_feedback_v3(args: argparse.Namespace) -> int:
     # Record to V3
     task_context = {"task_category": problem_class or "unknown"}
     try:
-        v3 = BorgV3(db_path="~/.hermes/guild/borg_v3.db")
-        v3.record_outcome(
+        _record_v3_outcome_safe(
             pack_id=pack_id,
             task_context=task_context,
             success=success,
@@ -431,9 +428,7 @@ def _cmd_recall(args: argparse.Namespace) -> int:
         # TASK 3: also inject into Thompson Sampling — record recall event so the
         # selector knows this error class has known solutions (or none yet)
         try:
-            from borg.core.v3_integration import BorgV3
-            v3 = BorgV3(db_path=os.path.expanduser("~/.hermes/guild/borg_v3.db"))
-            v3.record_outcome(
+            _record_v3_outcome_safe(
                 pack_id="recall-query",
                 agent_id="borg-cli",
                 task_context={"task_category": "recall", "error_message": error_message},
@@ -562,11 +557,9 @@ def _cmd_start(args: argparse.Namespace) -> int:
     # Auto-record feedback
     try:
         from borg.core.pack_taxonomy import classify_error
-        from borg.core.v3_integration import BorgV3
         pc = classify_error(error)
         if pc:
-            v3 = BorgV3(db_path="~/.hermes/guild/borg_v3.db")
-            v3.record_outcome(
+            _record_v3_outcome_safe(
                 pack_id=pc,
                 task_context={"task_category": pc, "source": "borg_start"},
                 success=True,
@@ -622,8 +615,7 @@ def _cmd_convert(args: argparse.Namespace) -> int:
                 # Load all packs from local guild dir
                 pack_names = get_available_pack_names()
                 
-                HERMES_HOME = pathlib.Path(os.getenv("HERMES_HOME", pathlib.Path.home() / ".hermes"))
-                guild_dir = HERMES_HOME / "guild"
+                guild_dir = get_borg_dir()
                 
                 for pack_name in pack_names:
                     pack_yaml = guild_dir / pack_name / "pack.yaml"
@@ -915,12 +907,18 @@ def _get_python_path() -> str:
 def _resolve_borg_mcp_command() -> tuple[str, list[str]]:
     """Resolve command+args used to start the borg MCP server.
 
-    Prefer the installed console script `borg-mcp` when available.
-    Fall back to the current interpreter + module invocation.
+    Prefer the console script installed next to the current interpreter. This
+    prevents fresh-venv setup from accidentally wiring a globally-installed
+    stale borg-mcp found earlier on PATH. Fall back to PATH, then module mode.
     """
-    borg_mcp = shutil.which("borg-mcp")
-    if borg_mcp:
-        return borg_mcp, []
+    current_bin = Path(sys.executable).resolve().parent
+    local_script = current_bin / ("borg-mcp.exe" if os.name == "nt" else "borg-mcp")
+    if local_script.exists():
+        return str(local_script), []
+    # Do not fall through to a globally-installed borg-mcp here. First-user
+    # setup must verify the Borg runtime that is currently running the CLI;
+    # otherwise a stale script in ~/.local/bin can make a fresh install look
+    # broken or wire Claude to the wrong package version.
     return sys.executable, ["-m", "borg.integrations.mcp_server"]
 
 
@@ -1554,6 +1552,24 @@ def _cmd_reputation(args: argparse.Namespace) -> int:
 
 
 # ---------------------------------------------------------------------------
+# first-10: print the first-user beta readiness contract
+# ---------------------------------------------------------------------------
+
+def _cmd_first_10(args: argparse.Namespace) -> int:
+    """Print the first-10 beta readiness contract."""
+    from borg.core.first_user_readiness import (
+        first_10_readiness_packet,
+        render_first_10_readiness_markdown,
+    )
+
+    if args.json:
+        print(json.dumps(first_10_readiness_packet(), indent=2, ensure_ascii=False))
+    else:
+        print(render_first_10_readiness_markdown())
+    return 0
+
+
+# ---------------------------------------------------------------------------
 # status: show borg system status
 # ---------------------------------------------------------------------------
 
@@ -1611,12 +1627,14 @@ def main() -> int:
         formatter_class=argparse.RawDescriptionHelpFormatter,
         epilog="""Quick Start:
   borg start                     First time? Start here — paste an error, get a fix
+  borg rescue 'TypeError: ...'   Get ACTION / STOP / VERIFY rescue guidance
   borg debug 'TypeError: ...'    Get structured debugging guidance for any error
   borg search debugging          Search for workflow packs
   borg generate systematic-debugging --format cursorrules
                                   Export a debugging workflow for Cursor
   borg setup-claude              Configure borg MCP for Claude Code
   borg setup-cursor              Configure borg MCP for Cursor
+  borg first-10 --json           Print first-user beta gates and smoke path
   borg autopilot                 Zero-config setup for Hermes""",
     )
     parser.add_argument("--version", "-V", action="version", version=f"borg {__version__}")
@@ -1784,6 +1802,15 @@ def main() -> int:
     p.add_argument("--json", action="store_true", help="Output machine-readable rescue packet")
     p.add_argument("--short", action="store_true", help="Omit full legacy guidance block")
     p.set_defaults(func=_cmd_rescue)
+
+    # borg first-10 — print first-user beta readiness contract
+    p = sub.add_parser("first-10", help="Print first-user beta readiness gates and smoke path",
+        formatter_class=argparse.RawDescriptionHelpFormatter,
+        epilog="""Examples:
+  borg first-10
+  borg first-10 --json""")
+    p.add_argument("--json", action="store_true", help="Output machine-readable readiness contract")
+    p.set_defaults(func=_cmd_first_10)
 
     # borg recall <error> — query FailureMemory for prior failure/success approaches
     p = sub.add_parser("recall", help="Query prior failure memory for an error message",

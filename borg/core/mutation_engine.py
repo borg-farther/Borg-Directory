@@ -189,13 +189,25 @@ class AntiPatternAddition(MutationOperator):
 
         from pathlib import Path
 
-        pack_failures_dir = Path(pack_dir) / pack_id
-        if not pack_failures_dir.exists():
+        # FailureMemory stores records under <memory_dir>/<agent_id>/<pack_id>/
+        # in current production.  Older tests/fixtures used <memory_dir>/<pack_id>/.
+        # Support both layouts so mutation suggestions consume the real failure
+        # memory API rather than depending on a stale fixture layout.
+        legacy_pack_dir = Path(pack_dir) / pack_id
+        candidate_dirs = []
+        if legacy_pack_dir.exists():
+            candidate_dirs.append(legacy_pack_dir)
+        for agent_dir in Path(pack_dir).iterdir() if Path(pack_dir).exists() else []:
+            if agent_dir.is_dir():
+                scoped_pack_dir = agent_dir / pack_id
+                if scoped_pack_dir.exists():
+                    candidate_dirs.append(scoped_pack_dir)
+        if not candidate_dirs:
             return []
 
         import yaml
 
-        for yaml_file in pack_failures_dir.glob("*.yaml"):
+        for yaml_file in (p for d in candidate_dirs for p in d.glob("*.yaml")):
             try:
                 data = yaml.safe_load(yaml_file.read_text(encoding="utf-8"))
                 if not isinstance(data, dict):

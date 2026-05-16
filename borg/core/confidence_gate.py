@@ -53,6 +53,22 @@ def permission_guidance_matches_task(task: str, context: str = "") -> bool:
     return bool(_PERMISSION_SIGNAL_PATTERN.search(f"{task_clean} {context_clean}"))
 
 
+def _pack_guidance_has_task_overlap(guidance: str, query: str, min_overlap: int = 2) -> bool:
+    """Return True only when PACK GUIDANCE appears relevant to the task.
+
+    This is a final injection boundary, not search ranking. It deliberately
+    ignores broad/meta words so a single token like "python" cannot justify
+    injecting python-type-error guidance into runtime/readiness work.
+    """
+    labels = re.findall(r"PACK GUIDANCE\s*\(([^)]+)\)", guidance or "", flags=re.IGNORECASE)
+    label_text = " ".join(label.replace("-", " ").replace("_", " ") for label in labels)
+    guidance_terms = _terms(label_text, _DEFAULT_PACK_STOPWORDS | _DEFAULT_TRACE_STOPWORDS | {"python", "javascript", "typescript", "node"})
+    query_terms = _terms(query, _DEFAULT_PACK_STOPWORDS | _DEFAULT_TRACE_STOPWORDS | {"python", "javascript", "typescript", "node"})
+    if not guidance_terms or not query_terms:
+        return False
+    return len(guidance_terms & query_terms) >= min_overlap
+
+
 def guidance_is_safe_to_inject(guidance: str, task: str, context: str = "") -> bool:
     """Fail closed on weak, synthetic, no-match, or irrelevant guidance.
 
@@ -86,6 +102,15 @@ def guidance_is_safe_to_inject(guidance: str, task: str, context: str = "") -> b
         if is_permission_pack:
             return permission_guidance_matches_task(task_clean, context_clean)
         return False
+
+    if has_pack_guidance and not is_permission_pack:
+        # Even high-confidence real traces can be paired with an unrelated seed
+        # pack. Do not inject pack-specific advice unless the current task has
+        # concrete overlap with that pack label/content. This catches cases like
+        # Borg readiness prompts receiving django-migration or python-type-error
+        # pack bullets merely because a broad trace hit survived upstream.
+        if not _pack_guidance_has_task_overlap(str(guidance), f"{task_clean} {context_clean}"):
+            return False
 
     return True
 
@@ -167,12 +192,18 @@ def trace_match_is_confident(
     if not has_actionable_content:
         return False
 
-    if query and similarity is not None:
-        try:
-            sim = float(similarity)
-        except (TypeError, ValueError):
-            return False
-        if sim < lexical_similarity_floor:
+    if query:
+        # Some fallback matchers return actionable-looking traces without an
+        # explicit semantic similarity. Those are exactly where broad Borg/Hermes
+        # words can become false positives, so require concrete lexical overlap
+        # unless the semantic score is high enough to stand on its own.
+        require_lexical_overlap = similarity is None
+        if similarity is not None:
+            try:
+                require_lexical_overlap = float(similarity) < lexical_similarity_floor
+            except (TypeError, ValueError):
+                return False
+        if require_lexical_overlap:
             active_stopwords = stopwords or _DEFAULT_TRACE_STOPWORDS
             query_terms = _terms(query, active_stopwords)
             trace_terms = _terms(_trace_text(trace), active_stopwords)

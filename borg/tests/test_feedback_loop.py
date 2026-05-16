@@ -13,6 +13,7 @@ Tests cover:
 
 import unittest
 from datetime import datetime, timedelta
+import pytest
 from borg.core.feedback_loop import (
     SignalType,
     FeedbackSignal,
@@ -25,6 +26,12 @@ from borg.core.feedback_loop import (
     AutoFeedbackDetector,
     FeedbackLoop,
 )
+
+
+@pytest.fixture(autouse=True)
+def _isolated_feedback_db(monkeypatch, tmp_path):
+    """Keep feedback-loop persistence tests isolated from the live Borg state."""
+    monkeypatch.setenv("BORG_HOME", str(tmp_path / "borg_home"))
 
 
 class TestSignalType(unittest.TestCase):

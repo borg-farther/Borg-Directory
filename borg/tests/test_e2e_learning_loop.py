@@ -250,7 +250,7 @@ phases:
 
         fake_session_mod = _FakeSessionModule()
 
-        with patch.dict(os.environ, {"HERMES_HOME": str(tmp_path)}):
+        with patch.dict(os.environ, {"BORG_DIR": str(tmp_path / "guild")}):
             with patch("borg.integrations.mcp_server.init_trace_capture", track_init):
                 with patch("borg.integrations.mcp_server._get_core_modules") as mock_core:
                     mock_core.return_value = (
@@ -622,7 +622,7 @@ class TestBorgFeedbackRecordsToV3:
         fake_session_mod = _FakeSessionModule()
         fake_session_mod.register_session(fake_session)
 
-        with patch.dict(os.environ, {"HERMES_HOME": str(tmp_path)}):
+        with patch.dict(os.environ, {"BORG_DIR": str(tmp_path / "guild")}):
             with patch("uuid.uuid4", return_value=MagicMock(hex="feedback123")):
                 with patch.object(Path, "write_text"):
                     with patch.object(Path, "mkdir"):
@@ -756,7 +756,7 @@ phases:
 
         fake_session_mod = _FakeSessionModule()
 
-        with patch.dict(os.environ, {"HERMES_HOME": str(tmp_path)}):
+        with patch.dict(os.environ, {"BORG_DIR": str(tmp_path / "guild")}):
             with patch("borg.integrations.mcp_server._get_core_modules") as mock_core:
                 mock_core.return_value = (
                     MagicMock(),
@@ -840,7 +840,7 @@ phases:
                 "session_id": session_id,
             })
 
-        with patch.dict(os.environ, {"HERMES_HOME": str(tmp_path)}):
+        with patch.dict(os.environ, {"BORG_DIR": str(tmp_path / "guild")}):
             with patch("uuid.uuid4", return_value=MagicMock(hex="e2efeedback")):
                 with patch.object(Path, "write_text"):
                     with patch.object(Path, "mkdir"):

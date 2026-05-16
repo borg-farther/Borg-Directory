@@ -20,3 +20,10 @@ telemetry.jsonl
 
 # Broken submodule artifact (removed 2026-04-24)
 docs/agenti/
+
+build/
+dist/
+
+# Local Hermes/planning and one-off audit scratch dirs
+.hermes/
+tmp_readiness_audit_*/

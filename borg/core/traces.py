@@ -17,20 +17,19 @@ from collections import Counter
 from pathlib import Path
 from typing import Any, Dict, List, Optional, Tuple
 
+from borg.core.dirs import get_trace_db_path
+
 logger = logging.getLogger(__name__)
 
 _fts_available = True  # module-level FTS5 flag
 
 # Database location
-TRACE_DB_PATH = os.path.join(
-    os.getenv("BORG_HOME", os.path.join(str(Path.home()), ".borg")),
-    "traces.db"
-)
+TRACE_DB_PATH = str(get_trace_db_path())
 
 
 def _get_db(db_path: str = None) -> sqlite3.Connection:
     """Get or create the trace database."""
-    path = db_path or TRACE_DB_PATH
+    path = db_path or str(get_trace_db_path())
     os.makedirs(os.path.dirname(path), exist_ok=True)
     db = sqlite3.connect(path)
     db.row_factory = sqlite3.Row

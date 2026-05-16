@@ -73,9 +73,17 @@ class QualityWeightedAggregator:
     Returns weighted success rate with confidence interval.
     """
 
-    def __init__(self, confidence_level: float = 0.95):
+    def __init__(self, confidence_level: float = 0.95, db_path: str | None = None):
         self.confidence_level = confidence_level
         self._pack_signals: Dict[str, List[FeedbackSignal]] = {}
+        if db_path is None:
+            from borg.core.dirs import get_feedback_db_path
+            db_path = str(get_feedback_db_path())
+        from pathlib import Path as _Path
+        _Path(db_path).expanduser().parent.mkdir(parents=True, exist_ok=True)
+        self._db_path = str(_Path(db_path).expanduser())
+        self._ensure_signals_table()
+        self._load_signals()
 
     def add_signal(self, signal: FeedbackSignal) -> None:
         """Add a feedback signal for a pack."""
@@ -532,17 +540,26 @@ class FeedbackLoop:
         aggregator: Optional[QualityWeightedAggregator] = None,
         free_rider_tracker: Optional[FreeRiderTracker] = None,
         drift_detector: Optional[DriftDetector] = None,
-        auto_feedback: Optional[AutoFeedbackDetector] = None
+        auto_feedback: Optional[AutoFeedbackDetector] = None,
+        db_path: str | None = None,
     ):
-        self.aggregator = aggregator or QualityWeightedAggregator()
+        self.aggregator = aggregator or QualityWeightedAggregator(db_path=db_path)
         self.free_rider_tracker = free_rider_tracker or FreeRiderTracker()
         self.drift_detector = drift_detector or DriftDetector()
         self.auto_feedback = auto_feedback or AutoFeedbackDetector()
 
         self._signals: List[FeedbackSignal] = []
         # SQLite persistence for signals
-        import os as _os
-        self._db_path = _os.path.expanduser("~/.borg/traces.db")
+        from pathlib import Path as _Path
+        if db_path is None:
+            from borg.core.dirs import get_feedback_db_path
+            db = get_feedback_db_path()
+            db.parent.mkdir(parents=True, exist_ok=True)
+            self._db_path = str(db)
+        else:
+            db = _Path(db_path).expanduser()
+            db.parent.mkdir(parents=True, exist_ok=True)
+            self._db_path = str(db)
         self._fl_ensure_table()
         self._fl_load_signals()
 
@@ -632,7 +649,7 @@ class FeedbackLoop:
             agent_id=agent_id or "borgv3",
             pack_id=pack_id,
             signal_type=SignalType.IMPLIED_USAGE,
-            value=1.0 if success else 0.0,
+            value=bool(success),
             timestamp=datetime.now(timezone.utc),
             task_context=task_context or {},
         )

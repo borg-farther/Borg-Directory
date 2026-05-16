@@ -1,55 +1,60 @@
-"""
-Tests for borg/core/dirs.py — BORG_DIR environment variable override.
-"""
+"""Tests for centralized Borg storage path resolution."""
 
-import os
-import pytest
 from pathlib import Path
 
 from borg.core import dirs
 
 
-class TestGetBorgDir:
-    """Test get_borg_dir() env-var override."""
-
-    def test_default_is_home_hermes_guild(self, monkeypatch):
-        """Without BORG_DIR set, defaults to ~/.hermes/guild."""
+class TestBorgPathResolution:
+    def test_default_is_home_dot_borg_guild(self, monkeypatch):
+        monkeypatch.delenv("BORG_HOME", raising=False)
         monkeypatch.delenv("BORG_DIR", raising=False)
-        # Force re-evaluation by patching the env after import
-        result = dirs.get_borg_dir()
-        expected = Path.home() / ".hermes" / "guild"
-        assert result == expected
+        assert dirs.get_borg_home() == Path.home() / ".borg"
+        assert dirs.get_borg_dir() == Path.home() / ".borg" / "guild"
+        assert dirs.get_trace_db_path() == Path.home() / ".borg" / "traces.db"
+        assert dirs.get_v3_db_path() == Path.home() / ".borg" / "borg_v3.db"
 
-    def test_borg_dir_env_var_overrides_default(self, monkeypatch, tmp_path):
-        """Setting BORG_DIR env var changes the returned path."""
-        custom = tmp_path / "custom-guild"
+    def test_borg_home_isolates_all_storage(self, monkeypatch, tmp_path):
+        home = tmp_path / "borg-home"
+        monkeypatch.setenv("BORG_HOME", str(home))
+        monkeypatch.delenv("BORG_DIR", raising=False)
+        assert dirs.get_borg_home() == home
+        assert dirs.get_borg_dir() == home / "guild"
+        assert dirs.get_trace_db_path() == home / "traces.db"
+        assert dirs.get_v3_db_path() == home / "borg_v3.db"
+        assert dirs.get_atom_db_path() == home / "atoms.db"
+        assert dirs.get_failure_memory_dir() == home / "failures"
+
+    def test_borg_dir_env_var_backcompat_isolation(self, monkeypatch, tmp_path):
+        custom = tmp_path / "legacy-root"
+        monkeypatch.delenv("BORG_HOME", raising=False)
         monkeypatch.setenv("BORG_DIR", str(custom))
-        result = dirs.get_borg_dir()
-        assert result == custom
+        assert dirs.get_borg_home() == custom
+        assert dirs.get_borg_dir() == custom
+        assert dirs.get_trace_db_path() == custom / "traces.db"
+        assert dirs.get_v3_db_path() == custom / "borg_v3.db"
 
-    def test_borg_dir_env_var_with_tilde_expansion(self, monkeypatch, tmp_path):
-        """BORG_DIR env var with ~ in path is NOT expanded by get_borg_dir (Path does not expand ~ in env vars)."""
-        # This is a property of how the env var works — Path doesn't expand ~
-        monkeypatch.setenv("BORG_DIR", "~/my-guild")
-        result = dirs.get_borg_dir()
-        # Path treats ~ literally when it comes from env var
-        assert str(result) == str(Path("~/my-guild"))
+    def test_env_vars_expand_tilde(self, monkeypatch):
+        monkeypatch.setenv("BORG_HOME", "~/my-borg")
+        monkeypatch.delenv("BORG_DIR", raising=False)
+        assert dirs.get_borg_home() == Path("~/my-borg").expanduser()
+        assert dirs.get_borg_dir() == Path("~/my-borg").expanduser() / "guild"
 
-    def test_borg_dir_can_be_absolute_path(self, monkeypatch, tmp_path):
-        """An absolute path works as BORG_DIR."""
-        abs_path = tmp_path / "abs-guild"
-        monkeypatch.setenv("BORG_DIR", str(abs_path))
-        assert dirs.get_borg_dir() == abs_path
+    def test_borg_dir_env_var_overrides_borg_home_for_workflows(self, monkeypatch, tmp_path):
+        home = tmp_path / "home"
+        workflow = tmp_path / "workflow"
+        monkeypatch.setenv("BORG_HOME", str(home))
+        monkeypatch.setenv("BORG_DIR", str(workflow))
+        assert dirs.get_borg_home() == home
+        assert dirs.get_borg_dir() == workflow
 
-
-class TestModuleLevelBorgDirConstant:
-    """Test the module-level BORG_DIR constant (backwards compat)."""
-
-    def test_borg_dir_constant_matches_get_borg_dir_at_load_time(self, monkeypatch):
-        """The BORG_DIR constant equals get_borg_dir() when the module was loaded."""
-        # Note: because BORG_DIR is captured at import time, it won't change
-        # if BORG_DIR env var is set after import. Use get_borg_dir() for
-        # dynamic behaviour. This test documents the current behaviour.
-        monkeypatch.setenv("BORG_DIR", "/test-path")
-        # After the env var is set, get_borg_dir() should return the new value
-        assert dirs.get_borg_dir() == Path("/test-path")
+    def test_paths_summary_is_machine_readable(self, monkeypatch, tmp_path):
+        home = tmp_path / "borg-home"
+        monkeypatch.setenv("BORG_HOME", str(home))
+        monkeypatch.delenv("BORG_DIR", raising=False)
+        summary = dirs.get_paths_summary()
+        assert summary["borg_home"] == str(home)
+        assert summary["borg_dir"] == str(home / "guild")
+        assert summary["trace_db_path"] == str(home / "traces.db")
+        assert summary["v3_db_path"] == str(home / "borg_v3.db")
+        assert summary["guild_db_path"] == str(home / "guild" / "guild.db")

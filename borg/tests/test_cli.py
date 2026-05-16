@@ -82,7 +82,7 @@ def test_try_dispatches_to_borg_try(mock_try):
 
 def test_init_scaffolds_new_pack(tmp_path, monkeypatch):
     """init now scaffolds inline (no longer dispatches to borg_init)."""
-    guild_dir = tmp_path / ".hermes" / "guild"
+    guild_dir = tmp_path / ".borg" / "guild"
     monkeypatch.setattr("pathlib.Path.home", lambda: tmp_path)
     code, out, err = capture_main(["init", "my-skill"])
     assert code == 0
@@ -657,13 +657,11 @@ def test_setup_claude_verify_failure_shows_install_hint_and_does_not_write_confi
     assert not (fake_home / ".claude.json").exists()
 
 
-@patch("borg.cli.shutil.which")
-def test_borg_mcp_entry_uses_empty_args_when_borg_mcp_exists(mock_which):
-    """When borg-mcp binary exists, config should execute it directly with no module args."""
-    mock_which.return_value = "/usr/local/bin/borg-mcp"
+def test_borg_mcp_entry_falls_back_to_current_python_module_when_no_local_script():
+    """Fresh setup must avoid wiring a stale global borg-mcp from PATH."""
     entry = cli_module._borg_mcp_server_entry("/tmp/path")["mcpServers"]["borg"]
-    assert entry["command"] == "/usr/local/bin/borg-mcp"
-    assert entry["args"] == []
+    assert entry["command"] == sys.executable
+    assert entry["args"] == ["-m", "borg.integrations.mcp_server"]
 
 
 def test_borg_mcp_entry_writes_absolute_borg_home():

@@ -191,7 +191,7 @@ Forbidden language until eval passes:
 - “collects traces” as a central/shared claim;
 - “zero risk”;
 - “fully anonymous”;
-- “validated at scale”;
+- scale-validation claims before external evidence exists;
 - “10m-agent ready” before M2 gates.
 
 ---

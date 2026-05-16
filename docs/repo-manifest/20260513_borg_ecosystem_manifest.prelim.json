@@ -1,0 +1,90 @@
+{
+  "rev": "20260513-1847-prelim",
+  "status": "preliminary_static_manifest_plus_cron_evidence_pending",
+  "read_only_deep_audit_job_id": "986868297ce9",
+  "rules": {
+    "no_delete_before_archive": true,
+    "no_secret_preservation": true,
+    "no_service_restart_without_operator_approval": true,
+    "public_launch_status": "NO_GO",
+    "supervised_beta_status": "CONTROLLED_GO_ONLY"
+  },
+  "paths": [
+    {
+      "path": "/root/hermes-workspace/borg",
+      "role": "canonical local/offline MCP failure-memory product",
+      "package": "agent-borg",
+      "version_known": "3.3.1",
+      "public_entrypoints_known": ["borg", "borg-mcp", "borg-doctor", "borg-install"],
+      "git_known": {
+        "branch": "fix/borg-observe-wrapper-20260424",
+        "head_short": "402d3f5",
+        "remote": "https://github.com/borg-farther/Borg-Directory.git",
+        "dirty_status_count": 237
+      },
+      "test_evidence_known": ["canonical confidence/readiness targeted suite: 19 passed", "version consistency: pyproject=3.3.1 runtime=3.3.1"],
+      "cutover_decision": "keep_canonical",
+      "blockers": ["dirty tree must be classified", "live borg_observe still appears stale/split-brain until served runtime proves NO_CONFIDENT_MATCH"]
+    },
+    {
+      "path": "/root/hermes-workspace/borg-collective-py",
+      "role": "Python federation SDK/CLI",
+      "package": "borg-collective",
+      "version_known": "0.7.0a1",
+      "public_entrypoints_known": ["borg", "borg-collective", "borg-mcp"],
+      "cutover_decision": "keep_as_sdk_or_merge_library_boundary_but_remove_public_borg_cli_collision",
+      "blockers": ["pytest collection failed due missing respx and hypothesis", "entrypoint collision with agent-borg: borg and borg-mcp"]
+    },
+    {
+      "path": "/root/hermes-workspace/borg-collective-v1",
+      "role": "Cloudflare Worker/D1 hosted federation backend",
+      "package": "borg-collective-v1",
+      "version_known": "0.9.2",
+      "cutover_decision": "keep_backend_only",
+      "blockers": ["npm test failed in current env due Wrangler remote-mode login/local-mode config", "remote migration safety must remain explicit; never run generic remote apply"]
+    },
+    {
+      "path": "/root/hermes-workspace/borg-init",
+      "role": "npm installer/onboarding",
+      "package": "@borg-collective/init",
+      "version_known": "0.1.0-rc2",
+      "public_entrypoints_known": ["borg-init"],
+      "test_evidence_known": ["npm test: 43 passed"],
+      "cutover_decision": "keep_installer_only",
+      "blockers": ["git/release cleanliness unknown at audited path", "installer must verify canonical agent-borg path, not introduce runtime fork"]
+    },
+    {
+      "path": "/root/hermes-workspace/guild-v2",
+      "role": "older/mirror runtime source",
+      "cutover_decision": "archive_or_generated_artifact_after_unique_diff_harvest",
+      "blockers": ["not auditable as git repo at requested path in first raw audit", "must not remain hand-maintained runtime source"]
+    },
+    {
+      "path": "/home/user/guild-tools",
+      "role": "older active-candidate runtime path",
+      "cutover_decision": "archive_or_generated_artifact_after_unique_diff_harvest",
+      "blockers": ["patched defensively due runtime split-brain", "must not remain hand-maintained production source"]
+    },
+    {
+      "path": "/root/.hermes/hermes-agent/hermes_cli/plugins/borg_auto_trace/__init__.py",
+      "role": "real Hermes Borg auto-trace plugin path",
+      "test_evidence_known": ["plugin pytest: 6 passed", "direct probe: suppresses_unrelated=True allows_permission=True"],
+      "cutover_decision": "keep_primary_plugin_path",
+      "blockers": ["live gateway/runtime may need operator-approved reload before source patch is served"]
+    },
+    {
+      "path": "/root/.hermes/hermes-agent/plugins/borg_auto_trace/__init__.py",
+      "role": "duplicate/defensive plugin path",
+      "cutover_decision": "deprecate_unless_packaging_proves_needed",
+      "blockers": ["do not assume this path auto-loads"]
+    }
+  ],
+  "global_blockers_ordered": [
+    "prove live served borg_observe/plugin path returns NO_CONFIDENT_MATCH for unrelated prompts",
+    "classify and resolve 237 dirty/untracked entries in canonical borg repo",
+    "resolve public CLI collision: agent-borg and borg-collective-py both expose borg and borg-mcp",
+    "make borg-collective-py tests self-contained via declared test extras",
+    "make borg-collective-v1 tests deterministic without interactive Wrangler remote auth",
+    "capture first-10 external-user supervised beta transcripts before any broad launch claim"
+  ]
+}

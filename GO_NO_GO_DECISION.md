@@ -1,24 +1,17 @@
-# Borg GO / NO-GO Decision
+# Borg Go / No-Go Decision
 
-Timestamp: `2026-05-04T12:08:01.327965+00:00`
-Soak duration seconds: `5.0`
+Generated: 2026-05-15 11:34:45 UTC
 
-## Step results
+Decision: **GO**
 
-- version_distribution_tests: PASS (rc=0)
-- atom_security_tests: PASS (rc=0)
-- security_gate: PASS (rc=0)
-- atom_fixture_corpus: PASS (rc=0)
-- load_10: PASS (rc=0)
-- load_100: PASS (rc=0)
-- load_1000: PASS (rc=0)
-- readiness_1000_tests: PASS (rc=0)
-- scoreboard_final: PASS (rc=0)
+## Rule
 
-## Rollout
+GO requires a clean fresh install, working console entrypoints, command/doc consistency, day-one rescue value, security baseline artifacts, and no failing hard gates.
 
-- Ready for 10 users: GO
-- Ready for 100 users: GO
-- Ready for 1000 users: GO
+## Evidence
 
-Snapshot: `eval/gate_run_snapshot.json`
+Machine snapshot: `eval/first_user_release_gate_snapshot.json`
+
+## Blockers
+
+None.

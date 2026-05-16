@@ -25,6 +25,7 @@ from borg.core.uri import (
     fetch_with_retry,
     fuzzy_match_pack,
     get_available_pack_names,
+    normalize_pack_uri,
     resolve_guild_uri,
 )
 
@@ -85,11 +86,20 @@ class TestResolveBorgUri:
         with pytest.raises(ValueError, match="Invalid guild URI"):
             resolve_guild_uri("borg://")
 
-    def test_guild_uri_shorthand_no_domain(self):
-        """borg://pack-name resolves as shorthand (no domain required)."""
-        url = resolve_guild_uri("borg://systematic-debugging")
-        assert "systematic-debugging.workflow.yaml" in url
-        assert "raw.githubusercontent.com" in url
+    def test_guild_uri_alias_resolves_to_same_github_raw(self):
+        """guild:// remains a first-user-safe legacy alias for borg://."""
+        result = resolve_guild_uri("guild://bensargotest-sys/my-pack")
+        assert result == (
+            f"https://raw.githubusercontent.com/{DEFAULT_REPO}/{DEFAULT_BRANCH}"
+            "/packs/my-pack.workflow.yaml"
+        )
+
+    def test_normalize_pack_uri_accepts_all_public_forms(self):
+        """Bare, borg://, and guild:// identifiers normalize to one canonical form."""
+        assert normalize_pack_uri("systematic-debugging") == "borg://hermes/systematic-debugging"
+        assert normalize_pack_uri("borg://hermes/systematic-debugging") == "borg://hermes/systematic-debugging"
+        assert normalize_pack_uri("guild://hermes/systematic-debugging") == "borg://hermes/systematic-debugging"
+        assert normalize_pack_uri("guild://hermes/systematic-debugging", canonical_scheme="guild") == "guild://hermes/systematic-debugging"
 
 
 # ---------------------------------------------------------------------------

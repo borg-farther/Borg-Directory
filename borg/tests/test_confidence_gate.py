@@ -102,6 +102,34 @@ def test_guidance_safety_suppresses_permission_guidance_if_only_stale_block_ment
     ) is False
 
 
+def test_guidance_safety_suppresses_unrelated_high_confidence_pack_guidance():
+    guidance = """
+ACTION: Plugin directory ~/.hermes/plugins/ is NOT auto-discovered.
+CONFIDENCE: Real traces: 22 | Synthetic: 0 | BORG [HIGH CONFIDENCE]
+PACK GUIDANCE (python-type-error)
+1. Identify the exact types involved in the operation
+"""
+    assert confidence_gate.guidance_is_safe_to_inject(
+        guidance,
+        "continue Borg readiness/get it there: fix borg_observe irrelevant guidance/runtime mismatch",
+        "python borg mcp runtime readiness",
+    ) is False
+
+
+def test_guidance_safety_allows_relevant_high_confidence_pack_guidance():
+    guidance = """
+ACTION: Open conflicting files.
+CONFIDENCE: Real traces: 3 | Synthetic: 0 | BORG [HIGH CONFIDENCE]
+PACK GUIDANCE (git-merge-conflict)
+Resolve conflict markers.
+"""
+    assert confidence_gate.guidance_is_safe_to_inject(
+        guidance,
+        "Fix git merge conflict markers after pulling main",
+        "git merge conflict",
+    ) is True
+
+
 def test_no_confident_match_response_has_required_action_stop_verify_contract():
     response = confidence_gate.no_confident_match_response("python")
     assert response.startswith("ACTION:")
@@ -121,6 +149,18 @@ def test_trace_confidence_rejects_medium_similarity_meta_overlap_only():
     assert confidence_gate.trace_match_is_confident(
         trace,
         query="continue Borg first-user readiness: fix borg_observe trace matching relevance bug",
+    ) is False
+
+
+def test_trace_confidence_rejects_missing_similarity_meta_overlap_only():
+    trace = {
+        "root_cause": "BORG_HOME was not set in the Hermes plugin service file.",
+        "approach_summary": "Plugin directory ~/.hermes/plugins/ is not auto-discovered; patch the real plugin runtime path.",
+    }
+
+    assert confidence_gate.trace_match_is_confident(
+        trace,
+        query="continue Borg readiness/get it there: fix borg_observe irrelevant guidance/runtime mismatch and proceed toward first-user readiness python borg mcp runtime readiness",
     ) is False
 
 

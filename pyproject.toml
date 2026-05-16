@@ -4,11 +4,10 @@ build-backend = "setuptools.build_meta"
 
 [project]
 name = "agent-borg"
-version = "3.3.1"
+version = "3.3.3"
 description = "Collective memory MCP server for AI coding agents"
 requires-python = ">=3.10"
 dependencies = [
-    "sentence-transformers>=2.2.0",
   "pyyaml>=6.0"
 ]
 
@@ -54,7 +53,7 @@ where = ["."]
 include = ["borg*"]
 
 [tool.setuptools.package-data]
-borg = ["seeds_data/*.yaml", "seeds_data/*.json"]
+borg = ["seeds_data/*.yaml", "seeds_data/*.json", "seeds_data/*.md", "seeds_data/packs/*.yaml"]
 
 [tool.pytest.ini_options]
 testpaths = ["borg/tests"]

@@ -1,0 +1,1517 @@
+{
+  "command": "git status --porcelain=v1 -z",
+  "entries": [
+    {
+      "classification": "commit_doc",
+      "path": "GO_NO_GO_DECISION.md",
+      "reason": "documentation/readiness/proof artifact",
+      "status": " M"
+    },
+    {
+      "classification": "commit_doc",
+      "path": "LOAD_TEST_REPORT_10.md",
+      "reason": "documentation/readiness/proof artifact",
+      "status": " M"
+    },
+    {
+      "classification": "commit_doc",
+      "path": "LOAD_TEST_REPORT_100.md",
+      "reason": "documentation/readiness/proof artifact",
+      "status": " M"
+    },
+    {
+      "classification": "commit_doc",
+      "path": "LOAD_TEST_REPORT_1000.md",
+      "reason": "documentation/readiness/proof artifact",
+      "status": " M"
+    },
+    {
+      "classification": "commit_doc",
+      "path": "PROJECT_STATUS.md",
+      "reason": "documentation/readiness/proof artifact",
+      "status": " M"
+    },
+    {
+      "classification": "commit_doc",
+      "path": "README.md",
+      "reason": "documentation/readiness/proof artifact",
+      "status": " M"
+    },
+    {
+      "classification": "commit_doc",
+      "path": "UAT_RESULTS.md",
+      "reason": "documentation/readiness/proof artifact",
+      "status": " M"
+    },
+    {
+      "classification": "commit_product_code",
+      "path": "borg/cli.py",
+      "reason": "product/runtime/eval source under canonical repo",
+      "status": " M"
+    },
+    {
+      "classification": "commit_product_code",
+      "path": "borg/cli/doctor.py",
+      "reason": "product/runtime/eval source under canonical repo",
+      "status": " M"
+    },
+    {
+      "classification": "commit_product_code",
+      "path": "borg/core/feedback_loop.py",
+      "reason": "product/runtime/eval source under canonical repo",
+      "status": " M"
+    },
+    {
+      "classification": "commit_product_code",
+      "path": "borg/core/uri.py",
+      "reason": "product/runtime/eval source under canonical repo",
+      "status": " M"
+    },
+    {
+      "classification": "commit_product_code",
+      "path": "borg/integrations/mcp_server.py",
+      "reason": "product/runtime/eval source under canonical repo",
+      "status": " M"
+    },
+    {
+      "classification": "commit_test",
+      "path": "borg/tests/test_borg_observe_confidence_gate.py",
+      "reason": "test coverage or verification artifact",
+      "status": " M"
+    },
+    {
+      "classification": "commit_test",
+      "path": "borg/tests/test_distribution_readiness.py",
+      "reason": "test coverage or verification artifact",
+      "status": " M"
+    },
+    {
+      "classification": "commit_test",
+      "path": "borg/tests/test_uri.py",
+      "reason": "test coverage or verification artifact",
+      "status": " M"
+    },
+    {
+      "classification": "generated_ignore",
+      "path": "build/lib/borg/__init__.py",
+      "reason": "generated build/dist/cache artifact; not source of truth",
+      "status": " M"
+    },
+    {
+      "classification": "generated_ignore",
+      "path": "build/lib/borg/cli.py",
+      "reason": "generated build/dist/cache artifact; not source of truth",
+      "status": " M"
+    },
+    {
+      "classification": "generated_ignore",
+      "path": "build/lib/borg/cli/__init__.py",
+      "reason": "generated build/dist/cache artifact; not source of truth",
+      "status": " M"
+    },
+    {
+      "classification": "generated_ignore",
+      "path": "build/lib/borg/cli/doctor.py",
+      "reason": "generated build/dist/cache artifact; not source of truth",
+      "status": " M"
+    },
+    {
+      "classification": "generated_ignore",
+      "path": "build/lib/borg/core/__init__.py",
+      "reason": "generated build/dist/cache artifact; not source of truth",
+      "status": " M"
+    },
+    {
+      "classification": "generated_ignore",
+      "path": "build/lib/borg/core/convert.py",
+      "reason": "generated build/dist/cache artifact; not source of truth",
+      "status": " M"
+    },
+    {
+      "classification": "generated_ignore",
+      "path": "build/lib/borg/core/feedback_loop.py",
+      "reason": "generated build/dist/cache artifact; not source of truth",
+      "status": " M"
+    },
+    {
+      "classification": "generated_ignore",
+      "path": "build/lib/borg/core/openclaw_converter.py",
+      "reason": "generated build/dist/cache artifact; not source of truth",
+      "status": " M"
+    },
+    {
+      "classification": "generated_ignore",
+      "path": "build/lib/borg/core/pack_taxonomy.py",
+      "reason": "generated build/dist/cache artifact; not source of truth",
+      "status": " M"
+    },
+    {
+      "classification": "generated_ignore",
+      "path": "build/lib/borg/core/privacy.py",
+      "reason": "generated build/dist/cache artifact; not source of truth",
+      "status": " M"
+    },
+    {
+      "classification": "generated_ignore",
+      "path": "build/lib/borg/core/publish.py",
+      "reason": "generated build/dist/cache artifact; not source of truth",
+      "status": " M"
+    },
+    {
+      "classification": "generated_ignore",
+      "path": "build/lib/borg/core/trace_matcher.py",
+      "reason": "generated build/dist/cache artifact; not source of truth",
+      "status": " M"
+    },
+    {
+      "classification": "generated_ignore",
+      "path": "build/lib/borg/core/traces.py",
+      "reason": "generated build/dist/cache artifact; not source of truth",
+      "status": " M"
+    },
+    {
+      "classification": "generated_ignore",
+      "path": "build/lib/borg/core/uri.py",
+      "reason": "generated build/dist/cache artifact; not source of truth",
+      "status": " M"
+    },
+    {
+      "classification": "generated_ignore",
+      "path": "build/lib/borg/defi/__init__.py",
+      "reason": "generated build/dist/cache artifact; not source of truth",
+      "status": " D"
+    },
+    {
+      "classification": "generated_ignore",
+      "path": "build/lib/borg/defi/alpha_signal.py",
+      "reason": "generated build/dist/cache artifact; not source of truth",
+      "status": " D"
+    },
+    {
+      "classification": "generated_ignore",
+      "path": "build/lib/borg/defi/api_clients/__init__.py",
+      "reason": "generated build/dist/cache artifact; not source of truth",
+      "status": " D"
+    },
+    {
+      "classification": "generated_ignore",
+      "path": "build/lib/borg/defi/api_clients/alchemy.py",
+      "reason": "generated build/dist/cache artifact; not source of truth",
+      "status": " D"
+    },
+    {
+      "classification": "generated_ignore",
+      "path": "build/lib/borg/defi/api_clients/arkham.py",
+      "reason": "generated build/dist/cache artifact; not source of truth",
+      "status": " D"
+    },
+    {
+      "classification": "generated_ignore",
+      "path": "build/lib/borg/defi/api_clients/base.py",
+      "reason": "generated build/dist/cache artifact; not source of truth",
+      "status": " D"
+    },
+    {
+      "classification": "generated_ignore",
+      "path": "build/lib/borg/defi/api_clients/birdeye.py",
+      "reason": "generated build/dist/cache artifact; not source of truth",
+      "status": " D"
+    },
+    {
+      "classification": "generated_ignore",
+      "path": "build/lib/borg/defi/api_clients/cache.py",
+      "reason": "generated build/dist/cache artifact; not source of truth",
+      "status": " D"
+    },
+    {
+      "classification": "generated_ignore",
+      "path": "build/lib/borg/defi/api_clients/defillama.py",
+      "reason": "generated build/dist/cache artifact; not source of truth",
+      "status": " D"
+    },
+    {
+      "classification": "generated_ignore",
+      "path": "build/lib/borg/defi/api_clients/dexscreener.py",
+      "reason": "generated build/dist/cache artifact; not source of truth",
+      "status": " D"
+    },
+    {
+      "classification": "generated_ignore",
+      "path": "build/lib/borg/defi/api_clients/goplus.py",
+      "reason": "generated build/dist/cache artifact; not source of truth",
+      "status": " D"
+    },
+    {
+      "classification": "generated_ignore",
+      "path": "build/lib/borg/defi/api_clients/helius.py",
+      "reason": "generated build/dist/cache artifact; not source of truth",
+      "status": " D"
+    },
+    {
+      "classification": "generated_ignore",
+      "path": "build/lib/borg/defi/cli.py",
+      "reason": "generated build/dist/cache artifact; not source of truth",
+      "status": " D"
+    },
+    {
+      "classification": "generated_ignore",
+      "path": "build/lib/borg/defi/cron/__init__.py",
+      "reason": "generated build/dist/cache artifact; not source of truth",
+      "status": " D"
+    },
+    {
+      "classification": "generated_ignore",
+      "path": "build/lib/borg/defi/cron/alpha_cron.py",
+      "reason": "generated build/dist/cache artifact; not source of truth",
+      "status": " D"
+    },
+    {
+      "classification": "generated_ignore",
+      "path": "build/lib/borg/defi/cron/delivery.py",
+      "reason": "generated build/dist/cache artifact; not source of truth",
+      "status": " D"
+    },
+    {
+      "classification": "generated_ignore",
+      "path": "build/lib/borg/defi/cron/liquidation_cron.py",
+      "reason": "generated build/dist/cache artifact; not source of truth",
+      "status": " D"
+    },
+    {
+      "classification": "generated_ignore",
+      "path": "build/lib/borg/defi/cron/live_scans.py",
+      "reason": "generated build/dist/cache artifact; not source of truth",
+      "status": " D"
+    },
+    {
+      "classification": "generated_ignore",
+      "path": "build/lib/borg/defi/cron/portfolio_cron.py",
+      "reason": "generated build/dist/cache artifact; not source of truth",
+      "status": " D"
+    },
+    {
+      "classification": "generated_ignore",
+      "path": "build/lib/borg/defi/cron/risk_cron.py",
+      "reason": "generated build/dist/cache artifact; not source of truth",
+      "status": " D"
+    },
+    {
+      "classification": "generated_ignore",
+      "path": "build/lib/borg/defi/cron/state.py",
+      "reason": "generated build/dist/cache artifact; not source of truth",
+      "status": " D"
+    },
+    {
+      "classification": "generated_ignore",
+      "path": "build/lib/borg/defi/cron/whale_cron.py",
+      "reason": "generated build/dist/cache artifact; not source of truth",
+      "status": " D"
+    },
+    {
+      "classification": "generated_ignore",
+      "path": "build/lib/borg/defi/cron/yield_cron.py",
+      "reason": "generated build/dist/cache artifact; not source of truth",
+      "status": " D"
+    },
+    {
+      "classification": "generated_ignore",
+      "path": "build/lib/borg/defi/data_models.py",
+      "reason": "generated build/dist/cache artifact; not source of truth",
+      "status": " D"
+    },
+    {
+      "classification": "generated_ignore",
+      "path": "build/lib/borg/defi/dojo_bridge.py",
+      "reason": "generated build/dist/cache artifact; not source of truth",
+      "status": " D"
+    },
+    {
+      "classification": "generated_ignore",
+      "path": "build/lib/borg/defi/liquidation_watcher.py",
+      "reason": "generated build/dist/cache artifact; not source of truth",
+      "status": " D"
+    },
+    {
+      "classification": "generated_ignore",
+      "path": "build/lib/borg/defi/lp_manager.py",
+      "reason": "generated build/dist/cache artifact; not source of truth",
+      "status": " D"
+    },
+    {
+      "classification": "generated_ignore",
+      "path": "build/lib/borg/defi/mcp_tools.py",
+      "reason": "generated build/dist/cache artifact; not source of truth",
+      "status": " D"
+    },
+    {
+      "classification": "generated_ignore",
+      "path": "build/lib/borg/defi/mev/__init__.py",
+      "reason": "generated build/dist/cache artifact; not source of truth",
+      "status": " D"
+    },
+    {
+      "classification": "generated_ignore",
+      "path": "build/lib/borg/defi/mev/flashbots.py",
+      "reason": "generated build/dist/cache artifact; not source of truth",
+      "status": " D"
+    },
+    {
+      "classification": "generated_ignore",
+      "path": "build/lib/borg/defi/mev/jito.py",
+      "reason": "generated build/dist/cache artifact; not source of truth",
+      "status": " D"
+    },
+    {
+      "classification": "generated_ignore",
+      "path": "build/lib/borg/defi/portfolio_monitor.py",
+      "reason": "generated build/dist/cache artifact; not source of truth",
+      "status": " D"
+    },
+    {
+      "classification": "generated_ignore",
+      "path": "build/lib/borg/defi/risk_engine.py",
+      "reason": "generated build/dist/cache artifact; not source of truth",
+      "status": " D"
+    },
+    {
+      "classification": "generated_ignore",
+      "path": "build/lib/borg/defi/security/__init__.py",
+      "reason": "generated build/dist/cache artifact; not source of truth",
+      "status": " D"
+    },
+    {
+      "classification": "generated_ignore",
+      "path": "build/lib/borg/defi/security/keystore.py",
+      "reason": "generated build/dist/cache artifact; not source of truth",
+      "status": " D"
+    },
+    {
+      "classification": "generated_ignore",
+      "path": "build/lib/borg/defi/security/tx_guard.py",
+      "reason": "generated build/dist/cache artifact; not source of truth",
+      "status": " D"
+    },
+    {
+      "classification": "generated_ignore",
+      "path": "build/lib/borg/defi/strategy_backtester.py",
+      "reason": "generated build/dist/cache artifact; not source of truth",
+      "status": " D"
+    },
+    {
+      "classification": "generated_ignore",
+      "path": "build/lib/borg/defi/strategy_selector.py",
+      "reason": "generated build/dist/cache artifact; not source of truth",
+      "status": " D"
+    },
+    {
+      "classification": "generated_ignore",
+      "path": "build/lib/borg/defi/swap_executor.py",
+      "reason": "generated build/dist/cache artifact; not source of truth",
+      "status": " D"
+    },
+    {
+      "classification": "generated_ignore",
+      "path": "build/lib/borg/defi/tests/__init__.py",
+      "reason": "generated build/dist/cache artifact; not source of truth",
+      "status": " D"
+    },
+    {
+      "classification": "generated_ignore",
+      "path": "build/lib/borg/defi/tests/test_alchemy.py",
+      "reason": "generated build/dist/cache artifact; not source of truth",
+      "status": " D"
+    },
+    {
+      "classification": "generated_ignore",
+      "path": "build/lib/borg/defi/tests/test_alpha_signal.py",
+      "reason": "generated build/dist/cache artifact; not source of truth",
+      "status": " D"
+    },
+    {
+      "classification": "generated_ignore",
+      "path": "build/lib/borg/defi/tests/test_api_clients.py",
+      "reason": "generated build/dist/cache artifact; not source of truth",
+      "status": " D"
+    },
+    {
+      "classification": "generated_ignore",
+      "path": "build/lib/borg/defi/tests/test_arkham.py",
+      "reason": "generated build/dist/cache artifact; not source of truth",
+      "status": " D"
+    },
+    {
+      "classification": "generated_ignore",
+      "path": "build/lib/borg/defi/tests/test_base_client.py",
+      "reason": "generated build/dist/cache artifact; not source of truth",
+      "status": " D"
+    },
+    {
+      "classification": "generated_ignore",
+      "path": "build/lib/borg/defi/tests/test_cache.py",
+      "reason": "generated build/dist/cache artifact; not source of truth",
+      "status": " D"
+    },
+    {
+      "classification": "generated_ignore",
+      "path": "build/lib/borg/defi/tests/test_cli.py",
+      "reason": "generated build/dist/cache artifact; not source of truth",
+      "status": " D"
+    },
+    {
+      "classification": "generated_ignore",
+      "path": "build/lib/borg/defi/tests/test_cron.py",
+      "reason": "generated build/dist/cache artifact; not source of truth",
+      "status": " D"
+    },
+    {
+      "classification": "generated_ignore",
+      "path": "build/lib/borg/defi/tests/test_cron_delivery.py",
+      "reason": "generated build/dist/cache artifact; not source of truth",
+      "status": " D"
+    },
+    {
+      "classification": "generated_ignore",
+      "path": "build/lib/borg/defi/tests/test_cron_state.py",
+      "reason": "generated build/dist/cache artifact; not source of truth",
+      "status": " D"
+    },
+    {
+      "classification": "generated_ignore",
+      "path": "build/lib/borg/defi/tests/test_data_models.py",
+      "reason": "generated build/dist/cache artifact; not source of truth",
+      "status": " D"
+    },
+    {
+      "classification": "generated_ignore",
+      "path": "build/lib/borg/defi/tests/test_dojo_bridge.py",
+      "reason": "generated build/dist/cache artifact; not source of truth",
+      "status": " D"
+    },
+    {
+      "classification": "generated_ignore",
+      "path": "build/lib/borg/defi/tests/test_e2e_live.py",
+      "reason": "generated build/dist/cache artifact; not source of truth",
+      "status": " D"
+    },
+    {
+      "classification": "generated_ignore",
+      "path": "build/lib/borg/defi/tests/test_goplus.py",
+      "reason": "generated build/dist/cache artifact; not source of truth",
+      "status": " D"
+    },
+    {
+      "classification": "generated_ignore",
+      "path": "build/lib/borg/defi/tests/test_keystore_unit.py",
+      "reason": "generated build/dist/cache artifact; not source of truth",
+      "status": " D"
+    },
+    {
+      "classification": "generated_ignore",
+      "path": "build/lib/borg/defi/tests/test_liquidation_watcher.py",
+      "reason": "generated build/dist/cache artifact; not source of truth",
+      "status": " D"
+    },
+    {
+      "classification": "generated_ignore",
+      "path": "build/lib/borg/defi/tests/test_live_scans.py",
+      "reason": "generated build/dist/cache artifact; not source of truth",
+      "status": " D"
+    },
+    {
+      "classification": "generated_ignore",
+      "path": "build/lib/borg/defi/tests/test_lp_manager.py",
+      "reason": "generated build/dist/cache artifact; not source of truth",
+      "status": " D"
+    },
+    {
+      "classification": "generated_ignore",
+      "path": "build/lib/borg/defi/tests/test_mcp_tools.py",
+      "reason": "generated build/dist/cache artifact; not source of truth",
+      "status": " D"
+    },
+    {
+      "classification": "generated_ignore",
+      "path": "build/lib/borg/defi/tests/test_mev.py",
+      "reason": "generated build/dist/cache artifact; not source of truth",
+      "status": " D"
+    },
+    {
+      "classification": "generated_ignore",
+      "path": "build/lib/borg/defi/tests/test_portfolio_monitor.py",
+      "reason": "generated build/dist/cache artifact; not source of truth",
+      "status": " D"
+    },
+    {
+      "classification": "generated_ignore",
+      "path": "build/lib/borg/defi/tests/test_risk_engine.py",
+      "reason": "generated build/dist/cache artifact; not source of truth",
+      "status": " D"
+    },
+    {
+      "classification": "generated_ignore",
+      "path": "build/lib/borg/defi/tests/test_strategy_backtester.py",
+      "reason": "generated build/dist/cache artifact; not source of truth",
+      "status": " D"
+    },
+    {
+      "classification": "generated_ignore",
+      "path": "build/lib/borg/defi/tests/test_strategy_selector.py",
+      "reason": "generated build/dist/cache artifact; not source of truth",
+      "status": " D"
+    },
+    {
+      "classification": "generated_ignore",
+      "path": "build/lib/borg/defi/tests/test_swap_executor.py",
+      "reason": "generated build/dist/cache artifact; not source of truth",
+      "status": " D"
+    },
+    {
+      "classification": "generated_ignore",
+      "path": "build/lib/borg/defi/tests/test_tx_guard_unit.py",
+      "reason": "generated build/dist/cache artifact; not source of truth",
+      "status": " D"
+    },
+    {
+      "classification": "generated_ignore",
+      "path": "build/lib/borg/defi/tests/test_v2_borg_bridge.py",
+      "reason": "generated build/dist/cache artifact; not source of truth",
+      "status": " D"
+    },
+    {
+      "classification": "generated_ignore",
+      "path": "build/lib/borg/defi/tests/test_v2_circuit_breaker.py",
+      "reason": "generated build/dist/cache artifact; not source of truth",
+      "status": " D"
+    },
+    {
+      "classification": "generated_ignore",
+      "path": "build/lib/borg/defi/tests/test_v2_drift.py",
+      "reason": "generated build/dist/cache artifact; not source of truth",
+      "status": " D"
+    },
+    {
+      "classification": "generated_ignore",
+      "path": "build/lib/borg/defi/tests/test_v2_integration.py",
+      "reason": "generated build/dist/cache artifact; not source of truth",
+      "status": " D"
+    },
+    {
+      "classification": "generated_ignore",
+      "path": "build/lib/borg/defi/tests/test_v2_models.py",
+      "reason": "generated build/dist/cache artifact; not source of truth",
+      "status": " D"
+    },
+    {
+      "classification": "generated_ignore",
+      "path": "build/lib/borg/defi/tests/test_v2_outcome_store.py",
+      "reason": "generated build/dist/cache artifact; not source of truth",
+      "status": " D"
+    },
+    {
+      "classification": "generated_ignore",
+      "path": "build/lib/borg/defi/tests/test_v2_pack_store.py",
+      "reason": "generated build/dist/cache artifact; not source of truth",
+      "status": " D"
+    },
+    {
+      "classification": "generated_ignore",
+      "path": "build/lib/borg/defi/tests/test_v2_recommender.py",
+      "reason": "generated build/dist/cache artifact; not source of truth",
+      "status": " D"
+    },
+    {
+      "classification": "generated_ignore",
+      "path": "build/lib/borg/defi/tests/test_v2_reputation.py",
+      "reason": "generated build/dist/cache artifact; not source of truth",
+      "status": " D"
+    },
+    {
+      "classification": "generated_ignore",
+      "path": "build/lib/borg/defi/tests/test_v2_seed_packs.py",
+      "reason": "generated build/dist/cache artifact; not source of truth",
+      "status": " D"
+    },
+    {
+      "classification": "generated_ignore",
+      "path": "build/lib/borg/defi/tests/test_v2_warnings.py",
+      "reason": "generated build/dist/cache artifact; not source of truth",
+      "status": " D"
+    },
+    {
+      "classification": "generated_ignore",
+      "path": "build/lib/borg/defi/tests/test_whale_tracker.py",
+      "reason": "generated build/dist/cache artifact; not source of truth",
+      "status": " D"
+    },
+    {
+      "classification": "generated_ignore",
+      "path": "build/lib/borg/defi/tests/test_yield_scanner.py",
+      "reason": "generated build/dist/cache artifact; not source of truth",
+      "status": " D"
+    },
+    {
+      "classification": "generated_ignore",
+      "path": "build/lib/borg/defi/v2/__init__.py",
+      "reason": "generated build/dist/cache artifact; not source of truth",
+      "status": " D"
+    },
+    {
+      "classification": "generated_ignore",
+      "path": "build/lib/borg/defi/v2/borg_bridge.py",
+      "reason": "generated build/dist/cache artifact; not source of truth",
+      "status": " D"
+    },
+    {
+      "classification": "generated_ignore",
+      "path": "build/lib/borg/defi/v2/circuit_breaker.py",
+      "reason": "generated build/dist/cache artifact; not source of truth",
+      "status": " D"
+    },
+    {
+      "classification": "generated_ignore",
+      "path": "build/lib/borg/defi/v2/daily_brief.py",
+      "reason": "generated build/dist/cache artifact; not source of truth",
+      "status": " D"
+    },
+    {
+      "classification": "generated_ignore",
+      "path": "build/lib/borg/defi/v2/drift.py",
+      "reason": "generated build/dist/cache artifact; not source of truth",
+      "status": " D"
+    },
+    {
+      "classification": "generated_ignore",
+      "path": "build/lib/borg/defi/v2/models.py",
+      "reason": "generated build/dist/cache artifact; not source of truth",
+      "status": " D"
+    },
+    {
+      "classification": "generated_ignore",
+      "path": "build/lib/borg/defi/v2/outcome_store.py",
+      "reason": "generated build/dist/cache artifact; not source of truth",
+      "status": " D"
+    },
+    {
+      "classification": "generated_ignore",
+      "path": "build/lib/borg/defi/v2/pack_store.py",
+      "reason": "generated build/dist/cache artifact; not source of truth",
+      "status": " D"
+    },
+    {
+      "classification": "generated_ignore",
+      "path": "build/lib/borg/defi/v2/recommender.py",
+      "reason": "generated build/dist/cache artifact; not source of truth",
+      "status": " D"
+    },
+    {
+      "classification": "generated_ignore",
+      "path": "build/lib/borg/defi/v2/reputation.py",
+      "reason": "generated build/dist/cache artifact; not source of truth",
+      "status": " D"
+    },
+    {
+      "classification": "generated_ignore",
+      "path": "build/lib/borg/defi/v2/seed_packs.py",
+      "reason": "generated build/dist/cache artifact; not source of truth",
+      "status": " D"
+    },
+    {
+      "classification": "generated_ignore",
+      "path": "build/lib/borg/defi/v2/warnings.py",
+      "reason": "generated build/dist/cache artifact; not source of truth",
+      "status": " D"
+    },
+    {
+      "classification": "generated_ignore",
+      "path": "build/lib/borg/defi/whale_tracker.py",
+      "reason": "generated build/dist/cache artifact; not source of truth",
+      "status": " D"
+    },
+    {
+      "classification": "generated_ignore",
+      "path": "build/lib/borg/defi/yield_scanner.py",
+      "reason": "generated build/dist/cache artifact; not source of truth",
+      "status": " D"
+    },
+    {
+      "classification": "generated_ignore",
+      "path": "build/lib/borg/tests/test_cli.py",
+      "reason": "generated build/dist/cache artifact; not source of truth",
+      "status": " M"
+    },
+    {
+      "classification": "generated_ignore",
+      "path": "build/lib/borg/tests/test_convert_openclaw.py",
+      "reason": "generated build/dist/cache artifact; not source of truth",
+      "status": " M"
+    },
+    {
+      "classification": "generated_ignore",
+      "path": "build/lib/borg/tests/test_fleet_syncer.py",
+      "reason": "generated build/dist/cache artifact; not source of truth",
+      "status": " M"
+    },
+    {
+      "classification": "generated_ignore",
+      "path": "build/lib/borg/tests/test_mcp_server.py",
+      "reason": "generated build/dist/cache artifact; not source of truth",
+      "status": " M"
+    },
+    {
+      "classification": "generated_ignore",
+      "path": "build/lib/borg/tests/test_mcp_server_extended.py",
+      "reason": "generated build/dist/cache artifact; not source of truth",
+      "status": " M"
+    },
+    {
+      "classification": "generated_ignore",
+      "path": "build/lib/borg/tests/test_pack_compatibility.py",
+      "reason": "generated build/dist/cache artifact; not source of truth",
+      "status": " M"
+    },
+    {
+      "classification": "generated_ignore",
+      "path": "build/lib/borg/tests/test_search.py",
+      "reason": "generated build/dist/cache artifact; not source of truth",
+      "status": " M"
+    },
+    {
+      "classification": "generated_ignore",
+      "path": "build/lib/borg/tests/test_start_signals.py",
+      "reason": "generated build/dist/cache artifact; not source of truth",
+      "status": " M"
+    },
+    {
+      "classification": "generated_ignore",
+      "path": "build/lib/borg/tests/test_uri.py",
+      "reason": "generated build/dist/cache artifact; not source of truth",
+      "status": " M"
+    },
+    {
+      "classification": "generated_ignore",
+      "path": "build/lib/borg/tests/test_v3_integration.py",
+      "reason": "generated build/dist/cache artifact; not source of truth",
+      "status": " M"
+    },
+    {
+      "classification": "generated_ignore",
+      "path": "dist/agent_borg-2.4.0-py3-none-any.whl",
+      "reason": "generated build/dist/cache artifact; not source of truth",
+      "status": " D"
+    },
+    {
+      "classification": "generated_ignore",
+      "path": "dist/agent_borg-2.4.0.tar.gz",
+      "reason": "generated build/dist/cache artifact; not source of truth",
+      "status": " D"
+    },
+    {
+      "classification": "generated_ignore",
+      "path": "dist/agent_borg-2.5.0-py3-none-any.whl",
+      "reason": "generated build/dist/cache artifact; not source of truth",
+      "status": " D"
+    },
+    {
+      "classification": "generated_ignore",
+      "path": "dist/agent_borg-2.5.0.tar.gz",
+      "reason": "generated build/dist/cache artifact; not source of truth",
+      "status": " D"
+    },
+    {
+      "classification": "generated_ignore",
+      "path": "dist/agent_borg-2.5.1-py3-none-any.whl",
+      "reason": "generated build/dist/cache artifact; not source of truth",
+      "status": " D"
+    },
+    {
+      "classification": "generated_ignore",
+      "path": "dist/agent_borg-2.5.1.tar.gz",
+      "reason": "generated build/dist/cache artifact; not source of truth",
+      "status": " D"
+    },
+    {
+      "classification": "generated_ignore",
+      "path": "dist/agent_borg-2.5.2-py3-none-any.whl",
+      "reason": "generated build/dist/cache artifact; not source of truth",
+      "status": " D"
+    },
+    {
+      "classification": "generated_ignore",
+      "path": "dist/agent_borg-2.5.2.tar.gz",
+      "reason": "generated build/dist/cache artifact; not source of truth",
+      "status": " D"
+    },
+    {
+      "classification": "generated_ignore",
+      "path": "dist/agent_borg-2.7.1-py3-none-any.whl",
+      "reason": "generated build/dist/cache artifact; not source of truth",
+      "status": " D"
+    },
+    {
+      "classification": "generated_ignore",
+      "path": "dist/agent_borg-2.7.1.tar.gz",
+      "reason": "generated build/dist/cache artifact; not source of truth",
+      "status": " D"
+    },
+    {
+      "classification": "generated_ignore",
+      "path": "dist/agent_borg-3.1.0-py3-none-any.whl",
+      "reason": "generated build/dist/cache artifact; not source of truth",
+      "status": " D"
+    },
+    {
+      "classification": "generated_ignore",
+      "path": "dist/agent_borg-3.1.0.tar.gz",
+      "reason": "generated build/dist/cache artifact; not source of truth",
+      "status": " D"
+    },
+    {
+      "classification": "generated_ignore",
+      "path": "dist/agent_borg-3.1.1-py3-none-any.whl",
+      "reason": "generated build/dist/cache artifact; not source of truth",
+      "status": " D"
+    },
+    {
+      "classification": "generated_ignore",
+      "path": "dist/agent_borg-3.1.1.tar.gz",
+      "reason": "generated build/dist/cache artifact; not source of truth",
+      "status": " D"
+    },
+    {
+      "classification": "generated_ignore",
+      "path": "dist/agent_borg-3.1.2-py3-none-any.whl",
+      "reason": "generated build/dist/cache artifact; not source of truth",
+      "status": " D"
+    },
+    {
+      "classification": "generated_ignore",
+      "path": "dist/agent_borg-3.1.2.tar.gz",
+      "reason": "generated build/dist/cache artifact; not source of truth",
+      "status": " D"
+    },
+    {
+      "classification": "generated_ignore",
+      "path": "dist/agent_borg-3.1.3-py3-none-any.whl",
+      "reason": "generated build/dist/cache artifact; not source of truth",
+      "status": " D"
+    },
+    {
+      "classification": "generated_ignore",
+      "path": "dist/agent_borg-3.1.3.tar.gz",
+      "reason": "generated build/dist/cache artifact; not source of truth",
+      "status": " D"
+    },
+    {
+      "classification": "generated_ignore",
+      "path": "dist/agent_borg-3.2.0-py3-none-any.whl",
+      "reason": "generated build/dist/cache artifact; not source of truth",
+      "status": " D"
+    },
+    {
+      "classification": "generated_ignore",
+      "path": "dist/agent_borg-3.2.0.tar.gz",
+      "reason": "generated build/dist/cache artifact; not source of truth",
+      "status": " D"
+    },
+    {
+      "classification": "generated_ignore",
+      "path": "dist/agent_borg-3.2.1-py3-none-any.whl",
+      "reason": "generated build/dist/cache artifact; not source of truth",
+      "status": " D"
+    },
+    {
+      "classification": "generated_ignore",
+      "path": "dist/agent_borg-3.2.1.tar.gz",
+      "reason": "generated build/dist/cache artifact; not source of truth",
+      "status": " D"
+    },
+    {
+      "classification": "generated_ignore",
+      "path": "dist/agent_borg-3.2.2-py3-none-any.whl",
+      "reason": "generated build/dist/cache artifact; not source of truth",
+      "status": " D"
+    },
+    {
+      "classification": "generated_ignore",
+      "path": "dist/agent_borg-3.2.2.tar.gz",
+      "reason": "generated build/dist/cache artifact; not source of truth",
+      "status": " D"
+    },
+    {
+      "classification": "generated_ignore",
+      "path": "dist/agent_borg-3.2.3-py3-none-any.whl",
+      "reason": "generated build/dist/cache artifact; not source of truth",
+      "status": " D"
+    },
+    {
+      "classification": "generated_ignore",
+      "path": "dist/agent_borg-3.2.3.tar.gz",
+      "reason": "generated build/dist/cache artifact; not source of truth",
+      "status": " D"
+    },
+    {
+      "classification": "generated_ignore",
+      "path": "dist/agent_borg-3.2.4-py3-none-any.whl",
+      "reason": "generated build/dist/cache artifact; not source of truth",
+      "status": " D"
+    },
+    {
+      "classification": "generated_ignore",
+      "path": "dist/agent_borg-3.2.4.tar.gz",
+      "reason": "generated build/dist/cache artifact; not source of truth",
+      "status": " D"
+    },
+    {
+      "classification": "generated_ignore",
+      "path": "dist/agent_borg-3.3.0-py3-none-any.whl",
+      "reason": "generated build/dist/cache artifact; not source of truth",
+      "status": " D"
+    },
+    {
+      "classification": "generated_ignore",
+      "path": "dist/agent_borg-3.3.0.tar.gz",
+      "reason": "generated build/dist/cache artifact; not source of truth",
+      "status": " D"
+    },
+    {
+      "classification": "generated_ignore",
+      "path": "dist/guild_packs-2.0.0-py3-none-any.whl",
+      "reason": "generated build/dist/cache artifact; not source of truth",
+      "status": " D"
+    },
+    {
+      "classification": "generated_ignore",
+      "path": "dist/guild_packs-2.0.0.tar.gz",
+      "reason": "generated build/dist/cache artifact; not source of truth",
+      "status": " D"
+    },
+    {
+      "classification": "generated_ignore",
+      "path": "dist/guild_packs-2.0.1-py3-none-any.whl",
+      "reason": "generated build/dist/cache artifact; not source of truth",
+      "status": " D"
+    },
+    {
+      "classification": "generated_ignore",
+      "path": "dist/guild_packs-2.0.1.tar.gz",
+      "reason": "generated build/dist/cache artifact; not source of truth",
+      "status": " D"
+    },
+    {
+      "classification": "generated_ignore",
+      "path": "dist/guild_packs-2.0.2-py3-none-any.whl",
+      "reason": "generated build/dist/cache artifact; not source of truth",
+      "status": " D"
+    },
+    {
+      "classification": "generated_ignore",
+      "path": "dist/guild_packs-2.0.2.tar.gz",
+      "reason": "generated build/dist/cache artifact; not source of truth",
+      "status": " D"
+    },
+    {
+      "classification": "generated_ignore",
+      "path": "dist/guild_packs-2.0.3-py3-none-any.whl",
+      "reason": "generated build/dist/cache artifact; not source of truth",
+      "status": " D"
+    },
+    {
+      "classification": "generated_ignore",
+      "path": "dist/guild_packs-2.0.3.tar.gz",
+      "reason": "generated build/dist/cache artifact; not source of truth",
+      "status": " D"
+    },
+    {
+      "classification": "generated_ignore",
+      "path": "dist/guild_packs-2.0.4-py3-none-any.whl",
+      "reason": "generated build/dist/cache artifact; not source of truth",
+      "status": " D"
+    },
+    {
+      "classification": "generated_ignore",
+      "path": "dist/guild_packs-2.0.4.tar.gz",
+      "reason": "generated build/dist/cache artifact; not source of truth",
+      "status": " D"
+    },
+    {
+      "classification": "generated_ignore",
+      "path": "dist/guild_packs-2.0.5-py3-none-any.whl",
+      "reason": "generated build/dist/cache artifact; not source of truth",
+      "status": " D"
+    },
+    {
+      "classification": "generated_ignore",
+      "path": "dist/guild_packs-2.0.5.tar.gz",
+      "reason": "generated build/dist/cache artifact; not source of truth",
+      "status": " D"
+    },
+    {
+      "classification": "generated_ignore",
+      "path": "dist/guild_packs-2.0.6-py3-none-any.whl",
+      "reason": "generated build/dist/cache artifact; not source of truth",
+      "status": " D"
+    },
+    {
+      "classification": "generated_ignore",
+      "path": "dist/guild_packs-2.0.6.tar.gz",
+      "reason": "generated build/dist/cache artifact; not source of truth",
+      "status": " D"
+    },
+    {
+      "classification": "generated_ignore",
+      "path": "dist/guild_packs-2.0.7-py3-none-any.whl",
+      "reason": "generated build/dist/cache artifact; not source of truth",
+      "status": " D"
+    },
+    {
+      "classification": "generated_ignore",
+      "path": "dist/guild_packs-2.0.7.tar.gz",
+      "reason": "generated build/dist/cache artifact; not source of truth",
+      "status": " D"
+    },
+    {
+      "classification": "generated_ignore",
+      "path": "dist/guild_packs-2.1.0-py3-none-any.whl",
+      "reason": "generated build/dist/cache artifact; not source of truth",
+      "status": " D"
+    },
+    {
+      "classification": "generated_ignore",
+      "path": "dist/guild_packs-2.1.0.tar.gz",
+      "reason": "generated build/dist/cache artifact; not source of truth",
+      "status": " D"
+    },
+    {
+      "classification": "generated_ignore",
+      "path": "dist/guild_packs-2.1.1-py3-none-any.whl",
+      "reason": "generated build/dist/cache artifact; not source of truth",
+      "status": " D"
+    },
+    {
+      "classification": "generated_ignore",
+      "path": "dist/guild_packs-2.1.1.tar.gz",
+      "reason": "generated build/dist/cache artifact; not source of truth",
+      "status": " D"
+    },
+    {
+      "classification": "commit_doc",
+      "path": "docs/README.md",
+      "reason": "documentation/readiness/proof artifact",
+      "status": " M"
+    },
+    {
+      "classification": "commit_product_code",
+      "path": "eval/gate_run_snapshot.json",
+      "reason": "product/runtime/eval source under canonical repo",
+      "status": " M"
+    },
+    {
+      "classification": "commit_product_code",
+      "path": "eval/load_1000_snapshot.json",
+      "reason": "product/runtime/eval source under canonical repo",
+      "status": " M"
+    },
+    {
+      "classification": "commit_product_code",
+      "path": "eval/load_100_snapshot.json",
+      "reason": "product/runtime/eval source under canonical repo",
+      "status": " M"
+    },
+    {
+      "classification": "commit_product_code",
+      "path": "eval/load_10_snapshot.json",
+      "reason": "product/runtime/eval source under canonical repo",
+      "status": " M"
+    },
+    {
+      "classification": "commit_product_code",
+      "path": "eval/uat_scoreboard_snapshot.json",
+      "reason": "product/runtime/eval source under canonical repo",
+      "status": " M"
+    },
+    {
+      "classification": "commit_product_code",
+      "path": "pyproject.toml",
+      "reason": "product/runtime/eval source under canonical repo",
+      "status": " M"
+    },
+    {
+      "classification": "commit_product_code",
+      "path": "borg/cli/__main__.py",
+      "reason": "product/runtime/eval source under canonical repo",
+      "status": "??"
+    },
+    {
+      "classification": "commit_product_code",
+      "path": "borg/core/confidence_gate.py",
+      "reason": "product/runtime/eval source under canonical repo",
+      "status": "??"
+    },
+    {
+      "classification": "commit_product_code",
+      "path": "borg/core/first_user_readiness.py",
+      "reason": "product/runtime/eval source under canonical repo",
+      "status": "??"
+    },
+    {
+      "classification": "commit_product_code",
+      "path": "borg/core/runtime_fingerprint.py",
+      "reason": "product/runtime/eval source under canonical repo",
+      "status": "??"
+    },
+    {
+      "classification": "commit_product_code",
+      "path": "borg/seeds_data/packs/systematic-debugging.workflow.yaml",
+      "reason": "product/runtime/eval source under canonical repo",
+      "status": "??"
+    },
+    {
+      "classification": "commit_test",
+      "path": "borg/tests/test_confidence_gate.py",
+      "reason": "test coverage or verification artifact",
+      "status": "??"
+    },
+    {
+      "classification": "commit_test",
+      "path": "borg/tests/test_first_10_readiness.py",
+      "reason": "test coverage or verification artifact",
+      "status": "??"
+    },
+    {
+      "classification": "commit_test",
+      "path": "borg/tests/test_first_user_cli_contract.py",
+      "reason": "test coverage or verification artifact",
+      "status": "??"
+    },
+    {
+      "classification": "commit_test",
+      "path": "borg/tests/test_runtime_fingerprint.py",
+      "reason": "test coverage or verification artifact",
+      "status": "??"
+    },
+    {
+      "classification": "generated_ignore",
+      "path": "build/lib/borg/cli/__main__.py",
+      "reason": "generated build/dist/cache artifact; not source of truth",
+      "status": "??"
+    },
+    {
+      "classification": "generated_ignore",
+      "path": "build/lib/borg/core/atom_policy.py",
+      "reason": "generated build/dist/cache artifact; not source of truth",
+      "status": "??"
+    },
+    {
+      "classification": "generated_ignore",
+      "path": "build/lib/borg/core/atom_retrieval.py",
+      "reason": "generated build/dist/cache artifact; not source of truth",
+      "status": "??"
+    },
+    {
+      "classification": "generated_ignore",
+      "path": "build/lib/borg/core/atom_store.py",
+      "reason": "generated build/dist/cache artifact; not source of truth",
+      "status": "??"
+    },
+    {
+      "classification": "generated_ignore",
+      "path": "build/lib/borg/core/atom_tenant.py",
+      "reason": "generated build/dist/cache artifact; not source of truth",
+      "status": "??"
+    },
+    {
+      "classification": "generated_ignore",
+      "path": "build/lib/borg/core/confidence_gate.py",
+      "reason": "generated build/dist/cache artifact; not source of truth",
+      "status": "??"
+    },
+    {
+      "classification": "generated_ignore",
+      "path": "build/lib/borg/core/first_user_readiness.py",
+      "reason": "generated build/dist/cache artifact; not source of truth",
+      "status": "??"
+    },
+    {
+      "classification": "generated_ignore",
+      "path": "build/lib/borg/core/learning_atoms.py",
+      "reason": "generated build/dist/cache artifact; not source of truth",
+      "status": "??"
+    },
+    {
+      "classification": "generated_ignore",
+      "path": "build/lib/borg/core/prompt_injection.py",
+      "reason": "generated build/dist/cache artifact; not source of truth",
+      "status": "??"
+    },
+    {
+      "classification": "generated_ignore",
+      "path": "build/lib/borg/core/rescue.py",
+      "reason": "generated build/dist/cache artifact; not source of truth",
+      "status": "??"
+    },
+    {
+      "classification": "generated_ignore",
+      "path": "build/lib/borg/core/runtime_fingerprint.py",
+      "reason": "generated build/dist/cache artifact; not source of truth",
+      "status": "??"
+    },
+    {
+      "classification": "generated_ignore",
+      "path": "build/lib/borg/integrations/mcp_server.py",
+      "reason": "generated build/dist/cache artifact; not source of truth",
+      "status": "??"
+    },
+    {
+      "classification": "generated_ignore",
+      "path": "build/lib/borg/seeds_data/packs/systematic-debugging.workflow.yaml",
+      "reason": "generated build/dist/cache artifact; not source of truth",
+      "status": "??"
+    },
+    {
+      "classification": "generated_ignore",
+      "path": "build/lib/borg/tests/test_atom_policy.py",
+      "reason": "generated build/dist/cache artifact; not source of truth",
+      "status": "??"
+    },
+    {
+      "classification": "generated_ignore",
+      "path": "build/lib/borg/tests/test_atom_retrieval_firewall.py",
+      "reason": "generated build/dist/cache artifact; not source of truth",
+      "status": "??"
+    },
+    {
+      "classification": "generated_ignore",
+      "path": "build/lib/borg/tests/test_atom_store.py",
+      "reason": "generated build/dist/cache artifact; not source of truth",
+      "status": "??"
+    },
+    {
+      "classification": "generated_ignore",
+      "path": "build/lib/borg/tests/test_atom_tenant.py",
+      "reason": "generated build/dist/cache artifact; not source of truth",
+      "status": "??"
+    },
+    {
+      "classification": "generated_ignore",
+      "path": "build/lib/borg/tests/test_borg_observe_confidence_gate.py",
+      "reason": "generated build/dist/cache artifact; not source of truth",
+      "status": "??"
+    },
+    {
+      "classification": "generated_ignore",
+      "path": "build/lib/borg/tests/test_borg_observe_wrapper.py",
+      "reason": "generated build/dist/cache artifact; not source of truth",
+      "status": "??"
+    },
+    {
+      "classification": "generated_ignore",
+      "path": "build/lib/borg/tests/test_cli_atom.py",
+      "reason": "generated build/dist/cache artifact; not source of truth",
+      "status": "??"
+    },
+    {
+      "classification": "generated_ignore",
+      "path": "build/lib/borg/tests/test_distribution_readiness.py",
+      "reason": "generated build/dist/cache artifact; not source of truth",
+      "status": "??"
+    },
+    {
+      "classification": "generated_ignore",
+      "path": "build/lib/borg/tests/test_first_10_readiness.py",
+      "reason": "generated build/dist/cache artifact; not source of truth",
+      "status": "??"
+    },
+    {
+      "classification": "generated_ignore",
+      "path": "build/lib/borg/tests/test_first_user_cli_contract.py",
+      "reason": "generated build/dist/cache artifact; not source of truth",
+      "status": "??"
+    },
+    {
+      "classification": "generated_ignore",
+      "path": "build/lib/borg/tests/test_golden_queries.py",
+      "reason": "generated build/dist/cache artifact; not source of truth",
+      "status": "??"
+    },
+    {
+      "classification": "generated_ignore",
+      "path": "build/lib/borg/tests/test_learning_atom_publish.py",
+      "reason": "generated build/dist/cache artifact; not source of truth",
+      "status": "??"
+    },
+    {
+      "classification": "generated_ignore",
+      "path": "build/lib/borg/tests/test_learning_atoms.py",
+      "reason": "generated build/dist/cache artifact; not source of truth",
+      "status": "??"
+    },
+    {
+      "classification": "generated_ignore",
+      "path": "build/lib/borg/tests/test_privacy_structured.py",
+      "reason": "generated build/dist/cache artifact; not source of truth",
+      "status": "??"
+    },
+    {
+      "classification": "generated_ignore",
+      "path": "build/lib/borg/tests/test_prompt_injection.py",
+      "reason": "generated build/dist/cache artifact; not source of truth",
+      "status": "??"
+    },
+    {
+      "classification": "generated_ignore",
+      "path": "build/lib/borg/tests/test_public_api_check.py",
+      "reason": "generated build/dist/cache artifact; not source of truth",
+      "status": "??"
+    },
+    {
+      "classification": "generated_ignore",
+      "path": "build/lib/borg/tests/test_rescue.py",
+      "reason": "generated build/dist/cache artifact; not source of truth",
+      "status": "??"
+    },
+    {
+      "classification": "generated_ignore",
+      "path": "build/lib/borg/tests/test_runtime_doctor.py",
+      "reason": "generated build/dist/cache artifact; not source of truth",
+      "status": "??"
+    },
+    {
+      "classification": "generated_ignore",
+      "path": "build/lib/borg/tests/test_version_consistency.py",
+      "reason": "generated build/dist/cache artifact; not source of truth",
+      "status": "??"
+    },
+    {
+      "classification": "generated_ignore",
+      "path": "dist/agent_borg-3.3.1-py3-none-any.whl",
+      "reason": "generated build/dist/cache artifact; not source of truth",
+      "status": "??"
+    },
+    {
+      "classification": "generated_ignore",
+      "path": "dist/agent_borg-3.3.1.tar.gz",
+      "reason": "generated build/dist/cache artifact; not source of truth",
+      "status": "??"
+    },
+    {
+      "classification": "commit_doc",
+      "path": "docs/20260513_BORG_DEEP_CUTOVER_EXECUTION_BOARD.md",
+      "reason": "documentation/readiness/proof artifact",
+      "status": "??"
+    },
+    {
+      "classification": "commit_doc",
+      "path": "docs/20260513_BORG_FULL_AUDIT_AND_OBSERVE_CONFIDENCE_GATE.md",
+      "reason": "documentation/readiness/proof artifact",
+      "status": "??"
+    },
+    {
+      "classification": "commit_doc",
+      "path": "docs/20260513_BORG_MULTI_REPO_PRODUCTION_CLEANUP_CUTOVER_PROPOSAL.md",
+      "reason": "documentation/readiness/proof artifact",
+      "status": "??"
+    },
+    {
+      "classification": "commit_doc",
+      "path": "docs/20260514_BORG_PRODUCTION_REBUILD_MASTER_PLAN.md",
+      "reason": "documentation/readiness/proof artifact",
+      "status": "??"
+    },
+    {
+      "classification": "commit_doc",
+      "path": "docs/20260514_BORG_RUNTIME_FINGERPRINT_CANARY_PROOF.md",
+      "reason": "documentation/readiness/proof artifact",
+      "status": "??"
+    },
+    {
+      "classification": "commit_doc",
+      "path": "docs/BORG_PROOF_DASHBOARD.html",
+      "reason": "documentation/readiness/proof artifact",
+      "status": "??"
+    },
+    {
+      "classification": "commit_doc",
+      "path": "docs/BORG_PROOF_DASHBOARD.md",
+      "reason": "documentation/readiness/proof artifact",
+      "status": "??"
+    },
+    {
+      "classification": "commit_doc",
+      "path": "docs/FIRST_10_BETA_READINESS.md",
+      "reason": "documentation/readiness/proof artifact",
+      "status": "??"
+    },
+    {
+      "classification": "commit_doc",
+      "path": "docs/public/proof-dashboard/",
+      "reason": "documentation/readiness/proof artifact",
+      "status": "??"
+    },
+    {
+      "classification": "commit_doc",
+      "path": "docs/repo-manifest/",
+      "reason": "cleanup/source-of-truth audit artifact",
+      "status": "??"
+    },
+    {
+      "classification": "commit_product_code",
+      "path": "eval/borg_proof_dashboard.json",
+      "reason": "product/runtime/eval source under canonical repo",
+      "status": "??"
+    },
+    {
+      "classification": "commit_product_code",
+      "path": "eval/first_user_release_gate_snapshot.json",
+      "reason": "product/runtime/eval source under canonical repo",
+      "status": "??"
+    },
+    {
+      "classification": "commit_product_code",
+      "path": "eval/run_first_user_release_gate.py",
+      "reason": "product/runtime/eval source under canonical repo",
+      "status": "??"
+    },
+    {
+      "classification": "commit_test",
+      "path": "eval/tests/test_borg_proof_dashboard.py",
+      "reason": "test coverage or verification artifact",
+      "status": "??"
+    },
+    {
+      "classification": "commit_product_code",
+      "path": "scripts/borg_proof_dashboard_lint.py",
+      "reason": "product/runtime/eval source under canonical repo",
+      "status": "??"
+    },
+    {
+      "classification": "commit_product_code",
+      "path": "scripts/build_borg_proof_dashboard.py",
+      "reason": "product/runtime/eval source under canonical repo",
+      "status": "??"
+    },
+    {
+      "classification": "commit_product_code",
+      "path": "scripts/run_runtime_fingerprint_verification.py",
+      "reason": "product/runtime/eval source under canonical repo",
+      "status": "??"
+    },
+    {
+      "classification": "archive_readonly",
+      "path": "tmp_readiness_audit_20260506/",
+      "reason": "temporary audit output; archive before possible deletion",
+      "status": "??"
+    }
+  ],
+  "generated_at_utc": "2026-05-14T11:36:05Z",
+  "policy": "no deletion, move, or commit from this manifest alone; archive/diff first",
+  "repo": "/root/hermes-workspace/borg",
+  "returncode": 0,
+  "schema_version": 1,
+  "summary": {
+    "archive_readonly": 1,
+    "commit_doc": 18,
+    "commit_product_code": 22,
+    "commit_test": 8,
+    "generated_ignore": 201
+  }
+}

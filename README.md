@@ -22,7 +22,7 @@ borg-doctor --json
 Expected first check:
 
 ```text
-borg version   # prints the installed version, currently 3.3.1 in this repo
+borg version   # prints the installed version, currently 3.3.3 in this repo
 borg-doctor    # returns ok=true / PASS-style checks when the install is healthy
 ```
 
@@ -109,6 +109,10 @@ pytest -q 2>&1 | borg rescue --json
 # Interactive onboarding uses the same rescue engine
 borg start
 
+# First-10 beta contract / readiness packet
+borg first-10
+borg first-10 --json
+
 # Search existing guidance
 borg search "django migration table already exists"
 
@@ -163,6 +167,7 @@ Core tools available through the MCP server include:
 - `borg_suggest` — suggest after repeated failures
 - `borg_convert` — convert skills/rules into Borg-compatible artifacts
 - `borg_publish` — publish artifacts with safety gates
+- `borg_first_10` — first-10 beta gates, smoke path, priming paragraph, feedback fields
 
 Use `borg_rescue` for concrete errors/failing command output. Use `borg_observe` first for broader debugging/config/install/deploy/test tasks.
 
@@ -177,13 +182,14 @@ Current local gate snapshot in this repo:
 - Security/privacy/prompt-injection surface: PASS
 - Learning-atom safety tests: PASS
 - Local 10/100/1000 logical-user soak: PASS
-- Latest focused verification: `7 passed`, then `3 passed`; readiness `all_pass=true`
+- Latest focused verification: source + wheel + PyPI first-user gates must pass; first-user public launch remains gated by real external-user evidence
 
 Canonical local artifacts:
 
 - [`PROJECT_STATUS.md`](PROJECT_STATUS.md)
 - [`GO_NO_GO_DECISION.md`](GO_NO_GO_DECISION.md)
 - [`docs/20260504-1123_BORG_PRODUCTION_1000_READINESS_STATUS.md`](docs/20260504-1123_BORG_PRODUCTION_1000_READINESS_STATUS.md)
+- [`docs/FIRST_10_BETA_READINESS.md`](docs/FIRST_10_BETA_READINESS.md)
 - [`eval/uat_scoreboard_snapshot.json`](eval/uat_scoreboard_snapshot.json)
 - [`docs/SECURITY_HARDENING_BASELINE.md`](docs/SECURITY_HARDENING_BASELINE.md)
 - [`docs/PRIVACY_MODEL.md`](docs/PRIVACY_MODEL.md)
@@ -222,6 +228,7 @@ python -m pip install agent-borg
 borg version
 borg-doctor --json
 borg search "django migration table already exists"
+borg first-10 --json
 python - <<'PY'
 import borg
 print(borg.check('TypeError: unsupported operand type(s)', top_k=2))
