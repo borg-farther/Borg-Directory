@@ -1,6 +1,6 @@
 # Borg First-User UAT Results
 
-Generated: 2026-05-15 11:34:45 UTC
+Generated: 2026-05-17 11:35:59 UTC
 
 Overall: **GO**
 
@@ -10,7 +10,7 @@ Overall: **GO**
 | `file:borg/__init__.py` | PASS | present |
 | `file:README.md` | PASS | present |
 | `file:LICENSE` | PASS | present |
-| `version_consistency` | PASS | pyproject=3.3.1 runtime=3.3.1 |
+| `version_consistency` | PASS | pyproject=3.3.3 runtime=3.3.3 |
 | `script_entrypoints` | PASS | borg, borg-mcp, borg-doctor declared |
 | `project_urls` | PASS | Homepage/Repository/Documentation/Issues present |
 | `readme_day_one_path` | PASS | README must include install + rescue as first-user path |
