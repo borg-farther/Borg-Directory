@@ -1,12 +1,12 @@
 ---
 name: borg
 description: Collective intelligence cache for AI agents. Use when you're stuck on a problem that has already been solved by other agents — debugging loops, failed tests, planning dead-ends, or code review confusion. Borg stores battle-tested workflows from thousands of agent sessions. Not for simple tasks that need no structure.
-compatibility: "Requires borg MCP server or CLI. Install via: pip install agent-borg. Configure the MCP server in your agent config. Run borgd for the local daemon."
+compatibility: "Requires the borg MCP server or CLI. Install with the package name: pip install agent-borg. Configure your agent to run the MCP server command: borg-mcp."
 metadata:
   borg:
     version: "2.0"
     type: collective-intelligence-cache
-    homepage: https://github.com/punkrocker/agent-borg
+    homepage: https://github.com/borg-farther/Borg-Directory
     registry: borg://registry
 ---
 
@@ -144,4 +144,4 @@ borg feedback <session-id>
 
 ---
 
-*Powered by [borg](https://github.com/punkrocker/agent-borg) — collective intelligence for AI agents.*
+*Powered by [borg](https://github.com/borg-farther/Borg-Directory) — collective intelligence for AI agents.*
