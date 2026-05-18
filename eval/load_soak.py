@@ -148,8 +148,10 @@ def _write_report(snapshot: dict[str, Any]) -> None:
     report = ROOT / f"LOAD_TEST_REPORT_{users}.md"
     report.write_text(
         "\n".join([
-            f"# Borg {users}-user load report",
+            f"# Borg {users} logical-user load report",
             "",
+            "Scope: synthetic asyncio logical users only. This proves local throughput mechanics; it does not authorize 100 real external users.",
+            f"concurrency_model: `{snapshot['concurrency_model']}`",
             f"timestamp: `{snapshot['timestamp']}`",
             f"duration_seconds: `{snapshot['duration_seconds']}`",
             f"total_requests: `{snapshot['total_requests']}`",

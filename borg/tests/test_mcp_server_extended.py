@@ -122,14 +122,15 @@ class TestAutoSave45Calls(unittest.TestCase):
             mcp_module._trace_captures.clear()
             mcp_module._trace_captures.update(self._saved_captures)
 
-    def test_auto_save_at_45_calls(self):
-        """Test that _feed_trace_capture auto-saves at 45 calls and deletes capture."""
+    def test_auto_save_at_45_calls_skips_hollow_trace(self):
+        """Auto-save at 45 calls must not persist traces with no meaningful root cause."""
         session_id = "test-session-45"
         _current_session_id.set(session_id)
         init_trace_capture(session_id, task="test-task", agent_id="test-agent")
 
         # Mock save_trace to avoid actual file operations
-        with patch("borg.integrations.mcp_server.save_trace") as mock_save:
+        with patch("borg.integrations.mcp_server.save_trace") as mock_save, \
+             patch("borg.integrations.mcp_server.logger.warning") as mock_warning:
             # Simulate 44 calls - should NOT trigger auto-save
             for i in range(44):
                 _feed_trace_capture(f"tool_{i}", {"n": i}, json.dumps({"success": True}))
@@ -137,13 +138,12 @@ class TestAutoSave45Calls(unittest.TestCase):
             mock_save.assert_not_called()
             self.assertIn(session_id, mcp_module._trace_captures)
 
-            # 45th call should trigger auto-save
+            # 45th call reaches auto-save, but extract_trace() has an empty root_cause.
             _feed_trace_capture("tool_45", {"n": 45}, json.dumps({"success": True}))
 
-            # save_trace should have been called because tool_calls >= 45
-            # and task is set and trace["tool_calls"] > 5
-            mock_save.assert_called_once()
-            # Session should be removed from captures
+            mock_save.assert_not_called()
+            mock_warning.assert_called_with("borg: skipped hollow trace")
+            # Session should still be removed from captures to avoid leaking state.
             self.assertNotIn(session_id, mcp_module._trace_captures)
 
     def test_auto_save_not_triggered_without_task(self):

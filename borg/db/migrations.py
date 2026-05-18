@@ -1,9 +1,40 @@
 """Guild database migrations."""
 
+import sqlite3
 import threading
+import time
 
-# Global lock for thread-safe migration
+# Global lock for thread-safe migration inside one Python process. SQLite
+# BEGIN IMMEDIATE below is the cross-process lock for shared database files.
 _migration_lock = threading.Lock()
+_MIGRATION_BUSY_RETRIES = 5
+_MIGRATION_BUSY_DELAYS_MS = [100, 200, 400, 800, 1600]
+
+
+def _is_busy_error(exc: sqlite3.OperationalError) -> bool:
+    code = getattr(exc, "sqlite_errorcode", getattr(exc, "code", None))
+    message = str(exc).lower()
+    return (
+        code in {sqlite3.SQLITE_BUSY, sqlite3.SQLITE_LOCKED}
+        or "database is locked" in message
+        or "database table is locked" in message
+        or "database schema is locked" in message
+    )
+
+
+def _retry_busy(operation):
+    last_error = None
+    for attempt in range(_MIGRATION_BUSY_RETRIES + 1):
+        try:
+            return operation()
+        except sqlite3.OperationalError as exc:
+            if _is_busy_error(exc) and attempt < _MIGRATION_BUSY_RETRIES:
+                last_error = exc
+                time.sleep(_MIGRATION_BUSY_DELAYS_MS[attempt] / 1000.0)
+                continue
+            raise
+    assert last_error is not None
+    raise last_error
 
 MIGRATIONS = [
     (
@@ -153,30 +184,48 @@ def get_current_version(conn):
 
 
 def migrate(conn):
-    """Apply all pending migrations in a thread-safe manner."""
-    # First check without lock (fast path for already-migrated DBs)
-    current_version = get_current_version(conn)
+    """Apply all pending migrations safely across threads and processes."""
     latest_version = max(m[0] for m in MIGRATIONS)
-    
+
+    # Fast path for already-migrated DBs. This avoids taking a write lock on
+    # every connection after the schema is current.
+    current_version = get_current_version(conn)
     if current_version >= latest_version:
         return current_version
-    
-    # Need to migrate - acquire lock
+
+    def _migrate_in_transaction():
+        conn.execute("BEGIN IMMEDIATE")
+        try:
+            # Re-check after acquiring SQLite's cross-process writer lock. A
+            # different process may have completed migration while we waited.
+            current = get_current_version(conn)
+            if current >= latest_version:
+                conn.execute("COMMIT")
+                return current
+
+            for version, description, statements in MIGRATIONS:
+                if version > current:
+                    for stmt in statements:
+                        conn.execute(stmt)
+
+                    # Idempotent insert keeps stale/racy legacy databases from
+                    # crashing if the schema table already has this version.
+                    conn.execute(
+                        "INSERT OR IGNORE INTO schema_version (version, applied_at, description) VALUES (?, datetime('now'), ?)",
+                        (version, description),
+                    )
+                    current = version
+
+            conn.execute("COMMIT")
+            return current
+        except Exception:
+            try:
+                conn.execute("ROLLBACK")
+            except sqlite3.OperationalError:
+                pass
+            raise
+
+    # Thread lock avoids duplicate work in one process; BEGIN IMMEDIATE is the
+    # real cross-process guard for first-use DB bootstrap.
     with _migration_lock:
-        # Re-check version after acquiring lock (another thread may have migrated)
-        current_version = get_current_version(conn)
-        
-        for version, description, statements in MIGRATIONS:
-            if version > current_version:
-                for stmt in statements:
-                    conn.execute(stmt)
-                
-                # Insert version record after all schema changes
-                conn.execute(
-                    "INSERT INTO schema_version (version, applied_at, description) VALUES (?, datetime('now'), ?)",
-                    (version, description),
-                )
-                conn.commit()
-                current_version = version
-        
-        return current_version
+        return _retry_busy(_migrate_in_transaction)

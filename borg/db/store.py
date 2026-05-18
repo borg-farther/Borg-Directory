@@ -14,9 +14,27 @@ from .migrations import migrate, get_current_version
 from borg.core.dirs import get_borg_dir
 
 # SQLITE_BUSY retry configuration
-BUSY_RETRIES = 3
-BUSY_DELAYS_MS = [100, 200, 400]  # Exponential backoff: 100ms, 200ms, 400ms
+BUSY_RETRIES = 5
+BUSY_DELAYS_MS = [100, 200, 400, 800, 1600]  # Exponential backoff under heavy writer contention
 BUSY_TIMEOUT_MS = 5000  # 5 second busy timeout
+_CONNECTION_INIT_LOCKS: dict[str, threading.RLock] = {}
+_CONNECTION_INIT_LOCKS_GUARD = threading.Lock()
+
+
+def _connection_init_lock(db_path: str) -> threading.RLock:
+    """Return a per-database lock for connection PRAGMA/migration setup.
+
+    SQLite WAL enables concurrent readers/writers after setup, but opening many
+    fresh connections can still race on PRAGMA journal_mode and schema migration.
+    Serialize only this short initialization path; normal CRUD remains concurrent.
+    """
+    key = str(Path(db_path).resolve())
+    with _CONNECTION_INIT_LOCKS_GUARD:
+        lock = _CONNECTION_INIT_LOCKS.get(key)
+        if lock is None:
+            lock = threading.RLock()
+            _CONNECTION_INIT_LOCKS[key] = lock
+        return lock
 
 
 def _retry_on_busy(operation, retries=BUSY_RETRIES, delays_ms=BUSY_DELAYS_MS):
@@ -24,7 +42,7 @@ def _retry_on_busy(operation, retries=BUSY_RETRIES, delays_ms=BUSY_DELAYS_MS):
     
     Args:
         operation: Callable to execute
-        retries: Number of retries (default: 3)
+        retries: Number of retries (default: 5)
         delays_ms: List of delay times in ms for each retry
         
     Returns:
@@ -38,7 +56,13 @@ def _retry_on_busy(operation, retries=BUSY_RETRIES, delays_ms=BUSY_DELAYS_MS):
         try:
             return operation()
         except sqlite3.OperationalError as e:
-            if "database is locked" in str(e) or e.code == 5:  # SQLITE_BUSY
+            sqlite_code = getattr(e, "sqlite_errorcode", getattr(e, "code", None))
+            if (
+                "database is locked" in str(e).lower()
+                or "database table is locked" in str(e).lower()
+                or "database schema is locked" in str(e).lower()
+                or sqlite_code in {sqlite3.SQLITE_BUSY, sqlite3.SQLITE_LOCKED}
+            ):
                 last_error = e
                 if attempt < retries:
                     delay_s = delays_ms[attempt] / 1000.0
@@ -119,18 +143,21 @@ class AgentStore:
                 self.db_path,
                 check_same_thread=False,
                 isolation_level=None,
+                timeout=BUSY_TIMEOUT_MS / 1000.0,
             )
             self._local.connection.row_factory = sqlite3.Row
-            # Enable WAL mode for better concurrency
-            self._local.connection.execute("PRAGMA journal_mode = WAL")
-            # Set busy timeout to 5 seconds
-            self._local.connection.execute(f"PRAGMA busy_timeout = {BUSY_TIMEOUT_MS}")
-            # Enable foreign keys
-            self._local.connection.execute("PRAGMA foreign_keys = ON")
-            # Synchronous mode for durability without full locking (NORMAL is good balance)
-            self._local.connection.execute("PRAGMA synchronous = NORMAL")
-            # Auto-migrate on first connection
-            migrate(self._local.connection)
+            with _connection_init_lock(self.db_path):
+                # Set busy timeout before any pragma that may contend on locks.
+                self._local.connection.execute(f"PRAGMA busy_timeout = {BUSY_TIMEOUT_MS}")
+                # Enable WAL mode for better reader/writer concurrency.
+                _retry_on_busy(lambda: self._local.connection.execute("PRAGMA journal_mode = WAL"))
+                # Enable foreign keys.
+                self._local.connection.execute("PRAGMA foreign_keys = ON")
+                # Synchronous mode for durability without full locking (NORMAL is good balance).
+                self._local.connection.execute("PRAGMA synchronous = NORMAL")
+                # Auto-migrate on first connection. Connection setup is serialized so
+                # concurrent fresh threads do not race on schema creation/FTS triggers.
+                _retry_on_busy(lambda: migrate(self._local.connection))
         return self._local.connection
 
     def _execute_with_retry(self, conn: sqlite3.Connection, sql: str, params: tuple = None) -> sqlite3.Cursor:

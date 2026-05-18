@@ -1,0 +1,84 @@
+{
+  "blockers": [
+    "first-10 external-user evidence has not passed: verified=0/10, real_users=0/10, installs=0/8, useful=0/6, critical_incidents=0/0"
+  ],
+  "first_10_external_evidence": {
+    "critical_privacy_security_failures": 0,
+    "exists": true,
+    "install_successes": 0,
+    "max_critical_privacy_security_failures": 0,
+    "passed": false,
+    "real_users": 0,
+    "required_install_successes": 8,
+    "required_total_real_users": 10,
+    "required_useful_rescue_moments": 6,
+    "scoreboard_gate": "BLOCKED",
+    "scoreboard_reason": "No verified external user rows exist yet.",
+    "useful_rescue_moments": 0,
+    "verified_external_users": 0
+  },
+  "first_user_release_gate": {
+    "exists": true,
+    "failed_count": 0,
+    "failures": [],
+    "generated_at_utc": "2026-05-18T07:44:34Z",
+    "passed": true,
+    "passed_count": 26
+  },
+  "gate_type": "real_user_rollout",
+  "generated_at_utc": "2026-05-18T07:46:07.756008+00:00",
+  "important_distinction": "load/readiness snapshots are synthetic/logical users; this gate controls real external-user rollout",
+  "infrastructure_ready_for_100": true,
+  "load_gates": {
+    "10": {
+      "duration_seconds": 30.0,
+      "exists": true,
+      "latency_ms": {
+        "avg": 0.49401962254474585,
+        "max": 53.078750032000244,
+        "p50": 0.4734150134027004,
+        "p95": 0.6281427631620318,
+        "p99": 0.8716626581735909
+      },
+      "passed": true,
+      "success_rate": 1.0,
+      "users": 10
+    },
+    "100": {
+      "duration_seconds": 30.0,
+      "exists": true,
+      "latency_ms": {
+        "avg": 0.48331129045512666,
+        "max": 4.875130020081997,
+        "p50": 0.4826189251616597,
+        "p95": 0.6004410097375512,
+        "p99": 0.6370391696691513
+      },
+      "passed": true,
+      "success_rate": 1.0,
+      "users": 100
+    }
+  },
+  "max_recommended_real_users_now": 10,
+  "no_fake_user_policy": "Do not mark first-10 complete or 100-real-user ready without consented external evidence rows.",
+  "ready_for_100_real_users": false,
+  "ready_for_10_controlled_beta": true,
+  "schema_version": 1,
+  "security": {
+    "missing": [],
+    "passed": true,
+    "required": [
+      "eval/security_hardening_baseline.json",
+      "docs/SECURITY_HARDENING_BASELINE.md",
+      "docs/PRIVACY_MODEL.md",
+      "docs/PROMPT_INJECTION_THREAT_MODEL.md",
+      "scripts/security_gate_check.py",
+      ".github/workflows/security-gates.yml"
+    ]
+  },
+  "version": {
+    "passed": true,
+    "project_version": "3.3.3",
+    "runtime_version": "3.3.3"
+  }
+}

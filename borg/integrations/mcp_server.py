@@ -127,6 +127,20 @@ def init_trace_capture(session_id: str, task: str = "", agent_id: str = ""):
         _trace_captures[session_id] = TraceCapture(task=task, agent_id=agent_id)
 
 
+def _trace_has_meaningful_root_cause(trace: Dict[str, Any]) -> bool:
+    """Return True when a trace has enough root-cause signal to persist."""
+    return len(str(trace.get("root_cause") or "").strip()) >= 10
+
+
+def _save_trace_if_meaningful(trace: Dict[str, Any]) -> bool:
+    """Persist trace only when it is not a hollow auto-capture."""
+    if not _trace_has_meaningful_root_cause(trace):
+        logger.warning("borg: skipped hollow trace")
+        return False
+    save_trace(trace)
+    return True
+
+
 def _feed_trace_capture(tool_name: str, args: Dict[str, Any], result: str):
     """Accumulate a tool call into the active trace capture for the current session."""
     session_id = _current_session_id.get()
@@ -144,7 +158,7 @@ def _feed_trace_capture(tool_name: str, args: Dict[str, Any], result: str):
             if capture.task:  # Only save if we have a task
                 trace = capture.extract_trace(outcome="auto_truncated")
                 if trace["tool_calls"] > 5:
-                    save_trace(trace)
+                    _save_trace_if_meaningful(trace)
             del _trace_captures[session_id]
 
 # ---------------------------------------------------------------------------
@@ -1396,10 +1410,7 @@ def borg_feedback(
                         root_cause=what_changed[:200] if what_changed else "",
                         approach_summary=where_to_reuse[:200] if where_to_reuse else ""
                     )
-                    if not trace.get('root_cause') or len(str(trace.get('root_cause',''))) < 10:
-                        print('borg: skipped hollow trace')
-                        return
-                    trace_id = save_trace(trace)
+                    _save_trace_if_meaningful(trace)
                     del _trace_captures[session_id_from_ctx]
 
                     # Do not recursively call borg_feedback here: this block already runs

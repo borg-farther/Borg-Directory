@@ -37,10 +37,43 @@ def test_borg_doctor_console_entrypoint_exists_and_delegates(monkeypatch, capsys
         lambda helpful=True: "recorded",
         raising=False,
     )
-    monkeypatch.setattr(
-        "subprocess.run",
-        lambda *args, **kwargs: type("Proc", (), {"stdout": '{"result":{}}', "stderr": ""})(),
-    )
+    class _FakeStdin:
+        def write(self, _text):
+            return None
+
+        def flush(self):
+            return None
+
+    class _FakeStdout:
+        def __init__(self):
+            self._lines = ['{"jsonrpc":"2.0","id":1,"result":{"serverInfo":{}}}\n']
+
+        def readline(self):
+            return self._lines.pop(0) if self._lines else ""
+
+    class _FakeStderr:
+        def readline(self):
+            return ""
+
+    class _FakeProc:
+        stdin = _FakeStdin()
+        stdout = _FakeStdout()
+        stderr = _FakeStderr()
+
+        def poll(self):
+            return None
+
+        def terminate(self):
+            return None
+
+        def wait(self, timeout=None):
+            return 0
+
+        def kill(self):
+            return None
+
+    monkeypatch.setattr("subprocess.Popen", lambda *args, **kwargs: _FakeProc())
+    monkeypatch.setattr("select.select", lambda reads, _writes, _errs, _timeout: ([reads[0]], [], []))
 
     code = run_doctor()
     out = capsys.readouterr().out

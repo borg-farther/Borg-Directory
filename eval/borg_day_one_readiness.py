@@ -65,7 +65,10 @@ def compile_snapshot() -> Dict[str, Any]:
     evidence_files = {name: _exists(rel) for name, rel in REQUIRED_EVIDENCE.items()}
     missing = [name for name, exists in evidence_files.items() if not exists]
 
-    local_gates_green = bool(gate.get("all_pass") and uat.get("all_pass"))
+    local_gates_green = bool(
+        gate.get("synthetic_load_all_pass", gate.get("all_pass"))
+        and uat.get("synthetic_load_all_pass", uat.get("all_pass"))
+    )
     security_green = bool(
         uat.get("security_surface", {}).get("passed")
         and security.get("threat_model")
