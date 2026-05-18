@@ -6,7 +6,22 @@ build-backend = "setuptools.build_meta"
 name = "agent-borg"
 version = "3.3.3"
 description = "Collective memory MCP server for AI coding agents"
+readme = "README.md"
 requires-python = ">=3.10"
+license = "MIT"
+authors = [
+  { name = "Borg contributors" }
+]
+keywords = ["mcp", "ai-agents", "debugging", "agent-tools", "collective-memory"]
+classifiers = [
+  "Development Status :: 4 - Beta",
+  "Intended Audience :: Developers",
+  "Programming Language :: Python :: 3",
+  "Programming Language :: Python :: 3.10",
+  "Programming Language :: Python :: 3.11",
+  "Programming Language :: Python :: 3.12",
+  "Topic :: Software Development :: Debuggers",
+]
 dependencies = [
   "pyyaml>=6.0"
 ]

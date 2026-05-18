@@ -1,51 +1,43 @@
-# Borg Claude Onboarding (deterministic)
+# Borg Claude onboarding
 
-## one command
+## One command
 
 ```bash
 borg setup-claude --scope user --verify --fix
 ```
 
-`--verify` is enabled by default now; keep it explicit in docs/scripts for readability.
-if you need to bypass handshake temporarily: `--no-verify`.
+Then fully restart Claude Code and ask:
 
-## what the human does
+```text
+what MCP tools do you have from Borg?
+```
 
-just run the command above, restart claude, ask:
+## What Borg does
 
-> what mcp tools do you have from borg?
+1. resolves the MCP launch command (`borg-mcp`, or Python module fallback);
+2. writes/merges the Borg MCP server into the selected config;
+3. creates Borg home storage if missing;
+4. writes an absolute `BORG_HOME` path;
+5. backs up existing config before modification;
+6. verifies the MCP initialize handshake.
 
-## what borg does automatically
+## Binary success gates
 
-1. resolves mcp launch command (`borg-mcp` if present, else `python -m borg.integrations.mcp_server`)
-2. writes config to the selected scope:
-   - `user` → `~/.claude.json`
-   - `project` → `./.mcp.json`
-   - `desktop` → `~/.config/claude/claude_desktop_config.json`
-3. enforces absolute `BORG_HOME` in env (`~` is not used)
-4. creates `BORG_HOME` if missing (`--fix`)
-5. backs up existing config before modifying (`*.bak`)
-6. verifies runtime via MCP initialize handshake (`--verify`)
+- setup command exits `0`;
+- target config contains `mcpServers.borg`;
+- setup prints `PASS (initialize handshake ok)`.
 
-## success gates (binary)
+## If setup fails
 
-- gate 1: setup command exits `0`
-- gate 2: target config file exists and contains `mcpServers.borg`
-- gate 3: verify reports `PASS (initialize handshake ok)`
+Read the printed gate failure. Common fixes:
 
-## failure handling
+- install Borg in the active Python environment: `python3 -m pip install agent-borg`;
+- use `--fix` so Borg can create missing local directories;
+- use an absolute `BORG_HOME` path in manual configs;
+- restart the agent host after config changes.
 
-if setup fails, the output explicitly says which gate failed:
+## Agent priming
 
-- missing/invalid `BORG_HOME`
-- unable to spawn MCP server
-- no initialize response from runtime
-
-rerun with `--fix` for auto-remediation of local directory/preflight issues.
-
-## security & reliability defaults
-
-- no shell expansion dependency for `BORG_HOME`
-- no overwrite of unrelated mcp servers (merge semantics)
-- config backup on change
-- project instructions (`CLAUDE.md`) are only touched for `project`/`desktop` scopes to avoid surprise edits in user-home setup
+```text
+{PRIMING_PARAGRAPH}
+```

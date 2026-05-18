@@ -1,14 +1,14 @@
 # Borg First-10 Beta Readiness Contract
 
-**Status:** pre-first-user beta contract. This is the standard Borg must satisfy before inviting the first 10 external users.
+**Status:** ready for controlled first-10 beta sharing. Public self-serve launch is still gated by real external-user evidence.
 
-**Success metric:** at least 6 of the first 10 users get one relevant `ACTION / STOP / VERIFY` moment without maintainer handholding, and every miss is recorded as `NO_CONFIDENT_MATCH` or explicit negative feedback instead of being hidden.
+**Success metric:** At least 6 of the first 10 users get one relevant ACTION/STOP/VERIFY moment without maintainer handholding, and every miss is recorded as NO_CONFIDENT_MATCH or explicit negative feedback instead of being hidden.
 
-## Non-negotiable product promise
+## Product promise
 
 Borg is a cache layer for agent reasoning. It should help an agent avoid a previously discovered dead end or reuse a proven next move. If Borg does not know, it must say so plainly.
 
-That means first-user output must never look smarter than its evidence. A weak match is worse than no match.
+A weak match is worse than no match.
 
 ## Agent priming paragraph
 
@@ -20,7 +20,7 @@ Before attempting technical fixes for errors, bugs, installs, configs, deploymen
 
 ## Clean-user smoke path
 
-Run this from a clean environment before handing Borg to a tester:
+Run this before handing Borg to a tester:
 
 ```bash
 python3 -m pip install agent-borg
@@ -36,19 +36,17 @@ A passing smoke path proves the public package entrypoints exist, the rescue pac
 
 ## Supported first-user mixes
 
-Do not assume all testers use the same stack. The first-10 path supports these mixes:
-
 - Human only: CLI or Python API, no MCP required.
 - Human chat UI plus agent host: Telegram/Discord/Slack/API sessions through Hermes, with Borg configured once in Hermes.
-- MCP-native coding agents: Claude Code, Cursor, Cline, Continue, Goose, Codex-style CLIs, or custom runners with `borg-mcp` configured in their MCP server list.
-- Any model provider behind the host: ChatGPT/OpenAI, Claude, OpenRouter, local models, or other OpenAI-compatible endpoints. Model choice does not change Borg setup when the host owns tool execution.
-- Chat app with no MCP/tool execution: run `borg rescue`/`borg search` outside the chat and paste the `ACTION / STOP / VERIFY` packet back, or route through an MCP-capable host.
+- MCP-native coding agents: Claude Code, Cursor, Cline, Continue, Goose, Codex-style CLIs, or custom runners with `borg-mcp` configured.
+- Any model provider behind the host: ChatGPT/OpenAI, Claude, OpenRouter, local models, or other OpenAI-compatible endpoints.
+- Chat app with no MCP/tool execution: run `borg rescue` / `borg search` outside the chat and paste the `ACTION / STOP / VERIFY` packet back, or route through an MCP-capable host.
 
 For every mix, the invariant is the same: install Borg on the machine that executes tools, prime the agent/human to call Borg before technical fixes, and record helpful/not-helpful/no-match outcomes.
 
 ## The seven gates
 
-### G1 — real-vs-synthetic confidence is impossible to miss
+### G1 — real-vs-synthetic confidence is visible
 
 Pass criteria:
 
@@ -58,29 +56,27 @@ Pass criteria:
 
 Proof:
 
-- `borg rescue '<known error>' --json` includes `evidence.source` and `confidence`.
-- `borg_observe` output includes `CONFIDENCE` with `Real traces` and `Synthetic` counts.
+- `borg rescue '<known error>' --json` includes evidence and confidence.
+- `borg_observe` output includes `CONFIDENCE` with real/synthetic counts when available.
 
-### G2 — retrieval fails closed instead of hallucinating relevance
+### G2 — retrieval fails closed
 
 Pass criteria:
 
-- Low-similarity trace hits are filtered before rendering.
-- Content-free trace hits cannot become `ACTION` guidance.
-- Unrelated pack matches return `NO_CONFIDENT_MATCH`, not random pack advice.
+- Low-similarity hits are filtered before rendering.
+- Content-free hits cannot become `ACTION` guidance.
+- Unrelated matches return `NO_CONFIDENT_MATCH`, not random advice.
 
 Proof:
 
-- `_trace_match_is_confident()` rejects `similarity < 0.45` and empty causal traces.
-- `_pack_match_is_confident()` requires domain/lexical overlap.
-- Unknown observe output starts with `ACTION / STOP / VERIFY / CONFIDENCE` and includes `NO_CONFIDENT_MATCH`.
+- Confidence-gate tests reject weak, empty, or unrelated matches.
 
 ### G3 — day-one packet answers what to do, avoid, and verify
 
 Pass criteria:
 
 - `borg_rescue` returns `ACTION`, `STOP`, `VERIFY`, `human_receipt`, and `automation_policy`.
-- `borg_observe` returns `ACTION`, `STOP` or explicit no-match `STOP`, `VERIFY`, and `CONFIDENCE`.
+- `borg_observe` returns `ACTION`, `STOP`, `VERIFY`, and `CONFIDENCE`, or an explicit no-match packet.
 - Agents are instructed not to blend weak retrieval into normal reasoning.
 
 Proof:
@@ -88,7 +84,7 @@ Proof:
 - `borg/tests/test_rescue.py`
 - `borg/tests/test_first_10_readiness.py`
 
-### G4 — fresh-user install gauntlet is canonical
+### G4 — fresh-user install path is canonical
 
 Pass criteria:
 
@@ -98,20 +94,20 @@ Pass criteria:
 
 Proof:
 
-- README evaluator smoke path.
+- Root README evaluator smoke path.
 - This document.
 
-### G5 — claims are truthful for a 10-user beta
+### G5 — claims are truthful for beta
 
 Pass criteria:
 
 - Docs describe Borg as a reasoning-cache/rescue-memory beta, not magic lift.
-- Unproven network effects and non-Python breadth are listed as limitations.
-- Success metric is user-observed `ACTION/STOP` value, not vanity test count.
+- Unproven network effects and broad non-Python coverage are listed as limitations.
+- Success metric is user-observed `ACTION/STOP/VERIFY` value, not vanity test count.
 
 Proof:
 
-- README “What is proven right now” and “Honest limitations”.
+- README readiness/limitations section.
 - This document’s first-10 success metric.
 
 ### G6 — security and privacy baseline is linked into launch flow
@@ -130,41 +126,18 @@ Proof:
 
 Tester rule: do not paste API keys, private repo contents, passwords, tokens, cookies, customer data, or private stack traces into public issues. Use sanitized excerpts or private handoff.
 
-### G7 — 10-user beta is instrumented as learning, not theatre
+## G7 — 10-user beta is measured, not theatre
 
 Pass criteria:
 
-- Each tester gets the same install, priming, three tasks, and feedback receipt.
+- Each tester gets the same install, priming, tasks, and feedback receipt.
 - Outcomes are captured as helpful/not helpful/no match.
-- GO/NO-GO after first 10 is binary against the 6/10 useful-moment threshold.
+- GO/NO-GO after first 10 is binary against the useful-moment threshold.
 
 Proof:
 
 - `borg first-10 --json`
 - This document.
-
-## Runtime confidence-gate regression note — 2026-05-13
-
-A first-user beta continuation prompt surfaced stale `PACK GUIDANCE (bash-permission-denied)` / generic pack guidance from live Borg paths even though the canonical package already had `NO_CONFIDENT_MATCH` confidence-gate logic.
-
-Permanent rule: unrelated readiness, docs, audit, onboarding, or beta-proof prompts must never receive synthetic permission/git/debug pack advice. They must fail closed as `NO_CONFIDENT_MATCH` or be suppressed before prompt injection.
-
-Patched safety layers:
-
-- canonical Borg MCP confidence gate: `/root/hermes-workspace/borg/borg/integrations/mcp_server.py`
-- installed live-runtime candidate: `/usr/local/lib/python3.12/dist-packages/borg/integrations/mcp_server.py`
-- older active-candidate runtime: `/home/user/guild-tools/borg/integrations/mcp_server.py`
-- older guild-v2 mirror: `/root/hermes-workspace/guild-v2/borg/integrations/mcp_server.py`
-- Hermes plugin final injection guard: `/root/.hermes/hermes-agent/hermes_cli/plugins/borg_auto_trace/__init__.py`
-- duplicate plugin guard: `/root/.hermes/hermes-agent/plugins/borg_auto_trace/__init__.py`
-
-Additional permanent rule added 2026-05-14: strip any embedded/pasted `=== BORG GUIDANCE ===` block before task classification or permission-signal matching. A user quoting stale `PACK GUIDANCE (bash-permission-denied)` must not make the next turn look like a permission-denied task. Long operator prose alone is not observe-worthy; auto-injection requires an explicit technical/action keyword after stripping embedded Borg guidance.
-
-Regression tests:
-
-- `/root/hermes-workspace/borg/borg/tests/test_borg_observe_confidence_gate.py`
-- `/root/hermes-workspace/borg/borg/tests/test_first_10_readiness.py`
-- `/root/.hermes/hermes-agent/tests/test_borg_auto_trace_guidance_filter.py`
 
 ## First-10 tester packet
 
