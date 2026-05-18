@@ -1,5 +1,5 @@
 #!/usr/bin/env python3
-"""Run Borg production readiness gates through 1000 concurrent users."""
+"""Run Borg synthetic/load gates and report separate real-user rollout status."""
 from __future__ import annotations
 
 import json
@@ -32,6 +32,13 @@ def _run(name: str, cmd: list[str], timeout: int = 900) -> dict[str, Any]:
         return {"name": name, "cmd": cmd, "started": started, "rc": 124, "stdout": stdout[-12000:], "stderr": stderr[-12000:], "timeout": timeout}
 
 
+def _json_from_stdout(step: dict[str, Any]) -> dict[str, Any]:
+    try:
+        return json.loads(step.get("stdout") or "{}")
+    except json.JSONDecodeError:
+        return {}
+
+
 def _write_decision(snapshot: dict[str, Any]) -> None:
     lines = [
         "# Borg GO / NO-GO Decision",
@@ -43,16 +50,40 @@ def _write_decision(snapshot: dict[str, Any]) -> None:
         "",
     ]
     for step in snapshot["steps"]:
-        lines.append(f"- {step['name']}: {'PASS' if step['rc'] == 0 else 'FAIL'} (rc={step['rc']})")
+        if step["name"] == "real_user_rollout_gate":
+            status = "GO" if snapshot.get("ready_for_100_real_users") else "NO-GO"
+            lines.append(f"- {step['name']}: {status} (rc={step['rc']}; nonzero is expected until first-10 external evidence passes)")
+        else:
+            lines.append(f"- {step['name']}: {'PASS' if step['rc'] == 0 else 'FAIL'} (rc={step['rc']})")
+    rollout = snapshot.get("real_user_rollout", {})
+    blockers = rollout.get("blockers") or []
     lines.extend([
         "",
-        "## Rollout",
+        "## Synthetic/logical load rollout",
         "",
-        f"- Ready for 10 users: {'GO' if snapshot['ready_for_10'] else 'NO-GO'}",
-        f"- Ready for 100 users: {'GO' if snapshot['ready_for_100'] else 'NO-GO'}",
-        f"- Ready for 1000 users: {'GO' if snapshot['ready_for_1000'] else 'NO-GO'}",
+        "These are throughput gates only. They do not authorize 100 real external users.",
+        "",
+        f"- Ready for 10 logical load users: {'GO' if snapshot['ready_for_10'] else 'NO-GO'}",
+        f"- Ready for 100 logical load users: {'GO' if snapshot['ready_for_100'] else 'NO-GO'}",
+        f"- Ready for 1000 logical load users: {'GO' if snapshot['ready_for_1000'] else 'NO-GO'}",
+        "",
+        "## Real external-user rollout",
+        "",
+        f"- Ready for 10 controlled real users: {'GO' if rollout.get('ready_for_10_controlled_beta') else 'NO-GO'}",
+        f"- Ready for 100 real external users: {'GO' if rollout.get('ready_for_100_real_users') else 'NO-GO'}",
+        f"- Max recommended real users now: {rollout.get('max_recommended_real_users_now', 0)}",
+        "",
+        "## Real-user blockers",
+        "",
+    ])
+    if blockers:
+        lines.extend(f"- {blocker}" for blocker in blockers)
+    else:
+        lines.append("None.")
+    lines.extend([
         "",
         "Snapshot: `eval/gate_run_snapshot.json`",
+        "Real-user snapshot: `eval/real_user_rollout_gate_snapshot.json`",
         "",
     ])
     (ROOT / "GO_NO_GO_DECISION.md").write_text("\n".join(lines), encoding="utf-8")
@@ -62,11 +93,14 @@ def _write_decision(snapshot: dict[str, Any]) -> None:
             "",
             f"Timestamp: `{snapshot['timestamp']}`",
             "",
-            "Final GO/NO-GO is always sourced from `GO_NO_GO_DECISION.md`, `PROJECT_STATUS.md`, and `eval/gate_run_snapshot.json`.",
+            "Final GO/NO-GO is sourced from `GO_NO_GO_DECISION.md`, `PROJECT_STATUS.md`, `eval/gate_run_snapshot.json`, and `eval/real_user_rollout_gate_snapshot.json`.",
             "",
-            f"READY_FOR_10: `{snapshot['ready_for_10']}`",
-            f"READY_FOR_100: `{snapshot['ready_for_100']}`",
-            f"READY_FOR_1000: `{snapshot['ready_for_1000']}`",
+            f"READY_FOR_10_LOGICAL_LOAD: `{snapshot['ready_for_10']}`",
+            f"READY_FOR_100_LOGICAL_LOAD: `{snapshot['ready_for_100']}`",
+            f"READY_FOR_1000_LOGICAL_LOAD: `{snapshot['ready_for_1000']}`",
+            f"READY_FOR_10_CONTROLLED_REAL_USERS: `{rollout.get('ready_for_10_controlled_beta')}`",
+            f"READY_FOR_100_REAL_EXTERNAL_USERS: `{rollout.get('ready_for_100_real_users')}`",
+            f"MAX_RECOMMENDED_REAL_USERS_NOW: `{rollout.get('max_recommended_real_users_now', 0)}`",
             "",
         ]),
         encoding="utf-8",
@@ -101,13 +135,26 @@ def main() -> int:
     }
     (ROOT / "eval" / "gate_run_snapshot.json").write_text(json.dumps(provisional, indent=2, sort_keys=True), encoding="utf-8")
 
+    real_user = _run("real_user_rollout_gate", [py, "eval/real_user_rollout_gate.py"], 180)
+    results.append(real_user)
+    real_user_payload = _json_from_stdout(real_user)
+    real_user_rollout = {
+        "ready_for_10_controlled_beta": bool(real_user_payload.get("ready_for_10_controlled_beta")),
+        "infrastructure_ready_for_100": bool(real_user_payload.get("infrastructure_ready_for_100")),
+        "ready_for_100_real_users": bool(real_user_payload.get("ready_for_100_real_users")),
+        "max_recommended_real_users_now": real_user_payload.get("max_recommended_real_users_now", 0),
+        "blockers": real_user_payload.get("blockers") or ["real-user rollout gate did not return machine-readable blockers"],
+        "rc": real_user["rc"],
+    }
+
     scoreboard = _run("scoreboard_final", [py, "eval/uat_scoreboard.py"], 180)
     results.append(scoreboard)
     scoreboard_snapshot = json.loads((ROOT / "eval" / "uat_scoreboard_snapshot.json").read_text(encoding="utf-8")) if (ROOT / "eval" / "uat_scoreboard_snapshot.json").exists() else {}
     ready_for_10 = bool(scoreboard_snapshot.get("ready_for_10"))
     ready_for_100 = bool(scoreboard_snapshot.get("ready_for_100"))
     ready_for_1000 = bool(scoreboard_snapshot.get("ready_for_1000"))
-    all_pass = non_score_pass and scoreboard["rc"] == 0 and ready_for_1000
+    synthetic_load_all_pass = non_score_pass and scoreboard["rc"] == 0 and ready_for_1000
+    overall_100_real_user_pass = synthetic_load_all_pass and real_user_rollout["ready_for_100_real_users"]
     final = {
         "timestamp": datetime.now(timezone.utc).isoformat(),
         "run_parameters": {"soak_duration_seconds": soak},
@@ -115,7 +162,11 @@ def main() -> int:
         "ready_for_10": ready_for_10,
         "ready_for_100": ready_for_100,
         "ready_for_1000": ready_for_1000,
-        "all_pass": all_pass,
+        "synthetic_load_all_pass": synthetic_load_all_pass,
+        "real_user_rollout": real_user_rollout,
+        "ready_for_100_real_users": real_user_rollout["ready_for_100_real_users"],
+        "overall_100_real_user_pass": overall_100_real_user_pass,
+        "all_pass": overall_100_real_user_pass,
     }
     (ROOT / "eval" / "gate_run_snapshot.json").write_text(json.dumps(final, indent=2, sort_keys=True), encoding="utf-8")
     _write_decision(final)
@@ -123,8 +174,18 @@ def main() -> int:
     final_scoreboard = _run("scoreboard_after_decision", [py, "eval/uat_scoreboard.py"], 180)
     final["steps"].append(final_scoreboard)
     (ROOT / "eval" / "gate_run_snapshot.json").write_text(json.dumps(final, indent=2, sort_keys=True), encoding="utf-8")
-    print(json.dumps({"ready_for_10": ready_for_10, "ready_for_100": ready_for_100, "ready_for_1000": ready_for_1000, "all_pass": all_pass}, indent=2))
-    return 0 if all_pass else 1
+    print(json.dumps({
+        "ready_for_10_logical_load": ready_for_10,
+        "ready_for_100_logical_load": ready_for_100,
+        "ready_for_1000_logical_load": ready_for_1000,
+        "synthetic_load_all_pass": synthetic_load_all_pass,
+        "ready_for_10_controlled_real_users": real_user_rollout["ready_for_10_controlled_beta"],
+        "ready_for_100_real_external_users": real_user_rollout["ready_for_100_real_users"],
+        "max_recommended_real_users_now": real_user_rollout["max_recommended_real_users_now"],
+        "overall_100_real_user_pass": overall_100_real_user_pass,
+        "blockers": real_user_rollout["blockers"],
+    }, indent=2))
+    return 0 if synthetic_load_all_pass else 1
 
 
 if __name__ == "__main__":

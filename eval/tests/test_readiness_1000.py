@@ -36,6 +36,32 @@ def test_gate_runner_runs_1000_user_soak() -> None:
     assert "ready_for_1000" in text
 
 
+def test_gate_runner_distinguishes_logical_load_from_real_users() -> None:
+    text = (_root() / "eval" / "run_readiness_gates.py").read_text(encoding="utf-8")
+    assert '"real_user_rollout_gate"' in text
+    assert "Ready for 100 logical load users" in text
+    assert "Ready for 100 real external users" in text
+    assert "ready_for_100_real_users" in text
+    assert "Ready for 100 users:" not in text
+
+
+def test_scoreboard_includes_real_user_rollout_gate() -> None:
+    text = (_root() / "eval" / "uat_scoreboard.py").read_text(encoding="utf-8")
+    assert "real_user_rollout" in text
+    assert "Ready for 100 real external users" in text
+    assert "Max recommended real users now" in text
+    assert "synthetic_load_all_pass" in text
+    assert "real_user_100_all_pass" in text
+    assert '"all_pass": real_user_100_all_pass' in text
+
+
+def test_load_reports_are_explicitly_logical_not_real_users() -> None:
+    text = (_root() / "eval" / "load_soak.py").read_text(encoding="utf-8")
+    assert "logical-user load report" in text
+    assert "synthetic asyncio logical users only" in text
+    assert "does not authorize 100 real external users" in text
+
+
 def test_latest_1000_snapshot_schema_if_present() -> None:
     path = _root() / "eval" / "load_1000_snapshot.json"
     if not path.exists():

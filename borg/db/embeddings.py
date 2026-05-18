@@ -19,7 +19,6 @@ except ImportError:
 
 from borg.core.dirs import get_borg_dir
 
-from .migrations import migrate
 from .store import AgentStore
 
 
@@ -49,15 +48,11 @@ class EmbeddingEngine:
             Path(self.db_path).parent.mkdir(parents=True, exist_ok=True)
 
     def _get_connection(self) -> sqlite3.Connection:
-        """Get a thread-local database connection."""
+        """Get a thread-local database connection using AgentStore hardening."""
         if not hasattr(self._local, 'connection') or self._local.connection is None:
-            self._local.connection = sqlite3.connect(
-                self.db_path or self._default_db_path(),
-                check_same_thread=False,
-                isolation_level=None,
-            )
-            self._local.connection.row_factory = sqlite3.Row
-            migrate(self._local.connection)
+            store = AgentStore(self.db_path or self._default_db_path())
+            self._local.store = store
+            self._local.connection = store._get_connection()
         return self._local.connection
 
     def _default_db_path(self) -> str:
@@ -251,9 +246,12 @@ class EmbeddingEngine:
 
     def close(self):
         """Close the thread-local database connection."""
-        if hasattr(self._local, 'connection') and self._local.connection is not None:
+        if hasattr(self._local, 'store') and self._local.store is not None:
+            self._local.store.close()
+            self._local.store = None
+        elif hasattr(self._local, 'connection') and self._local.connection is not None:
             self._local.connection.close()
-            self._local.connection = None
+        self._local.connection = None
 
     def __enter__(self) -> "EmbeddingEngine":
         """Enter context manager."""

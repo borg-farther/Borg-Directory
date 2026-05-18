@@ -40,6 +40,14 @@ PRIMING_PARAGRAPH = (
     "and record the outcome with borg_rate(helpful=True/False)."
 )
 
+SUPPORTED_FIRST_USER_MIXES = [
+    "Human only: CLI or Python API, no MCP required.",
+    "Human chat UI plus agent host: Telegram/Discord/Slack/API sessions through Hermes, with Borg configured once in Hermes.",
+    "MCP-native coding agents: Claude Code, Cursor, Cline, Continue, Goose, Codex-style CLIs, or custom runners with borg-mcp configured.",
+    "Any model provider behind the host: ChatGPT/OpenAI, Claude, OpenRouter, local models, or other OpenAI-compatible endpoints.",
+    "Chat app with no MCP/tool execution: run borg rescue/search outside the chat and paste ACTION/STOP/VERIFY back, or route through an MCP-capable host.",
+]
+
 FIRST_10_GATES: List[ReadinessGate] = [
     ReadinessGate(
         id="G1",
@@ -146,6 +154,7 @@ def first_10_readiness_packet() -> Dict[str, Any]:
         "status": "first_10_beta_contract",
         "success_metric": FIRST_10_SUCCESS_METRIC,
         "priming_paragraph": PRIMING_PARAGRAPH,
+        "supported_mixes": list(SUPPORTED_FIRST_USER_MIXES),
         "gates": [gate.to_dict() for gate in FIRST_10_GATES],
         "smoke_commands": [
             "python3 -m pip install agent-borg",
@@ -187,6 +196,12 @@ def render_first_10_readiness_markdown() -> str:
         "```bash",
         *packet["smoke_commands"],
         "```",
+        "",
+        "## Supported first-user mixes",
+        "",
+        *[f"- {mix}" for mix in packet["supported_mixes"]],
+        "",
+        "For every mix: install Borg where tools execute, prime the agent/human to call Borg before technical fixes, and record helpful/not-helpful/no-match outcomes.",
         "",
         "## Binary gates",
         "",
