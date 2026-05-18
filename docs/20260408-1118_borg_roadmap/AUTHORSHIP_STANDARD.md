@@ -107,3 +107,34 @@ scenarios in an isolated `/tmp` repo before being dropped into
   editing the `expected_name` / `expected_email` variables.
 - Retroactive cleanup of existing wrongly-authored commits. Explicitly
   rejected: rewriting history loses forensic signal.
+
+---
+
+## Policy change — 2026-05-18
+
+The canonical public identity for this repo is now:
+
+    user.name  = borg-farther
+    user.email = admin@borg.directory
+
+This replaces the previous local author standard of
+`Hermes Agent <aleshbrown@gmail.com>` so local commits use the same public
+identity as the GitHub account used on PR merges.
+
+The local pre-commit hook now enforces `borg-farther <admin@borg.directory>`.
+Set the repo-local config with:
+
+```bash
+cd /root/hermes-workspace/borg
+git config user.name  'borg-farther'
+git config user.email 'admin@borg.directory'
+```
+
+For one-off commits, use:
+
+```bash
+git -c user.name='borg-farther' -c user.email='admin@borg.directory' commit -m "..."
+```
+
+This policy change does not rewrite existing commits. Any history rewrite or
+author cleanup is a separate operation and must be handled explicitly.
