@@ -3,7 +3,7 @@
 import json
 import os
 
-TASKS_DIR = '/root/hermes-workspace/borg/dogfood/swebench_tasks'
+TASKS_DIR = '/root/hermes-workspace/borg/docs/archive/dogfood/dogfood/swebench_tasks'
 OUTPUT_DIR = '/root/hermes-workspace/borg/eval/e1b_real_bugs/results'
 
 tasks = sorted(os.listdir(TASKS_DIR))

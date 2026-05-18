@@ -365,7 +365,7 @@ def run_e1b_evaluation(bugs: list[BugCase], output_dir: str) -> dict:
 
 def main():
     # Configuration
-    TASKS_DIR = '/root/hermes-workspace/borg/dogfood/swebench_tasks'
+    TASKS_DIR = '/root/hermes-workspace/borg/docs/archive/dogfood/dogfood/swebench_tasks'
     OUTPUT_DIR = '/root/hermes-workspace/borg/eval/e1b_real_bugs/results'
     BUG_COUNT = 8  # Test on 8 Django bugs
     

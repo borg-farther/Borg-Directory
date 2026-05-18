@@ -9,7 +9,7 @@ Provides:
   - BORG_DEBUG_KWARGS: maps problem_class → @mention placeholders used in packs
 
 Architecture:
-  - Seed packs live in borg/skills/*.md (YAML frontmatter)
+  - Seed packs live in borg/seeds_data/ for wheels and examples/skills/ for dev fixtures
   - Pack loader reads them and caches in memory
   - Thompson Sampling integration via v3_integration.BorgV3
 """
@@ -300,7 +300,7 @@ def _get_skills_dir() -> Path:
     
     Search order:
     1. borg/seeds_data/ inside the installed package (PyPI installs)
-    2. skills/ directory sibling to borg package (editable/dev installs)
+    2. examples/skills/ directory sibling to borg package (editable/dev installs)
     3. Absolute dev fallback
     4. Return None if not found (callers must handle gracefully)
     """
@@ -313,12 +313,12 @@ def _get_skills_dir() -> Path:
         return seeds_data
 
     # 2. Sibling to package (editable install)
-    skills_dir = borg_path.parent / "skills"
+    skills_dir = borg_path.parent / "examples" / "skills"
     if skills_dir.is_dir():
         return skills_dir
 
     # 3. Absolute dev fallback
-    dev_path = Path("/root/hermes-workspace/borg/skills")
+    dev_path = Path("/root/hermes-workspace/borg/examples/skills")
     if dev_path.is_dir():
         return dev_path
 
@@ -652,7 +652,7 @@ def debug_error(error_message: str, show_evidence: bool = True) -> str:
     if not pack:
         return (
             f"Pack for '{problem_class}' found but failed to load.\n"
-            "This is a system error — check that borg/skills/*.md files exist."
+            "This is a system error — check that borg/seeds_data/*.md files exist."
         )
 
     # Step 3: render
