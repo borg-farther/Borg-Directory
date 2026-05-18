@@ -1,28 +1,90 @@
 # Trying Borg
 
-This is the detailed first-user setup guide. The shortest path is in [`QUICKSTART.md`](QUICKSTART.md).
+This is the detailed first-user setup guide. The shortest path is in [`QUICKSTART.md`](QUICKSTART.md); OS-specific install details are in [`INSTALL.md`](INSTALL.md).
 
 ## 1. Install
 
 Borg requires Python 3.10+.
 
+Borg is the product name. The package you install is `agent-borg`; that package gives you the `borg` CLI, `borg-mcp` MCP server command, and `borg-doctor` diagnostic command.
+
+Do **not** install these for Borg:
+
+- `pip install borg`
+- `brew install borgbackup`
+- `apt install borgbackup`
+- `apt-get install borgbackup`
+- `dnf install borgbackup`
+- `pacman -S borg`
+
+Those are unrelated to this AI-agent tool.
+
+### macOS
+
 ```bash
-python3 -m pip install agent-borg
+python3 --version  # must be 3.10+
+brew install pipx
+pipx ensurepath
+pipx install agent-borg
+exec "$SHELL" -l
+
+command -v borg
+command -v borg-mcp
 borg version
 borg-doctor --json
 ```
 
-If you prefer an isolated CLI install:
+### Linux
+
+Debian/Ubuntu:
 
 ```bash
+python3 --version  # must be 3.10+
+sudo apt update
+sudo apt install -y pipx
+pipx ensurepath
 pipx install agent-borg
+exec "$SHELL" -l
+
+command -v borg
+command -v borg-mcp
+borg version
+borg-doctor --json
 ```
 
-If `borg` is not found, check your Python scripts directory:
+Other Linux:
 
 ```bash
-python3 -c "import sysconfig; print(sysconfig.get_path('scripts'))"
+python3 -m pip install --user pipx
+python3 -m pipx ensurepath
+python3 -m pipx install agent-borg
+exec "$SHELL" -l
+
+command -v borg
+command -v borg-mcp
+borg version
+borg-doctor --json
 ```
+
+### Windows PowerShell
+
+```powershell
+py -3 --version  # must be 3.10+
+py -m pip install --user pipx
+py -m pipx ensurepath
+py -m pipx install agent-borg
+```
+
+Close and reopen PowerShell, then verify:
+
+```powershell
+where.exe borg
+where.exe borg-mcp
+borg version
+borg-doctor --json
+```
+
+If `borg` is not found, see [`INSTALL.md#if-something-went-wrong`](INSTALL.md#if-something-went-wrong).
 
 ## 2. First value check
 
@@ -62,6 +124,8 @@ This records outcome data. Shared learning depends on explicit publishing/aggreg
 
 ## 4. Claude Code setup
 
+Prerequisite: `borg version` and `borg-doctor --json` pass.
+
 ```bash
 borg setup-claude --scope user --verify --fix
 ```
@@ -74,9 +138,25 @@ What this does:
 4. uses an absolute `BORG_HOME` path;
 5. runs an MCP initialize handshake and prints PASS/FAIL.
 
-After setup, fully restart Claude Code and ask what Borg tools are available.
+Expected output includes:
+
+```text
+Verify: PASS (initialize handshake ok)
+```
+
+After setup, fully quit and restart Claude Code.
+
+Then ask Claude Code:
+
+```text
+what MCP tools do you have from Borg?
+```
+
+Expected: Claude lists Borg tools such as `borg_rescue`, `borg_observe`, and `borg_search`, or `/mcp list` shows a `borg` server.
 
 ## 5. Generic MCP setup
+
+Prefer the setup command above when using Claude Code. For any stdio MCP client that accepts `mcpServers` JSON:
 
 ```json
 {
@@ -90,19 +170,21 @@ After setup, fully restart Claude Code and ask what Borg tools are available.
 }
 ```
 
-If `borg-mcp` is not on PATH:
+If the client cannot find `borg-mcp`, locate it first:
 
-```json
-{
-  "mcpServers": {
-    "borg": {
-      "command": "python3",
-      "args": ["-m", "borg.integrations.mcp_server"],
-      "env": { "BORG_HOME": "/absolute/path/to/.borg" }
-    }
-  }
-}
+macOS/Linux:
+
+```bash
+command -v borg-mcp
 ```
+
+Windows PowerShell:
+
+```powershell
+where.exe borg-mcp
+```
+
+Use that absolute path as the MCP `command`. Avoid bare `python`/`python3` in MCP config unless you are certain that exact interpreter has `agent-borg` installed.
 
 ## 6. Agent priming
 
