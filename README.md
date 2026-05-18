@@ -1,11 +1,12 @@
 # Borg — collective memory for AI agents
 
+Borg helps coding agents avoid rediscovering the same fixes and dead ends.
+Give it an error or task; it returns an `ACTION / STOP / VERIFY` packet, or a clear `NO_CONFIDENT_MATCH` when it does not know.
+
 **Install:** `pip install agent-borg`  
 **CLI:** `borg`  
 **MCP server:** `borg-mcp`  
 **Canonical repo:** https://github.com/borg-farther/Borg-Directory
-
-Borg helps coding agents avoid rediscovering the same fixes and dead ends. When an agent hits an error, it can check Borg first, get prior guidance, and record whether the guidance helped.
 
 Borg is not marketed here as a magic success-rate booster. Current local security/readiness gates are green; statistically significant external agent-level lift is still unproven.
 
@@ -19,20 +20,13 @@ borg version
 borg-doctor --json
 ```
 
-Expected first check:
-
-```text
-borg version   # prints the installed version, currently 3.3.3 in this repo
-borg-doctor    # returns ok=true / PASS-style checks when the install is healthy
-```
-
 For isolated installs:
 
 ```bash
 pipx install agent-borg
 ```
 
-For controlled or offline environments, pre-download wheels on a connected machine and install from that local wheelhouse:
+For controlled or offline environments:
 
 ```bash
 python -m pip download agent-borg -d ./wheelhouse
@@ -51,21 +45,54 @@ Requires Python 3.10+.
 
 ---
 
-## 2. One-command Claude setup
+## 2. First useful command
+
+```bash
+borg rescue "ModuleNotFoundError: No module named flask"
+```
+
+Expected shape:
+
+```text
+ACTION: what to try next
+STOP: what dead-end to avoid
+VERIFY: exact check to rerun
+CONFIDENCE: tested / observed / inferred / NO_CONFIDENT_MATCH
+```
+
+More day-one commands:
+
+```bash
+pytest -q 2>&1 | borg rescue --json
+borg search "django migration table already exists"
+borg try systematic-debugging
+borg apply systematic-debugging --task "Fix Django migration table already exists error"
+borg first-10 --json
+```
+
+Python API:
+
+```python
+import borg
+
+hits = borg.check("TypeError: unsupported operand type(s)", top_k=3)
+for hit in hits:
+    print(hit.get("name"), hit.get("tier"))
+```
+
+---
+
+## 3. Connect an agent with MCP
+
+Claude Code one-command setup:
 
 ```bash
 borg setup-claude --scope user --verify --fix
 ```
 
-What this does:
+Then fully restart Claude Code and confirm Borg tools appear.
 
-1. Finds the MCP launch command.
-2. Creates Borg home storage if missing.
-3. Writes user-level Claude MCP config.
-4. Runs an MCP initialize verification.
-5. Prints a binary pass/fail result with remediation if something is wrong.
-
-If your agent config needs manual MCP wiring, use this:
+Manual MCP config for any stdio MCP client:
 
 ```json
 {
@@ -79,7 +106,7 @@ If your agent config needs manual MCP wiring, use this:
 }
 ```
 
-Fallback if `borg-mcp` is not on PATH:
+If `borg-mcp` is not on PATH:
 
 ```json
 {
@@ -95,184 +122,61 @@ Fallback if `borg-mcp` is not on PATH:
 
 Use absolute paths in MCP env blocks. Do not rely on `~` expansion inside MCP clients.
 
----
-
-## 3. Any mix: human UI, agent host, model provider
-
-Borg only needs to be installed where the agent can run tools. The human UI and model provider are separate choices.
-
-Common combinations:
-
-- Human in a terminal, no agent: run `borg rescue ...`, `borg search ...`, and `borg first-10 --json` directly.
-- Claude Code: run `borg setup-claude --scope user --verify --fix`, then restart Claude Code.
-- Cursor: run `borg setup-cursor` from the project root, then restart Cursor.
-- Other MCP-capable agents such as Cline, Continue, Goose, Codex-style CLIs, or custom agent runners: add the manual `mcpServers.borg` config from section 2.
-- Hermes as the agent: add Borg to Hermes with `hermes mcp add ...`; then any Hermes front-end can use it, including CLI, Telegram, Discord, Slack, or API/webhook sessions.
-- ChatGPT/OpenAI as the model inside Hermes or another agent host: no special Borg setup is needed beyond MCP. The model provider does not own the tools; the agent host does.
-- ChatGPT app or any chat UI with no MCP/tool execution: use Borg from the CLI/Python API and paste the `ACTION / STOP / VERIFY` packet back into the chat, or route the work through an MCP-capable host such as Hermes.
-
-Rule of thumb: configure Borg once in the agent host that executes tools; then use whatever human UI and model provider you want.
-
-### Hermes gateway example: Telegram UI + ChatGPT/OpenAI model
-
-Run this on the same machine/server where the Hermes gateway runs:
-
-```bash
-python3 -m pip install --upgrade agent-borg
-borg-doctor --json
-mkdir -p ~/.borg
-
-hermes mcp add borg --command "$(command -v borg-mcp)" --env BORG_HOME="$HOME/.borg"
-hermes mcp test borg
-
-# restart Hermes so gateway sessions see the new MCP tools
-hermes gateway restart
-```
-
-If you normally control Hermes from Telegram, Discord, Slack, or another messaging UI, send this after setup:
-```text
-/restart
-```
-
-Then test from that UI:
-```text
-Use Borg first on this error:
-ModuleNotFoundError: No module named flask
-
-Show me:
-1. what Borg matched
-2. ACTION
-3. STOP / what dead-end it avoids
-4. VERIFY
-5. whether Borg had high confidence or no confident match
-```
-
-Expected value moment: Borg should show a concrete ACTION / STOP / VERIFY packet, plus a short receipt explaining what it matched and what dead-end it prevented. If there is no confident match, the correct output is a clear `NO_CONFIDENT_MATCH`, not generic advice.
+More setup detail: [`docs/MCP_SETUP.md`](docs/MCP_SETUP.md).
 
 ---
 
-## 4. First useful commands
+## 4. Prime the agent
 
-```bash
-# Fastest day-one value: paste an error, get ACTION / STOP / VERIFY
-borg rescue "ModuleNotFoundError: No module named flask"
-
-# Pipe failing command output into Borg
-pytest -q 2>&1 | borg rescue --json
-
-# Interactive onboarding uses the same rescue engine
-borg start
-
-# First-10 beta contract / readiness packet
-borg first-10
-borg first-10 --json
-
-# Search existing guidance
-borg search "django migration table already exists"
-
-# Preview a workflow pack safely
-borg try borg://hermes/systematic-debugging
-
-# Pull the pack locally
-borg pull borg://hermes/systematic-debugging
-
-# Apply it to a real task
-borg apply systematic-debugging --task "Fix Django migration table already exists error"
-
-# After completion, generate feedback
-borg feedback <session_id>
-```
-
-For Python callers:
-
-```python
-import borg
-
-hits = borg.check("TypeError: unsupported operand type(s)", top_k=3)
-for hit in hits:
-    print(hit.get("name"), hit.get("tier"))
-```
-
----
-
-## 5. Agent instruction / priming
-
-Put this in your project `CLAUDE.md`, agent system prompt, or first user message:
+Put this in `CLAUDE.md`, an agent system prompt, or the first user message:
 
 ```text
-Before attempting technical fixes for errors, bugs, installs, configs, deployments, or tests, call Borg first. Prefer borg_rescue(input="<exact error or failing command output>") when there is a concrete failure; use borg_observe(task="<exact task or error>", context="<tech stack>") at task start. Treat Borg output as advisory: follow ACTION when relevant, avoid STOP/AVOID patterns, and disclose when retrieved guidance is weak or does not fit. After the fix, call borg_rate(helpful=True/False) or record the outcome.
+Before attempting technical fixes for errors, bugs, installs, configs, deployments, or tests, call Borg first. Prefer borg_rescue(input="<exact error or failing command output>") when there is a concrete failure; use borg_observe(task="<exact task or error>", context="<tech stack>") at task start. Treat Borg output as advisory: follow ACTION when relevant, avoid STOP/AVOID patterns, disclose NO_CONFIDENT_MATCH or weak guidance, and record the outcome with borg_rate(helpful=True/False).
 ```
 
 Why: agents often do not discover optional tools unless explicitly primed.
 
 ---
 
-## 6. MCP tools
+## 5. What is ready now
 
-Core tools available through the MCP server include:
+Ready for **controlled first-10 beta sharing**:
 
-- `borg_rescue` — agent-ready ACTION / STOP / VERIFY packet for concrete failures
-- `borg_observe` — passive guidance before a technical fix
-- `borg_search` — search packs / traces
-- `borg_try` — preview a pack before saving
-- `borg_pull` — fetch and validate a pack
-- `borg_apply` — phase-by-phase execution
-- `borg_feedback` — structured feedback artifact
-- `borg_suggest` — suggest after repeated failures
-- `borg_convert` — convert skills/rules into Borg-compatible artifacts
-- `borg_publish` — publish artifacts with safety gates
-- `borg_first_10` — first-10 beta gates, smoke path, priming paragraph, feedback fields
+- Install, CLI, Python API, and MCP entrypoints are present.
+- First-user rescue path returns ACTION / STOP / VERIFY.
+- Security/privacy/prompt-injection surface: PASS.
+- GitHub CI and security gates are green on the current default branch.
+- First-10 beta contract is published: [`docs/FIRST_10_BETA_READINESS.md`](docs/FIRST_10_BETA_READINESS.md).
 
-Use `borg_rescue` for concrete errors/failing command output. Use `borg_observe` first for broader debugging/config/install/deploy/test tasks.
+Not yet claimed:
+
+- Statistically significant agent-level success lift.
+- Real external-user network effects.
+- Public self-serve launch readiness.
+- Broad non-Python coverage.
+- Global/federated multi-node reliability.
+
+Public self-serve launch remains gated by real external-user evidence. Current threshold: At least 6 of the first 10 users get one relevant ACTION/STOP/VERIFY moment without maintainer handholding, and every miss is recorded as NO_CONFIDENT_MATCH or explicit negative feedback instead of being hidden.
+
+Current public status: [`docs/READINESS.md`](docs/READINESS.md).
 
 ---
 
-## 7. What is proven right now
+## 6. Security and privacy
 
-Current local gate snapshot in this repo:
+Start here:
 
-- Version consistency: PASS
-- First-user install surface: PASS
-- Security/privacy/prompt-injection surface: PASS
-- Learning-atom safety tests: PASS
-- Local 10/100/1000 logical-user soak: PASS
-- Latest focused verification: source + wheel + PyPI first-user gates must pass; first-user public launch remains gated by real external-user evidence
-
-Canonical local artifacts:
-
-- [`PROJECT_STATUS.md`](PROJECT_STATUS.md)
-- [`GO_NO_GO_DECISION.md`](GO_NO_GO_DECISION.md)
-- [`docs/20260504-1123_BORG_PRODUCTION_1000_READINESS_STATUS.md`](docs/20260504-1123_BORG_PRODUCTION_1000_READINESS_STATUS.md)
-- [`docs/FIRST_10_BETA_READINESS.md`](docs/FIRST_10_BETA_READINESS.md)
-- [`eval/uat_scoreboard_snapshot.json`](eval/uat_scoreboard_snapshot.json)
 - [`docs/SECURITY_HARDENING_BASELINE.md`](docs/SECURITY_HARDENING_BASELINE.md)
 - [`docs/PRIVACY_MODEL.md`](docs/PRIVACY_MODEL.md)
 - [`docs/PROMPT_INJECTION_THREAT_MODEL.md`](docs/PROMPT_INJECTION_THREAT_MODEL.md)
 - [`docs/TRUST_AND_PROMOTION.md`](docs/TRUST_AND_PROMOTION.md)
 - [`docs/REVOCATION_AND_DELETION.md`](docs/REVOCATION_AND_DELETION.md)
 
----
-
-## 7. Honest limitations
-
-Not yet proven:
-
-- Statistically significant agent-level success lift.
-- Real external-user network effects.
-- Global/federated multi-node reliability.
-- Broad non-Python generalization.
-- Navigation cache as a shipped first-user feature.
-
-Security boundary:
-
-- Learning atoms are signed, privacy-scanned, prompt-injection scanned, and revocable.
-- Ed25519 primitives exist, but do not interpret that as “every pack from every source is cryptographically trusted” unless the specific command reports verified signature state.
+Do not paste API keys, passwords, cookies, tokens, private repo contents, customer data, or unsanitized private stack traces into public issues.
 
 ---
 
-## 8. For evaluators
-
-If you are evaluating Borg, run this exact smoke path from a clean environment:
+## 7. Clean evaluator smoke path
 
 ```bash
 python3 -m venv /tmp/borg-smoke
@@ -281,30 +185,24 @@ python -m pip install --upgrade pip
 python -m pip install agent-borg
 borg version
 borg-doctor --json
+borg rescue "ModuleNotFoundError: No module named flask" --json
 borg search "django migration table already exists"
 borg first-10 --json
-python - <<'PY'
-import borg
-print(borg.check('TypeError: unsupported operand type(s)', top_k=2))
-PY
 ```
 
-Then connect MCP using `borg setup-claude --scope user --verify --fix` or the manual config above.
+Then connect MCP with `borg setup-claude --scope user --verify --fix` or the manual config above.
 
 A good first evaluation is whether Borg reduces redundant investigation, not whether it magically solves every bug.
 
 ---
 
-## 9. Development verification
+## Docs
 
-From a source checkout:
-
-```bash
-python -m pytest -q borg/tests/test_public_api_check.py borg/tests/test_version_consistency.py borg/tests/test_runtime_doctor.py
-python scripts/security_gate_check.py
-BORG_READINESS_SOAK_SECONDS=5 python eval/run_readiness_gates.py
-python eval/uat_scoreboard.py
-```
+- [`docs/QUICKSTART.md`](docs/QUICKSTART.md) — short copy-paste path
+- [`docs/TRYING_BORG.md`](docs/TRYING_BORG.md) — detailed first-user setup
+- [`docs/MCP_SETUP.md`](docs/MCP_SETUP.md) — MCP setup details
+- [`docs/READINESS.md`](docs/READINESS.md) — current readiness status
+- [`docs/archive/`](docs/archive/) — historical audits, experiments, and internal planning artifacts; not current product claims
 
 ---
 

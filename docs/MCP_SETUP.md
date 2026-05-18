@@ -1,263 +1,90 @@
-# Borg MCP Setup Guide
+# Borg MCP setup
 
-This guide provides exact copy-paste MCP configurations for Claude Code, Cursor, and generic MCP clients.
+Recommended Claude Code setup:
 
-**The recommended setup is:**
 ```bash
 borg setup-claude --scope user --verify --fix
 ```
 
-The config below is what `borg setup-claude` writes automatically. You only need this if you're configuring manually.
+Then fully restart Claude Code.
 
----
+## What the setup command proves
 
-## Claude Code
+- `borg-mcp` or `python -m borg.integrations.mcp_server` can be launched.
+- Borg home storage exists or is created.
+- The MCP server responds to `initialize`.
+- Config is merged instead of overwriting unrelated MCP servers.
+- `BORG_HOME` is written as an absolute path, not `~`.
 
-**Config file (recommended scope):** `~/.claude.json`
+## Manual config
 
-> Note: `--scope desktop` still supports `~/.config/claude/claude_desktop_config.json` for legacy installs.
-
-### Single borg server (recommended: use borg-mcp)
+Use this for Claude Code, Cursor, Cline, Continue, Goose, Codex-style CLIs, or any stdio MCP client that accepts `mcpServers` JSON.
 
 ```json
 {
   "mcpServers": {
     "borg": {
       "command": "borg-mcp",
-      "args": []
+      "args": [],
+      "env": { "BORG_HOME": "/absolute/path/to/.borg" }
     }
   }
 }
 ```
 
-### Using explicit Python interpreter
-
-If `borg-mcp` is not in PATH, use your Python executable directly:
+If `borg-mcp` is not on PATH:
 
 ```json
 {
   "mcpServers": {
     "borg": {
       "command": "python3",
-      "args": ["-m", "borg.integrations.mcp_server"]
+      "args": ["-m", "borg.integrations.mcp_server"],
+      "env": { "BORG_HOME": "/absolute/path/to/.borg" }
     }
   }
 }
 ```
 
-### Multiple MCP servers (merge existing)
+## Core first-user MCP tools
 
-If you already have other MCP servers configured, merge the borg entry:
+- `borg_rescue` — ACTION / STOP / VERIFY packet for concrete failures.
+- `borg_observe` — guidance before technical fixes.
+- `borg_search` — search packs and traces.
+- `borg_try` — preview a pack.
+- `borg_apply` — start/checkpoint/complete pack execution.
+- `borg_feedback` — generate feedback from a completed session.
+- `borg_suggest` — suggest after repeated failures.
+- `borg_first_10` — first-10 beta gates and smoke path.
 
-```json
-{
-  "mcpServers": {
-    "borg": {
-      "command": "borg-mcp",
-      "args": []
-    },
-    "your-other-server": {
-      "command": "your-other-mcp-server",
-      "args": []
-    }
-  }
-}
-```
+Advanced/admin tools may also be exposed by the server, but first users should start with the tools above.
 
-### Verify Claude Code sees borg
-
-After restarting Claude Code, ask:
-> "What MCP tools do you have available from borg?"
-
-### Critical gotcha
-
-Use absolute `BORG_HOME` paths in MCP env. Do not use `~/.borg` in manual JSON entries — some Claude launch paths do not shell-expand `~`.
-
-You should see tools like `borg_search`, `borg_observe`, `borg_try`, `borg_apply`, `borg_feedback`, `borg_suggest`, and `borg_debug`.
-
----
-
-## Cursor
-
-**Config file:** `~/.cursor/mcp.json`
-
-Create the file if it doesn't exist:
-
-```json
-{
-  "mcpServers": {
-    "borg": {
-      "command": "borg-mcp",
-      "args": []
-    }
-  }
-}
-```
-
-Or with explicit Python:
-```json
-{
-  "mcpServers": {
-    "borg": {
-      "command": "python3",
-      "args": ["-m", "borg.integrations.mcp_server"]
-    }
-  }
-}
-```
-
-### Multiple MCP servers
-
-```json
-{
-  "mcpServers": {
-    "borg": {
-      "command": "borg-mcp",
-      "args": []
-    },
-    "filesystem": {
-      "command": "npx",
-      "args": ["-y", "@modelcontextprotocol/server-filesystem", "/path/to/allowed/dir"]
-    }
-  }
-}
-```
-
-### Verify Cursor sees borg
-
-Restart Cursor. Ask: "Search borg packs for a code review workflow."
-
----
-
-## Generic MCP Client
-
-Any MCP client that supports stdio-based servers can use borg.
-
-### Basic stdio configuration
-
-```json
-{
-  "mcpServers": {
-    "borg": {
-      "command": "borg-mcp",
-      "args": []
-    }
-  }
-}
-```
-
-### With explicit Python interpreter
-
-```json
-{
-  "mcpServers": {
-    "borg": {
-      "command": "python3",
-      "args": ["-m", "borg.integrations.mcp_server"]
-    }
-  }
-}
-```
-
-Or with inline Python path resolution:
-```json
-{
-  "mcpServers": {
-    "borg": {
-      "command": "python3",
-      "args": ["-c", "import sys; sys.path.insert(0, '/path/to/site-packages'); from borg.integrations.mcp_server import main; main()"]
-    }
-  }
-}
-```
-
-### Manual JSON-RPC 2.0 over stdio
-
-borg-mcp speaks JSON-RPC 2.0 over stdin/stdout. You can test it manually:
+## Verify manually
 
 ```bash
-# Initialize
-echo '{"jsonrpc":"2.0","id":1,"method":"initialize","params":{"protocolVersion":"2024-11-05","capabilities":{},"clientInfo":{"name":"test","version":"1.0"}}}' | borg-mcp
-
-# List tools
-echo '{"jsonrpc":"2.0","id":2,"method":"tools/list","params":{}}' | borg-mcp
-
-# Call borg_search
-echo '{"jsonrpc":"2.0","id":3,"method":"tools/call","params":{"name":"borg_search","arguments":{"query":"debugging"}}}' | borg-mcp
+borg-doctor --json
 ```
 
----
+For raw JSON-RPC stdio testing:
 
-## Protocol Details
-
-- **Protocol version:** 2024-11-05
-- **Transport:** stdio (stdin/stdout JSON-RPC 2.0)
-- **Server name:** borg-mcp-server
-- **Server version:** 3.3.0
-
-### Available Tools
-
-| Tool | Description |
-|------|-------------|
-| `borg_search` | Search packs by keyword or semantic similarity |
-| `borg_observe` | Proactive guidance at task start |
-| `borg_try` | Preview pack without saving |
-| `borg_pull` | Download and save pack locally |
-| `borg_apply` | Execute pack (start/checkpoint/complete) |
-| `borg_feedback` | Generate feedback from session |
-| `borg_publish` | Publish pack or feedback to GitHub |
-| `borg_convert` | Convert SKILL.md/CLAUDE.md/.cursorrules |
-| `borg_suggest` | Auto-suggest pack from frustration signals |
-| `borg_debug` | Get structured debugging guidance |
-
----
+```bash
+echo '{"jsonrpc":"2.0","id":1,"method":"initialize","params":{"protocolVersion":"2024-11-05","capabilities":{},"clientInfo":{"name":"test","version":"1.0"}}}' | borg-mcp
+```
 
 ## Troubleshooting
 
-### "command not found" or server not responding
-
-1. Verify borg-mcp is installed:
-```bash
-which borg-mcp
-borg-mcp --version 2>&1 || echo "borg-mcp not in PATH"
-```
-
-2. Find the correct path:
-```bash
-pip show agent-borg | grep Location
-# borg-mcp is at: <Location>/../../../bin/borg-mcp
-```
-
-3. Use absolute path in config, or use `python3 -m borg.integrations.mcp_server`.
-
-### macOS: "borg-mcp cannot be opened because the developer is not verified"
-
-Go to System Preferences → Security & Privacy → General → allow "borg-mcp" (or use `xattr -d com.apple.quarantine /path/to/borg-mcp`).
-
-### Windows: borg-mcp closes immediately
-
-On Windows, specify python explicitly:
-```json
-{
-  "mcpServers": {
-    "borg": {
-      "command": "python",
-      "args": ["-m", "borg.integrations.mcp_server"]
-    }
-  }
-}
-```
-
-### Claude Code / Cursor don't show borg tools after setup
-
-1. Restart the IDE completely (not just the chat)
-2. Check the IDE's MCP logs (usually in dev tools or console)
-3. Verify JSON syntax is valid in config file
-4. Try with absolute path to borg-mcp or python
-
-### Linux: ~/.config directory doesn't exist
+### `borg-mcp` not found
 
 ```bash
-mkdir -p ~/.config/claude
-mkdir -p ~/.cursor
+python3 -m pip install agent-borg
+python3 -c "import sysconfig; print(sysconfig.get_path('scripts'))"
 ```
+
+Use the printed scripts directory to build an absolute command path if your MCP client cannot find `borg-mcp`.
+
+### MCP tools do not appear
+
+1. Fully restart the agent host/IDE.
+2. Confirm the JSON config is valid.
+3. Confirm the configured `BORG_HOME` path is absolute.
+4. Run `borg-doctor --json` and fix any failed check.

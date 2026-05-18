@@ -1,43 +1,30 @@
-# Borg docs index
+# Borg docs
 
-Start here: [`../README.md`](../README.md)
+Start with the root [`README.md`](../README.md). It is the canonical public first-user path.
 
-The root README is the canonical first-user and evaluator path for Borg:
+## Current public docs
 
-- install
-- verify
-- connect MCP
-- run first CLI/Python queries
-- prime an agent to call Borg
-- inspect readiness/security evidence
-- understand honest limitations
+- [`QUICKSTART.md`](QUICKSTART.md) — shortest copy-paste path
+- [`TRYING_BORG.md`](TRYING_BORG.md) — detailed first-user setup
+- [`MCP_SETUP.md`](MCP_SETUP.md) — Claude Code, Cursor, and generic MCP setup
+- [`ONBOARDING.md`](ONBOARDING.md) — deterministic Claude onboarding gates
+- [`FIRST_10_BETA_READINESS.md`](FIRST_10_BETA_READINESS.md) — first-10 beta contract
+- [`READINESS.md`](READINESS.md) — current readiness status and honest launch boundary
+- [`SECURITY_HARDENING_BASELINE.md`](SECURITY_HARDENING_BASELINE.md) — security gate summary
+- [`../eval/security_hardening_baseline.json`](../eval/security_hardening_baseline.json) — machine-readable security baseline
+- [`PRIVACY_MODEL.md`](PRIVACY_MODEL.md) — privacy model
+- [`PROMPT_INJECTION_THREAT_MODEL.md`](PROMPT_INJECTION_THREAT_MODEL.md) — prompt-injection threat model
+- [`TRUST_AND_PROMOTION.md`](TRUST_AND_PROMOTION.md) — trust and promotion rules
+- [`REVOCATION_AND_DELETION.md`](REVOCATION_AND_DELETION.md) — revocation/deletion policy
+- [`LEARNING_ATOM_SCHEMA.md`](LEARNING_ATOM_SCHEMA.md) — learning atom schema
 
-## Key docs
+## Archive
 
-- [Trying Borg / detailed setup](TRYING_BORG.md)
-- [MCP setup](MCP_SETUP.md)
-- [Integration guide](INTEGRATION_GUIDE.md)
-- [Security hardening baseline](SECURITY_HARDENING_BASELINE.md)
-- [First-10 beta readiness contract](FIRST_10_BETA_READINESS.md)
-- [Privacy model](PRIVACY_MODEL.md)
-- [Prompt-injection threat model](PROMPT_INJECTION_THREAT_MODEL.md)
-- [Trust and promotion](TRUST_AND_PROMOTION.md)
-- [Revocation and deletion](REVOCATION_AND_DELETION.md)
-- [Learning atom schema](LEARNING_ATOM_SCHEMA.md)
-- [Production / 1000-user readiness status](20260504-1123_BORG_PRODUCTION_1000_READINESS_STATUS.md)
-- [20260513 full audit + observe confidence-gate closure](20260513_BORG_FULL_AUDIT_AND_OBSERVE_CONFIDENCE_GATE.md)
-- [20260513 multi-repo production cleanup / cutover proposal](20260513_BORG_MULTI_REPO_PRODUCTION_CLEANUP_CUTOVER_PROPOSAL.md)
-- [20260513 deeper production cutover execution board](20260513_BORG_DEEP_CUTOVER_EXECUTION_BOARD.md)
+Historical audits, experiments, marketing drafts, status snapshots, and operator notes live under [`archive/`](archive/).
+They are retained for provenance, but they are not current product claims or first-user instructions.
 
-## Current truth source
+## Current truth
 
-Do not use old roadmap or design docs as product claims without checking current gate artifacts:
-
-- [`../PROJECT_STATUS.md`](../PROJECT_STATUS.md)
-- [`../GO_NO_GO_DECISION.md`](../GO_NO_GO_DECISION.md)
-- [`../eval/uat_scoreboard_snapshot.json`](../eval/uat_scoreboard_snapshot.json)
-- [`../eval/security_hardening_baseline.json`](../eval/security_hardening_baseline.json)
-
-## Honest status
-
-Current local security/readiness gates are green. External-user network effects and statistically significant agent-level task-success lift are not yet proven.
+- Controlled first-10 beta: ready to share.
+- Public self-serve launch: not yet; requires real external-user evidence.
+- Statistically significant agent-level success lift: not yet proven.
