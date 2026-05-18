@@ -97,7 +97,49 @@ Use absolute paths in MCP env blocks. Do not rely on `~` expansion inside MCP cl
 
 ---
 
-## 3. First useful commands
+## 3. Hermes + Telegram + ChatGPT setup
+
+If you use Hermes as the agent, Telegram as the chat UI, and ChatGPT/OpenAI as the model, Borg still works the same way: connect Borg as an MCP server inside Hermes. The model provider is not important; Hermes provides the tool access.
+
+Run this on the same machine/server where the Hermes gateway runs:
+
+```bash
+python3 -m pip install --upgrade agent-borg
+borg-doctor --json
+mkdir -p ~/.borg
+
+hermes mcp add borg --command "$(command -v borg-mcp)" --env BORG_HOME="$HOME/.borg"
+hermes mcp test borg
+
+# restart Hermes so Telegram sessions see the new MCP tools
+hermes gateway restart
+```
+
+If you normally control Hermes from Telegram, send this after setup:
+
+```text
+/restart
+```
+
+Then test from Telegram:
+
+```text
+Use Borg first on this error:
+ModuleNotFoundError: No module named flask
+
+Show me:
+1. what Borg matched
+2. ACTION
+3. STOP / what dead-end it avoids
+4. VERIFY
+5. whether Borg had high confidence or no confident match
+```
+
+Expected value moment: Borg should show a concrete ACTION / STOP / VERIFY packet, plus a short receipt explaining what it matched and what dead-end it prevented.
+
+---
+
+## 4. First useful commands
 
 ```bash
 # Fastest day-one value: paste an error, get ACTION / STOP / VERIFY
@@ -141,7 +183,7 @@ for hit in hits:
 
 ---
 
-## 4. Agent instruction / priming
+## 5. Agent instruction / priming
 
 Put this in your project `CLAUDE.md`, agent system prompt, or first user message:
 
@@ -153,7 +195,7 @@ Why: agents often do not discover optional tools unless explicitly primed.
 
 ---
 
-## 5. MCP tools
+## 6. MCP tools
 
 Core tools available through the MCP server include:
 
@@ -173,7 +215,7 @@ Use `borg_rescue` for concrete errors/failing command output. Use `borg_observe`
 
 ---
 
-## 6. What is proven right now
+## 7. What is proven right now
 
 Current local gate snapshot in this repo:
 
