@@ -7,6 +7,7 @@ Give it an error or task; it returns an `ACTION / STOP / VERIFY` packet, or a cl
 **Installed CLI:** `borg`  
 **MCP server command:** `borg-mcp`  
 **Canonical repo:** https://github.com/borg-farther/Borg-Directory
+**Canonical/no-loss policy:** [`docs/CANONICAL_REPO.md`](docs/CANONICAL_REPO.md)
 
 Name warning: Borg is the product name and `borg` is the command, but the package you install is **`agent-borg`**.
 Do **not** run `pip install borg`, `brew install borgbackup`, `apt install borgbackup`, `apt-get install borgbackup`, `dnf install borgbackup`, or `pacman -S borg`; those install unrelated Borg/BorgBackup software and will not provide Borg's AI-agent MCP tools.
