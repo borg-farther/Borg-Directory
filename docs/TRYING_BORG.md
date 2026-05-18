@@ -1,261 +1,115 @@
-# Trying Borg — Quick Setup Guide
+# Trying Borg
 
-**agent-borg** is a federated knowledge exchange for AI agents. It ships a CLI and MCP server that gives your agent access to battle-tested debugging workflows.
+This is the detailed first-user setup guide. The shortest path is in [`QUICKSTART.md`](QUICKSTART.md).
 
-**agent-borg 3.3.0** | GitHub: `borg-farther/Borg-Directory` | CLI: `borg` | MCP: `borg-mcp`
-
----
-
-## 1. INSTALLATION
+## 1. Install
 
 Borg requires Python 3.10+.
 
 ```bash
-# Install via pip (one of these methods)
-pip install agent-borg                    # system-wide (may need --break-system-packages)
-pipx install agent-borg                   # recommended — isolated environment
-pip install --user agent-borg             # user-local
-```
-
-**Verify installation:**
-```bash
+python3 -m pip install agent-borg
 borg version
-# Expected output: agent-borg 3.3.0
+borg-doctor --json
 ```
 
-If `borg: command not found`, your pipx/bin directory may not be in PATH. Add it:
+If you prefer an isolated CLI install:
+
 ```bash
-export PATH="$HOME/.local/bin:$PATH"      # Linux/macOS
-# or find it: python3 -c "import sysconfig; print(sysconfig.get_path('scripts'))"
+pipx install agent-borg
 ```
 
----
+If `borg` is not found, check your Python scripts directory:
 
-## 2. CLAUDE CODE SETUP (MCP)
+```bash
+python3 -c "import sysconfig; print(sysconfig.get_path('scripts'))"
+```
 
-Borg works as an MCP server, giving Claude Code access to borg tools.
+## 2. First value check
 
-### one command (canonical)
+```bash
+borg rescue "ModuleNotFoundError: No module named flask"
+```
+
+Expected shape:
+
+```text
+ACTION: ...
+STOP: ...
+VERIFY: ...
+CONFIDENCE: ...
+```
+
+If Borg has no confident match, it should say `NO_CONFIDENT_MATCH` instead of forcing unrelated advice.
+
+## 3. Search and pack workflow
+
+```bash
+borg search "django migration table already exists"
+borg try systematic-debugging
+borg pull borg://hermes/systematic-debugging
+borg apply systematic-debugging --task "Fix login bug where users get 401"
+```
+
+After a real outcome, record feedback:
+
+```bash
+borg feedback-v3 --pack systematic-debugging --success yes
+# or
+borg feedback-v3 --pack systematic-debugging --success no
+```
+
+This records outcome data. Shared learning depends on explicit publishing/aggregation and is still being validated.
+
+## 4. Claude Code setup
 
 ```bash
 borg setup-claude --scope user --verify --fix
 ```
 
-what this does in one pass:
-- writes/merges `mcpServers.borg` into `~/.claude.json`
-- enforces absolute `BORG_HOME` (never `~`)
-- creates `BORG_HOME` if missing (`--fix`)
-- runs initialize handshake before writing config (`--verify`) so broken runtime is rejected early
+What this does:
 
-### if setup fails
+1. resolves the MCP launch command;
+2. writes/merges `mcpServers.borg` into the selected config;
+3. creates Borg home storage if missing;
+4. uses an absolute `BORG_HOME` path;
+5. runs an MCP initialize handshake and prints PASS/FAIL.
 
-you now get direct remediation output from setup itself (for example `pip install agent-borg` when import fails).
+After setup, fully restart Claude Code and ask what Borg tools are available.
 
-### avoid this anti-pattern
-
-do **not** manually run `claude mcp add-json` with `BORG_HOME=~/.borg` unless you know exactly why — `~` may not expand in claude's spawn environment.
-use the command above instead.
-
-### restart claude code
-
-after setup, **fully restart Claude Code** (not just chat tabs).
-
-### what you get:
-
-| Tool | Description |
-|------|-------------|
-| `borg_search` | Search borg packs by keyword |
-| `borg_observe` | Proactive guidance at task start |
-| `borg_try` | Preview a pack before applying |
-| `borg_apply` | Execute a pack (start / advance / complete) |
-| `borg_feedback` | Record outcome after a pack |
-| `borg_suggest` | Get pack suggestions after failures |
-| `borg_debug` | Get structured debugging guidance |
-
----
-
-## 3. CURSOR SETUP
-
-Add to `~/.cursor/mcp.json`:
+## 5. Generic MCP setup
 
 ```json
 {
   "mcpServers": {
     "borg": {
       "command": "borg-mcp",
-      "args": []
+      "args": [],
+      "env": { "BORG_HOME": "/absolute/path/to/.borg" }
     }
   }
 }
 ```
 
-Or using explicit Python:
-```json
-{
-  "mcpServers": {
-    "borg": {
-      "command": "python3",
-      "args": ["-m", "borg.integrations.mcp_server"]
-    }
-  }
-}
-```
-
-### Verify Cursor sees borg
-
-Restart Cursor. Ask: "What MCP tools do you have available from borg?"
-
----
-
-## 4. MANUAL MCP CONFIGURATION
-
-Any MCP client that supports stdio-based servers can use borg.
-
-### Basic stdio configuration
-
-```json
-{
-  "mcpServers": {
-    "borg": {
-      "command": "borg-mcp",
-      "args": []
-    }
-  }
-}
-```
-
-### With explicit Python interpreter
+If `borg-mcp` is not on PATH:
 
 ```json
 {
   "mcpServers": {
     "borg": {
       "command": "python3",
-      "args": ["-m", "borg.integrations.mcp_server"]
+      "args": ["-m", "borg.integrations.mcp_server"],
+      "env": { "BORG_HOME": "/absolute/path/to/.borg" }
     }
   }
 }
 ```
 
-### Manual JSON-RPC 2.0 over stdio
+## 6. Agent priming
 
-borg-mcp speaks JSON-RPC 2.0 over stdin/stdout. You can test it manually:
-
-```bash
-# Initialize
-echo '{"jsonrpc":"2.0","id":1,"method":"initialize","params":{"protocolVersion":"2024-11-05","capabilities":{},"clientInfo":{"name":"test","version":"1.0"}}}' | borg-mcp
-
-# List tools
-echo '{"jsonrpc":"2.0","id":2,"method":"tools/list","params":{}}' | borg-mcp
-
-# Call borg_search
-echo '{"jsonrpc":"2.0","id":3,"method":"tools/call","params":{"name":"borg_search","arguments":{"query":"debugging"}}}' | borg-mcp
+```text
+{PRIMING_PARAGRAPH}
 ```
 
----
+## 7. Readiness boundary
 
-## 5. CLI QUICK REFERENCE
-
-```bash
-# Search for relevant packs
-borg search debugging
-borg search "null pointer"
-borg search django migration
-
-# Get debugging guidance for an error
-borg debug 'TypeError: NoneType object has no attribute get'
-
-# List all available packs
-borg list
-
-# Show a specific pack
-borg show systematic-debugging
-
-# Preview a pack before applying
-borg try borg://systematic-debugging
-
-# Apply a pack to your current task
-borg apply systematic-debugging --task "Fix login bug where users get 401"
-
-# Record what worked (helps future agents)
-borg feedback-v3 --pack systematic-debugging --success yes
-
-# Export pack for your editor
-borg generate systematic-debugging --format claude
-borg generate systematic-debugging --format cursor
-```
-
----
-
-## 6. TROUBLESHOOTING
-
-### "borg: command not found" after install
-
-```bash
-# Check where borg was installed
-pip show agent-borg | grep Location
-
-# Try running via python module
-python3 -m borg.cli --version
-
-# Or use the full path
-~/.local/bin/borg version
-```
-
-### "command not found" or server not responding (MCP)
-
-1. Verify borg-mcp is installed:
-```bash
-which borg-mcp
-borg-mcp --version 2>&1 || echo "borg-mcp not in PATH"
-```
-
-2. Find the correct path:
-```bash
-pip show agent-borg | grep Location
-# borg-mcp is at: <Location>/../../../bin/borg-mcp
-```
-
-3. Use absolute path in your MCP config.
-
-### "ModuleNotFoundError: No module named 'borg'"
-
-This usually means your Python environment is different from where borg was installed.
-
-```bash
-# Check which python/pip you're using
-which python3
-python3 --version
-
-# Reinstall in the correct environment
-pipx install agent-borg   # recommended
-# or
-python3 -m pip install agent-borg --user
-```
-
-### Claude Code / Cursor don't show borg tools after setup
-
-1. **Fully restart** the IDE (not just the chat session)
-2. Check the IDE's MCP logs (usually in dev tools or console)
-3. Verify JSON syntax is valid in the config file
-4. Try with absolute path to `borg-mcp` or `python3`
-
-### Still stuck?
-
-```bash
-# Run the CLI directly to see errors
-borg search "test" 2>&1
-
-# Check version
-borg --version
-```
-
-For more help, open an issue at: https://github.com/borg-farther/Borg-Directory/issues
-
----
-
-## 7. COLD START
-
-On a fresh install, borg ships with a built-in seed corpus so `borg search` returns results immediately — no network required.
-
-If you have `BORG_DISABLE_SEEDS=1` set, seeds are disabled. Unset it to use the built-in corpus.
+Borg is ready for controlled first-10 beta sharing. It is not yet claiming public self-serve launch readiness or statistically significant agent-level success lift. See [`READINESS.md`](READINESS.md).
