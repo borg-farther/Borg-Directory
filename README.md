@@ -152,7 +152,7 @@ If `py` is unavailable, replace `py` with `python`.
 If you intentionally want Borg inside the active Python environment instead of an isolated CLI install:
 
 ```bash
-python3 -m pip install agent-borg
+python3 -m pip install https://github.com/borg-farther/Borg-Directory/releases/download/v3.3.3/agent_borg-3.3.3-py3-none-any.whl
 python3 -m pip install 'agent-borg[embeddings]'  # optional semantic search
 python3 -m pip install 'agent-borg[crypto]'      # optional Ed25519 signing support
 python3 -m pip install 'agent-borg[all]'         # optional dev + semantic + crypto
@@ -161,7 +161,7 @@ python3 -m pip install 'agent-borg[all]'         # optional dev + semantic + cry
 Windows PowerShell:
 
 ```powershell
-py -m pip install agent-borg
+py -m pip install https://github.com/borg-farther/Borg-Directory/releases/download/v3.3.3/agent_borg-3.3.3-py3-none-any.whl
 py -m pip install "agent-borg[embeddings]"
 py -m pip install "agent-borg[crypto]"
 py -m pip install "agent-borg[all]"
