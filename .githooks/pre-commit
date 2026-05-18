@@ -1,0 +1,66 @@
+#!/usr/bin/env bash
+# borg pre-commit: enforce canonical author identity.
+#
+# Installed 2026-04-08 as part of the workspace housekeeping sweep
+# (workstreams 5.2 / 5.3 in docs/20260408-1118_borg_roadmap/).
+#
+# Rationale: subagent prompts have historically overridden git user.name to
+# "Claude Code" or similar, which pollutes `git log --author`. The canonical
+# public identity for this repo is:
+#
+#     user.name  = borg-farther
+#     user.email = admin@borg.directory
+#
+# (Changed 2026-05-18 from previous Hermes Agent <aleshbrown@gmail.com> to
+# unify local commits with the GitHub-account identity used on PR-merges.)
+#
+# A commit-msg hook can't see the author; a pre-commit hook can read
+# `git config` before the commit object is written, so that's where we
+# enforce the rule.
+#
+# Bypass in emergencies with: git commit --no-verify
+# Or override per-commit with: git -c user.name='borg-farther' -c user.email='admin@borg.directory' commit ...
+
+set -euo pipefail
+
+expected_name="borg-farther"
+expected_email="admin@borg.directory"
+
+# Prefer per-commit overrides (`git -c user.name=...`) which show up via
+# `git var GIT_AUTHOR_IDENT`. Fall back to `git config` if not set.
+author_ident="$(git var GIT_AUTHOR_IDENT 2>/dev/null || true)"
+
+if [ -n "$author_ident" ]; then
+    # Format: "Name <email> <timestamp> <tz>"
+    actual_name="$(printf '%s' "$author_ident" | sed -E 's/ <[^>]*> [0-9]+ [-+0-9]+$//')"
+    actual_email="$(printf '%s' "$author_ident" | sed -E 's/^.*<([^>]*)>.*$/\1/')"
+else
+    actual_name="$(git config user.name || echo '')"
+    actual_email="$(git config user.email || echo '')"
+fi
+
+if [ "$actual_name" != "$expected_name" ] || [ "$actual_email" != "$expected_email" ]; then
+    cat >&2 <<EOF
+pre-commit: refusing commit — author identity does not match the borg canonical identity.
+
+    expected: $expected_name <$expected_email>
+    got:      $actual_name <$actual_email>
+
+Fix with one of:
+
+  1. Set it permanently for this repo:
+       git config user.name  'borg-farther'
+       git config user.email 'admin@borg.directory'
+
+  2. Override per-commit (recommended for subagents):
+       git -c user.name='borg-farther' -c user.email='admin@borg.directory' commit ...
+
+  3. Emergency bypass:
+       git commit --no-verify ...
+
+See docs/20260408-1118_borg_roadmap/AUTHORSHIP_STANDARD.md for the full rationale.
+EOF
+    exit 1
+fi
+
+exit 0
