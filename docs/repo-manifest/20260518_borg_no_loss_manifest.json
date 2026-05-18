@@ -1,0 +1,102 @@
+{
+  "rev": "20260518-1427",
+  "status": "implemented_guardrails_no_destructive_cleanup",
+  "canonical": {
+    "github": "https://github.com/borg-farther/Borg-Directory",
+    "local_path": "/root/hermes-workspace/borg",
+    "package": "agent-borg",
+    "cli": "borg",
+    "mcp_server": "borg-mcp",
+    "decision": "only active public product repo"
+  },
+  "snapshot": {
+    "local_path": "/root/hermes-workspace/borg-no-loss-snapshots/20260518-1427",
+    "contents": [
+      "git bundles for git repositories",
+      "working-tree tarballs excluding .git, generated caches, node_modules, virtualenvs, and common secret files",
+      "status, diffstat, tracked/untracked file lists, SHA256SUMS"
+    ],
+    "public_release_artifact": false
+  },
+  "non_destructive_policy": [
+    "no deletes before archive",
+    "no git clean before source inventory",
+    "no force-push or branch pruning before bundle backup",
+    "no repo archiving/privatizing before unique assets are classified",
+    "no public setup docs pointing at stale repos or non-shipped commands"
+  ],
+  "legacy_repos": [
+    {
+      "name": "borg-init",
+      "github": "https://github.com/borg-farther/borg-init",
+      "local_path": "/root/hermes-workspace/borg-init",
+      "visibility": "public",
+      "role": "NPM/NPX installer adjunct prototype",
+      "unique_assets": ["multi-client MCP config detection", "atomic JSON config merge", "hosted federation registration", "~/.borg/config.toml bootstrap"],
+      "decision": "keep or import as installer adjunct; not canonical product repo"
+    },
+    {
+      "name": "borg-collective-v1",
+      "github": "https://github.com/borg-farther/borg-collective-v1",
+      "local_path": "/root/hermes-workspace/borg-collective-v1",
+      "visibility": "private",
+      "role": "Cloudflare Worker/D1 hosted federation backend",
+      "unique_assets": ["hosted REST API", "D1 migrations", "hybrid search", "feedback funnel", "metrics/status endpoints", "Worker auth/rate-limit/security", "MCP discovery/card endpoints"],
+      "decision": "preserve as private service prototype; not superseded by canonical local package"
+    },
+    {
+      "name": "borg-collective-py",
+      "github": "https://github.com/borg-farther/borg-collective-py",
+      "local_path": "/root/hermes-workspace/borg-collective-py",
+      "visibility": "private",
+      "role": "Python SDK/CLI/MCP client for hosted federation",
+      "unique_assets": ["sync/async hosted client", "borg-collective CLI", "federation MCP tools", "offline queue", "redaction", "Ed25519 signing", "transport retries", "integration docs", "closure tests"],
+      "decision": "preserve; not superseded by canonical local package"
+    },
+    {
+      "name": "guild-v2 / guild-tools",
+      "local_path": "/root/hermes-workspace/guild-v2",
+      "role": "older runtime predecessor and experiment line",
+      "unique_assets": ["borg/wiki knowledge layer", "borg/extraction.py", "borg/mutation PackMutator/MutationPlan", "borg/meta_mcp hillclimber", "borg_extract and borg_wiki MCP tools"],
+      "decision": "selectively migrate or archive unique experiments before any cleanup"
+    },
+    {
+      "name": "guild-packs",
+      "local_path": "/root/hermes-workspace/guild-packs",
+      "role": "original workflow-pack registry",
+      "unique_assets": ["packs/*.yaml", "patterns/*.arp.yaml", "schema/v2", "index.json", "provenance and sybil scripts"],
+      "decision": "preserve registry snapshot; markdown examples are not lossless replacements"
+    },
+    {
+      "name": "guild-benchmark",
+      "local_path": "/root/hermes-workspace/guild-benchmark",
+      "role": "benchmark harness with executable challenge fixtures",
+      "unique_assets": ["challenge source trees", "verify.sh scripts", "runner.py", "run_benchmark.py", "analyze.py", "metrics contract tests"],
+      "decision": "preserve as eval fixtures or keep private benchmark repo"
+    },
+    {
+      "name": "guild-mcp-package",
+      "local_path": "/root/hermes-workspace/guild-mcp-package",
+      "role": "standalone legacy guild_* MCP package",
+      "unique_assets": ["guild_* compatibility", "GuildMCPClient stdio convenience client"],
+      "decision": "archive only after compatibility decision; not a git repo"
+    }
+  ],
+  "implemented_files": [
+    "AGENTS.md",
+    "docs/CANONICAL_REPO.md",
+    "docs/repo-manifest/20260518_borg_no_loss_manifest.json",
+    "tests/packaging/test_canonical_repo_no_loss_guardrails.py"
+  ],
+  "public_confusion_fixed": [
+    "examples/skills/borg/SKILL.md stale homepage and borgd compatibility text",
+    "borg/seeds_data/borg/SKILL.md stale homepage and borgd compatibility text",
+    "borg-init README/package metadata now identify it as an installer adjunct and point to the canonical Borg-Directory repo"
+  ],
+  "remaining_operator_gated": [
+    "decide borg-init public/private/import path",
+    "enable GitHub branch protection/rulesets",
+    "decide whether hosted federation service repos become public later",
+    "decide whether old private Guild repos are archived read-only"
+  ]
+}

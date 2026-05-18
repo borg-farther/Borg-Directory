@@ -11,6 +11,7 @@ ROOT = Path(__file__).resolve().parents[2]
 ALLOWED_ROOT_FILES = {
     ".dockerignore",
     ".gitignore",
+    "AGENTS.md",
     "CHANGELOG.md",
     "Dockerfile",
     "LICENSE",
