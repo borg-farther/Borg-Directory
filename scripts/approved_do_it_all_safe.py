@@ -32,7 +32,7 @@ COMMIT_MSG = "chore(borg): public waitlist readiness proof"
 PRIOR_ALLOWLIST = {
     "borg/core/confidence_gate.py",
     "borg/integrations/mcp_server.py",
-    "borg/tests/test_confidence_gate.py",
+    "tests/readiness/test_confidence_gate.py",
     "docs/BORG_PROOF_DASHBOARD.md",
     "docs/BORG_PROOF_DASHBOARD.html",
     "docs/public/proof-dashboard/index.html",
@@ -59,13 +59,13 @@ ALLOWLIST = PRIOR_ALLOWLIST | {
 }
 
 GATES = [
-    [sys.executable, "-m", "pytest", "-q", "borg/tests/test_confidence_gate.py", "borg/tests/test_borg_observe_confidence_gate.py", "borg/tests/test_runtime_fingerprint.py"],
+    [sys.executable, "-m", "pytest", "-q", "tests/readiness/test_confidence_gate.py", "tests/mcp/test_borg_observe_confidence_gate.py", "tests/mcp/test_runtime_fingerprint.py"],
     [sys.executable, "scripts/build_borg_proof_dashboard.py"],
     [sys.executable, "scripts/borg_proof_dashboard_lint.py"],
     [sys.executable, "-m", "pytest", "-q", "eval/tests/test_borg_proof_dashboard.py"],
     [sys.executable, "eval/run_first_user_release_gate.py"],
     [sys.executable, "scripts/security_gate_check.py"],
-    [sys.executable, "-m", "pytest", "-q", "borg/tests/test_privacy_structured.py", "borg/tests/test_prompt_injection.py", "borg/tests/test_atom_policy.py", "borg/tests/test_atom_retrieval_firewall.py", "borg/tests/test_privacy.py"],
+    [sys.executable, "-m", "pytest", "-q", "tests/security/test_privacy_structured.py", "tests/security/test_prompt_injection.py", "tests/security/test_atom_policy.py", "tests/security/test_atom_retrieval_firewall.py", "tests/security/test_privacy.py"],
     [sys.executable, "scripts/fix_public_launch_blockers_safe.py"],
 ]
 

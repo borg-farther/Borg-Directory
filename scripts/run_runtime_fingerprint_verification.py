@@ -22,10 +22,10 @@ COMMANDS = [
         'name': 'borg_pytest_confidence_runtime_first10',
         'cwd': str(ROOT),
         'cmd': [sys.executable, '-m', 'pytest', '-q',
-                'borg/tests/test_confidence_gate.py',
-                'borg/tests/test_borg_observe_confidence_gate.py',
-                'borg/tests/test_runtime_fingerprint.py',
-                'borg/tests/test_first_10_readiness.py'],
+                'tests/readiness/test_confidence_gate.py',
+                'tests/mcp/test_borg_observe_confidence_gate.py',
+                'tests/mcp/test_runtime_fingerprint.py',
+                'tests/readiness/test_first_10_readiness.py'],
         'timeout': 180,
     },
     {
@@ -145,7 +145,7 @@ for item in parts:
         classification = 'commit_doc'; reason = 'cleanup/source-of-truth audit artifact'
     elif p.startswith('docs/') or p in {'README.md','PROJECT_STATUS.md','GO_NO_GO_DECISION.md','LOAD_TEST_REPORT_10.md','LOAD_TEST_REPORT_100.md','LOAD_TEST_REPORT_1000.md','UAT_RESULTS.md'}:
         classification = 'commit_doc'; reason = 'documentation/readiness/proof artifact'
-    elif p.startswith('borg/tests/') or p.startswith('eval/tests/') or '/tests/' in p:
+    elif p.startswith('tests/') or p.startswith('eval/tests/') or '/tests/' in p:
         classification = 'commit_test'; reason = 'test coverage or verification artifact'
     elif p.startswith('borg/') or p.startswith('scripts/') or p.startswith('eval/') or p == 'pyproject.toml':
         classification = 'commit_product_code'; reason = 'product/runtime/eval source under canonical repo'

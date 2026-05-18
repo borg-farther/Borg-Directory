@@ -25,6 +25,8 @@ from unittest.mock import patch
 
 
 def _reload_traces_stack():
+    import borg.core.dirs as _d
+    importlib.reload(_d)
     import borg.core.traces as _t
     importlib.reload(_t)
     import borg.core.trace_matcher as _tm
@@ -41,6 +43,9 @@ class TestObserveSearchRoundtrip(unittest.TestCase):
         self.tmp = tempfile.mkdtemp()
         self.borg_home = Path(self.tmp) / ".borg"
         self.borg_home.mkdir(parents=True, exist_ok=True)
+        # borg_search surfaces traces only when the Borg guild dir exists;
+        # this mirrors a real initialized BORG_HOME while keeping the test isolated.
+        (self.borg_home / "guild").mkdir(parents=True, exist_ok=True)
         self._old_env = os.environ.get("BORG_HOME")
         os.environ["BORG_HOME"] = str(self.borg_home)
         self._traces = _reload_traces_stack()

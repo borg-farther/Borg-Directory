@@ -39,7 +39,7 @@ Borg treats all historical memory as untrusted data. Retrieved atoms are advisor
 ## Verification
 
 ```bash
-python -m pytest -q borg/tests/test_prompt_injection.py borg/tests/test_atom_retrieval_firewall.py
+python -m pytest -q tests/security/test_prompt_injection.py tests/security/test_atom_retrieval_firewall.py
 ```
 
 ## Important limitation

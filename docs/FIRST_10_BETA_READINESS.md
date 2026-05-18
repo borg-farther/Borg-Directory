@@ -81,8 +81,8 @@ Pass criteria:
 
 Proof:
 
-- `borg/tests/test_rescue.py`
-- `borg/tests/test_first_10_readiness.py`
+- `tests/core/test_rescue.py`
+- `tests/readiness/test_first_10_readiness.py`
 
 ### G4 — fresh-user install path is canonical
 

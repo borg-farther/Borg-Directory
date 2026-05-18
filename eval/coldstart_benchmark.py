@@ -25,7 +25,7 @@ import sys
 import os
 from pathlib import Path
 
-FIXTURE_PATH = Path(__file__).parent.parent / "borg" / "tests" / "fixtures" / "swebench_coldstart_50.json"
+FIXTURE_PATH = Path(__file__).parent.parent / "tests" / "fixtures" / "swebench_coldstart_50.json"
 REPORT_PATH = Path(__file__).parent / "coldstart_report.json"
 
 

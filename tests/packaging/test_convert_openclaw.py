@@ -52,7 +52,7 @@ from borg.core.convert import (
 # ---------------------------------------------------------------------------
 
 PACKS_DIR = Path(os.environ.get("BORG_TEST_PACKS_DIR", "/root/hermes-workspace/guild-packs/packs"))
-FIXTURES_DIR = Path(__file__).parent / "fixtures" / "openclaw"
+FIXTURES_DIR = Path(__file__).resolve().parents[1] / "fixtures" / "openclaw"
 QUICK_VALIDATE_SRC = Path("/tmp/openclaw-analysis/skills/skill-creator/scripts/quick_validate.py")
 QUICK_VALIDATE_FIXTURE = FIXTURES_DIR / "quick_validate.py"
 
@@ -649,10 +649,10 @@ class TestR1ExistingConvertTests:
     def test_existing_convert_tests_pass(self):
         """Run the existing test_convert.py and verify it passes."""
         result = subprocess.run(
-            [sys.executable, "-m", "pytest", str(Path(__file__).parent / "test_convert.py"), "-v"],
+            [sys.executable, "-m", "pytest", str(Path(__file__).resolve().parents[1] / "core" / "test_convert.py"), "-v"],
             capture_output=True,
             text=True,
-            cwd=str(Path(__file__).parent.parent.parent),
+            cwd=str(Path(__file__).resolve().parents[2]),
         )
         assert result.returncode == 0, \
             f"Existing convert.py tests failed:\n{result.stdout}\n{result.stderr}"

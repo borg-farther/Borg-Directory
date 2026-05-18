@@ -111,8 +111,8 @@ def main() -> int:
     soak = float(os.getenv("BORG_READINESS_SOAK_SECONDS", "30"))
     py = sys.executable
     steps = [
-        ("version_distribution_tests", [py, "-m", "pytest", "-q", "borg/tests/test_version_consistency.py", "borg/tests/test_distribution_readiness.py", "borg/tests/test_runtime_doctor.py"], 300),
-        ("atom_security_tests", [py, "-m", "pytest", "-q", "borg/tests/test_atom_tenant.py", "borg/tests/test_atom_policy.py", "borg/tests/test_learning_atoms.py", "borg/tests/test_atom_store.py", "borg/tests/test_atom_retrieval_firewall.py", "borg/tests/test_learning_atom_publish.py", "borg/tests/test_cli_atom.py", "borg/tests/test_privacy_structured.py", "borg/tests/test_prompt_injection.py", "borg/tests/test_privacy.py"], 600),
+        ("version_distribution_tests", [py, "-m", "pytest", "-q", "tests/packaging/test_version_consistency.py", "tests/packaging/test_distribution_readiness.py", "tests/cli/test_runtime_doctor.py"], 300),
+        ("atom_security_tests", [py, "-m", "pytest", "-q", "tests/security/test_atom_tenant.py", "tests/security/test_atom_policy.py", "tests/security/test_learning_atoms.py", "tests/security/test_atom_store.py", "tests/security/test_atom_retrieval_firewall.py", "tests/security/test_learning_atom_publish.py", "tests/cli/test_cli_atom.py", "tests/security/test_privacy_structured.py", "tests/security/test_prompt_injection.py", "tests/security/test_privacy.py"], 600),
         ("security_gate", [py, "scripts/security_gate_check.py"], 120),
         ("atom_fixture_corpus", [py, "scripts/run_atom_fixture_corpus.py"], 120),
         ("load_10", [py, "eval/load_soak.py", "--users", "10", "--duration", str(soak)], int(soak + 180)),
