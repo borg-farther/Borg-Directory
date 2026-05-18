@@ -36,3 +36,9 @@ dist/
 # Local Hermes/planning and one-off audit scratch dirs
 .hermes/
 tmp_readiness_audit_*/
+
+# Build artefacts (added during repo tidy)
+.coverage
+build/
+dist/
+*.egg-info/
