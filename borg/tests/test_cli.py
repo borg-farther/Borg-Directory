@@ -657,10 +657,15 @@ def test_setup_claude_verify_failure_shows_install_hint_and_does_not_write_confi
     assert not (fake_home / ".claude.json").exists()
 
 
-def test_borg_mcp_entry_falls_back_to_current_python_module_when_no_local_script():
+def test_borg_mcp_entry_falls_back_to_current_python_module_when_no_local_script(tmp_path, monkeypatch):
     """Fresh setup must avoid wiring a stale global borg-mcp from PATH."""
+    fake_python = tmp_path / "venv" / "bin" / "python"
+    fake_python.parent.mkdir(parents=True)
+    fake_python.write_text("", encoding="utf-8")
+    monkeypatch.setattr(sys, "executable", str(fake_python))
+
     entry = cli_module._borg_mcp_server_entry("/tmp/path")["mcpServers"]["borg"]
-    assert entry["command"] == sys.executable
+    assert entry["command"] == str(fake_python)
     assert entry["args"] == ["-m", "borg.integrations.mcp_server"]
 
 

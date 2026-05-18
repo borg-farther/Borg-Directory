@@ -342,6 +342,8 @@ def check_confidence_decay(pack: dict) -> dict:
         }
 
     try:
+        if isinstance(created, str) and created.endswith("Z"):
+            created = f"{created[:-1]}+00:00"
         created_dt = datetime.fromisoformat(created)
         if created_dt.tzinfo is None:
             created_dt = created_dt.replace(tzinfo=timezone.utc)

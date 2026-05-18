@@ -491,11 +491,18 @@ def load_pack(pack_identifier: str) -> Dict[str, Any]:
         FileNotFoundError: If no file is found for the identifier.
         ValueError: If the file does not contain a valid workflow pack.
     """
+    import os
     import pathlib
     import yaml
 
+    def _readable_file(candidate: pathlib.Path) -> bool:
+        try:
+            return candidate.exists() and candidate.is_file()
+        except OSError:
+            return False
+
     path = pathlib.Path(pack_identifier)
-    if path.exists() and path.is_file():
+    if _readable_file(path):
         content = path.read_text(encoding="utf-8")
         pack = yaml.safe_load(content)
         if isinstance(pack, dict):
@@ -507,24 +514,47 @@ def load_pack(pack_identifier: str) -> Dict[str, Any]:
     borg_dir = get_borg_dir()
     candidates = [borg_dir / pack_identifier / "pack.yaml"]
 
-    # Then try as a pack name in the bundled/local guild-packs directory.
-    guild_packs_dir = pathlib.Path("/root/hermes-workspace/guild-packs/packs")
-    candidates.extend([
-        guild_packs_dir / f"{pack_identifier}.yaml",
-        guild_packs_dir / f"{pack_identifier}.workflow.yaml",
-        guild_packs_dir / f"{pack_identifier}.rubric.yaml",
-    ])
+    # Then try bundled seed packs. These are shipped with the wheel and work in CI
+    # or clean installs where maintainer-only /root/hermes-workspace paths are absent.
+    bundled_packs_dir = pathlib.Path(__file__).resolve().parents[1] / "seeds_data" / "packs"
+    pack_roots = [bundled_packs_dir]
+
+    # Optional external pack fixture directory for local development/test overrides.
+    env_packs_dir = os.environ.get("BORG_TEST_PACKS_DIR")
+    if env_packs_dir:
+        pack_roots.append(pathlib.Path(env_packs_dir))
+
+    # Backward-compatible local maintainer checkout path. Keep it last and guard all
+    # probes because CI users may not be allowed to stat paths under /root.
+    pack_roots.append(pathlib.Path("/root/hermes-workspace/guild-packs/packs"))
+
+    seen: set[str] = set()
+    for pack_root in pack_roots:
+        for suffix in (".yaml", ".workflow.yaml", ".rubric.yaml"):
+            candidate = pack_root / f"{pack_identifier}{suffix}"
+            key = str(candidate)
+            if key not in seen:
+                candidates.append(candidate)
+                seen.add(key)
 
     for candidate in candidates:
-        if candidate.exists():
+        if _readable_file(candidate):
             pack = yaml.safe_load(candidate.read_text(encoding="utf-8"))
             if isinstance(pack, dict):
                 return pack
 
     # Finally scan configured Borg workflow subdirectories for ID/slug matches.
-    if borg_dir.exists():
-        for pack_yaml in borg_dir.glob("*/pack.yaml"):
-            if pack_yaml.parent.name == pack_identifier:
+    try:
+        borg_dir_exists = borg_dir.exists()
+    except OSError:
+        borg_dir_exists = False
+    if borg_dir_exists:
+        try:
+            pack_files = list(borg_dir.glob("*/pack.yaml"))
+        except OSError:
+            pack_files = []
+        for pack_yaml in pack_files:
+            if pack_yaml.parent.name == pack_identifier and _readable_file(pack_yaml):
                 pack = yaml.safe_load(pack_yaml.read_text(encoding="utf-8"))
                 if isinstance(pack, dict):
                     return pack

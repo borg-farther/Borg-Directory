@@ -1,6 +1,7 @@
 # Borg first-10 user invite packet
 
 Generated: 2026-05-14T18:25:05Z
+Rev: 2026-05-17T11:39:07Z — install path updated to published PyPI package `agent-borg==3.3.3`.
 
 ## Exact invite message
 
@@ -13,7 +14,7 @@ Preferred isolated install:
 ```bash
 python -m pip install --user pipx
 python -m pipx ensurepath
-pipx install git+https://github.com/borg-farther/Borg-Directory.git
+pipx install agent-borg==3.3.3
 borg --version
 borg rescue "paste a REDACTED real error here"
 ```
@@ -22,10 +23,12 @@ Fallback if pipx is unavailable:
 
 ```bash
 python -m venv /tmp/borg-beta-venv
-/tmp/borg-beta-venv/bin/python -m pip install git+https://github.com/borg-farther/Borg-Directory.git
+/tmp/borg-beta-venv/bin/python -m pip install agent-borg==3.3.3
 /tmp/borg-beta-venv/bin/borg --version
 /tmp/borg-beta-venv/bin/borg rescue "paste a REDACTED real error here"
 ```
+
+Source-branch install is only for maintainer-approved pre-release testing, not the default first-10 path.
 
 ## Consent and privacy warning
 

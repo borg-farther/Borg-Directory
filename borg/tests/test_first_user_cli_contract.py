@@ -8,6 +8,7 @@ functions, because first users hit console scripts first.
 from __future__ import annotations
 
 import json
+import re
 import subprocess
 import sys
 
@@ -37,10 +38,43 @@ def test_borg_doctor_console_entrypoint_exists_and_delegates(monkeypatch, capsys
         lambda helpful=True: "recorded",
         raising=False,
     )
-    monkeypatch.setattr(
-        "subprocess.run",
-        lambda *args, **kwargs: type("Proc", (), {"stdout": '{"result":{}}', "stderr": ""})(),
-    )
+    class _FakeStdin:
+        def write(self, _text):
+            return None
+
+        def flush(self):
+            return None
+
+    class _FakeStdout:
+        def __init__(self):
+            self._lines = ['{"jsonrpc":"2.0","id":1,"result":{"serverInfo":{}}}\n']
+
+        def readline(self):
+            return self._lines.pop(0) if self._lines else ""
+
+    class _FakeStderr:
+        def readline(self):
+            return ""
+
+    class _FakeProc:
+        stdin = _FakeStdin()
+        stdout = _FakeStdout()
+        stderr = _FakeStderr()
+
+        def poll(self):
+            return None
+
+        def terminate(self):
+            return None
+
+        def wait(self, timeout=None):
+            return 0
+
+        def kill(self):
+            return None
+
+    monkeypatch.setattr("subprocess.Popen", lambda *args, **kwargs: _FakeProc())
+    monkeypatch.setattr("select.select", lambda reads, _writes, _errs, _timeout: ([reads[0]], [], []))
 
     code = run_doctor()
     out = capsys.readouterr().out
@@ -88,10 +122,11 @@ def test_python_module_cli_help_matches_console_contract():
 
 def test_console_and_source_versions_match_pyproject():
     """Console/source entrypoints must report the pyproject version, not stale host borg."""
-    import tomllib
-
     root = cli_module.Path(__file__).resolve().parents[2]
-    expected = tomllib.loads((root / "pyproject.toml").read_text(encoding="utf-8"))["project"]["version"]
+    pyproject_text = (root / "pyproject.toml").read_text(encoding="utf-8")
+    match = re.search(r'^version\s*=\s*["\']([^"\']+)["\']', pyproject_text, re.MULTILINE)
+    assert match, "pyproject.toml must declare project.version"
+    expected = match.group(1)
     assert cli_module.__version__ == expected
     code, out, err = capture_main(["--version"])
     assert code == 0

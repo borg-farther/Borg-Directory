@@ -28,6 +28,7 @@ SOURCE_PATHS = [
     "eval/first_user_release_gate_snapshot.json",
     "eval/uat_scoreboard_snapshot.json",
     "eval/gate_run_snapshot.json",
+    "eval/real_user_rollout_gate_snapshot.json",
     "eval/load_10_snapshot.json",
     "eval/load_100_snapshot.json",
     "eval/load_1000_snapshot.json",
@@ -126,6 +127,7 @@ def build_model() -> dict:
     first = load_json("eval/first_user_release_gate_snapshot.json")
     uat = load_json("eval/uat_scoreboard_snapshot.json")
     gate = load_json("eval/gate_run_snapshot.json")
+    real_user = load_json("eval/real_user_rollout_gate_snapshot.json")
     loads = {str(n): load_json(f"eval/load_{n}_snapshot.json") for n in (10, 100, 1000)}
     pv, rv = pyproject_version(), init_version()
     pcount = pack_count()
@@ -137,8 +139,11 @@ def build_model() -> dict:
     first_gate_pass = nested(first, ["all_pass"])
     if first_gate_pass is None and isinstance(first, dict) and isinstance(first.get("results"), list):
         first_gate_pass = all(item.get("passed") is True for item in first["results"] if isinstance(item, dict))
-    uat_pass = nested(uat, ["all_pass"])
-    gate_pass = nested(gate, ["all_pass"])
+    uat_pass = nested(uat, ["synthetic_load_all_pass"], nested(uat, ["all_pass"]))
+    gate_pass = nested(gate, ["synthetic_load_all_pass"], nested(gate, ["all_pass"]))
+    real_user_100_pass = nested(real_user, ["ready_for_100_real_users"], nested(uat, ["real_user_rollout", "ready_for_100_real_users"]))
+    max_recommended_real_users = nested(real_user, ["max_recommended_real_users_now"], nested(uat, ["real_user_rollout", "max_recommended_real_users_now"], 0))
+    real_user_blockers = nested(real_user, ["blockers"], nested(uat, ["real_user_rollout", "blockers"], []))
     load_summary = {}
     for n, data in loads.items():
         load_summary[n] = {
@@ -174,8 +179,10 @@ def build_model() -> dict:
         "active_contributors_consumers": {"value": "UNKNOWN", "honesty_label": "MISSING_BORG_ANALYTICS_ARTIFACT", "provenance": "No Borg analytics export artifact was found under eval/ or docs/."},
         "packs": {"value": pcount if pcount is not None else "MISSING", "honesty_label": "REPO_FILE_COUNT" if pcount is not None else "MISSING", "provenance": "borg/seeds_data/packs/*.yaml"},
         "first_user_release_gate": {"value": status_bool(first_gate_pass), "honesty_label": "LOCAL_ARTIFACT", "provenance": "eval/first_user_release_gate_snapshot.json" if first else "MISSING"},
-        "uat_scoreboard": {"value": status_bool(uat_pass), "honesty_label": "LOCAL_ARTIFACT", "provenance": "eval/uat_scoreboard_snapshot.json" if uat else "MISSING"},
-        "gate_run": {"value": status_bool(gate_pass), "honesty_label": "LOCAL_ARTIFACT", "provenance": "eval/gate_run_snapshot.json" if gate else "MISSING"},
+        "uat_scoreboard_synthetic_load": {"value": status_bool(uat_pass), "honesty_label": "LOCAL_ARTIFACT_LOGICAL_USERS", "provenance": "eval/uat_scoreboard_snapshot.json" if uat else "MISSING"},
+        "gate_run_synthetic_load": {"value": status_bool(gate_pass), "honesty_label": "LOCAL_ARTIFACT_LOGICAL_USERS", "provenance": "eval/gate_run_snapshot.json" if gate else "MISSING"},
+        "real_user_100_rollout_gate": {"value": status_bool(real_user_100_pass), "honesty_label": "REAL_EXTERNAL_USERS", "provenance": "eval/real_user_rollout_gate_snapshot.json" if real_user else "MISSING"},
+        "max_recommended_real_users_now": {"value": max_recommended_real_users, "honesty_label": "REAL_EXTERNAL_USERS", "provenance": "eval/real_user_rollout_gate_snapshot.json" if real_user else "MISSING"},
         "version_package": {"value": f"pyproject={pv or 'MISSING'} runtime={rv or 'MISSING'}", "honesty_label": "REPO_SOURCE", "provenance": "pyproject.toml; borg/__init__.py"},
         "host_runtime_split_brain": {"value": "NOT_REPRODUCED_IN_THIS_BUILD", "honesty_label": "EVIDENCE_GAP", "provenance": "Prior docs mention runtime/host issues, but this dashboard build did not run environment probes."},
         "load_gates": {"value": load_summary, "honesty_label": "LOGICAL_USERS_NOT_REAL_USERS", "provenance": "eval/load_*_snapshot.json and eval/uat_scoreboard_snapshot.json"},
@@ -201,6 +208,7 @@ def build_model() -> dict:
         "evidence_gaps": [
             "No Borg analytics export proving active contributors or consumers was found.",
             "No first-10-user scoreboard with real outcomes exists yet.",
+            f"100-real-user gate remains blocked: {real_user_blockers or ['no blocker detail found']}",
             "Host/runtime split-brain was not freshly reproduced by this dashboard build.",
         ],
     }
@@ -220,13 +228,17 @@ def build_model() -> dict:
     else:
         evidence.append(source_record("eval/first_user_release_gate_snapshot.json", "first-user release gate status unknown"))
     if uat:
-        evidence.append(source_record("eval/uat_scoreboard_snapshot.json", f"UAT all_pass={uat_pass}; ready_for_10={nested(uat, ['ready_for_10'])}; ready_for_1000={nested(uat, ['ready_for_1000'])}", nested(uat, ["timestamp"])))
+        evidence.append(source_record("eval/uat_scoreboard_snapshot.json", f"UAT synthetic_load_all_pass={uat_pass}; real_user_100_all_pass={real_user_100_pass}; ready_for_10={nested(uat, ['ready_for_10'])}; ready_for_1000={nested(uat, ['ready_for_1000'])}", nested(uat, ["timestamp"])))
     else:
         evidence.append(source_record("eval/uat_scoreboard_snapshot.json", "UAT scoreboard missing"))
     if gate:
-        evidence.append(source_record("eval/gate_run_snapshot.json", f"gate run all_pass={gate_pass}; ready_for_10={nested(gate, ['ready_for_10'])}; ready_for_1000={nested(gate, ['ready_for_1000'])}", nested(gate, ["timestamp"])))
+        evidence.append(source_record("eval/gate_run_snapshot.json", f"gate run synthetic_load_all_pass={gate_pass}; overall_100_real_user_pass={real_user_100_pass}; ready_for_10={nested(gate, ['ready_for_10'])}; ready_for_1000={nested(gate, ['ready_for_1000'])}", nested(gate, ["timestamp"])))
     else:
         evidence.append(source_record("eval/gate_run_snapshot.json", "gate run missing"))
+    if real_user:
+        evidence.append(source_record("eval/real_user_rollout_gate_snapshot.json", f"100-real-user gate={real_user_100_pass}; max_recommended_real_users={max_recommended_real_users}; blockers={real_user_blockers}", nested(real_user, ["generated_at_utc"])))
+    else:
+        evidence.append(source_record("eval/real_user_rollout_gate_snapshot.json", "real-user rollout gate missing"))
     for n, data in loads.items():
         evidence.append(source_record(f"eval/load_{n}_snapshot.json", f"logical load {n}: passed={load_summary[str(n)]['passed']}; total_requests={load_summary[str(n)]['total_requests']}; success_rate={load_summary[str(n)]['success_rate']}; p95_ms={load_summary[str(n)]['p95_ms']}; model={load_summary[str(n)]['concurrency_model']}", load_summary[str(n)]["timestamp"]))
     evidence.append(source_record("pyproject.toml", f"package version={pv}; scripts declared in project metadata"))

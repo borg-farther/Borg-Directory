@@ -763,23 +763,22 @@ phases:
         # ── Step 7: Verify selector posterior updated ─────────────────────
         posterior = selector._posteriors.get(("debug-pack", "debug"))
         assert posterior is not None, "Posterior for debug-pack/debug should exist"
+        before_mean = 0.5  # Prior mean before one success: alpha=1, beta=1
         assert posterior.alpha > 1.0, f"Expected alpha > 1 (prior was 1.0), got {posterior.alpha}"
+        assert posterior.mean > before_mean, (
+            f"debug-pack posterior mean should improve after success feedback: "
+            f"before={before_mean}, after={posterior.mean}"
+        )
 
-        # ── Step 8: Re-search → debug-pack should score higher ────────────
+        # ── Step 8: Re-search still includes the updated pack ──────────────
         results_after = selector.select(
             task_context={"task_type": "debug", "keywords": ["bug"]},
             candidates=candidates,
             limit=2,
-            seed=99,  # Same seed for fair comparison
+            seed=99,  # Same seed for repeatability; individual Thompson draws can still move down.
         )
         after_scores = {r.pack_id: r.sampled_value for r in results_after}
-
-        # After a success, debug-pack's Thompson sample should be higher
-        # (or at minimum, higher than before)
-        assert after_scores["debug-pack"] > before_scores["debug-pack"], (
-            f"debug-pack should score higher after success feedback: "
-            f"before={before_scores['debug-pack']}, after={after_scores['debug-pack']}"
-        )
+        assert "debug-pack" in after_scores
 
         # Clean up global state
         mcp_mod._trace_captures = {}

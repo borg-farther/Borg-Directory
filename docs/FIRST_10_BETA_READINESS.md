@@ -34,6 +34,18 @@ borg first-10 --json
 
 A passing smoke path proves the public package entrypoints exist, the rescue packet is machine-readable, seed search returns useful results, MCP setup has a binary verification path, and the first-10 contract is available to users.
 
+## Supported first-user mixes
+
+Do not assume all testers use the same stack. The first-10 path supports these mixes:
+
+- Human only: CLI or Python API, no MCP required.
+- Human chat UI plus agent host: Telegram/Discord/Slack/API sessions through Hermes, with Borg configured once in Hermes.
+- MCP-native coding agents: Claude Code, Cursor, Cline, Continue, Goose, Codex-style CLIs, or custom runners with `borg-mcp` configured in their MCP server list.
+- Any model provider behind the host: ChatGPT/OpenAI, Claude, OpenRouter, local models, or other OpenAI-compatible endpoints. Model choice does not change Borg setup when the host owns tool execution.
+- Chat app with no MCP/tool execution: run `borg rescue`/`borg search` outside the chat and paste the `ACTION / STOP / VERIFY` packet back, or route through an MCP-capable host.
+
+For every mix, the invariant is the same: install Borg on the machine that executes tools, prime the agent/human to call Borg before technical fixes, and record helpful/not-helpful/no-match outcomes.
+
 ## The seven gates
 
 ### G1 — real-vs-synthetic confidence is impossible to miss

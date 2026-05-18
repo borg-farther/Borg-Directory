@@ -5,6 +5,8 @@ threads without SQLITE_BUSY errors, using WAL mode, busy_timeout, and
 exponential backoff retry.
 """
 
+import multiprocessing as mp
+import sys
 import tempfile
 import threading
 import time
@@ -14,6 +16,16 @@ from datetime import datetime, timezone
 import pytest
 
 from borg.db.store import AgentStore
+
+
+def _bootstrap_store_process(db_path: str, barrier, queue) -> None:
+    """Open a fresh AgentStore in a separate process and report bootstrap status."""
+    try:
+        barrier.wait(timeout=15)
+        with AgentStore(db_path) as store:
+            queue.put(("ok", store.get_schema_version()))
+    except Exception as exc:  # pragma: no cover - failure details returned to parent
+        queue.put(("error", f"{type(exc).__name__}: {exc}"))
 
 
 class TestStoreConcurrency:
@@ -272,6 +284,40 @@ class TestStoreConcurrency:
         cursor = conn.execute("PRAGMA busy_timeout")
         result = cursor.fetchone()[0]
         assert result == 5000, f"Expected busy_timeout of 5000, got {result}"
+
+    @pytest.mark.skipif(sys.platform == "win32", reason="multiprocessing spawn adds high flake risk for this lock-specific regression")
+    def test_multiprocess_fresh_db_initialization(self):
+        """Concurrent first-use processes must not race schema migrations."""
+        with tempfile.TemporaryDirectory() as td:
+            db_path = f"{td}/multiprocess_bootstrap.db"
+            ctx = mp.get_context("fork")
+            process_count = 12
+            barrier = ctx.Barrier(process_count)
+            queue = ctx.Queue()
+            processes = [
+                ctx.Process(target=_bootstrap_store_process, args=(db_path, barrier, queue))
+                for _ in range(process_count)
+            ]
+
+            for proc in processes:
+                proc.start()
+            for proc in processes:
+                proc.join(timeout=30)
+
+            alive = [proc.pid for proc in processes if proc.is_alive()]
+            for proc in processes:
+                if proc.is_alive():
+                    proc.terminate()
+                    proc.join(timeout=5)
+            assert not alive, f"Store bootstrap processes hung: {alive}"
+
+            results = [queue.get(timeout=5) for _ in processes]
+            errors = [detail for status, detail in results if status != "ok"]
+            assert not errors, "Multiprocess bootstrap errors:\n" + "\n".join(errors)
+            assert all(version >= 2 for status, version in results if status == "ok")
+
+            with AgentStore(db_path) as store:
+                assert store.get_schema_version() >= 2
 
     def test_context_manager_thread_safety(self, store):
         """Test that context manager properly closes connections in multi-threaded usage."""

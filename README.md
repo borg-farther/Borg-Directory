@@ -97,7 +97,61 @@ Use absolute paths in MCP env blocks. Do not rely on `~` expansion inside MCP cl
 
 ---
 
-## 3. First useful commands
+## 3. Any mix: human UI, agent host, model provider
+
+Borg only needs to be installed where the agent can run tools. The human UI and model provider are separate choices.
+
+Common combinations:
+
+- Human in a terminal, no agent: run `borg rescue ...`, `borg search ...`, and `borg first-10 --json` directly.
+- Claude Code: run `borg setup-claude --scope user --verify --fix`, then restart Claude Code.
+- Cursor: run `borg setup-cursor` from the project root, then restart Cursor.
+- Other MCP-capable agents such as Cline, Continue, Goose, Codex-style CLIs, or custom agent runners: add the manual `mcpServers.borg` config from section 2.
+- Hermes as the agent: add Borg to Hermes with `hermes mcp add ...`; then any Hermes front-end can use it, including CLI, Telegram, Discord, Slack, or API/webhook sessions.
+- ChatGPT/OpenAI as the model inside Hermes or another agent host: no special Borg setup is needed beyond MCP. The model provider does not own the tools; the agent host does.
+- ChatGPT app or any chat UI with no MCP/tool execution: use Borg from the CLI/Python API and paste the `ACTION / STOP / VERIFY` packet back into the chat, or route the work through an MCP-capable host such as Hermes.
+
+Rule of thumb: configure Borg once in the agent host that executes tools; then use whatever human UI and model provider you want.
+
+### Hermes gateway example: Telegram UI + ChatGPT/OpenAI model
+
+Run this on the same machine/server where the Hermes gateway runs:
+
+```bash
+python3 -m pip install --upgrade agent-borg
+borg-doctor --json
+mkdir -p ~/.borg
+
+hermes mcp add borg --command "$(command -v borg-mcp)" --env BORG_HOME="$HOME/.borg"
+hermes mcp test borg
+
+# restart Hermes so gateway sessions see the new MCP tools
+hermes gateway restart
+```
+
+If you normally control Hermes from Telegram, Discord, Slack, or another messaging UI, send this after setup:
+```text
+/restart
+```
+
+Then test from that UI:
+```text
+Use Borg first on this error:
+ModuleNotFoundError: No module named flask
+
+Show me:
+1. what Borg matched
+2. ACTION
+3. STOP / what dead-end it avoids
+4. VERIFY
+5. whether Borg had high confidence or no confident match
+```
+
+Expected value moment: Borg should show a concrete ACTION / STOP / VERIFY packet, plus a short receipt explaining what it matched and what dead-end it prevented. If there is no confident match, the correct output is a clear `NO_CONFIDENT_MATCH`, not generic advice.
+
+---
+
+## 4. First useful commands
 
 ```bash
 # Fastest day-one value: paste an error, get ACTION / STOP / VERIFY
@@ -141,7 +195,7 @@ for hit in hits:
 
 ---
 
-## 4. Agent instruction / priming
+## 5. Agent instruction / priming
 
 Put this in your project `CLAUDE.md`, agent system prompt, or first user message:
 
@@ -153,7 +207,7 @@ Why: agents often do not discover optional tools unless explicitly primed.
 
 ---
 
-## 5. MCP tools
+## 6. MCP tools
 
 Core tools available through the MCP server include:
 
@@ -173,7 +227,7 @@ Use `borg_rescue` for concrete errors/failing command output. Use `borg_observe`
 
 ---
 
-## 6. What is proven right now
+## 7. What is proven right now
 
 Current local gate snapshot in this repo:
 
