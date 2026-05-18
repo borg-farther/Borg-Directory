@@ -139,6 +139,8 @@ def test_readme_has_early_agent_runner_why_and_how() -> None:
     block = text[agent_start:install_start]
     assert "Why:" in block
     assert "How:" in block
+    assert "agent host" in block
+    assert "Hermes with Claude/GPT models" in block
     assert "Claude Code" in block
     assert "Hermes Agent" in block
     assert "OpenClaw" in block
@@ -168,6 +170,9 @@ def test_mcp_setup_has_agent_host_sections_in_order() -> None:
     assert "ACTION / STOP / VERIFY" in why_block
     assert "NO_CONFIDENT_MATCH" in why_block
     assert "exact failing command" in why_block
+    assert "agent host" in why_block
+    assert "Hermes with Claude" in why_block
+    assert "GPT" in why_block
 
 
 def test_mcp_setup_has_platform_specific_borg_mcp_config() -> None:
@@ -179,6 +184,7 @@ def test_mcp_setup_has_platform_specific_borg_mcp_config() -> None:
     assert "fully quit and restart Claude Code" in claude
 
     hermes = _section_between(text, r"^##\s+Hermes Agent\b", r"^##\s+OpenClaw\b")
+    assert "regardless of whether Hermes is using Claude, GPT" in hermes
     assert "~/.hermes/config.yaml" in hermes
     assert "mcp_servers:" in hermes
     assert re.search(r"(?m)^\s*command:\s*borg-mcp\b", hermes)
