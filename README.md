@@ -13,6 +13,23 @@ Do **not** run `pip install borg`, `brew install borgbackup`, `apt install borgb
 
 Borg is not marketed here as a magic success-rate booster. Current local security/readiness gates are green; statistically significant external agent-level lift is still unproven.
 
+## For people running AI agents
+
+If you run Claude Code, Hermes Agent, OpenClaw, or any MCP-capable coding agent, connect Borg once as a local MCP server.
+
+Why: the agent can check prior fixes and dead ends before burning tool calls. It gets `ACTION / STOP / VERIFY`, can avoid repeated failed loops, and should disclose `NO_CONFIDENT_MATCH` when Borg has no good hit.
+
+How:
+
+1. Install `agent-borg` and verify `borg-mcp`.
+2. Connect your agent host:
+   - Claude Code: `borg setup-claude --scope user --verify --fix`
+   - Hermes Agent: add `mcp_servers.borg` in `~/.hermes/config.yaml`
+   - OpenClaw / generic MCP: add `mcpServers.borg` with `"command": "borg-mcp"`
+3. Restart the agent and ask: `what MCP tools do you have from Borg?`
+
+Details: [`docs/MCP_SETUP.md`](docs/MCP_SETUP.md).
+
 ---
 
 ## 1. Install `agent-borg`
@@ -198,9 +215,11 @@ for hit in hits:
 
 ---
 
-## 3. Connect Claude Code with MCP
+## 3. Connect an agent with MCP
 
-Prerequisite: `borg version` and `borg-doctor --json` pass in the same terminal environment that launches Claude Code.
+Prerequisite: `borg version` and `borg-doctor --json` pass in the same environment that launches your agent host.
+
+Claude Code one-command setup:
 
 ```bash
 borg setup-claude --scope user --verify --fix
@@ -220,6 +239,8 @@ what MCP tools do you have from Borg?
 ```
 
 Expected: Claude lists Borg tools such as `borg_rescue`, `borg_observe`, and `borg_search`, or `/mcp list` shows a `borg` server.
+
+Hermes Agent uses `mcp_servers.borg` in `~/.hermes/config.yaml`. OpenClaw and most other MCP-capable agents use an `mcpServers.borg` JSON block.
 
 Manual MCP config for any stdio MCP client:
 
@@ -261,7 +282,7 @@ More setup detail: [`docs/MCP_SETUP.md`](docs/MCP_SETUP.md).
 Put this in `CLAUDE.md`, an agent system prompt, or the first user message:
 
 ```text
-Before attempting technical fixes for errors, bugs, installs, configs, deployments, or tests, call Borg first. Prefer borg_rescue(input="<exact error or failing command output>") when there is a concrete failure; use borg_observe(task="<exact task or error>", context="<tech stack>") at task start. Treat Borg output as advisory: follow ACTION when relevant, avoid STOP/AVOID patterns, disclose NO_CONFIDENT_MATCH or weak guidance, and record the outcome with borg_rate(helpful=True/False).
+Before attempting technical fixes for errors, bugs, installs, configs, deployments, or tests, call Borg first. Prefer borg_rescue(input="<exact error or failing command output>") when there is a concrete failure; use borg_observe(task="<exact task or error>", context="<tech stack>") at task start. Treat Borg output as advisory: follow ACTION when relevant, avoid STOP/AVOID patterns, disclose NO_CONFIDENT_MATCH or weak guidance, and verify with the exact failing command or smallest regression test. After the outcome, record it with borg_feedback if you used a pack session, or borg_record_failure if you are recording a concrete error-pattern success/failure.
 ```
 
 Why: agents often do not discover optional tools unless explicitly primed.

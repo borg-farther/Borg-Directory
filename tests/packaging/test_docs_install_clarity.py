@@ -33,6 +33,23 @@ def _code_blocks(text: str) -> list[str]:
     return re.findall(r"```(?:bash|sh|shell|powershell|ps1)?\s*\n(.*?)```", text, re.DOTALL | re.IGNORECASE)
 
 
+def _strip_fenced_code(text: str) -> str:
+    return re.sub(r"```.*?```", "", text, flags=re.DOTALL)
+
+
+def _heading_start(text: str, pattern: str) -> int:
+    match = re.search(pattern, text, flags=re.IGNORECASE | re.MULTILINE)
+    assert match, f"missing heading matching {pattern!r}"
+    return match.start()
+
+
+def _section_between(text: str, start_pattern: str, end_pattern: str | None = None) -> str:
+    start = _heading_start(text, start_pattern)
+    end = len(text) if end_pattern is None else _heading_start(text, end_pattern)
+    assert start < end
+    return text[start:end]
+
+
 def _extract_os_block(text: str, os_name: str) -> str:
     match = re.search(
         rf"(?ims)^###?\s+{re.escape(os_name)}\b.*?```(?:bash|sh|shell|powershell|ps1)?\s*\n(?P<commands>.*?)```",
@@ -110,3 +127,83 @@ def test_legacy_setup_docs_are_archived_not_current_root_docs() -> None:
     assert (ROOT / "docs" / "archive" / "legacy-setup" / "HERMES_NOUS_SETUP.md").exists()
     assert (ROOT / "docs" / "archive" / "legacy-setup" / "OPENCLAW_SETUP.md").exists()
     assert (ROOT / "docs" / "archive" / "legacy-audits" / "UX_AUDIT_HERMES.md").exists()
+
+
+def test_readme_has_early_agent_runner_why_and_how() -> None:
+    text = _read(Path("README.md"))
+
+    agent_start = _heading_start(text, r"^##\s+For people running AI agents\b")
+    install_start = _heading_start(text, r"^##\s+1\.\s+Install `agent-borg`")
+    assert agent_start < install_start
+
+    block = text[agent_start:install_start]
+    assert "Why:" in block
+    assert "How:" in block
+    assert "Claude Code" in block
+    assert "Hermes Agent" in block
+    assert "OpenClaw" in block
+    assert "ACTION / STOP / VERIFY" in block
+    assert "NO_CONFIDENT_MATCH" in block
+    assert "borg setup-claude --scope user --verify --fix" in block
+    assert "mcp_servers.borg" in block
+    assert "mcpServers.borg" in block
+    assert "what MCP tools do you have from Borg?" in block
+
+
+def test_mcp_setup_has_agent_host_sections_in_order() -> None:
+    text = _read(Path("docs/MCP_SETUP.md"))
+
+    why = _heading_start(text, r"^##\s+Why connect an agent to Borg\?")
+    preflight = _heading_start(text, r"^##\s+Preflight\b")
+    claude = _heading_start(text, r"^##\s+Claude Code\b")
+    hermes = _heading_start(text, r"^##\s+Hermes Agent\b")
+    openclaw = _heading_start(text, r"^##\s+OpenClaw\b")
+    generic = _heading_start(text, r"^##\s+Generic MCP clients\b")
+
+    assert [why, preflight, claude, hermes, openclaw, generic] == sorted(
+        [why, preflight, claude, hermes, openclaw, generic]
+    )
+
+    why_block = text[why:preflight]
+    assert "ACTION / STOP / VERIFY" in why_block
+    assert "NO_CONFIDENT_MATCH" in why_block
+    assert "exact failing command" in why_block
+
+
+def test_mcp_setup_has_platform_specific_borg_mcp_config() -> None:
+    text = _read(Path("docs/MCP_SETUP.md"))
+
+    claude = _section_between(text, r"^##\s+Claude Code\b", r"^##\s+Hermes Agent\b")
+    assert "borg setup-claude --scope user --verify --fix" in claude
+    assert "Verify: PASS" in claude
+    assert "fully quit and restart Claude Code" in claude
+
+    hermes = _section_between(text, r"^##\s+Hermes Agent\b", r"^##\s+OpenClaw\b")
+    assert "~/.hermes/config.yaml" in hermes
+    assert "mcp_servers:" in hermes
+    assert re.search(r"(?m)^\s*command:\s*borg-mcp\b", hermes)
+    assert "mcp_borg_borg_rescue" in hermes
+
+    openclaw = _section_between(text, r"^##\s+OpenClaw\b", r"^##\s+Generic MCP clients\b")
+    assert "mcpServers" in openclaw
+    assert '"command": "borg-mcp"' in openclaw
+    assert "does not currently publish a verified one-command OpenClaw installer" in openclaw
+
+    generic = _section_between(text, r"^##\s+Generic MCP clients\b", r"^##\s+Core first-user MCP tools\b")
+    assert "mcpServers" in generic
+    assert '"command": "borg-mcp"' in generic
+    assert "BORG_HOME" in generic
+
+
+def test_current_docs_do_not_reference_removed_borg_rate_tool() -> None:
+    for relative_path in CURRENT_DOCS:
+        assert "borg_rate" not in _read(relative_path), relative_path
+
+
+def test_agent_runner_docs_keep_one_prompting_area_not_repeated_per_host() -> None:
+    text = _read(Path("docs/MCP_SETUP.md"))
+    visible_text = _strip_fenced_code(text)
+
+    assert len(re.findall(r"(?im)^##\s+Prime the agent once\b", text)) == 1
+    assert len(re.findall(r"(?i)Before attempting technical fixes", text)) == 1
+    assert len(re.findall(r"(?i)borgbackup", visible_text)) == 1
