@@ -7,8 +7,8 @@ from pathlib import Path
 ROOT = Path(__file__).resolve().parents[1]
 PYTHON = sys.executable
 commands = [
-    [PYTHON, "-m", "pytest", "-q", "borg/tests/test_e2e_learning_loop_v3.py", "borg/tests/test_v3_integration.py", "borg/tests/test_failure_memory.py", "borg/tests/test_mutation_engine.py", "borg/tests/test_feedback_loop.py", "borg/tests/test_contextual_selector.py", "--tb=short"],
-    [PYTHON, "-m", "pytest", "-q", "borg/tests/test_rescue.py", "borg/tests/test_runtime_fingerprint.py", "borg/tests/test_embeddings_schema_compat.py", "eval/tests/test_security_hardening_baseline.py", "borg/tests/test_confidence_gate.py", "borg/tests/test_borg_observe_confidence_gate.py", "borg/tests/test_first_10_readiness.py", "--tb=short"],
+    [PYTHON, "-m", "pytest", "-q", "tests/learning/test_e2e_learning_loop_v3.py", "tests/learning/test_v3_integration.py", "tests/learning/test_failure_memory.py", "tests/learning/test_mutation_engine.py", "tests/learning/test_feedback_loop.py", "tests/learning/test_contextual_selector.py", "--tb=short"],
+    [PYTHON, "-m", "pytest", "-q", "tests/core/test_rescue.py", "tests/mcp/test_runtime_fingerprint.py", "tests/packaging/test_embeddings_schema_compat.py", "eval/tests/test_security_hardening_baseline.py", "tests/readiness/test_confidence_gate.py", "tests/mcp/test_borg_observe_confidence_gate.py", "tests/readiness/test_first_10_readiness.py", "--tb=short"],
     [PYTHON, "-m", "pytest", "-q", "eval/tests/test_benchmark_evidence_contract.py", "--tb=short"],
     [PYTHON, "eval/run_first_user_release_gate.py"],
     [PYTHON, "scripts/security_gate_check.py"],

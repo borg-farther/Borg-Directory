@@ -26,8 +26,8 @@ from typing import Any, Dict, List, Optional
 
 import pytest
 
-# Ensure borg is on path
-sys.path.insert(0, "/root/hermes-workspace/borg")
+# Ensure borg is on path when this file is run directly.
+sys.path.insert(0, str(Path(__file__).resolve().parents[2]))
 
 # ---------------------------------------------------------------------------
 # Constants
@@ -170,33 +170,33 @@ class TestTraceCapture:
         import borg.integrations.mcp_server as mcp_module
         from borg.core.traces import _ensure_schema
 
-        # Reset global capture
-        mcp_module._trace_capture = None
-
-        # Initialize capture with a task
         task_desc = "Simulate a debugging session to test accumulation"
-        mcp_module._trace_capture = mcp_module._trace_capture or \
-            __import__('borg.core.traces', fromlist=['TraceCapture']).TraceCapture(
-                task=task_desc, agent_id="test-agent"
-            )
+        session_id = "test-feed-trace-capture"
+        token = mcp_module._current_session_id.set(session_id)
+        try:
+            mcp_module._trace_captures.pop(session_id, None)
+            mcp_module.init_trace_capture(session_id, task=task_desc, agent_id="test-agent")
 
-        # Simulate 10 tool calls (well before the 45-call auto-save)
-        for i in range(10):
-            mcp_module._feed_trace_capture(
-                "read_file",
-                {"path": f"/testbed/django/db/models/file_{i}.py"},
-                f"content {i}"
-            )
+            # Simulate 10 tool calls (well before the 45-call auto-save)
+            for i in range(10):
+                mcp_module._feed_trace_capture(
+                    "read_file",
+                    {"path": f"/testbed/django/db/models/file_{i}.py"},
+                    f"content {i}"
+                )
 
-        # Verify the capture accumulated the calls
-        assert mcp_module._trace_capture is not None
-        assert mcp_module._trace_capture.tool_calls == 10, \
-            f"Should have accumulated 10 calls, got {mcp_module._trace_capture.tool_calls}"
-        assert len(mcp_module._trace_capture.files_read) == 10, \
-            f"Should have tracked 10 file reads, got {len(mcp_module._trace_capture.files_read)}"
+            capture = mcp_module._trace_captures.get(session_id)
+            assert capture is not None
+            assert capture.tool_calls == 10, \
+                f"Should have accumulated 10 calls, got {capture.tool_calls}"
+            assert len(capture.files_read) == 10, \
+                f"Should have tracked 10 file reads, got {len(capture.files_read)}"
 
-        # Verify we can extract a trace before auto-save threshold
-        trace = mcp_module._trace_capture.extract_trace(outcome="unknown")
+            # Verify we can extract a trace before auto-save threshold
+            trace = capture.extract_trace(outcome="unknown")
+        finally:
+            mcp_module._trace_captures.pop(session_id, None)
+            mcp_module._current_session_id.reset(token)
         assert trace is not None
         assert trace["tool_calls"] == 10
         assert "django" in trace["technology"].lower()
@@ -838,7 +838,7 @@ class TestSystemHealth:
 
 
 # ---------------------------------------------------------------------------
-# Run with: pytest tests/test_e2e_verify.py -v
+# Run with: pytest tests/e2e/test_e2e_verify.py -v
 # ---------------------------------------------------------------------------
 
 if __name__ == "__main__":

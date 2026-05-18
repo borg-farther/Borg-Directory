@@ -16,7 +16,7 @@ import pytest
 
 import borg.cli as cli_module
 from borg.cli.doctor import run_doctor
-from borg.tests.test_cli import capture_main
+from tests.cli.test_cli import capture_main
 
 
 def test_borg_doctor_console_entrypoint_exists_and_delegates(monkeypatch, capsys, tmp_path):

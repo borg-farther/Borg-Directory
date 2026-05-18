@@ -26,7 +26,7 @@ Security baseline for privacy-safe collective memory and learning atoms.
 - M0 tests:
 
 ```bash
-python -m pytest -q borg/tests/test_privacy_structured.py borg/tests/test_prompt_injection.py borg/tests/test_learning_atoms.py borg/tests/test_atom_policy.py borg/tests/test_atom_retrieval_firewall.py borg/tests/test_atom_store.py borg/tests/test_learning_atom_publish.py
+python -m pytest -q tests/security/test_privacy_structured.py tests/security/test_prompt_injection.py tests/security/test_learning_atoms.py tests/security/test_atom_policy.py tests/security/test_atom_retrieval_firewall.py tests/security/test_atom_store.py tests/security/test_learning_atom_publish.py
 ```
 
 ## Release blockers
