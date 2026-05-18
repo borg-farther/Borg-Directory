@@ -22,6 +22,8 @@ Before attempting technical fixes for errors, bugs, installs, configs, deploymen
 
 Run this before handing Borg to a tester:
 
+Install package `agent-borg`; it provides `borg`, `borg-mcp`, and `borg-doctor`. Do **not** use `pip install borg`, `brew install borgbackup`, `apt install borgbackup`, `apt-get install borgbackup`, `dnf install borgbackup`, or `pacman -S borg`; those are unrelated.
+
 ```bash
 python3 -m pip install agent-borg
 borg version
@@ -31,6 +33,8 @@ borg search 'django migration table already exists'
 borg setup-claude --scope user --verify --fix
 borg first-10 --json
 ```
+
+After `borg setup-claude --scope user --verify --fix`, fully restart Claude Code and verify Claude lists Borg tools such as `borg_rescue`, `borg_observe`, and `borg_search`.
 
 A passing smoke path proves the public package entrypoints exist, the rescue packet is machine-readable, seed search returns useful results, MCP setup has a binary verification path, and the first-10 contract is available to users.
 
@@ -144,6 +148,9 @@ Proof:
 Send each tester this:
 
 1. Install:
+   
+   Package name is `agent-borg`; command after install is `borg`. Do **not** install `borg` or `borgbackup`.
+   
    ```bash
    python3 -m pip install agent-borg
    borg version

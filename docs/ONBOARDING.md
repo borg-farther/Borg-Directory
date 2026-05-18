@@ -1,20 +1,41 @@
 # Borg Claude onboarding
 
+## Prerequisite
+
+Install package `agent-borg`; it provides the `borg` CLI and `borg-mcp` MCP server command.
+
+Do **not** install `borg` or `borgbackup`; those are unrelated. If you are not installed yet, use [`INSTALL.md`](INSTALL.md).
+
+Verify first:
+
+```bash
+borg version
+borg-doctor --json
+```
+
 ## One command
 
 ```bash
 borg setup-claude --scope user --verify --fix
 ```
 
-Then fully restart Claude Code and ask:
+Expected output includes:
+
+```text
+Verify: PASS (initialize handshake ok)
+```
+
+Then fully quit and restart Claude Code. In the new session, ask:
 
 ```text
 what MCP tools do you have from Borg?
 ```
 
+Expected: Claude lists Borg MCP tools such as `borg_rescue`, `borg_observe`, and `borg_search`, or `/mcp list` shows a `borg` server.
+
 ## What Borg does
 
-1. resolves the MCP launch command (`borg-mcp`, or Python module fallback);
+1. resolves the MCP launch command (`borg-mcp`);
 2. writes/merges the Borg MCP server into the selected config;
 3. creates Borg home storage if missing;
 4. writes an absolute `BORG_HOME` path;
@@ -25,16 +46,18 @@ what MCP tools do you have from Borg?
 
 - setup command exits `0`;
 - target config contains `mcpServers.borg`;
-- setup prints `PASS (initialize handshake ok)`.
+- setup prints `PASS (initialize handshake ok)`;
+- after restart, Claude lists Borg tools.
 
 ## If setup fails
 
 Read the printed gate failure. Common fixes:
 
-- install Borg in the active Python environment: `python3 -m pip install agent-borg`;
+- install the correct package: `pipx install agent-borg`;
 - use `--fix` so Borg can create missing local directories;
 - use an absolute `BORG_HOME` path in manual configs;
-- restart the agent host after config changes.
+- restart the agent host after config changes;
+- if Claude Code says `borg not found`, fully quit/reopen it after `pipx ensurepath`.
 
 ## Agent priming
 

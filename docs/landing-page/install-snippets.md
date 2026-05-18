@@ -1,85 +1,80 @@
-# borg — Install Snippets
+# Borg install snippets
 
-## Cursor (.cursorrules)
+Use these snippets on landing pages or agent setup pages. Keep the name distinction visible:
 
-```markdown
-# Add to your .cursorrules file
+- Install package: `agent-borg`
+- CLI command: `borg`
+- MCP server command: `borg-mcp`
 
-# --- borg integration ---
-# When you hit a blocker, run:
-#   borg query --stuck "describe the problem"
-# This checks the collective for known solutions.
+Do **not** tell users to install `borg` or `borgbackup`; those are unrelated.
 
-# Install borg CLI
-# Run once in your project root:
-pip install agent-borg
-```
-
-## Cline (.clinerules)
-
-```markdown
-# Add to your .clinerules file
-
-# --- borg integration ---
-# On blocker: borg query --stuck "describe what broke"
-# Pulls verified solutions from the collective in <1s.
-
-# One-time setup
-pip install agent-borg
-```
-
-## Claude Code (CLAUDE.md)
-
-```markdown
-# Add to your CLAUDE.md file
-
-## borg — collective problem solving
-# When stuck on an error or blocker:
-#   1. Run: borg query --stuck "<error message>"
-#   2. If a solution exists, apply it directly.
-#   3. Never loop twice on the same error class.
-
-# Install borg (one-time)
-pip install agent-borg
-```
-
-## OpenClaw (clawhub)
+## macOS
 
 ```bash
-# Install borg via clawhub
-clawhub install borg
-
-# Then enable in openclaw config (~/.openclaw/config.yml):
-# plugins:
-#   - borg
+brew install pipx
+pipx ensurepath
+pipx install agent-borg
+exec "$SHELL" -l
+borg version
+borg-doctor --json
 ```
 
-## MCP (Model Context Protocol)
+## Linux
 
 ```bash
-# Install the borg MCP server
-pip install agent-borg
+sudo apt update
+sudo apt install -y pipx
+pipx ensurepath
+pipx install agent-borg
+exec "$SHELL" -l
+borg version
+borg-doctor --json
 ```
 
-Then add to your MCP client config (e.g. Cursor, Claude Desktop, etc.):
+## Windows PowerShell
+
+```powershell
+py -m pip install --user pipx
+py -m pipx ensurepath
+py -m pipx install agent-borg
+# close and reopen PowerShell
+where.exe borg
+borg version
+borg-doctor --json
+```
+
+## Claude Code setup
+
+```bash
+borg setup-claude --scope user --verify --fix
+```
+
+Then fully quit and restart Claude Code. Ask:
+
+```text
+what MCP tools do you have from Borg?
+```
+
+Expected: Claude lists tools such as `borg_rescue`, `borg_observe`, and `borg_search`, or `/mcp list` shows a `borg` server.
+
+## Generic MCP config
 
 ```json
 {
   "mcpServers": {
     "borg": {
-      "command": "python",
-      "args": ["-m", "borg.mcp.server"]
+      "command": "borg-mcp",
+      "args": [],
+      "env": { "BORG_HOME": "/absolute/path/to/.borg" }
     }
   }
 }
 ```
 
-## Quick Verify
+If `borg-mcp` is not on PATH, locate it with `command -v borg-mcp` on macOS/Linux or `where.exe borg-mcp` on Windows, then use that absolute path as `command`.
 
-After installation, run:
+## Agent priming snippet
 
-```bash
-borg --version
+```text
+Before attempting technical fixes for errors, bugs, installs, configs, deployments, or tests, call Borg first. Prefer borg_rescue(input="<exact error or failing command output>") when there is a concrete failure; use borg_observe(task="<exact task or error>", context="<tech stack>") at task start. Treat Borg output as advisory: follow ACTION when relevant, avoid STOP/AVOID patterns, disclose NO_CONFIDENT_MATCH or weak guidance, and record the outcome with borg_rate(helpful=True/False).
 ```
-
-This confirms the CLI is on your PATH and the collective connection is working.
