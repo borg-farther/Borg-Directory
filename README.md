@@ -16,6 +16,7 @@ Borg is not marketed here as a magic success-rate booster. Current local securit
 ## For people running AI agents
 
 If you run Claude Code, Hermes Agent, OpenClaw, or any MCP-capable coding agent, connect Borg once as a local MCP server.
+Choose the setup path by the **agent host** you run, not by the model inside it. If you use Hermes with Claude, GPT, OpenRouter, or another provider, follow the **Hermes Agent** path.
 
 Why: the agent can check prior fixes and dead ends before burning tool calls. It gets `ACTION / STOP / VERIFY`, can avoid repeated failed loops, and should disclose `NO_CONFIDENT_MATCH` when Borg has no good hit.
 
@@ -24,7 +25,7 @@ How:
 1. Install `agent-borg` and verify `borg-mcp`.
 2. Connect your agent host:
    - Claude Code: `borg setup-claude --scope user --verify --fix`
-   - Hermes Agent: add `mcp_servers.borg` in `~/.hermes/config.yaml`
+   - Hermes Agent, including Hermes with Claude/GPT models: add `mcp_servers.borg` in `~/.hermes/config.yaml`
    - OpenClaw / generic MCP: add `mcpServers.borg` with `"command": "borg-mcp"`
 3. Restart the agent and ask: `what MCP tools do you have from Borg?`
 
