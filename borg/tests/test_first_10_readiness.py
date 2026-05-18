@@ -48,6 +48,11 @@ def test_first_10_packet_contains_install_mcp_feedback_and_priming():
     assert "borg_observe" in packet["priming_paragraph"]
     assert "borg_rate(helpful=True/False)" in packet["priming_paragraph"]
     assert "did_it_prevent_a_dead_end" in packet["feedback_fields"]
+    mixes = "\n".join(packet["supported_mixes"])
+    assert "Hermes" in mixes
+    assert "ChatGPT/OpenAI" in mixes
+    assert "Claude Code" in mixes
+    assert "Human only" in mixes
 
 
 def test_first_10_markdown_is_human_readable_and_not_theatre():
@@ -57,6 +62,9 @@ def test_first_10_markdown_is_human_readable_and_not_theatre():
     assert "NO-GO" in md
     assert "NO_CONFIDENT_MATCH" in md
     assert "ACTION/STOP/VERIFY" in md
+    assert "Supported first-user mixes" in md
+    assert "ChatGPT/OpenAI" in md
+    assert "Hermes" in md
     assert "vanity" not in md.lower() or "test count" in md.lower()
 
 
