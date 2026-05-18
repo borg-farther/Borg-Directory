@@ -1,5 +1,9 @@
 # Changelog
 
+## 3.3.5 — 2026-05-18
+
+- Fix: `borg/__init__.py` now derives `__version__` from package metadata (importlib.metadata.version) instead of a hardcoded string. CLI banners (`borg version`, `borg-mcp`, `borg-doctor`) will always match the installed version going forward.
+
 ## 3.3.3
 
 - Tightened first-user docs around `borg rescue`, `borg first-10`, and MCP setup.
