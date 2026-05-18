@@ -8,6 +8,7 @@ functions, because first users hit console scripts first.
 from __future__ import annotations
 
 import json
+import re
 import subprocess
 import sys
 
@@ -121,10 +122,11 @@ def test_python_module_cli_help_matches_console_contract():
 
 def test_console_and_source_versions_match_pyproject():
     """Console/source entrypoints must report the pyproject version, not stale host borg."""
-    import tomllib
-
     root = cli_module.Path(__file__).resolve().parents[2]
-    expected = tomllib.loads((root / "pyproject.toml").read_text(encoding="utf-8"))["project"]["version"]
+    pyproject_text = (root / "pyproject.toml").read_text(encoding="utf-8")
+    match = re.search(r'^version\s*=\s*["\']([^"\']+)["\']', pyproject_text, re.MULTILINE)
+    assert match, "pyproject.toml must declare project.version"
+    expected = match.group(1)
     assert cli_module.__version__ == expected
     code, out, err = capture_main(["--version"])
     assert code == 0
