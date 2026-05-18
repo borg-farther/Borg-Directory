@@ -14,7 +14,7 @@ if str(ROOT) not in sys.path:
 from borg.core.atom_policy import AtomDecision, classify_atom_policy
 from borg.core.learning_atoms import compute_atom_id
 
-FIXTURES = ROOT / "borg" / "tests" / "fixtures"
+FIXTURES = ROOT / "tests" / "fixtures"
 
 
 def atom_with_text(text: str) -> dict:

@@ -1,8 +1,8 @@
 """
 Comprehensive tests for borg.core.contextual_selector.
 
-Run with: python -m pytest borg/tests/test_contextual_selector.py -v
-Or directly: python -m borg.tests.test_contextual_selector
+Run with: python -m pytest tests/learning/test_contextual_selector.py -v
+Or directly: python -m pytest tests/learning/test_contextual_selector.py
 """
 
 import math

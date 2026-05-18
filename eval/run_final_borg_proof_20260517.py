@@ -66,7 +66,7 @@ def read_json(rel: str) -> dict[str, Any]:
 def main() -> int:
     py = sys.executable
     commands = [
-        ("targeted_readiness_and_store_tests", [py, "-m", "pytest", "-q", "eval/tests/test_readiness_1000.py", "eval/tests/test_real_user_rollout_gate.py", "borg/tests/test_store_concurrency.py"], 600, {0}),
+        ("targeted_readiness_and_store_tests", [py, "-m", "pytest", "-q", "eval/tests/test_readiness_1000.py", "eval/tests/test_real_user_rollout_gate.py", "tests/core/test_store_concurrency.py"], 600, {0}),
         ("full_pytest_suite", [py, "-m", "pytest", "-q"], 600, {0}),
         ("security_gate_check", [py, "scripts/security_gate_check.py"], 180, {0}),
         ("first_user_release_gate_fresh_venv", [py, "eval/run_first_user_release_gate.py"], 900, {0}),

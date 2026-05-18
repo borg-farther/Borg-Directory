@@ -87,8 +87,8 @@ FIRST_10_GATES: List[ReadinessGate] = [
             "Agents are instructed not to blend weak retrieval into normal reasoning.",
         ],
         proof=[
-            "borg/tests/test_rescue.py",
-            "borg/tests/test_first_10_readiness.py",
+            "tests/core/test_rescue.py",
+            "tests/readiness/test_first_10_readiness.py",
         ],
     ),
     ReadinessGate(

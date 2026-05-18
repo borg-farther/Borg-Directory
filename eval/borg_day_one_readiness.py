@@ -23,11 +23,11 @@ REQUIRED_EVIDENCE = {
     "security_baseline": "eval/security_hardening_baseline.json",
     "readme": "README.md",
     "rescue_engine": "borg/core/rescue.py",
-    "rescue_tests": "borg/tests/test_rescue.py",
+    "rescue_tests": "tests/core/test_rescue.py",
     "privacy_scanner": "borg/core/privacy.py",
     "prompt_injection_scanner": "borg/core/prompt_injection.py",
-    "privacy_tests": "borg/tests/test_privacy_structured.py",
-    "prompt_injection_tests": "borg/tests/test_prompt_injection.py",
+    "privacy_tests": "tests/security/test_privacy_structured.py",
+    "prompt_injection_tests": "tests/security/test_prompt_injection.py",
     "security_gate": "scripts/security_gate_check.py",
 }
 
@@ -80,7 +80,7 @@ def compile_snapshot() -> Dict[str, Any]:
         _exists(path)
         for path in (
             "borg/core/rescue.py",
-            "borg/tests/test_rescue.py",
+            "tests/core/test_rescue.py",
         )
     ) and "borg rescue" in readme and "borg_rescue" in readme
     first_user_surface_green = bool(uat.get("first_user_surface", {}).get("passed"))

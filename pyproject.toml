@@ -73,7 +73,7 @@ include = ["borg*"]
 borg = ["seeds_data/*.yaml", "seeds_data/*.json", "seeds_data/*.md", "seeds_data/packs/*.yaml"]
 
 [tool.pytest.ini_options]
-testpaths = ["borg/tests"]
+testpaths = ["tests"]
 norecursedirs = ["docs", "build", "dist", ".git", ".pytest_cache", "*.egg-info"]
 markers = [
     "network: tests that mock or exercise network-style pack retrieval paths",
