@@ -7,6 +7,7 @@ Do **not** install `borg` or `borgbackup`; those are unrelated to this AI-agent 
 ## Why connect an agent to Borg?
 
 If you run Claude Code, Hermes Agent, OpenClaw, Cursor, Cline, Continue, Goose, or another MCP-capable coding agent, connect Borg once as a local MCP server.
+Choose the setup path by the **agent host**, not by the model provider. If you run Hermes with Claude, GPT, OpenRouter, Anthropic, OpenAI, or another model backend, use the **Hermes Agent** section.
 
 Why:
 
@@ -64,6 +65,8 @@ what MCP tools do you have from Borg?
 Expected: Claude lists Borg tools such as `borg_rescue`, `borg_observe`, and `borg_search`, or `/mcp list` shows a `borg` server.
 
 ## Hermes Agent
+
+Use this section for Hermes Agent regardless of whether Hermes is using Claude, GPT, OpenRouter, Anthropic, OpenAI, or another model provider.
 
 Add Borg to `~/.hermes/config.yaml`:
 
