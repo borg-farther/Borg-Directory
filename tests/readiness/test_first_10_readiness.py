@@ -46,7 +46,9 @@ def test_first_10_packet_contains_install_mcp_feedback_and_priming():
     assert "borg first-10 --json" in commands
     assert "borg_rescue" in packet["priming_paragraph"]
     assert "borg_observe" in packet["priming_paragraph"]
-    assert "borg_rate(helpful=True/False)" in packet["priming_paragraph"]
+    assert "borg_feedback" in packet["priming_paragraph"]
+    assert "borg_record_failure" in packet["priming_paragraph"]
+    assert "borg_rate" not in packet["priming_paragraph"]
     assert "did_it_prevent_a_dead_end" in packet["feedback_fields"]
     mixes = "\n".join(packet["supported_mixes"])
     assert "Hermes" in mixes
