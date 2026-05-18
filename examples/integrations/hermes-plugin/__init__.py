@@ -8,7 +8,7 @@ run_agent.py. This plugin is fully opt-in.
 Installation (one of two ways):
 
   1. Symlink into ~/.hermes/plugins/ (recommended for dev):
-       ln -s /root/hermes-workspace/guild-v2/hermes-plugin ~/.hermes/plugins/guild-v2
+       ln -s /path/to/Borg-Directory/examples/integrations/hermes-plugin ~/.hermes/plugins/borg
 
   2. pip install the whole guild-v2 package (it registers via entry-points).
 

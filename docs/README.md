@@ -2,6 +2,10 @@
 
 Start with the root [`README.md`](../README.md). It is the canonical public first-user path.
 
+Only the docs listed below are current public first-user docs. Other historical
+notes, old experiments, generated PDFs, marketing drafts, and one-off scripts
+belong under [`archive/`](archive/) and are not current product claims.
+
 ## Current public docs
 
 - [`QUICKSTART.md`](QUICKSTART.md) — shortest copy-paste path

@@ -34,7 +34,7 @@ for f in files[:10]:
 
 # Check migration_state_desync pack
 print()
-SKILLS_DIR = Path('/root/hermes-workspace/borg/skills')
+SKILLS_DIR = Path('/root/hermes-workspace/borg/examples/skills')
 for pf in sorted(SKILLS_DIR.glob('*.md')):
     content = pf.read_text()
     if not content.startswith('---'):

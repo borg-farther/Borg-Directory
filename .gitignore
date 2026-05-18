@@ -8,6 +8,12 @@ borg.db
 __pycache__/
 *.pyc
 *.pyo
+.pytest_cache/
+.mypy_cache/
+.ruff_cache/
+.coverage
+.coverage.*
+htmlcov/
 
 # Runtime
 embeddings.pkl
@@ -17,6 +23,9 @@ telemetry.jsonl
 # Python packaging artifacts
 *.egg-info/
 *.egg
+.venv/
+venv/
+*.log
 
 # Broken submodule artifact (removed 2026-04-24)
 docs/agenti/

@@ -7,7 +7,7 @@ import yaml
 from pathlib import Path
 
 # Load all Django SWE-bench tasks
-task_dir = Path("/root/hermes-workspace/borg/dogfood/swebench_tasks")
+task_dir = Path("/root/hermes-workspace/borg/docs/archive/dogfood/dogfood/swebench_tasks")
 django_tasks = sorted(task_dir.glob("django__django-*"))
 
 bugs = []
@@ -91,7 +91,7 @@ for task_path in django_tasks:
 print(f"Loaded {len(bugs)} Django bugs\n")
 
 # Load skill packs
-skill_dir = Path("/root/hermes-workspace/borg/skills")
+skill_dir = Path("/root/hermes-workspace/borg/examples/skills")
 packs = {}
 for f in skill_dir.glob("*.md"):
     try:
