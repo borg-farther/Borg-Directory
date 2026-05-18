@@ -82,7 +82,7 @@ def classify_error(problem: str, hints: str) -> list:
 
 
 def main():
-    TASKS_DIR = '/root/hermes-workspace/borg/dogfood/swebench_tasks'
+    TASKS_DIR = '/root/hermes-workspace/borg/docs/archive/dogfood/dogfood/swebench_tasks'
     OUTPUT_DIR = '/root/hermes-workspace/borg/eval/e1b_real_bugs/results'
     
     os.makedirs(OUTPUT_DIR, exist_ok=True)

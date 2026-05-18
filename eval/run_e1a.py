@@ -222,10 +222,10 @@ def check_file_match(trail_files: List[str], patch_files: List[str]) -> Tuple[in
 
 def main():
     # Paths
-    skills_dir = Path("/root/hermes-workspace/borg/skills")
+    skills_dir = Path("/root/hermes-workspace/borg/examples/skills")
     task_dirs = [
-        Path("/root/hermes-workspace/borg/dogfood/swebench_experiment"),
-        Path("/root/hermes-workspace/borg/dogfood/swebench_tasks"),
+        Path("/root/hermes-workspace/borg/docs/archive/dogfood/dogfood/swebench_experiment"),
+        Path("/root/hermes-workspace/borg/docs/archive/dogfood/dogfood/swebench_tasks"),
     ]
     output_file = Path("/root/hermes-workspace/borg/eval/E1a_results.md")
     

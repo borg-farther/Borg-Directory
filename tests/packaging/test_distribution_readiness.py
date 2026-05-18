@@ -37,7 +37,20 @@ def test_packaged_seed_data_includes_markdown_files() -> None:
     data = tomllib.loads(pyproject.read_text(encoding="utf-8"))
     package_data = data["tool"]["setuptools"]["package-data"]["borg"]
     assert "seeds_data/*.md" in package_data
+    assert "seeds_data/*/*.md" in package_data
     assert (_repo_root() / "borg" / "seeds_data" / "systematic-debugging.md").exists()
+    assert (_repo_root() / "borg" / "seeds_data" / "borg" / "SKILL.md").exists()
+
+
+def test_borg_install_entrypoint_is_safe_alias() -> None:
+    """The legacy borg-install script must not wire users to stale removed commands."""
+    data = tomllib.loads((_repo_root() / "pyproject.toml").read_text(encoding="utf-8"))
+    scripts = data["project"]["scripts"]
+    assert scripts["borg-install"] == "borg.cli.install:main"
+
+    install_py = (_repo_root() / "borg" / "cli" / "install.py").read_text(encoding="utf-8")
+    assert "setup-claude --scope user --verify --fix" in install_py
+    assert '"serve"' not in install_py
 
 
 def test_base_install_keeps_sentence_transformers_optional() -> None:

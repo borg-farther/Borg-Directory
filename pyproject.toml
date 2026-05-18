@@ -70,7 +70,7 @@ where = ["."]
 include = ["borg*"]
 
 [tool.setuptools.package-data]
-borg = ["seeds_data/*.yaml", "seeds_data/*.json", "seeds_data/*.md", "seeds_data/packs/*.yaml"]
+borg = ["seeds_data/*.yaml", "seeds_data/*.json", "seeds_data/*.md", "seeds_data/*/*.yaml", "seeds_data/*/*.json", "seeds_data/*/*.md", "seeds_data/packs/*.yaml"]
 
 [tool.pytest.ini_options]
 testpaths = ["tests"]
