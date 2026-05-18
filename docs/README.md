@@ -8,6 +8,7 @@ belong under [`archive/`](archive/) and are not current product claims.
 
 ## Current public docs
 
+- [`INSTALL.md`](INSTALL.md) — OS-specific install guide and wrong-package troubleshooting
 - [`QUICKSTART.md`](QUICKSTART.md) — shortest copy-paste path
 - [`TRYING_BORG.md`](TRYING_BORG.md) — detailed first-user setup
 - [`MCP_SETUP.md`](MCP_SETUP.md) — Claude Code, Cursor, and generic MCP setup

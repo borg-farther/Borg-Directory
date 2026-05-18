@@ -3,27 +3,149 @@
 Borg helps coding agents avoid rediscovering the same fixes and dead ends.
 Give it an error or task; it returns an `ACTION / STOP / VERIFY` packet, or a clear `NO_CONFIDENT_MATCH` when it does not know.
 
-**Install:** `pip install agent-borg`  
-**CLI:** `borg`  
-**MCP server:** `borg-mcp`  
+**Install package:** `agent-borg`  
+**Installed CLI:** `borg`  
+**MCP server command:** `borg-mcp`  
 **Canonical repo:** https://github.com/borg-farther/Borg-Directory
+
+Name warning: Borg is the product name and `borg` is the command, but the package you install is **`agent-borg`**.
+Do **not** run `pip install borg`, `brew install borgbackup`, `apt install borgbackup`, `apt-get install borgbackup`, `dnf install borgbackup`, or `pacman -S borg`; those install unrelated Borg/BorgBackup software and will not provide Borg's AI-agent MCP tools.
 
 Borg is not marketed here as a magic success-rate booster. Current local security/readiness gates are green; statistically significant external agent-level lift is still unproven.
 
 ---
 
-## 1. Install
+## 1. Install `agent-borg`
+
+Requires Python 3.10+. For normal users, prefer `pipx`: it installs the CLI cleanly without polluting your system Python.
+
+### macOS
 
 ```bash
-python3 -m pip install agent-borg
+python3 --version  # must be 3.10+
+brew install pipx
+pipx ensurepath
+pipx install agent-borg
+exec "$SHELL" -l
+
+command -v borg
+command -v borg-mcp
 borg version
 borg-doctor --json
 ```
 
-For isolated installs:
+No Homebrew?
 
 ```bash
+python3 -m pip install --user pipx
+python3 -m pipx ensurepath
+python3 -m pipx install agent-borg
+exec "$SHELL" -l
+
+command -v borg
+borg version
+borg-doctor --json
+```
+
+Do not run `brew install borgbackup`; that installs BorgBackup, not this project.
+
+### Linux
+
+Debian/Ubuntu:
+
+```bash
+python3 --version  # must be 3.10+
+sudo apt update
+sudo apt install -y pipx
+pipx ensurepath
 pipx install agent-borg
+exec "$SHELL" -l
+
+command -v borg
+command -v borg-mcp
+borg version
+borg-doctor --json
+```
+
+Fedora/RHEL:
+
+```bash
+sudo dnf install -y pipx
+pipx ensurepath
+pipx install agent-borg
+exec "$SHELL" -l
+
+command -v borg
+borg version
+borg-doctor --json
+```
+
+Arch:
+
+```bash
+sudo pacman -Syu --needed python-pipx
+pipx ensurepath
+pipx install agent-borg
+exec "$SHELL" -l
+
+command -v borg
+borg version
+borg-doctor --json
+```
+
+If your distro has no `pipx` package:
+
+```bash
+python3 -m pip install --user pipx
+python3 -m pipx ensurepath
+python3 -m pipx install agent-borg
+exec "$SHELL" -l
+
+command -v borg
+borg version
+borg-doctor --json
+```
+
+Do not run `apt install borgbackup`, `apt-get install borgbackup`, `dnf install borgbackup`, or `pacman -S borg`; those install BorgBackup/other packages, not this project.
+
+### Windows PowerShell
+
+```powershell
+py -3 --version  # must be 3.10+
+py -m pip install --user pipx
+py -m pipx ensurepath
+py -m pipx install agent-borg
+```
+
+Close and reopen PowerShell, then verify:
+
+```powershell
+where.exe borg
+where.exe borg-mcp
+borg version
+borg-doctor --json
+```
+
+If `py` is unavailable, replace `py` with `python`.
+
+### Optional Python-environment install
+
+If you intentionally want Borg inside the active Python environment instead of an isolated CLI install:
+
+```bash
+python3 -m pip install agent-borg
+python3 -m pip install 'agent-borg[embeddings]'  # optional semantic search
+python3 -m pip install 'agent-borg[crypto]'      # optional Ed25519 signing support
+python3 -m pip install 'agent-borg[all]'         # optional dev + semantic + crypto
+```
+
+Windows PowerShell:
+
+```powershell
+py -m pip install agent-borg
+py -m pip install "agent-borg[embeddings]"
+py -m pip install "agent-borg[crypto]"
+py -m pip install "agent-borg[all]"
 ```
 
 For controlled or offline environments:
@@ -31,17 +153,11 @@ For controlled or offline environments:
 ```bash
 python -m pip download agent-borg -d ./wheelhouse
 python -m pip install --no-index --find-links ./wheelhouse agent-borg
+borg version
+borg-doctor --json
 ```
 
-Optional extras:
-
-```bash
-pip install 'agent-borg[embeddings]'   # semantic search
-pip install 'agent-borg[crypto]'       # Ed25519 signing support
-pip install 'agent-borg[all]'          # dev + semantic + crypto
-```
-
-Requires Python 3.10+.
+Full install guide: [`docs/INSTALL.md`](docs/INSTALL.md).
 
 ---
 
@@ -82,15 +198,28 @@ for hit in hits:
 
 ---
 
-## 3. Connect an agent with MCP
+## 3. Connect Claude Code with MCP
 
-Claude Code one-command setup:
+Prerequisite: `borg version` and `borg-doctor --json` pass in the same terminal environment that launches Claude Code.
 
 ```bash
 borg setup-claude --scope user --verify --fix
 ```
 
-Then fully restart Claude Code and confirm Borg tools appear.
+Expected output includes:
+
+```text
+Verify: PASS (initialize handshake ok)
+```
+
+Then fully quit and restart Claude Code so it reloads PATH and MCP config.
+In a new Claude Code session, ask:
+
+```text
+what MCP tools do you have from Borg?
+```
+
+Expected: Claude lists Borg tools such as `borg_rescue`, `borg_observe`, and `borg_search`, or `/mcp list` shows a `borg` server.
 
 Manual MCP config for any stdio MCP client:
 
@@ -106,20 +235,21 @@ Manual MCP config for any stdio MCP client:
 }
 ```
 
-If `borg-mcp` is not on PATH:
+If the MCP client cannot find `borg-mcp`, first locate it:
 
-```json
-{
-  "mcpServers": {
-    "borg": {
-      "command": "python3",
-      "args": ["-m", "borg.integrations.mcp_server"],
-      "env": { "BORG_HOME": "/absolute/path/to/.borg" }
-    }
-  }
-}
+macOS/Linux:
+
+```bash
+command -v borg-mcp
 ```
 
+Windows PowerShell:
+
+```powershell
+where.exe borg-mcp
+```
+
+Then use that absolute path as the MCP `command`. Avoid bare `python`/`python3` in MCP config unless you are certain that exact interpreter has `agent-borg` installed.
 Use absolute paths in MCP env blocks. Do not rely on `~` expansion inside MCP clients.
 
 More setup detail: [`docs/MCP_SETUP.md`](docs/MCP_SETUP.md).
@@ -178,6 +308,8 @@ Do not paste API keys, passwords, cookies, tokens, private repo contents, custom
 
 ## 7. Clean evaluator smoke path
 
+Use the package name `agent-borg`; the CLI command after install is `borg`. Do not substitute `borg`, `borgbackup`, Homebrew BorgBackup, or apt/dnf/pacman BorgBackup.
+
 ```bash
 python3 -m venv /tmp/borg-smoke
 . /tmp/borg-smoke/bin/activate
@@ -190,7 +322,7 @@ borg search "django migration table already exists"
 borg first-10 --json
 ```
 
-Then connect MCP with `borg setup-claude --scope user --verify --fix` or the manual config above.
+Then connect MCP with `borg setup-claude --scope user --verify --fix`, fully restart Claude Code, and verify Claude lists Borg tools such as `borg_rescue`, `borg_observe`, and `borg_search`.
 
 A good first evaluation is whether Borg reduces redundant investigation, not whether it magically solves every bug.
 
@@ -198,6 +330,7 @@ A good first evaluation is whether Borg reduces redundant investigation, not whe
 
 ## Docs
 
+- [`docs/INSTALL.md`](docs/INSTALL.md) — OS-specific install guide and wrong-package troubleshooting
 - [`docs/QUICKSTART.md`](docs/QUICKSTART.md) — short copy-paste path
 - [`docs/TRYING_BORG.md`](docs/TRYING_BORG.md) — detailed first-user setup
 - [`docs/MCP_SETUP.md`](docs/MCP_SETUP.md) — MCP setup details
