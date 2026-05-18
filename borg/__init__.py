@@ -12,7 +12,12 @@ from __future__ import annotations
 import json
 from typing import Any
 
-__version__ = "3.3.3"
+try:
+    from importlib.metadata import PackageNotFoundError, version as _pkg_version
+
+    __version__ = _pkg_version("agent-borg")
+except (ImportError, PackageNotFoundError):
+    __version__ = "3.3.5"  # fallback only when package metadata is unavailable
 
 
 def check(context: str, constraints: dict | None = None, top_k: int = 3) -> list[dict[str, Any]]:
