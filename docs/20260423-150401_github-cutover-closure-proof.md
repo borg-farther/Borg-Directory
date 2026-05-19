@@ -3,7 +3,7 @@
 - Run timestamp (UTC): 2026-04-23 15:04:01
 - Working repo: `/root/hermes-workspace/borg`
 - Target new home: `borg-farther/Borg-Directory`
-- Target old home candidate: `bensargotest-sys/agent-borg`
+- Target old home candidate: `<OLD_ACCT>/agent-borg`
 
 ## Step 1 — Verify local `origin` points to new home
 **Command:**
@@ -36,7 +36,7 @@ github.com
   - Git operations protocol: https
   - Token: github...PzP_***********************************************************
 
-  ✓ Logged in to github.com account bensargotest-sys (/root/.config/gh/hosts.yml)
+  ✓ Logged in to github.com account <OLD_ACCT> (/root/.config/gh/hosts.yml)
   - Active account: false
   - Git operations protocol: https
   - Token: ghp_************************************
@@ -57,18 +57,18 @@ cd /root/hermes-workspace/borg && gh repo view borg-farther/Borg-Directory --jso
 ### 2c) Old repo metadata
 **Command:**
 ```bash
-cd /root/hermes-workspace/borg && gh repo view bensargotest-sys/agent-borg --json nameWithOwner,visibility,isPrivate,isArchived,defaultBranchRef,url,description
+cd /root/hermes-workspace/borg && gh repo view <OLD_ACCT>/agent-borg --json nameWithOwner,visibility,isPrivate,isArchived,defaultBranchRef,url,description
 ```
 **Exit code:** `1`
 **Output / blocker:**
 ```text
-GraphQL: Could not resolve to a Repository with the name 'bensargotest-sys/agent-borg'. (repository)
+GraphQL: Could not resolve to a Repository with the name '<OLD_ACCT>/agent-borg'. (repository)
 ```
 
 ### 2d) Old repo REST existence check
 **Command:**
 ```bash
-cd /root/hermes-workspace/borg && gh api repos/bensargotest-sys/agent-borg
+cd /root/hermes-workspace/borg && gh api repos/<OLD_ACCT>/agent-borg
 ```
 **Exit code:** `1`
 **Output / blocker:**
@@ -81,7 +81,7 @@ cd /root/hermes-workspace/borg && gh api repos/bensargotest-sys/agent-borg
 ## Step 3 — If allowed and old repo exists, set old repo private
 **Command attempted:**
 ```bash
-cd /root/hermes-workspace/borg && gh api -X PATCH repos/bensargotest-sys/agent-borg -f private=true
+cd /root/hermes-workspace/borg && gh api -X PATCH repos/<OLD_ACCT>/agent-borg -f private=true
 ```
 **Exit code:** `1`
 **Output / blocker:**
@@ -93,12 +93,12 @@ cd /root/hermes-workspace/borg && gh api -X PATCH repos/bensargotest-sys/agent-b
 ## Step 4 — Verify old repo visibility is private after change
 **Command attempted:**
 ```bash
-cd /root/hermes-workspace/borg && gh repo view bensargotest-sys/agent-borg --json visibility,isPrivate,nameWithOwner
+cd /root/hermes-workspace/borg && gh repo view <OLD_ACCT>/agent-borg --json visibility,isPrivate,nameWithOwner
 ```
 **Exit code:** `1`
 **Output / blocker:**
 ```text
-GraphQL: Could not resolve to a Repository with the name 'bensargotest-sys/agent-borg'. (repository)
+GraphQL: Could not resolve to a Repository with the name '<OLD_ACCT>/agent-borg'. (repository)
 ```
 **Result:** BLOCKED (visibility cannot be attested because repo is inaccessible/not found)
 

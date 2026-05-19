@@ -683,7 +683,7 @@ Resistance is futile — your agent will be assimilated.
 
 ## Current
 - Package: agent-borg (PyPI)
-- GitHub org: bensargotest-sys (TEST — undermines credibility, needs change)
+- GitHub org: <OLD_ACCT> (TEST — undermines credibility, needs change)
 - Domain: none
 
 ## Top Domain Candidates (researched 2026-03-28)
@@ -699,7 +699,7 @@ Resistance is futile — your agent will be assimilated.
 | borgmesh.ai | YES |
 
 ## Decisions Needed
-- [ ] GitHub org name (replace bensargotest-sys)
+- [ ] GitHub org name (replace <OLD_ACCT>)
 - [ ] Domain registration
 - [ ] Logo / visual identity
 - [ ] Launch strategy (soft launch or announcement)
@@ -726,7 +726,7 @@ Resistance is futile — your agent will be assimilated.
 
 # PART 18: OPEN QUESTIONS
 
-- [ ] Org name (bensargotest-sys → ?)
+- [ ] Org name (<OLD_ACCT> → ?)
 - [ ] Domain (borg.dev? borgpacks.io? borg.ai?)
 - [ ] Logo / visual identity
 - [ ] Launch strategy — soft or big bang?

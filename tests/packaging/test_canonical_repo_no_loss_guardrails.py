@@ -82,5 +82,5 @@ def test_shipped_borg_seed_skill_uses_current_public_home_and_commands() -> None
         assert "pip install agent-borg" in text
         assert "borg-mcp" in text
         assert "punkrocker/agent-borg" not in text
-        assert "bensargotest-sys/agent-borg" not in text
+        assert "legacy-org/agent-borg" not in text
         assert "borgd" not in text

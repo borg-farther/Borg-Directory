@@ -34,8 +34,8 @@ from borg.core.search import borg_search, borg_try, borg_pull
 # Constants
 # ---------------------------------------------------------------------------
 
-PACKS_INDEX_PATH = Path(os.environ.get("BORG_TEST_PACKS_INDEX", "/root/hermes-workspace/guild-packs/index.json"))
-PACKS_DIR = Path(os.environ.get("BORG_TEST_PACKS_DIR", "/root/hermes-workspace/guild-packs/packs"))
+PACKS_INDEX_PATH = Path(os.environ.get("BORG_TEST_PACKS_INDEX", "/tmp/example-packs/index.json"))
+PACKS_DIR = Path(os.environ.get("BORG_TEST_PACKS_DIR", "/tmp/example-packs/packs"))
 
 def _readable_file(path: Path) -> bool:
     try:
@@ -264,7 +264,7 @@ class TestBorgTryPreviewsPacks:
         content = read_pack_yaml(pack_name)
         fname = get_pack_file_path(pack_name).name
         resolved_url = (
-            f"https://raw.githubusercontent.com/bensargotest-sys/guild-packs/main"
+            f"https://raw.githubusercontent.com/example-org/example-packs/main"
             f"/packs/{fname}"
         )
         with patch("borg.core.search.resolve_guild_uri", return_value=resolved_url):
@@ -297,7 +297,7 @@ class TestTop5PacksPullAndValidate:
         content = read_pack_yaml(pack_name)
         fname = get_pack_file_path(pack_name).name
         resolved_url = (
-            f"https://raw.githubusercontent.com/bensargotest-sys/guild-packs/main"
+            f"https://raw.githubusercontent.com/example-org/example-packs/main"
             f"/packs/{fname}"
         )
 
@@ -359,7 +359,7 @@ class TestTop5PacksTryVerdict:
         content = read_pack_yaml(pack_name)
         fname = get_pack_file_path(pack_name).name
         resolved_url = (
-            f"https://raw.githubusercontent.com/bensargotest-sys/guild-packs/main"
+            f"https://raw.githubusercontent.com/example-org/example-packs/main"
             f"/packs/{fname}"
         )
         with patch("borg.core.search.resolve_guild_uri", return_value=resolved_url):

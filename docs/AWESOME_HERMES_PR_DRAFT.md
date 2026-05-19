@@ -11,7 +11,7 @@
 Add under: `## Skills & Plugins` → `### Skill Registries & Discovery`
 
 ```md
-- **[beta]** [agent-borg](https://github.com/bensargotest-sys/guild-tools) by [bensargotest-sys](https://github.com/bensargotest-sys) - Workflow cache and collective intelligence engine for AI agents. 14 MCP tools (`borg_search`, `borg_pull`, `borg_try`, `borg_apply`, `borg_publish`, `borg_feedback`, `borg_suggest`, `borg_observe`, `borg_convert`, and more). Stores proven approaches as reusable YAML packs with Ed25519 signing, OpenClaw bridge, and agentskills.io converter. 1,083 tests. Beta — solid test coverage but no external users yet. Framed as "connective brain tissue for agents."
+- **[beta]** [agent-borg](https://github.com/<OLD_ACCT>/guild-tools) by [<OLD_ACCT>](https://github.com/<OLD_ACCT>) - Workflow cache and collective intelligence engine for AI agents. 14 MCP tools (`borg_search`, `borg_pull`, `borg_try`, `borg_apply`, `borg_publish`, `borg_feedback`, `borg_suggest`, `borg_observe`, `borg_convert`, and more). Stores proven approaches as reusable YAML packs with Ed25519 signing, OpenClaw bridge, and agentskills.io converter. 1,083 tests. Beta — solid test coverage but no external users yet. Framed as "connective brain tissue for agents."
 ```
 
 ---
@@ -26,12 +26,12 @@ feat: Add agent-borg (beta) — workflow cache and collective intelligence for H
 
 ### What is agent-borg?
 
-[agent-borg](https://github.com/bensargotest-sys/guild-tools) is a workflow cache 
-layer for AI agents. Where a standard agent starts each problem from scratch, borg 
-lets it reach into a shared cache of proven approaches — and write back what it 
+[agent-borg](https://github.com/<OLD_ACCT>/guild-tools) is a workflow cache
+layer for AI agents. Where a standard agent starts each problem from scratch, borg
+lets it reach into a shared cache of proven approaches — and write back what it
 learned so the next agent doesn't repeat the same failed attempts.
 
-Framed as "cache layer for agent reasoning" or "connective brain tissue for agents," 
+Framed as "cache layer for agent reasoning" or "connective brain tissue for agents,"
 it manages **workflow packs** — YAML files encoding how to approach a problem class:
 
 - Problem class, mental model, ordered phases with checkpoints and anti-patterns
@@ -41,8 +41,8 @@ it manages **workflow packs** — YAML files encoding how to approach a problem 
 
 ### Capabilities
 
-- **14 MCP tools**: `borg_search`, `borg_pull`, `borg_try`, `borg_apply`, 
-  `borg_publish`, `borg_feedback`, `borg_suggest`, `borg_observe`, `borg_convert`, 
+- **14 MCP tools**: `borg_search`, `borg_pull`, `borg_try`, `borg_apply`,
+  `borg_publish`, `borg_feedback`, `borg_suggest`, `borg_observe`, `borg_convert`,
   `borg_init`, and 4 more
 - **Collective intelligence packs**: Pre-built packs for common agent tasks
 - **Reputation engine**: Pack quality signals from the community
@@ -58,10 +58,10 @@ it manages **workflow packs** — YAML files encoding how to approach a problem 
 - ✅ Comprehensive test suite (1,083 tests)
 - ✅ MCP integration fully wired (14 tools)
 - ⚠️  No confirmed external users yet — this is the honest differentiating factor
-- ⚠️  Small GitHub repo (bensargotest-sys/guild-tools) — early-stage project
+- ⚠️  Small GitHub repo (<OLD_ACCT>/guild-tools) — early-stage project
 
-The **beta** tag is appropriate: it works and is well-tested, but is still 
-gaining adoption. Recommend reviewing again in 60 days to re-assess toward 
+The **beta** tag is appropriate: it works and is well-tested, but is still
+gaining adoption. Recommend reviewing again in 60 days to re-assess toward
 production if an active user community emerges.
 
 ### Why it belongs in the list
@@ -74,8 +74,8 @@ production if an active user community emerges.
 
 ### Category
 
-`Skill Registries & Discovery` — borg is a workflow pack registry with semantic 
-search, reputation scoring, and community curation. Fits alongside `hermeshub` 
+`Skill Registries & Discovery` — borg is a workflow pack registry with semantic
+search, reputation scoring, and community curation. Fits alongside `hermeshub`
 and `skilldock.io`.
 
 ---
@@ -85,9 +85,9 @@ and `skilldock.io`.
 | Field | Value |
 |-------|-------|
 | Resource name | agent-borg |
-| URL | https://github.com/bensargotest-sys/guild-tools |
+| URL | https://github.com/<OLD_ACCT>/guild-tools |
 | PyPI | https://pypi.org/project/agent-borg/ |
-| Author | bensargotest-sys |
+| Author | <OLD_ACCT> |
 | Category | Skill Registries & Discovery |
 | Maturity | beta |
 | MCP tools | 14 |

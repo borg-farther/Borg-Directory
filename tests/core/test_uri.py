@@ -39,7 +39,7 @@ class TestResolveBorgUri:
 
     def test_guild_uri_resolves_to_github_raw(self):
         """borg://domain/name resolves to the correct GitHub raw URL."""
-        result = resolve_guild_uri("borg://bensargotest-sys/my-pack")
+        result = resolve_guild_uri("borg://example-org/my-pack")
         assert result == (
             f"https://raw.githubusercontent.com/{DEFAULT_REPO}/{DEFAULT_BRANCH}"
             "/packs/my-pack.workflow.yaml"
@@ -47,8 +47,8 @@ class TestResolveBorgUri:
 
     def test_guild_uri_with_slash_in_name(self):
         """borg://domain/pack/subpath resolves to a URL with the full path in the pack segment."""
-        # guild://bensargotest-sys/my-pack -> packs/my-pack.workflow.yaml (pack name is just "my-pack")
-        result = resolve_guild_uri("borg://bensargotest-sys/my-pack")
+        # guild://example-org/my-pack -> packs/my-pack.workflow.yaml (pack name is just "my-pack")
+        result = resolve_guild_uri("borg://example-org/my-pack")
         assert result == (
             f"https://raw.githubusercontent.com/{DEFAULT_REPO}/{DEFAULT_BRANCH}"
             "/packs/my-pack.workflow.yaml"
@@ -56,7 +56,7 @@ class TestResolveBorgUri:
 
     def test_https_uri_passthrough(self):
         """https:// URLs are returned unchanged."""
-        url = "https://raw.githubusercontent.com/bensargotest-sys/guild-packs/main/packs/test.yaml"
+        url = "https://raw.githubusercontent.com/example-org/example-packs/main/packs/test.yaml"
         assert resolve_guild_uri(url) == url
 
     def test_http_uri_passthrough(self):
@@ -88,7 +88,7 @@ class TestResolveBorgUri:
 
     def test_guild_uri_alias_resolves_to_same_github_raw(self):
         """guild:// remains a first-user-safe legacy alias for borg://."""
-        result = resolve_guild_uri("guild://bensargotest-sys/my-pack")
+        result = resolve_guild_uri("guild://example-org/my-pack")
         assert result == (
             f"https://raw.githubusercontent.com/{DEFAULT_REPO}/{DEFAULT_BRANCH}"
             "/packs/my-pack.workflow.yaml"
@@ -234,8 +234,8 @@ class TestFuzzyMatchPack:
 
         monkeypatch.setattr(uri_module, "get_available_pack_names", fake_names)
 
-        # Should look up "my-pack" not "bensargotest-sys/my-pack"
-        result = fuzzy_match_pack("borg://bensargotest-sys/my-pack")
+        # Should look up "my-pack" not "/my-pack"
+        result = fuzzy_match_pack("borg://example-org/my-pack")
         assert "my-pack" in result
 
     def test_returns_close_matches(self, monkeypatch):

@@ -80,7 +80,7 @@ def test_pull_raw_github_yaml(temp_borg_dir, clear_index_cache):
 
     # The django-null-pointer seed pack exists in the agent-borg repo
     url = (
-        "https://github.com/bensargotest-sys/agent-borg/raw/main"
+        "https://github.com/example-org/agent-borg/raw/main"
         "/borg/seeds_data/packs/django-null-pointer.yaml"
     )
 

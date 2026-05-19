@@ -1,0 +1,39 @@
+name: Account Reference Firewall
+
+on:
+  push:
+    branches: [main, master]
+  pull_request:
+    branches: [main, master]
+
+jobs:
+  old-account-reference:
+    runs-on: ubuntu-latest
+    env:
+      OLD_ACCT_PART_A: bensargo
+      OLD_ACCT_PART_B: test-sys
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Reject old account references
+        shell: bash
+        run: |
+          set -euo pipefail
+          forbidden="${OLD_ACCT_PART_A}${OLD_ACCT_PART_B}"
+          matches="$(
+            grep -RIn "$forbidden" src tests docs borg \
+              --include='*.py' \
+              --include='*.md' \
+              --include='*.toml' \
+              --include='*.yml' \
+              --include='*.yaml' \
+              --include='*.json' \
+              --include='*.txt' \
+              --include='*.html' \
+              2>/dev/null || true
+          )"
+          matches="$(printf '%s\n' "$matches" | grep -v '^AGENTS.md:' || true)"
+          if [ -n "$matches" ]; then
+            printf 'Forbidden old account reference found:\n%s\n' "$matches"
+            exit 1
+          fi

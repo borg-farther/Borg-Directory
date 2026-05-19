@@ -1,7 +1,7 @@
 # 20260408-0735 Phase 0 Ship Report
 
 **Status:** SHIPPED to PyPI as `agent-borg==3.2.2`
-**Tag:** `v3.2.2` pushed to `bensargotest-sys/guild-tools`
+**Tag:** `v3.2.2` pushed to `<OLD_ACCT>/guild-tools`
 **Verifier:** Hermes Agent (Chief Architect role per AB's Q3 directive — minimum human-in-loop)
 **Time from spec → ship:** ~75 minutes (PRD complete at 06:50, v3.2.2 live at ~07:35)
 

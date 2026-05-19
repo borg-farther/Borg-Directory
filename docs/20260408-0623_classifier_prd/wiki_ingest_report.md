@@ -93,7 +93,7 @@ are preserved untouched except the daily note (append-only).
 ### Git commit
 
 Vault is a git repo at `/root/obsidian-vaults/borg` with remote
-`origin → https://github.com/bensargotest-sys/obsidian-borg.git`.
+`origin → https://github.com/<OLD_ACCT>/obsidian-borg.git`.
 - **Commit SHA:** `bc08c8c0e674129e8247db4e7edeef13758a8ee3`
 - **Commit message:** `20260408-0832 ingest: v3.2.2/3 classifier saga + GEPA lessons`
 - **Files in commit:** 12 files changed, 838 insertions(+)
@@ -129,4 +129,4 @@ grep -rhoE '\[\[[^]]+\]\]' /root/obsidian-vaults/borg --include='*.md' | wc -l
 ## Git commit SHA
 
 `bc08c8c0e674129e8247db4e7edeef13758a8ee3` — pushed to
-`https://github.com/bensargotest-sys/obsidian-borg.git` (master).
+`https://github.com/<OLD_ACCT>/obsidian-borg.git` (master).

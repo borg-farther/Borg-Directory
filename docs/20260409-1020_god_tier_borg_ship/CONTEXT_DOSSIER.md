@@ -17,7 +17,7 @@ A full **SPEC.md + PRD** for agent-borg v3.3.0 — world-class quality. This mea
 **Why now:** v3.2.4 is not shippable as "ready for real users". Four concrete ship blockers block promotion. The cold-start gap (empty search on first install) is the rate-limiting step of adoption. This pipeline produces the v3.3.0 release plan, spec, and PRD that will pass a Google-level review.
 
 **Current state of the codebase:**
-- Repo: `https://github.com/bensargotest-sys/agent-borg` (PyPI name: `agent-borg`)
+- Repo: `https://github.com/<OLD_ACCT>/agent-borg` (PyPI name: `agent-borg`)
 - Borg version: `3.2.4` (master at commit `decb281`)
 - CLI: `borg` (subcommands: `search`, `setup-claude`, `observe`, `generate`, `debug`, `pull`, `feedback-v3`, `mcp`)
 - MCP server: 17 tools, JSON-RPC 2.0
@@ -66,7 +66,7 @@ These are hard gates for v3.3.0. All four MUST pass before the release tag.
 
 ### SB-04 — `pyproject.toml` URLs point at `guild-packs`
 - **File:** `pyproject.toml` `[project.urls]`
-- **Bug:** Homepage / Repository / Documentation point at `https://github.com/bensargotest-sys/guild-packs`. PyPI homepage link leads to wrong repo. Also: wheel `Author` / `Author-email` fields may still reference old name.
+- **Bug:** Homepage / Repository / Documentation point at `https://github.com/<OLD_ACCT>/guild-packs`. PyPI homepage link leads to wrong repo. Also: wheel `Author` / `Author-email` fields may still reference old name.
 - **Fix:** Update all URLs to `agent-borg`. Grep entire file for any stale naming.
 - **Effort:** 15 min
 - **Verification:** `pip show agent-borg | grep -i url` shows zero `guild-packs` substrings.

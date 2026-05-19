@@ -1,8 +1,8 @@
 # Pack Registry Audit Results
 
 **Audit Date:** 2026-03-28
-**Registry URL:** `https://raw.githubusercontent.com/bensargotest-sys/guild-packs/main/index.json`
-**Repo:** bensargotest-sys/guild-packs (main branch)
+**Registry URL:** `https://raw.githubusercontent.com/<OLD_ACCT>/guild-packs/main/index.json`
+**Repo:** <OLD_ACCT>/guild-packs (main branch)
 
 ---
 

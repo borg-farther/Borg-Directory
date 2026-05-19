@@ -36,7 +36,7 @@ FEEDBACK_DIR = BORG_DIR / "feedback"
 OUTBOX_DIR = BORG_DIR / "outbox"
 EXECUTIONS_DIR = BORG_DIR / "executions"
 
-DEFAULT_REPO = "bensargotest-sys/guild-packs"
+DEFAULT_REPO = os.environ.get("BORG_PACK_REPO", "PLACEHOLDER-pending-org-migration/guild-packs")
 DEFAULT_BRANCH = "main"
 
 # Rate limit: max publishes per agent per day (PRD §12)

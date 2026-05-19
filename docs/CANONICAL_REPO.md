@@ -116,7 +116,7 @@ Current public user path must say:
 - canonical repo: `borg-farther/Borg-Directory`;
 - do not install unrelated `borg` / `borgbackup` packages.
 
-Public docs and shipped seed skills must not point users at stale public homes such as `punkrocker/agent-borg` or `bensargotest-sys/agent-borg`, and must not advertise non-shipped daemons such as `borgd` unless that daemon exists in the package.
+Public docs and shipped seed skills must not point users at stale public homes such as `punkrocker/agent-borg` or `<OLD_ACCT>/agent-borg`, and must not advertise non-shipped daemons such as `borgd` unless that daemon exists in the package.
 
 ## Guardrails for AI agents
 
