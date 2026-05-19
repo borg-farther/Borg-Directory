@@ -13,6 +13,7 @@ ALLOWED_ROOT_FILES = {
     ".gitignore",
     "AGENTS.md",
     "CHANGELOG.md",
+    "CLAUDE.md",
     "Dockerfile",
     "LICENSE",
     "README.md",
@@ -20,6 +21,7 @@ ALLOWED_ROOT_FILES = {
 }
 
 ALLOWED_ROOT_DIRS = {
+    ".githooks",
     ".github",
     "benchmarks",
     "borg",
