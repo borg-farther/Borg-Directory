@@ -1,5 +1,12 @@
 # Changelog
 
+## 3.3.6 — 2026-05-20
+
+- Firewall: scrubbed residual deprecated account-name references from public docs and tracked eval artifacts.
+- Fix: `DEFAULT_REPO` now defaults to `borg-farther/Borg-Directory` for pack publish/discovery paths.
+- Fix: remote pack fallback URLs now point at `borg/seeds_data/packs/`, the path that actually exists in the public repo.
+- CI: widened the account-reference firewall to scan all tracked files.
+
 ## 3.3.5 — 2026-05-18
 
 - Fix: `borg/__init__.py` now derives `__version__` from package metadata (importlib.metadata.version) instead of a hardcoded string. CLI banners (`borg version`, `borg-mcp`, `borg-doctor`) will always match the installed version going forward.

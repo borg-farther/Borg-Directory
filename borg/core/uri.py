@@ -30,8 +30,9 @@ logger = logging.getLogger(__name__)
 # Constants
 # ---------------------------------------------------------------------------
 
-DEFAULT_REPO = os.environ.get("BORG_PACK_REPO", "PLACEHOLDER-pending-org-migration/guild-packs")
+DEFAULT_REPO = os.environ.get("BORG_PACK_REPO", "borg-farther/Borg-Directory")
 DEFAULT_BRANCH = "main"
+REMOTE_PACKS_PATH = "borg/seeds_data/packs"
 BORG_DIR = get_borg_dir()
 INDEX_URL = f"https://raw.githubusercontent.com/{DEFAULT_REPO}/{DEFAULT_BRANCH}/index.json"
 
@@ -122,7 +123,7 @@ def resolve_guild_uri(uri: str) -> str:
 
     return (
         f"https://raw.githubusercontent.com/{DEFAULT_REPO}/{DEFAULT_BRANCH}"
-        f"/packs/{name}.workflow.yaml"
+        f"/{REMOTE_PACKS_PATH}/{name}.workflow.yaml"
     )
 
 
@@ -236,19 +237,27 @@ def get_available_pack_names() -> List[str]:
     except Exception:
         pass
 
-    # Fallback: gh CLI tree listing
+    # Fallback: gh CLI recursive tree listing of the packaged seed pack path.
     if not names:
         try:
             result = subprocess.run(
-                ["gh", "api", f"repos/{DEFAULT_REPO}/git/trees/{DEFAULT_BRANCH}",
+                ["gh", "api", f"repos/{DEFAULT_REPO}/git/trees/{DEFAULT_BRANCH}?recursive=1",
                  "--jq", ".tree[].path"],
                 capture_output=True, text=True, timeout=10,
             )
             if result.returncode == 0:
+                prefix = f"{REMOTE_PACKS_PATH}/"
                 for line in result.stdout.strip().split("\n"):
                     line = line.strip()
-                    if line and not line.startswith(".") and line not in ("README.md", "LICENSE", "index.json"):
-                        names.add(line)
+                    if not line.startswith(prefix) or not line.endswith((".yaml", ".yml")):
+                        continue
+                    filename = Path(line).name
+                    if filename.endswith(".workflow.yaml"):
+                        names.add(filename[:-len(".workflow.yaml")])
+                    elif filename.endswith(".yaml"):
+                        names.add(filename[:-len(".yaml")])
+                    elif filename.endswith(".yml"):
+                        names.add(filename[:-len(".yml")])
         except Exception:
             pass
 

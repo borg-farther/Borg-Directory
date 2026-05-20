@@ -1,0 +1,83 @@
+{
+  "schema_version": 1,
+  "generated_from": "borg/seeds_data/packs",
+  "packs": [
+    {
+      "name": "bash-permission-denied",
+      "uri": "borg://hermes/bash-permission-denied",
+      "path": "borg/seeds_data/packs/bash-permission-denied.yaml",
+      "description": "Bash or shell command fails with \"Permission denied\" error.\nUsually occurs when running scripts or accessing files without execute/read permissions.\n",
+      "problem_class": "permission_denied"
+    },
+    {
+      "name": "django-circular-dependency",
+      "uri": "borg://hermes/django-circular-dependency",
+      "path": "borg/seeds_data/packs/django-circular-dependency.yaml",
+      "description": "Django app fails with \"ImportError: circular import\" during startup.\n",
+      "problem_class": "import_cycle"
+    },
+    {
+      "name": "django-migration-state",
+      "uri": "borg://hermes/django-migration-state",
+      "path": "borg/seeds_data/packs/django-migration-state.yaml",
+      "description": "Django migrations are out of sync with database state.\n\"table already exists\", \"no such table\", or \"applied migrations\" errors.\n",
+      "problem_class": "migration_state_desync"
+    },
+    {
+      "name": "django-null-pointer",
+      "uri": "borg://hermes/django-null-pointer",
+      "path": "borg/seeds_data/packs/django-null-pointer.yaml",
+      "description": "Django template or view fails with \"NoneType is not iterable\" or\n\"'NoneType' object has no attribute\".\n",
+      "problem_class": "null_pointer_chain"
+    },
+    {
+      "name": "django-schema-drift",
+      "uri": "borg://hermes/django-schema-drift",
+      "path": "borg/seeds_data/packs/django-schema-drift.yaml",
+      "description": "Django model and database schema are out of sync.\n\"no such column\" or \"table has no column\" errors after adding fields.\n",
+      "problem_class": "schema_drift"
+    },
+    {
+      "name": "docker-no-space",
+      "uri": "borg://hermes/docker-no-space",
+      "path": "borg/seeds_data/packs/docker-no-space.yaml",
+      "description": "Docker fails with \"no space left on device\" or \"ENOSPC\" error\nwhen building images or running containers.\n",
+      "problem_class": "docker_no_space"
+    },
+    {
+      "name": "git-merge-conflict",
+      "uri": "borg://hermes/git-merge-conflict",
+      "path": "borg/seeds_data/packs/git-merge-conflict.yaml",
+      "description": "Git merge or rebase fails due to conflicting changes.\n\"CONFLICT (content): merge conflict in <file>\".\n",
+      "problem_class": "merge_conflict"
+    },
+    {
+      "name": "pytest-flaky-test",
+      "uri": "borg://hermes/pytest-flaky-test",
+      "path": "borg/seeds_data/packs/pytest-flaky-test.yaml",
+      "description": "Pytest test passes sometimes and fails other times without code changes.\nTests using network, time-based assertions, or shared state are flaky.\n",
+      "problem_class": "flaky_test"
+    },
+    {
+      "name": "python-import-cycle",
+      "uri": "borg://hermes/python-import-cycle",
+      "path": "borg/seeds_data/packs/python-import-cycle.yaml",
+      "description": "Python module fails with \"ImportError: circular import\" or\n\"cannot import name 'X' from 'Y'\".\n",
+      "problem_class": "import_cycle"
+    },
+    {
+      "name": "python-missing-dependency",
+      "uri": "borg://hermes/python-missing-dependency",
+      "path": "borg/seeds_data/packs/python-missing-dependency.yaml",
+      "description": "Python fails with \"ModuleNotFoundError: No module named 'X'\" or\n\"ImportError: No module named 'X'\".\n",
+      "problem_class": "missing_dependency"
+    },
+    {
+      "name": "systematic-debugging",
+      "uri": "borg://hermes/systematic-debugging",
+      "path": "borg/seeds_data/packs/systematic-debugging.workflow.yaml",
+      "problem_class": "systematic_debugging",
+      "version": "1.0"
+    }
+  ]
+}
