@@ -77,6 +77,8 @@ Full OS-specific install guide: [`INSTALL.md`](INSTALL.md).
 borg rescue "ModuleNotFoundError: No module named flask"
 ```
 
+MCP equivalent for agents: `error_lookup(input="ModuleNotFoundError: No module named flask")`; `borg_rescue(...)` remains the canonical Borg tool name and returns the same packet.
+
 Look for:
 
 - `ACTION` — what to try next
@@ -106,14 +108,14 @@ Then fully quit and restart Claude Code. In Claude Code, ask:
 what MCP tools do you have from Borg?
 ```
 
-Expected: Claude lists Borg tools such as `borg_rescue`, `borg_observe`, and `borg_search`, or `/mcp list` shows a `borg` server.
+Expected: Claude lists Borg tools such as `error_lookup`, `borg_rescue`, `borg_observe`, and `borg_search`, or `/mcp list` shows a `borg` server.
 
 Hermes Agent, OpenClaw, and generic MCP clients: use [`MCP_SETUP.md`](MCP_SETUP.md).
 
 ## Prime the agent
 
 ```text
-Before attempting technical fixes for errors, bugs, installs, configs, deployments, or tests, call Borg first. Prefer borg_rescue(input="<exact error or failing command output>") when there is a concrete failure; use borg_observe(task="<exact task or error>", context="<tech stack>") at task start. Treat Borg output as advisory: follow ACTION when relevant, avoid STOP/AVOID patterns, disclose NO_CONFIDENT_MATCH or weak guidance, and verify with the exact failing command or smallest regression test. After the outcome, record it with borg_feedback if you used a pack session, or borg_record_failure if you are recording a concrete error-pattern success/failure.
+Before attempting technical fixes for errors, bugs, installs, configs, deployments, or tests, call Borg first. For a concrete failure in MCP, call error_lookup(input="<exact error or failing command output>"); it is the plain-English alias for borg_rescue(input="<exact error or failing command output>") and returns the same ACTION/STOP/VERIFY packet. The CLI equivalent is borg rescue "<exact error>". Use borg_observe(task="<exact task or error>", context="<tech stack>") for broader task-start guidance when there is not yet a concrete failure. Treat Borg output as advisory: follow ACTION when relevant, avoid STOP/AVOID patterns, disclose NO_CONFIDENT_MATCH or weak guidance, and verify with the exact failing command or smallest regression test. After the outcome, record it with borg_feedback if you used a pack session, or borg_record_failure if you are recording a concrete error-pattern success/failure.
 ```
 
 ## More

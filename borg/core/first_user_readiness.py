@@ -33,13 +33,22 @@ FIRST_10_SUCCESS_METRIC = (
 
 PRIMING_PARAGRAPH = (
     "Before attempting technical fixes for errors, bugs, installs, configs, deployments, "
-    "or tests, call Borg first. Prefer borg_rescue(input=\"<exact error or failing command output>\") "
-    "when there is a concrete failure; use borg_observe(task=\"<exact task or error>\", "
-    "context=\"<tech stack>\") at task start. Treat Borg output as advisory: follow ACTION "
+    "or tests, call Borg first. For a concrete failure in MCP, call "
+    "error_lookup(input=\"<exact error or failing command output>\"); it is the plain-English "
+    "alias for borg_rescue(input=\"<exact error or failing command output>\") and returns the same "
+    "ACTION/STOP/VERIFY packet. The CLI equivalent is borg rescue \"<exact error>\". Use "
+    "borg_observe(task=\"<exact task or error>\", context=\"<tech stack>\") for broader task-start "
+    "guidance when there is not yet a concrete failure. Treat Borg output as advisory: follow ACTION "
     "when relevant, avoid STOP/AVOID patterns, disclose NO_CONFIDENT_MATCH or weak guidance, "
     "and verify with the exact failing command or smallest regression test. After the outcome, "
     "record it with borg_feedback if you used a pack session, or borg_record_failure if you are "
     "recording a concrete error-pattern success/failure."
+)
+
+MCP_FIRST_CALL = (
+    "error_lookup(input=\"ModuleNotFoundError: No module named flask\", show_guidance=False) "
+    "or borg_rescue(input=\"ModuleNotFoundError: No module named flask\", show_guidance=False); "
+    "both must return the same ACTION/STOP/VERIFY rescue packet."
 )
 
 SUPPORTED_FIRST_USER_MIXES = [
@@ -84,7 +93,7 @@ FIRST_10_GATES: List[ReadinessGate] = [
         id="G3",
         title="Day-one packet answers what to do, avoid, and verify",
         pass_criteria=[
-            "borg_rescue returns ACTION, STOP, VERIFY, human_receipt, automation_policy.",
+            "borg_rescue / error_lookup returns ACTION, STOP, VERIFY, human_receipt, automation_policy.",
             "borg_observe returns ACTION, STOP or explicit no-match STOP, VERIFY, CONFIDENCE.",
             "Agents are instructed not to blend weak retrieval into normal reasoning.",
         ],
@@ -156,6 +165,7 @@ def first_10_readiness_packet() -> Dict[str, Any]:
         "status": "first_10_beta_contract",
         "success_metric": FIRST_10_SUCCESS_METRIC,
         "priming_paragraph": PRIMING_PARAGRAPH,
+        "mcp_first_call": MCP_FIRST_CALL,
         "supported_mixes": list(SUPPORTED_FIRST_USER_MIXES),
         "gates": [gate.to_dict() for gate in FIRST_10_GATES],
         "smoke_commands": [
@@ -198,6 +208,10 @@ def render_first_10_readiness_markdown() -> str:
         "```bash",
         *packet["smoke_commands"],
         "```",
+        "",
+        "## MCP first call",
+        "",
+        packet["mcp_first_call"],
         "",
         "## Supported first-user mixes",
         "",

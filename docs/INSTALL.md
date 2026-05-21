@@ -180,6 +180,14 @@ VERIFY: exact check to rerun
 CONFIDENCE: tested / observed / inferred / NO_CONFIDENT_MATCH
 ```
 
+MCP equivalent for agents:
+
+```text
+error_lookup(input="ModuleNotFoundError: No module named flask", show_guidance=False)
+# same rescue contract as:
+borg_rescue(input="ModuleNotFoundError: No module named flask", show_guidance=False)
+```
+
 ---
 
 ## Connect Claude Code
@@ -202,7 +210,9 @@ Then fully quit and restart Claude Code. In the new session, ask:
 what MCP tools do you have from Borg?
 ```
 
-Expected: Claude lists Borg tools such as `borg_rescue`, `borg_observe`, and `borg_search`, or `/mcp list` shows a `borg` server.
+Expected: Claude lists Borg tools such as `error_lookup`, `borg_rescue`, `borg_observe`, and `borg_search`, or `/mcp list` shows a `borg` server.
+
+For a concrete failure, call `error_lookup(input="<exact error>")` first. If the host only exposes canonical Borg names, call `borg_rescue(input="<exact error>")`. Use `borg_observe(...)` for broader task-start guidance when there is not yet exact failing output.
 
 ---
 

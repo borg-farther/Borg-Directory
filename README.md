@@ -187,6 +187,8 @@ Full install guide: [`docs/INSTALL.md`](docs/INSTALL.md).
 borg rescue "ModuleNotFoundError: No module named flask"
 ```
 
+MCP equivalent for agents: `error_lookup(input="ModuleNotFoundError: No module named flask")`; `borg_rescue(...)` remains the canonical Borg tool name and returns the same packet.
+
 Expected shape:
 
 ```text
@@ -241,7 +243,7 @@ In a new Claude Code session, ask:
 what MCP tools do you have from Borg?
 ```
 
-Expected: Claude lists Borg tools such as `borg_rescue`, `borg_observe`, and `borg_search`, or `/mcp list` shows a `borg` server.
+Expected: Claude lists Borg tools such as `error_lookup`, `borg_rescue`, `borg_observe`, and `borg_search`, or `/mcp list` shows a `borg` server.
 
 Hermes Agent uses `mcp_servers.borg` in `~/.hermes/config.yaml`. OpenClaw and most other MCP-capable agents use an `mcpServers.borg` JSON block.
 
@@ -285,7 +287,7 @@ More setup detail: [`docs/MCP_SETUP.md`](docs/MCP_SETUP.md).
 Put this in `CLAUDE.md`, an agent system prompt, or the first user message:
 
 ```text
-Before attempting technical fixes for errors, bugs, installs, configs, deployments, or tests, call Borg first. Prefer borg_rescue(input="<exact error or failing command output>") when there is a concrete failure; use borg_observe(task="<exact task or error>", context="<tech stack>") at task start. Treat Borg output as advisory: follow ACTION when relevant, avoid STOP/AVOID patterns, disclose NO_CONFIDENT_MATCH or weak guidance, and verify with the exact failing command or smallest regression test. After the outcome, record it with borg_feedback if you used a pack session, or borg_record_failure if you are recording a concrete error-pattern success/failure.
+Before attempting technical fixes for errors, bugs, installs, configs, deployments, or tests, call Borg first. For a concrete failure in MCP, call error_lookup(input="<exact error or failing command output>"); it is the plain-English alias for borg_rescue(input="<exact error or failing command output>") and returns the same ACTION/STOP/VERIFY packet. The CLI equivalent is borg rescue "<exact error>". Use borg_observe(task="<exact task or error>", context="<tech stack>") for broader task-start guidance when there is not yet a concrete failure. Treat Borg output as advisory: follow ACTION when relevant, avoid STOP/AVOID patterns, disclose NO_CONFIDENT_MATCH or weak guidance, and verify with the exact failing command or smallest regression test. After the outcome, record it with borg_feedback if you used a pack session, or borg_record_failure if you are recording a concrete error-pattern success/failure.
 ```
 
 Why: agents often do not discover optional tools unless explicitly primed.
@@ -346,7 +348,7 @@ borg search "django migration table already exists"
 borg first-10 --json
 ```
 
-Then connect MCP with `borg setup-claude --scope user --verify --fix`, fully restart Claude Code, and verify Claude lists Borg tools such as `borg_rescue`, `borg_observe`, and `borg_search`.
+Then connect MCP with `borg setup-claude --scope user --verify --fix`, fully restart Claude Code, and verify Claude lists Borg tools such as `error_lookup`, `borg_rescue`, `borg_observe`, and `borg_search`.
 
 A good first evaluation is whether Borg reduces redundant investigation, not whether it magically solves every bug.
 

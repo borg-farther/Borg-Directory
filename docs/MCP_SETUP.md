@@ -11,7 +11,7 @@ Choose the setup path by the **agent host**, not by the model provider. If you r
 
 Why:
 
-- The agent can call `borg_rescue` on a concrete failure and get an `ACTION / STOP / VERIFY` packet.
+- The agent can call `error_lookup` on a concrete failure and get an `ACTION / STOP / VERIFY` packet. `error_lookup` is a plain-English alias for `borg_rescue`, which remains the canonical Borg tool name.
 - The agent can call `borg_observe` before a technical fix to check known approaches and dead ends.
 - The agent can avoid repeated failed loops before spending more tool calls.
 - If Borg has no confident match, the agent should disclose `NO_CONFIDENT_MATCH` instead of forcing advice.
@@ -62,7 +62,7 @@ Then fully quit and restart Claude Code. In the new session, ask:
 what MCP tools do you have from Borg?
 ```
 
-Expected: Claude lists Borg tools such as `borg_rescue`, `borg_observe`, and `borg_search`, or `/mcp list` shows a `borg` server.
+Expected: Claude lists Borg tools such as `error_lookup`, `borg_rescue`, `borg_observe`, and `borg_search`, or `/mcp list` shows a `borg` server.
 
 ## Hermes Agent
 
@@ -88,7 +88,7 @@ Restart Hermes Agent so MCP tools are rediscovered. In a new Hermes session, ask
 what MCP tools do you have from Borg?
 ```
 
-Expected: Hermes lists Borg MCP tools. Depending on Hermes tool naming, they may appear as bare Borg tool names such as `borg_rescue`, `borg_observe`, and `borg_search`, or with a server prefix such as `mcp_borg_borg_rescue`.
+Expected: Hermes lists Borg MCP tools. Depending on Hermes tool naming, they may appear as bare Borg tool names such as `error_lookup`, `borg_rescue`, `borg_observe`, and `borg_search`, or with a server prefix such as `mcp_borg_borg_rescue`.
 
 ## OpenClaw
 
@@ -110,7 +110,7 @@ Use this server block:
 }
 ```
 
-Then fully restart OpenClaw and verify it can see Borg tools such as `borg_rescue`, `borg_observe`, and `borg_search`.
+Then fully restart OpenClaw and verify it can see Borg tools such as `error_lookup`, `borg_rescue`, `borg_observe`, and `borg_search`.
 
 OpenClaw path note: Borg does not currently publish a verified one-command OpenClaw installer. Use OpenClaw's current MCP config path rather than copying stale `guild-*` setup docs.
 
@@ -151,7 +151,8 @@ Use absolute paths in MCP env blocks. Do not rely on `~` expansion inside MCP cl
 
 ## Core first-user MCP tools
 
-- `borg_rescue` — ACTION / STOP / VERIFY packet for concrete failures.
+- `error_lookup` — plain-English alias for `borg_rescue`; use this first for concrete failures.
+- `borg_rescue` — canonical Borg ACTION / STOP / VERIFY packet for concrete failures.
 - `borg_observe` — guidance before technical fixes.
 - `borg_search` — search packs and traces.
 - `borg_try` — preview a pack.
@@ -168,7 +169,7 @@ Advanced/admin tools may also be exposed by the server, but first users should s
 Agents often do not discover optional tools without a small instruction. Put this in `CLAUDE.md`, an agent system prompt, or the first user message:
 
 ```text
-Before attempting technical fixes for errors, bugs, installs, configs, deployments, or tests, call Borg first. Prefer borg_rescue(input="<exact error or failing command output>") when there is a concrete failure; use borg_observe(task="<exact task or error>", context="<tech stack>") at task start. Treat Borg output as advisory: follow ACTION when relevant, avoid STOP/AVOID patterns, disclose NO_CONFIDENT_MATCH or weak guidance, and verify with the exact failing command or smallest regression test. After the outcome, record it with borg_feedback if you used a pack session, or borg_record_failure if you are recording a concrete error-pattern success/failure.
+Before attempting technical fixes for errors, bugs, installs, configs, deployments, or tests, call Borg first. For a concrete failure in MCP, call error_lookup(input="<exact error or failing command output>"); it is the plain-English alias for borg_rescue(input="<exact error or failing command output>") and returns the same ACTION/STOP/VERIFY packet. The CLI equivalent is borg rescue "<exact error>". Use borg_observe(task="<exact task or error>", context="<tech stack>") for broader task-start guidance when there is not yet a concrete failure. Treat Borg output as advisory: follow ACTION when relevant, avoid STOP/AVOID patterns, disclose NO_CONFIDENT_MATCH or weak guidance, and verify with the exact failing command or smallest regression test. After the outcome, record it with borg_feedback if you used a pack session, or borg_record_failure if you are recording a concrete error-pattern success/failure.
 ```
 
 ## Verify manually
