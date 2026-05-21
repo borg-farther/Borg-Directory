@@ -18,7 +18,7 @@ A human can run `borg rescue ...` manually, but an agent can use Borg at the mom
 
 Connected agents can:
 
-- call `borg_rescue` for concrete failures and receive `ACTION / STOP / VERIFY`;
+- call `error_lookup` for concrete failures and receive `ACTION / STOP / VERIFY`; `borg_rescue` is the canonical Borg tool name and returns the same packet;
 - call `borg_observe` before technical fixes to check known approaches;
 - search related packs/traces with `borg_search`;
 - disclose `NO_CONFIDENT_MATCH` when Borg has no good hit instead of forcing weak advice.
@@ -63,7 +63,7 @@ Then fully quit and restart Claude Code. In a new session, ask:
 what MCP tools do you have from Borg?
 ```
 
-Expected: Claude lists Borg tools such as `borg_rescue`, `borg_observe`, and `borg_search`, or `/mcp list` shows a `borg` server.
+Expected: Claude lists Borg tools such as `error_lookup`, `borg_rescue`, `borg_observe`, and `borg_search`, or `/mcp list` shows a `borg` server.
 
 ## Hermes Agent
 
@@ -79,7 +79,7 @@ mcp_servers:
       BORG_HOME: /absolute/path/to/.borg
 ```
 
-Restart Hermes Agent. Expected tools may be listed as `borg_rescue` / `borg_observe` / `borg_search`, or with a Hermes server prefix such as `mcp_borg_borg_rescue`.
+Restart Hermes Agent. Expected tools may be listed as `error_lookup` / `borg_rescue` / `borg_observe` / `borg_search`, or with a Hermes server prefix such as `mcp_borg_borg_rescue`.
 
 ## OpenClaw
 
@@ -99,7 +99,7 @@ If your OpenClaw build supports stdio MCP servers, add this block to OpenClaw's 
 }
 ```
 
-Restart OpenClaw and verify it can see Borg tools such as `borg_rescue`, `borg_observe`, and `borg_search`.
+Restart OpenClaw and verify it can see Borg tools such as `error_lookup`, `borg_rescue`, `borg_observe`, and `borg_search`.
 
 OpenClaw note: Borg does not currently publish a verified one-command OpenClaw installer. Use OpenClaw's current MCP config path and avoid stale `guild-*` setup docs.
 
@@ -139,7 +139,8 @@ Avoid bare `python` or `python3` in MCP configs unless you know that exact inter
 
 ## Core first-user MCP tools
 
-- `borg_rescue` — ACTION / STOP / VERIFY packet for concrete failures.
+- `error_lookup` — plain-English alias for `borg_rescue`; use this first for concrete failures.
+- `borg_rescue` — canonical Borg ACTION / STOP / VERIFY packet for concrete failures.
 - `borg_observe` — guidance before technical fixes.
 - `borg_search` — search packs and traces.
 - `borg_try` — preview a pack.
@@ -152,5 +153,5 @@ Avoid bare `python` or `python3` in MCP configs unless you know that exact inter
 ## Prime the agent once
 
 ```text
-Before attempting technical fixes for errors, bugs, installs, configs, deployments, or tests, call Borg first. Prefer borg_rescue(input="<exact error or failing command output>") when there is a concrete failure; use borg_observe(task="<exact task or error>", context="<tech stack>") at task start. Treat Borg output as advisory: follow ACTION when relevant, avoid STOP/AVOID patterns, disclose NO_CONFIDENT_MATCH or weak guidance, and verify with the exact failing command or smallest regression test. After the outcome, record it with borg_feedback if you used a pack session, or borg_record_failure if you are recording a concrete error-pattern success/failure.
+Before attempting technical fixes for errors, bugs, installs, configs, deployments, or tests, call Borg first. For a concrete failure in MCP, call error_lookup(input="<exact error or failing command output>"); it is the plain-English alias for borg_rescue(input="<exact error or failing command output>") and returns the same ACTION/STOP/VERIFY packet. The CLI equivalent is borg rescue "<exact error>". Use borg_observe(task="<exact task or error>", context="<tech stack>") for broader task-start guidance when there is not yet a concrete failure. Treat Borg output as advisory: follow ACTION when relevant, avoid STOP/AVOID patterns, disclose NO_CONFIDENT_MATCH or weak guidance, and verify with the exact failing command or smallest regression test. After the outcome, record it with borg_feedback if you used a pack session, or borg_record_failure if you are recording a concrete error-pattern success/failure.
 ```

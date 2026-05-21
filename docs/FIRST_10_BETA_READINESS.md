@@ -15,7 +15,7 @@ A weak match is worse than no match.
 Put this in `CLAUDE.md`, the agent system prompt, or the first user message:
 
 ```text
-Before attempting technical fixes for errors, bugs, installs, configs, deployments, or tests, call Borg first. Prefer borg_rescue(input="<exact error or failing command output>") when there is a concrete failure; use borg_observe(task="<exact task or error>", context="<tech stack>") at task start. Treat Borg output as advisory: follow ACTION when relevant, avoid STOP/AVOID patterns, disclose NO_CONFIDENT_MATCH or weak guidance, and verify with the exact failing command or smallest regression test. After the outcome, record it with borg_feedback if you used a pack session, or borg_record_failure if you are recording a concrete error-pattern success/failure.
+Before attempting technical fixes for errors, bugs, installs, configs, deployments, or tests, call Borg first. For a concrete failure in MCP, call error_lookup(input="<exact error or failing command output>"); it is the plain-English alias for borg_rescue(input="<exact error or failing command output>") and returns the same ACTION/STOP/VERIFY packet. The CLI equivalent is borg rescue "<exact error>". Use borg_observe(task="<exact task or error>", context="<tech stack>") for broader task-start guidance when there is not yet a concrete failure. Treat Borg output as advisory: follow ACTION when relevant, avoid STOP/AVOID patterns, disclose NO_CONFIDENT_MATCH or weak guidance, and verify with the exact failing command or smallest regression test. After the outcome, record it with borg_feedback if you used a pack session, or borg_record_failure if you are recording a concrete error-pattern success/failure.
 ```
 
 ## Clean-user smoke path
@@ -34,7 +34,15 @@ borg setup-claude --scope user --verify --fix
 borg first-10 --json
 ```
 
-After `borg setup-claude --scope user --verify --fix`, fully restart Claude Code and verify Claude lists Borg tools such as `borg_rescue`, `borg_observe`, and `borg_search`.
+After `borg setup-claude --scope user --verify --fix`, fully restart Claude Code and verify Claude lists Borg tools such as `error_lookup`, `borg_rescue`, `borg_observe`, and `borg_search`.
+
+MCP first call for a concrete failure:
+
+```text
+error_lookup(input="ModuleNotFoundError: No module named flask", show_guidance=False)
+# same rescue contract as:
+borg_rescue(input="ModuleNotFoundError: No module named flask", show_guidance=False)
+```
 
 A passing smoke path proves the public package entrypoints exist, the rescue packet is machine-readable, seed search returns useful results, MCP setup has a binary verification path, and the first-10 contract is available to users.
 
@@ -79,7 +87,7 @@ Proof:
 
 Pass criteria:
 
-- `borg_rescue` returns `ACTION`, `STOP`, `VERIFY`, `human_receipt`, and `automation_policy`.
+- `error_lookup` and `borg_rescue` return the same `ACTION`, `STOP`, `VERIFY`, `human_receipt`, and `automation_policy`.
 - `borg_observe` returns `ACTION`, `STOP`, `VERIFY`, and `CONFIDENCE`, or an explicit no-match packet.
 - Agents are instructed not to blend weak retrieval into normal reasoning.
 
@@ -156,7 +164,7 @@ Send each tester this:
    borg version
    borg-doctor --json
    ```
-2. Add the priming paragraph above to their agent.
+2. Add the priming paragraph above to their agent. For a concrete MCP failure, the first call is `error_lookup(input="<exact error>")`; if the host only shows canonical Borg names, use `borg_rescue(input="<exact error>")`.
 3. Try three tasks:
    - one real error they are currently debugging;
    - one install/config/deploy issue;

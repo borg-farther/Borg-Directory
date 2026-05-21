@@ -475,6 +475,34 @@ TOOLS: List[Dict[str, Any]] = [
         },
     },
     {
+        "name": "error_lookup",
+        "description": (
+            "Plain-English alias for borg_rescue. Given an error, failing command output, or agent transcript, "
+            "returns the same ACTION, STOP, VERIFY, confidence, human receipt, and automation policy as borg_rescue. "
+            "Use this as the first-user MCP tool name for concrete failures."
+        ),
+        "inputSchema": {
+            "type": "object",
+            "properties": {
+                "input": {
+                    "type": "string",
+                    "description": "Error, failing command output, task text, or recent agent transcript.",
+                },
+                "source": {
+                    "type": "string",
+                    "description": "Caller provenance tag (default: mcp).",
+                    "default": "mcp",
+                },
+                "show_guidance": {
+                    "type": "boolean",
+                    "description": "Include full legacy guidance block (default: true).",
+                    "default": True,
+                },
+            },
+            "required": ["input"],
+        },
+    },
+    {
         "name": "borg_first_10",
         "description": (
             "Machine-readable first-10 beta readiness contract: seven gates, clean-user smoke path, "
@@ -1768,6 +1796,16 @@ def borg_rescue(input: str = "", source: str = "mcp", show_guidance: bool = True
         return json.dumps({"success": False, "error": str(e), "type": type(e).__name__})
 
 
+def error_lookup(input: str = "", source: str = "mcp", show_guidance: bool = True) -> str:
+    """Plain-English MCP alias for :func:`borg_rescue`.
+
+    First users search for an "error lookup" tool before they know Borg's
+    internal naming.  Keep the alias behaviorally identical to borg_rescue so
+    docs, MCP discovery, and agent priming all point to one rescue contract.
+    """
+    return borg_rescue(input=input, source=source or "mcp", show_guidance=show_guidance)
+
+
 def borg_first_10() -> str:
     """Return the first-10 beta readiness contract as JSON."""
     try:
@@ -2950,7 +2988,7 @@ def call_tool(name: str, arguments: Dict[str, Any]) -> str:
                 signal.signal(signal.SIGALRM, old_handler)
 
         # Feed tool call into trace capture (skip borg internal tools to avoid noise)
-        if name not in ("borg_search", "borg_observe", "borg_rescue", "borg_suggest", "borg_feedback", "borg_publish"):
+        if name not in ("borg_search", "borg_observe", "borg_rescue", "error_lookup", "borg_suggest", "borg_feedback", "borg_publish"):
             _feed_trace_capture(name, arguments, result)
 
         return result
@@ -3025,7 +3063,7 @@ def _call_tool_impl(name: str, arguments: Dict[str, Any]) -> str:
             tried_packs=arguments.get("tried_packs"),
         )
 
-    elif name == "borg_rescue":
+    elif name in ("borg_rescue", "error_lookup"):
         return borg_rescue(
             input=arguments.get("input", ""),
             source=arguments.get("source", "mcp"),

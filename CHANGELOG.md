@@ -1,5 +1,11 @@
 # Changelog
 
+## 3.3.7 — 2026-05-21
+
+- MCP: added `error_lookup` as a plain-English alias for `borg_rescue`, keeping the same ACTION / STOP / VERIFY rescue contract for concrete failures.
+- First-user UX: updated README, install, MCP setup, quickstart, trying-Borg, first-10 readiness, and bundled skills so concrete failures use `error_lookup` / `borg rescue` before broader `borg_observe` or pack search.
+- Tests: added first-user MCP alias regressions for tool discovery, dispatcher parity, JSON-RPC response shape, duplicate tool names, trace-capture privacy, and readiness contract docs.
+
 ## 3.3.6 — 2026-05-20
 
 - Firewall: scrubbed residual deprecated account-name references from public docs and tracked eval artifacts.

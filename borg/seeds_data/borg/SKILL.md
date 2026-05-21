@@ -38,6 +38,30 @@ Apply this skill when ANY of the following are true:
 
 ## How to Use
 
+### Step 0: Concrete Failure Rescue First
+
+If you have an exact error, failing command output, traceback, or install/config/deploy failure, do **not** start with pack search. Ask Borg for the day-one rescue packet first:
+
+```text
+Tool: error_lookup
+Args: input="<exact error or failing command output>", show_guidance=false
+```
+
+If your MCP host only exposes canonical Borg names, use the identical canonical call:
+
+```text
+Tool: borg_rescue
+Args: input="<exact error or failing command output>", show_guidance=false
+```
+
+CLI equivalent:
+
+```bash
+borg rescue "<exact error or failing command output>"
+```
+
+Use `borg_observe(task="<task>", context="<tech stack>")` for broader task-start guidance when there is not yet a concrete failure. Use pack search/apply only after rescue/observe or when you deliberately need a workflow pack.
+
 ### Step 1: Search for a Relevant Pack
 
 ```
@@ -83,6 +107,8 @@ Borg records the outcome so future agents benefit from your session.
 | Tool | When to Use | Key Args |
 |------|-------------|----------|
 | `borg_search` | Find packs for your problem | `query` (keywords) |
+| `error_lookup` | Plain-English rescue alias for concrete failures | `input` |
+| `borg_rescue` | Canonical ACTION / STOP / VERIFY rescue packet | `input` |
 | `borg_observe` | Proactive guidance at task start | `task`, `context` |
 | `borg_try` | Preview a pack before applying | `uri` |
 | `borg_apply` | Start / advance / complete a pack session | `action`, `pack_name`, `session_id` |
@@ -123,6 +149,9 @@ Borg stores **workflow packs** in a searchable registry. Each pack contains:
 ## Borg CLI Quick Reference
 
 ```bash
+# Concrete error rescue first
+borg rescue "<exact error or failing command output>"
+
 # Search for packs
 borg search <keywords>
 
