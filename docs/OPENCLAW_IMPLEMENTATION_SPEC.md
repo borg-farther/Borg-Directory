@@ -1043,7 +1043,7 @@ def _cmd_openclaw_list(args) -> int:
                                        ▼
 ┌──────────────────────────────────────────────────────────────────────────────┐
 │                       Borg Pack Registry                                      │
-│  Bensargotest-sys/guild-packs on GitHub                                      │
+│  borg-farther/Borg-Directory on GitHub                                      │
 │  index.json + 23 *.workflow.yaml packs                                       │
 └──────────────────────────────────────────────────────────────────────────────┘
 ```

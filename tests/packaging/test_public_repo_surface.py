@@ -15,6 +15,7 @@ ALLOWED_ROOT_FILES = {
     "CHANGELOG.md",
     "CLAUDE.md",
     "Dockerfile",
+    "index.json",
     "LICENSE",
     "README.md",
     "pyproject.toml",

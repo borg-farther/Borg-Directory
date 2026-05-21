@@ -29,4 +29,4 @@ Public first-user docs must point to:
 - MCP server: `borg-mcp`
 - repo: `borg-farther/Borg-Directory`
 
-Do not reintroduce stale setup names such as `pip install guild-packs`, `guildpacks`, stale `guild_*` user instructions, `punkrocker/agent-borg`, `bensargotest-sys/agent-borg`, or non-shipped `borgd` daemon instructions in current public setup docs.
+Never reference deprecated or personal account names; canonical identity is `borg-farther`. Do not reintroduce stale setup names such as `pip install guild-packs`, `guildpacks`, stale `guild_*` user instructions, or non-shipped `borgd` daemon instructions in current public setup docs.

@@ -17,7 +17,7 @@ commit, fix your git config — don't go around it.
 
 ## Runtime facts not in AGENTS.md
 
-- borg.core.uri.DEFAULT_REPO points at bensargotest-sys/guild-packs,
+- borg.core.uri.DEFAULT_REPO points at borg-farther/Borg-Directory,
   which is LIVE RUNTIME. Do not rename or repoint without a coordinated
   migration.
 - The Hermes gateway on the dev VPS runs as a system systemd service

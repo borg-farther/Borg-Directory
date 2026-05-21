@@ -22,6 +22,7 @@ sys.path.insert(0, str(Path(__file__).parent.parent.parent))
 from borg.core.uri import (
     DEFAULT_REPO,
     DEFAULT_BRANCH,
+    REMOTE_PACKS_PATH,
     fetch_with_retry,
     fuzzy_match_pack,
     get_available_pack_names,
@@ -42,7 +43,7 @@ class TestResolveBorgUri:
         result = resolve_guild_uri("borg://example-org/my-pack")
         assert result == (
             f"https://raw.githubusercontent.com/{DEFAULT_REPO}/{DEFAULT_BRANCH}"
-            "/packs/my-pack.workflow.yaml"
+            "/borg/seeds_data/packs/my-pack.workflow.yaml"
         )
 
     def test_guild_uri_with_slash_in_name(self):
@@ -51,8 +52,14 @@ class TestResolveBorgUri:
         result = resolve_guild_uri("borg://example-org/my-pack")
         assert result == (
             f"https://raw.githubusercontent.com/{DEFAULT_REPO}/{DEFAULT_BRANCH}"
-            "/packs/my-pack.workflow.yaml"
+            "/borg/seeds_data/packs/my-pack.workflow.yaml"
         )
+
+    def test_remote_pack_path_points_to_packaged_seed_directory(self):
+        """Remote fallback URL points at the path that exists in the public repo."""
+        result = resolve_guild_uri("borg://example-org/my-pack")
+        assert f"/{REMOTE_PACKS_PATH}/my-pack.workflow.yaml" in result
+
 
     def test_https_uri_passthrough(self):
         """https:// URLs are returned unchanged."""
@@ -91,7 +98,7 @@ class TestResolveBorgUri:
         result = resolve_guild_uri("guild://example-org/my-pack")
         assert result == (
             f"https://raw.githubusercontent.com/{DEFAULT_REPO}/{DEFAULT_BRANCH}"
-            "/packs/my-pack.workflow.yaml"
+            "/borg/seeds_data/packs/my-pack.workflow.yaml"
         )
 
     def test_normalize_pack_uri_accepts_all_public_forms(self):

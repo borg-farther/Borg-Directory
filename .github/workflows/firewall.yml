@@ -21,18 +21,8 @@ jobs:
           set -euo pipefail
           forbidden="${OLD_ACCT_PART_A}${OLD_ACCT_PART_B}"
           matches="$(
-            grep -RIn "$forbidden" src tests docs borg \
-              --include='*.py' \
-              --include='*.md' \
-              --include='*.toml' \
-              --include='*.yml' \
-              --include='*.yaml' \
-              --include='*.json' \
-              --include='*.txt' \
-              --include='*.html' \
-              2>/dev/null || true
+            git grep -In "$forbidden" -- . 2>/dev/null || true
           )"
-          matches="$(printf '%s\n' "$matches" | grep -v '^AGENTS.md:' || true)"
           if [ -n "$matches" ]; then
             printf 'Forbidden old account reference found:\n%s\n' "$matches"
             exit 1

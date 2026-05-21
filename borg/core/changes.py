@@ -43,10 +43,12 @@ def detect_recent_changes(project_path: str = '.', hours: int = 24) -> dict:
     if not repo_root.exists():
         return result
 
-    # Check if it's a git repo
+    # Do not require .git to be a directory: linked worktrees store .git as a
+    # file that points at the common git dir. Let `git rev-parse` below be the
+    # authoritative repo check so normal repos and worktrees both work.
     try:
-        git_dir = repo_root / ".git"
-        if not git_dir.is_dir():
+        git_marker = repo_root / ".git"
+        if not git_marker.exists():
             return result
     except (OSError, PermissionError):
         return result

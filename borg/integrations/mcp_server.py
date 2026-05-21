@@ -359,7 +359,7 @@ TOOLS: List[Dict[str, Any]] = [
                 },
                 "repo": {
                     "type": "string",
-                    "description": "Target GitHub repo (defaults to BORG_PACK_REPO or PLACEHOLDER-pending-org-migration/guild-packs)",
+                    "description": "Target GitHub repo (defaults to BORG_PACK_REPO or borg-farther/Borg-Directory)",
                 },
             },
             "required": ["action"],

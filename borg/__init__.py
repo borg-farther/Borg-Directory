@@ -10,14 +10,34 @@ only when the search layer itself is unavailable.
 from __future__ import annotations
 
 import json
+import re
+from pathlib import Path
 from typing import Any
 
-try:
-    from importlib.metadata import PackageNotFoundError, version as _pkg_version
+def _version_from_source_pyproject() -> str | None:
+    """Return the source-tree version when running from a checkout."""
+    pyproject = Path(__file__).resolve().parents[1] / "pyproject.toml"
+    if not pyproject.exists():
+        return None
+    try:
+        text = pyproject.read_text(encoding="utf-8")
+    except OSError:
+        return None
+    if 'name = "agent-borg"' not in text:
+        return None
+    match = re.search(r'^version\s*=\s*["\']([^"\']+)["\']', text, re.MULTILINE)
+    return match.group(1) if match else None
 
-    __version__ = _pkg_version("agent-borg")
-except (ImportError, PackageNotFoundError):
-    __version__ = "3.3.5"  # fallback only when package metadata is unavailable
+_source_version = _version_from_source_pyproject()
+if _source_version:
+    __version__ = _source_version
+else:
+    try:
+        from importlib.metadata import PackageNotFoundError, version as _pkg_version
+
+        __version__ = _pkg_version("agent-borg")
+    except (ImportError, PackageNotFoundError):
+        __version__ = "3.3.6"  # fallback only when package metadata is unavailable
 
 
 def check(context: str, constraints: dict | None = None, top_k: int = 3) -> list[dict[str, Any]]:
