@@ -3,8 +3,10 @@
 from __future__ import annotations
 
 import argparse
+import io
 import json
 import sys
+from pathlib import Path
 from unittest.mock import patch, MagicMock
 
 import pytest
@@ -159,6 +161,34 @@ def test_rescue_command_json_fails_closed_on_unknown():
     assert data["success"] is False
     assert data["status"] == "no_confident_match"
     assert data["automation_policy"]["fail_closed"] is True
+
+
+def test_cli_source_does_not_use_builtin_input():
+    """Interactive first-user paths must avoid Bandit B322 input() findings."""
+    text = Path(main.__code__.co_filename).read_text(encoding="utf-8")
+    assert "input(" not in text
+
+
+class _TtyStringIO(io.StringIO):
+    def isatty(self):
+        return True
+
+
+def test_rescue_interactive_fallback_reads_one_stdin_line(monkeypatch):
+    monkeypatch.setattr(
+        sys,
+        "stdin",
+        _TtyStringIO("ModuleNotFoundError: No module named flask\n"),
+    )
+
+    code, out, err = capture_main(["rescue", "--short"])
+
+    assert code == 0
+    assert "Paste the exact error" in out
+    assert "> " in out
+    assert "ACTION" in out
+    assert "STOP" in out
+    assert "VERIFY" in out
 
 
 # ---------------------------------------------------------------------------

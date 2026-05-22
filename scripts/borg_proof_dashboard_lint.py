@@ -76,7 +76,7 @@ def main() -> int:
 
     # Explicitly require required sections in Markdown for human readers.
     md = MD_PATH.read_text(encoding="utf-8")
-    for heading in ["## Big top verdict", "## Evidence table", "## Blockers", "## First-10-user scoreboard template", "## Anti-hype section", "## Next action queue before sharing Git with first user"]:
+    for heading in ["## Big top verdict", "## Evidence table", "## Blockers", "## First-10-user scoreboard template", "## Anti-hype section", "## Next action queue before supervised first user"]:
         if heading not in md:
             return fail(f"missing Markdown heading: {heading}")
 

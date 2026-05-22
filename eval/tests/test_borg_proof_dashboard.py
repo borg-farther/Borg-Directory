@@ -47,6 +47,6 @@ def test_borg_proof_dashboard_markdown_required_sections():
         "## Blockers",
         "## First-10-user scoreboard template",
         "## Anti-hype section",
-        "## Next action queue before sharing Git with first user",
+        "## Next action queue before supervised first user",
     ]:
         assert heading in md

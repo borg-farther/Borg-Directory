@@ -31,6 +31,8 @@ import time
 from pathlib import Path
 from typing import Any, Dict, List, Optional
 
+from borg import __version__ as BORG_VERSION
+
 # Suppress default logging (MCP uses stdout for JSON-RPC)
 logging.basicConfig(stream=sys.stderr, level=logging.WARNING)
 
@@ -885,7 +887,7 @@ TOOLS: List[Dict[str, Any]] = [
 # Server metadata
 # ---------------------------------------------------------------------------
 
-SERVER_INFO = {"name": "borg-mcp-server", "version": "1.0.0"}
+SERVER_INFO = {"name": "borg-mcp-server", "version": BORG_VERSION}
 
 CAPABILITIES = {"tools": {}}
 

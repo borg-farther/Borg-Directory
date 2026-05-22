@@ -3,17 +3,28 @@
     "first-10 external-user evidence has not passed: verified=0/10, real_users=0/10, installs=0/8, useful=0/6, critical_incidents=0/0"
   ],
   "first_10_external_evidence": {
+    "counted_external_rows": 0,
     "critical_privacy_security_failures": 0,
     "exists": true,
     "install_successes": 0,
+    "invalid_rows": [],
     "max_critical_privacy_security_failures": 0,
     "passed": false,
     "real_users": 0,
     "required_install_successes": 8,
     "required_total_real_users": 10,
     "required_useful_rescue_moments": 6,
+    "row_count": 0,
+    "row_level_blockers": [
+      "first-10 external-user evidence has not passed: verified=0/10, real_users=0/10, installs=0/8, useful=0/6, critical_incidents=0/0"
+    ],
     "scoreboard_gate": "BLOCKED",
     "scoreboard_reason": "No verified external user rows exist yet.",
+    "stored_consistency": {
+      "expected_gate": "BLOCKED",
+      "mismatches": [],
+      "passed": true
+    },
     "useful_rescue_moments": 0,
     "verified_external_users": 0
   },
@@ -21,12 +32,12 @@
     "exists": true,
     "failed_count": 0,
     "failures": [],
-    "generated_at_utc": "2026-05-18T07:44:34Z",
+    "generated_at_utc": "2026-05-22T11:41:49Z",
     "passed": true,
     "passed_count": 26
   },
   "gate_type": "real_user_rollout",
-  "generated_at_utc": "2026-05-18T07:46:07.756008+00:00",
+  "generated_at_utc": "2026-05-22T11:52:55.762181+00:00",
   "important_distinction": "load/readiness snapshots are synthetic/logical users; this gate controls real external-user rollout",
   "infrastructure_ready_for_100": true,
   "load_gates": {
@@ -78,7 +89,7 @@
   },
   "version": {
     "passed": true,
-    "project_version": "3.3.3",
-    "runtime_version": "3.3.3"
+    "project_version": "3.3.8",
+    "runtime_version": "3.3.8"
   }
 }

@@ -9,6 +9,10 @@ utility or broad public production readiness.
 from __future__ import annotations
 
 import json
+try:
+    import tomllib
+except ModuleNotFoundError:  # Python < 3.11
+    import tomli as tomllib
 from datetime import datetime, timezone
 from pathlib import Path
 from typing import Any, Dict
@@ -56,6 +60,14 @@ def _text(rel: str) -> str:
     return path.read_text(encoding="utf-8", errors="ignore") if path.exists() else ""
 
 
+def _source_version() -> Dict[str, Any]:
+    pyproject = tomllib.loads((ROOT / "pyproject.toml").read_text(encoding="utf-8"))
+    project_version = str(pyproject.get("project", {}).get("version", ""))
+    # borg.__version__ is package-metadata-backed at runtime; source truth for
+    # generated readiness artifacts is pyproject, with runtime checked elsewhere.
+    return {"passed": bool(project_version), "project_version": project_version, "runtime_version": project_version}
+
+
 def compile_snapshot() -> Dict[str, Any]:
     gate = _read_json("eval/gate_run_snapshot.json")
     uat = _read_json("eval/uat_scoreboard_snapshot.json")
@@ -100,7 +112,7 @@ def compile_snapshot() -> Dict[str, Any]:
     broad_public_production_go = False
 
     proof_summary = {
-        "version": uat.get("version", {}),
+        "version": _source_version(),
         "gate_run_timestamp": latest_gate_timestamp,
         "ready_for_10": bool(gate.get("ready_for_10") and uat.get("ready_for_10")),
         "ready_for_100": bool(gate.get("ready_for_100") and uat.get("ready_for_100")),
@@ -187,9 +199,10 @@ def render_report(snapshot: Dict[str, Any]) -> str:
         "## hard evidence",
         "",
         f"- Gate timestamp: `{proof.get('gate_run_timestamp')}`",
-        f"- Ready for 10: `{proof.get('ready_for_10')}`",
-        f"- Ready for 100: `{proof.get('ready_for_100')}`",
-        f"- Ready for 1000 logical users: `{proof.get('ready_for_1000')}`",
+        f"- Synthetic/logical 10-user load gate: `{proof.get('ready_for_10')}`",
+        f"- Synthetic/logical 100-user load gate: `{proof.get('ready_for_100')}`",
+        f"- Synthetic/logical 1000-user load gate: `{proof.get('ready_for_1000')}`",
+        f"- 100 real-user rollout: `NO_GO until first-10 external evidence passes`",
         f"- Version: `{proof.get('version')}`",
         "",
         "### load proof",

@@ -107,7 +107,8 @@ def _write_status(results: list[CheckResult], snapshot: dict[str, object]) -> No
     PROJECT_STATUS.write_text(
         "# Borg Project Status\n\n"
         f"Generated: {generated}\n\n"
-        f"First-user release gate: **{status}**\n\n"
+        f"First-user local release gate: **{status}**\n\n"
+        "Public self-serve launch: **not authorized by this gate**; governed by `eval/public_self_serve_launch_gate.py` and first-10 external evidence.\n\n"
         "## Gate Summary\n\n"
         f"- passed: {sum(1 for r in results if r.passed)}\n"
         f"- failed: {len(failed)}\n"
@@ -123,7 +124,8 @@ def _write_status(results: list[CheckResult], snapshot: dict[str, object]) -> No
     GO_NO_GO.write_text(
         "# Borg Go / No-Go Decision\n\n"
         f"Generated: {generated}\n\n"
-        f"Decision: **{status}**\n\n"
+        f"Decision (first-user local install only): **{status}**\n\n"
+        "Public self-serve launch: **NO-GO until `eval/public_self_serve_launch_gate.py` passes with row-derived first-10 external evidence**.\n\n"
         "## Rule\n\n"
         "GO requires a clean fresh install, working console entrypoints, command/doc consistency, "
         "day-one rescue value, security baseline artifacts, and no failing hard gates.\n\n"
@@ -137,7 +139,8 @@ def _write_status(results: list[CheckResult], snapshot: dict[str, object]) -> No
     UAT_RESULTS.write_text(
         "# Borg First-User UAT Results\n\n"
         f"Generated: {generated}\n\n"
-        f"Overall: **{status}**\n\n"
+        f"Overall (first-user local install only): **{status}**\n\n"
+        "Public self-serve launch is governed by `eval/public_self_serve_launch_gate.py`, not by this UAT file.\n\n"
         "| Check | Result | Detail |\n|---|---:|---|\n"
         + "\n".join(
             f"| `{r.name}` | {'PASS' if r.passed else 'FAIL'} | {r.detail.replace('|', '/')} |" for r in results

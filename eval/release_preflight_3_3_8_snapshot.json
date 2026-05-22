@@ -1,0 +1,44 @@
+{
+  "schema_version": 1,
+  "generated_at_utc": "2026-05-22T11:44:21Z",
+  "package": "agent-borg",
+  "version": "3.3.8",
+  "branch": "production-readiness-hardening-20260522",
+  "repository": "borg-farther/Borg-Directory",
+  "default_branch": "main",
+  "verdict": "ABORT_UPLOAD",
+  "upload_attempted": false,
+  "reason": "Strict production PyPI preflight passed local code/package gates but failed release provenance gates: release branch is not pushed, 3.3.8 is not merged to main, no v3.3.8 tag exists, and no GitHub Actions run exists for a merged release commit.",
+  "passed_gates": {
+    "source_version_consistency": "pyproject=3.3.8 runtime_fallback=3.3.8",
+    "full_pytest": "2174 passed, 40 skipped, 4 xfailed, 1 xpassed, 44 warnings",
+    "targeted_readiness_docs": "74 passed",
+    "security_gate": "PASS: Borg security hardening policy gate",
+    "targeted_mcp_cli_apply_tests": "107 passed, 1 xfailed",
+    "proof_dashboard": "build + lint + tests passed",
+    "local_first_user_release_gate": "PASS; fresh local wheel install, borg --version, borg rescue, borg-doctor, setup-claude sandbox, public import API",
+    "twine_check": "dist/agent_borg-3.3.8-py3-none-any.whl PASSED; dist/agent_borg-3.3.8.tar.gz PASSED",
+    "pypi_version_absent": "agent-borg==3.3.8 absent on PyPI; latest=3.3.7",
+    "docs_claim_guard": "PASS: checked docs and public proof dashboard, no violations"
+  },
+  "failed_or_blocking_gates": {
+    "remote_release_branch": "FAIL: production-readiness-hardening-20260522 is not present on origin",
+    "merged_default_branch": "FAIL: 3.3.8 changes are not merged into origin/main",
+    "tag_v3_3_8": "FAIL: no local/remote v3.3.8 tag observed",
+    "ci_on_release_commit": "FAIL: no GitHub Actions run can exist for an unpushed/unmerged release commit",
+    "pypi_fresh_install_canary": "FAIL expected before upload: isolated pip install from production PyPI cannot find agent-borg==3.3.8",
+    "public_self_serve_gate": "NO-GO: PyPI latest/fresh-install and first-10 evidence gates are blocked",
+    "first_10_external_evidence": "BLOCKED: verified=0/10, installs=0/8, useful=0/6, critical_incidents=0/0"
+  },
+  "next_required_actions": [
+    "Push branch production-readiness-hardening-20260522 to origin.",
+    "Open a release PR against main with the verified gate evidence.",
+    "Require GitHub Actions success on the exact PR head and merge commit.",
+    "Merge to main according to repo policy.",
+    "Create/push v3.3.8 on the CI-green main commit.",
+    "Rebuild wheel/sdist from a clean checkout of the tagged commit and rerun twine check.",
+    "Upload only dist/agent_borg-3.3.8-py3-none-any.whl and dist/agent_borg-3.3.8.tar.gz after the above pass.",
+    "After upload, rerun eval/run_pypi_fresh_install_canary.py and eval/public_self_serve_launch_gate.py.",
+    "Collect consented first-10 external-user rows before any public self-serve GO."
+  ]
+}

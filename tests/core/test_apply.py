@@ -160,6 +160,25 @@ class TestActionStart:
         assert data["success"] is False
         assert "Pack not found" in data["error"]
 
+    def test_start_rejects_pack_name_paths(self, tmp_agent_dir):
+        for unsafe_name in ("../test-pack", "test-pack/../test-pack", "/tmp/test-pack", ""):
+            result = apply_mod.action_start(unsafe_name, "Task", agent_dir=tmp_agent_dir)
+            data = parse_result(result)
+
+            assert data["success"] is False
+            assert "Invalid pack name" in data["error"]
+
+    def test_start_does_not_execute_fuzzy_substring_match(self, tmp_agent_dir):
+        make_pack_dir(tmp_agent_dir, "systematic-debugging")
+
+        result = apply_mod.action_start("debug", "Task", agent_dir=tmp_agent_dir)
+        data = parse_result(result)
+
+        assert data["success"] is False
+        assert "Pack not found" in data["error"]
+        assert "systematic-debugging" in data["similar"]
+        assert "session_id" not in data
+
     def test_start_includes_instructions(self, tmp_agent_dir):
         result = apply_mod.action_start("test-pack", "Task", agent_dir=tmp_agent_dir)
         data = parse_result(result)

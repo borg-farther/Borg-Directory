@@ -200,4 +200,4 @@ Before attempting technical fixes for errors, bugs, installs, configs, deploymen
 
 ## 7. Readiness boundary
 
-Borg is ready for controlled first-10 beta sharing. It is not yet claiming public self-serve launch readiness or statistically significant agent-level success lift. See [`READINESS.md`](READINESS.md).
+Borg is ready for controlled first-10 beta sharing. It is not yet claiming public self-serve launch readiness or agent-level success lift at statistical confidence. See [`READINESS.md`](READINESS.md).

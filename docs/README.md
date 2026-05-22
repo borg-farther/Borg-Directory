@@ -15,6 +15,10 @@ belong under [`archive/`](archive/) and are not current product claims.
 - [`ONBOARDING.md`](ONBOARDING.md) — deterministic Claude onboarding gates
 - [`FIRST_10_BETA_READINESS.md`](FIRST_10_BETA_READINESS.md) — first-10 beta contract
 - [`READINESS.md`](READINESS.md) — current readiness status and honest launch boundary
+- [`20260522_BORG_PRODUCTION_DAY_ONE_HARDENING_PLAN.md`](20260522_BORG_PRODUCTION_DAY_ONE_HARDENING_PLAN.md) — hard-gated production/day-one hardening plan and proof checklist
+- [`20260522_BORG_338_RELEASE_PREFLIGHT_ABORT.md`](20260522_BORG_338_RELEASE_PREFLIGHT_ABORT.md) — strict PyPI 3.3.8 preflight result: code gates green, upload aborted on release-provenance gates
+- [`PUBLIC_SELF_SERVE_LAUNCH_GO_NO_GO.md`](PUBLIC_SELF_SERVE_LAUNCH_GO_NO_GO.md) — canonical public self-serve launch gate output
+- [`../eval/public_self_serve_launch_gate_snapshot.json`](../eval/public_self_serve_launch_gate_snapshot.json) — machine-readable public self-serve launch gate snapshot
 - [`SECURITY_HARDENING_BASELINE.md`](SECURITY_HARDENING_BASELINE.md) — security gate summary
 - [`../eval/security_hardening_baseline.json`](../eval/security_hardening_baseline.json) — machine-readable security baseline
 - [`PRIVACY_MODEL.md`](PRIVACY_MODEL.md) — privacy model
@@ -32,4 +36,4 @@ They are retained for provenance, but they are not current product claims or fir
 
 - Controlled first-10 beta: ready to share.
 - Public self-serve launch: not yet; requires real external-user evidence.
-- Statistically significant agent-level success lift: not yet proven.
+- Agent-level success lift at statistical confidence: not yet proven.
