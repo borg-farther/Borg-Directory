@@ -17,7 +17,7 @@
 
 ## What is not proven
 
-- Statistically significant agent-level success lift.
+- Agent-level success lift at statistical confidence.
 - Real external-user network effects.
 - Broad non-Python coverage.
 - Global/federated multi-node reliability.
@@ -34,6 +34,9 @@ At least 6 of the first 10 users get one relevant ACTION/STOP/VERIFY moment with
 - [`PRIVACY_MODEL.md`](PRIVACY_MODEL.md)
 - [`PROMPT_INJECTION_THREAT_MODEL.md`](PROMPT_INJECTION_THREAT_MODEL.md)
 - [`../eval/first_user_release_gate_snapshot.json`](../eval/first_user_release_gate_snapshot.json)
+- [`../eval/pypi_fresh_install_snapshot.json`](../eval/pypi_fresh_install_snapshot.json)
+- [`../eval/public_self_serve_launch_gate_snapshot.json`](../eval/public_self_serve_launch_gate_snapshot.json)
+- [`../eval/first_10_user_scoreboard.json`](../eval/first_10_user_scoreboard.json)
 - [`../eval/security_hardening_baseline.json`](../eval/security_hardening_baseline.json)
 
 Historical status snapshots are archived under [`archive/root-md/`](archive/root-md/).

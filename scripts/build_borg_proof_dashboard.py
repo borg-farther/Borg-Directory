@@ -29,6 +29,8 @@ SOURCE_PATHS = [
     "eval/uat_scoreboard_snapshot.json",
     "eval/gate_run_snapshot.json",
     "eval/real_user_rollout_gate_snapshot.json",
+    "eval/public_self_serve_launch_gate_snapshot.json",
+    "eval/pypi_fresh_install_snapshot.json",
     "eval/load_10_snapshot.json",
     "eval/load_100_snapshot.json",
     "eval/load_1000_snapshot.json",
@@ -128,6 +130,8 @@ def build_model() -> dict:
     uat = load_json("eval/uat_scoreboard_snapshot.json")
     gate = load_json("eval/gate_run_snapshot.json")
     real_user = load_json("eval/real_user_rollout_gate_snapshot.json")
+    public_gate = load_json("eval/public_self_serve_launch_gate_snapshot.json")
+    pypi_fresh = load_json("eval/pypi_fresh_install_snapshot.json")
     loads = {str(n): load_json(f"eval/load_{n}_snapshot.json") for n in (10, 100, 1000)}
     pv, rv = pyproject_version(), init_version()
     pcount = pack_count()
@@ -142,6 +146,8 @@ def build_model() -> dict:
     uat_pass = nested(uat, ["synthetic_load_all_pass"], nested(uat, ["all_pass"]))
     gate_pass = nested(gate, ["synthetic_load_all_pass"], nested(gate, ["all_pass"]))
     real_user_100_pass = nested(real_user, ["ready_for_100_real_users"], nested(uat, ["real_user_rollout", "ready_for_100_real_users"]))
+    public_self_serve_pass = nested(public_gate, ["ready_for_public_self_serve_launch"])
+    pypi_fresh_pass = nested(pypi_fresh, ["success"])
     max_recommended_real_users = nested(real_user, ["max_recommended_real_users_now"], nested(uat, ["real_user_rollout", "max_recommended_real_users_now"], 0))
     real_user_blockers = nested(real_user, ["blockers"], nested(uat, ["real_user_rollout", "blockers"], []))
     load_summary = {}
@@ -169,8 +175,8 @@ def build_model() -> dict:
             "why": "No verified external install/onboarding evidence yet; Git-only flow should not be treated as self-serve until at least the first-10 scoreboard has real outcomes.",
         },
         "broad_public_launch": {
-            "verdict": "NO-GO",
-            "why": "No verified external-user adoption evidence, no first-10 real-user scoreboard, and public-launch claims would overstate local/logical evidence.",
+            "verdict": "NO-GO" if public_self_serve_pass is not True else "GO",
+            "why": "Public self-serve gate is blocked until PyPI latest/fresh-install/MCP/docs gates pass and first-10 external evidence exists." if public_self_serve_pass is not True else "Public self-serve gate has passed with row-derived external evidence.",
         },
     }
 
@@ -183,7 +189,9 @@ def build_model() -> dict:
         "gate_run_synthetic_load": {"value": status_bool(gate_pass), "honesty_label": "LOCAL_ARTIFACT_LOGICAL_USERS", "provenance": "eval/gate_run_snapshot.json" if gate else "MISSING"},
         "real_user_100_rollout_gate": {"value": status_bool(real_user_100_pass), "honesty_label": "REAL_EXTERNAL_USERS", "provenance": "eval/real_user_rollout_gate_snapshot.json" if real_user else "MISSING"},
         "max_recommended_real_users_now": {"value": max_recommended_real_users, "honesty_label": "REAL_EXTERNAL_USERS", "provenance": "eval/real_user_rollout_gate_snapshot.json" if real_user else "MISSING"},
-        "version_package": {"value": f"pyproject={pv or 'MISSING'} runtime={rv or 'MISSING'}", "honesty_label": "REPO_SOURCE", "provenance": "pyproject.toml; borg/__init__.py"},
+        "public_self_serve_launch_gate": {"value": status_bool(public_self_serve_pass), "honesty_label": "PUBLIC_LAUNCH_GATE", "provenance": "eval/public_self_serve_launch_gate_snapshot.json" if public_gate else "MISSING"},
+        "pypi_fresh_install_canary": {"value": status_bool(pypi_fresh_pass), "honesty_label": "PYPI_FRESH_INSTALL", "provenance": "eval/pypi_fresh_install_snapshot.json" if pypi_fresh else "MISSING"},
+        "source_version_consistency": {"value": f"pyproject={pv or 'MISSING'} runtime={rv or 'MISSING'}", "honesty_label": "REPO_SOURCE", "provenance": "pyproject.toml; borg/__init__.py"},
         "host_runtime_split_brain": {"value": "NOT_REPRODUCED_IN_THIS_BUILD", "honesty_label": "EVIDENCE_GAP", "provenance": "Prior docs mention runtime/host issues, but this dashboard build did not run environment probes."},
         "load_gates": {"value": load_summary, "honesty_label": "LOGICAL_USERS_NOT_REAL_USERS", "provenance": "eval/load_*_snapshot.json and eval/uat_scoreboard_snapshot.json"},
     }
@@ -191,6 +199,7 @@ def build_model() -> dict:
     blockers = {
         "user_affecting": [
             "No real first-user install/rescue outcome has been recorded yet.",
+            "PyPI fresh-install canary is not green yet." if pypi_fresh_pass is not True else "PyPI fresh-install canary is green.",
             "Unattended Git-only onboarding remains unproven until external user can install, configure MCP, and receive a useful rescue without maintainer intervention.",
         ],
         "investor_affecting": [
@@ -214,7 +223,7 @@ def build_model() -> dict:
     }
 
     next_actions = [
-        "Share Git only with first user under live supervision and label it as a private proof, not public launch.",
+        "Use source checkout only under live supervision and label it as a private proof, not public launch.",
         "Create a fresh-clone runbook: install package, run borg --version, configure MCP, run one rescue, capture exact timestamps and blockers.",
         "Record first user in the first-10 scoreboard template using a pseudonym and consented outcome fields.",
         "If any onboarding step fails, add artifact path/stdout/stderr and keep broad launch at NO-GO.",
@@ -239,6 +248,14 @@ def build_model() -> dict:
         evidence.append(source_record("eval/real_user_rollout_gate_snapshot.json", f"100-real-user gate={real_user_100_pass}; max_recommended_real_users={max_recommended_real_users}; blockers={real_user_blockers}", nested(real_user, ["generated_at_utc"])))
     else:
         evidence.append(source_record("eval/real_user_rollout_gate_snapshot.json", "real-user rollout gate missing"))
+    if public_gate:
+        evidence.append(source_record("eval/public_self_serve_launch_gate_snapshot.json", f"public self-serve gate={public_self_serve_pass}; max_recommended_real_users={nested(public_gate, ['max_recommended_real_users_now'])}; blockers={nested(public_gate, ['blockers'], [])}", nested(public_gate, ["generated_at_utc"])))
+    else:
+        evidence.append(source_record("eval/public_self_serve_launch_gate_snapshot.json", "public self-serve launch gate missing"))
+    if pypi_fresh:
+        evidence.append(source_record("eval/pypi_fresh_install_snapshot.json", f"PyPI fresh-install canary success={pypi_fresh_pass}; version={nested(pypi_fresh, ['version'])}", nested(pypi_fresh, ["generated_at_utc"])))
+    else:
+        evidence.append(source_record("eval/pypi_fresh_install_snapshot.json", "PyPI fresh-install canary missing"))
     for n, data in loads.items():
         evidence.append(source_record(f"eval/load_{n}_snapshot.json", f"logical load {n}: passed={load_summary[str(n)]['passed']}; total_requests={load_summary[str(n)]['total_requests']}; success_rate={load_summary[str(n)]['success_rate']}; p95_ms={load_summary[str(n)]['p95_ms']}; model={load_summary[str(n)]['concurrency_model']}", load_summary[str(n)]["timestamp"]))
     evidence.append(source_record("pyproject.toml", f"package version={pv}; scripts declared in project metadata"))
@@ -254,7 +271,7 @@ def build_model() -> dict:
         "generated_at_utc": now_iso(),
         "repo": str(ROOT),
         "top_verdict": verdicts,
-        "ready_to_share_git_now": {"answer": "YES, supervised only", "conditions": ["Do not present as unattended or public launch ready.", "Capture real first-user outcome evidence immediately."]},
+        "supervised_source_checkout": {"answer": "CONDITIONAL", "conditions": ["Hands-on maintainer supervision only.", "Do not present as unattended or public launch ready.", "Capture real first-user outcome evidence immediately."]},
         "metrics": metrics,
         "evidence": evidence,
         "blockers": blockers,
@@ -298,7 +315,7 @@ Repo: `{model['repo']}`
 
 {md_table(['Scope', 'Verdict', 'Why'], verdict_rows)}
 
-**Ready to share Git now?** {model['ready_to_share_git_now']['answer']} — {'; '.join(model['ready_to_share_git_now']['conditions'])}
+**Supervised source checkout only?** {model['supervised_source_checkout']['answer']} — {'; '.join(model['supervised_source_checkout']['conditions'])}
 
 ## Metrics with provenance and honesty labels
 
@@ -320,7 +337,7 @@ Repo: `{model['repo']}`
 
 {model['anti_hype']['text']}
 
-## Next action queue before sharing Git with first user
+## Next action queue before supervised first user
 
 {md_table(['#', 'Action'], next_rows)}
 """
@@ -343,13 +360,13 @@ body{font-family:system-ui,-apple-system,Segoe UI,sans-serif;max-width:1180px;ma
     return f"""<!doctype html><html lang=\"en\"><head><meta charset=\"utf-8\"><meta name=\"viewport\" content=\"width=device-width,initial-scale=1\"><title>Borg Proof Dashboard</title><style>{css}</style></head><body>
 <h1>Borg Proof Dashboard</h1><p>Generated: <span class=\"mono\">{esc(model['generated_at_utc'])}</span><br>Repo: <span class=\"mono\">{esc(model['repo'])}</span></p>
 <h2>Big top verdict</h2><table><tr><th>Scope</th><th>Verdict</th><th>Why</th></tr>{verdict_html}</table>
-<p class=\"note\"><strong>Ready to share Git now?</strong> {esc(model['ready_to_share_git_now']['answer'])}. {' '.join(esc(c) for c in model['ready_to_share_git_now']['conditions'])}</p>
+<p class=\"note\"><strong>Supervised source checkout only?</strong> {esc(model['supervised_source_checkout']['answer'])}. {' '.join(esc(c) for c in model['supervised_source_checkout']['conditions'])}</p>
 <h2>Metrics with provenance and honesty labels</h2><table><tr><th>Metric</th><th>Value</th><th>Honesty label</th><th>Provenance</th></tr>{metric_html}</table>
 <h2>Evidence table</h2><table><tr><th>Source file path</th><th>Exists</th><th>SHA256</th><th>Freshness timestamp</th><th>Exact claim derived</th></tr>{evidence_html}</table>
 <h2>Blockers</h2><table><tr><th>Category</th><th>Blockers</th></tr>{blockers_html}</table>
 <h2>First-10-user scoreboard template</h2><table><tr>{score_head}</tr>{score_body}</table>
 <h2>Anti-hype section</h2><p class=\"note\">{esc(model['anti_hype']['text'])}</p>
-<h2>Next action queue before sharing Git with first user</h2><ol>{next_html}</ol>
+<h2>Next action queue before supervised first user</h2><ol>{next_html}</ol>
 <h2>Markdown source</h2><pre>{esc(md)}</pre>
 </body></html>"""
 

@@ -27,33 +27,33 @@
   ],
   "missing_evidence": [],
   "proof_summary": {
-    "gate_run_timestamp": "2026-05-04T12:08:01.327965+00:00",
+    "gate_run_timestamp": "2026-05-18T07:46:07.667878+00:00",
     "load_10": {
       "exists": true,
-      "p95_ms": 0.6029137410223484,
-      "p99_ms": 0.6239618547260761,
+      "p95_ms": 0.6281427631620318,
+      "p99_ms": 0.8716626581735909,
       "passed": true,
       "success_rate": 1.0,
-      "timestamp": "2026-05-04T12:07:50.113051+00:00",
-      "total_requests": 10913
+      "timestamp": "2026-05-18T07:45:06.621553+00:00",
+      "total_requests": 59794
     },
     "load_100": {
       "exists": true,
-      "p95_ms": 0.5782860796898603,
-      "p99_ms": 0.6126944534480573,
+      "p95_ms": 0.6004410097375512,
+      "p99_ms": 0.6370391696691513,
       "passed": true,
       "success_rate": 1.0,
-      "timestamp": "2026-05-04T12:07:55.211079+00:00",
-      "total_requests": 11199
+      "timestamp": "2026-05-18T07:45:36.770025+00:00",
+      "total_requests": 59981
     },
     "load_1000": {
       "exists": true,
-      "p95_ms": 0.6138130091130733,
-      "p99_ms": 0.6562628224492074,
+      "p95_ms": 0.6051470059901476,
+      "p99_ms": 0.7191141927614809,
       "passed": true,
       "success_rate": 1.0,
-      "timestamp": "2026-05-04T12:08:00.350199+00:00",
-      "total_requests": 10123
+      "timestamp": "2026-05-18T07:46:06.931035+00:00",
+      "total_requests": 59947
     },
     "ready_for_10": true,
     "ready_for_100": true,
@@ -76,8 +76,8 @@
     ],
     "version": {
       "passed": true,
-      "project_version": "3.3.1",
-      "runtime_version": "3.3.1"
+      "project_version": "3.3.8",
+      "runtime_version": "3.3.8"
     }
   },
   "security": {
@@ -91,7 +91,7 @@
     ],
     "status": "GREEN_FOR_CONTROLLED_FIRST_USERS"
   },
-  "timestamp": "2026-05-05T12:49:43.492946+00:00",
+  "timestamp": "2026-05-22T10:38:47.482623+00:00",
   "value": {
     "expected_time_to_visible_value_seconds": "30-90 for a known Python/Django class after install",
     "expected_value_type": "avoided debugging dead-end, next command/check, verification step, outcome feedback path",

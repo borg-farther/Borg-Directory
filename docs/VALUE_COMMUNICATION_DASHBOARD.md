@@ -1,20 +1,22 @@
 # borg value communication dashboard
 
-## operator benefits (validated)
-- completion lift: **+65%** (control 35% -> borg 100%)
-- token savings: **1,275** per task
-- latency savings: **25.5s** per task
-- external channel readiness: targeted **28 passed**, full eval **41 passed**
+## operator benefits (validated internally)
+- first visible value path after PyPI release: `pipx install agent-borg==3.3.8` -> `borg rescue "<redacted error>"` -> ACTION / STOP / VERIFY
+- pre-release value path: local wheel/source first-user gate is green, but this is not public self-serve proof
+- local/synthetic gate status: first-user release gate and logical load gates are green in current artifacts
+- external-user proof status: **not proven yet**; verified external users remain `0`
+- statistically significant agent-level lift: **not claimed** until a controlled external-user benchmark passes
 
 ## readiness status
-- ready_for_10: true
-- ready_for_100: true
-- ready_for_1000: true
-- decision: SHIP
+- controlled first-10 PyPI beta infrastructure: **NO-GO until PyPI latest/fresh-install/MCP canary passes**
+- supervised local first-user path: GO in current artifacts
+- public self-serve launch: **NO-GO until first-10 row-derived external evidence passes**
+- 100 real-user rollout: **NO-GO until 10 external users, >=8 installs, >=6 useful rescues, and 0 critical incidents**
+- decision: controlled first-10 beta only; no broad self-serve or frontier-better-than claim
 
 ## evidence
-- `eval/value_communication_dashboard.json`
-- `eval/gate_run_snapshot.json`
-- `eval/uat_scoreboard_snapshot.json`
-- `docs/public/status.json`
-- `docs/public/value.json`
+- `eval/public_self_serve_launch_gate_snapshot.json`
+- `eval/real_user_rollout_gate_snapshot.json`
+- `eval/first_10_user_scoreboard.json`
+- `eval/pypi_fresh_install_snapshot.json`
+- `eval/first_user_release_gate_snapshot.json`

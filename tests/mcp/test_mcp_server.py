@@ -14,6 +14,7 @@ Tests:
 
 import json
 import logging
+import re
 
 logger = logging.getLogger(__name__)
 import sys
@@ -26,6 +27,7 @@ import pytest
 # Ensure guild-v2 package is on the path
 sys.path.insert(0, str(Path(__file__).parent.parent.parent))
 
+import borg
 from borg.integrations import mcp_server as mcp_module
 
 
@@ -72,7 +74,7 @@ class TestMakeResponse:
 # ============================================================================
 
 class TestInitialize:
-    def test_initialize_returns_protocol_and_capabilities(self):
+    def test_initialize_returns_protocol_capabilities_and_runtime_version(self):
         req = minimal_request("initialize", {}, req_id=1)
         resp = mcp_module.handle_request(req)
         assert resp is not None
@@ -80,6 +82,16 @@ class TestInitialize:
         assert resp["result"]["protocolVersion"] == "2024-11-05"
         assert "serverInfo" in resp["result"]
         assert resp["result"]["serverInfo"]["name"] == "borg-mcp-server"
+        assert resp["result"]["serverInfo"]["version"] == borg.__version__
+        assert mcp_module.SERVER_INFO["version"] == borg.__version__
+
+    def test_mcp_server_info_version_matches_pyproject(self):
+        pyproject = Path(__file__).resolve().parents[2] / "pyproject.toml"
+        text = pyproject.read_text(encoding="utf-8")
+        match = re.search(r'^version\s*=\s*["\']([^"\']+)["\']', text, re.MULTILINE)
+        assert match is not None
+        assert borg.__version__ == match.group(1)
+        assert mcp_module.SERVER_INFO["version"] == match.group(1)
 
     def test_initialize_no_id_still_returns_response(self):
         req = {"jsonrpc": "2.0", "method": "initialize", "params": {}, "id": None}

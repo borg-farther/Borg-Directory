@@ -10,12 +10,20 @@ from __future__ import annotations
 import json
 import re
 import sys
-import tomllib
+try:
+    import tomllib
+except ModuleNotFoundError:  # Python < 3.11
+    import tomli as tomllib
 from datetime import datetime, timezone
 from pathlib import Path
 from typing import Any
 
 ROOT = Path(__file__).resolve().parents[1]
+if str(ROOT) not in sys.path:
+    sys.path.insert(0, str(ROOT))
+
+from eval.first_10_evidence import evaluate_scoreboard
+
 SNAPSHOT = ROOT / "eval" / "real_user_rollout_gate_snapshot.json"
 REPORT = ROOT / "docs" / "20260517_BORG_100_REAL_USER_READINESS.md"
 
@@ -80,40 +88,54 @@ def _load_ready(users: int) -> dict[str, Any]:
 
 def _first_10_evidence() -> dict[str, Any]:
     data = _read_json(ROOT / "eval" / "first_10_user_scoreboard.json")
-    counts = data.get("current_counts") or {}
-    truth = data.get("truth_policy") or {}
-    thresholds = data.get("thresholds") or {}
+    if not data:
+        return {
+            "exists": False,
+            "verified_external_users": 0,
+            "real_users": 0,
+            "install_successes": 0,
+            "useful_rescue_moments": 0,
+            "critical_privacy_security_failures": 0,
+            "required_total_real_users": 10,
+            "required_install_successes": 8,
+            "required_useful_rescue_moments": 6,
+            "max_critical_privacy_security_failures": 0,
+            "scoreboard_gate": None,
+            "scoreboard_reason": "scoreboard missing",
+            "row_count": 0,
+            "invalid_rows": [],
+            "stored_consistency": {"passed": False, "mismatches": [{"field": "file", "expected": "present", "actual": "missing"}]},
+            "passed": False,
+        }
+
+    evidence = evaluate_scoreboard(data)
+    derived = evidence["derived_counts"]
+    thresholds = evidence["thresholds"]
     verdict = data.get("current_verdict") or {}
-    verified = int(truth.get("verified_external_users") or 0)
-    real_users = int(counts.get("real_users") or 0)
-    installs = int(counts.get("install_successes") or 0)
-    useful = int(counts.get("useful_rescue_moments") or 0)
-    incidents = int(counts.get("critical_privacy_security_failures") or 0)
-    required_users = int(thresholds.get("required_total_real_users") or 10)
-    required_installs = int(thresholds.get("min_install_successes_for_public_self_serve") or 8)
-    required_useful = int(thresholds.get("min_useful_rescue_moments_for_public_self_serve") or 6)
-    max_incidents = int(thresholds.get("max_critical_privacy_security_failures") or 0)
-    first_10_passed = (
-        verified >= required_users
-        and real_users >= required_users
-        and installs >= required_installs
-        and useful >= required_useful
-        and incidents <= max_incidents
+    passed = bool(
+        evidence["schema_valid"]
+        and evidence["thresholds_passed"]
+        and evidence["stored_consistency"]["passed"]
     )
     return {
-        "exists": bool(data),
-        "verified_external_users": verified,
-        "real_users": real_users,
-        "install_successes": installs,
-        "useful_rescue_moments": useful,
-        "critical_privacy_security_failures": incidents,
-        "required_total_real_users": required_users,
-        "required_install_successes": required_installs,
-        "required_useful_rescue_moments": required_useful,
-        "max_critical_privacy_security_failures": max_incidents,
+        "exists": True,
+        "verified_external_users": derived["verified_external_users"],
+        "real_users": derived["real_users"],
+        "install_successes": derived["install_successes"],
+        "useful_rescue_moments": derived["useful_rescue_moments"],
+        "critical_privacy_security_failures": derived["critical_privacy_security_failures"],
+        "required_total_real_users": thresholds["required_total_real_users"],
+        "required_install_successes": thresholds["required_install_successes"],
+        "required_useful_rescue_moments": thresholds["required_useful_rescue_moments"],
+        "max_critical_privacy_security_failures": thresholds["max_critical_privacy_security_failures"],
         "scoreboard_gate": verdict.get("public_self_serve_launch_gate"),
         "scoreboard_reason": verdict.get("reason"),
-        "passed": first_10_passed,
+        "row_count": evidence["row_count"],
+        "counted_external_rows": evidence["counted_external_rows"],
+        "invalid_rows": evidence["invalid_rows"],
+        "stored_consistency": evidence["stored_consistency"],
+        "row_level_blockers": evidence["blockers"],
+        "passed": passed,
     }
 
 
@@ -151,6 +173,9 @@ def compile_rollout_gate() -> dict[str, Any]:
     if not load_100["passed"]:
         blockers.append("100-user load gate is not green")
     if not first_10["passed"]:
+        row_blockers = first_10.get("row_level_blockers") or []
+        if row_blockers:
+            blockers.extend(str(blocker) for blocker in row_blockers)
         blockers.append(
             "first-10 external-user evidence has not passed: "
             f"verified={first_10['verified_external_users']}/{first_10['required_total_real_users']}, "
@@ -174,7 +199,7 @@ def compile_rollout_gate() -> dict[str, Any]:
         "infrastructure_ready_for_100": infra_ready_for_100,
         "ready_for_100_real_users": ready_for_100_real_users,
         "max_recommended_real_users_now": max_recommended_real_users_now,
-        "blockers": blockers,
+        "blockers": list(dict.fromkeys(blockers)),
         "no_fake_user_policy": "Do not mark first-10 complete or 100-real-user ready without consented external evidence rows.",
     }
 

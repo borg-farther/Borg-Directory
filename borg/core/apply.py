@@ -60,6 +60,32 @@ MAX_FIELD_SIZE_BYTES = 10 * 1024  # 10 KB
 # In-memory overlay for apply-specific session fields not stored in core session
 _active_apply_state: Dict[str, Dict[str, Any]] = {}
 
+
+def _safe_pack_file(base: Path, pack_name: str) -> Path:
+    """Resolve a pulled-pack path without fuzzy or path-traversal behavior.
+
+    `borg apply` executes local workflow packs. It must never select an
+    arbitrary substring match or follow a caller-controlled name outside the
+    configured Borg directory; a wrong pack is worse than a clear fail-closed
+    error. Human-friendly suggestions are returned by `action_start`, but this
+    resolver only accepts exact single-directory pack names.
+    """
+    if not isinstance(pack_name, str) or not pack_name.strip():
+        raise ValueError("Invalid pack name: must be a non-empty directory name")
+
+    clean_name = pack_name.strip()
+    if clean_name in {".", ".."} or "/" in clean_name or "\\" in clean_name:
+        raise ValueError("Invalid pack name: must be a single directory name, not a path")
+
+    base_resolved = base.resolve()
+    pack_file = (base_resolved / clean_name / "pack.yaml").resolve()
+    try:
+        pack_file.relative_to(base_resolved)
+    except ValueError as exc:
+        raise ValueError("Invalid pack name: resolved path escapes the Borg directory") from exc
+    return pack_file
+
+
 # ---------------------------------------------------------------------------
 # V1/V2 pack normalization
 # ---------------------------------------------------------------------------
@@ -164,19 +190,23 @@ def action_start(pack_name: str, task: str, *, agent_dir: Optional[Path] = None)
     Does NOT log execution_started until operator approves via __approval__ checkpoint.
     """
     base = agent_dir if agent_dir is not None else GUILD_DIR
-    # Find the pack
-    pack_file = base / pack_name / "pack.yaml"
+    # Find the pack. Exact match only: never execute a fuzzy substring match.
+    try:
+        pack_file = _safe_pack_file(base, pack_name)
+    except ValueError as e:
+        return json.dumps({"success": False, "error": str(e)})
     if not pack_file.exists():
         candidates = list(base.glob("*/pack.yaml"))
-        matches = [c for c in candidates if pack_name in c.parent.name]
-        if matches:
-            pack_file = matches[0]
-        else:
-            return json.dumps({
-                "success": False,
-                "error": f"Pack not found: {pack_name}. Pull it first with borg_pull.",
-                "available": [c.parent.name for c in candidates],
-            })
+        candidate_names = [c.parent.name for c in candidates]
+        similar = [name for name in candidate_names if pack_name and pack_name in name][:5]
+        response = {
+            "success": False,
+            "error": f"Pack not found: {pack_name}. Pull it first with borg_pull.",
+            "available": candidate_names,
+        }
+        if similar:
+            response["similar"] = similar
+        return json.dumps(response)
 
     try:
         pack_text = pack_file.read_text(encoding="utf-8")

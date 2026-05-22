@@ -1,7 +1,7 @@
 # Borg Day-One First-User Readiness
 
 Revision: `20260505-0700`
-Generated: `2026-05-05T12:49:43.492946+00:00`
+Generated: `2026-05-22T10:38:47.482623+00:00`
 
 ## blunt verdict
 
@@ -20,17 +20,18 @@ Borg is ready for a controlled first-user cohort if the promise is narrow: agent
 
 ## hard evidence
 
-- Gate timestamp: `2026-05-04T12:08:01.327965+00:00`
-- Ready for 10: `True`
-- Ready for 100: `True`
-- Ready for 1000 logical users: `True`
-- Version: `{'passed': True, 'project_version': '3.3.1', 'runtime_version': '3.3.1'}`
+- Gate timestamp: `2026-05-18T07:46:07.667878+00:00`
+- Synthetic/logical 10-user load gate: `True`
+- Synthetic/logical 100-user load gate: `True`
+- Synthetic/logical 1000-user load gate: `True`
+- 100 real-user rollout: `NO_GO until first-10 external evidence passes`
+- Version: `{'passed': True, 'project_version': '3.3.8', 'runtime_version': '3.3.8'}`
 
 ### load proof
 
-- load_10: passed=`True`, success_rate=`1.0`, p95_ms=`0.6029137410223484`, p99_ms=`0.6239618547260761`, requests=`10913`
-- load_100: passed=`True`, success_rate=`1.0`, p95_ms=`0.5782860796898603`, p99_ms=`0.6126944534480573`, requests=`11199`
-- load_1000: passed=`True`, success_rate=`1.0`, p95_ms=`0.6138130091130733`, p99_ms=`0.6562628224492074`, requests=`10123`
+- load_10: passed=`True`, success_rate=`1.0`, p95_ms=`0.6281427631620318`, p99_ms=`0.8716626581735909`, requests=`59794`
+- load_100: passed=`True`, success_rate=`1.0`, p95_ms=`0.6004410097375512`, p99_ms=`0.6370391696691513`, requests=`59981`
+- load_1000: passed=`True`, success_rate=`1.0`, p95_ms=`0.6051470059901476`, p99_ms=`0.7191141927614809`, requests=`59947`
 
 ## security/privacy/prompt-injection posture
 

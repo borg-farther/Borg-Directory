@@ -4,14 +4,14 @@ Generated: 2026-05-14 18:39 UTC
 
 ## Current state
 
-Borg is **public waitlist / narrow-beta ready** on branch `public-waitlist-readiness-20260514`.
+Borg is **source/local supervised first-user ready** on branch `production-readiness-hardening-20260522`. PyPI-based first-10 beta and public self-serve remain blocked until `agent-borg==3.3.8` is published and verified from a clean PyPI install.
 
 Hard evidence already completed:
 
 - Pushed branch: `public-waitlist-readiness-20260514`
 - Pushed head observed in prior run: `a20921610b7d41bcc7db71361f1271c347ecbc58`
 - Required local gates: PASS
-- pipx proof: PASS
+- PyPI fresh-install/MCP canary for `agent-borg==3.3.8`: BLOCKED until release publish
 - security baseline: PASS
 - privacy/prompt-injection/atom/firewall tests: PASS
 - source canaries: PASS
@@ -20,7 +20,7 @@ Hard evidence already completed:
 
 ## Remaining self-serve blockers
 
-Only two true blockers remain for full public self-serve launch:
+Three true blockers remain for full public self-serve launch:
 
 1. **Live MCP runtime identity**
    - Need: supervised live reload/cutover and live canary.
@@ -31,7 +31,14 @@ Only two true blockers remain for full public self-serve launch:
      - result is recorded in `eval/live_mcp_self_serve_canary.json` and docs.
    - Constraint: autonomous agent must not restart/kill/signal gateway. This needs an approved human-operated reload window or a safe platform-level reload command explicitly outside the prohibited gateway-kill path.
 
-2. **First 10 real external users**
+2. **PyPI 3.3.8 release and fresh-install/MCP canary**
+   - Need: `agent-borg==3.3.8` present on production PyPI and installed from an isolated clean environment.
+   - Done criteria:
+     - PyPI latest metadata equals `3.3.8` and project URLs match `borg-farther/Borg-Directory`;
+     - `python eval/run_pypi_fresh_install_canary.py` passes using `--isolated --index-url https://pypi.org/simple`;
+     - installed `borg`, `borg-doctor`, and `borg-mcp` return the expected value signals and MCP `serverInfo.version` is `3.3.8`.
+
+3. **First 10 real external users**
    - Need: real external-user outcome evidence, not simulations.
    - Done criteria:
      - 10 consented real external user rows in `eval/first_10_user_scoreboard.json`;
@@ -56,7 +63,14 @@ Only two true blockers remain for full public self-serve launch:
    - `docs/LIVE_MCP_SELF_SERVE_CANARY.md`
 5. If any stale guidance appears, self-serve remains NO.
 
-### Phase B — first-10 user sprint
+### Phase B — PyPI release/canary closure
+
+1. Land 3.3.8 source on default branch and require green CI on that exact commit.
+2. Tag `v3.3.8` on the CI-green commit.
+3. Build clean wheel/sdist, run `twine check`, confirm PyPI absence, upload only the exact 3.3.8 artifacts.
+4. Run `python eval/run_pypi_fresh_install_canary.py` and keep launch blocked unless it passes.
+
+### Phase C — first-10 user sprint
 
 Use `docs/20260514_FIRST_10_USER_INVITE_PACKET.md` exactly.
 
@@ -65,17 +79,18 @@ For each user:
 1. Send invite and privacy warning.
 2. Record consent.
 3. User runs one of:
-   - `pipx install git+https://github.com/borg-farther/Borg-Directory.git`
-   - fallback venv install from same repo URL.
+   - `pipx install agent-borg==3.3.8`
+   - fallback venv install from PyPI: `/tmp/borg-beta-venv/bin/python -m pip install agent-borg==3.3.8`
+   - source-branch install only for maintainer-approved pre-release testing, never the default first-10 path.
 4. User runs:
    - `borg --version`
    - `borg rescue "<redacted real error>"`
 5. Record fields in `eval/first_10_user_scoreboard.json`.
 6. If a privacy/security incident happens, pause public launch and fix before continuing.
 
-### Phase C — final launch gate
+### Phase D — final launch gate
 
-After Phase A and B pass, run all release gates again:
+After Phases A, B, and C pass, run all release gates again:
 
 ```bash
 python -m pytest -q borg/tests/test_confidence_gate.py borg/tests/test_borg_observe_confidence_gate.py borg/tests/test_runtime_fingerprint.py
