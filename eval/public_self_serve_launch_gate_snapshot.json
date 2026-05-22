@@ -1,7 +1,5 @@
 {
   "blockers": [
-    "PyPI latest metadata does not match source version or required project URLs",
-    "PyPI fresh-install + MCP stdio canary snapshot is missing or failing",
     "first-10 external-user evidence has not passed: verified=0/10, real_users=0/10, installs=0/8, useful=0/6, critical_incidents=0/0"
   ],
   "gate_type": "public_self_serve_launch",
@@ -9,9 +7,6 @@
     "docs_claim_guard": {
       "checked": [
         "README.md",
-        "PROJECT_STATUS.md",
-        "GO_NO_GO_DECISION.md",
-        "UAT_RESULTS.md",
         "docs/README.md",
         "docs/READINESS.md",
         "docs/INSTALL.md",
@@ -74,22 +69,23 @@
     "pypi_fresh_install_and_mcp_stdio": {
       "exists": true,
       "expected_version": "3.3.8",
-      "failed_count": 1,
-      "failures": [
-        "pip_install_agent_borg"
-      ],
-      "generated_at_utc": "2026-05-22T11:41:53Z",
-      "mcp_server_info": null,
-      "mcp_stdio_canary_passed": false,
-      "passed": false,
+      "failed_count": 0,
+      "failures": [],
+      "generated_at_utc": "2026-05-22T12:11:37Z",
+      "mcp_server_info": {
+        "name": "borg-mcp-server",
+        "version": "3.3.8"
+      },
+      "mcp_stdio_canary_passed": true,
+      "passed": true,
       "path": "eval/pypi_fresh_install_snapshot.json",
       "version": "3.3.8"
     },
     "pypi_latest": {
       "expected_version": "3.3.8",
-      "latest_version": "3.3.7",
+      "latest_version": "3.3.8",
       "package": "agent-borg",
-      "passed": false,
+      "passed": true,
       "project_urls": {
         "Documentation": "https://github.com/borg-farther/Borg-Directory#readme",
         "Homepage": "https://github.com/borg-farther/Borg-Directory",
@@ -118,9 +114,9 @@
       "url_missing": []
     }
   },
-  "generated_at_utc": "2026-05-22T11:41:53.563606+00:00",
-  "max_recommended_real_users_now": 0,
-  "ready_for_controlled_first_10_beta": false,
+  "generated_at_utc": "2026-05-22T12:13:48.086768+00:00",
+  "max_recommended_real_users_now": 10,
+  "ready_for_controlled_first_10_beta": true,
   "ready_for_public_self_serve_launch": false,
   "schema_version": 1,
   "source_version": "3.3.8",
