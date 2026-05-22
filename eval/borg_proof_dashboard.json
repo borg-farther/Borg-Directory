@@ -55,23 +55,23 @@
     {
       "claim_derived": "100-real-user gate=False; max_recommended_real_users=10; blockers=['first-10 external-user evidence has not passed: verified=0/10, real_users=0/10, installs=0/8, useful=0/6, critical_incidents=0/0']",
       "exists": true,
-      "freshness_timestamp": "2026-05-22T12:13:45.137669+00:00",
+      "freshness_timestamp": "2026-05-22T14:50:55.239747+00:00",
       "path": "eval/real_user_rollout_gate_snapshot.json",
-      "sha256": "2b0a0280e96e3dbd853523a355a7fb43b94eee8304d28f9e29703ce690e6da76"
+      "sha256": "5a5cfb855fd112fcdcc6fd0b1f49cfb38df94084456219ef1e345c64f22a415f"
     },
     {
       "claim_derived": "public self-serve gate=False; max_recommended_real_users=10; blockers=['first-10 external-user evidence has not passed: verified=0/10, real_users=0/10, installs=0/8, useful=0/6, critical_incidents=0/0']",
       "exists": true,
-      "freshness_timestamp": "2026-05-22T12:13:48.086768+00:00",
+      "freshness_timestamp": "2026-05-22T14:50:55.154475+00:00",
       "path": "eval/public_self_serve_launch_gate_snapshot.json",
-      "sha256": "41088c91a0b5782d02ca183bf5220700087d7865a115a7df897253a8f7877793"
+      "sha256": "7e73be890b4d6fb87f10937ddc1bb2a7cd44ee40df37748042913cdebf2ca685"
     },
     {
-      "claim_derived": "PyPI fresh-install canary success=True; version=3.3.8",
+      "claim_derived": "PyPI fresh-install canary success=True; version=3.3.9",
       "exists": true,
-      "freshness_timestamp": "2026-05-22T12:11:37Z",
+      "freshness_timestamp": "2026-05-22T14:50:13Z",
       "path": "eval/pypi_fresh_install_snapshot.json",
-      "sha256": "a82eb3f24ba8bdebeae25720727a86a44a5451050beb5a101313dd13a7af9ee6"
+      "sha256": "f51dcea2bec03a352b8f9f94703ae310fdaafda15aa89fabe8ede720103b949d"
     },
     {
       "claim_derived": "logical load 10: passed=True; total_requests=59794; success_rate=1.0; p95_ms=0.6281427631620318; model=asyncio_logical_users",
@@ -95,18 +95,18 @@
       "sha256": "7a97f13045c6e54751de87963979fd47cedd19467b1b03c1f2c5f0f4aa703629"
     },
     {
-      "claim_derived": "package version=3.3.8; scripts declared in project metadata",
+      "claim_derived": "package version=3.3.9; scripts declared in project metadata",
       "exists": true,
-      "freshness_timestamp": "2026-05-22T12:58:58Z",
+      "freshness_timestamp": "2026-05-22T14:45:19Z",
       "path": "pyproject.toml",
-      "sha256": "0defe018ec8a2ecc6a772aa49e4bafb93853f0e9d4b24605925af0b62f8b1154"
+      "sha256": "557fd315765b9172cb956be417c720e046118717086ad194ffa91631e4134606"
     },
     {
-      "claim_derived": "runtime __version__=3.3.8; top-level check() delegates to search",
+      "claim_derived": "runtime __version__=3.3.9; top-level check() delegates to search",
       "exists": true,
-      "freshness_timestamp": "2026-05-22T11:59:37Z",
+      "freshness_timestamp": "2026-05-22T14:45:19Z",
       "path": "borg/__init__.py",
-      "sha256": "14a1cfcffc78976668925f8f06991459ba5aed9c3b6a8d558bf0e1ad6417c8e9"
+      "sha256": "cf3bff54cd2075ebdaa1713ecf05689113a9955f03cbde7a4dc9adc2e1b542b9"
     }
   ],
   "first_10_user_scoreboard_template": {
@@ -212,7 +212,7 @@
       }
     ]
   },
-  "generated_at_utc": "2026-05-22T12:59:12Z",
+  "generated_at_utc": "2026-05-22T14:50:55Z",
   "metrics": {
     "active_contributors_consumers": {
       "honesty_label": "MISSING_BORG_ANALYTICS_ARTIFACT",
@@ -301,7 +301,7 @@
     "source_version_consistency": {
       "honesty_label": "REPO_SOURCE",
       "provenance": "pyproject.toml; borg/__init__.py",
-      "value": "pyproject=3.3.8 runtime=3.3.8"
+      "value": "pyproject=3.3.9 runtime=3.3.9"
     },
     "uat_scoreboard_synthetic_load": {
       "honesty_label": "LOCAL_ARTIFACT_LOGICAL_USERS",
