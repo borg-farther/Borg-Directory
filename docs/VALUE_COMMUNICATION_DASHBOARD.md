@@ -1,7 +1,7 @@
 # borg value communication dashboard
 
 ## operator benefits (validated internally)
-- first visible value path after PyPI release: `pipx install agent-borg==3.3.9` -> `borg rescue "<redacted error>"` -> ACTION / STOP / VERIFY
+- first visible value path after PyPI release: `pipx install agent-borg==3.3.10` -> `borg rescue "<redacted error>"` -> ACTION / STOP / VERIFY
 - pre-release value path: local wheel/source first-user gate is green, but this is not public self-serve proof
 - local/synthetic gate status: first-user release gate and logical load gates are green in current artifacts
 - external-user proof status: **not proven yet**; verified external users remain `0`

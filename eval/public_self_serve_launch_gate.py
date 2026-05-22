@@ -49,7 +49,7 @@ CURRENT_CLAIM_DOCS = [
     Path("docs/ROADMAP.md"),
     Path("docs/20260522_PUBLIC_PRESENTATION_AUDIT.md"),
     Path("docs/20260522_BORG_PRODUCTION_DAY_ONE_HARDENING_PLAN.md"),
-    Path("docs/20260522_BORG_339_RELEASE_PREFLIGHT_PUBLISHED.md"),
+    Path("docs/20260522_BORG_3310_RELEASE_PREFLIGHT_PUBLISHED.md"),
     Path("docs/PUBLIC_SELF_SERVE_LAUNCH_GO_NO_GO.md"),
     Path("docs/VALUE_COMMUNICATION_DASHBOARD.md"),
     Path("docs/VALUE_COMMUNICATION_DASHBOARD.html"),
@@ -197,6 +197,8 @@ def docs_claim_guard(paths: list[Path], expected_version: str, *, public_evidenc
             (r"BORG_338_RELEASE_PREFLIGHT", "stale 3.3.8 release-proof reference"),
             (r"release_preflight_3_3_8", "stale 3.3.8 release-preflight snapshot reference"),
             (r"serverInfo\.version\s*==\s*3\.3\.8", "stale MCP version claim"),
+            (r"BORG_339_RELEASE_PREFLIGHT", "stale 3.3.9 release-proof reference"),
+            (r"serverInfo\.version\s*==\s*3\.3\.9", "stale MCP version claim"),
         ]
         for pattern, label in stale_release_tokens:
             match = re.search(pattern, text)

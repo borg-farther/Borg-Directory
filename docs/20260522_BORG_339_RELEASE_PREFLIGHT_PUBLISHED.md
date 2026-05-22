@@ -1,5 +1,8 @@
 # Borg 3.3.9 production PyPI release preflight and verification
 
+> **Historical/internal — not current product documentation.**
+> Current release proof is [`20260522_BORG_3310_RELEASE_PREFLIGHT_PUBLISHED.md`](20260522_BORG_3310_RELEASE_PREFLIGHT_PUBLISHED.md).
+
 Rev: 2026-05-22
 
 ## Verdict

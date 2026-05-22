@@ -164,6 +164,7 @@ def build_model() -> dict:
     real_user_100_pass = nested(real_user, ["ready_for_100_real_users"], nested(uat, ["real_user_rollout", "ready_for_100_real_users"]))
     public_self_serve_pass = nested(public_gate, ["ready_for_public_self_serve_launch"])
     pypi_fresh_pass = nested(pypi_fresh, ["success"])
+    pypi_fresh_version = nested(pypi_fresh, ["version"])
     max_recommended_real_users = nested(real_user, ["max_recommended_real_users_now"], nested(uat, ["real_user_rollout", "max_recommended_real_users_now"], 0))
     real_user_blockers = nested(real_user, ["blockers"], nested(uat, ["real_user_rollout", "blockers"], []))
     load_summary = {}
@@ -243,7 +244,7 @@ def build_model() -> dict:
     }
 
     next_actions = [
-        "Use `pipx install agent-borg==3.3.9` with controlled first-10 beta testers and label it as beta evidence capture, not public launch.",
+        f"Use `pipx install agent-borg=={pypi_fresh_version or pv or 'CURRENT_VERSION'}` with controlled first-10 beta testers and label it as beta evidence capture, not public launch.",
         "Create a fresh-PyPI runbook: install package, run borg --version, configure MCP, run one rescue, capture exact timestamps and blockers.",
         "Record first user in the first-10 scoreboard template using a pseudonym and consented outcome fields.",
         "If any onboarding step fails, add artifact path/stdout/stderr and keep broad launch at NO-GO.",

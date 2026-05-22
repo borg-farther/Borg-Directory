@@ -25,7 +25,7 @@ The public GitHub path now says what Borg is in one screen, shows the first valu
 ## What was fixed in this pass
 
 - Reworked the README opening around a concrete 60-second rescue path instead of broad marketing language.
-- Converted internal/status docs to current `agent-borg==3.3.9` reality: PyPI is live and fresh-install/stdin MCP canary passes.
+- Converted internal/status docs to current `agent-borg==3.3.10` reality: PyPI is live and fresh-install/stdin MCP canary passes.
 - Replaced stale roadmap language from the old `guild-packs` / `guildpacks` era.
 - Moved stale demo docs out of the live docs surface into `docs/archive/stale-public/`.
 - Added regression tests that prevent reintroducing unsupported external-lift claims, stale PyPI blockers, and first-screen README ambiguity.
@@ -34,9 +34,9 @@ The public GitHub path now says what Borg is in one screen, shows the first valu
 
 ## Current evidence
 
-- PyPI latest: `agent-borg==3.3.9` after the docs-only patch release.
+- PyPI latest: `agent-borg==3.3.10` after the docs-only patch release.
 - Fresh PyPI install canary: PASS.
-- MCP stdio canary: PASS, `serverInfo.version == 3.3.9` after the docs-only patch release.
+- MCP stdio canary: PASS, `serverInfo.version == 3.3.10` after the docs-only patch release.
 - Public docs claim guard: PASS.
 - Security policy gate: PASS.
 - Full sanitized pytest run: PASS.

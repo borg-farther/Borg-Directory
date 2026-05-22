@@ -63,23 +63,23 @@
     {
       "claim_derived": "100-real-user gate=False; max_recommended_real_users=10; blockers=['first-10 external-user evidence has not passed: verified=0/10, real_users=0/10, installs=0/8, useful=0/6, critical_incidents=0/0']",
       "exists": true,
-      "freshness_timestamp": "2026-05-22T20:03:49.694259+00:00",
+      "freshness_timestamp": "2026-05-22T20:42:08.707805+00:00",
       "path": "eval/real_user_rollout_gate_snapshot.json",
-      "sha256": "819d833937b36191f1521aa6d5e8e79f22e9e58a01754ca3532f6cab5f48a631"
+      "sha256": "708e049968794bf9c5d05d82eaaa9ee24ef91d0c86ec85e99e8018fc3ab183be"
     },
     {
       "claim_derived": "public self-serve gate=False; max_recommended_real_users=10; blockers=['first-10 external-user evidence has not passed: verified=0/10, real_users=0/10, installs=0/8, useful=0/6, critical_incidents=0/0']",
       "exists": true,
-      "freshness_timestamp": "2026-05-22T20:06:28.314606+00:00",
+      "freshness_timestamp": "2026-05-22T20:42:08.658397+00:00",
       "path": "eval/public_self_serve_launch_gate_snapshot.json",
-      "sha256": "e027bb36dc5b92cceb9155613acf53518e6582dbb04d0572595ec9279599bcc6"
+      "sha256": "293aa0c370d103e0672db8f20d736db6cb03f1001a38214aaf60de913e40e2e2"
     },
     {
-      "claim_derived": "PyPI fresh-install canary success=True; version=3.3.9",
+      "claim_derived": "PyPI fresh-install canary success=True; version=3.3.10",
       "exists": true,
-      "freshness_timestamp": "2026-05-22T14:50:13Z",
+      "freshness_timestamp": "2026-05-22T20:30:42Z",
       "path": "eval/pypi_fresh_install_snapshot.json",
-      "sha256": "f51dcea2bec03a352b8f9f94703ae310fdaafda15aa89fabe8ede720103b949d"
+      "sha256": "7036c1a24e5add42200d67a8fce9e6dbe2785e11ee833be3f0937b6b805155c1"
     },
     {
       "claim_derived": "logical load 10: passed=True; total_requests=59794; success_rate=1.0; p95_ms=0.6281427631620318; model=asyncio_logical_users",
@@ -103,18 +103,18 @@
       "sha256": "7a97f13045c6e54751de87963979fd47cedd19467b1b03c1f2c5f0f4aa703629"
     },
     {
-      "claim_derived": "package version=3.3.9; scripts declared in project metadata",
+      "claim_derived": "package version=3.3.10; scripts declared in project metadata",
       "exists": true,
-      "freshness_timestamp": "2026-05-22T14:45:19Z",
+      "freshness_timestamp": "2026-05-22T20:25:53Z",
       "path": "pyproject.toml",
-      "sha256": "557fd315765b9172cb956be417c720e046118717086ad194ffa91631e4134606"
+      "sha256": "e985c25026ed8d02022d4f80b9f1e17843fb2dcfaad4c06837f62d758dc6970d"
     },
     {
-      "claim_derived": "runtime __version__=3.3.9; top-level check() delegates to search",
+      "claim_derived": "runtime __version__=3.3.10; top-level check() delegates to search",
       "exists": true,
-      "freshness_timestamp": "2026-05-22T14:45:19Z",
+      "freshness_timestamp": "2026-05-22T20:25:53Z",
       "path": "borg/__init__.py",
-      "sha256": "cf3bff54cd2075ebdaa1713ecf05689113a9955f03cbde7a4dc9adc2e1b542b9"
+      "sha256": "079ca796afcc3456c3b01cf9cea780a87ace0c1a1fe502f60864f9b9bab5b035"
     }
   ],
   "first_10_user_scoreboard_template": {
@@ -220,7 +220,7 @@
       }
     ]
   },
-  "generated_at_utc": "2026-05-22T20:06:28Z",
+  "generated_at_utc": "2026-05-22T20:42:08Z",
   "metrics": {
     "active_contributors_consumers": {
       "honesty_label": "MISSING_BORG_ANALYTICS_ARTIFACT",
@@ -309,7 +309,7 @@
     "source_version_consistency": {
       "honesty_label": "REPO_SOURCE",
       "provenance": "pyproject.toml; borg/__init__.py",
-      "value": "pyproject=3.3.9 runtime=3.3.9"
+      "value": "pyproject=3.3.10 runtime=3.3.10"
     },
     "uat_scoreboard_synthetic_load": {
       "honesty_label": "LOCAL_ARTIFACT_LOGICAL_USERS",
@@ -323,7 +323,7 @@
     }
   },
   "next_action_queue_before_sharing_git_with_first_user": [
-    "Use `pipx install agent-borg==3.3.9` with controlled first-10 beta testers and label it as beta evidence capture, not public launch.",
+    "Use `pipx install agent-borg==3.3.10` with controlled first-10 beta testers and label it as beta evidence capture, not public launch.",
     "Create a fresh-PyPI runbook: install package, run borg --version, configure MCP, run one rescue, capture exact timestamps and blockers.",
     "Record first user in the first-10 scoreboard template using a pseudonym and consented outcome fields.",
     "If any onboarding step fails, add artifact path/stdout/stderr and keep broad launch at NO-GO.",
@@ -331,7 +331,7 @@
     "Before any public claim, replace logical-user load evidence with real external-user evidence or clearly label the distinction."
   ],
   "repo": "https://github.com/borg-farther/Borg-Directory",
-  "source_revision": "2e6322e48fceb84a9e416a0d533706f731d2606c+dirty",
+  "source_revision": "ef91225c1355582684d53f4e3ec12eaa6e4353ca+dirty",
   "top_verdict": {
     "broad_public_launch": {
       "verdict": "NO-GO",
