@@ -1,3 +1,6 @@
+> **Internal operator policy — not a first-user product guide.**
+> Current public first-user docs start at [the root README](https://github.com/borg-farther/Borg-Directory/blob/main/README.md) and [docs index](https://github.com/borg-farther/Borg-Directory/blob/main/docs/README.md). This file governs repo preservation and no-loss operations.
+
 # Borg canonical repo and no-loss policy
 
 Rev: `20260518-1427`

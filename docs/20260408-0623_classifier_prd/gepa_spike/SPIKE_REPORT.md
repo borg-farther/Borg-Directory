@@ -1,3 +1,6 @@
+> **Historical/internal — not current product documentation.**
+> Current public docs start at [the root README](https://github.com/borg-farther/Borg-Directory/blob/main/README.md) and [docs index](https://github.com/borg-farther/Borg-Directory/blob/main/docs/README.md). Do not treat old commands, credentials, metrics, version numbers, repo names, or launch claims in this file as current.
+
 # 20260408 GEPA-on-Borg-classifier spike report
 
 **Date:** 20260408
@@ -267,7 +270,7 @@ source /tmp/gepa-spike-venv/bin/activate
 pip install 'gepa==0.0.26' 'dspy-ai==3.1.3'
 
 # 2. Provide at least one LLM key (priority: ANTHROPIC > OPENAI > GEMINI)
-export ANTHROPIC_API_KEY=sk-ant-...
+export ANTHROPIC_API_KEY=[REDACTED_TOKEN_PREFIX]
 #   or
 export OPENAI_API_KEY=sk-...
 #   or

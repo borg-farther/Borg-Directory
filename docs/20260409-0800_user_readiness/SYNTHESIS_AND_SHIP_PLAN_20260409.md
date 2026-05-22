@@ -1,3 +1,6 @@
+> **Historical/internal — not current product documentation.**
+> Current public docs start at [the root README](https://github.com/borg-farther/Borg-Directory/blob/main/README.md) and [docs index](https://github.com/borg-farther/Borg-Directory/blob/main/docs/README.md). Do not treat old commands, credentials, metrics, version numbers, repo names, or launch claims in this file as current.
+
 # Borg User-Readiness — Synthesis and Ship Plan
 
 | Field | Value |
@@ -114,11 +117,11 @@ These do not block the v3.3.0 tag from being cut, but the release notes cannot h
 
 ## 5. P2.1 Sonnet — what AB needs to decide
 
-**The shared `sk-ant-oat01...` Claude Code OAuth token cannot run the P2.1 Sonnet experiment**, for the reasons documented in `P2_OAUTH_TOOLUSE_429_FINDING.md`. Three options:
+**The shared `[REDACTED_TOKEN_PREFIX]` Claude Code OAuth token cannot run the P2.1 Sonnet experiment**, for the reasons documented in `P2_OAUTH_TOOLUSE_429_FINDING.md`. Three options:
 
 | Option | Effort | Cost | Story |
 |---|---|---|---|
-| **Provision a fresh `sk-ant-api03...` first-party Anthropic key, run P2.1 as designed** | 30 min AB + 1h wall clock | ~$25 | Original roadmap. Best for the publication path. |
+| **Provision a fresh `[REDACTED_TOKEN_PREFIX]` first-party Anthropic key, run P2.1 as designed** | 30 min AB + 1h wall clock | ~$25 | Original roadmap. Best for the publication path. |
 | **Pivot the slot to MiniMax-M2.7** | 1h to wire + 30 min wall clock | ~$0.20 | Drops cross-model story to "MiniMax tier 1 + tier 2". Honest but weaker. |
 | **Defer P2 entirely**, ship v3.3.0 cold-start fix, then re-do P1 with a C3 (seeded public corpus) condition on M2.7 | 2-3 days total | ~$1 | Bypasses the model question entirely; fixes the artifact instead. Best ROI per dollar. |
 

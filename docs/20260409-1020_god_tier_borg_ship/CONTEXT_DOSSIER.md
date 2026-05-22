@@ -1,3 +1,6 @@
+> **Historical/internal — not current product documentation.**
+> Current public docs start at [the root README](https://github.com/borg-farther/Borg-Directory/blob/main/README.md) and [docs index](https://github.com/borg-farther/Borg-Directory/blob/main/docs/README.md). Do not treat old commands, credentials, metrics, version numbers, repo names, or launch claims in this file as current.
+
 # Context Dossier — Borg v3.3.0 God-Tier Ship Plan + PRD
 
 **Dossier ID:** 20260409-1020_god_tier_borg_ship / CONTEXT_DOSSIER
@@ -33,7 +36,7 @@ A full **SPEC.md + PRD** for agent-borg v3.3.0 — world-class quality. This mea
 **Model routing in this session:**
 - Orchestrator (this agent): Claude Opus 4.6 via Anthropic primary
 - Subagents: MiniMax-M2.7 via MiniMax provider (M2.7 handles tool use, agent loops)
-- Sonnet blocked: OAuth token `sk-ant-oat01...` refuses tool-use payloads (returns synthetic 429). See `docs/20260408-1118_borg_roadmap/P2_OAUTH_TOOLUSE_429_FINDING.md`. Sonnet experiment deferred.
+- Sonnet blocked: OAuth token `[REDACTED_TOKEN_PREFIX]` refuses tool-use payloads (returns synthetic 429). See `docs/20260408-1118_borg_roadmap/P2_OAUTH_TOOLUSE_429_FINDING.md`. Sonnet experiment deferred.
 
 ---
 
@@ -144,7 +147,7 @@ Any eval that uses the orchestrator (Opus) for treatment runs will get ceiling-e
 
 **Sonnet deferred note:**
 P2.1 Sonnet is the cross-model story. It requires either:
-(a) A fresh `sk-ant-api03...` Anthropic key (~$25), or
+(a) A fresh `[REDACTED_TOKEN_PREFIX]` Anthropic key (~$25), or
 (b) A MiniMax-M2.7 pivot for the P2 slot (~$0.30)
 
 For the v3.3.0 PRD, P2 is NOT in scope (cold-start is). The eval plan must account for P2's deferred status.

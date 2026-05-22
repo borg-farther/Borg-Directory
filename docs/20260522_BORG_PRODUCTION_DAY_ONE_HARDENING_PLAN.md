@@ -47,7 +47,7 @@ That nucleus is the day-one value path. Everything else is gated by evidence.
 ## P1 repo-fixable hardening now being delivered
 
 1. **Version truth**
-   - Failure mode: MCP `serverInfo.version` hardcoded to `1.0.0` while package/runtime version is `3.3.8`.
+   - Historical failure mode: MCP `serverInfo.version` was hardcoded to `1.0.0` while package/runtime had advanced.
    - Fix: source MCP `SERVER_INFO.version` from `borg.__version__`.
    - Tests: initialize response, `SERVER_INFO`, `borg.__version__`, and `pyproject.toml` must all match.
 

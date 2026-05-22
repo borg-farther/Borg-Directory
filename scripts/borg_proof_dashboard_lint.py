@@ -3,6 +3,7 @@
 from __future__ import annotations
 
 import json
+import hashlib
 import re
 import sys
 from pathlib import Path
@@ -60,6 +61,13 @@ def main() -> int:
             return fail(f"evidence row {idx} missing path/exists/claim")
         if item.get("exists") and not re.fullmatch(r"[0-9a-f]{64}", str(item.get("sha256", ""))):
             return fail(f"evidence row {idx} has invalid sha256")
+        if item.get("exists"):
+            source_path = ROOT / str(item["path"])
+            if not source_path.exists():
+                return fail(f"evidence row {idx} says exists but source file is missing: {item['path']}")
+            actual = hashlib.sha256(source_path.read_bytes()).hexdigest()
+            if item.get("sha256") != actual:
+                return fail(f"evidence row {idx} has stale sha256 for {item['path']}")
 
     metrics = data.get("metrics", {})
     veu = metrics.get("verified_external_users", {})
@@ -67,6 +75,10 @@ def main() -> int:
         return fail("verified external users must be 0 unless this lint is extended with hard evidence validation")
     if data.get("top_verdict", {}).get("broad_public_launch", {}).get("verdict") != "NO-GO":
         return fail("broad public launch must remain NO-GO without real external-user evidence")
+    if data.get("repo") != "https://github.com/borg-farther/Borg-Directory":
+        return fail("dashboard repo field must use canonical GitHub URL, not a local filesystem path")
+    if not re.fullmatch(r"[0-9a-f]{40}(?:\+dirty)?", str(data.get("source_revision", ""))):
+        return fail("dashboard source_revision must be the exact git commit SHA, optionally marked +dirty for generated working-tree snapshots")
 
     evidence_proves_external = bool(data.get("evidence_fields_proving_external_adoption"))
     for phrase in HYPE_PHRASES:
@@ -76,7 +88,7 @@ def main() -> int:
 
     # Explicitly require required sections in Markdown for human readers.
     md = MD_PATH.read_text(encoding="utf-8")
-    for heading in ["## Big top verdict", "## Evidence table", "## Blockers", "## First-10-user scoreboard template", "## Anti-hype section", "## Next action queue before supervised first user"]:
+    for heading in ["## Big top verdict", "## Evidence table", "## Blockers", "## First-10-user scoreboard template", "## Anti-hype section", "## Next action queue before controlled first-10 beta testers"]:
         if heading not in md:
             return fail(f"missing Markdown heading: {heading}")
 

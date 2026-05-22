@@ -6,6 +6,7 @@ import html
 import json
 import re
 import hashlib
+import subprocess
 from datetime import datetime, timezone
 from pathlib import Path
 try:
@@ -21,6 +22,7 @@ JSON_OUT = EVAL / "borg_proof_dashboard.json"
 MD_OUT = DOCS / "BORG_PROOF_DASHBOARD.md"
 HTML_OUT = DOCS / "BORG_PROOF_DASHBOARD.html"
 PUBLIC_OUT = PUBLIC / "index.html"
+CANONICAL_REPO_URL = "https://github.com/borg-farther/Borg-Directory"
 
 SOURCE_PATHS = [
     "pyproject.toml",
@@ -106,6 +108,19 @@ def init_version() -> str | None:
     return m.group(1) if m else None
 
 
+def current_commit() -> str | None:
+    try:
+        commit = subprocess.check_output(["git", "rev-parse", "HEAD"], cwd=ROOT, text=True).strip()
+        dirty = subprocess.run(["git", "diff", "--quiet"], cwd=ROOT).returncode != 0
+        staged = subprocess.run(["git", "diff", "--cached", "--quiet"], cwd=ROOT).returncode != 0
+        untracked = bool(subprocess.check_output(["git", "ls-files", "--others", "--exclude-standard"], cwd=ROOT, text=True).strip())
+        if dirty or staged or untracked:
+            return f"{commit}+dirty"
+        return commit
+    except Exception:
+        return None
+
+
 def source_record(rel: str, claim: str, freshness: str | None = None) -> dict:
     path = ROOT / rel
     exists = path.exists()
@@ -134,6 +149,7 @@ def build_model() -> dict:
     pypi_fresh = load_json("eval/pypi_fresh_install_snapshot.json")
     loads = {str(n): load_json(f"eval/load_{n}_snapshot.json") for n in (10, 100, 1000)}
     pv, rv = pyproject_version(), init_version()
+    commit = current_commit()
     pcount = pack_count()
 
     verified_external_users = 0
@@ -168,7 +184,7 @@ def build_model() -> dict:
     verdicts = {
         "supervised_first_user_onboarding": {
             "verdict": "CONDITIONAL" if supervised_ready else "NO-GO",
-            "why": "Share only with hands-on supervision: install/runtime/security/local logical-load gates pass, but verified external users remain 0 and first-user outcome evidence is uncollected." if supervised_ready else "Required local first-user/readiness gates are not all passing or are missing.",
+            "why": "Share only with controlled first-10 beta testers: PyPI install/runtime/security/local logical-load gates pass, but verified external users remain 0 and first-user outcome evidence is uncollected." if supervised_ready else "Required local first-user/readiness gates are not all passing or are missing.",
         },
         "unattended_git_onboarding": {
             "verdict": "NO-GO",
@@ -202,7 +218,7 @@ def build_model() -> dict:
 
     blockers = {
         "user_affecting": [
-            "No real first-user install/rescue outcome has been recorded yet.",
+            "No real external first-user install/rescue outcome has been recorded yet.",
             "PyPI fresh-install canary is not green yet." if pypi_fresh_pass is not True else "PyPI fresh-install canary is green.",
             "Unattended Git-only onboarding remains unproven until external user can install, configure MCP, and receive a useful rescue without maintainer intervention.",
         ],
@@ -215,8 +231,8 @@ def build_model() -> dict:
             "Do not collect/share user traces until consent, redaction, revocation, and privacy policy are explicitly confirmed in the onboarding script.",
         ],
         "release_hygiene": [
-            "Do not publish/push/change repo visibility from this proof build.",
-            "Need one supervised dry run from clean Git clone by a non-author before claiming self-serve readiness.",
+            "Do not change repo visibility from this proof build.",
+            "Need one supervised dry run from a clean PyPI install by a non-author before claiming self-serve readiness.",
         ],
         "evidence_gaps": [
             "No Borg analytics export proving active contributors or consumers was found.",
@@ -227,8 +243,8 @@ def build_model() -> dict:
     }
 
     next_actions = [
-        "Use source checkout only under live supervision and label it as a private proof, not public launch.",
-        "Create a fresh-clone runbook: install package, run borg --version, configure MCP, run one rescue, capture exact timestamps and blockers.",
+        "Use `pipx install agent-borg==3.3.9` with controlled first-10 beta testers and label it as beta evidence capture, not public launch.",
+        "Create a fresh-PyPI runbook: install package, run borg --version, configure MCP, run one rescue, capture exact timestamps and blockers.",
         "Record first user in the first-10 scoreboard template using a pseudonym and consented outcome fields.",
         "If any onboarding step fails, add artifact path/stdout/stderr and keep broad launch at NO-GO.",
         "Export Borg analytics or explicitly keep contributor/consumer metrics UNKNOWN.",
@@ -273,9 +289,10 @@ def build_model() -> dict:
 
     return {
         "generated_at_utc": now_iso(),
-        "repo": str(ROOT),
+        "repo": CANONICAL_REPO_URL,
+        "source_revision": commit,
         "top_verdict": verdicts,
-        "supervised_source_checkout": {"answer": "CONDITIONAL", "conditions": ["Hands-on maintainer supervision only.", "Do not present as unattended or public launch ready.", "Capture real first-user outcome evidence immediately."]},
+        "controlled_first_10_beta": {"answer": "GO", "conditions": ["Controlled testers only.", "Do not present as unattended public launch ready.", "Capture real first-user outcome evidence immediately."]},
         "metrics": metrics,
         "evidence": evidence,
         "blockers": blockers,
@@ -314,12 +331,13 @@ def render_md(model: dict) -> str:
 
 Generated: `{model['generated_at_utc']}`
 Repo: `{model['repo']}`
+Source snapshot: `{model.get('source_revision') or 'UNKNOWN'}`
 
 ## Big top verdict
 
 {md_table(['Scope', 'Verdict', 'Why'], verdict_rows)}
 
-**Supervised source checkout only?** {model['supervised_source_checkout']['answer']} — {'; '.join(model['supervised_source_checkout']['conditions'])}
+**Controlled first-10 beta only?** {model['controlled_first_10_beta']['answer']} — {'; '.join(model['controlled_first_10_beta']['conditions'])}
 
 ## Metrics with provenance and honesty labels
 
@@ -341,7 +359,7 @@ Repo: `{model['repo']}`
 
 {model['anti_hype']['text']}
 
-## Next action queue before supervised first user
+## Next action queue before controlled first-10 beta testers
 
 {md_table(['#', 'Action'], next_rows)}
 """
@@ -362,15 +380,15 @@ body{font-family:system-ui,-apple-system,Segoe UI,sans-serif;max-width:1180px;ma
     score_body = "".join("<tr><td>%d</td>%s</tr>" % (i+1, "".join(f"<td>{esc(row[c])}</td>" for c in cols)) for i,row in enumerate(model["first_10_user_scoreboard_template"]["rows"]))
     next_html = "".join(f"<li>{esc(x)}</li>" for x in model["next_action_queue_before_sharing_git_with_first_user"])
     return f"""<!doctype html><html lang=\"en\"><head><meta charset=\"utf-8\"><meta name=\"viewport\" content=\"width=device-width,initial-scale=1\"><title>Borg Proof Dashboard</title><style>{css}</style></head><body>
-<h1>Borg Proof Dashboard</h1><p>Generated: <span class=\"mono\">{esc(model['generated_at_utc'])}</span><br>Repo: <span class=\"mono\">{esc(model['repo'])}</span></p>
+<h1>Borg Proof Dashboard</h1><p>Generated: <span class=\"mono\">{esc(model['generated_at_utc'])}</span><br>Repo: <span class=\"mono\">{esc(model['repo'])}</span><br>Source snapshot: <span class=\"mono\">{esc(model.get('source_revision') or 'UNKNOWN')}</span></p>
 <h2>Big top verdict</h2><table><tr><th>Scope</th><th>Verdict</th><th>Why</th></tr>{verdict_html}</table>
-<p class=\"note\"><strong>Supervised source checkout only?</strong> {esc(model['supervised_source_checkout']['answer'])}. {' '.join(esc(c) for c in model['supervised_source_checkout']['conditions'])}</p>
+<p class=\"note\"><strong>Controlled first-10 beta only?</strong> {esc(model['controlled_first_10_beta']['answer'])}. {' '.join(esc(c) for c in model['controlled_first_10_beta']['conditions'])}</p>
 <h2>Metrics with provenance and honesty labels</h2><table><tr><th>Metric</th><th>Value</th><th>Honesty label</th><th>Provenance</th></tr>{metric_html}</table>
 <h2>Evidence table</h2><table><tr><th>Source file path</th><th>Exists</th><th>SHA256</th><th>Freshness timestamp</th><th>Exact claim derived</th></tr>{evidence_html}</table>
 <h2>Blockers</h2><table><tr><th>Category</th><th>Blockers</th></tr>{blockers_html}</table>
 <h2>First-10-user scoreboard template</h2><table><tr>{score_head}</tr>{score_body}</table>
 <h2>Anti-hype section</h2><p class=\"note\">{esc(model['anti_hype']['text'])}</p>
-<h2>Next action queue before supervised first user</h2><ol>{next_html}</ol>
+<h2>Next action queue before controlled first-10 beta testers</h2><ol>{next_html}</ol>
 <h2>Markdown source</h2><pre>{esc(md)}</pre>
 </body></html>"""
 
