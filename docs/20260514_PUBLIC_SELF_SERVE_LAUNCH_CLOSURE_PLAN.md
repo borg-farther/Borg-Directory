@@ -4,14 +4,14 @@ Generated: 2026-05-14 18:39 UTC
 
 ## Current state
 
-Borg's package path is **ready for controlled first-10 beta sharing**: `agent-borg==3.3.8` is live on PyPI, the fresh-install/stdout MCP canary passed, and the default branch CI/security gates are green.
+Borg's package path is **ready for controlled first-10 beta sharing**: `agent-borg==3.3.9` is live on PyPI, the fresh-install/stdout MCP canary passed, and the default branch CI/security gates are green.
 
 Public self-serve launch remains **NO-GO** until row-derived first-10 external-user evidence passes. Served remote MCP remains a separate runtime cutover/canary channel, not proven by the PyPI stdio release.
 
 Hard evidence already completed:
 
-- Branch/PR hardening for 3.3.8: merged into `main`
-- PyPI fresh-install/MCP canary for `agent-borg==3.3.8`: PASS
+- Branch/PR hardening for 3.3.9: merged into `main`
+- PyPI fresh-install/MCP canary for `agent-borg==3.3.9`: PASS
 - security baseline: PASS
 - privacy/prompt-injection/atom/firewall tests: PASS
 - source canaries: PASS
@@ -65,7 +65,7 @@ Completed proof lives in:
 - `eval/release_preflight_3_3_8_snapshot.json`
 - `eval/pypi_fresh_install_snapshot.json`
 
-Current package path status: `agent-borg==3.3.8` is published, PyPI metadata matches the repo, and the isolated fresh-install/stdin MCP canary passes.
+Current package path status: `agent-borg==3.3.9` is published, PyPI metadata matches the repo, and the isolated fresh-install/stdin MCP canary passes.
 
 ### Phase C — first-10 user sprint
 
@@ -76,8 +76,8 @@ For each user:
 1. Send invite and privacy warning.
 2. Record consent.
 3. User runs one of:
-   - `pipx install agent-borg==3.3.8`
-   - fallback venv install from PyPI: `/tmp/borg-beta-venv/bin/python -m pip install agent-borg==3.3.8`
+   - `pipx install agent-borg==3.3.9`
+   - fallback venv install from PyPI: `/tmp/borg-beta-venv/bin/python -m pip install agent-borg==3.3.9`
    - source-branch install only for maintainer-approved pre-release testing, never the default first-10 path.
 4. User runs:
    - `borg --version`

@@ -1,5 +1,11 @@
 # Changelog
 
+## 3.3.9 — 2026-05-22
+
+- Public presentation patch: ships the sharpened README to PyPI so first users see the 60-second `borg rescue` path and absolute GitHub documentation links.
+- Claims discipline: removes guarded statistical-lift phrasing from the package long description and keeps public self-serve / served-MCP / 100-user claims blocked until real evidence passes.
+- Tests: extends public-presentation regression coverage for README overclaim language and first-10 readiness wording.
+
 ## 3.3.8 — 2026-05-22
 
 - Public self-serve hardening: added row-derived first-10 evidence validation, PyPI fresh-install/MCP stdio canary, and a single fail-closed public self-serve launch gate.
