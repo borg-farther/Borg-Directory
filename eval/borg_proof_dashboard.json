@@ -17,17 +17,25 @@
       "Local/logical load gates prove engineering readiness, not market adoption or retention."
     ],
     "release_hygiene": [
-      "Do not publish/push/change repo visibility from this proof build.",
-      "Need one supervised dry run from clean Git clone by a non-author before claiming self-serve readiness."
+      "Do not change repo visibility from this proof build.",
+      "Need one supervised dry run from a clean PyPI install by a non-author before claiming self-serve readiness."
     ],
     "security_privacy": [
       "Security surface artifacts/gates exist in local snapshots, but no third-party audit or live adversarial user evidence is present.",
       "Do not collect/share user traces until consent, redaction, revocation, and privacy policy are explicitly confirmed in the onboarding script."
     ],
     "user_affecting": [
-      "No real first-user install/rescue outcome has been recorded yet.",
+      "No real external first-user install/rescue outcome has been recorded yet.",
       "PyPI fresh-install canary is green.",
       "Unattended Git-only onboarding remains unproven until external user can install, configure MCP, and receive a useful rescue without maintainer intervention."
+    ]
+  },
+  "controlled_first_10_beta": {
+    "answer": "GO",
+    "conditions": [
+      "Controlled testers only.",
+      "Do not present as unattended public launch ready.",
+      "Capture real first-user outcome evidence immediately."
     ]
   },
   "evidence": [
@@ -55,16 +63,16 @@
     {
       "claim_derived": "100-real-user gate=False; max_recommended_real_users=10; blockers=['first-10 external-user evidence has not passed: verified=0/10, real_users=0/10, installs=0/8, useful=0/6, critical_incidents=0/0']",
       "exists": true,
-      "freshness_timestamp": "2026-05-22T14:50:55.239747+00:00",
+      "freshness_timestamp": "2026-05-22T20:03:49.694259+00:00",
       "path": "eval/real_user_rollout_gate_snapshot.json",
-      "sha256": "5a5cfb855fd112fcdcc6fd0b1f49cfb38df94084456219ef1e345c64f22a415f"
+      "sha256": "819d833937b36191f1521aa6d5e8e79f22e9e58a01754ca3532f6cab5f48a631"
     },
     {
       "claim_derived": "public self-serve gate=False; max_recommended_real_users=10; blockers=['first-10 external-user evidence has not passed: verified=0/10, real_users=0/10, installs=0/8, useful=0/6, critical_incidents=0/0']",
       "exists": true,
-      "freshness_timestamp": "2026-05-22T14:50:55.154475+00:00",
+      "freshness_timestamp": "2026-05-22T20:06:28.314606+00:00",
       "path": "eval/public_self_serve_launch_gate_snapshot.json",
-      "sha256": "7e73be890b4d6fb87f10937ddc1bb2a7cd44ee40df37748042913cdebf2ca685"
+      "sha256": "e027bb36dc5b92cceb9155613acf53518e6582dbb04d0572595ec9279599bcc6"
     },
     {
       "claim_derived": "PyPI fresh-install canary success=True; version=3.3.9",
@@ -212,7 +220,7 @@
       }
     ]
   },
-  "generated_at_utc": "2026-05-22T14:50:55Z",
+  "generated_at_utc": "2026-05-22T20:06:28Z",
   "metrics": {
     "active_contributors_consumers": {
       "honesty_label": "MISSING_BORG_ANALYTICS_ARTIFACT",
@@ -315,22 +323,15 @@
     }
   },
   "next_action_queue_before_sharing_git_with_first_user": [
-    "Use source checkout only under live supervision and label it as a private proof, not public launch.",
-    "Create a fresh-clone runbook: install package, run borg --version, configure MCP, run one rescue, capture exact timestamps and blockers.",
+    "Use `pipx install agent-borg==3.3.9` with controlled first-10 beta testers and label it as beta evidence capture, not public launch.",
+    "Create a fresh-PyPI runbook: install package, run borg --version, configure MCP, run one rescue, capture exact timestamps and blockers.",
     "Record first user in the first-10 scoreboard template using a pseudonym and consented outcome fields.",
     "If any onboarding step fails, add artifact path/stdout/stderr and keep broad launch at NO-GO.",
     "Export Borg analytics or explicitly keep contributor/consumer metrics UNKNOWN.",
     "Before any public claim, replace logical-user load evidence with real external-user evidence or clearly label the distinction."
   ],
-  "repo": "/root/hermes-workspace/borg-firewall-fix",
-  "supervised_source_checkout": {
-    "answer": "CONDITIONAL",
-    "conditions": [
-      "Hands-on maintainer supervision only.",
-      "Do not present as unattended or public launch ready.",
-      "Capture real first-user outcome evidence immediately."
-    ]
-  },
+  "repo": "https://github.com/borg-farther/Borg-Directory",
+  "source_revision": "2e6322e48fceb84a9e416a0d533706f731d2606c+dirty",
   "top_verdict": {
     "broad_public_launch": {
       "verdict": "NO-GO",
@@ -338,7 +339,7 @@
     },
     "supervised_first_user_onboarding": {
       "verdict": "CONDITIONAL",
-      "why": "Share only with hands-on supervision: install/runtime/security/local logical-load gates pass, but verified external users remain 0 and first-user outcome evidence is uncollected."
+      "why": "Share only with controlled first-10 beta testers: PyPI install/runtime/security/local logical-load gates pass, but verified external users remain 0 and first-user outcome evidence is uncollected."
     },
     "unattended_git_onboarding": {
       "verdict": "NO-GO",

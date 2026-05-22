@@ -8,11 +8,10 @@ Give Borg an error, traceback, failed test, install problem, config failure, or 
 - `VERIFY` — the exact command or test to rerun
 - `CONFIDENCE` — tested / observed / inferred, or `NO_CONFIDENT_MATCH`
 
-**Install package:** `agent-borg`  
-**Installed CLI:** `borg`  
-**MCP server command:** `borg-mcp`  
-**Canonical repo:** https://github.com/borg-farther/Borg-Directory
-**Canonical/no-loss policy:** [`docs/CANONICAL_REPO.md`](https://github.com/borg-farther/Borg-Directory/blob/main/docs/CANONICAL_REPO.md)
+- **Install package:** `agent-borg`
+- **Installed CLI:** `borg`
+- **MCP server command:** `borg-mcp`
+- **Canonical repo:** https://github.com/borg-farther/Borg-Directory
 
 **Status:** first-10 beta. Borg's install, CLI, stdio MCP, security, and confidence-gating paths are ready for controlled testers. Public self-serve launch, 100-user rollout, served remote MCP, and measured external lift are not claimed until the required real-user evidence passes.
 
@@ -20,16 +19,24 @@ Give Borg an error, traceback, failed test, install problem, config failure, or 
 
 ```bash
 pipx install agent-borg
-borg rescue "ModuleNotFoundError: No module named flask"
+borg rescue "ModuleNotFoundError: No module named flask" --short
 ```
 
-Expected shape:
+Expected abbreviated shape:
 
 ```text
-ACTION: install the missing package in the active environment
-STOP: do not edit the imported module's source before checking installation
-VERIFY: rerun the failing import or test command
-CONFIDENCE: ...
+BORG RESCUE
+status: matched
+match: missing_dependency [tested]
+
+ACTION
+  - ...
+
+STOP
+  - ...
+
+VERIFY
+  - ...
 ```
 
 > **Install-name note:** Borg is the product name, and `borg` is the command after install. The Python package to install is **`agent-borg`**.
@@ -377,11 +384,14 @@ A good first evaluation is whether Borg reduces redundant investigation, not whe
 
 ## Docs
 
+- [`docs/README.md`](https://github.com/borg-farther/Borg-Directory/blob/main/docs/README.md) — current-docs index; anything not listed there is historical/internal and not a current product claim
 - [`docs/INSTALL.md`](https://github.com/borg-farther/Borg-Directory/blob/main/docs/INSTALL.md) — OS-specific install guide and wrong-package troubleshooting
 - [`docs/QUICKSTART.md`](https://github.com/borg-farther/Borg-Directory/blob/main/docs/QUICKSTART.md) — short copy-paste path
 - [`docs/TRYING_BORG.md`](https://github.com/borg-farther/Borg-Directory/blob/main/docs/TRYING_BORG.md) — detailed first-user setup
 - [`docs/MCP_SETUP.md`](https://github.com/borg-farther/Borg-Directory/blob/main/docs/MCP_SETUP.md) — MCP setup details
 - [`docs/READINESS.md`](https://github.com/borg-farther/Borg-Directory/blob/main/docs/READINESS.md) — current readiness status
+- [`docs/PUBLIC_SELF_SERVE_LAUNCH_GO_NO_GO.md`](https://github.com/borg-farther/Borg-Directory/blob/main/docs/PUBLIC_SELF_SERVE_LAUNCH_GO_NO_GO.md) — canonical public launch gate output
+- [`docs/CANONICAL_REPO.md`](https://github.com/borg-farther/Borg-Directory/blob/main/docs/CANONICAL_REPO.md) — internal canonical repo / no-loss preservation policy for operators
 - [`docs/archive/`](https://github.com/borg-farther/Borg-Directory/tree/main/docs/archive/) — historical audits, experiments, and internal planning artifacts; not current product claims
 
 ---

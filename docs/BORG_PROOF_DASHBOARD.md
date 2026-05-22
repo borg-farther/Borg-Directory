@@ -1,17 +1,18 @@
 # Borg Proof Dashboard
 
-Generated: `2026-05-22T14:50:55Z`
-Repo: `/root/hermes-workspace/borg-firewall-fix`
+Generated: `2026-05-22T20:06:28Z`
+Repo: `https://github.com/borg-farther/Borg-Directory`
+Source snapshot: `2e6322e48fceb84a9e416a0d533706f731d2606c+dirty`
 
 ## Big top verdict
 
 | Scope | Verdict | Why |
 | --- | --- | --- |
-| supervised first user onboarding | CONDITIONAL | Share only with hands-on supervision: install/runtime/security/local logical-load gates pass, but verified external users remain 0 and first-user outcome evidence is uncollected. |
+| supervised first user onboarding | CONDITIONAL | Share only with controlled first-10 beta testers: PyPI install/runtime/security/local logical-load gates pass, but verified external users remain 0 and first-user outcome evidence is uncollected. |
 | unattended git onboarding | NO-GO | No verified external install/onboarding evidence yet; Git-only flow should not be treated as self-serve until at least the first-10 scoreboard has real outcomes. |
 | broad public launch | NO-GO | Public self-serve gate is blocked only by row-derived first-10 external-user evidence; PyPI/latest/fresh-install/MCP/docs gates are green. |
 
-**Supervised source checkout only?** CONDITIONAL — Hands-on maintainer supervision only.; Do not present as unattended or public launch ready.; Capture real first-user outcome evidence immediately.
+**Controlled first-10 beta only?** GO — Controlled testers only.; Do not present as unattended public launch ready.; Capture real first-user outcome evidence immediately.
 
 ## Metrics with provenance and honesty labels
 
@@ -38,8 +39,8 @@ Repo: `/root/hermes-workspace/borg-firewall-fix`
 | eval/first_user_release_gate_snapshot.json | True | 44155fad6673491731125c1056ed07c5a8dd5943fe74b41dc5f06e21e883d163 | 2026-05-22T11:41:49Z | first-user release gate all_pass=True |
 | eval/uat_scoreboard_snapshot.json | True | d05753c32ce3b9b3e2f115b2b164c18d7635af4e8cd6c4ae7e73dabac2e6109e | 2026-05-18T07:46:07.702390+00:00 | UAT synthetic_load_all_pass=True; real_user_100_all_pass=False; ready_for_10=True; ready_for_1000=True |
 | eval/gate_run_snapshot.json | True | 70e7a691c169ff9543389d7fcdab590978cd140470796e4bcfaf4931cdd29b99 | 2026-05-18T07:46:07.667878+00:00 | gate run synthetic_load_all_pass=True; overall_100_real_user_pass=False; ready_for_10=True; ready_for_1000=True |
-| eval/real_user_rollout_gate_snapshot.json | True | 5a5cfb855fd112fcdcc6fd0b1f49cfb38df94084456219ef1e345c64f22a415f | 2026-05-22T14:50:55.239747+00:00 | 100-real-user gate=False; max_recommended_real_users=10; blockers=['first-10 external-user evidence has not passed: verified=0/10, real_users=0/10, installs=0/8, useful=0/6, critical_incidents=0/0'] |
-| eval/public_self_serve_launch_gate_snapshot.json | True | 7e73be890b4d6fb87f10937ddc1bb2a7cd44ee40df37748042913cdebf2ca685 | 2026-05-22T14:50:55.154475+00:00 | public self-serve gate=False; max_recommended_real_users=10; blockers=['first-10 external-user evidence has not passed: verified=0/10, real_users=0/10, installs=0/8, useful=0/6, critical_incidents=0/0'] |
+| eval/real_user_rollout_gate_snapshot.json | True | 819d833937b36191f1521aa6d5e8e79f22e9e58a01754ca3532f6cab5f48a631 | 2026-05-22T20:03:49.694259+00:00 | 100-real-user gate=False; max_recommended_real_users=10; blockers=['first-10 external-user evidence has not passed: verified=0/10, real_users=0/10, installs=0/8, useful=0/6, critical_incidents=0/0'] |
+| eval/public_self_serve_launch_gate_snapshot.json | True | e027bb36dc5b92cceb9155613acf53518e6582dbb04d0572595ec9279599bcc6 | 2026-05-22T20:06:28.314606+00:00 | public self-serve gate=False; max_recommended_real_users=10; blockers=['first-10 external-user evidence has not passed: verified=0/10, real_users=0/10, installs=0/8, useful=0/6, critical_incidents=0/0'] |
 | eval/pypi_fresh_install_snapshot.json | True | f51dcea2bec03a352b8f9f94703ae310fdaafda15aa89fabe8ede720103b949d | 2026-05-22T14:50:13Z | PyPI fresh-install canary success=True; version=3.3.9 |
 | eval/load_10_snapshot.json | True | ba59f7350f5b3cdb9078ddfe786524f00b3e1de7b384885e6297f7cb9c46a7c2 | 2026-05-18T07:45:06.621553+00:00 | logical load 10: passed=True; total_requests=59794; success_rate=1.0; p95_ms=0.6281427631620318; model=asyncio_logical_users |
 | eval/load_100_snapshot.json | True | f19307704ed8df2c3b536b70b5cb4544bc07a375afa4ba9c213cdb3adc6149f4 | 2026-05-18T07:45:36.770025+00:00 | logical load 100: passed=True; total_requests=59981; success_rate=1.0; p95_ms=0.6004410097375512; model=asyncio_logical_users |
@@ -51,10 +52,10 @@ Repo: `/root/hermes-workspace/borg-firewall-fix`
 
 | Category | Blockers |
 | --- | --- |
-| user affecting | No real first-user install/rescue outcome has been recorded yet.<br>PyPI fresh-install canary is green.<br>Unattended Git-only onboarding remains unproven until external user can install, configure MCP, and receive a useful rescue without maintainer intervention. |
+| user affecting | No real external first-user install/rescue outcome has been recorded yet.<br>PyPI fresh-install canary is green.<br>Unattended Git-only onboarding remains unproven until external user can install, configure MCP, and receive a useful rescue without maintainer intervention. |
 | investor affecting | Verified external users: 0 based on available hard evidence.<br>Local/logical load gates prove engineering readiness, not market adoption or retention. |
 | security privacy | Security surface artifacts/gates exist in local snapshots, but no third-party audit or live adversarial user evidence is present.<br>Do not collect/share user traces until consent, redaction, revocation, and privacy policy are explicitly confirmed in the onboarding script. |
-| release hygiene | Do not publish/push/change repo visibility from this proof build.<br>Need one supervised dry run from clean Git clone by a non-author before claiming self-serve readiness. |
+| release hygiene | Do not change repo visibility from this proof build.<br>Need one supervised dry run from a clean PyPI install by a non-author before claiming self-serve readiness. |
 | evidence gaps | No Borg analytics export proving active contributors or consumers was found.<br>No first-10-user scoreboard with real outcomes exists yet.<br>100-real-user gate remains blocked: ['first-10 external-user evidence has not passed: verified=0/10, real_users=0/10, installs=0/8, useful=0/6, critical_incidents=0/0']<br>Host/runtime split-brain was not freshly reproduced by this dashboard build. |
 
 ## First-10-user scoreboard template
@@ -76,12 +77,12 @@ Repo: `/root/hermes-workspace/borg-firewall-fix`
 
 Simulated/logical users are not real users. Internal sessions, tool calls, local tests, and maintainer runs are not adoption. Real verified external users are 0 unless a hard evidence artifact proves otherwise; no such artifact was found by this build.
 
-## Next action queue before supervised first user
+## Next action queue before controlled first-10 beta testers
 
 | # | Action |
 | --- | --- |
-| 1 | Use source checkout only under live supervision and label it as a private proof, not public launch. |
-| 2 | Create a fresh-clone runbook: install package, run borg --version, configure MCP, run one rescue, capture exact timestamps and blockers. |
+| 1 | Use `pipx install agent-borg==3.3.9` with controlled first-10 beta testers and label it as beta evidence capture, not public launch. |
+| 2 | Create a fresh-PyPI runbook: install package, run borg --version, configure MCP, run one rescue, capture exact timestamps and blockers. |
 | 3 | Record first user in the first-10 scoreboard template using a pseudonym and consented outcome fields. |
 | 4 | If any onboarding step fails, add artifact path/stdout/stderr and keep broad launch at NO-GO. |
 | 5 | Export Borg analytics or explicitly keep contributor/consumer metrics UNKNOWN. |

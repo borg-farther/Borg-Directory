@@ -41,15 +41,27 @@ CURRENT_CLAIM_DOCS = [
     Path("docs/QUICKSTART.md"),
     Path("docs/TRYING_BORG.md"),
     Path("docs/MCP_SETUP.md"),
+    Path("docs/ONBOARDING.md"),
     Path("docs/FIRST_10_BETA_READINESS.md"),
     Path("docs/20260514_FIRST_10_USER_INVITE_PACKET.md"),
     Path("docs/20260514_PUBLIC_SELF_SERVE_LAUNCH_CLOSURE_PLAN.md"),
+    Path("docs/20260517_BORG_100_REAL_USER_READINESS.md"),
+    Path("docs/ROADMAP.md"),
+    Path("docs/20260522_PUBLIC_PRESENTATION_AUDIT.md"),
     Path("docs/20260522_BORG_PRODUCTION_DAY_ONE_HARDENING_PLAN.md"),
+    Path("docs/20260522_BORG_339_RELEASE_PREFLIGHT_PUBLISHED.md"),
+    Path("docs/PUBLIC_SELF_SERVE_LAUNCH_GO_NO_GO.md"),
     Path("docs/VALUE_COMMUNICATION_DASHBOARD.md"),
     Path("docs/VALUE_COMMUNICATION_DASHBOARD.html"),
     Path("docs/BORG_PROOF_DASHBOARD.md"),
     Path("docs/BORG_PROOF_DASHBOARD.html"),
     Path("docs/public/proof-dashboard/index.html"),
+    Path("docs/SECURITY_HARDENING_BASELINE.md"),
+    Path("docs/PRIVACY_MODEL.md"),
+    Path("docs/PROMPT_INJECTION_THREAT_MODEL.md"),
+    Path("docs/TRUST_AND_PROMOTION.md"),
+    Path("docs/REVOCATION_AND_DELETION.md"),
+    Path("docs/LEARNING_ATOM_SCHEMA.md"),
     Path("eval/borg_proof_dashboard.json"),
 ]
 
@@ -180,6 +192,16 @@ def docs_claim_guard(paths: list[Path], expected_version: str, *, public_evidenc
                     "kind": "stale agent-borg pin",
                     "detail": f"found agent-borg=={match.group('version')} expected agent-borg=={expected_version}",
                 })
+
+        stale_release_tokens = [
+            (r"BORG_338_RELEASE_PREFLIGHT", "stale 3.3.8 release-proof reference"),
+            (r"release_preflight_3_3_8", "stale 3.3.8 release-preflight snapshot reference"),
+            (r"serverInfo\.version\s*==\s*3\.3\.8", "stale MCP version claim"),
+        ]
+        for pattern, label in stale_release_tokens:
+            match = re.search(pattern, text)
+            if match:
+                violations.append({"path": str(rel), "kind": label, "detail": match.group(0)[:180]})
 
         if re.search(r"(?im)^\s*(?:python\s+-m\s+)?pipx\s+install\s+git\+https://github\.com/borg-farther/Borg-Directory\.git\b", text):
             violations.append({"path": str(rel), "kind": "public git+ install path", "detail": "current public first-user docs must use PyPI agent-borg, not git+ source install"})

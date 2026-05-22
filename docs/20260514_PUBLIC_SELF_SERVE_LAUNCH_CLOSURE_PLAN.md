@@ -4,7 +4,7 @@ Generated: 2026-05-14 18:39 UTC
 
 ## Current state
 
-Borg's package path is **ready for controlled first-10 beta sharing**: `agent-borg==3.3.9` is live on PyPI, the fresh-install/stdout MCP canary passed, and the default branch CI/security gates are green.
+Borg's package path is **ready for controlled first-10 beta sharing**: `agent-borg==3.3.9` is live on PyPI, the fresh-install/stdio MCP canary passed, and the default branch CI/security gates are green.
 
 Public self-serve launch remains **NO-GO** until row-derived first-10 external-user evidence passes. Served remote MCP remains a separate runtime cutover/canary channel, not proven by the PyPI stdio release.
 
@@ -61,11 +61,10 @@ Two true blockers remain before broader launch claims:
 
 Completed proof lives in:
 
-- `docs/20260522_BORG_338_RELEASE_PREFLIGHT_PUBLISHED.md`
-- `eval/release_preflight_3_3_8_snapshot.json`
+- `docs/20260522_BORG_339_RELEASE_PREFLIGHT_PUBLISHED.md`
 - `eval/pypi_fresh_install_snapshot.json`
 
-Current package path status: `agent-borg==3.3.9` is published, PyPI metadata matches the repo, and the isolated fresh-install/stdin MCP canary passes.
+Current package path status: `agent-borg==3.3.9` is published, PyPI metadata matches the repo, and the isolated fresh-install/stdio MCP canary passes.
 
 ### Phase C — first-10 user sprint
 
@@ -108,7 +107,7 @@ Then refresh final launch artifacts:
 Public self-serve launch is **GO** only if:
 
 - first-10 scoreboard: PASS thresholds;
-- package PyPI/fresh-install/stdin MCP canary: PASS;
+- package PyPI/fresh-install/stdio MCP canary: PASS;
 - served remote MCP canary: PASS if remote MCP is part of the launch surface;
 - repo branch is pushed and reviewable;
 - docs claim scrub remains PASS;

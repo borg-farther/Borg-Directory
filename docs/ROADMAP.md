@@ -51,11 +51,11 @@ Build only what first users prove is missing:
 
 - [ ] Run controlled external A/B tasks only after first-10 evidence exists.
 - [ ] Measure useful rescue rate, avoided dead-end rate, repeat use within 7 days, and task completion deltas.
-- [ ] Do not claim statistically significant lift until a documented controlled benchmark supports it.
+- [ ] Do not claim measured external lift until a documented controlled benchmark supports it.
 
 ## What is intentionally not claimed yet
 
-- statistically significant agent-level success lift;
+- measured external agent-level success lift;
 - public self-serve launch readiness;
 - 100-real-user readiness;
 - broad non-Python ecosystem coverage;

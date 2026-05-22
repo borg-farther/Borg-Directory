@@ -1,3 +1,6 @@
+> **Historical/internal — not current product documentation.**
+> Current public docs start at [the root README](https://github.com/borg-farther/Borg-Directory/blob/main/README.md) and [docs index](https://github.com/borg-farther/Borg-Directory/blob/main/docs/README.md). Do not treat old commands, credentials, metrics, version numbers, repo names, or launch claims in this file as current.
+
 # File rev 20260504-1123 rev B — Borg production / 1000-user readiness closure status
 
 ## Status
