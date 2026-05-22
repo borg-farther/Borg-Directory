@@ -3,12 +3,21 @@ from __future__ import annotations
 import json
 import hashlib
 import re
+import subprocess
 from pathlib import Path
 
 ROOT = Path(__file__).resolve().parents[2]
 
 
 def test_borg_proof_dashboard_artifacts_exist_and_are_honest():
+    subprocess.run(
+        ["python", "scripts/build_borg_proof_dashboard.py"],
+        cwd=ROOT,
+        check=True,
+        stdout=subprocess.PIPE,
+        stderr=subprocess.PIPE,
+        text=True,
+    )
     json_path = ROOT / "eval" / "borg_proof_dashboard.json"
     md_path = ROOT / "docs" / "BORG_PROOF_DASHBOARD.md"
     html_path = ROOT / "docs" / "BORG_PROOF_DASHBOARD.html"

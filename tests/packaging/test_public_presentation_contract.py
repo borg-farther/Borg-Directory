@@ -23,7 +23,7 @@ def test_readme_leads_with_concrete_value_before_install_matrix() -> None:
     assert top.index("## Try Borg in 60 seconds") < text.index("## 1. Install `agent-borg`")
 
 
-def test_current_docs_do_not_contradict_339_published_state() -> None:
+def test_current_docs_do_not_contradict_3310_published_state() -> None:
     watched = {
         "README.md": read("README.md"),
         "CHANGELOG.md": read("CHANGELOG.md"),
@@ -35,7 +35,7 @@ def test_current_docs_do_not_contradict_339_published_state() -> None:
         "docs/VALUE_COMMUNICATION_DASHBOARD.md": read("docs/VALUE_COMMUNICATION_DASHBOARD.md"),
         "docs/20260514_PUBLIC_SELF_SERVE_LAUNCH_CLOSURE_PLAN.md": read("docs/20260514_PUBLIC_SELF_SERVE_LAUNCH_CLOSURE_PLAN.md"),
         "docs/20260522_PUBLIC_PRESENTATION_AUDIT.md": read("docs/20260522_PUBLIC_PRESENTATION_AUDIT.md"),
-        "docs/20260522_BORG_339_RELEASE_PREFLIGHT_PUBLISHED.md": read("docs/20260522_BORG_339_RELEASE_PREFLIGHT_PUBLISHED.md"),
+        "docs/20260522_BORG_3310_RELEASE_PREFLIGHT_PUBLISHED.md": read("docs/20260522_BORG_3310_RELEASE_PREFLIGHT_PUBLISHED.md"),
     }
     stale = [
         "PyPI latest remains 3.3.7",
@@ -43,6 +43,7 @@ def test_current_docs_do_not_contradict_339_published_state() -> None:
         "NO-GO until PyPI latest/fresh-install/MCP canary passes",
         "blocked until `agent-borg==3.3.8` is published",
         "BORG_338_RELEASE_PREFLIGHT",
+        "BORG_339_RELEASE_PREFLIGHT",
         "release_preflight_3_3_8",
         "fresh-install/stdout MCP",
         "guild-packs 2.1.1",
@@ -101,7 +102,7 @@ def test_non_current_public_docs_are_bannered_or_operator_scoped() -> None:
         "ROADMAP.md",
         "20260522_PUBLIC_PRESENTATION_AUDIT.md",
         "20260522_BORG_PRODUCTION_DAY_ONE_HARDENING_PLAN.md",
-        "20260522_BORG_339_RELEASE_PREFLIGHT_PUBLISHED.md",
+        "20260522_BORG_3310_RELEASE_PREFLIGHT_PUBLISHED.md",
         "20260514_PUBLIC_SELF_SERVE_LAUNCH_CLOSURE_PLAN.md",
         "20260517_BORG_100_REAL_USER_READINESS.md",
         "PUBLIC_SELF_SERVE_LAUNCH_GO_NO_GO.md",

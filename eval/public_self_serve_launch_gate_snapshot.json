@@ -21,7 +21,7 @@
         "docs/ROADMAP.md",
         "docs/20260522_PUBLIC_PRESENTATION_AUDIT.md",
         "docs/20260522_BORG_PRODUCTION_DAY_ONE_HARDENING_PLAN.md",
-        "docs/20260522_BORG_339_RELEASE_PREFLIGHT_PUBLISHED.md",
+        "docs/20260522_BORG_3310_RELEASE_PREFLIGHT_PUBLISHED.md",
         "docs/PUBLIC_SELF_SERVE_LAUNCH_GO_NO_GO.md",
         "docs/VALUE_COMMUNICATION_DASHBOARD.md",
         "docs/VALUE_COMMUNICATION_DASHBOARD.html",
@@ -80,22 +80,22 @@
     },
     "pypi_fresh_install_and_mcp_stdio": {
       "exists": true,
-      "expected_version": "3.3.9",
+      "expected_version": "3.3.10",
       "failed_count": 0,
       "failures": [],
-      "generated_at_utc": "2026-05-22T14:50:13Z",
+      "generated_at_utc": "2026-05-22T20:30:42Z",
       "mcp_server_info": {
         "name": "borg-mcp-server",
-        "version": "3.3.9"
+        "version": "3.3.10"
       },
       "mcp_stdio_canary_passed": true,
       "passed": true,
       "path": "eval/pypi_fresh_install_snapshot.json",
-      "version": "3.3.9"
+      "version": "3.3.10"
     },
     "pypi_latest": {
-      "expected_version": "3.3.9",
-      "latest_version": "3.3.9",
+      "expected_version": "3.3.10",
+      "latest_version": "3.3.10",
       "package": "agent-borg",
       "passed": true,
       "project_urls": {
@@ -126,11 +126,11 @@
       "url_missing": []
     }
   },
-  "generated_at_utc": "2026-05-22T20:06:28.314606+00:00",
+  "generated_at_utc": "2026-05-22T20:42:08.658397+00:00",
   "max_recommended_real_users_now": 10,
   "ready_for_controlled_first_10_beta": true,
   "ready_for_public_self_serve_launch": false,
   "schema_version": 1,
-  "source_version": "3.3.9",
+  "source_version": "3.3.10",
   "truth_policy": "Public self-serve is GO only after PyPI/fresh-install/MCP/docs gates pass AND row-derived first-10 external-user evidence passes. Synthetic users and aggregate-only edits never count."
 }
