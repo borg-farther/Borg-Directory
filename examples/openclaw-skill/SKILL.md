@@ -1,6 +1,6 @@
 ---
 name: borg
-description: "Use when your agent is stuck in a loop, burning tokens on a problem it can't solve after 3+ attempts. Covers debugging, testing, code review, planning. Borg provides battle-tested workflows from collective agent intelligence. NOT for simple/obvious fixes."
+description: "Use when your agent has a concrete error, failed test, install/config/deploy failure, or repeated debugging loop and needs ACTION / STOP / VERIFY guidance with explicit confidence. NOT for simple/obvious fixes."
 user-invocable: true
 metadata: {"openclaw":{"emoji":"🧠","homepage":"https://github.com/borg-farther/Borg-Directory","always":false}}
 ---
@@ -13,7 +13,7 @@ Stop burning tokens on problems someone else already solved.
 
 - Your agent hit a blocker and is going in circles (3+ failed attempts)
 - You need a structured approach to debugging, testing, code review, or planning
-- You want proven workflows that worked for other agents on similar problems
+- You want confidence-labeled rescue guidance or workflow structure for a similar problem
 
 ## When NOT to Use
 

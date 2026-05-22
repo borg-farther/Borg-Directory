@@ -1,19 +1,40 @@
-# Borg — collective memory for AI agents
+# Borg — failure memory for AI coding agents
 
-Borg helps coding agents avoid rediscovering the same fixes and dead ends.
-Give it an error or task; it returns an `ACTION / STOP / VERIFY` packet, or a clear `NO_CONFIDENT_MATCH` when it does not know.
+Borg is a local CLI and MCP server that helps coding agents avoid repeating known debugging dead ends.
+Give Borg an error, traceback, failed test, install problem, config failure, or deployment failure; it returns a short rescue packet:
+
+- `ACTION` — the next thing to try
+- `STOP` — a dead end to avoid
+- `VERIFY` — the exact command or test to rerun
+- `CONFIDENCE` — tested / observed / inferred, or `NO_CONFIDENT_MATCH`
 
 **Install package:** `agent-borg`  
 **Installed CLI:** `borg`  
 **MCP server command:** `borg-mcp`  
 **Canonical repo:** https://github.com/borg-farther/Borg-Directory
-**Canonical/no-loss policy:** [`docs/CANONICAL_REPO.md`](docs/CANONICAL_REPO.md)
+**Canonical/no-loss policy:** [`docs/CANONICAL_REPO.md`](https://github.com/borg-farther/Borg-Directory/blob/main/docs/CANONICAL_REPO.md)
+
+**Status:** first-10 beta. Borg's install, CLI, stdio MCP, security, and confidence-gating paths are ready for controlled testers. Public self-serve launch, 100-user rollout, served remote MCP, and measured external lift are not claimed until the required real-user evidence passes.
+
+## Try Borg in 60 seconds
+
+```bash
+pipx install agent-borg
+borg rescue "ModuleNotFoundError: No module named flask"
+```
+
+Expected shape:
+
+```text
+ACTION: install the missing package in the active environment
+STOP: do not edit the imported module's source before checking installation
+VERIFY: rerun the failing import or test command
+CONFIDENCE: ...
+```
 
 > **Install-name note:** Borg is the product name, and `borg` is the command after install. The Python package to install is **`agent-borg`**.
 >
 > Use `pipx install agent-borg` or `python3 -m pip install agent-borg`. Do **not** use `pip install borg`, `brew install borgbackup`, `apt install borgbackup`, `apt-get install borgbackup`, `dnf install borgbackup`, or `pacman -S borg`; those install unrelated Borg/BorgBackup software and will not provide Borg's AI-agent MCP tools.
-
-Borg is not marketed here as a magic success-rate booster. Current local security/readiness gates are green; statistically significant external agent-level lift is still unproven.
 
 ## For people running AI agents
 
@@ -31,7 +52,7 @@ How:
    - OpenClaw / generic MCP: add `mcpServers.borg` with `"command": "borg-mcp"`
 3. Restart the agent and ask: `what MCP tools do you have from Borg?`
 
-Details: [`docs/MCP_SETUP.md`](docs/MCP_SETUP.md).
+Details: [`docs/MCP_SETUP.md`](https://github.com/borg-farther/Borg-Directory/blob/main/docs/MCP_SETUP.md).
 
 ---
 
@@ -177,7 +198,7 @@ borg version
 borg-doctor --json
 ```
 
-Full install guide: [`docs/INSTALL.md`](docs/INSTALL.md).
+Full install guide: [`docs/INSTALL.md`](https://github.com/borg-farther/Borg-Directory/blob/main/docs/INSTALL.md).
 
 ---
 
@@ -278,7 +299,7 @@ where.exe borg-mcp
 Then use that absolute path as the MCP `command`. Avoid bare `python`/`python3` in MCP config unless you are certain that exact interpreter has `agent-borg` installed.
 Use absolute paths in MCP env blocks. Do not rely on `~` expansion inside MCP clients.
 
-More setup detail: [`docs/MCP_SETUP.md`](docs/MCP_SETUP.md).
+More setup detail: [`docs/MCP_SETUP.md`](https://github.com/borg-farther/Borg-Directory/blob/main/docs/MCP_SETUP.md).
 
 ---
 
@@ -302,19 +323,19 @@ Ready for **controlled first-10 beta sharing**:
 - First-user rescue path returns ACTION / STOP / VERIFY.
 - Security/privacy/prompt-injection surface: PASS.
 - GitHub CI and security gates are green on the current default branch.
-- First-10 beta contract is published: [`docs/FIRST_10_BETA_READINESS.md`](docs/FIRST_10_BETA_READINESS.md).
+- First-10 beta contract is published: [`docs/FIRST_10_BETA_READINESS.md`](https://github.com/borg-farther/Borg-Directory/blob/main/docs/FIRST_10_BETA_READINESS.md).
 
 Not yet claimed:
 
-- Statistically significant agent-level success lift.
+- Measured external agent success lift.
 - Real external-user network effects.
 - Public self-serve launch readiness.
 - Broad non-Python coverage.
 - Global/federated multi-node reliability.
 
-Public self-serve launch remains gated by real external-user evidence. Current threshold: At least 6 of the first 10 users get one relevant ACTION/STOP/VERIFY moment without maintainer handholding, and every miss is recorded as NO_CONFIDENT_MATCH or explicit negative feedback instead of being hidden.
+Public self-serve launch remains gated by real external-user evidence. Current threshold: 10 consented external users, at least 8 successful installs, at least 6 useful ACTION / STOP / VERIFY rescue moments without maintainer handholding, and 0 critical privacy/security incidents.
 
-Current public status: [`docs/READINESS.md`](docs/READINESS.md).
+Current public status: [`docs/READINESS.md`](https://github.com/borg-farther/Borg-Directory/blob/main/docs/READINESS.md).
 
 ---
 
@@ -322,11 +343,11 @@ Current public status: [`docs/READINESS.md`](docs/READINESS.md).
 
 Start here:
 
-- [`docs/SECURITY_HARDENING_BASELINE.md`](docs/SECURITY_HARDENING_BASELINE.md)
-- [`docs/PRIVACY_MODEL.md`](docs/PRIVACY_MODEL.md)
-- [`docs/PROMPT_INJECTION_THREAT_MODEL.md`](docs/PROMPT_INJECTION_THREAT_MODEL.md)
-- [`docs/TRUST_AND_PROMOTION.md`](docs/TRUST_AND_PROMOTION.md)
-- [`docs/REVOCATION_AND_DELETION.md`](docs/REVOCATION_AND_DELETION.md)
+- [`docs/SECURITY_HARDENING_BASELINE.md`](https://github.com/borg-farther/Borg-Directory/blob/main/docs/SECURITY_HARDENING_BASELINE.md)
+- [`docs/PRIVACY_MODEL.md`](https://github.com/borg-farther/Borg-Directory/blob/main/docs/PRIVACY_MODEL.md)
+- [`docs/PROMPT_INJECTION_THREAT_MODEL.md`](https://github.com/borg-farther/Borg-Directory/blob/main/docs/PROMPT_INJECTION_THREAT_MODEL.md)
+- [`docs/TRUST_AND_PROMOTION.md`](https://github.com/borg-farther/Borg-Directory/blob/main/docs/TRUST_AND_PROMOTION.md)
+- [`docs/REVOCATION_AND_DELETION.md`](https://github.com/borg-farther/Borg-Directory/blob/main/docs/REVOCATION_AND_DELETION.md)
 
 Do not paste API keys, passwords, cookies, tokens, private repo contents, customer data, or unsanitized private stack traces into public issues.
 
@@ -356,15 +377,15 @@ A good first evaluation is whether Borg reduces redundant investigation, not whe
 
 ## Docs
 
-- [`docs/INSTALL.md`](docs/INSTALL.md) — OS-specific install guide and wrong-package troubleshooting
-- [`docs/QUICKSTART.md`](docs/QUICKSTART.md) — short copy-paste path
-- [`docs/TRYING_BORG.md`](docs/TRYING_BORG.md) — detailed first-user setup
-- [`docs/MCP_SETUP.md`](docs/MCP_SETUP.md) — MCP setup details
-- [`docs/READINESS.md`](docs/READINESS.md) — current readiness status
-- [`docs/archive/`](docs/archive/) — historical audits, experiments, and internal planning artifacts; not current product claims
+- [`docs/INSTALL.md`](https://github.com/borg-farther/Borg-Directory/blob/main/docs/INSTALL.md) — OS-specific install guide and wrong-package troubleshooting
+- [`docs/QUICKSTART.md`](https://github.com/borg-farther/Borg-Directory/blob/main/docs/QUICKSTART.md) — short copy-paste path
+- [`docs/TRYING_BORG.md`](https://github.com/borg-farther/Borg-Directory/blob/main/docs/TRYING_BORG.md) — detailed first-user setup
+- [`docs/MCP_SETUP.md`](https://github.com/borg-farther/Borg-Directory/blob/main/docs/MCP_SETUP.md) — MCP setup details
+- [`docs/READINESS.md`](https://github.com/borg-farther/Borg-Directory/blob/main/docs/READINESS.md) — current readiness status
+- [`docs/archive/`](https://github.com/borg-farther/Borg-Directory/tree/main/docs/archive/) — historical audits, experiments, and internal planning artifacts; not current product claims
 
 ---
 
 ## License
 
-MIT. See [`LICENSE`](LICENSE).
+MIT. See [`LICENSE`](https://github.com/borg-farther/Borg-Directory/blob/main/LICENSE).

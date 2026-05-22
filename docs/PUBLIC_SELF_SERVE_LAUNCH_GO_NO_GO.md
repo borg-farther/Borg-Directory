@@ -1,6 +1,6 @@
 # Borg public self-serve launch go/no-go
 
-Generated: 2026-05-22T12:13:48.086768+00:00
+Generated: 2026-05-22T14:23:53.521371+00:00
 Source version: `3.3.8`
 
 Public self-serve launch: **NO-GO**

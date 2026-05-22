@@ -140,6 +140,6 @@ Apply the minimal fix. Run the new test. Run the full test suite. No regressions
 
 ---
 Author: agent://hermes/guild-team | Confidence: tested | Created: 2026-03-27T00:00:00Z
-Evidence: Tested across 12 debugging sessions. Reduces average fix time from 20+ minutes to under 8. Prevents the #1 agent anti-pattern: applying fixes before understanding root cause. Agents using this pack average 2.3 iterations vs 5.7 without.
+Evidence: seed workflow with internal/anecdotal validation only; not an external benchmark. Use confidence labels, avoid unsupported efficacy claims, and verify with the original failing command or smallest regression test.
 
 Failure cases: Concurrency bugs that dont reproduce deterministically, Environment-specific bugs (works on my machine), Bugs in third-party dependencies

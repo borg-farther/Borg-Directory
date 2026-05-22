@@ -176,7 +176,11 @@ def build_model() -> dict:
         },
         "broad_public_launch": {
             "verdict": "NO-GO" if public_self_serve_pass is not True else "GO",
-            "why": "Public self-serve gate is blocked until PyPI latest/fresh-install/MCP/docs gates pass and first-10 external evidence exists." if public_self_serve_pass is not True else "Public self-serve gate has passed with row-derived external evidence.",
+            "why": (
+                "Public self-serve gate is blocked only by row-derived first-10 external-user evidence; PyPI/latest/fresh-install/MCP/docs gates are green."
+                if pypi_fresh_pass is True and public_self_serve_pass is not True
+                else "Public self-serve gate is blocked until PyPI latest/fresh-install/MCP/docs gates pass and first-10 external evidence exists."
+            ) if public_self_serve_pass is not True else "Public self-serve gate has passed with row-derived external evidence.",
         },
     }
 

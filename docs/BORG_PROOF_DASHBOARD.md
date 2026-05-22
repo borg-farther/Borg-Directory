@@ -1,6 +1,6 @@
 # Borg Proof Dashboard
 
-Generated: `2026-05-22T12:13:16Z`
+Generated: `2026-05-22T12:59:12Z`
 Repo: `/root/hermes-workspace/borg-firewall-fix`
 
 ## Big top verdict
@@ -9,7 +9,7 @@ Repo: `/root/hermes-workspace/borg-firewall-fix`
 | --- | --- | --- |
 | supervised first user onboarding | CONDITIONAL | Share only with hands-on supervision: install/runtime/security/local logical-load gates pass, but verified external users remain 0 and first-user outcome evidence is uncollected. |
 | unattended git onboarding | NO-GO | No verified external install/onboarding evidence yet; Git-only flow should not be treated as self-serve until at least the first-10 scoreboard has real outcomes. |
-| broad public launch | NO-GO | Public self-serve gate is blocked until PyPI latest/fresh-install/MCP/docs gates pass and first-10 external evidence exists. |
+| broad public launch | NO-GO | Public self-serve gate is blocked only by row-derived first-10 external-user evidence; PyPI/latest/fresh-install/MCP/docs gates are green. |
 
 **Supervised source checkout only?** CONDITIONAL — Hands-on maintainer supervision only.; Do not present as unattended or public launch ready.; Capture real first-user outcome evidence immediately.
 
@@ -38,13 +38,13 @@ Repo: `/root/hermes-workspace/borg-firewall-fix`
 | eval/first_user_release_gate_snapshot.json | True | 44155fad6673491731125c1056ed07c5a8dd5943fe74b41dc5f06e21e883d163 | 2026-05-22T11:41:49Z | first-user release gate all_pass=True |
 | eval/uat_scoreboard_snapshot.json | True | d05753c32ce3b9b3e2f115b2b164c18d7635af4e8cd6c4ae7e73dabac2e6109e | 2026-05-18T07:46:07.702390+00:00 | UAT synthetic_load_all_pass=True; real_user_100_all_pass=False; ready_for_10=True; ready_for_1000=True |
 | eval/gate_run_snapshot.json | True | 70e7a691c169ff9543389d7fcdab590978cd140470796e4bcfaf4931cdd29b99 | 2026-05-18T07:46:07.667878+00:00 | gate run synthetic_load_all_pass=True; overall_100_real_user_pass=False; ready_for_10=True; ready_for_1000=True |
-| eval/real_user_rollout_gate_snapshot.json | True | 383859a0bcb23255fa464961d5a60e92b948beb7bae33525f0d15a1672c0b722 | 2026-05-22T12:11:46.248998+00:00 | 100-real-user gate=False; max_recommended_real_users=10; blockers=['first-10 external-user evidence has not passed: verified=0/10, real_users=0/10, installs=0/8, useful=0/6, critical_incidents=0/0'] |
-| eval/public_self_serve_launch_gate_snapshot.json | True | 2f66acf2d82286b33d57bf3679f486b993a2bf18e69a76a284fd06878e0622b6 | 2026-05-22T12:11:38.497180+00:00 | public self-serve gate=False; max_recommended_real_users=10; blockers=['first-10 external-user evidence has not passed: verified=0/10, real_users=0/10, installs=0/8, useful=0/6, critical_incidents=0/0'] |
+| eval/real_user_rollout_gate_snapshot.json | True | 2b0a0280e96e3dbd853523a355a7fb43b94eee8304d28f9e29703ce690e6da76 | 2026-05-22T12:13:45.137669+00:00 | 100-real-user gate=False; max_recommended_real_users=10; blockers=['first-10 external-user evidence has not passed: verified=0/10, real_users=0/10, installs=0/8, useful=0/6, critical_incidents=0/0'] |
+| eval/public_self_serve_launch_gate_snapshot.json | True | 41088c91a0b5782d02ca183bf5220700087d7865a115a7df897253a8f7877793 | 2026-05-22T12:13:48.086768+00:00 | public self-serve gate=False; max_recommended_real_users=10; blockers=['first-10 external-user evidence has not passed: verified=0/10, real_users=0/10, installs=0/8, useful=0/6, critical_incidents=0/0'] |
 | eval/pypi_fresh_install_snapshot.json | True | a82eb3f24ba8bdebeae25720727a86a44a5451050beb5a101313dd13a7af9ee6 | 2026-05-22T12:11:37Z | PyPI fresh-install canary success=True; version=3.3.8 |
 | eval/load_10_snapshot.json | True | ba59f7350f5b3cdb9078ddfe786524f00b3e1de7b384885e6297f7cb9c46a7c2 | 2026-05-18T07:45:06.621553+00:00 | logical load 10: passed=True; total_requests=59794; success_rate=1.0; p95_ms=0.6281427631620318; model=asyncio_logical_users |
 | eval/load_100_snapshot.json | True | f19307704ed8df2c3b536b70b5cb4544bc07a375afa4ba9c213cdb3adc6149f4 | 2026-05-18T07:45:36.770025+00:00 | logical load 100: passed=True; total_requests=59981; success_rate=1.0; p95_ms=0.6004410097375512; model=asyncio_logical_users |
 | eval/load_1000_snapshot.json | True | 7a97f13045c6e54751de87963979fd47cedd19467b1b03c1f2c5f0f4aa703629 | 2026-05-18T07:46:06.931035+00:00 | logical load 1000: passed=True; total_requests=59947; success_rate=1.0; p95_ms=0.6051470059901476; model=asyncio_logical_users |
-| pyproject.toml | True | 0defe018ec8a2ecc6a772aa49e4bafb93853f0e9d4b24605925af0b62f8b1154 | 2026-05-22T11:59:37Z | package version=3.3.8; scripts declared in project metadata |
+| pyproject.toml | True | 0defe018ec8a2ecc6a772aa49e4bafb93853f0e9d4b24605925af0b62f8b1154 | 2026-05-22T12:58:58Z | package version=3.3.8; scripts declared in project metadata |
 | borg/__init__.py | True | 14a1cfcffc78976668925f8f06991459ba5aed9c3b6a8d558bf0e1ad6417c8e9 | 2026-05-22T11:59:37Z | runtime __version__=3.3.8; top-level check() delegates to search |
 
 ## Blockers

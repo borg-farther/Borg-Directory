@@ -1,6 +1,8 @@
 # Borg Benchmark Suite
 
-This benchmark suite measures agent performance with and without borg packs.
+> **Synthetic benchmark design, not public efficacy proof.** This directory is useful for exercising benchmark plumbing and comparing candidate workflows. Do not cite it as external agent-level lift, production success-rate evidence, or real-user adoption proof until it is backed by actual controlled agent runs.
+
+This benchmark suite defines comparison tasks for evaluating agent performance with and without Borg guidance.
 
 ## Overview
 
@@ -80,13 +82,12 @@ The scoring function measures:
 
 ### Iteration Estimation
 
-Since this is a **simulated benchmark**, actual agent runs are not executed. Instead:
+This benchmark currently uses deterministic placeholder estimates; it does **not** execute independent agents or prove real-world performance.
 
 - **without borg**: `iterations_taken = max_iterations` (baseline from task definition)
-- **with borg**: `iterations_taken = max_iterations * 0.6` (40% reduction from systematic approach)
+- **with borg**: `iterations_taken = max_iterations * 0.6` (design placeholder only)
 
-This reflects empirical data from the borg pack provenance:
-> "Agents using this pack average 2.3 iterations vs 5.7 without."
+Treat these numbers as scaffold values for benchmark development, not as public Borg performance claims. Replace them with measured runs before making any efficacy statement.
 
 ### Results
 
@@ -95,24 +96,24 @@ Results are saved to `results/` directory:
 - `results/results_YYYYMMDD_HHMMSS.md` - Markdown table
 - `results/results_YYYYMMDD_HHMMSS.json` - JSON data
 
-## Expected Outcomes
+## Placeholder Output Shape
 
-### Iterations Saved
+Current benchmark outputs may include illustrative scaffold values. They are not real efficacy evidence.
 
-| Metric | Expected |
-|:-------|:---------|
-| Average iterations (baseline) | 4.5 |
-| Average iterations (with borg) | 2.7 |
-| Average saved | ~40% reduction |
+| Metric | Placeholder |
+|:-------|:------------|
+| Average iterations (baseline) | from task `max_iterations` |
+| Average iterations (with borg) | design placeholder until measured |
+| Average saved | not claimed |
 
 ### Correct Fix Rate
 
-| Mode | Expected |
-|:-----|:---------|
-| without borg | ~60% |
-| with borg | ~95% |
+| Mode | Current status |
+|:-----|:---------------|
+| without borg | not measured by this scaffold |
+| with borg | not measured by this scaffold |
 
-The systematic approach from borg packs should lead to more reliable fixes.
+The benchmark becomes claim-worthy only after it runs real agents, records raw transcripts/logs, defines a control, and reports statistical uncertainty.
 
 ## Pack Coverage
 

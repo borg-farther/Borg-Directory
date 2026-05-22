@@ -4,7 +4,7 @@
 
 - Public self-serve hardening: added row-derived first-10 evidence validation, PyPI fresh-install/MCP stdio canary, and a single fail-closed public self-serve launch gate.
 - Claims discipline: updated first-10 invite/closure docs to `agent-borg==3.3.8`, replaced unsupported lift/SHIP copy with controlled-beta/no-go wording, and added CI coverage for public-readiness fail-closed tests.
-- Release blocker made explicit: PyPI latest remains 3.3.7 until an approved upload; public self-serve gate fails closed until 3.3.8 is published and first-10 external evidence passes.
+- Release status: `agent-borg==3.3.8` is published on production PyPI; the post-upload fresh-install/MCP stdio canary passed. Public self-serve still fails closed until first-10 external evidence passes.
 
 ## 3.3.7 — 2026-05-21
 
