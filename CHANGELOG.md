@@ -1,5 +1,10 @@
 # Changelog
 
+## 3.3.10 — 2026-05-22
+
+- Docs-only PyPI presentation sync release: publishes the PR #25 GitHub README/public-doc hardening to the PyPI long description.
+- Keeps runtime behavior unchanged from 3.3.9.
+
 ## 3.3.9 — 2026-05-22
 
 - Public presentation patch: ships the sharpened README to PyPI so first users see the 60-second `borg rescue` path and absolute GitHub documentation links.
