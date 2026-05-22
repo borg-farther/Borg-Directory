@@ -55,16 +55,16 @@
     {
       "claim_derived": "100-real-user gate=False; max_recommended_real_users=10; blockers=['first-10 external-user evidence has not passed: verified=0/10, real_users=0/10, installs=0/8, useful=0/6, critical_incidents=0/0']",
       "exists": true,
-      "freshness_timestamp": "2026-05-22T12:11:46.248998+00:00",
+      "freshness_timestamp": "2026-05-22T12:13:45.137669+00:00",
       "path": "eval/real_user_rollout_gate_snapshot.json",
-      "sha256": "383859a0bcb23255fa464961d5a60e92b948beb7bae33525f0d15a1672c0b722"
+      "sha256": "2b0a0280e96e3dbd853523a355a7fb43b94eee8304d28f9e29703ce690e6da76"
     },
     {
       "claim_derived": "public self-serve gate=False; max_recommended_real_users=10; blockers=['first-10 external-user evidence has not passed: verified=0/10, real_users=0/10, installs=0/8, useful=0/6, critical_incidents=0/0']",
       "exists": true,
-      "freshness_timestamp": "2026-05-22T12:11:38.497180+00:00",
+      "freshness_timestamp": "2026-05-22T12:13:48.086768+00:00",
       "path": "eval/public_self_serve_launch_gate_snapshot.json",
-      "sha256": "2f66acf2d82286b33d57bf3679f486b993a2bf18e69a76a284fd06878e0622b6"
+      "sha256": "41088c91a0b5782d02ca183bf5220700087d7865a115a7df897253a8f7877793"
     },
     {
       "claim_derived": "PyPI fresh-install canary success=True; version=3.3.8",
@@ -97,7 +97,7 @@
     {
       "claim_derived": "package version=3.3.8; scripts declared in project metadata",
       "exists": true,
-      "freshness_timestamp": "2026-05-22T11:59:37Z",
+      "freshness_timestamp": "2026-05-22T12:58:58Z",
       "path": "pyproject.toml",
       "sha256": "0defe018ec8a2ecc6a772aa49e4bafb93853f0e9d4b24605925af0b62f8b1154"
     },
@@ -212,7 +212,7 @@
       }
     ]
   },
-  "generated_at_utc": "2026-05-22T12:13:16Z",
+  "generated_at_utc": "2026-05-22T12:59:12Z",
   "metrics": {
     "active_contributors_consumers": {
       "honesty_label": "MISSING_BORG_ANALYTICS_ARTIFACT",
@@ -334,7 +334,7 @@
   "top_verdict": {
     "broad_public_launch": {
       "verdict": "NO-GO",
-      "why": "Public self-serve gate is blocked until PyPI latest/fresh-install/MCP/docs gates pass and first-10 external evidence exists."
+      "why": "Public self-serve gate is blocked only by row-derived first-10 external-user evidence; PyPI/latest/fresh-install/MCP/docs gates are green."
     },
     "supervised_first_user_onboarding": {
       "verdict": "CONDITIONAL",

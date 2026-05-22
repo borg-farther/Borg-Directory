@@ -15,8 +15,10 @@ belong under [`archive/`](archive/) and are not current product claims.
 - [`ONBOARDING.md`](ONBOARDING.md) — deterministic Claude onboarding gates
 - [`FIRST_10_BETA_READINESS.md`](FIRST_10_BETA_READINESS.md) — first-10 beta contract
 - [`READINESS.md`](READINESS.md) — current readiness status and honest launch boundary
+- [`ROADMAP.md`](ROADMAP.md) — current roadmap and intentionally-not-claimed boundaries
+- [`20260522_PUBLIC_PRESENTATION_AUDIT.md`](20260522_PUBLIC_PRESENTATION_AUDIT.md) — public GitHub first-user presentation audit and current verdict
 - [`20260522_BORG_PRODUCTION_DAY_ONE_HARDENING_PLAN.md`](20260522_BORG_PRODUCTION_DAY_ONE_HARDENING_PLAN.md) — hard-gated production/day-one hardening plan and proof checklist
-- [`20260522_BORG_338_RELEASE_PREFLIGHT_PUBLISHED.md`](20260522_BORG_338_RELEASE_PREFLIGHT_PUBLISHED.md) — strict PyPI 3.3.8 preflight result: code gates green, upload aborted on release-provenance gates
+- [`20260522_BORG_338_RELEASE_PREFLIGHT_PUBLISHED.md`](20260522_BORG_338_RELEASE_PREFLIGHT_PUBLISHED.md) — strict PyPI 3.3.8 preflight and post-upload verification: package is live, fresh-install/MCP canary passed
 - [`PUBLIC_SELF_SERVE_LAUNCH_GO_NO_GO.md`](PUBLIC_SELF_SERVE_LAUNCH_GO_NO_GO.md) — canonical public self-serve launch gate output
 - [`../eval/public_self_serve_launch_gate_snapshot.json`](../eval/public_self_serve_launch_gate_snapshot.json) — machine-readable public self-serve launch gate snapshot
 - [`SECURITY_HARDENING_BASELINE.md`](SECURITY_HARDENING_BASELINE.md) — security gate summary

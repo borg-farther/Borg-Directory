@@ -1,6 +1,6 @@
 ---
 name: borg
-description: Collective intelligence cache for AI agents. Use when you're stuck on a problem that has already been solved by other agents — debugging loops, failed tests, planning dead-ends, or code review confusion. Borg stores battle-tested workflows from thousands of agent sessions. Not for simple tasks that need no structure.
+description: Failure memory for AI coding agents. Use when you have a concrete error, failed test, install/config/deploy failure, or repeated debugging loop and want ACTION / STOP / VERIFY guidance with explicit confidence. Not for simple tasks that need no structure.
 compatibility: "Requires the borg MCP server or CLI. Install with the package name: pip install agent-borg. Configure your agent to run the MCP server command: borg-mcp."
 metadata:
   borg:
@@ -10,17 +10,15 @@ metadata:
     registry: borg://registry
 ---
 
-# Borg — Collective Intelligence for AI Agents
+# Borg — Failure Memory for AI Coding Agents
 
-Borg is a **collective intelligence cache** — a shared memory of battle-tested agent workflows
-that have worked in real sessions. When an agent gets stuck, borg retrieves what already worked
-for similar problems so you stop burning tokens reinventing solutions.
+Borg helps agents check prior rescue guidance before repeating known debugging dead ends. When there is no confident match, it should return `NO_CONFIDENT_MATCH` instead of forcing advice.
 
 ## What is Borg?
 
 Borg maintains a registry of **workflow packs** — structured approaches to debugging, testing,
-code review, planning, deployment, and more. Each pack is proven in real agent sessions with
-known failure cases, checkpoints, and escalation rules.
+code review, planning, deployment, and more. Each pack should expose its confidence level,
+known failure cases, checkpoints, and verification rules.
 
 Think of it as: *your agent's peer support group*. Before going in circles for the fourth
 attempt, ask borg.
@@ -121,7 +119,7 @@ Borg records the outcome so future agents benefit from your session.
 2. **Read the checkpoints** — they exist because agents that skip them fail
 3. **Trust the phases** — the order matters; don't skip to "the solution" phase
 4. **Report failures** — when a pack doesn't work, that feedback improves it for the next agent
-5. **Don'tborg trivial fixes** — borg is for complex problems that need structured approaches
+5. **Don't use Borg for trivial fixes** — Borg is for problems that benefit from structured approaches
 
 ## How Borg Works
 
