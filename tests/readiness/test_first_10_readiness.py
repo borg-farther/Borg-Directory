@@ -129,7 +129,8 @@ def test_docs_link_first_10_security_and_truthful_limitations():
     security = (ROOT / "docs" / "SECURITY_HARDENING_BASELINE.md").read_text(encoding="utf-8")
 
     assert "FIRST_10_BETA_READINESS.md" in readme
-    assert "Statistically significant agent-level success lift" in readme
+    assert "Measured external agent success lift" in readme
+    assert "Not yet claimed" in readme
     assert "Security/privacy/prompt-injection surface" in readme
     assert "secret scan" in security.lower()
     assert "pip-audit" in security

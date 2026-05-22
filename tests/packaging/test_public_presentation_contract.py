@@ -47,6 +47,7 @@ def test_current_docs_do_not_contradict_338_published_state() -> None:
 
 def test_public_examples_and_benchmark_readmes_do_not_overclaim_external_lift() -> None:
     watched = {
+        "README.md": read("README.md"),
         "benchmarks/README.md": read("benchmarks/README.md"),
         "examples/skills/borg/SKILL.md": read("examples/skills/borg/SKILL.md"),
         "borg/seeds_data/borg/SKILL.md": read("borg/seeds_data/borg/SKILL.md"),
@@ -59,6 +60,8 @@ def test_public_examples_and_benchmark_readmes_do_not_overclaim_external_lift() 
         "thousands of agent sessions",
         "proven in real agent sessions",
         "battle-tested workflows from collective agent intelligence",
+        "statistically significant agent-level success lift",
+        "statistically significant external agent-level lift",
         "2.3 iterations vs 5.7",
         "~95%",
         "40% reduction from systematic approach",

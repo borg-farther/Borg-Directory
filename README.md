@@ -14,7 +14,7 @@ Give Borg an error, traceback, failed test, install problem, config failure, or 
 **Canonical repo:** https://github.com/borg-farther/Borg-Directory
 **Canonical/no-loss policy:** [`docs/CANONICAL_REPO.md`](https://github.com/borg-farther/Borg-Directory/blob/main/docs/CANONICAL_REPO.md)
 
-**Status:** first-10 beta. Borg's install, CLI, stdio MCP, security, and confidence-gating paths are ready for controlled testers. Public self-serve launch and statistically significant external agent-level lift are not claimed until real first-10 evidence passes.
+**Status:** first-10 beta. Borg's install, CLI, stdio MCP, security, and confidence-gating paths are ready for controlled testers. Public self-serve launch, 100-user rollout, served remote MCP, and measured external lift are not claimed until the required real-user evidence passes.
 
 ## Try Borg in 60 seconds
 
@@ -327,7 +327,7 @@ Ready for **controlled first-10 beta sharing**:
 
 Not yet claimed:
 
-- Statistically significant agent-level success lift.
+- Measured external agent success lift.
 - Real external-user network effects.
 - Public self-serve launch readiness.
 - Broad non-Python coverage.
