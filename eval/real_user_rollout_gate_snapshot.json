@@ -32,12 +32,12 @@
     "exists": true,
     "failed_count": 0,
     "failures": [],
-    "generated_at_utc": "2026-05-22T11:41:49Z",
+    "generated_at_utc": "2026-05-23T20:42:03Z",
     "passed": true,
     "passed_count": 26
   },
   "gate_type": "real_user_rollout",
-  "generated_at_utc": "2026-05-22T20:42:08.707805+00:00",
+  "generated_at_utc": "2026-05-23T20:43:36.055774+00:00",
   "important_distinction": "load/readiness snapshots are synthetic/logical users; this gate controls real external-user rollout",
   "infrastructure_ready_for_100": true,
   "load_gates": {
@@ -45,11 +45,11 @@
       "duration_seconds": 30.0,
       "exists": true,
       "latency_ms": {
-        "avg": 0.49401962254474585,
-        "max": 53.078750032000244,
-        "p50": 0.4734150134027004,
-        "p95": 0.6281427631620318,
-        "p99": 0.8716626581735909
+        "avg": 0.4196978200266779,
+        "max": 1.2744090054184198,
+        "p50": 0.3946599317714572,
+        "p95": 0.5762591026723385,
+        "p99": 0.6065821251831948
       },
       "passed": true,
       "success_rate": 1.0,
@@ -59,11 +59,11 @@
       "duration_seconds": 30.0,
       "exists": true,
       "latency_ms": {
-        "avg": 0.48331129045512666,
-        "max": 4.875130020081997,
-        "p50": 0.4826189251616597,
-        "p95": 0.6004410097375512,
-        "p99": 0.6370391696691513
+        "avg": 0.43180075371041415,
+        "max": 8.023671107366681,
+        "p50": 0.4048091359436512,
+        "p95": 0.5875204456970096,
+        "p99": 0.6236810539849102
       },
       "passed": true,
       "success_rate": 1.0,

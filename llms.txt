@@ -1,0 +1,29 @@
+# Borg
+
+Borg is failure memory for AI coding agents.
+
+Canonical repo: https://github.com/borg-farther/Borg-Directory
+Install package: agent-borg
+CLI commands: borg, borg-mcp, borg-doctor
+MCP server command: borg-mcp
+Python: 3.10+
+
+Day-one value path:
+1. pipx install agent-borg
+2. borg rescue "ModuleNotFoundError: No module named flask" --short
+3. Expect ACTION / STOP / VERIFY / CONFIDENCE, or NO_CONFIDENT_MATCH.
+
+Current rollout boundary:
+- Ready for controlled first-10 beta when local gates pass.
+- Do not claim public self-serve launch, 100 real users, served remote MCP, or measured external lift until row-derived external-user evidence passes.
+
+Useful docs:
+- README: https://github.com/borg-farther/Borg-Directory#readme
+- MCP setup: https://github.com/borg-farther/Borg-Directory/blob/main/docs/MCP_SETUP.md
+- Security model: https://github.com/borg-farther/Borg-Directory/blob/main/docs/SECURITY_HARDENING_BASELINE.md
+
+Verification commands:
+- python eval/run_first_user_release_gate.py
+- python eval/run_readiness_gates.py
+- python eval/real_user_rollout_gate.py
+- python -m pytest -q tests/packaging/test_distribution_readiness.py tests/packaging/test_public_repo_surface.py

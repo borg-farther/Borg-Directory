@@ -1,12 +1,32 @@
 from __future__ import annotations
 
 from pathlib import Path
+import subprocess
 
 ROOT = Path(__file__).resolve().parents[2]
 
 
 def read(relative: str) -> str:
     return (ROOT / relative).read_text(encoding="utf-8")
+
+
+def _gitlink_doc_roots() -> set[str]:
+    """Return docs/* gitlink roots that are preserved vendor/reference snapshots."""
+    result = subprocess.run(
+        ["git", "ls-files", "-s", "docs"],
+        cwd=ROOT,
+        check=True,
+        text=True,
+        capture_output=True,
+    )
+    roots: set[str] = set()
+    for line in result.stdout.splitlines():
+        parts = line.split(maxsplit=3)
+        if len(parts) == 4 and parts[0] == "160000" and parts[3].startswith("docs/"):
+            rel = Path(parts[3]).relative_to("docs")
+            if rel.parts:
+                roots.add(rel.parts[0])
+    return roots
 
 
 def test_readme_leads_with_concrete_value_before_install_matrix() -> None:
@@ -115,12 +135,16 @@ def test_non_current_public_docs_are_bannered_or_operator_scoped() -> None:
         "REVOCATION_AND_DELETION.md",
         "LEARNING_ATOM_SCHEMA.md",
         "CANONICAL_REPO.md",
+        "LIVE_MCP_SELF_SERVE_CANARY.md",
     }
     docs = ROOT / "docs"
+    gitlink_roots = _gitlink_doc_roots()
     failures: list[str] = []
     for path in docs.rglob("*.md"):
         rel = path.relative_to(docs)
         if rel.parts and rel.parts[0] == "archive":
+            continue
+        if rel.parts and rel.parts[0] in gitlink_roots:
             continue
         if str(rel) in current:
             continue

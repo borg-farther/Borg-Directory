@@ -171,4 +171,4 @@ borg feedback <session-id>
 
 ---
 
-*Powered by [borg](https://github.com/borg-farther/Borg-Directory) — collective intelligence for AI agents.*
+*Powered by [borg](https://github.com/borg-farther/Borg-Directory) — failure memory for AI coding agents.*

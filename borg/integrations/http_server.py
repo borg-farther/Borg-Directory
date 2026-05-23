@@ -29,7 +29,7 @@ def create_app():
 
     app = FastAPI(
         title="Borg MCP HTTP Server",
-        description="Collective memory for AI coding agents",
+        description="Failure memory for AI coding agents",
         version="1.0.0"
     )
 

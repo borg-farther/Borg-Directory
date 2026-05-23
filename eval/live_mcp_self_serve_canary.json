@@ -1,0 +1,37 @@
+{
+  "generated_at_utc": "2026-05-23T20:15:16Z",
+  "gate_type": "live_served_mcp_canary",
+  "restart_or_reload_performed": false,
+  "policy_note": "Agent did not restart, kill, signal, or reload the Hermes gateway.",
+  "expected_source_version": "3.3.10",
+  "fingerprint": {
+    "success": true,
+    "pid": 423397,
+    "borg_version": "3.3.7",
+    "borg_home": "/root/.borg",
+    "cwd": "/root/.hermes/hermes-agent",
+    "module_path": "/root/hermes-workspace/borg/borg/__init__.py",
+    "module_sha256": "079ca796afcc3456c3b01cf9cea780a87ace0c1a1fe502f60864f9b9bab5b035",
+    "mcp_server_sha256": "54a071c0c2c34d645366189043ad7cc5b2df13b57a5d8e4132a8c62527518a53",
+    "reload_status": "loaded_code_has_confidence_gate"
+  },
+  "canaries": {
+    "nonsense_observe_no_confident_match": {
+      "passed": true,
+      "observed_marker": "NO_CONFIDENT_MATCH"
+    },
+    "permission_denied_rescue": {
+      "passed": true,
+      "problem_class": "permission_denied",
+      "confidence": "tested",
+      "action_contains": "chmod",
+      "stop_contains": "chmod 777"
+    }
+  },
+  "version_matches_expected": false,
+  "all_canary_calls_passed": true,
+  "verdict": "BLOCKED_VERSION_DRIFT_OPERATOR_RELOAD_REQUIRED",
+  "blockers": [
+    "Live MCP process reports borg_version=3.3.7 while canonical source/PyPI are 3.3.10. Served runtime needs operator-supervised reload/cutover before public self-serve claims."
+  ]
+}

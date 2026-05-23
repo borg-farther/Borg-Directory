@@ -14,7 +14,7 @@
     "ready_for_10": true,
     "ready_for_100": true,
     "ready_for_1000": true,
-    "timestamp": "2026-05-18T07:46:07.667878+00:00"
+    "timestamp": "2026-05-23T20:43:36.108175+00:00"
   },
   "gates": {
     "first_user_surface": true,
@@ -27,30 +27,30 @@
   "loads": {
     "10": {
       "exists": true,
-      "p95_ms": 0.6281427631620318,
-      "p99_ms": 0.8716626581735909,
+      "p95_ms": 0.5762591026723385,
+      "p99_ms": 0.6065821251831948,
       "passed": true,
       "success_rate": 1.0,
-      "timestamp": "2026-05-18T07:45:06.621553+00:00",
-      "total_requests": 59794
+      "timestamp": "2026-05-23T20:42:35.169345+00:00",
+      "total_requests": 70464
     },
     "100": {
       "exists": true,
-      "p95_ms": 0.6004410097375512,
-      "p99_ms": 0.6370391696691513,
+      "p95_ms": 0.5875204456970096,
+      "p99_ms": 0.6236810539849102,
       "passed": true,
       "success_rate": 1.0,
-      "timestamp": "2026-05-18T07:45:36.770025+00:00",
-      "total_requests": 59981
+      "timestamp": "2026-05-23T20:43:05.286983+00:00",
+      "total_requests": 67290
     },
     "1000": {
       "exists": true,
-      "p95_ms": 0.6051470059901476,
-      "p99_ms": 0.7191141927614809,
+      "p95_ms": 0.5758799961768091,
+      "p99_ms": 0.6048608920536935,
       "passed": true,
       "success_rate": 1.0,
-      "timestamp": "2026-05-18T07:46:06.931035+00:00",
-      "total_requests": 59947
+      "timestamp": "2026-05-23T20:43:35.455161+00:00",
+      "total_requests": 69146
     }
   },
   "ready_for_10": true,
@@ -62,7 +62,7 @@
       "first-10 external-user evidence has not passed: verified=0/10, real_users=0/10, installs=0/8, useful=0/6, critical_incidents=0/0"
     ],
     "exists": true,
-    "generated_at_utc": "2026-05-18T07:46:07.604652+00:00",
+    "generated_at_utc": "2026-05-23T20:43:36.055774+00:00",
     "infrastructure_ready_for_100": true,
     "max_recommended_real_users_now": 10,
     "ready_for_100_real_users": false,
@@ -90,10 +90,10 @@
   },
   "source": "eval/uat_scoreboard.py",
   "synthetic_load_all_pass": true,
-  "timestamp": "2026-05-18T07:46:07.702390+00:00",
+  "timestamp": "2026-05-23T20:43:36.145499+00:00",
   "version": {
     "passed": true,
-    "project_version": "3.3.3",
-    "runtime_version": "3.3.3"
+    "project_version": "3.3.10",
+    "runtime_version": "3.3.10"
   }
 }

@@ -17,6 +17,7 @@ ALLOWED_ROOT_FILES = {
     "Dockerfile",
     "index.json",
     "LICENSE",
+    "llms.txt",
     "README.md",
     "pyproject.toml",
 }
@@ -92,3 +93,60 @@ def test_public_first_user_docs_have_no_unrendered_placeholders() -> None:
         assert "{PRIMING_PARAGRAPH}" not in text
         assert "borg_rescue" in text
         assert "borg_observe" in text
+
+
+def test_public_positioning_uses_plain_failure_memory_language() -> None:
+    """Public/current surfaces should not sound like vague AI-product slop."""
+    active_surfaces = [
+        "README.md",
+        "pyproject.toml",
+        "llms.txt",
+        "AGENTS.md",
+        "CLAUDE.md",
+        ".github/copilot-instructions.md",
+        "borg/cli.py",
+        "borg/integrations/http_server.py",
+        "borg/core/convert.py",
+        "borg/core/openclaw_converter.py",
+        "borg/seeds_data/borg/SKILL.md",
+    ]
+    banned_snippets = [
+        "Semantic reasoning cache",
+        "collective intelligence for AI agents",
+        "Collective Intelligence for AI Agents",
+        "magic success-rate booster",
+        "god-tier",
+        "world-class",
+    ]
+
+    for relative_path in active_surfaces:
+        text = (ROOT / relative_path).read_text(encoding="utf-8")
+        assert "failure memory" in text.lower(), relative_path
+        for snippet in banned_snippets:
+            assert snippet not in text, f"{snippet!r} leaked into {relative_path}"
+
+
+def test_agent_readable_surfaces_state_identity_safety_and_rollout_boundary() -> None:
+    """Agent-facing files are production surfaces, not generic boilerplate."""
+    agent_files = [
+        "AGENTS.md",
+        "CLAUDE.md",
+        ".github/copilot-instructions.md",
+        "llms.txt",
+    ]
+    forbidden_ops = [
+        "systemctl restart hermes-gateway",
+        "kill hermes-gateway",
+        "pkill hermes",
+        "kill -9",
+    ]
+
+    for relative_path in agent_files:
+        text = (ROOT / relative_path).read_text(encoding="utf-8")
+        assert "agent-borg" in text, relative_path
+        assert "borg-mcp" in text, relative_path
+        assert "borg-farther/Borg-Directory" in text, relative_path
+        assert "first-10" in text.lower(), relative_path
+        assert "public self-serve" in text.lower(), relative_path
+        for forbidden in forbidden_ops:
+            assert forbidden not in text, f"{forbidden!r} leaked into {relative_path}"

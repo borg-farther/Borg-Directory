@@ -43,11 +43,11 @@ user-invocable: true
 metadata: {{"openclaw":{{"emoji":"{emoji}","homepage":"https://github.com/borg-farther/Borg-Directory","always":false}}}}
 ---
 
-# 🧠 Borg — Collective Intelligence for AI Agents
+# Borg — failure memory for AI coding agents
 
 {body}
 ---
-*Powered by [borg](https://github.com/borg-farther/Borg-Directory) — collective intelligence for AI agents.*
+*Powered by [borg](https://github.com/borg-farther/Borg-Directory) — failure memory for AI coding agents.*
 """
 
 
