@@ -5,14 +5,14 @@ build-backend = "setuptools.build_meta"
 [project]
 name = "agent-borg"
 version = "3.3.10"
-description = "Collective memory MCP server for AI coding agents"
+description = "Failure memory CLI and MCP server for AI coding agents"
 readme = "README.md"
 requires-python = ">=3.10"
 license = "MIT"
 authors = [
   { name = "Borg contributors" }
 ]
-keywords = ["mcp", "ai-agents", "debugging", "agent-tools", "collective-memory"]
+keywords = ["mcp", "ai-agents", "debugging", "agent-tools", "failure-memory"]
 classifiers = [
   "Development Status :: 4 - Beta",
   "Intended Audience :: Developers",

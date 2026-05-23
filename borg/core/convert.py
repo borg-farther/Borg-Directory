@@ -742,9 +742,9 @@ def generate_bridge_skill(packs: list) -> str:
     lines.append("")
     
     # Title
-    lines.append("# 🧠 Borg — Collective Intelligence for AI Agents")
+    lines.append("# Borg — failure memory for AI coding agents")
     lines.append("")
-    lines.append("Stop burning tokens on problems someone else already solved.")
+    lines.append("Stop repeating debugging dead ends your agent can avoid.")
     lines.append("")
     
     # When to Use
@@ -799,7 +799,7 @@ def generate_bridge_skill(packs: list) -> str:
     
     # Footer
     lines.append("---")
-    lines.append("*Powered by [borg](https://github.com/borg-farther/Borg-Directory) — collective intelligence for AI agents.*")
+    lines.append("*Powered by [borg](https://github.com/borg-farther/Borg-Directory) — failure memory for AI coding agents.*")
 
     return "\n".join(lines)
 

@@ -1631,7 +1631,7 @@ def _cmd_status(args: argparse.Namespace) -> int:
 def main() -> int:
     parser = argparse.ArgumentParser(
         prog="borg",
-        description="Borg — Semantic reasoning cache for AI agents.",
+        description="Borg — failure memory for AI coding agents.",
         formatter_class=argparse.RawDescriptionHelpFormatter,
         epilog="""Quick Start:
   borg start                     First time? Start here — paste an error, get a fix
@@ -1902,7 +1902,7 @@ in v3.2.4 to fix the observe→search roundtrip bug from the P1.1 experiment."""
 
     # borg atom — privacy-safe learning atom utilities
     p = sub.add_parser("atom", help="Manage signed, sanitized, revocable learning atoms",
-        description="Manage signed, sanitized, revocable learning atoms for privacy-safe collective intelligence.",
+        description="Manage signed, sanitized, revocable learning atoms for privacy-safe failure memory.",
         formatter_class=argparse.RawDescriptionHelpFormatter,
         epilog="""Publish uses fail-closed policy gates and publishes no raw traces.
 

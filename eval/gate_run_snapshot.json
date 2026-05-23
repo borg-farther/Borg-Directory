@@ -25,15 +25,15 @@
         "-m",
         "pytest",
         "-q",
-        "borg/tests/test_version_consistency.py",
-        "borg/tests/test_distribution_readiness.py",
-        "borg/tests/test_runtime_doctor.py"
+        "tests/packaging/test_version_consistency.py",
+        "tests/packaging/test_distribution_readiness.py",
+        "tests/cli/test_runtime_doctor.py"
       ],
       "name": "version_distribution_tests",
       "rc": 0,
-      "started": "2026-05-18T07:44:34.539509+00:00",
+      "started": "2026-05-23T20:42:03.366067+00:00",
       "stderr": "",
-      "stdout": ".........                                                                [100%]\n9 passed in 0.09s\n"
+      "stdout": "..........                                                               [100%]\n10 passed in 0.05s\n"
     },
     {
       "cmd": [
@@ -41,22 +41,22 @@
         "-m",
         "pytest",
         "-q",
-        "borg/tests/test_atom_tenant.py",
-        "borg/tests/test_atom_policy.py",
-        "borg/tests/test_learning_atoms.py",
-        "borg/tests/test_atom_store.py",
-        "borg/tests/test_atom_retrieval_firewall.py",
-        "borg/tests/test_learning_atom_publish.py",
-        "borg/tests/test_cli_atom.py",
-        "borg/tests/test_privacy_structured.py",
-        "borg/tests/test_prompt_injection.py",
-        "borg/tests/test_privacy.py"
+        "tests/security/test_atom_tenant.py",
+        "tests/security/test_atom_policy.py",
+        "tests/security/test_learning_atoms.py",
+        "tests/security/test_atom_store.py",
+        "tests/security/test_atom_retrieval_firewall.py",
+        "tests/security/test_learning_atom_publish.py",
+        "tests/cli/test_cli_atom.py",
+        "tests/security/test_privacy_structured.py",
+        "tests/security/test_prompt_injection.py",
+        "tests/security/test_privacy.py"
       ],
       "name": "atom_security_tests",
       "rc": 0,
-      "started": "2026-05-18T07:44:35.291485+00:00",
+      "started": "2026-05-23T20:42:04.002922+00:00",
       "stderr": "",
-      "stdout": "........................................................................ [ 82%]\n...............                                                          [100%]\n87 passed in 0.36s\n"
+      "stdout": "........................................................................ [ 82%]\n...............                                                          [100%]\n87 passed in 0.28s\n"
     },
     {
       "cmd": [
@@ -65,7 +65,7 @@
       ],
       "name": "security_gate",
       "rc": 0,
-      "started": "2026-05-18T07:44:36.361331+00:00",
+      "started": "2026-05-23T20:42:04.908488+00:00",
       "stderr": "",
       "stdout": "PASS: Borg security hardening policy gate\n"
     },
@@ -76,7 +76,7 @@
       ],
       "name": "atom_fixture_corpus",
       "rc": 0,
-      "started": "2026-05-18T07:44:36.437338+00:00",
+      "started": "2026-05-23T20:42:04.977214+00:00",
       "stderr": "",
       "stdout": "{\n  \"success\": true,\n  \"total\": 10,\n  \"failed\": []\n}\n"
     },
@@ -91,9 +91,9 @@
       ],
       "name": "load_10",
       "rc": 0,
-      "started": "2026-05-18T07:44:36.519097+00:00",
+      "started": "2026-05-23T20:42:05.068353+00:00",
       "stderr": "",
-      "stdout": "{\n  \"concurrency_model\": \"asyncio_logical_users\",\n  \"duration_seconds\": 30.0,\n  \"failures\": 0,\n  \"latency_ms\": {\n    \"avg\": 0.49401962254474585,\n    \"max\": 53.078750032000244,\n    \"p50\": 0.4734150134027004,\n    \"p95\": 0.6281427631620318,\n    \"p99\": 0.8716626581735909\n  },\n  \"operation\": \"learning_atom_retrieval_firewall_privacy_prompt_scan\",\n  \"passed\": true,\n  \"per_user_min_requests\": 5979,\n  \"requests_per_second\": 1993.1333333333334,\n  \"sample_failures\": [],\n  \"success_rate\": 1.0,\n  \"successes\": 59794,\n  \"thresholds\": {\n    \"min_requests_per_user\": 1.0,\n    \"p95_ms_max\": 2000.0,\n    \"p99_ms_max\": 4000.0,\n    \"success_rate_min\": 0.95\n  },\n  \"timestamp\": \"2026-05-18T07:45:06.621553+00:00\",\n  \"total_requests\": 59794,\n  \"users\": 10\n}\n"
+      "stdout": "{\n  \"concurrency_model\": \"asyncio_logical_users\",\n  \"duration_seconds\": 30.0,\n  \"failures\": 0,\n  \"latency_ms\": {\n    \"avg\": 0.4196978200266779,\n    \"max\": 1.2744090054184198,\n    \"p50\": 0.3946599317714572,\n    \"p95\": 0.5762591026723385,\n    \"p99\": 0.6065821251831948\n  },\n  \"operation\": \"learning_atom_retrieval_firewall_privacy_prompt_scan\",\n  \"passed\": true,\n  \"per_user_min_requests\": 7046,\n  \"requests_per_second\": 2348.8,\n  \"sample_failures\": [],\n  \"success_rate\": 1.0,\n  \"successes\": 70464,\n  \"thresholds\": {\n    \"min_requests_per_user\": 1.0,\n    \"p95_ms_max\": 2000.0,\n    \"p99_ms_max\": 4000.0,\n    \"success_rate_min\": 0.95\n  },\n  \"timestamp\": \"2026-05-23T20:42:35.169345+00:00\",\n  \"total_requests\": 70464,\n  \"users\": 10\n}\n"
     },
     {
       "cmd": [
@@ -106,9 +106,9 @@
       ],
       "name": "load_100",
       "rc": 0,
-      "started": "2026-05-18T07:45:06.645545+00:00",
+      "started": "2026-05-23T20:42:35.186336+00:00",
       "stderr": "",
-      "stdout": "{\n  \"concurrency_model\": \"asyncio_logical_users\",\n  \"duration_seconds\": 30.0,\n  \"failures\": 0,\n  \"latency_ms\": {\n    \"avg\": 0.48331129045512666,\n    \"max\": 4.875130020081997,\n    \"p50\": 0.4826189251616597,\n    \"p95\": 0.6004410097375512,\n    \"p99\": 0.6370391696691513\n  },\n  \"operation\": \"learning_atom_retrieval_firewall_privacy_prompt_scan\",\n  \"passed\": true,\n  \"per_user_min_requests\": 599,\n  \"requests_per_second\": 1999.3666666666666,\n  \"sample_failures\": [],\n  \"success_rate\": 1.0,\n  \"successes\": 59981,\n  \"thresholds\": {\n    \"min_requests_per_user\": 1.0,\n    \"p95_ms_max\": 1000.0,\n    \"p99_ms_max\": 3000.0,\n    \"success_rate_min\": 0.95\n  },\n  \"timestamp\": \"2026-05-18T07:45:36.770025+00:00\",\n  \"total_requests\": 59981,\n  \"users\": 100\n}\n"
+      "stdout": "{\n  \"concurrency_model\": \"asyncio_logical_users\",\n  \"duration_seconds\": 30.0,\n  \"failures\": 0,\n  \"latency_ms\": {\n    \"avg\": 0.43180075371041415,\n    \"max\": 8.023671107366681,\n    \"p50\": 0.4048091359436512,\n    \"p95\": 0.5875204456970096,\n    \"p99\": 0.6236810539849102\n  },\n  \"operation\": \"learning_atom_retrieval_firewall_privacy_prompt_scan\",\n  \"passed\": true,\n  \"per_user_min_requests\": 672,\n  \"requests_per_second\": 2243.0,\n  \"sample_failures\": [],\n  \"success_rate\": 1.0,\n  \"successes\": 67290,\n  \"thresholds\": {\n    \"min_requests_per_user\": 1.0,\n    \"p95_ms_max\": 1000.0,\n    \"p99_ms_max\": 3000.0,\n    \"success_rate_min\": 0.95\n  },\n  \"timestamp\": \"2026-05-23T20:43:05.286983+00:00\",\n  \"total_requests\": 67290,\n  \"users\": 100\n}\n"
     },
     {
       "cmd": [
@@ -121,9 +121,9 @@
       ],
       "name": "load_1000",
       "rc": 0,
-      "started": "2026-05-18T07:45:36.786015+00:00",
+      "started": "2026-05-23T20:43:05.304842+00:00",
       "stderr": "",
-      "stdout": "{\n  \"concurrency_model\": \"asyncio_logical_users\",\n  \"duration_seconds\": 30.0,\n  \"failures\": 0,\n  \"latency_ms\": {\n    \"avg\": 0.4828815213195873,\n    \"max\": 15.29224799014628,\n    \"p50\": 0.4715999821200967,\n    \"p95\": 0.6051470059901476,\n    \"p99\": 0.7191141927614809\n  },\n  \"operation\": \"learning_atom_retrieval_firewall_privacy_prompt_scan\",\n  \"passed\": true,\n  \"per_user_min_requests\": 59,\n  \"requests_per_second\": 1998.2333333333333,\n  \"sample_failures\": [],\n  \"success_rate\": 1.0,\n  \"successes\": 59947,\n  \"thresholds\": {\n    \"min_requests_per_user\": 1.0,\n    \"p95_ms_max\": 500.0,\n    \"p99_ms_max\": 1500.0,\n    \"success_rate_min\": 0.99\n  },\n  \"timestamp\": \"2026-05-18T07:46:06.931035+00:00\",\n  \"total_requests\": 59947,\n  \"users\": 1000\n}\n"
+      "stdout": "{\n  \"concurrency_model\": \"asyncio_logical_users\",\n  \"duration_seconds\": 30.0,\n  \"failures\": 0,\n  \"latency_ms\": {\n    \"avg\": 0.4194050861892789,\n    \"max\": 2.2249771282076836,\n    \"p50\": 0.39460998959839344,\n    \"p95\": 0.5758799961768091,\n    \"p99\": 0.6048608920536935\n  },\n  \"operation\": \"learning_atom_retrieval_firewall_privacy_prompt_scan\",\n  \"passed\": true,\n  \"per_user_min_requests\": 69,\n  \"requests_per_second\": 2304.866666666667,\n  \"sample_failures\": [],\n  \"success_rate\": 1.0,\n  \"successes\": 69146,\n  \"thresholds\": {\n    \"min_requests_per_user\": 1.0,\n    \"p95_ms_max\": 500.0,\n    \"p99_ms_max\": 1500.0,\n    \"success_rate_min\": 0.99\n  },\n  \"timestamp\": \"2026-05-23T20:43:35.455161+00:00\",\n  \"total_requests\": 69146,\n  \"users\": 1000\n}\n"
     },
     {
       "cmd": [
@@ -135,9 +135,9 @@
       ],
       "name": "readiness_1000_tests",
       "rc": 0,
-      "started": "2026-05-18T07:46:06.949846+00:00",
+      "started": "2026-05-23T20:43:35.476643+00:00",
       "stderr": "",
-      "stdout": "........                                                                 [100%]\n8 passed in 0.03s\n"
+      "stdout": "........                                                                 [100%]\n8 passed in 0.02s\n"
     },
     {
       "cmd": [
@@ -146,7 +146,7 @@
       ],
       "name": "real_user_rollout_gate",
       "rc": 1,
-      "started": "2026-05-18T07:46:07.564871+00:00",
+      "started": "2026-05-23T20:43:36.014603+00:00",
       "stderr": "",
       "stdout": "{\n  \"ready_for_10_controlled_beta\": true,\n  \"infrastructure_ready_for_100\": true,\n  \"ready_for_100_real_users\": false,\n  \"max_recommended_real_users_now\": 10,\n  \"blockers\": [\n    \"first-10 external-user evidence has not passed: verified=0/10, real_users=0/10, installs=0/8, useful=0/6, critical_incidents=0/0\"\n  ],\n  \"snapshot\": \"eval/real_user_rollout_gate_snapshot.json\",\n  \"report\": \"docs/20260517_BORG_100_REAL_USER_READINESS.md\"\n}\n"
     },
@@ -157,7 +157,7 @@
       ],
       "name": "scoreboard_final",
       "rc": 0,
-      "started": "2026-05-18T07:46:07.613168+00:00",
+      "started": "2026-05-23T20:43:36.063744+00:00",
       "stderr": "",
       "stdout": "/root/hermes-workspace/borg/PROJECT_STATUS.md\n/root/hermes-workspace/borg/eval/uat_scoreboard_snapshot.json\n"
     },
@@ -168,11 +168,11 @@
       ],
       "name": "scoreboard_after_decision",
       "rc": 0,
-      "started": "2026-05-18T07:46:07.668724+00:00",
+      "started": "2026-05-23T20:43:36.108917+00:00",
       "stderr": "",
       "stdout": "/root/hermes-workspace/borg/PROJECT_STATUS.md\n/root/hermes-workspace/borg/eval/uat_scoreboard_snapshot.json\n"
     }
   ],
   "synthetic_load_all_pass": true,
-  "timestamp": "2026-05-18T07:46:07.667878+00:00"
+  "timestamp": "2026-05-23T20:43:36.108175+00:00"
 }
