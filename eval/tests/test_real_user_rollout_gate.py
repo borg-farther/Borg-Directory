@@ -1,8 +1,6 @@
 from __future__ import annotations
 
 import json
-import subprocess
-import sys
 from pathlib import Path
 
 from eval import real_user_rollout_gate as rollout_gate
@@ -18,16 +16,12 @@ def test_real_user_rollout_gate_script_exists_and_mentions_no_fake_users() -> No
     assert "first-10 external-user evidence" in text
 
 
-def test_real_user_rollout_gate_blocks_100_when_first_10_scoreboard_empty() -> None:
-    proc = subprocess.run(
-        [sys.executable, "eval/real_user_rollout_gate.py"],
-        cwd=str(ROOT),
-        text=True,
-        capture_output=True,
-        timeout=60,
-    )
-    assert proc.returncode == 1
-    payload = json.loads(proc.stdout)
+def test_real_user_rollout_gate_blocks_100_when_first_10_scoreboard_empty(tmp_path, monkeypatch, capsys) -> None:
+    monkeypatch.setattr(rollout_gate, "SNAPSHOT", tmp_path / "real_user_rollout_gate_snapshot.json")
+    monkeypatch.setattr(rollout_gate, "REPORT", tmp_path / "20260517_BORG_100_REAL_USER_READINESS.md")
+
+    assert rollout_gate.main() == 1
+    payload = json.loads(capsys.readouterr().out)
     assert payload["ready_for_100_real_users"] is False
     assert payload["max_recommended_real_users_now"] in {0, 10}
     assert any("first-10 external-user evidence" in b for b in payload["blockers"])

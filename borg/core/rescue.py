@@ -15,6 +15,7 @@ same engine so manual and automated paths cannot drift.
 from __future__ import annotations
 
 from dataclasses import dataclass, asdict
+import re
 from typing import Any, Dict, List, Optional
 
 from borg.core.pack_taxonomy import (
@@ -50,6 +51,55 @@ def _as_text(value: Any) -> str:
     if value is None:
         return ""
     return str(value).strip()
+
+
+_IMPORT_TO_DISTRIBUTION = {
+    "bs4": "beautifulsoup4",
+    "cv2": "opencv-python",
+    "dateutil": "python-dateutil",
+    "dotenv": "python-dotenv",
+    "google.protobuf": "protobuf",
+    "jwt": "PyJWT",
+    "PIL": "Pillow",
+    "sklearn": "scikit-learn",
+    "yaml": "PyYAML",
+}
+
+_MISSING_MODULE_RE = re.compile(
+    r"(?:ModuleNotFoundError:\s*)?No module named\s+['\"]?([A-Za-z_][\w]*(?:\.[A-Za-z_][\w]*)*)['\"]?",
+    re.IGNORECASE,
+)
+
+
+def _missing_dependency_hint(error_text: str) -> Optional[Dict[str, str]]:
+    """Derive a concrete install command from common `No module named X` errors."""
+    match = _MISSING_MODULE_RE.search(error_text or "")
+    if not match:
+        return None
+    module = match.group(1)
+    top_level = module.split(".", 1)[0]
+    distribution = _IMPORT_TO_DISTRIBUTION.get(module) or _IMPORT_TO_DISTRIBUTION.get(top_level) or top_level
+    return {"module": module, "distribution": distribution}
+
+
+def _specialize_missing_dependency_actions(error_text: str, actions: List[str], limit: int = 3) -> List[str]:
+    """Replace generic `package-name` guidance with a copy-pasteable install hint."""
+    hint = _missing_dependency_hint(error_text)
+    if not hint:
+        return actions
+
+    module = hint["module"]
+    distribution = hint["distribution"]
+    specialized = [
+        f"install the distribution for import `{module}` — run/check: pip install {distribution}"
+    ]
+    for action in actions:
+        concrete = action.replace("<package-name>", distribution).replace("package-name", distribution)
+        if concrete not in specialized:
+            specialized.append(concrete)
+        if len(specialized) >= limit:
+            break
+    return specialized
 
 
 def _extract_actions(pack: Dict[str, Any], limit: int = 3) -> List[str]:
@@ -231,6 +281,8 @@ def rescue(task_or_error: str, *, source: str = "cli", show_guidance: bool = Tru
         )
 
     actions = _extract_actions(pack)
+    if problem_class == "missing_dependency":
+        actions = _specialize_missing_dependency_actions(text, actions)
     stops = _extract_stops(pack)
     verify = _extract_verify(pack)
     confidence = _confidence_from_evidence(pack)

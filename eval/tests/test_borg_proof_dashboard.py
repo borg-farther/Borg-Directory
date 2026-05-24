@@ -3,25 +3,31 @@ from __future__ import annotations
 import json
 import hashlib
 import re
-import subprocess
 from pathlib import Path
+
+from scripts import build_borg_proof_dashboard as dashboard
 
 ROOT = Path(__file__).resolve().parents[2]
 
 
-def test_borg_proof_dashboard_artifacts_exist_and_are_honest():
-    subprocess.run(
-        ["python", "scripts/build_borg_proof_dashboard.py"],
-        cwd=ROOT,
-        check=True,
-        stdout=subprocess.PIPE,
-        stderr=subprocess.PIPE,
-        text=True,
-    )
-    json_path = ROOT / "eval" / "borg_proof_dashboard.json"
-    md_path = ROOT / "docs" / "BORG_PROOF_DASHBOARD.md"
-    html_path = ROOT / "docs" / "BORG_PROOF_DASHBOARD.html"
-    public_path = ROOT / "docs" / "public" / "proof-dashboard" / "index.html"
+def test_borg_proof_dashboard_artifacts_exist_and_are_honest(tmp_path, monkeypatch):
+    docs = tmp_path / "docs"
+    eval_dir = tmp_path / "eval"
+    public = docs / "public" / "proof-dashboard"
+    monkeypatch.setattr(dashboard, "DOCS", docs)
+    monkeypatch.setattr(dashboard, "EVAL", eval_dir)
+    monkeypatch.setattr(dashboard, "PUBLIC", public)
+    monkeypatch.setattr(dashboard, "JSON_OUT", eval_dir / "borg_proof_dashboard.json")
+    monkeypatch.setattr(dashboard, "MD_OUT", docs / "BORG_PROOF_DASHBOARD.md")
+    monkeypatch.setattr(dashboard, "HTML_OUT", docs / "BORG_PROOF_DASHBOARD.html")
+    monkeypatch.setattr(dashboard, "PUBLIC_OUT", public / "index.html")
+
+    assert dashboard.main() == 0
+
+    json_path = dashboard.JSON_OUT
+    md_path = dashboard.MD_OUT
+    html_path = dashboard.HTML_OUT
+    public_path = dashboard.PUBLIC_OUT
     for path in [json_path, md_path, html_path, public_path]:
         assert path.exists(), path
     data = json.loads(json_path.read_text(encoding="utf-8"))

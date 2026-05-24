@@ -411,6 +411,14 @@ body{font-family:system-ui,-apple-system,Segoe UI,sans-serif;max-width:1180px;ma
 </body></html>"""
 
 
+def display_path(path: Path) -> str:
+    """Return a stable path for CLI output even when tests redirect outputs."""
+    try:
+        return str(path.relative_to(ROOT))
+    except ValueError:
+        return str(path)
+
+
 def main() -> int:
     DOCS.mkdir(parents=True, exist_ok=True)
     EVAL.mkdir(parents=True, exist_ok=True)
@@ -422,10 +430,10 @@ def main() -> int:
     MD_OUT.write_text(md, encoding="utf-8")
     HTML_OUT.write_text(html_text, encoding="utf-8")
     PUBLIC_OUT.write_text(html_text, encoding="utf-8")
-    print(MD_OUT.relative_to(ROOT))
-    print(HTML_OUT.relative_to(ROOT))
-    print(JSON_OUT.relative_to(ROOT))
-    print(PUBLIC_OUT.relative_to(ROOT))
+    print(display_path(MD_OUT))
+    print(display_path(HTML_OUT))
+    print(display_path(JSON_OUT))
+    print(display_path(PUBLIC_OUT))
     return 0
 
 if __name__ == "__main__":

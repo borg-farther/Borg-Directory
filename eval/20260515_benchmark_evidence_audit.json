@@ -1,0 +1,24 @@
+{
+  "schema_version": 1,
+  "generated_at_utc": "2026-05-15T11:30:00Z",
+  "status": "NO_VALID_EVIDENCE",
+  "frontier_better_than_proven": false,
+  "reason": "No controlled frontier benchmark with positive duration, positive/explicitly-unavailable token metrics, matched control/treatment rows, and statistical confidence was found. The inspected guild-benchmark control artifact is zero-duration/zero-token and cannot support a frontier-better-than claim.",
+  "inspected_artifacts": [
+    {
+      "path": "/root/hermes-workspace/guild-benchmark/results/02_control_20260327_153709.json",
+      "status": "invalid_for_frontier_claim",
+      "duration_seconds": 0.0,
+      "tokens_used": 0,
+      "token_delta": 0,
+      "why_invalid": "duration_seconds=0.0 and tokens_used=0/token_delta=0 make this a smoke/control artifact, not comparative outcome evidence."
+    }
+  ],
+  "required_before_any_frontier_claim": [
+    "pre-registered matched tasks",
+    "randomized control/treatment or baseline/treatment arms on the same tasks",
+    "current frontier baseline named explicitly",
+    "verified success/time/token metrics with non-null deltas or explicit token-unavailable marker",
+    "confidence interval or statistical confidence report"
+  ]
+}

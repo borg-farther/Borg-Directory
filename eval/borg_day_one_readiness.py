@@ -143,7 +143,8 @@ def compile_snapshot() -> Dict[str, Any]:
                 "local gates, security surface, first-user surface, and rescue surface are green; "
                 "external outcome lift remains unproven"
                 if controlled_first_users_go
-                else "one or more local readiness/security/rescue evidence gates are incomplete"
+                else "one or more local readiness/security/rescue evidence gates are incomplete; "
+                "external outcome lift remains unproven"
             ),
         },
         "value": {

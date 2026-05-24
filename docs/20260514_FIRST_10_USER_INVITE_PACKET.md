@@ -1,7 +1,7 @@
 # Borg first-10 user invite packet
 
 Generated: 2026-05-14T18:25:05Z
-Rev: 2026-05-22T14:45:00Z — controlled first-10 beta install path targets PyPI package `agent-borg==3.3.11`; send only after PyPI latest and the fresh-install/MCP canary both pass for this version.
+Rev: 2026-05-22T14:45:00Z — controlled first-10 beta install path targets PyPI package `agent-borg==3.3.12`; send only after PyPI latest and the fresh-install/MCP canary both pass for this version.
 
 ## Exact invite message
 
@@ -9,14 +9,14 @@ Hi — we are running a small consented Borg beta for the first 10 external user
 
 ## Install commands
 
-STOP gate: these commands are for the post-release first-10 beta. Do **not** send them to external users until `python eval/run_pypi_fresh_install_canary.py` passes for `agent-borg==3.3.11`.
+STOP gate: these commands are for the post-release first-10 beta. Do **not** send them to external users until `python eval/run_pypi_fresh_install_canary.py` passes for `agent-borg==3.3.12`.
 
 Preferred isolated install:
 
 ```bash
 python -m pip install --user pipx
 python -m pipx ensurepath
-pipx install agent-borg==3.3.11
+pipx install agent-borg==3.3.12
 borg --version
 borg rescue "paste a REDACTED real error here"
 ```
@@ -25,7 +25,7 @@ Fallback if pipx is unavailable:
 
 ```bash
 python -m venv /tmp/borg-beta-venv
-/tmp/borg-beta-venv/bin/python -m pip install agent-borg==3.3.11
+/tmp/borg-beta-venv/bin/python -m pip install agent-borg==3.3.12
 /tmp/borg-beta-venv/bin/borg --version
 /tmp/borg-beta-venv/bin/borg rescue "paste a REDACTED real error here"
 ```

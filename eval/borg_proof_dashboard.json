@@ -9,7 +9,7 @@
     "evidence_gaps": [
       "No Borg analytics export proving active contributors or consumers was found.",
       "No first-10-user scoreboard with real outcomes exists yet.",
-      "100-real-user gate remains blocked: ['first-10 external-user evidence has not passed: verified=0/10, real_users=0/10, installs=0/8, useful=0/6, critical_incidents=0/0']",
+      "100-real-user gate remains blocked: ['PyPI latest/fresh-install package evidence is not green: latest metadata does not match source version', 'PyPI latest/fresh-install package evidence is not green: fresh install + MCP stdio canary is not green', 'first-10 external-user evidence has not passed: verified=0/10, real_users=0/10, installs=0/8, useful=0/6, critical_incidents=0/0']",
       "Host/runtime split-brain was not freshly reproduced by this dashboard build."
     ],
     "investor_affecting": [
@@ -26,16 +26,16 @@
     ],
     "user_affecting": [
       "No real external first-user install/rescue outcome has been recorded yet.",
-      "PyPI fresh-install canary is green.",
+      "PyPI fresh-install canary is not green yet.",
       "Unattended Git-only onboarding remains unproven until external user can install, configure MCP, and receive a useful rescue without maintainer intervention."
     ]
   },
   "controlled_first_10_beta": {
-    "answer": "GO",
+    "answer": "NO-GO",
     "conditions": [
-      "Controlled testers only.",
+      "Do not invite controlled beta users until PyPI latest, fresh-install, and stdio MCP canaries are green.",
       "Do not present as unattended public launch ready.",
-      "Capture real first-user outcome evidence immediately."
+      "Keep first-10 evidence capture prepared, but blocked until package evidence is green."
     ]
   },
   "evidence": [
@@ -61,25 +61,25 @@
       "sha256": "f324e9c6919b605f593d14efe41940cecfa0b0f5e39eb00ad000478df20ba7bc"
     },
     {
-      "claim_derived": "100-real-user gate=False; max_recommended_real_users=10; blockers=['first-10 external-user evidence has not passed: verified=0/10, real_users=0/10, installs=0/8, useful=0/6, critical_incidents=0/0']",
+      "claim_derived": "100-real-user gate=False; max_recommended_real_users=0; blockers=['PyPI latest/fresh-install package evidence is not green: latest metadata does not match source version', 'PyPI latest/fresh-install package evidence is not green: fresh install + MCP stdio canary is not green', 'first-10 external-user evidence has not passed: verified=0/10, real_users=0/10, installs=0/8, useful=0/6, critical_incidents=0/0']",
       "exists": true,
-      "freshness_timestamp": "2026-05-24T21:14:14.695332+00:00",
+      "freshness_timestamp": "2026-05-24T22:48:10.871404+00:00",
       "path": "eval/real_user_rollout_gate_snapshot.json",
-      "sha256": "fda67bdef1cf425f8930a00e7a43e11d4e5fa5deec67a5e75757689fbdfd9a68"
+      "sha256": "3fc744264d41b7d57eb611aaa5c2870d2a84bccdbdcd62b84bb6cdd2dab4a9f1"
     },
     {
-      "claim_derived": "public self-serve gate=False; max_recommended_real_users=10; blockers=['first-10 external-user evidence has not passed: verified=0/10, real_users=0/10, installs=0/8, useful=0/6, critical_incidents=0/0']",
+      "claim_derived": "public self-serve gate=False; max_recommended_real_users=0; blockers=['PyPI latest metadata does not match source version or required project URLs', 'PyPI fresh-install + MCP stdio canary snapshot is missing or failing', 'first-10 external-user evidence has not passed: verified=0/10, real_users=0/10, installs=0/8, useful=0/6, critical_incidents=0/0']",
       "exists": true,
-      "freshness_timestamp": "2026-05-24T21:09:22.554492+00:00",
+      "freshness_timestamp": "2026-05-24T22:48:10.769056+00:00",
       "path": "eval/public_self_serve_launch_gate_snapshot.json",
-      "sha256": "66b83c3e5c941676cbc7eb091142deb0c0d4b332928274aebdab341b6a885f8d"
+      "sha256": "6250f38e78936209239f102e31c3e7f9631d1b31aaeda920908d51252624991c"
     },
     {
-      "claim_derived": "PyPI fresh-install canary success=True; version=3.3.11",
+      "claim_derived": "PyPI fresh-install canary success=False; version=3.3.12",
       "exists": true,
-      "freshness_timestamp": "2026-05-24T21:09:22Z",
+      "freshness_timestamp": "2026-05-24T22:47:52Z",
       "path": "eval/pypi_fresh_install_snapshot.json",
-      "sha256": "68ac9d3aa510680781555144c519998b8ac772b6879690a3d1f8cb437d4e9a34"
+      "sha256": "febd97848af71fb4c98b18155545019a86fafb58ffe19dcee455e6becf72c074"
     },
     {
       "claim_derived": "logical load 10: passed=True; total_requests=68962; success_rate=1.0; p95_ms=0.5755376303568482; model=asyncio_logical_users",
@@ -103,18 +103,18 @@
       "sha256": "b1c1bde0a6b82cb61c68d326359b49b2bcfe3cf78608f3dbc7d52d6994996aec"
     },
     {
-      "claim_derived": "package version=3.3.11; scripts declared in project metadata",
+      "claim_derived": "package version=3.3.12; scripts declared in project metadata",
       "exists": true,
-      "freshness_timestamp": "2026-05-24T21:04:13Z",
+      "freshness_timestamp": "2026-05-24T22:42:25Z",
       "path": "pyproject.toml",
-      "sha256": "b8af575dae132c157cf848dbb5f53c84ebfd58a4983cd5ff0800e6c6d7db77ea"
+      "sha256": "a6898c4a2abd5f7e5f6f1dbd01eedb39fd7beb43f01a2c2a031deb89c73eaf54"
     },
     {
-      "claim_derived": "runtime __version__=3.3.11; top-level check() delegates to search",
+      "claim_derived": "runtime __version__=3.3.12; top-level check() delegates to search",
       "exists": true,
-      "freshness_timestamp": "2026-05-24T21:04:13Z",
+      "freshness_timestamp": "2026-05-24T22:42:26Z",
       "path": "borg/__init__.py",
-      "sha256": "0a6f8653c22cb2cda6101d26929893804c855e0c3e41ded6179fac491e33d785"
+      "sha256": "392f554ea0c3768fd4940de71a267bc30d97b98cc1e52ca4fba2e0e29cfb38dc"
     },
     {
       "claim_derived": "prior local status/readiness narrative used as contextual evidence only, not external adoption proof",
@@ -241,7 +241,7 @@
       }
     ]
   },
-  "generated_at_utc": "2026-05-24T21:14:14Z",
+  "generated_at_utc": "2026-05-24T23:02:04Z",
   "metrics": {
     "active_contributors_consumers": {
       "honesty_label": "MISSING_BORG_ANALYTICS_ARTIFACT",
@@ -305,7 +305,7 @@
     "max_recommended_real_users_now": {
       "honesty_label": "REAL_EXTERNAL_USERS",
       "provenance": "eval/real_user_rollout_gate_snapshot.json",
-      "value": 10
+      "value": 0
     },
     "packs": {
       "honesty_label": "REPO_FILE_COUNT",
@@ -320,7 +320,7 @@
     "pypi_fresh_install_canary": {
       "honesty_label": "PYPI_FRESH_INSTALL",
       "provenance": "eval/pypi_fresh_install_snapshot.json",
-      "value": "PASS"
+      "value": "FAIL"
     },
     "real_user_100_rollout_gate": {
       "honesty_label": "REAL_EXTERNAL_USERS",
@@ -330,7 +330,7 @@
     "source_version_consistency": {
       "honesty_label": "REPO_SOURCE",
       "provenance": "pyproject.toml; borg/__init__.py",
-      "value": "pyproject=3.3.11 runtime=3.3.11"
+      "value": "pyproject=3.3.12 runtime=3.3.12"
     },
     "uat_scoreboard_synthetic_load": {
       "honesty_label": "LOCAL_ARTIFACT_LOGICAL_USERS",
@@ -344,7 +344,7 @@
     }
   },
   "next_action_queue_before_sharing_git_with_first_user": [
-    "Use `pipx install agent-borg==3.3.11` with controlled first-10 beta testers and label it as beta evidence capture, not public launch.",
+    "Use `pipx install agent-borg==3.3.12` with controlled first-10 beta testers and label it as beta evidence capture, not public launch.",
     "Create a fresh-PyPI runbook: install package, run borg --version, configure MCP, run one rescue, capture exact timestamps and blockers.",
     "Record first user in the first-10 scoreboard template using a pseudonym and consented outcome fields.",
     "If any onboarding step fails, add artifact path/stdout/stderr and keep broad launch at NO-GO.",
@@ -352,15 +352,15 @@
     "Before any public claim, replace logical-user load evidence with real external-user evidence or clearly label the distinction."
   ],
   "repo": "https://github.com/borg-farther/Borg-Directory",
-  "source_revision": "1046eca0467a032fbc95f6b320809923f7bbe06b+dirty",
+  "source_revision": "79146eb95ade553464da5e16243a3c1acc083d70+dirty",
   "top_verdict": {
     "broad_public_launch": {
       "verdict": "NO-GO",
-      "why": "Public self-serve gate is blocked only by row-derived first-10 external-user evidence; PyPI/latest/fresh-install/MCP/docs gates are green."
+      "why": "Public self-serve gate is blocked until PyPI latest/fresh-install/MCP/docs gates pass and first-10 external evidence exists."
     },
     "controlled_first_10_beta": {
-      "verdict": "CONDITIONAL",
-      "why": "Controlled first-10 beta infrastructure is green; keep broad launch blocked until row-derived external-user evidence passes."
+      "verdict": "NO-GO",
+      "why": "Controlled first-10 beta is blocked until the public package path is green: PyPI latest metadata, fresh-install canary, stdio MCP canary, and docs guard must all pass."
     },
     "local_release_candidate": {
       "verdict": "NO-GO",
