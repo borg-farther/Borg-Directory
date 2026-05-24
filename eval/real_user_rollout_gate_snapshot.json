@@ -1,7 +1,5 @@
 {
   "blockers": [
-    "PyPI latest/fresh-install package evidence is not green: latest metadata does not match source version",
-    "PyPI latest/fresh-install package evidence is not green: fresh install + MCP stdio canary is not green",
     "first-10 external-user evidence has not passed: verified=0/10, real_users=0/10, installs=0/8, useful=0/6, critical_incidents=0/0"
   ],
   "first_10_external_evidence": {
@@ -39,9 +37,9 @@
     "passed_count": 26
   },
   "gate_type": "real_user_rollout",
-  "generated_at_utc": "2026-05-24T19:45:25.420696+00:00",
+  "generated_at_utc": "2026-05-24T21:09:22.648203+00:00",
   "important_distinction": "load/readiness snapshots are synthetic/logical users; this gate controls real external-user rollout",
-  "infrastructure_ready_for_100": false,
+  "infrastructure_ready_for_100": true,
   "load_gates": {
     "10": {
       "duration_seconds": 30.0,
@@ -73,45 +71,41 @@
     }
   },
   "local_infrastructure_ready_for_10": true,
-  "max_recommended_real_users_now": 0,
+  "max_recommended_real_users_now": 10,
   "no_fake_user_policy": "Do not mark first-10 complete or 100-real-user ready without consented external evidence rows.",
   "public_package_gate": {
-    "blockers": [
-      "PyPI latest/fresh-install package evidence is not green: latest metadata does not match source version",
-      "PyPI latest/fresh-install package evidence is not green: fresh install + MCP stdio canary is not green"
-    ],
-    "passed": false,
+    "blockers": [],
+    "passed": true,
     "pypi_fresh_install_and_mcp_stdio": {
       "exists": true,
       "expected_version": "3.3.11",
-      "failed_count": 1,
-      "failures": [
-        "pip_install_agent_borg"
-      ],
-      "generated_at_utc": "2026-05-24T19:45:08Z",
-      "mcp_server_info": null,
-      "mcp_stdio_canary_passed": false,
-      "passed": false,
+      "failed_count": 0,
+      "failures": [],
+      "generated_at_utc": "2026-05-24T21:09:22Z",
+      "mcp_server_info": {
+        "name": "borg-mcp-server",
+        "version": "3.3.11"
+      },
+      "mcp_stdio_canary_passed": true,
+      "passed": true,
       "path": "eval/pypi_fresh_install_snapshot.json",
       "version": "3.3.11"
     },
     "pypi_latest": {
-      "banned_keywords_present": [
-        "collective-memory"
-      ],
+      "banned_keywords_present": [],
       "expected_summary": "Failure memory CLI and MCP server for AI coding agents",
       "expected_version": "3.3.11",
-      "keyword_missing": true,
+      "keyword_missing": false,
       "keywords": [
         "agent-tools",
         "ai-agents",
-        "collective-memory",
         "debugging",
+        "failure-memory",
         "mcp"
       ],
-      "latest_version": "3.3.10",
+      "latest_version": "3.3.11",
       "package": "agent-borg",
-      "passed": false,
+      "passed": true,
       "project_urls": {
         "Documentation": "https://github.com/borg-farther/Borg-Directory#readme",
         "Homepage": "https://github.com/borg-farther/Borg-Directory",
@@ -127,6 +121,8 @@
         "numpy>=1.24.0; extra == \"embeddings\"",
         "scikit-learn>=1.3.0; extra == \"embeddings\"",
         "pynacl>=1.5.0; extra == \"crypto\"",
+        "fastapi>=0.110; extra == \"http\"",
+        "uvicorn>=0.27; extra == \"http\"",
         "pytest>=8.0.0; extra == \"dev\"",
         "tomli>=2.0.0; python_version < \"3.11\" and extra == \"dev\"",
         "pytest>=8.0.0; extra == \"all\"",
@@ -134,18 +130,18 @@
         "sentence-transformers>=2.2.0; extra == \"all\"",
         "numpy>=1.24.0; extra == \"all\"",
         "scikit-learn>=1.3.0; extra == \"all\"",
-        "pynacl>=1.5.0; extra == \"all\""
+        "pynacl>=1.5.0; extra == \"all\"",
+        "fastapi>=0.110; extra == \"all\"",
+        "uvicorn>=0.27; extra == \"all\""
       ],
-      "stale_copy": [
-        "Collective memory MCP server"
-      ],
-      "summary": "Collective memory MCP server for AI coding agents",
+      "stale_copy": [],
+      "summary": "Failure memory CLI and MCP server for AI coding agents",
       "url_mismatches": {},
       "url_missing": []
     }
   },
   "ready_for_100_real_users": false,
-  "ready_for_10_controlled_beta": false,
+  "ready_for_10_controlled_beta": true,
   "schema_version": 1,
   "security": {
     "missing": [],
