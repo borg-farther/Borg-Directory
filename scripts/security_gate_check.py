@@ -1,5 +1,5 @@
 #!/usr/bin/env python3
-"""Policy gate for Borg privacy-safe collective memory baseline."""
+"""Policy gate for Borg privacy-safe failure memory baseline."""
 
 from __future__ import annotations
 
@@ -28,9 +28,9 @@ REQUIRED_FILES = [
 ]
 
 REQUIRED_PRIVACY_SENTENCE = (
-    "Borg does not upload raw agent conversations, raw traces, tool outputs, source files, "
-    "screenshots, or environment variables to shared collective memory. Shared collective "
-    "memory accepts only signed, sanitized, revocable learning atoms."
+    "Borg is failure memory for AI coding agents. It does not upload raw agent conversations, "
+    "raw traces, tool outputs, source files, screenshots, or environment variables by default. "
+    "Any shared failure-memory path is opt-in and accepts only signed, sanitized, revocable learning atoms."
 )
 
 FORBIDDEN_CLAIMS = [
@@ -68,6 +68,12 @@ def main() -> int:
             fail(f"forbidden claim found: {claim}")
 
     baseline = json.loads((ROOT / "eval/security_hardening_baseline.json").read_text(encoding="utf-8"))
+    workflow_text = (ROOT / ".github" / "workflows" / "security-gates.yml").read_text(encoding="utf-8", errors="ignore")
+    if "pip-audit || true" in workflow_text or "bandit" in workflow_text and "bandit" in workflow_text.split("bandit", 1)[1].split("\n", 1)[0] and "|| true" in workflow_text.split("bandit", 1)[1].split("\n", 1)[0]:
+        fail("security workflow contains fail-open scanner command")
+    if "pip-audit" not in workflow_text:
+        fail("security workflow missing dependency audit command")
+
     for key in ["threat_model", "controls", "ci_gates", "release_blockers"]:
         if key not in baseline or not baseline[key]:
             fail(f"baseline missing populated key: {key}")

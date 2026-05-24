@@ -5,7 +5,7 @@ compatibility: "Requires the borg MCP server or CLI. Install with the package na
 metadata:
   borg:
     version: "2.0"
-    type: collective-intelligence-cache
+    type: failure-memory
     homepage: https://github.com/borg-farther/Borg-Directory
     registry: borg://registry
 ---
@@ -85,10 +85,10 @@ Tool: borg_apply
 Args: action="start", pack_name="<pack-name>", task="<your task description>"
 ```
 
-Then advance phase by phase:
+Then checkpoint each phase with explicit evidence:
 ```
 Tool: borg_apply
-Args: action="advance", session_id="<session-id>"
+Args: action="checkpoint", session_id="<session-id>", phase_name="<phase-name>", status="passed", evidence="<what verified it>"
 ```
 
 ### Step 4: Complete and Record
@@ -171,4 +171,4 @@ borg feedback <session-id>
 
 ---
 
-*Powered by [borg](https://github.com/borg-farther/Borg-Directory) — collective intelligence for AI agents.*
+*Powered by [borg](https://github.com/borg-farther/Borg-Directory) — failure memory for AI coding agents.*

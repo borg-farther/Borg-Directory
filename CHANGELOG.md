@@ -1,5 +1,13 @@
 # Changelog
 
+## 3.3.11 — 2026-05-23
+
+- Production hardening release: publishes the failure-memory package summary/keywords so PyPI no longer presents Borg as vague collective memory.
+- MCP stdio hardening: `borg-mcp` now accepts standard `Content-Length` framed JSON-RPC while preserving newline-delimited compatibility.
+- HTTP MCP hardening: adds explicit `borg-http`/`agent-borg[http]` packaging, loopback default, bearer-token enforcement for `/mcp`, and a fail-closed advisory tool allowlist.
+- Public-surface cleanup: removes stale collective-intelligence/OpenClaw/autopilot wording from shipped seeds, examples, and generator output.
+- Release boundary unchanged: controlled first-10 beta only; public self-serve and served remote MCP remain blocked until their separate evidence/runtime gates pass.
+
 ## 3.3.10 — 2026-05-22
 
 - Docs-only PyPI presentation sync release: publishes the PR #25 GitHub README/public-doc hardening to the PyPI long description.

@@ -1,4 +1,4 @@
-"""Guild embeddings engine for semantic search using sentence-transformers."""
+"""Borg failure memory embeddings for semantic search using sentence-transformers."""
 
 import io
 import os
@@ -23,7 +23,7 @@ from .store import AgentStore
 
 
 class EmbeddingEngine:
-    """Vector storage and similarity search for guild packs.
+    """Vector storage and similarity search for Borg failure memory packs.
     
     Uses sentence-transformers for encoding and SQLite for storage.
     Supports lazy model loading - model isn't loaded until first encode call.
@@ -62,14 +62,14 @@ class EmbeddingEngine:
     def _load_model(self):
         """Lazy load the sentence-transformers model."""
         if not _SENTENCE_TRANSFORMERS_AVAILABLE:
-            raise ImportError("Install guild-packs[embeddings] for semantic search")
+            raise ImportError("Install agent-borg[embeddings] for semantic search")
         if self._model is None:
             self._model = SentenceTransformer(self.model_name)
 
     def _get_embedding_dim(self) -> int:
         """Get embedding dimensionality without loading full model."""
         if not _SENTENCE_TRANSFORMERS_AVAILABLE:
-            raise ImportError("Install guild-packs[embeddings] for semantic search")
+            raise ImportError("Install agent-borg[embeddings] for semantic search")
         if self._model is None:
             model = SentenceTransformer(self.model_name)
             return model.get_sentence_embedding_dimension()

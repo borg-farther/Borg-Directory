@@ -1,5 +1,7 @@
 {
   "blockers": [
+    "PyPI latest metadata does not match source version or required project URLs",
+    "PyPI fresh-install + MCP stdio canary snapshot is missing or failing",
     "first-10 external-user evidence has not passed: verified=0/10, real_users=0/10, installs=0/8, useful=0/6, critical_incidents=0/0"
   ],
   "gate_type": "public_self_serve_launch",
@@ -7,6 +9,9 @@
     "docs_claim_guard": {
       "checked": [
         "README.md",
+        "PROJECT_STATUS.md",
+        "GO_NO_GO_DECISION.md",
+        "UAT_RESULTS.md",
         "docs/README.md",
         "docs/READINESS.md",
         "docs/INSTALL.md",
@@ -19,9 +24,7 @@
         "docs/20260514_PUBLIC_SELF_SERVE_LAUNCH_CLOSURE_PLAN.md",
         "docs/20260517_BORG_100_REAL_USER_READINESS.md",
         "docs/ROADMAP.md",
-        "docs/20260522_PUBLIC_PRESENTATION_AUDIT.md",
         "docs/20260522_BORG_PRODUCTION_DAY_ONE_HARDENING_PLAN.md",
-        "docs/20260522_BORG_3310_RELEASE_PREFLIGHT_PUBLISHED.md",
         "docs/PUBLIC_SELF_SERVE_LAUNCH_GO_NO_GO.md",
         "docs/VALUE_COMMUNICATION_DASHBOARD.md",
         "docs/VALUE_COMMUNICATION_DASHBOARD.html",
@@ -73,31 +76,42 @@
       "exists": true,
       "failed_count": 0,
       "failures": [],
-      "generated_at_utc": "2026-05-22T11:41:49Z",
+      "generated_at_utc": "2026-05-24T19:44:51Z",
       "passed": true,
       "passed_count": 26,
       "path": "eval/first_user_release_gate_snapshot.json"
     },
     "pypi_fresh_install_and_mcp_stdio": {
       "exists": true,
-      "expected_version": "3.3.10",
-      "failed_count": 0,
-      "failures": [],
-      "generated_at_utc": "2026-05-22T20:30:42Z",
-      "mcp_server_info": {
-        "name": "borg-mcp-server",
-        "version": "3.3.10"
-      },
-      "mcp_stdio_canary_passed": true,
-      "passed": true,
+      "expected_version": "3.3.11",
+      "failed_count": 1,
+      "failures": [
+        "pip_install_agent_borg"
+      ],
+      "generated_at_utc": "2026-05-24T19:45:08Z",
+      "mcp_server_info": null,
+      "mcp_stdio_canary_passed": false,
+      "passed": false,
       "path": "eval/pypi_fresh_install_snapshot.json",
-      "version": "3.3.10"
+      "version": "3.3.11"
     },
     "pypi_latest": {
-      "expected_version": "3.3.10",
+      "banned_keywords_present": [
+        "collective-memory"
+      ],
+      "expected_summary": "Failure memory CLI and MCP server for AI coding agents",
+      "expected_version": "3.3.11",
+      "keyword_missing": true,
+      "keywords": [
+        "agent-tools",
+        "ai-agents",
+        "collective-memory",
+        "debugging",
+        "mcp"
+      ],
       "latest_version": "3.3.10",
       "package": "agent-borg",
-      "passed": true,
+      "passed": false,
       "project_urls": {
         "Documentation": "https://github.com/borg-farther/Borg-Directory#readme",
         "Homepage": "https://github.com/borg-farther/Borg-Directory",
@@ -122,15 +136,19 @@
         "scikit-learn>=1.3.0; extra == \"all\"",
         "pynacl>=1.5.0; extra == \"all\""
       ],
+      "stale_copy": [
+        "Collective memory MCP server"
+      ],
+      "summary": "Collective memory MCP server for AI coding agents",
       "url_mismatches": {},
       "url_missing": []
     }
   },
-  "generated_at_utc": "2026-05-22T20:42:08.658397+00:00",
-  "max_recommended_real_users_now": 10,
-  "ready_for_controlled_first_10_beta": true,
+  "generated_at_utc": "2026-05-24T19:45:13.927834+00:00",
+  "max_recommended_real_users_now": 0,
+  "ready_for_controlled_first_10_beta": false,
   "ready_for_public_self_serve_launch": false,
   "schema_version": 1,
-  "source_version": "3.3.10",
+  "source_version": "3.3.11",
   "truth_policy": "Public self-serve is GO only after PyPI/fresh-install/MCP/docs gates pass AND row-derived first-10 external-user evidence passes. Synthetic users and aggregate-only edits never count."
 }

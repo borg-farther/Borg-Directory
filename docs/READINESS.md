@@ -2,11 +2,11 @@
 
 ## Current verdict
 
-- Controlled first-10 beta: **GO**.
-- Public waitlist / narrow beta: **GO only with the limits below disclosed**.
+- Controlled first-10 beta: **NO-GO until PyPI latest, fresh-install, and stdio MCP canaries are green**.
+- Public waitlist / narrow beta: **NO-GO until controlled first-10 package infrastructure is green and limits are disclosed**.
 - Public self-serve launch: **NO-GO until real external-user evidence exists**.
 
-## Why controlled beta is OK
+## What must pass before controlled beta
 
 - Public install path exists: `python3 -m pip install agent-borg`.
 - CLI entrypoints exist: `borg`, `borg-mcp`, `borg-doctor`.

@@ -1,4 +1,4 @@
-"""Borg — collective memory for AI coding agents.
+"""Borg — failure memory for AI coding agents.
 
 The top-level :func:`check` helper is intentionally tiny, but it must be real:
 it is the first API many agents try after ``import borg``.  Returning an empty
@@ -37,7 +37,7 @@ else:
 
         __version__ = _pkg_version("agent-borg")
     except (ImportError, PackageNotFoundError):
-        __version__ = "3.3.10"  # fallback only when package metadata is unavailable
+        __version__ = "3.3.11"  # fallback only when package metadata is unavailable
 
 
 def check(context: str, constraints: dict | None = None, top_k: int = 3) -> list[dict[str, Any]]:

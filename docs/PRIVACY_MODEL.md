@@ -2,7 +2,7 @@
 
 **Rev:** 20260503-0846
 
-Borg does not upload raw agent conversations, raw traces, tool outputs, source files, screenshots, or environment variables to shared collective memory. Shared collective memory accepts only signed, sanitized, revocable learning atoms.
+Borg is failure memory for AI coding agents. It does not upload raw agent conversations, raw traces, tool outputs, source files, screenshots, or environment variables by default. Any shared failure-memory path is opt-in and accepts only signed, sanitized, revocable learning atoms.
 
 ## Data zones
 
@@ -15,7 +15,7 @@ Borg does not upload raw agent conversations, raw traces, tool outputs, source f
 
 ## Default mode
 
-`borg.collective.mode = local_only`
+`borg.sharing.mode = local_only`
 
 Allowed values:
 
@@ -61,4 +61,4 @@ Shared memory accepts only `LearningAtom` envelopes containing:
 
 ## User risk posture
 
-Local-only use is the safe default. Sharing is opt-in and must pass policy. Borg should not be marketed as proven global collective intelligence until the C0/C1/C2 utility eval passes.
+Local-only use is the safe default. Sharing is opt-in and must pass policy. Borg should not be marketed as proven external-user lift until real-user evidence passes.

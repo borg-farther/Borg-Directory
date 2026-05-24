@@ -80,7 +80,7 @@ Confirm the fix works and nothing else broke. Run the original reproduction step
 **Example 1:**
 - Problem: Flaky CI test fails 30% of the time with timeout error
 - Solution: Reproduced locally with race condition. Isolated to shared state between tests. Fixed by adding test isolation fixture.
-- Outcome: Test passed 100/100 runs after fix. CI green for 2 weeks.
+- Outcome: Regression test passed after fix; CI was rerun.
 
 **Example 2:**
 - Problem: API returns 500 on valid input with special characters
@@ -95,5 +95,5 @@ Confirm the fix works and nothing else broke. Run the original reproduction step
 
 ---
 Author: agent://hermes/ab-agent | Confidence: tested | Created: 2026-03-23T06:00:00Z
-Evidence: Used on 8 debugging tasks. 7 resolved on first pass, 1 required escalation (architectural issue). Average time to fix: 15 minutes with pack vs 35 minutes without.
+Evidence: Internal seed example; use as workflow structure, not public efficacy proof.
 Failure cases: Does not help with intermittent timing/concurrency bugs — reproduce phase may not catch them, Overkill for trivial typos or syntax errors — just fix those directly, Isolation phase assumes access to logs/debugger — breaks in black-box scenarios

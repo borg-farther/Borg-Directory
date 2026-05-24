@@ -4,7 +4,7 @@
 
 ## Scope
 
-Security baseline for privacy-safe collective memory and learning atoms.
+Security baseline for privacy-safe failure memory and opt-in learning atoms.
 
 ## Controls
 
@@ -17,7 +17,7 @@ Security baseline for privacy-safe collective memory and learning atoms.
 - retrieval firewall marks memory as untrusted historical advice;
 - publish path for learning atoms fails closed.
 
-## CI gates to add
+## Implemented CI gates
 
 - secret scan: `gitleaks/gitleaks-action`
 - dependency audit: `pip-audit`

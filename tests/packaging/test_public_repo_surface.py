@@ -75,6 +75,12 @@ def test_generated_and_internal_artifacts_are_not_tracked_at_root() -> None:
     assert not any(ROOT_SCRIPT_RE.match(path) for path in root_files)
 
 
+def test_security_workflow_dependency_audit_is_fail_closed() -> None:
+    workflow = (ROOT / ".github" / "workflows" / "security-gates.yml").read_text(encoding="utf-8")
+    assert "pip-audit || true" not in workflow
+    assert "pip-audit" in workflow
+
+
 def test_archive_has_a_public_boundary_note() -> None:
     archive_readme = (ROOT / "docs" / "archive" / "README.md").read_text(encoding="utf-8")
     assert "not the current first-user product surface" in archive_readme
@@ -108,12 +114,32 @@ def test_public_positioning_uses_plain_failure_memory_language() -> None:
         "borg/integrations/http_server.py",
         "borg/core/convert.py",
         "borg/core/openclaw_converter.py",
+        "borg/db/embeddings.py",
         "borg/seeds_data/borg/SKILL.md",
+        "borg/seeds_data/borg-autopilot/SKILL.md",
+        "examples/openclaw-skill/SKILL.md",
+        "examples/skills/borg/SKILL.md",
+        "examples/skills/guild-autopilot/SKILL.md",
+        "docs/SECURITY_HARDENING_BASELINE.md",
+        "docs/PRIVACY_MODEL.md",
     ]
     banned_snippets = [
         "Semantic reasoning cache",
+        "Collective memory MCP server",
+        "collective memory MCP server",
+        "collective memory",
+        "shared collective memory",
+        "collective-intelligence-cache",
+        "collective agent intelligence",
         "collective intelligence for AI agents",
         "Collective Intelligence for AI Agents",
+        "battle-tested workflows from collective agent intelligence",
+        "thousands of agents",
+        "guild-packs[embeddings]",
+        "action=\"advance\"",
+        "test-recovery",
+        "Zero-config",
+        "zero-config",
         "magic success-rate booster",
         "god-tier",
         "world-class",

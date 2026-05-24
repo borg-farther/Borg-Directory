@@ -4,14 +4,14 @@ Generated: 2026-05-14 18:39 UTC
 
 ## Current state
 
-Borg's package path is **ready for controlled first-10 beta sharing**: `agent-borg==3.3.10` is live on PyPI, the fresh-install/stdio MCP canary passed, and the default branch CI/security gates are green.
+Borg's source package path is **ready for controlled first-10 beta after release publication**: local `agent-borg==3.3.11` wheel/fresh-install gates pass, but production PyPI upload and post-upload canary are still pending.
 
 Public self-serve launch remains **NO-GO** until row-derived first-10 external-user evidence passes. Served remote MCP remains a separate runtime cutover/canary channel, not proven by the PyPI stdio release.
 
 Hard evidence already completed:
 
-- Branch/PR hardening for 3.3.10: merged into `main`
-- PyPI fresh-install/MCP canary for `agent-borg==3.3.10`: PASS
+- Branch/source hardening for 3.3.11: local release candidate in this branch
+- Local wheel/fresh-install/MCP canary for `agent-borg==3.3.11`: PASS
 - security baseline: PASS
 - privacy/prompt-injection/atom/firewall tests: PASS
 - source canaries: PASS
@@ -57,14 +57,14 @@ Two true blockers remain before broader launch claims:
    - `docs/LIVE_MCP_SELF_SERVE_CANARY.md`
 5. If any stale guidance appears, self-serve remains NO.
 
-### Phase B — package release/canary closure (complete)
+### Phase B — package release/canary closure (pending for 3.3.11)
 
-Completed proof lives in:
+Prior 3.3.10 proof lives in:
 
-- `docs/20260522_BORG_3310_RELEASE_PREFLIGHT_PUBLISHED.md`
-- `eval/pypi_fresh_install_snapshot.json`
+- `docs/20260522_BORG_3310_RELEASE_PREFLIGHT_PUBLISHED.md` (historical)
+- `eval/pypi_fresh_install_snapshot.json` (current 3.3.11 canary fails until upload)
 
-Current package path status: `agent-borg==3.3.10` is published, PyPI metadata matches the repo, and the isolated fresh-install/stdio MCP canary passes.
+Current package path status: source `agent-borg==3.3.11` local wheel/fresh-install canary passes. Production PyPI latest remains 3.3.10 until explicit upload approval; the PyPI fresh-install canary is expected to fail before that upload.
 
 ### Phase C — first-10 user sprint
 
@@ -75,8 +75,8 @@ For each user:
 1. Send invite and privacy warning.
 2. Record consent.
 3. User runs one of:
-   - `pipx install agent-borg==3.3.10`
-   - fallback venv install from PyPI: `/tmp/borg-beta-venv/bin/python -m pip install agent-borg==3.3.10`
+   - `pipx install agent-borg==3.3.11`
+   - fallback venv install from PyPI: `/tmp/borg-beta-venv/bin/python -m pip install agent-borg==3.3.11`
    - source-branch install only for maintainer-approved pre-release testing, never the default first-10 path.
 4. User runs:
    - `borg --version`

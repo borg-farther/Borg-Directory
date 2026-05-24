@@ -29,6 +29,15 @@ from eval.first_10_evidence import evaluate_scoreboard
 
 SNAPSHOT = ROOT / "eval" / "public_self_serve_launch_gate_snapshot.json"
 REPORT = ROOT / "docs" / "PUBLIC_SELF_SERVE_LAUNCH_GO_NO_GO.md"
+EXPECTED_PYPI_SUMMARY = "Failure memory CLI and MCP server for AI coding agents"
+REQUIRED_PYPI_KEYWORD = "failure-memory"
+BANNED_PYPI_KEYWORDS = {"collective-memory"}
+BANNED_PYPI_COPY = [
+    "Collective memory MCP server",
+    "Semantic reasoning cache",
+    "Collective Intelligence for AI Agents",
+    "collective intelligence for AI agents",
+]
 
 CURRENT_CLAIM_DOCS = [
     Path("README.md"),
@@ -47,9 +56,7 @@ CURRENT_CLAIM_DOCS = [
     Path("docs/20260514_PUBLIC_SELF_SERVE_LAUNCH_CLOSURE_PLAN.md"),
     Path("docs/20260517_BORG_100_REAL_USER_READINESS.md"),
     Path("docs/ROADMAP.md"),
-    Path("docs/20260522_PUBLIC_PRESENTATION_AUDIT.md"),
     Path("docs/20260522_BORG_PRODUCTION_DAY_ONE_HARDENING_PLAN.md"),
-    Path("docs/20260522_BORG_3310_RELEASE_PREFLIGHT_PUBLISHED.md"),
     Path("docs/PUBLIC_SELF_SERVE_LAUNCH_GO_NO_GO.md"),
     Path("docs/VALUE_COMMUNICATION_DASHBOARD.md"),
     Path("docs/VALUE_COMMUNICATION_DASHBOARD.html"),
@@ -97,6 +104,8 @@ def fetch_pypi_latest(package: str = "agent-borg", timeout: int = 30) -> dict[st
         "package": package,
         "url": url,
         "version": data.get("info", {}).get("version"),
+        "summary": data.get("info", {}).get("summary") or "",
+        "keywords": data.get("info", {}).get("keywords") or "",
         "project_urls": data.get("info", {}).get("project_urls") or {},
         "requires_dist": data.get("info", {}).get("requires_dist") or [],
     }
@@ -125,12 +134,35 @@ def pypi_latest_check(expected_version: str, *, fetch_network: bool = True, pypi
         if project_urls.get(key) != expected
     }
     latest = pypi_data.get("version")
-    passed = latest == expected_version and not url_missing and not url_mismatches
+    summary = str(pypi_data.get("summary") or "")
+    keywords = {
+        token.strip()
+        for token in re.split(r"[,\s]+", str(pypi_data.get("keywords") or ""))
+        if token.strip()
+    }
+    stale_copy = [snippet for snippet in BANNED_PYPI_COPY if snippet in summary]
+    keyword_missing = REQUIRED_PYPI_KEYWORD not in keywords
+    banned_keywords_present = sorted(keywords & BANNED_PYPI_KEYWORDS)
+    passed = (
+        latest == expected_version
+        and not url_missing
+        and not url_mismatches
+        and summary == EXPECTED_PYPI_SUMMARY
+        and not keyword_missing
+        and not banned_keywords_present
+        and not stale_copy
+    )
     return {
         "passed": passed,
         "package": pypi_data.get("package", "agent-borg"),
         "latest_version": latest,
         "expected_version": expected_version,
+        "summary": summary,
+        "expected_summary": EXPECTED_PYPI_SUMMARY,
+        "keywords": sorted(keywords),
+        "keyword_missing": keyword_missing,
+        "banned_keywords_present": banned_keywords_present,
+        "stale_copy": stale_copy,
         "url_missing": url_missing,
         "url_mismatches": url_mismatches,
         "requires_dist": pypi_data.get("requires_dist") or [],
@@ -175,7 +207,13 @@ def pypi_fresh_install_check(path: Path, expected_version: str) -> dict[str, Any
     }
 
 
-def docs_claim_guard(paths: list[Path], expected_version: str, *, public_evidence_ready: bool) -> dict[str, Any]:
+def docs_claim_guard(
+    paths: list[Path],
+    expected_version: str,
+    *,
+    public_evidence_ready: bool,
+    package_evidence_ready: bool = True,
+) -> dict[str, Any]:
     violations: list[dict[str, Any]] = []
     checked: list[str] = []
     for rel in paths:
@@ -219,6 +257,32 @@ def docs_claim_guard(paths: list[Path], expected_version: str, *, public_evidenc
                         continue
                     violations.append({"path": str(rel), "line": line, "kind": label, "detail": match.group(0)[:180]})
 
+        if not package_evidence_ready:
+            for line_number, line_text in enumerate(text.splitlines(), start=1):
+                lower = line_text.lower()
+                claims_controlled_go = (
+                    "controlled first-10" in lower
+                    and "go" in lower
+                    and "no-go" not in lower
+                    and not re.search(r"(?i)\b(after|until|pending|not yet|only after)\b", line_text)
+                )
+                claims_package_green = (
+                    "pypi latest" in lower
+                    and "fresh-install" in lower
+                    and "stdio mcp" in lower
+                    and "green" in lower
+                    and "not green" not in lower
+                    and "not yet" not in lower
+                    and not re.search(r"(?i)\b(after|until|pending|not yet|only after|before)\b", line_text)
+                )
+                if claims_controlled_go or claims_package_green:
+                    violations.append({
+                        "path": str(rel),
+                        "line": line_number,
+                        "kind": "controlled first-10 package GO before PyPI canary",
+                        "detail": line_text[:180],
+                    })
+
     return {"passed": not violations, "checked": checked, "violations": violations}
 
 
@@ -250,9 +314,15 @@ def compile_gate(*, fetch_network: bool = True, pypi_data: dict[str, Any] | None
     first_user = first_user_release_check(ROOT / "eval" / "first_user_release_gate_snapshot.json")
     pypi_latest = pypi_latest_check(version, fetch_network=fetch_network, pypi_data=pypi_data)
     pypi_fresh = pypi_fresh_install_check(ROOT / "eval" / "pypi_fresh_install_snapshot.json", version)
-    docs = docs_claim_guard(CURRENT_CLAIM_DOCS, version, public_evidence_ready=first_10["passed"])
+    package_evidence_ready = bool(pypi_latest["passed"] and pypi_fresh["passed"])
+    docs = docs_claim_guard(
+        CURRENT_CLAIM_DOCS,
+        version,
+        public_evidence_ready=first_10["passed"],
+        package_evidence_ready=package_evidence_ready,
+    )
 
-    infrastructure_ready = bool(first_user["passed"] and pypi_latest["passed"] and pypi_fresh["passed"] and docs["passed"])
+    infrastructure_ready = bool(first_user["passed"] and package_evidence_ready and docs["passed"])
     public_self_serve_ready = bool(infrastructure_ready and first_10["passed"])
     blockers: list[str] = []
     if not first_user["passed"]:
