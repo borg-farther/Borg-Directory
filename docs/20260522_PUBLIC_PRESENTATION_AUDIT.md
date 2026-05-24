@@ -1,5 +1,7 @@
 # Borg public GitHub presentation audit
 
+> Historical/internal — not current product documentation. Superseded by current readiness gates and release snapshots.
+
 Rev: 2026-05-22
 
 ## Verdict

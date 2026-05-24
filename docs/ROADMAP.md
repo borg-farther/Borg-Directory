@@ -8,11 +8,11 @@ Borg is failure memory for AI coding agents: a local CLI/MCP server that turns a
 
 ## Current public state
 
-- Package: `agent-borg==3.3.10` on production PyPI.
+- Source release candidate: `agent-borg==3.3.11`; production PyPI upload and post-upload canary still pending.
 - CLI command: `borg`.
 - MCP server command: `borg-mcp`.
 - GitHub default branch: `main` at `borg-farther/Borg-Directory`.
-- Controlled first-10 beta infrastructure: GO.
+- Controlled first-10 beta infrastructure: NO-GO until PyPI latest, fresh-install, and stdio MCP canaries are green.
 - Public self-serve launch: NO-GO until row-derived first-10 external evidence passes.
 - Served remote MCP: separate NO-GO channel until live runtime fingerprint/canary passes.
 

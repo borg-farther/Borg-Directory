@@ -735,7 +735,7 @@ def generate_bridge_skill(packs: list) -> str:
     # Frontmatter (YAML)
     lines.append("---")
     lines.append("name: borg")
-    lines.append("description: \"Use when your agent is stuck in a loop, burning tokens on a problem it can't solve after 3+ attempts. Covers debugging, testing, code review, planning. Borg provides battle-tested workflows from collective agent intelligence. NOT for simple/obvious fixes.\"")
+    lines.append("description: \"Use when your agent is stuck in a loop on a concrete error, failed test, install/config/deploy failure, or non-trivial review/planning task. Borg provides confidence-labeled failure-memory guidance and workflow structure. NOT for simple/obvious fixes.\"")
     lines.append("user-invocable: true")
     lines.append("metadata: {\"openclaw\":{\"emoji\":\"🧠\",\"homepage\":\"https://github.com/borg-farther/Borg-Directory\",\"always\":false}}")
     lines.append("---")
@@ -752,7 +752,7 @@ def generate_bridge_skill(packs: list) -> str:
     lines.append("")
     lines.append("- Your agent hit a blocker and is going in circles (3+ failed attempts)")
     lines.append("- You need a structured approach to debugging, testing, code review, or planning")
-    lines.append("- You want proven workflows that worked for other agents on similar problems")
+    lines.append("- You want a structured workflow with explicit confidence and verification steps")
     lines.append("")
     
     # When NOT to Use

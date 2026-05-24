@@ -524,9 +524,9 @@ TOOLS: List[Dict[str, Any]] = [
     {
         "name": "borg_observe",
         "description": (
-            "Silent observation: analyzes the current task and returns structural guidance from proven approaches. "
-            "Call this at the start of any task to get battle-tested strategies. "
-            "Returns specific phase-by-phase guidance if a relevant pack exists, or general best practices if not. "
+            "Silent observation: analyzes the current task and returns confidence-labeled structural guidance. "
+            "Call this at the start of non-trivial debugging/testing/review tasks to get recorded or seeded strategies. "
+            "Returns specific phase-by-phase guidance only when a relevant pack exists, or explicit no-match guidance. "
             "Supports conditional phases: when context includes error_message, error_type, attempts, "
             "has_recent_changes, or error_in_test, skip_if/inject_if/context_prompts conditions are evaluated."
         ),
@@ -655,7 +655,7 @@ TOOLS: List[Dict[str, Any]] = [
     {
         "name": "borg_recall",
         "description": (
-            "Recall collective failure memory for an error. Returns approaches that other agents "
+            "Recall failure memory for an error. Returns approaches that agents "
             "tried and failed, as well as approaches that succeeded. Use this before attempting "
             "a fix to avoid known wrong paths."
         ),
@@ -678,7 +678,7 @@ TOOLS: List[Dict[str, Any]] = [
     {
         "name": "borg_record_failure",
         "description": (
-            "Record a failure or success outcome for an error pattern in collective failure memory. "
+            "Record a failure or success outcome for an error pattern in failure memory. "
             "This writes to the failure memory store so other agents can benefit from the learning. "
             "Call this after attempting a fix — record 'success' if it worked, 'failure' if it did not."
         ),
@@ -2303,7 +2303,7 @@ def borg_context(project_path: str = ".", hours: int = 24) -> str:
 
 
 def borg_recall(error_message: str = "", agent_id: str = "default") -> str:
-    """Recall collective failure memory for an error.
+    """Recall failure memory for an error.
 
     Returns approaches that other agents tried and failed, as well as
     approaches that succeeded. If no matching memory is found, returns null.
@@ -3188,6 +3188,95 @@ def make_error(id: Any, code: int, message: str) -> Dict[str, Any]:
 
 
 # ---------------------------------------------------------------------------
+# Stdio transport helpers
+# ---------------------------------------------------------------------------
+
+def _to_bytes(value: Any) -> bytes:
+    if isinstance(value, bytes):
+        return value
+    return str(value).encode("utf-8")
+
+
+def _read_bytes(stream: Any, length: int) -> bytes:
+    data = stream.read(length)
+    return data if isinstance(data, bytes) else str(data).encode("utf-8")
+
+
+def _iter_stdio_messages(stream: Any = None):
+    """Yield ``(payload, framed)`` messages from stdio.
+
+    Supports both legacy newline-delimited JSON-RPC and standard MCP
+    ``Content-Length: N\r\n\r\n<body>`` framing. Borg historically emitted one
+    JSON object per line; keeping that path preserves compatibility with older
+    wrappers while allowing strict MCP clients to use the standard transport.
+    """
+    if stream is None:
+        stream = getattr(sys.stdin, "buffer", sys.stdin)
+
+    while True:
+        line = stream.readline()
+        if not line:
+            break
+        first = _to_bytes(line)
+        if not first.strip():
+            continue
+
+        if not first.lower().startswith(b"content-length:"):
+            yield first.strip().decode("utf-8"), False
+            continue
+
+        headers = [first.rstrip(b"\r\n")]
+        while True:
+            header_line = stream.readline()
+            if not header_line:
+                yield "", True
+                break
+            header = _to_bytes(header_line)
+            if header in (b"\r\n", b"\n", b""):
+                break
+            headers.append(header.rstrip(b"\r\n"))
+        else:  # pragma: no cover - loop cannot naturally fall through
+            continue
+
+        length = None
+        for header in headers:
+            name, _, value = header.partition(b":")
+            if name.strip().lower() == b"content-length":
+                try:
+                    length = int(value.strip())
+                except ValueError:
+                    length = -1
+                break
+
+        if length is None or length < 0:
+            yield "", True
+            continue
+
+        body = _read_bytes(stream, length)
+        if len(body) != length:
+            yield "", True
+            continue
+        yield body.decode("utf-8"), True
+
+
+def _write_stdio_response(response: Dict[str, Any], *, framed: bool, output: Any = None) -> None:
+    """Write a JSON-RPC response using the same framing as the request."""
+    body = json.dumps(response, separators=(",", ":")).encode("utf-8")
+    if framed:
+        payload = b"Content-Length: " + str(len(body)).encode("ascii") + b"\r\n\r\n" + body
+        stream: Any = output if output is not None else getattr(sys.stdout, "buffer", sys.stdout)
+    else:
+        payload = body + b"\n"
+        stream = output if output is not None else getattr(sys.stdout, "buffer", sys.stdout)
+
+    try:
+        stream.write(payload)
+    except TypeError:
+        stream.write(payload.decode("utf-8"))
+    stream.flush()
+
+
+# ---------------------------------------------------------------------------
 # Request handler
 # ---------------------------------------------------------------------------
 
@@ -3246,7 +3335,7 @@ def handle_request(request: Dict[str, Any]) -> Optional[Dict[str, Any]]:
 # ---------------------------------------------------------------------------
 
 def main() -> None:
-    """Run the MCP server on stdio. Reads JSON-RPC requests from stdin, writes responses to stdout."""
+    """Run the MCP server on stdio. Supports MCP framed and newline JSON-RPC."""
     # Cold start — runs once on first install
     try:
         from borg.core.cold_start import run_if_needed
@@ -3256,23 +3345,17 @@ def main() -> None:
 
     from borg import __version__
     print(f"borg-mcp-server v{__version__} ready (stdio transport)", file=sys.stderr, flush=True)
-    for line in sys.stdin:
-        line = line.strip()
-        if not line:
-            continue
-
+    for payload, framed in _iter_stdio_messages():
         try:
-            request = json.loads(line)
+            request = json.loads(payload)
         except json.JSONDecodeError as e:
             response = make_error(None, -32700, f"Parse error: {e}")
-            sys.stdout.write(json.dumps(response) + "\n")
-            sys.stdout.flush()
+            _write_stdio_response(response, framed=framed)
             continue
 
         response = handle_request(request)
         if response is not None:
-            sys.stdout.write(json.dumps(response) + "\n")
-            sys.stdout.flush()
+            _write_stdio_response(response, framed=framed)
 
 
 if __name__ == "__main__":

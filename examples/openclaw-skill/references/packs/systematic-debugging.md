@@ -118,19 +118,19 @@ Apply the minimal fix. Run the new test. Run the full test suite. No regressions
 
 ## Examples
 **Example 1:**
-- Problem: Agent spent 20 minutes trying random fixes for a TypeError in API handler
-- Solution: Pack forced reproduce → investigate flow. Stack trace showed wrong argument order in a function call 3 levels up. Fixed in 4 minutes once root cause was found.
-- Outcome: 4 minutes vs 20 minutes. One targeted fix vs 6 reverted attempts.
+- Problem: Agent was trying random fixes for a TypeError in an API handler
+- Solution: Pack forced reproduce → investigate flow. Stack trace showed wrong argument order in a function call 3 levels up.
+- Outcome: Root cause identified, one targeted fix applied, and the original failing command rerun.
 
 **Example 2:**
 - Problem: Flaky CI test fails 30% of the time with timeout
 - Solution: Reproduce phase caught race condition. Investigate phase traced to shared state between tests. Hypothesis: test isolation fixture missing. Confirmed.
-- Outcome: Test passed 100/100 after adding isolation. CI stable for 2 weeks.
+- Outcome: Regression test passed after adding isolation; CI check was rerun.
 
 **Example 3:**
 - Problem: Import error after dependency upgrade
 - Solution: Investigate phase: git diff showed version bump. Search found the renamed module. One-line import fix.
-- Outcome: 2 minutes. Would have been 15 without the systematic trace.
+- Outcome: Import path corrected and the original import failure was rerun successfully.
 
 
 ## Escalation

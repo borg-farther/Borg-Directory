@@ -17,9 +17,9 @@ belong under [`archive/`](archive/) and are not current product claims.
 - [`FIRST_10_BETA_READINESS.md`](FIRST_10_BETA_READINESS.md) — first-10 beta contract
 - [`READINESS.md`](READINESS.md) — current readiness status and honest launch boundary
 - [`ROADMAP.md`](ROADMAP.md) — current roadmap and intentionally-not-claimed boundaries
-- [`20260522_PUBLIC_PRESENTATION_AUDIT.md`](20260522_PUBLIC_PRESENTATION_AUDIT.md) — public GitHub first-user presentation audit and current verdict
+- [`20260522_PUBLIC_PRESENTATION_AUDIT.md`](20260522_PUBLIC_PRESENTATION_AUDIT.md) — historical public GitHub presentation audit (not current release truth)
 - [`20260522_BORG_PRODUCTION_DAY_ONE_HARDENING_PLAN.md`](20260522_BORG_PRODUCTION_DAY_ONE_HARDENING_PLAN.md) — hard-gated production/day-one hardening plan and proof checklist
-- [`20260522_BORG_3310_RELEASE_PREFLIGHT_PUBLISHED.md`](20260522_BORG_3310_RELEASE_PREFLIGHT_PUBLISHED.md) — strict PyPI 3.3.10 preflight and post-upload verification: package is live, fresh-install/MCP canary passed
+- [`20260522_BORG_3310_RELEASE_PREFLIGHT_PUBLISHED.md`](20260522_BORG_3310_RELEASE_PREFLIGHT_PUBLISHED.md) — historical PyPI 3.3.10 release proof (not current release truth)
 - [`20260514_PUBLIC_SELF_SERVE_LAUNCH_CLOSURE_PLAN.md`](20260514_PUBLIC_SELF_SERVE_LAUNCH_CLOSURE_PLAN.md) — exact remaining evidence sequence before public self-serve launch can be claimed
 - [`20260517_BORG_100_REAL_USER_READINESS.md`](20260517_BORG_100_REAL_USER_READINESS.md) — 100-real-user rollout gate: currently blocked by first-10 external-user evidence
 - [`PUBLIC_SELF_SERVE_LAUNCH_GO_NO_GO.md`](PUBLIC_SELF_SERVE_LAUNCH_GO_NO_GO.md) — canonical public self-serve launch gate output

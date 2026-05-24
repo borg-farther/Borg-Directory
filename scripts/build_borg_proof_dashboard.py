@@ -165,7 +165,8 @@ def build_model() -> dict:
     public_self_serve_pass = nested(public_gate, ["ready_for_public_self_serve_launch"])
     pypi_fresh_pass = nested(pypi_fresh, ["success"])
     pypi_fresh_version = nested(pypi_fresh, ["version"])
-    max_recommended_real_users = nested(real_user, ["max_recommended_real_users_now"], nested(uat, ["real_user_rollout", "max_recommended_real_users_now"], 0))
+    max_recommended_real_users = nested(public_gate, ["max_recommended_real_users_now"], nested(real_user, ["max_recommended_real_users_now"], nested(uat, ["real_user_rollout", "max_recommended_real_users_now"], 0)))
+    controlled_beta_ready = nested(public_gate, ["ready_for_controlled_first_10_beta"]) is True
     real_user_blockers = nested(real_user, ["blockers"], nested(uat, ["real_user_rollout", "blockers"], []))
     load_summary = {}
     for n, data in loads.items():
@@ -181,11 +182,20 @@ def build_model() -> dict:
             "timestamp": nested(data, ["timestamp"], nested(uat, ["loads", n, "timestamp"])),
         }
 
-    supervised_ready = bool(version_consistent and (first_gate_pass is True) and (uat_pass is True) and (gate_pass is True))
+    local_release_candidate_ready = bool(version_consistent and (first_gate_pass is True) and (uat_pass is True) and (gate_pass is True))
+    controlled_beta_why = (
+        "Controlled first-10 beta infrastructure is green; keep broad launch blocked until row-derived external-user evidence passes."
+        if controlled_beta_ready
+        else "Controlled first-10 beta is blocked until the public package path is green: PyPI latest metadata, fresh-install canary, stdio MCP canary, and docs guard must all pass."
+    )
     verdicts = {
-        "supervised_first_user_onboarding": {
-            "verdict": "CONDITIONAL" if supervised_ready else "NO-GO",
-            "why": "Share only with controlled first-10 beta testers: PyPI install/runtime/security/local logical-load gates pass, but verified external users remain 0 and first-user outcome evidence is uncollected." if supervised_ready else "Required local first-user/readiness gates are not all passing or are missing.",
+        "controlled_first_10_beta": {
+            "verdict": "CONDITIONAL" if controlled_beta_ready else "NO-GO",
+            "why": controlled_beta_why,
+        },
+        "local_release_candidate": {
+            "verdict": "CONDITIONAL" if local_release_candidate_ready else "NO-GO",
+            "why": "Local source/wheel gates pass, but this does not authorize public beta without PyPI/latest/fresh-install proof." if local_release_candidate_ready else "Required local first-user/readiness gates are not all passing or are missing.",
         },
         "unattended_git_onboarding": {
             "verdict": "NO-GO",
@@ -293,7 +303,14 @@ def build_model() -> dict:
         "repo": CANONICAL_REPO_URL,
         "source_revision": commit,
         "top_verdict": verdicts,
-        "controlled_first_10_beta": {"answer": "GO", "conditions": ["Controlled testers only.", "Do not present as unattended public launch ready.", "Capture real first-user outcome evidence immediately."]},
+        "controlled_first_10_beta": {
+            "answer": "GO" if controlled_beta_ready else "NO-GO",
+            "conditions": [
+                "Controlled testers only." if controlled_beta_ready else "Do not invite controlled beta users until PyPI latest, fresh-install, and stdio MCP canaries are green.",
+                "Do not present as unattended public launch ready.",
+                "Capture real first-user outcome evidence immediately." if controlled_beta_ready else "Keep first-10 evidence capture prepared, but blocked until package evidence is green.",
+            ],
+        },
         "metrics": metrics,
         "evidence": evidence,
         "blockers": blockers,

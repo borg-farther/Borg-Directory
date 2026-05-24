@@ -23,6 +23,7 @@ if str(ROOT) not in sys.path:
     sys.path.insert(0, str(ROOT))
 
 from eval.first_10_evidence import evaluate_scoreboard
+from eval import public_self_serve_launch_gate as public_gate
 
 SNAPSHOT = ROOT / "eval" / "real_user_rollout_gate_snapshot.json"
 REPORT = ROOT / "docs" / "20260517_BORG_100_REAL_USER_READINESS.md"
@@ -86,6 +87,23 @@ def _load_ready(users: int) -> dict[str, Any]:
     }
 
 
+def _public_package_ready() -> dict[str, Any]:
+    version = _version_consistent().get("project_version") or public_gate.source_version()
+    pypi_latest = public_gate.pypi_latest_check(str(version), fetch_network=True)
+    pypi_fresh = public_gate.pypi_fresh_install_check(ROOT / "eval" / "pypi_fresh_install_snapshot.json", str(version))
+    blockers: list[str] = []
+    if not pypi_latest.get("passed"):
+        blockers.append("PyPI latest/fresh-install package evidence is not green: latest metadata does not match source version")
+    if not pypi_fresh.get("passed"):
+        blockers.append("PyPI latest/fresh-install package evidence is not green: fresh install + MCP stdio canary is not green")
+    return {
+        "passed": bool(pypi_latest.get("passed") and pypi_fresh.get("passed")),
+        "pypi_latest": pypi_latest,
+        "pypi_fresh_install_and_mcp_stdio": pypi_fresh,
+        "blockers": blockers,
+    }
+
+
 def _first_10_evidence() -> dict[str, Any]:
     data = _read_json(ROOT / "eval" / "first_10_user_scoreboard.json")
     if not data:
@@ -143,18 +161,19 @@ def compile_rollout_gate() -> dict[str, Any]:
     version = _version_consistent()
     security = _security_ready()
     first_user = _first_user_release_ready()
+    package = _public_package_ready()
     load_10 = _load_ready(10)
     load_100 = _load_ready(100)
     first_10 = _first_10_evidence()
-    infra_ready_for_10 = all([
+    local_infra_ready_for_10 = all([
         version["passed"],
         security["passed"],
         first_user["passed"],
         load_10["passed"],
     ])
-    infra_ready_for_100 = infra_ready_for_10 and load_100["passed"]
-    ready_for_10_controlled_beta = infra_ready_for_10
-    ready_for_100_real_users = infra_ready_for_100 and first_10["passed"]
+    ready_for_10_controlled_beta = bool(local_infra_ready_for_10 and package["passed"])
+    infrastructure_ready_for_100 = bool(ready_for_10_controlled_beta and load_100["passed"])
+    ready_for_100_real_users = infrastructure_ready_for_100 and first_10["passed"]
     max_recommended_real_users_now = 0
     if ready_for_100_real_users:
         max_recommended_real_users_now = 100
@@ -172,6 +191,8 @@ def compile_rollout_gate() -> dict[str, Any]:
         blockers.append("10-user load gate is not green")
     if not load_100["passed"]:
         blockers.append("100-user load gate is not green")
+    if not package["passed"]:
+        blockers.extend(package.get("blockers") or ["public PyPI package/fresh-install evidence is not green"])
     if not first_10["passed"]:
         row_blockers = first_10.get("row_level_blockers") or []
         if row_blockers:
@@ -193,10 +214,12 @@ def compile_rollout_gate() -> dict[str, Any]:
         "version": version,
         "security": security,
         "first_user_release_gate": first_user,
+        "public_package_gate": package,
         "load_gates": {"10": load_10, "100": load_100},
         "first_10_external_evidence": first_10,
+        "local_infrastructure_ready_for_10": local_infra_ready_for_10,
         "ready_for_10_controlled_beta": ready_for_10_controlled_beta,
-        "infrastructure_ready_for_100": infra_ready_for_100,
+        "infrastructure_ready_for_100": infrastructure_ready_for_100,
         "ready_for_100_real_users": ready_for_100_real_users,
         "max_recommended_real_users_now": max_recommended_real_users_now,
         "blockers": list(dict.fromkeys(blockers)),

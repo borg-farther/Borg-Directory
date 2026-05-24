@@ -5,9 +5,9 @@ user-invocable: true
 metadata: {"openclaw":{"emoji":"🧠","homepage":"https://github.com/borg-farther/Borg-Directory","always":false}}
 ---
 
-# 🧠 Borg — Collective Intelligence for AI Agents
+# Borg — failure memory for AI coding agents
 
-Stop burning tokens on problems someone else already solved.
+Stop repeating debugging dead ends your agent can avoid.
 
 ## When to Use
 
@@ -96,4 +96,4 @@ Do NOT skip phases. Do NOT move to the next phase until the checkpoint passes.
   - **writing-plans** (inferred)
 
 ---
-*Powered by [borg](https://github.com/borg-farther/Borg-Directory) — collective intelligence for AI agents.*
+*Powered by [borg](https://github.com/borg-farther/Borg-Directory) — failure memory for AI coding agents.*

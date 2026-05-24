@@ -1,5 +1,7 @@
 # Borg 3.3.10 production PyPI release preflight and verification
 
+> Historical/internal — not current product documentation. Superseded by current readiness gates and release snapshots.
+
 Rev: 2026-05-22
 
 ## Verdict

@@ -26,6 +26,15 @@ from typing import Any
 
 ROOT = Path(__file__).resolve().parents[1]
 SNAPSHOT = ROOT / "eval" / "pypi_fresh_install_snapshot.json"
+EXPECTED_SUMMARY = "Failure memory CLI and MCP server for AI coding agents"
+BANNED_PUBLIC_COPY = [
+    "Collective memory MCP server",
+    "Semantic reasoning cache",
+    "Collective Intelligence for AI Agents",
+    "collective intelligence for AI agents",
+    "collective agent intelligence",
+    "battle-tested workflows from thousands of agents",
+]
 
 
 @dataclass
@@ -192,8 +201,9 @@ def run_canary(version: str) -> dict[str, Any]:
             ))
         install_ok = bool(results and results[-1].name == "pip_install_agent_borg" and results[-1].passed)
         commands = [
+            ("pip_show_agent_borg", [str(py), "-m", "pip", "show", "agent-borg"], [f"Version: {version}", f"Summary: {EXPECTED_SUMMARY}"]),
             ("borg_version", [str(borg), "--version"], [version]),
-            ("borg_help", [str(borg), "--help"], ["borg rescue", "borg start"]),
+            ("borg_help", [str(borg), "--help"], ["failure memory for AI coding agents", "borg rescue", "borg start"]),
             ("borg_rescue_json", [str(borg), "rescue", "ModuleNotFoundError: No module named flask", "--json"], ["agent_instruction", "human_receipt", "ACTION", "STOP", "VERIFY"]),
             ("borg_doctor_json", [str(doctor), "--json"], ["runtime", "checks"]),
         ]
@@ -201,11 +211,12 @@ def run_canary(version: str) -> dict[str, Any]:
             for name, cmd, needles in commands:
                 result = run_cmd(name, cmd, env=env, timeout=180)
                 combined = result.stdout + result.stderr
-                if result.passed and all(needle in combined for needle in needles):
+                stale_copy = [snippet for snippet in BANNED_PUBLIC_COPY if snippet in combined]
+                if result.passed and all(needle in combined for needle in needles) and not stale_copy:
                     result.detail = "expected value signal present"
                 else:
                     result.passed = False
-                    result.detail = "missing expected output tokens or command failed"
+                    result.detail = "missing expected output tokens, stale public copy present, or command failed"
                 results.append(result)
 
             if borg_mcp.exists():

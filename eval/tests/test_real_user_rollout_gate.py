@@ -28,10 +28,11 @@ def test_real_user_rollout_gate_blocks_100_when_first_10_scoreboard_empty() -> N
     )
     assert proc.returncode == 1
     payload = json.loads(proc.stdout)
-    assert payload["infrastructure_ready_for_100"] is True
-    assert payload["ready_for_10_controlled_beta"] is True
+    assert payload["infrastructure_ready_for_100"] is False
+    assert payload["ready_for_10_controlled_beta"] is False
     assert payload["ready_for_100_real_users"] is False
-    assert payload["max_recommended_real_users_now"] == 10
+    assert payload["max_recommended_real_users_now"] == 0
+    assert any("PyPI latest/fresh-install package evidence" in b for b in payload["blockers"])
     assert any("first-10 external-user evidence" in b for b in payload["blockers"])
 
 
@@ -43,6 +44,38 @@ def test_real_user_rollout_gate_snapshot_is_machine_readable() -> None:
     assert data["important_distinction"].startswith("load/readiness snapshots are synthetic")
     assert data["max_recommended_real_users_now"] in {0, 10, 100}
     assert data["no_fake_user_policy"].startswith("Do not mark first-10 complete")
+
+
+def test_real_user_rollout_gate_blocks_controlled_beta_when_public_package_path_fails(monkeypatch) -> None:
+    monkeypatch.setattr(rollout_gate, "_version_consistent", lambda: {"passed": True})
+    monkeypatch.setattr(rollout_gate, "_security_ready", lambda: {"passed": True, "missing": []})
+    monkeypatch.setattr(rollout_gate, "_first_user_release_ready", lambda: {"passed": True})
+    monkeypatch.setattr(rollout_gate, "_load_ready", lambda users: {"passed": True, "users": users})
+    monkeypatch.setattr(rollout_gate, "_first_10_evidence", lambda: {
+        "passed": False,
+        "verified_external_users": 0,
+        "real_users": 0,
+        "install_successes": 0,
+        "useful_rescue_moments": 0,
+        "critical_privacy_security_failures": 0,
+        "required_total_real_users": 10,
+        "required_install_successes": 8,
+        "required_useful_rescue_moments": 6,
+        "max_critical_privacy_security_failures": 0,
+        "row_level_blockers": [],
+    })
+    monkeypatch.setattr(rollout_gate, "_public_package_ready", lambda: {
+        "passed": False,
+        "blockers": ["PyPI latest/fresh-install package evidence is not green"],
+    })
+
+    snapshot = rollout_gate.compile_rollout_gate()
+
+    assert snapshot["ready_for_10_controlled_beta"] is False
+    assert snapshot["infrastructure_ready_for_100"] is False
+    assert snapshot["ready_for_100_real_users"] is False
+    assert snapshot["max_recommended_real_users_now"] == 0
+    assert "PyPI latest/fresh-install package evidence is not green" in snapshot["blockers"]
 
 
 def test_first_10_evidence_is_derived_from_rows_not_aggregate_counts(monkeypatch) -> None:

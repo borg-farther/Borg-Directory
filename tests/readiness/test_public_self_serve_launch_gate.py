@@ -64,6 +64,27 @@ def _scoreboard(rows: list[dict[str, object]]) -> dict[str, object]:
     return evidence.scoreboard_with_derived_fields(data)
 
 
+def _pypi_fixture(
+    version: str = "9.9.9",
+    *,
+    project_urls: dict[str, str] | None = None,
+    summary: str | None = None,
+    keywords: str | None = None,
+) -> dict[str, object]:
+    return {
+        "package": "agent-borg",
+        "version": version,
+        "summary": gate.EXPECTED_PYPI_SUMMARY if summary is None else summary,
+        "keywords": gate.REQUIRED_PYPI_KEYWORD if keywords is None else keywords,
+        "project_urls": project_urls if project_urls is not None else {
+            "Homepage": "https://github.com/borg-farther/Borg-Directory",
+            "Repository": "https://github.com/borg-farther/Borg-Directory",
+            "Documentation": "https://github.com/borg-farther/Borg-Directory#readme",
+            "Issues": "https://github.com/borg-farther/Borg-Directory/issues",
+        },
+    }
+
+
 def test_row_derived_evidence_rejects_forged_aggregates_with_empty_rows() -> None:
     data = _scoreboard([])
     data["truth_policy"]["verified_external_users"] = 10  # type: ignore[index]
@@ -196,36 +217,44 @@ def test_docs_claim_guard_catches_stale_pins_and_unsupported_ship_claims(tmp_pat
     assert "statistically significant external/agent lift claim" not in kinds
 
 
+def test_docs_claim_guard_blocks_controlled_beta_go_until_package_canary_passes(tmp_path: Path, monkeypatch) -> None:
+    monkeypatch.setattr(gate, "ROOT", tmp_path)
+    doc = tmp_path / "docs" / "VALUE_COMMUNICATION_DASHBOARD.md"
+    doc.parent.mkdir()
+    doc.write_text(
+        "controlled first-10 PyPI beta infrastructure: **GO** — PyPI latest, "
+        "fresh-install, stdio MCP, docs claim guard, and security gates are green\n",
+        encoding="utf-8",
+    )
+
+    result = gate.docs_claim_guard(
+        [Path("docs/VALUE_COMMUNICATION_DASHBOARD.md")],
+        "9.9.9",
+        public_evidence_ready=False,
+        package_evidence_ready=False,
+    )
+
+    assert result["passed"] is False
+    assert any(v["kind"] == "controlled first-10 package GO before PyPI canary" for v in result["violations"])
+
+
 def test_pypi_latest_check_requires_source_version_and_urls() -> None:
     result = gate.pypi_latest_check(
         "9.9.9",
         fetch_network=False,
-        pypi_data={
-            "package": "agent-borg",
-            "version": "9.9.9",
-            "project_urls": {
-                "Homepage": "https://github.com/borg-farther/Borg-Directory",
-                "Repository": "https://github.com/borg-farther/Borg-Directory",
-                "Documentation": "https://github.com/borg-farther/Borg-Directory#readme",
-                "Issues": "https://github.com/borg-farther/Borg-Directory/issues",
-            },
-        },
+        pypi_data=_pypi_fixture(),
     )
     assert result["passed"] is True
 
     wrong_urls = gate.pypi_latest_check(
         "9.9.9",
         fetch_network=False,
-        pypi_data={
-            "package": "agent-borg",
-            "version": "9.9.9",
-            "project_urls": {
-                "Homepage": "https://example.com",
-                "Repository": "https://example.com/repo",
-                "Documentation": "https://example.com/docs",
-                "Issues": "https://example.com/issues",
-            },
-        },
+        pypi_data=_pypi_fixture(project_urls={
+            "Homepage": "https://example.com",
+            "Repository": "https://example.com/repo",
+            "Documentation": "https://example.com/docs",
+            "Issues": "https://example.com/issues",
+        }),
     )
     assert wrong_urls["passed"] is False
     assert wrong_urls["url_mismatches"]["Homepage"]["expected"] == "https://github.com/borg-farther/Borg-Directory"
@@ -259,16 +288,7 @@ def test_public_self_serve_gate_passes_only_when_all_artifacts_and_real_rows_pas
 
     snapshot = gate.compile_gate(
         fetch_network=False,
-        pypi_data={
-            "package": "agent-borg",
-            "version": "9.9.9",
-            "project_urls": {
-                "Homepage": "https://github.com/borg-farther/Borg-Directory",
-                "Repository": "https://github.com/borg-farther/Borg-Directory",
-                "Documentation": "https://github.com/borg-farther/Borg-Directory#readme",
-                "Issues": "https://github.com/borg-farther/Borg-Directory/issues",
-            },
-        },
+        pypi_data=_pypi_fixture(),
     )
 
     assert snapshot["ready_for_public_self_serve_launch"] is True
@@ -295,16 +315,7 @@ def test_public_self_serve_gate_blocks_empty_evidence_even_when_infra_passes(tmp
 
     snapshot = gate.compile_gate(
         fetch_network=False,
-        pypi_data={
-            "package": "agent-borg",
-            "version": "9.9.9",
-            "project_urls": {
-                "Homepage": "https://github.com/borg-farther/Borg-Directory",
-                "Repository": "https://github.com/borg-farther/Borg-Directory",
-                "Documentation": "https://github.com/borg-farther/Borg-Directory#readme",
-                "Issues": "https://github.com/borg-farther/Borg-Directory/issues",
-            },
-        },
+        pypi_data=_pypi_fixture(),
     )
 
     assert snapshot["ready_for_controlled_first_10_beta"] is True

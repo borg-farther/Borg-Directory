@@ -252,23 +252,21 @@ def generate_bridge_skill(packs: List[dict], output_dir: Optional[Path] = None) 
 
     # Build description (max 1024 chars)
     description = (
-        "When your agent is stuck in a loop, burning tokens on a problem someone else already solved. "
-        "Use when debugging takes >3 attempts, code review needs structure, or you need a proven approach "
-        "for testing, planning, or deployment. Borg connects to collective agent intelligence — "
-        "battle-tested workflows from thousands of agents. "
-        "NOT for simple tasks that need no structure."
+        "When your agent is stuck in a loop on a concrete error, failed test, install/config/deploy failure, "
+        "or non-trivial review/planning task. Borg provides confidence-labeled failure-memory guidance and "
+        "workflow structure with explicit verification steps. NOT for simple tasks that need no structure."
     )
 
     # Build body
     body_parts = []
 
-    body_parts.append("Stop burning tokens on problems someone else already solved.\n")
+    body_parts.append("Stop repeating debugging dead ends your agent can avoid.\n")
 
     # When to Use
     body_parts.append("## When to Use\n")
     body_parts.append("- Your agent hit a blocker and is going in circles (3+ failed attempts)\n")
     body_parts.append("- You need a structured approach to debugging, testing, code review, or planning\n")
-    body_parts.append("- You want proven workflows that worked for other agents on similar problems\n")
+    body_parts.append("- You want a structured workflow with explicit confidence and verification steps\n")
 
     # When NOT to Use
     body_parts.append("## When NOT to Use\n")

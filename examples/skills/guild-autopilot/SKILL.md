@@ -1,10 +1,8 @@
-# Borg Autopilot — Zero-Config Borg Experience
+# Borg Agent Priming Helper
 
 ## Purpose
 
-Borg Autopilot is a **self-configuring skill** that makes Borg packs work automatically,
-without any user setup or CLAUDE.md editing. A Hermes user only needs `agent-borg` installed
-and the MCP server configured — this skill tells the agent **when** and **how** to use it.
+This skill teaches an agent when to call Borg after `agent-borg` is installed and the `borg-mcp` server is configured. Borg is failure memory for AI coding agents; this helper does not install Borg, edit agent config, or claim public self-serve readiness by itself.
 
 
 ## Current Borg first-user rule
@@ -150,13 +148,13 @@ Args: context="I have a TypeError in my auth module, tests are failing", failure
 
 - **Hermes MCP:** The Borg MCP server must be configured in `~/.hermes/config.yaml`
 - **MCP server:** Exposes `error_lookup`, `borg_rescue`, `borg_observe`, `borg_search`, `borg_suggest`, and pack-application tools
-- **Zero user action required:** The skill file itself is the only setup needed
+- **Agent priming only:** This skill is useful after Borg has been installed and connected
 
 ## Example Conversation
 
 User: "my auth tests are failing after I added JWT"
 Agent: [detects "test" + "failing" → calls error_lookup or borg_observe]
-→ "I see you're dealing with test failures. Borg suggests 'test-recovery' [tested] (Test debugging workflow) — try: borg://hermes/test-recovery"
+→ "I see you're dealing with test failures. Borg suggests 'systematic-debugging' (debugging workflow) — try: borg://hermes/systematic-debugging"
 
 User: "why is my server crashing on startup"
 Agent: [detects "crash" → calls error_lookup or borg_observe]

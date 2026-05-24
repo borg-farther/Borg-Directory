@@ -9,7 +9,7 @@
     "evidence_gaps": [
       "No Borg analytics export proving active contributors or consumers was found.",
       "No first-10-user scoreboard with real outcomes exists yet.",
-      "100-real-user gate remains blocked: ['first-10 external-user evidence has not passed: verified=0/10, real_users=0/10, installs=0/8, useful=0/6, critical_incidents=0/0']",
+      "100-real-user gate remains blocked: ['PyPI latest/fresh-install package evidence is not green: latest metadata does not match source version', 'PyPI latest/fresh-install package evidence is not green: fresh install + MCP stdio canary is not green', 'first-10 external-user evidence has not passed: verified=0/10, real_users=0/10, installs=0/8, useful=0/6, critical_incidents=0/0']",
       "Host/runtime split-brain was not freshly reproduced by this dashboard build."
     ],
     "investor_affecting": [
@@ -26,95 +26,116 @@
     ],
     "user_affecting": [
       "No real external first-user install/rescue outcome has been recorded yet.",
-      "PyPI fresh-install canary is green.",
+      "PyPI fresh-install canary is not green yet.",
       "Unattended Git-only onboarding remains unproven until external user can install, configure MCP, and receive a useful rescue without maintainer intervention."
     ]
   },
   "controlled_first_10_beta": {
-    "answer": "GO",
+    "answer": "NO-GO",
     "conditions": [
-      "Controlled testers only.",
+      "Do not invite controlled beta users until PyPI latest, fresh-install, and stdio MCP canaries are green.",
       "Do not present as unattended public launch ready.",
-      "Capture real first-user outcome evidence immediately."
+      "Keep first-10 evidence capture prepared, but blocked until package evidence is green."
     ]
   },
   "evidence": [
     {
       "claim_derived": "first-user release gate all_pass=True",
       "exists": true,
-      "freshness_timestamp": "2026-05-22T11:41:49Z",
+      "freshness_timestamp": "2026-05-24T19:44:51Z",
       "path": "eval/first_user_release_gate_snapshot.json",
-      "sha256": "44155fad6673491731125c1056ed07c5a8dd5943fe74b41dc5f06e21e883d163"
+      "sha256": "367230553a5dd6202420becfaeaf268bf75603e5fc4dd54dc08f597dd0881af6"
     },
     {
       "claim_derived": "UAT synthetic_load_all_pass=True; real_user_100_all_pass=False; ready_for_10=True; ready_for_1000=True",
       "exists": true,
-      "freshness_timestamp": "2026-05-18T07:46:07.702390+00:00",
+      "freshness_timestamp": "2026-05-24T07:38:56.063440+00:00",
       "path": "eval/uat_scoreboard_snapshot.json",
-      "sha256": "d05753c32ce3b9b3e2f115b2b164c18d7635af4e8cd6c4ae7e73dabac2e6109e"
+      "sha256": "f5770651e2c9e3e6d23eac9703a5e103d04ab49dba6f020dcdd743fcc16af648"
     },
     {
-      "claim_derived": "gate run synthetic_load_all_pass=True; overall_100_real_user_pass=False; ready_for_10=True; ready_for_1000=True",
+      "claim_derived": "gate run synthetic_load_all_pass=False; overall_100_real_user_pass=False; ready_for_10=True; ready_for_1000=True",
       "exists": true,
-      "freshness_timestamp": "2026-05-18T07:46:07.667878+00:00",
+      "freshness_timestamp": "2026-05-24T07:38:56.025585+00:00",
       "path": "eval/gate_run_snapshot.json",
-      "sha256": "70e7a691c169ff9543389d7fcdab590978cd140470796e4bcfaf4931cdd29b99"
+      "sha256": "f324e9c6919b605f593d14efe41940cecfa0b0f5e39eb00ad000478df20ba7bc"
     },
     {
-      "claim_derived": "100-real-user gate=False; max_recommended_real_users=10; blockers=['first-10 external-user evidence has not passed: verified=0/10, real_users=0/10, installs=0/8, useful=0/6, critical_incidents=0/0']",
+      "claim_derived": "100-real-user gate=False; max_recommended_real_users=0; blockers=['PyPI latest/fresh-install package evidence is not green: latest metadata does not match source version', 'PyPI latest/fresh-install package evidence is not green: fresh install + MCP stdio canary is not green', 'first-10 external-user evidence has not passed: verified=0/10, real_users=0/10, installs=0/8, useful=0/6, critical_incidents=0/0']",
       "exists": true,
-      "freshness_timestamp": "2026-05-22T20:42:08.707805+00:00",
+      "freshness_timestamp": "2026-05-24T19:45:25.420696+00:00",
       "path": "eval/real_user_rollout_gate_snapshot.json",
-      "sha256": "708e049968794bf9c5d05d82eaaa9ee24ef91d0c86ec85e99e8018fc3ab183be"
+      "sha256": "6d48c8e05560b8402ae81abb8532a753ba82d632ebd88535bea89a2883337143"
     },
     {
-      "claim_derived": "public self-serve gate=False; max_recommended_real_users=10; blockers=['first-10 external-user evidence has not passed: verified=0/10, real_users=0/10, installs=0/8, useful=0/6, critical_incidents=0/0']",
+      "claim_derived": "public self-serve gate=False; max_recommended_real_users=0; blockers=['PyPI latest metadata does not match source version or required project URLs', 'PyPI fresh-install + MCP stdio canary snapshot is missing or failing', 'first-10 external-user evidence has not passed: verified=0/10, real_users=0/10, installs=0/8, useful=0/6, critical_incidents=0/0']",
       "exists": true,
-      "freshness_timestamp": "2026-05-22T20:42:08.658397+00:00",
+      "freshness_timestamp": "2026-05-24T19:45:13.927834+00:00",
       "path": "eval/public_self_serve_launch_gate_snapshot.json",
-      "sha256": "293aa0c370d103e0672db8f20d736db6cb03f1001a38214aaf60de913e40e2e2"
+      "sha256": "d82fad386f9247554927a7f11ea69fa5c95fd03fc12e3a8de2301039aab23b97"
     },
     {
-      "claim_derived": "PyPI fresh-install canary success=True; version=3.3.10",
+      "claim_derived": "PyPI fresh-install canary success=False; version=3.3.11",
       "exists": true,
-      "freshness_timestamp": "2026-05-22T20:30:42Z",
+      "freshness_timestamp": "2026-05-24T19:45:08Z",
       "path": "eval/pypi_fresh_install_snapshot.json",
-      "sha256": "7036c1a24e5add42200d67a8fce9e6dbe2785e11ee833be3f0937b6b805155c1"
+      "sha256": "94cf4f7f8997e312f42e76adfb06c8004a27006412d7ebd7846641a83d6ff80b"
     },
     {
-      "claim_derived": "logical load 10: passed=True; total_requests=59794; success_rate=1.0; p95_ms=0.6281427631620318; model=asyncio_logical_users",
+      "claim_derived": "logical load 10: passed=True; total_requests=68962; success_rate=1.0; p95_ms=0.5755376303568482; model=asyncio_logical_users",
       "exists": true,
-      "freshness_timestamp": "2026-05-18T07:45:06.621553+00:00",
+      "freshness_timestamp": "2026-05-24T07:37:55.127417+00:00",
       "path": "eval/load_10_snapshot.json",
-      "sha256": "ba59f7350f5b3cdb9078ddfe786524f00b3e1de7b384885e6297f7cb9c46a7c2"
+      "sha256": "b17c67eac7a35d03b27a598b05f543c19523e52073bf25828c722e9e76b69764"
     },
     {
-      "claim_derived": "logical load 100: passed=True; total_requests=59981; success_rate=1.0; p95_ms=0.6004410097375512; model=asyncio_logical_users",
+      "claim_derived": "logical load 100: passed=True; total_requests=64939; success_rate=1.0; p95_ms=0.5981309339404106; model=asyncio_logical_users",
       "exists": true,
-      "freshness_timestamp": "2026-05-18T07:45:36.770025+00:00",
+      "freshness_timestamp": "2026-05-24T07:38:25.246013+00:00",
       "path": "eval/load_100_snapshot.json",
-      "sha256": "f19307704ed8df2c3b536b70b5cb4544bc07a375afa4ba9c213cdb3adc6149f4"
+      "sha256": "ffaee97abd21493996d056c812b26503af5e05d6432a68c2a8ae0a454f571952"
     },
     {
-      "claim_derived": "logical load 1000: passed=True; total_requests=59947; success_rate=1.0; p95_ms=0.6051470059901476; model=asyncio_logical_users",
+      "claim_derived": "logical load 1000: passed=True; total_requests=70111; success_rate=1.0; p95_ms=0.560709391720593; model=asyncio_logical_users",
       "exists": true,
-      "freshness_timestamp": "2026-05-18T07:46:06.931035+00:00",
+      "freshness_timestamp": "2026-05-24T07:38:55.423045+00:00",
       "path": "eval/load_1000_snapshot.json",
-      "sha256": "7a97f13045c6e54751de87963979fd47cedd19467b1b03c1f2c5f0f4aa703629"
+      "sha256": "b1c1bde0a6b82cb61c68d326359b49b2bcfe3cf78608f3dbc7d52d6994996aec"
     },
     {
-      "claim_derived": "package version=3.3.10; scripts declared in project metadata",
+      "claim_derived": "package version=3.3.11; scripts declared in project metadata",
       "exists": true,
-      "freshness_timestamp": "2026-05-22T20:25:53Z",
+      "freshness_timestamp": "2026-05-23T23:32:19Z",
       "path": "pyproject.toml",
-      "sha256": "e985c25026ed8d02022d4f80b9f1e17843fb2dcfaad4c06837f62d758dc6970d"
+      "sha256": "b8af575dae132c157cf848dbb5f53c84ebfd58a4983cd5ff0800e6c6d7db77ea"
     },
     {
-      "claim_derived": "runtime __version__=3.3.10; top-level check() delegates to search",
+      "claim_derived": "runtime __version__=3.3.11; top-level check() delegates to search",
       "exists": true,
-      "freshness_timestamp": "2026-05-22T20:25:53Z",
+      "freshness_timestamp": "2026-05-23T23:24:12Z",
       "path": "borg/__init__.py",
-      "sha256": "079ca796afcc3456c3b01cf9cea780a87ace0c1a1fe502f60864f9b9bab5b035"
+      "sha256": "0a6f8653c22cb2cda6101d26929893804c855e0c3e41ded6179fac491e33d785"
+    },
+    {
+      "claim_derived": "prior local status/readiness narrative used as contextual evidence only, not external adoption proof",
+      "exists": true,
+      "freshness_timestamp": "2026-05-24T19:44:51Z",
+      "path": "PROJECT_STATUS.md",
+      "sha256": "e8b36fb233590ba0e351f571ba3f65ea644ee8b46c105e5c0cd4eef602105de3"
+    },
+    {
+      "claim_derived": "prior local status/readiness narrative used as contextual evidence only, not external adoption proof",
+      "exists": true,
+      "freshness_timestamp": "2026-05-24T19:44:51Z",
+      "path": "GO_NO_GO_DECISION.md",
+      "sha256": "a12a902945e0ce27e4c2eaeabee2122064d995b8e3b7b4248a981759fb538072"
+    },
+    {
+      "claim_derived": "prior local status/readiness narrative used as contextual evidence only, not external adoption proof",
+      "exists": true,
+      "freshness_timestamp": "2026-05-24T19:44:51Z",
+      "path": "UAT_RESULTS.md",
+      "sha256": "fdcc490e01ed9542b6f9a30dd00999b5d0a3416e7cb6b26528d3c764a6a8e595"
     }
   ],
   "first_10_user_scoreboard_template": {
@@ -220,7 +241,7 @@
       }
     ]
   },
-  "generated_at_utc": "2026-05-22T20:42:08Z",
+  "generated_at_utc": "2026-05-24T19:45:25Z",
   "metrics": {
     "active_contributors_consumers": {
       "honesty_label": "MISSING_BORG_ANALYTICS_ARTIFACT",
@@ -235,7 +256,7 @@
     "gate_run_synthetic_load": {
       "honesty_label": "LOCAL_ARTIFACT_LOGICAL_USERS",
       "provenance": "eval/gate_run_snapshot.json",
-      "value": "PASS"
+      "value": "FAIL"
     },
     "host_runtime_split_brain": {
       "honesty_label": "EVIDENCE_GAP",
@@ -249,34 +270,34 @@
         "10": {
           "concurrency_model": "asyncio_logical_users",
           "exists": true,
-          "p95_ms": 0.6281427631620318,
-          "p99_ms": 0.8716626581735909,
+          "p95_ms": 0.5755376303568482,
+          "p99_ms": 0.6008552201092243,
           "passed": true,
           "success_rate": 1.0,
-          "timestamp": "2026-05-18T07:45:06.621553+00:00",
-          "total_requests": 59794,
+          "timestamp": "2026-05-24T07:37:55.127417+00:00",
+          "total_requests": 68962,
           "users_label": 10
         },
         "100": {
           "concurrency_model": "asyncio_logical_users",
           "exists": true,
-          "p95_ms": 0.6004410097375512,
-          "p99_ms": 0.6370391696691513,
+          "p95_ms": 0.5981309339404106,
+          "p99_ms": 0.6571157835423953,
           "passed": true,
           "success_rate": 1.0,
-          "timestamp": "2026-05-18T07:45:36.770025+00:00",
-          "total_requests": 59981,
+          "timestamp": "2026-05-24T07:38:25.246013+00:00",
+          "total_requests": 64939,
           "users_label": 100
         },
         "1000": {
           "concurrency_model": "asyncio_logical_users",
           "exists": true,
-          "p95_ms": 0.6051470059901476,
-          "p99_ms": 0.7191141927614809,
+          "p95_ms": 0.560709391720593,
+          "p99_ms": 0.5917398957535625,
           "passed": true,
           "success_rate": 1.0,
-          "timestamp": "2026-05-18T07:46:06.931035+00:00",
-          "total_requests": 59947,
+          "timestamp": "2026-05-24T07:38:55.423045+00:00",
+          "total_requests": 70111,
           "users_label": 1000
         }
       }
@@ -284,7 +305,7 @@
     "max_recommended_real_users_now": {
       "honesty_label": "REAL_EXTERNAL_USERS",
       "provenance": "eval/real_user_rollout_gate_snapshot.json",
-      "value": 10
+      "value": 0
     },
     "packs": {
       "honesty_label": "REPO_FILE_COUNT",
@@ -299,7 +320,7 @@
     "pypi_fresh_install_canary": {
       "honesty_label": "PYPI_FRESH_INSTALL",
       "provenance": "eval/pypi_fresh_install_snapshot.json",
-      "value": "PASS"
+      "value": "FAIL"
     },
     "real_user_100_rollout_gate": {
       "honesty_label": "REAL_EXTERNAL_USERS",
@@ -309,7 +330,7 @@
     "source_version_consistency": {
       "honesty_label": "REPO_SOURCE",
       "provenance": "pyproject.toml; borg/__init__.py",
-      "value": "pyproject=3.3.10 runtime=3.3.10"
+      "value": "pyproject=3.3.11 runtime=3.3.11"
     },
     "uat_scoreboard_synthetic_load": {
       "honesty_label": "LOCAL_ARTIFACT_LOGICAL_USERS",
@@ -323,7 +344,7 @@
     }
   },
   "next_action_queue_before_sharing_git_with_first_user": [
-    "Use `pipx install agent-borg==3.3.10` with controlled first-10 beta testers and label it as beta evidence capture, not public launch.",
+    "Use `pipx install agent-borg==3.3.11` with controlled first-10 beta testers and label it as beta evidence capture, not public launch.",
     "Create a fresh-PyPI runbook: install package, run borg --version, configure MCP, run one rescue, capture exact timestamps and blockers.",
     "Record first user in the first-10 scoreboard template using a pseudonym and consented outcome fields.",
     "If any onboarding step fails, add artifact path/stdout/stderr and keep broad launch at NO-GO.",
@@ -331,15 +352,19 @@
     "Before any public claim, replace logical-user load evidence with real external-user evidence or clearly label the distinction."
   ],
   "repo": "https://github.com/borg-farther/Borg-Directory",
-  "source_revision": "ef91225c1355582684d53f4e3ec12eaa6e4353ca+dirty",
+  "source_revision": "8453e579cfa3b1ba5a1274b7c7d10062dea5db8a+dirty",
   "top_verdict": {
     "broad_public_launch": {
       "verdict": "NO-GO",
-      "why": "Public self-serve gate is blocked only by row-derived first-10 external-user evidence; PyPI/latest/fresh-install/MCP/docs gates are green."
+      "why": "Public self-serve gate is blocked until PyPI latest/fresh-install/MCP/docs gates pass and first-10 external evidence exists."
     },
-    "supervised_first_user_onboarding": {
-      "verdict": "CONDITIONAL",
-      "why": "Share only with controlled first-10 beta testers: PyPI install/runtime/security/local logical-load gates pass, but verified external users remain 0 and first-user outcome evidence is uncollected."
+    "controlled_first_10_beta": {
+      "verdict": "NO-GO",
+      "why": "Controlled first-10 beta is blocked until the public package path is green: PyPI latest metadata, fresh-install canary, stdio MCP canary, and docs guard must all pass."
+    },
+    "local_release_candidate": {
+      "verdict": "NO-GO",
+      "why": "Required local first-user/readiness gates are not all passing or are missing."
     },
     "unattended_git_onboarding": {
       "verdict": "NO-GO",

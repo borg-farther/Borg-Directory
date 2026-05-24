@@ -13,7 +13,7 @@ Usage:
     borg rescue <error>       — agent-ready rescue packet: ACTION / STOP / VERIFY / receipt
     borg generate <pack>      — export pack to .cursorrules / .clinerules / CLAUDE.md / .windsurfrules
     borg list                 — list local packs
-    borg autopilot            — zero-config setup (install MCP + skill + auto-suggest)
+    borg autopilot            — guided Hermes setup (install MCP + skill + auto-suggest)
     borg setup-claude         — configure borg MCP for Claude Code
     borg setup-cursor         — configure borg MCP for Cursor
     borg version              — show version
@@ -1338,7 +1338,7 @@ def _cmd_setup_cursor(args: argparse.Namespace) -> int:
 
 
 # ---------------------------------------------------------------------------
-# Zero-config autopilot
+# Guided Hermes setup helper
 # ---------------------------------------------------------------------------
 
 HERMES_SKILL_TEMPLATE = """\
@@ -1431,7 +1431,7 @@ mcp_servers:
 
 
 def _cmd_autopilot(args: argparse.Namespace) -> int:
-    """Zero-config autopilot: install MCP server config, skill file, and auto-suggest.
+    """Guided Hermes setup helper: install MCP server config, skill file, and auto-suggest.
 
     This single command sets up everything needed for borg to work automatically
     in Hermes — no manual CLAUDE.md editing required.
@@ -1517,7 +1517,7 @@ def _cmd_autopilot(args: argparse.Namespace) -> int:
         print("[autopilot] Everything already set up! Borg is ready to use.")
         return 0
 
-    print("[autopilot] Zero-config guild setup complete!")
+    print("[autopilot] Borg Hermes setup complete.")
     print()
     print("What was configured:")
     for c in changes:
@@ -1643,7 +1643,7 @@ def main() -> int:
   borg setup-claude              Configure borg MCP for Claude Code
   borg setup-cursor              Configure borg MCP for Cursor
   borg first-10 --json           Print first-user beta gates and smoke path
-  borg autopilot                 Zero-config setup for Hermes""",
+  borg autopilot                 Guided Hermes setup""",
     )
     parser.add_argument("--version", "-V", action="version", version=f"borg {__version__}")
     sub = parser.add_subparsers(dest="command", required=True)
@@ -1970,7 +1970,7 @@ Examples:
     p.set_defaults(func=_cmd_version)
 
     # guild autopilot
-    p = sub.add_parser("autopilot", help="Zero-config setup: install MCP + skill + auto-suggest",
+    p = sub.add_parser("autopilot", help="Guided Hermes setup: install MCP + skill + auto-suggest",
         formatter_class=argparse.RawDescriptionHelpFormatter,
         epilog="""Examples:
   borg autopilot""")
