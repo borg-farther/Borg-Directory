@@ -63,9 +63,9 @@
     {
       "claim_derived": "100-real-user gate=False; max_recommended_real_users=10; blockers=['first-10 external-user evidence has not passed: verified=0/10, real_users=0/10, installs=0/8, useful=0/6, critical_incidents=0/0']",
       "exists": true,
-      "freshness_timestamp": "2026-05-24T21:09:22.648203+00:00",
+      "freshness_timestamp": "2026-05-24T21:14:14.695332+00:00",
       "path": "eval/real_user_rollout_gate_snapshot.json",
-      "sha256": "5c6d2d9282b1dfad12d18be365f3edcb6bc821410c9d8dd69246cc012ee42409"
+      "sha256": "fda67bdef1cf425f8930a00e7a43e11d4e5fa5deec67a5e75757689fbdfd9a68"
     },
     {
       "claim_derived": "public self-serve gate=False; max_recommended_real_users=10; blockers=['first-10 external-user evidence has not passed: verified=0/10, real_users=0/10, installs=0/8, useful=0/6, critical_incidents=0/0']",
@@ -241,7 +241,7 @@
       }
     ]
   },
-  "generated_at_utc": "2026-05-24T21:09:22Z",
+  "generated_at_utc": "2026-05-24T21:14:14Z",
   "metrics": {
     "active_contributors_consumers": {
       "honesty_label": "MISSING_BORG_ANALYTICS_ARTIFACT",
@@ -352,7 +352,7 @@
     "Before any public claim, replace logical-user load evidence with real external-user evidence or clearly label the distinction."
   ],
   "repo": "https://github.com/borg-farther/Borg-Directory",
-  "source_revision": "215bd0f29c86ddbaff3796664772a9da452bbef1+dirty",
+  "source_revision": "1046eca0467a032fbc95f6b320809923f7bbe06b+dirty",
   "top_verdict": {
     "broad_public_launch": {
       "verdict": "NO-GO",

@@ -1,8 +1,8 @@
 # Borg Proof Dashboard
 
-Generated: `2026-05-24T21:09:22Z`
+Generated: `2026-05-24T21:14:14Z`
 Repo: `https://github.com/borg-farther/Borg-Directory`
-Source snapshot: `215bd0f29c86ddbaff3796664772a9da452bbef1+dirty`
+Source snapshot: `1046eca0467a032fbc95f6b320809923f7bbe06b+dirty`
 
 ## Big top verdict
 
@@ -40,7 +40,7 @@ Source snapshot: `215bd0f29c86ddbaff3796664772a9da452bbef1+dirty`
 | eval/first_user_release_gate_snapshot.json | True | 367230553a5dd6202420becfaeaf268bf75603e5fc4dd54dc08f597dd0881af6 | 2026-05-24T19:44:51Z | first-user release gate all_pass=True |
 | eval/uat_scoreboard_snapshot.json | True | f5770651e2c9e3e6d23eac9703a5e103d04ab49dba6f020dcdd743fcc16af648 | 2026-05-24T07:38:56.063440+00:00 | UAT synthetic_load_all_pass=True; real_user_100_all_pass=False; ready_for_10=True; ready_for_1000=True |
 | eval/gate_run_snapshot.json | True | f324e9c6919b605f593d14efe41940cecfa0b0f5e39eb00ad000478df20ba7bc | 2026-05-24T07:38:56.025585+00:00 | gate run synthetic_load_all_pass=False; overall_100_real_user_pass=False; ready_for_10=True; ready_for_1000=True |
-| eval/real_user_rollout_gate_snapshot.json | True | 5c6d2d9282b1dfad12d18be365f3edcb6bc821410c9d8dd69246cc012ee42409 | 2026-05-24T21:09:22.648203+00:00 | 100-real-user gate=False; max_recommended_real_users=10; blockers=['first-10 external-user evidence has not passed: verified=0/10, real_users=0/10, installs=0/8, useful=0/6, critical_incidents=0/0'] |
+| eval/real_user_rollout_gate_snapshot.json | True | fda67bdef1cf425f8930a00e7a43e11d4e5fa5deec67a5e75757689fbdfd9a68 | 2026-05-24T21:14:14.695332+00:00 | 100-real-user gate=False; max_recommended_real_users=10; blockers=['first-10 external-user evidence has not passed: verified=0/10, real_users=0/10, installs=0/8, useful=0/6, critical_incidents=0/0'] |
 | eval/public_self_serve_launch_gate_snapshot.json | True | 66b83c3e5c941676cbc7eb091142deb0c0d4b332928274aebdab341b6a885f8d | 2026-05-24T21:09:22.554492+00:00 | public self-serve gate=False; max_recommended_real_users=10; blockers=['first-10 external-user evidence has not passed: verified=0/10, real_users=0/10, installs=0/8, useful=0/6, critical_incidents=0/0'] |
 | eval/pypi_fresh_install_snapshot.json | True | 68ac9d3aa510680781555144c519998b8ac772b6879690a3d1f8cb437d4e9a34 | 2026-05-24T21:09:22Z | PyPI fresh-install canary success=True; version=3.3.11 |
 | eval/load_10_snapshot.json | True | b17c67eac7a35d03b27a598b05f543c19523e52073bf25828c722e9e76b69764 | 2026-05-24T07:37:55.127417+00:00 | logical load 10: passed=True; total_requests=68962; success_rate=1.0; p95_ms=0.5755376303568482; model=asyncio_logical_users |

@@ -27,9 +27,14 @@ def test_borg_proof_dashboard_artifacts_exist_and_are_honest():
     data = json.loads(json_path.read_text(encoding="utf-8"))
     assert data["repo"] == "https://github.com/borg-farther/Borg-Directory"
     assert re.fullmatch(r"[0-9a-f]{40}(?:\+dirty)?", data["source_revision"])
-    assert data["controlled_first_10_beta"]["answer"] == "NO-GO"
-    assert data["top_verdict"]["controlled_first_10_beta"]["verdict"] == "NO-GO"
-    assert "PyPI latest" in data["top_verdict"]["controlled_first_10_beta"]["why"]
+    if data["metrics"]["pypi_fresh_install_canary"]["value"] == "PASS":
+        assert data["controlled_first_10_beta"]["answer"] == "GO"
+        assert data["top_verdict"]["controlled_first_10_beta"]["verdict"] == "CONDITIONAL"
+        assert "infrastructure is green" in data["top_verdict"]["controlled_first_10_beta"]["why"]
+    else:
+        assert data["controlled_first_10_beta"]["answer"] == "NO-GO"
+        assert data["top_verdict"]["controlled_first_10_beta"]["verdict"] == "NO-GO"
+        assert "PyPI latest" in data["top_verdict"]["controlled_first_10_beta"]["why"]
     assert data["metrics"]["verified_external_users"]["value"] == 0
     assert data["top_verdict"]["broad_public_launch"]["verdict"] == "NO-GO"
     assert data["top_verdict"]["unattended_git_onboarding"]["verdict"] == "NO-GO"

@@ -28,12 +28,19 @@ def test_real_user_rollout_gate_blocks_100_when_first_10_scoreboard_empty() -> N
     )
     assert proc.returncode == 1
     payload = json.loads(proc.stdout)
-    assert payload["infrastructure_ready_for_100"] is False
-    assert payload["ready_for_10_controlled_beta"] is False
     assert payload["ready_for_100_real_users"] is False
-    assert payload["max_recommended_real_users_now"] == 0
-    assert any("PyPI latest/fresh-install package evidence" in b for b in payload["blockers"])
+    assert payload["max_recommended_real_users_now"] in {0, 10}
     assert any("first-10 external-user evidence" in b for b in payload["blockers"])
+
+    package_blocked = any("PyPI latest/fresh-install package evidence" in b for b in payload["blockers"])
+    if package_blocked:
+        assert payload["ready_for_10_controlled_beta"] is False
+        assert payload["infrastructure_ready_for_100"] is False
+        assert payload["max_recommended_real_users_now"] == 0
+    else:
+        assert payload["ready_for_10_controlled_beta"] is True
+        assert payload["infrastructure_ready_for_100"] is True
+        assert payload["max_recommended_real_users_now"] == 10
 
 
 def test_real_user_rollout_gate_snapshot_is_machine_readable() -> None:
