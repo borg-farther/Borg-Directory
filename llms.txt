@@ -14,7 +14,7 @@ Day-one value path:
 3. Expect ACTION / STOP / VERIFY / CONFIDENCE, or NO_CONFIDENT_MATCH.
 
 Current rollout boundary:
-- Controlled first-10 public-package beta infrastructure is green for agent-borg==3.3.13 after PyPI latest, fresh-install, and stdio MCP canaries passed.
+- Controlled first-10 public-package beta infrastructure is blocked for agent-borg==3.3.14 until PyPI latest, fresh-install, and stdio MCP canaries pass for that version.
 - Do not claim public self-serve launch, 100 real users, served remote MCP, or measured external lift until row-derived external-user evidence passes.
 
 Useful docs:

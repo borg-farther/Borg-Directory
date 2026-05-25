@@ -1,13 +1,15 @@
-name: First-10 beta feedback
-description: Report whether Borg gave you a useful ACTION / STOP / VERIFY moment
-title: "[first-10 feedback] "
-labels: ["first-10-feedback"]
+name: First-10 beta / bad-answer feedback
+description: Report whether Borg gave a useful ACTION / STOP / VERIFY moment, or a bad/irrelevant first answer
+title: "[first-10 feedback or bad answer] "
+labels: ["first-10-feedback", "bad-answer"]
 assignees: []
 body:
   - type: markdown
     attributes:
       value: |
         Thanks for trying Borg. Please do not paste API keys, passwords, tokens, cookies, customer data, private repo contents, or unsanitized private stack traces.
+
+        If Borg's first answer was unrelated, choose **No, unrelated guidance** below and paste only a redacted summary. Bad first answers are launch blockers until triaged.
 
   - type: dropdown
     id: path

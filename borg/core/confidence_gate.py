@@ -20,6 +20,25 @@ _PERMISSION_SIGNAL_PATTERN = re.compile(
     re.IGNORECASE,
 )
 
+_META_NEGATED_GUIDANCE_PATTERN = re.compile(
+    r"\b(?:irrelevant|unrelated|wrong|bad|false|spurious|stale|leaked|leaking|quoted|pasted)\s+"
+    r"(?:[a-z0-9_+./-]+\s+){0,6}(?:guidance|advice|pack|answer|response|match|hit|trace)s?\b",
+    re.IGNORECASE,
+)
+
+_DO_NOT_DEBUG_PATTERN = re.compile(
+    r"\bdo\s+not\s+(?:debug|fix|diagnose|troubleshoot|solve|work\s+on)\s+"
+    r"(?:[a-z0-9_+./-]+\s*){1,5}",
+    re.IGNORECASE,
+)
+
+_PRIOR_GUIDANCE_SAID_PATTERN = re.compile(
+    r"\b(?:previous|prior|last|old|earlier)\s+"
+    r"(?:borg\s+)?(?:answer|guidance|advice|response|output|suggestion|pack|match)\s+"
+    r"(?:said|says|recommended|returned|gave|told|suggested|included)\s+[^.;\n]{0,180}",
+    re.IGNORECASE,
+)
+
 _DEFAULT_PACK_STOPWORDS = {
     "a", "an", "the", "all", "for", "to", "of", "in", "on", "and", "or",
     "build", "fix", "audit", "make", "create", "update", "task", "error",
@@ -28,9 +47,12 @@ _DEFAULT_PACK_STOPWORDS = {
 _DEFAULT_TRACE_STOPWORDS = _DEFAULT_PACK_STOPWORDS | {
     # Borg/meta words are too broad to prove relevance. They caused unrelated
     # Hermes/Borg plugin traces to leak into readiness/dashboard tasks.
-    "borg", "trace", "traces", "mcp", "plugin", "runtime", "hermes",
+    "borg", "trace", "traces", "mcp", "plugin", "plugins", "runtime", "hermes",
     "guidance", "observe", "observed", "match", "matching", "relevance",
     "readiness", "continue", "first", "user", "users", "gate", "gates",
+    "public", "self", "service", "trust", "answer", "answers", "product",
+    "hardening", "harden", "cold", "start", "meta", "operator",
+    "permission", "permissions", "denied", "eacces", "chmod",
 }
 
 
@@ -46,10 +68,24 @@ def strip_embedded_borg_guidance(message: str) -> str:
     return _BORG_GUIDANCE_BLOCK_PATTERN.sub("\n", str(message)).strip()
 
 
+def normalize_query_for_matching(message: str) -> str:
+    """Return only active task text for relevance matching.
+
+    Cold-start trust prompts often mention bad prior Borg output, e.g.
+    "irrelevant Django guidance leaked". Those quoted/negated words must not be
+    treated as positive evidence that the new task is a Django/permission issue.
+    """
+    cleaned = strip_embedded_borg_guidance(message or "")
+    cleaned = _PRIOR_GUIDANCE_SAID_PATTERN.sub(" ", cleaned)
+    cleaned = _META_NEGATED_GUIDANCE_PATTERN.sub(" ", cleaned)
+    cleaned = _DO_NOT_DEBUG_PATTERN.sub(" ", cleaned)
+    return re.sub(r"\s+", " ", cleaned).strip()
+
+
 def permission_guidance_matches_task(task: str, context: str = "") -> bool:
     """Return True only when the cleaned task/context has permission signals."""
-    task_clean = strip_embedded_borg_guidance(task or "")
-    context_clean = strip_embedded_borg_guidance(context or "")
+    task_clean = normalize_query_for_matching(task or "")
+    context_clean = normalize_query_for_matching(context or "")
     return bool(_PERMISSION_SIGNAL_PATTERN.search(f"{task_clean} {context_clean}"))
 
 
@@ -80,8 +116,8 @@ def guidance_is_safe_to_inject(guidance: str, task: str, context: str = "") -> b
     if not guidance or len(str(guidance)) < 50:
         return False
 
-    task_clean = strip_embedded_borg_guidance(task or "")
-    context_clean = strip_embedded_borg_guidance(context or "")
+    task_clean = normalize_query_for_matching(task or "")
+    context_clean = normalize_query_for_matching(context or "")
     lowered = str(guidance).lower()
 
     if "no_confident_match" in lowered or "no confident match" in lowered:
@@ -112,6 +148,15 @@ def guidance_is_safe_to_inject(guidance: str, task: str, context: str = "") -> b
         if not _pack_guidance_has_task_overlap(str(guidance), f"{task_clean} {context_clean}"):
             return False
 
+    if not has_pack_guidance and "real traces:" in lowered and "action:" in lowered:
+        # Trace-only guidance can still be irrelevant even when it has many real
+        # traces.  For cold-start trust, require at least one concrete non-meta
+        # token shared by the current task and the rendered trace guidance.
+        guidance_terms = _terms(str(guidance), _DEFAULT_TRACE_STOPWORDS)
+        query_terms = _terms(f"{task_clean} {context_clean}", _DEFAULT_TRACE_STOPWORDS)
+        if not (guidance_terms & query_terms):
+            return False
+
     return True
 
 
@@ -132,7 +177,7 @@ def no_confident_match_response(tech: str = "") -> str:
 
 def _terms(text: str, stopwords: set[str]) -> set[str]:
     return {
-        t for t in re.findall(r"[a-z0-9_+-]{3,}", strip_embedded_borg_guidance(text or "").lower())
+        t for t in re.findall(r"[a-z0-9_+-]{3,}", normalize_query_for_matching(text or "").lower())
         if t not in stopwords
     }
 
@@ -193,22 +238,16 @@ def trace_match_is_confident(
         return False
 
     if query:
-        # Some fallback matchers return actionable-looking traces without an
-        # explicit semantic similarity. Those are exactly where broad Borg/Hermes
-        # words can become false positives, so require concrete lexical overlap
-        # unless the semantic score is high enough to stand on its own.
-        require_lexical_overlap = similarity is None
-        if similarity is not None:
-            try:
-                require_lexical_overlap = float(similarity) < lexical_similarity_floor
-            except (TypeError, ValueError):
-                return False
-        if require_lexical_overlap:
-            active_stopwords = stopwords or _DEFAULT_TRACE_STOPWORDS
-            query_terms = _terms(query, active_stopwords)
-            trace_terms = _terms(_trace_text(trace), active_stopwords)
-            if len(query_terms & trace_terms) < min_query_overlap:
-                return False
+        # A high semantic score is not enough for first-answer trust.  We have
+        # seen real production prompts receive confident but irrelevant Borg or
+        # framework guidance.  Require concrete non-meta lexical overlap for all
+        # trace hits; semantic ranking may order candidates, but cannot authorize
+        # injection by itself.
+        active_stopwords = stopwords or _DEFAULT_TRACE_STOPWORDS
+        query_terms = _terms(query, active_stopwords)
+        trace_terms = _terms(_trace_text(trace), active_stopwords)
+        if len(query_terms & trace_terms) < min_query_overlap:
+            return False
 
     return True
 
@@ -223,7 +262,7 @@ def pack_match_is_confident(
     """Return True only for exact/lexically strong pack matches."""
     if not isinstance(pack, dict):
         return False
-    query_l = strip_embedded_borg_guidance(query or "").lower()
+    query_l = normalize_query_for_matching(query or "").lower()
     if not query_l.strip():
         return False
 

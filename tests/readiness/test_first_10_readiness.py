@@ -10,6 +10,7 @@ from __future__ import annotations
 import json
 from pathlib import Path
 
+from eval import first_10_evidence as evidence
 from borg.core.first_user_readiness import (
     FIRST_10_GATES,
     PRIMING_PARAGRAPH,
@@ -50,6 +51,15 @@ def test_first_10_packet_contains_install_mcp_feedback_and_priming():
     assert "borg_record_failure" in packet["priming_paragraph"]
     assert "borg_rate" not in packet["priming_paragraph"]
     assert "did_it_prevent_a_dead_end" in packet["feedback_fields"]
+    assert "baseline_minutes_without_borg" in packet["feedback_fields"]
+    assert "actual_minutes_with_borg" in packet["feedback_fields"]
+    assert "net_minutes_saved" in packet["feedback_fields"]
+    assert "baseline_tokens_without_borg" in packet["feedback_fields"]
+    assert "actual_tokens_with_borg" in packet["feedback_fields"]
+    assert "net_tokens_saved" in packet["feedback_fields"]
+    assert "savings_counterfactual_basis" in packet["feedback_fields"]
+    assert "user_confirmed_value" in packet["feedback_fields"]
+    assert any("value_receipt" in item for gate in packet["gates"] for item in gate["pass_criteria"])
     mixes = "\n".join(packet["supported_mixes"])
     assert "Hermes" in mixes
     assert "ChatGPT/OpenAI" in mixes
@@ -155,3 +165,123 @@ def test_mcp_exposes_first_10_contract():
     assert data["success"] is True
     assert data["status"] == "first_10_beta_contract"
     assert len(data["gates"]) == 7
+
+
+def _first_10_value_row(
+    idx: int,
+    *,
+    minutes_before: float | None = None,
+    minutes_after: float | None = None,
+    tokens_before: int | None = None,
+    tokens_after: int | None = None,
+    confirmed: bool = False,
+) -> dict[str, object]:
+    row: dict[str, object] = {
+        "user_id_pseudonym": f"external-user-{idx:02d}",
+        "external_user_evidence_uri": f"https://evidence.borg-farther.org/first-10/{idx}",
+        "consent_confirmed": True,
+        "install_method": "pipx install agent-borg==9.9.9",
+        "install_success": True,
+        "time_to_first_rescue_minutes": 4,
+        "rescue_input_redacted": "ModuleNotFoundError: No module named flask",
+        "rescue_returned_action_stop_verify": True,
+        "rescue_useful": True,
+        "mcp_setup_attempted": True,
+        "mcp_setup_success": True,
+        "no_confident_match_when_unknown": True,
+        "blocker_category": "none",
+        "blocker_notes_redacted": "none",
+        "privacy_security_incident": False,
+        "repeat_use_within_7_days": idx <= 2,
+        "outcome_recorded": True,
+        "savings_counterfactual_basis": "randomized_control" if confirmed else "unknown",
+        "dead_end_avoided_confirmed": confirmed,
+        "user_confirmed_value": confirmed,
+    }
+    if minutes_before is not None:
+        row["baseline_minutes_without_borg"] = minutes_before
+    if minutes_after is not None:
+        row["actual_minutes_with_borg"] = minutes_after
+    if tokens_before is not None:
+        row["baseline_tokens_without_borg"] = tokens_before
+    if tokens_after is not None:
+        row["actual_tokens_with_borg"] = tokens_after
+    return row
+
+
+def _first_10_value_scoreboard(rows: list[dict[str, object]]) -> dict[str, object]:
+    data: dict[str, object] = {
+        "schema_version": 1,
+        "truth_policy": {
+            "simulated_users_count_as_real": False,
+            "internal_sessions_count_as_real": False,
+            "maintainer_runs_count_as_real": False,
+            "verified_external_users": 0,
+            "public_self_serve_launch_allowed_before_thresholds": False,
+        },
+        "thresholds": {
+            "min_install_successes_for_public_self_serve": 8,
+            "min_useful_rescue_moments_for_public_self_serve": 6,
+            "max_critical_privacy_security_failures": 0,
+            "required_total_real_users": 10,
+        },
+        "columns": evidence.DEFAULT_COLUMNS,
+        "rows": rows,
+        "current_counts": {},
+        "current_value_counts": {},
+        "current_verdict": {},
+    }
+    return evidence.scoreboard_with_derived_fields(data)
+
+
+def test_first_10_scoreboard_derives_human_value_savings_from_external_rows():
+    rows = [_first_10_value_row(i) for i in range(1, 11)]
+    rows[0].update(
+        _first_10_value_row(
+            1,
+            minutes_before=30,
+            minutes_after=10,
+            tokens_before=9000,
+            tokens_after=5000,
+            confirmed=True,
+        )
+    )
+    rows[1].update(
+        _first_10_value_row(
+            2,
+            minutes_before=20,
+            minutes_after=35,
+            tokens_before=3000,
+            tokens_after=4500,
+            confirmed=True,
+        )
+    )
+    data = _first_10_value_scoreboard(rows)
+
+    result = evidence.evaluate_scoreboard(data)
+
+    assert result["schema_valid"] is True
+    assert result["derived_value"]["rows_with_measured_value"] == 2
+    assert result["derived_value"]["net_minutes_saved"] == 5.0
+    assert result["derived_value"]["positive_minutes_saved"] == 20.0
+    assert result["derived_value"]["negative_minutes_cost"] == 15.0
+    assert result["derived_value"]["net_tokens_saved"] == 2500
+    assert result["derived_value"]["dead_ends_avoided_confirmed"] == 2
+    assert result["stored_consistency"]["passed"] is True
+
+
+def test_first_10_scoreboard_rejects_forged_or_inconsistent_savings_fields():
+    rows = [_first_10_value_row(i) for i in range(1, 11)]
+    rows[0].update(_first_10_value_row(1, minutes_before=30, minutes_after=10, confirmed=True))
+    rows[0]["net_minutes_saved"] = 99
+    data = _first_10_value_scoreboard(rows)
+
+    result = evidence.evaluate_scoreboard(data)
+
+    assert result["schema_valid"] is False
+    assert result["public_self_serve_launch_gate"] == "BLOCKED"
+    assert any(
+        "net_minutes_saved does not match" in reason
+        for item in result["invalid_rows"]
+        for reason in item["reasons"]
+    )

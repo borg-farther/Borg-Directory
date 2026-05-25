@@ -85,6 +85,24 @@ def _pypi_fixture(
     }
 
 
+def _write_cold_start_trust_snapshot(root: Path, *, passed: bool = True) -> None:
+    (root / "eval" / "cold_start_trust_gate_snapshot.json").write_text(
+        json.dumps({
+            "passed": passed,
+            "checks": [
+                {"name": name, "passed": passed}
+                for name in sorted(gate.REQUIRED_COLD_START_TRUST_CHECKS)
+            ],
+            "trust_policy": "fail closed on irrelevant first answers",
+            "bad_answer_feedback_path": {
+                "agent_fast_path": "borg_rate(helpful=False)",
+                "human_path": ".github/ISSUE_TEMPLATE/classifier-feedback.yml",
+            },
+        }),
+        encoding="utf-8",
+    )
+
+
 def test_row_derived_evidence_rejects_forged_aggregates_with_empty_rows() -> None:
     data = _scoreboard([])
     data["truth_policy"]["verified_external_users"] = 10  # type: ignore[index]
@@ -201,7 +219,8 @@ def test_docs_claim_guard_catches_stale_pins_and_unsupported_ship_claims(tmp_pat
         "completion lift: +65%\n"
         "statistically significant agent-level lift: not claimed\n"
         "**Ready to share Git now?** YES, supervised only\n"
-        "version_package pyproject=3.3.1 runtime=3.3.1\n",
+        "version_package pyproject=3.3.1 runtime=3.3.1\n"
+        "ready_for_10=True; ready_for_1000=True\n",
         encoding="utf-8",
     )
 
@@ -214,6 +233,7 @@ def test_docs_claim_guard_catches_stale_pins_and_unsupported_ship_claims(tmp_pat
     assert "completion-lift claim without external evidence" in kinds
     assert "stale Git-sharing YES claim" in kinds
     assert "stale proof-dashboard version metric" in kinds
+    assert "unqualified logical-load readiness claim" in kinds
     assert "statistically significant external/agent lift claim" not in kinds
 
 
@@ -237,6 +257,35 @@ def test_docs_claim_guard_blocks_controlled_beta_go_until_package_canary_passes(
 
     assert result["passed"] is False
     assert any(v["kind"] == "controlled first-10 package GO before PyPI canary" for v in result["violations"])
+
+
+def test_docs_claim_guard_blocks_known_package_beta_contradictions(tmp_path: Path, monkeypatch) -> None:
+    monkeypatch.setattr(gate, "ROOT", tmp_path)
+    doc = tmp_path / "README.md"
+    doc.write_text(
+        "Package infrastructure is green for **controlled first-10 public-package beta**:\n"
+        "Ready to invite up to 10 controlled public-package beta testers.\n"
+        "Published controlled-beta package line: `agent-borg==9.9.9`; production PyPI upload and fresh-install + stdio MCP canary are green.\n"
+        "Public waitlist / narrow beta: **CONDITIONAL GO for controlled first-10 only**.\n"
+        "controlled first-10 beta invites may start with consented evidence capture.\n",
+        encoding="utf-8",
+    )
+
+    result = gate.docs_claim_guard(
+        [Path("README.md")],
+        "9.9.9",
+        public_evidence_ready=False,
+        package_evidence_ready=False,
+    )
+
+    assert result["passed"] is False
+    kinds = {violation["kind"] for violation in result["violations"]}
+    assert "controlled beta package infrastructure green before PyPI canary" in kinds
+    assert "ready-to-invite claim before PyPI canary" in kinds
+    assert "published controlled-beta package line before PyPI canary" in kinds
+    assert "production PyPI canary green before PyPI canary" in kinds
+    assert "controlled first-10 conditional GO before PyPI canary" in kinds
+    assert "controlled beta invites-may-start before PyPI canary" in kinds
 
 
 def test_pypi_latest_check_requires_source_version_and_urls() -> None:
@@ -277,6 +326,7 @@ def test_public_self_serve_gate_passes_only_when_all_artifacts_and_real_rows_pas
     (tmp_path / "README.md").write_text("pipx install agent-borg==9.9.9\nPublic self-serve launch: NO-GO until evidence.\n", encoding="utf-8")
     (tmp_path / "eval" / "first_10_user_scoreboard.json").write_text(json.dumps(_scoreboard([_row(i) for i in range(1, 11)])), encoding="utf-8")
     (tmp_path / "eval" / "first_user_release_gate_snapshot.json").write_text(json.dumps({"success": True, "results": [{"name": "ok", "passed": True}]}), encoding="utf-8")
+    _write_cold_start_trust_snapshot(tmp_path)
     (tmp_path / "eval" / "pypi_fresh_install_snapshot.json").write_text(
         json.dumps({
             "success": True,
@@ -304,6 +354,7 @@ def test_public_self_serve_gate_blocks_empty_evidence_even_when_infra_passes(tmp
     (tmp_path / "README.md").write_text("pipx install agent-borg==9.9.9\nPublic self-serve launch: NO-GO until evidence.\n", encoding="utf-8")
     (tmp_path / "eval" / "first_10_user_scoreboard.json").write_text(json.dumps(_scoreboard([])), encoding="utf-8")
     (tmp_path / "eval" / "first_user_release_gate_snapshot.json").write_text(json.dumps({"success": True, "results": [{"name": "ok", "passed": True}]}), encoding="utf-8")
+    _write_cold_start_trust_snapshot(tmp_path)
     (tmp_path / "eval" / "pypi_fresh_install_snapshot.json").write_text(
         json.dumps({
             "success": True,
@@ -323,6 +374,33 @@ def test_public_self_serve_gate_blocks_empty_evidence_even_when_infra_passes(tmp
     assert snapshot["ready_for_public_self_serve_launch"] is False
     assert snapshot["max_recommended_real_users_now"] == 10
     assert any("first-10 external-user evidence" in blocker for blocker in snapshot["blockers"])
+
+
+def test_public_self_serve_gate_blocks_when_cold_start_trust_snapshot_fails(tmp_path: Path, monkeypatch) -> None:
+    monkeypatch.setattr(gate, "ROOT", tmp_path)
+    monkeypatch.setattr(gate, "CURRENT_CLAIM_DOCS", [Path("README.md")])
+    (tmp_path / "eval").mkdir()
+    (tmp_path / "pyproject.toml").write_text('[project]\nname = "agent-borg"\nversion = "9.9.9"\n', encoding="utf-8")
+    (tmp_path / "README.md").write_text("pipx install agent-borg==9.9.9\nPublic self-serve launch: NO-GO until evidence.\n", encoding="utf-8")
+    (tmp_path / "eval" / "first_10_user_scoreboard.json").write_text(json.dumps(_scoreboard([_row(i) for i in range(1, 11)])), encoding="utf-8")
+    (tmp_path / "eval" / "first_user_release_gate_snapshot.json").write_text(json.dumps({"success": True, "results": [{"name": "ok", "passed": True}]}), encoding="utf-8")
+    _write_cold_start_trust_snapshot(tmp_path, passed=False)
+    (tmp_path / "eval" / "pypi_fresh_install_snapshot.json").write_text(
+        json.dumps({
+            "success": True,
+            "version": "9.9.9",
+            "results": [{"name": "install", "passed": True}],
+            "mcp_stdio_canary": {"passed": True},
+        }),
+        encoding="utf-8",
+    )
+
+    snapshot = gate.compile_gate(fetch_network=False, pypi_data=_pypi_fixture())
+
+    assert snapshot["ready_for_controlled_first_10_beta"] is False
+    assert snapshot["ready_for_public_self_serve_launch"] is False
+    assert snapshot["gates"]["cold_start_trust_hardening"]["passed"] is False
+    assert any("cold-start trust" in blocker for blocker in snapshot["blockers"])
 
 
 def test_pypi_fresh_install_canary_fails_closed_when_release_not_on_pypi(monkeypatch) -> None:

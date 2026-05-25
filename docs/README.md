@@ -48,6 +48,6 @@ They are retained for provenance, but they are not current product claims or fir
 
 ## Current truth
 
-- Controlled first-10 public-package beta infrastructure: green for `agent-borg==3.3.13` after PyPI latest, fresh-install, stdio MCP, source/local first-user, and GitHub CI/security gates passed.
+- Controlled first-10 public-package beta infrastructure: NO-GO for this source revision until PyPI latest, fresh-install, stdio MCP, source/local first-user, and GitHub CI/security gates pass for `agent-borg==3.3.14`.
 - Public self-serve launch: not yet; requires real external-user evidence.
 - Agent-level success lift at statistical confidence: not yet proven.

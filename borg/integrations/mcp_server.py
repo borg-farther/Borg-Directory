@@ -1779,6 +1779,10 @@ def _strip_embedded_borg_guidance(message: str) -> str:
     return _confidence_gate.strip_embedded_borg_guidance(message)
 
 
+def _normalize_query_for_matching(message: str) -> str:
+    return _confidence_gate.normalize_query_for_matching(message)
+
+
 def _permission_guidance_matches_task(task: str, context: str = "") -> bool:
     return _confidence_gate.permission_guidance_matches_task(task, context)
 
@@ -2183,8 +2187,8 @@ def borg_rate(helpful: bool, trace_id: str = None, comment: str = "") -> str:
         return f"BORG: Rate error: {_e}"
 
 def _detect_technology(task: str, context: str) -> str:
-    """Infer the primary technology domain from task + context text."""
-    text = f"{task} {context}".lower()
+    """Infer the primary technology domain from active task + context text."""
+    text = _normalize_query_for_matching(f"{task} {context}").lower()
     tech_map = {
         'django': ['django', 'django.db', 'makemigrations', 'migrate'],
         'python': ['python', 'pip', 'venv', 'virtualenv'],
@@ -2206,8 +2210,12 @@ def _detect_technology(task: str, context: str) -> str:
         'rust': ['rust', 'cargo', 'rustc', 'borrow checker', 'lifetime', 'ownership', 'borrowing'],
     }
     for tech, keywords in tech_map.items():
-        if any(kw in text for kw in keywords):
-            return tech
+        for kw in keywords:
+            if re.search(r"[a-z0-9]", kw) and len(kw) <= 4:
+                if re.search(rf"(?<![a-z0-9]){re.escape(kw)}(?![a-z0-9])", text):
+                    return tech
+            elif kw in text:
+                return tech
     return ''
 
 
@@ -3358,10 +3366,6 @@ def main() -> None:
             _write_stdio_response(response, framed=framed)
 
 
-if __name__ == "__main__":
-    main()
-
-
 # Short-form wrapper  guarantees short=True returns concise output
 _borg_observe_orig = borg_observe
 def borg_observe(task: str = "", context: str = "", context_dict: dict = None, project_path: str = None, short: bool = False) -> str:
@@ -3400,3 +3404,7 @@ def borg_observe(task: str = "", context: str = "", context_dict: dict = None, p
     if action:
         return action[:120] + ("\n" + conf[:80] if conf else "")
     return result[:200]
+
+
+if __name__ == "__main__":
+    main()

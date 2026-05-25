@@ -1,9 +1,24 @@
 {
-  "detail": "Controlled first-10 public-package beta infrastructure is green; public self-serve remains blocked until row-derived first-10 external-user evidence passes.",
+  "detail": "Public-package controlled beta remains blocked until PyPI latest and fresh PyPI install + stdio MCP canaries pass for the current source version.",
   "headline": "ACTION / STOP / VERIFY rescue packets are green in first-user package gates",
   "honesty_label": "LOCAL_SOURCE_GATE_NOT_EXTERNAL_ADOPTION",
-  "primary_metric": "PASS",
+  "measured_savings": {
+    "counterfactual_basis_counts": {},
+    "dead_ends_avoided_confirmed": 0,
+    "negative_minutes_cost": 0.0,
+    "negative_tokens_cost": 0,
+    "net_minutes_saved": 0.0,
+    "net_tokens_saved": 0,
+    "positive_minutes_saved": 0.0,
+    "positive_tokens_saved": 0,
+    "rows_with_measured_value": 0
+  },
+  "measurement_contract": "Only consented external first-10 rows with before/after time or token data can create measured savings. Estimates and maintainer runs do not count.",
+  "primary_metric": "LOCAL_SOURCE_FIRST_USER_GATE_PASS",
+  "primary_metric_scope": "local/source first-user release gate; not external adoption or public-package beta proof",
   "schema_version": 1,
   "summary": "Borg gives coding agents a concrete next action, a dead end to avoid, and a verification step for known failure classes.",
-  "updated_at": "2026-05-25T11:01:31Z"
+  "updated_at": "2026-05-25T16:09:12Z",
+  "value_honesty_label": "ROW_DERIVED_EXTERNAL_USER_SAVINGS_REQUIRED",
+  "verified_external_users": 0
 }

@@ -290,6 +290,19 @@ class TestBorgPull:
         assert "Pack not found" in result["error"]
         assert "suggestions" in result
 
+    def test_pull_direct_url_failure_skips_slow_fuzzy_suggestions(self):
+        """Direct URL failures should not add remote-index suggestion latency."""
+        url = "https://invalid.domain.tld/pack.yaml"
+        with patch("borg.core.search.resolve_guild_uri", return_value=url):
+            with patch("borg.core.search.fetch_with_retry", return_value=("", "timed out")):
+                with patch("borg.core.search.fuzzy_match_pack") as fuzzy:
+                    result = json.loads(borg_pull(url))
+
+        assert result["success"] is False
+        assert "Pack not found" in result["error"]
+        assert result["suggestions"] == []
+        fuzzy.assert_not_called()
+
     def test_pull_safety_threat_blocks_save(self, tmp_path, monkeypatch):
         """Pack with injection patterns is rejected and not saved."""
         fake_guild = tmp_path / "guild"

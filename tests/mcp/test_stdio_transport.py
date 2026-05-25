@@ -89,3 +89,93 @@ def test_borg_mcp_console_script_accepts_standard_mcp_framing(tmp_path: Path) ->
     assert by_id[1]["result"]["serverInfo"]["name"] == "borg-mcp-server"
     tool_names = {tool["name"] for tool in by_id[2]["result"]["tools"]}
     assert "error_lookup" in tool_names
+
+
+def test_borg_mcp_console_script_observe_fails_closed_for_meta_trust_prompt(tmp_path: Path) -> None:
+    requests = [
+        {"jsonrpc": "2.0", "id": 1, "method": "initialize", "params": {}},
+        {
+            "jsonrpc": "2.0",
+            "id": 2,
+            "method": "tools/call",
+            "params": {
+                "name": "borg_observe",
+                "arguments": {
+                    "task": "Audit product readiness and cold-start trust hardening. Explain why irrelevant Django/permission guidance leaked; do not debug Django.",
+                    "context": "public self-service first-answer trust gate",
+                },
+            },
+        },
+    ]
+    env = os.environ.copy()
+    env.update({
+        "PYTHONPATH": str(ROOT),
+        "PYTHONNOUSERSITE": "1",
+        "HOME": str(tmp_path / "home"),
+        "BORG_HOME": str(tmp_path / "borg-home"),
+        "BORG_DIR": str(tmp_path / "borg-home"),
+    })
+
+    proc = subprocess.run(
+        [sys.executable, "-m", "borg.integrations.mcp_server"],
+        cwd=ROOT,
+        input=b"".join(_frame(req) for req in requests),
+        capture_output=True,
+        timeout=30,
+        env=env,
+    )
+
+    assert proc.returncode == 0, proc.stderr.decode("utf-8", errors="replace")
+    frames = _read_frames(proc.stdout)
+    observe_text = frames[-1]["result"]["content"][0]["text"]
+    lowered = observe_text.lower()
+    assert "no_confident_match" in lowered or "no confident match" in lowered
+    assert "pack guidance" not in lowered
+    assert "django" not in lowered
+    assert "migrate" not in lowered
+    assert "chmod" not in lowered
+
+
+def test_borg_mcp_console_script_permission_denied_script_does_not_return_npm_fix(tmp_path: Path) -> None:
+    requests = [
+        {"jsonrpc": "2.0", "id": 1, "method": "initialize", "params": {}},
+        {
+            "jsonrpc": "2.0",
+            "id": 2,
+            "method": "tools/call",
+            "params": {
+                "name": "borg_observe",
+                "arguments": {
+                    "task": "Fix bash: ./deploy.sh: Permission denied",
+                    "context": "bash: ./deploy.sh: Permission denied",
+                },
+            },
+        },
+    ]
+    env = os.environ.copy()
+    env.update({
+        "PYTHONPATH": str(ROOT),
+        "PYTHONNOUSERSITE": "1",
+        "HOME": str(tmp_path / "home"),
+        "BORG_HOME": str(tmp_path / "borg-home"),
+        "BORG_DIR": str(tmp_path / "borg-home"),
+    })
+
+    proc = subprocess.run(
+        [sys.executable, "-m", "borg.integrations.mcp_server"],
+        cwd=ROOT,
+        input=b"".join(_frame(req) for req in requests),
+        capture_output=True,
+        timeout=30,
+        env=env,
+    )
+
+    assert proc.returncode == 0, proc.stderr.decode("utf-8", errors="replace")
+    frames = _read_frames(proc.stdout)
+    observe_text = frames[-1]["result"]["content"][0]["text"]
+    lowered = observe_text.lower()
+    action_line = next((line for line in lowered.splitlines() if line.startswith("action:")), "")
+    assert "npm" not in action_line
+    assert "~/.npm-global" not in action_line
+    assert "chmod +x" in lowered or "bash-permission-denied" in lowered
+    assert "no_confident_match" not in lowered

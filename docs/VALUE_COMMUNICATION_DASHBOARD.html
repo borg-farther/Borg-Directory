@@ -5,19 +5,28 @@
 <h1>Borg value communication dashboard</h1>
 <h2>Operator benefits validated internally</h2>
 <ul>
-<li>First visible value path after PyPI release: <code>pipx install agent-borg==3.3.13</code> -&gt; <code>borg rescue "&lt;redacted error&gt;"</code> -&gt; ACTION / STOP / VERIFY.</li>
+<li>First visible value path after PyPI release: <code>pipx install agent-borg==3.3.14</code> -&gt; <code>borg rescue "&lt;redacted error&gt;"</code> -&gt; ACTION / STOP / VERIFY.</li>
 <li>Pre-release value path: local wheel/source first-user gate is green, but this is not public self-serve proof.</li>
 <li>Local/synthetic gate status: first-user release gate and logical load gates are green in current artifacts.</li>
 <li>External-user proof status: <strong>not proven yet</strong>; verified external users remain <code>0</code>.</li>
+<li>Measured savings status: <strong>0 measured rows, 0.0 net minutes saved, 0 net tokens saved</strong>; savings are not claimed until consented external-user rows include before/after measurements.</li>
 <li>Statistically significant agent-level lift: <strong>not claimed</strong> until a controlled external-user benchmark passes.</li>
+</ul>
+<h2>Measured savings contract</h2>
+<ul>
+<li>Source of truth: <code>eval/first_10_user_scoreboard.json</code> rows, recomputed by <code>eval/first_10_evidence.py</code>.</li>
+<li>Allowed measurement fields: <code>baseline_minutes_without_borg</code>, <code>actual_minutes_with_borg</code>, <code>net_minutes_saved</code>, <code>baseline_tokens_without_borg</code>, <code>actual_tokens_with_borg</code>, <code>net_tokens_saved</code>, <code>savings_counterfactual_basis</code>, <code>dead_end_avoided_confirmed</code>, <code>user_confirmed_value</code>.</li>
+<li>Validator rule: <code>net_*_saved</code> must equal baseline minus actual; forged aggregate fields block public self-serve.</li>
+<li>Dashboard rule: public <code>value.json</code> and proof dashboard may show only row-derived measured savings, never estimates from a rescue call.</li>
+<li>Rescue rule: <code>borg rescue --json</code> exposes <code>value_receipt.measurement_status=ready_to_measure</code> and <code>savings_claim_type=none</code> until a later first-10 row records the outcome.</li>
 </ul>
 <h2>Readiness status</h2>
 <ul>
-<li>Controlled first-10 PyPI beta infrastructure: <strong>GO for up to 10 controlled testers</strong> — PyPI latest/fresh-install/stdio MCP package evidence is green for <code>agent-borg==3.3.13</code>.</li>
+<li>Controlled first-10 PyPI beta infrastructure: <strong>NO-GO for this source revision</strong> — publish <code>agent-borg==3.3.14</code>, then rerun fresh-install/stdio MCP package evidence before inviting testers.</li>
 <li>Supervised local first-user path: GO in current artifacts.</li>
 <li>Public self-serve launch: <strong>NO-GO until first-10 row-derived external evidence passes</strong>.</li>
 <li>100 real-user rollout: <strong>NO-GO until 10 external users, &gt;=8 installs, &gt;=6 useful rescues, and 0 critical incidents</strong>.</li>
-<li>Decision: controlled first-10 beta invites may start with consented evidence capture; no broad self-serve or frontier-better-than claim.</li>
+<li>Decision: controlled first-10 beta invites may not start for <code>agent-borg==3.3.14</code> until PyPI latest, fresh-install, and stdio MCP package evidence are green; no broad self-serve or frontier-better-than claim.</li>
 </ul>
 <h2>Evidence</h2>
 <ul>

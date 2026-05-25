@@ -1,6 +1,6 @@
 # Borg First-10 Beta Readiness Contract
 
-**Status:** controlled first-10 public-package beta infrastructure is green for `agent-borg==3.3.13`: PyPI latest metadata, fresh PyPI install, stdio MCP canary, GitHub CI/security gates, and source/local first-user gates passed. Invite at most 10 controlled testers with consented evidence capture. Public self-serve launch is still gated by row-derived real external-user evidence.
+**Status:** controlled first-10 public-package beta infrastructure is blocked for `agent-borg==3.3.14` until PyPI latest, fresh-install, and stdio MCP canaries pass for that version. Source/local first-user and security gates may pass before release, but they do not authorize tester invites. After the package gates pass, invite at most 10 controlled testers with consented evidence capture. Public self-serve launch is still gated by row-derived real external-user evidence.
 
 **Success metric:** At least 6 of the first 10 users get one relevant ACTION/STOP/VERIFY moment without maintainer handholding, and every miss is recorded as NO_CONFIDENT_MATCH or explicit negative feedback instead of being hidden.
 
@@ -87,7 +87,7 @@ Proof:
 
 Pass criteria:
 
-- `error_lookup` and `borg_rescue` return the same `ACTION`, `STOP`, `VERIFY`, `human_receipt`, and `automation_policy`.
+- `error_lookup` and `borg_rescue` return the same `ACTION`, `STOP`, `VERIFY`, `human_receipt`, `automation_policy`, and no-hype `value_receipt`.
 - `borg_observe` returns `ACTION`, `STOP`, `VERIFY`, and `CONFIDENCE`, or an explicit no-match packet.
 - Agents are instructed not to blend weak retrieval into normal reasoning.
 
@@ -143,7 +143,9 @@ Tester rule: do not paste API keys, private repo contents, passwords, tokens, co
 Pass criteria:
 
 - Each tester gets the same install, priming, tasks, and feedback receipt.
-- Outcomes are captured as helpful/not helpful/no match.
+- Outcomes are captured as helpful/not helpful/no match plus optional before/after minutes or tokens.
+- Measured savings are row-derived only: consented external-user rows in `eval/first_10_user_scoreboard.json` must supply before/after fields before dashboards may show minutes or tokens saved.
+- Rescue packets never claim savings at call time; they expose a `value_receipt` saying measurement is pending until outcome rows exist.
 - GO/NO-GO after first 10 is binary against the useful-moment threshold.
 
 Proof:
@@ -175,6 +177,7 @@ Send each tester this:
    - did it prevent a dead end?
    - did the fix work?
    - if no, what was the exact miss/no-match reason?
+   - optional measured value fields: baseline minutes without Borg, actual minutes with Borg, net minutes saved, baseline tokens without Borg, actual tokens with Borg, net tokens saved, savings counterfactual basis, dead-end avoided confirmed, and user-confirmed value.
 5. Record feedback:
    ```bash
    borg feedback-v3 --pack <pack-or-problem-class> --success yes

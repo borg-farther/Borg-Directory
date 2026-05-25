@@ -114,6 +114,7 @@ def main() -> int:
         ("version_distribution_tests", [py, "-m", "pytest", "-q", "tests/packaging/test_version_consistency.py", "tests/packaging/test_distribution_readiness.py", "tests/cli/test_runtime_doctor.py"], 300),
         ("atom_security_tests", [py, "-m", "pytest", "-q", "tests/security/test_atom_tenant.py", "tests/security/test_atom_policy.py", "tests/security/test_learning_atoms.py", "tests/security/test_atom_store.py", "tests/security/test_atom_retrieval_firewall.py", "tests/security/test_learning_atom_publish.py", "tests/cli/test_cli_atom.py", "tests/security/test_privacy_structured.py", "tests/security/test_prompt_injection.py", "tests/security/test_privacy.py"], 600),
         ("security_gate", [py, "scripts/security_gate_check.py"], 120),
+        ("cold_start_trust_gate", [py, "eval/cold_start_trust_gate.py"], 120),
         ("atom_fixture_corpus", [py, "scripts/run_atom_fixture_corpus.py"], 120),
         ("load_10", [py, "eval/load_soak.py", "--users", "10", "--duration", str(soak)], int(soak + 180)),
         ("load_100", [py, "eval/load_soak.py", "--users", "100", "--duration", str(soak)], int(soak + 240)),

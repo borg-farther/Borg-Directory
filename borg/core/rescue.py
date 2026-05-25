@@ -42,6 +42,7 @@ class RescueResult:
     guidance: str
     automation_policy: Dict[str, Any]
     evidence: Dict[str, Any]
+    value_receipt: Dict[str, Any]
 
     def to_dict(self) -> Dict[str, Any]:
         return asdict(self)
@@ -206,6 +207,61 @@ def _confidence_from_evidence(pack: Optional[Dict[str, Any]]) -> str:
     return "inferred"
 
 
+def _value_receipt(
+    *,
+    matched: bool,
+    problem_class: str,
+    confidence: str,
+    evidence: Dict[str, Any],
+    stop: Optional[List[str]] = None,
+) -> Dict[str, Any]:
+    """Return the human-visible value receipt attached to every rescue.
+
+    The receipt deliberately does **not** claim savings at rescue time. It tells
+    the human what value Borg attempted to provide and which first-10 row fields
+    are needed before dashboards may show measured savings.
+    """
+    dead_end = (stop or [""])[0] if stop else ""
+    matched_pack_id = problem_class if matched and problem_class != "unknown" else None
+    summary = (
+        "Borg produced an ACTION/STOP/VERIFY rescue packet; savings are not measured "
+        "until a consented first-10 outcome row records before/after time or token data."
+        if matched
+        else "Borg did not find a confident match; no savings are claimed."
+    )
+    return {
+        "schema_version": 1,
+        "measurement_status": "ready_to_measure" if matched else "not_measured_no_match",
+        "matched_pack_id": matched_pack_id,
+        "matched_pattern": problem_class if matched else None,
+        "confidence": confidence,
+        "evidence_source": evidence.get("source", "unknown"),
+        "savings_claim_type": "none",
+        "measured_minutes_saved": None,
+        "measured_tokens_saved": None,
+        "estimated_minutes_saved": None,
+        "estimated_tokens_saved": None,
+        "dead_end_avoidance_status": "suggested_not_confirmed" if matched else "not_applicable",
+        "dead_end_avoided_candidate": dead_end or None,
+        "human_visible_summary": summary,
+        "first_10_row_fields_required_for_measured_savings": [
+            "user_id_pseudonym",
+            "external_user_evidence_uri",
+            "consent_confirmed",
+            "baseline_minutes_without_borg",
+            "actual_minutes_with_borg",
+            "net_minutes_saved",
+            "baseline_tokens_without_borg",
+            "actual_tokens_with_borg",
+            "net_tokens_saved",
+            "savings_counterfactual_basis",
+            "dead_end_avoided_confirmed",
+            "user_confirmed_value",
+            "outcome_recorded",
+        ],
+    }
+
+
 def rescue(task_or_error: str, *, source: str = "cli", show_guidance: bool = True) -> RescueResult:
     """Return a complete first-user rescue packet.
 
@@ -251,6 +307,12 @@ def rescue(task_or_error: str, *, source: str = "cli", show_guidance: bool = Tru
             guidance="",
             automation_policy=automation_policy,
             evidence={"success_count": 0, "failure_count": 0, "uses": 0, "source": "none"},
+            value_receipt=_value_receipt(
+                matched=False,
+                problem_class="unknown",
+                confidence="unknown",
+                evidence={"source": "none"},
+            ),
         )
 
     problem_class = classify_error(text) or "unknown"
@@ -278,6 +340,12 @@ def rescue(task_or_error: str, *, source: str = "cli", show_guidance: bool = Tru
             guidance=guidance,
             automation_policy=automation_policy,
             evidence=_evidence(None),
+            value_receipt=_value_receipt(
+                matched=False,
+                problem_class="unknown",
+                confidence="unknown",
+                evidence=_evidence(None),
+            ),
         )
 
     actions = _extract_actions(pack)
@@ -316,6 +384,13 @@ def rescue(task_or_error: str, *, source: str = "cli", show_guidance: bool = Tru
         guidance=guidance,
         automation_policy=automation_policy,
         evidence=ev,
+        value_receipt=_value_receipt(
+            matched=True,
+            problem_class=problem_class,
+            confidence=confidence,
+            evidence=ev,
+            stop=stops,
+        ),
     )
 
 
@@ -344,6 +419,12 @@ def render_rescue_text(result: RescueResult) -> str:
     lines.append("")
     lines.append("HUMAN RECEIPT")
     lines.append(result.human_receipt)
+    lines.append("")
+    lines.append("VALUE RECEIPT")
+    lines.append("measured savings: not yet measured")
+    lines.append(f"measurement status: {result.value_receipt.get('measurement_status', 'unknown')}")
+    if result.value_receipt.get("dead_end_avoided_candidate"):
+        lines.append(f"dead-end candidate: {result.value_receipt['dead_end_avoided_candidate']}")
     if result.guidance:
         lines.append("")
         lines.append("FULL GUIDANCE")

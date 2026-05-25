@@ -7,6 +7,7 @@ import json
 import re
 import hashlib
 import subprocess
+import sys
 from datetime import datetime, timezone
 from pathlib import Path
 try:
@@ -15,6 +16,8 @@ except ImportError:  # pragma: no cover
     import tomli as tomllib
 
 ROOT = Path(__file__).resolve().parents[1]
+if str(ROOT) not in sys.path:
+    sys.path.insert(0, str(ROOT))
 DOCS = ROOT / "docs"
 EVAL = ROOT / "eval"
 PUBLIC = DOCS / "public" / "proof-dashboard"
@@ -35,7 +38,9 @@ SOURCE_PATHS = [
     "eval/uat_scoreboard_snapshot.json",
     "eval/gate_run_snapshot.json",
     "eval/real_user_rollout_gate_snapshot.json",
+    "eval/first_10_user_scoreboard.json",
     "eval/public_self_serve_launch_gate_snapshot.json",
+    "eval/cold_start_trust_gate_snapshot.json",
     "eval/pypi_fresh_install_snapshot.json",
     "eval/load_10_snapshot.json",
     "eval/load_100_snapshot.json",
@@ -149,15 +154,39 @@ def build_model() -> dict:
     uat = load_json("eval/uat_scoreboard_snapshot.json")
     gate = load_json("eval/gate_run_snapshot.json")
     real_user = load_json("eval/real_user_rollout_gate_snapshot.json")
+    first10_scoreboard = load_json("eval/first_10_user_scoreboard.json")
     public_gate = load_json("eval/public_self_serve_launch_gate_snapshot.json")
+    cold_start_trust = load_json("eval/cold_start_trust_gate_snapshot.json")
     pypi_fresh = load_json("eval/pypi_fresh_install_snapshot.json")
     loads = {str(n): load_json(f"eval/load_{n}_snapshot.json") for n in (10, 100, 1000)}
     pv, rv = pyproject_version(), init_version()
     commit = current_commit()
     pcount = pack_count()
 
+    first10_evaluation = None
     verified_external_users = 0
+    measured_savings = {
+        "rows_with_measured_value": 0,
+        "dead_ends_avoided_confirmed": 0,
+        "net_minutes_saved": 0.0,
+        "positive_minutes_saved": 0.0,
+        "negative_minutes_cost": 0.0,
+        "net_tokens_saved": 0,
+        "positive_tokens_saved": 0,
+        "negative_tokens_cost": 0,
+        "counterfactual_basis_counts": {},
+    }
     external_user_evidence = "No artifact found that identifies real verified external users; simulated/logical load users are excluded."
+    if isinstance(first10_scoreboard, dict) and "_parse_error" not in first10_scoreboard:
+        try:
+            from eval.first_10_evidence import evaluate_scoreboard
+
+            first10_evaluation = evaluate_scoreboard(first10_scoreboard)
+            verified_external_users = int(first10_evaluation["derived_counts"].get("verified_external_users", 0))
+            measured_savings = dict(first10_evaluation.get("derived_value") or measured_savings)
+            external_user_evidence = "eval/first_10_user_scoreboard.json row-derived external-user evidence"
+        except Exception as exc:
+            external_user_evidence = f"eval/first_10_user_scoreboard.json could not be evaluated: {exc}"
 
     version_consistent = bool(pv and rv and pv == rv)
     first_gate_pass = nested(first, ["all_pass"])
@@ -167,8 +196,10 @@ def build_model() -> dict:
     gate_pass = nested(gate, ["synthetic_load_all_pass"], nested(gate, ["all_pass"]))
     real_user_100_pass = nested(real_user, ["ready_for_100_real_users"], nested(uat, ["real_user_rollout", "ready_for_100_real_users"]))
     public_self_serve_pass = nested(public_gate, ["ready_for_public_self_serve_launch"])
+    cold_start_trust_pass = nested(cold_start_trust, ["passed"])
     pypi_fresh_pass = nested(pypi_fresh, ["success"])
     pypi_fresh_version = nested(pypi_fresh, ["version"])
+    pypi_fresh_current = bool(pypi_fresh_pass is True and pypi_fresh_version == pv)
     max_recommended_real_users = nested(public_gate, ["max_recommended_real_users_now"], nested(real_user, ["max_recommended_real_users_now"], nested(uat, ["real_user_rollout", "max_recommended_real_users_now"], 0)))
     controlled_beta_ready = nested(public_gate, ["ready_for_controlled_first_10_beta"]) is True
     real_user_blockers = nested(real_user, ["blockers"], nested(uat, ["real_user_rollout", "blockers"], []))
@@ -190,7 +221,7 @@ def build_model() -> dict:
     controlled_beta_why = (
         "Controlled first-10 beta infrastructure is green; keep broad launch blocked until row-derived external-user evidence passes."
         if controlled_beta_ready
-        else "Controlled first-10 beta is blocked until the public package path is green: PyPI latest metadata, fresh-install canary, stdio MCP canary, and docs guard must all pass."
+        else "Controlled first-10 beta is blocked until the public package path is green: PyPI latest metadata, fresh-install canary, stdio MCP canary, cold-start trust gate, and docs guard must all pass."
     )
     verdicts = {
         "controlled_first_10_beta": {
@@ -208,15 +239,16 @@ def build_model() -> dict:
         "broad_public_launch": {
             "verdict": "NO-GO" if public_self_serve_pass is not True else "GO",
             "why": (
-                "Public self-serve gate is blocked only by row-derived first-10 external-user evidence; PyPI/latest/fresh-install/MCP/docs gates are green."
-                if pypi_fresh_pass is True and public_self_serve_pass is not True
-                else "Public self-serve gate is blocked until PyPI latest/fresh-install/MCP/docs gates pass and first-10 external evidence exists."
+                "Public self-serve gate is blocked only by row-derived first-10 external-user evidence; PyPI/latest/fresh-install/MCP/docs/cold-start-trust gates are green."
+                if pypi_fresh_current and cold_start_trust_pass is True and public_self_serve_pass is not True
+                else "Public self-serve gate is blocked until PyPI latest/fresh-install/MCP/docs/cold-start-trust gates pass and first-10 external evidence exists."
             ) if public_self_serve_pass is not True else "Public self-serve gate has passed with row-derived external evidence.",
         },
     }
 
     metrics = {
-        "verified_external_users": {"value": verified_external_users, "honesty_label": "HARD_EVIDENCE_ABSENT_DEFAULT_ZERO", "provenance": external_user_evidence},
+        "verified_external_users": {"value": verified_external_users, "honesty_label": "ROW_DERIVED_EXTERNAL_USERS", "provenance": external_user_evidence},
+        "measured_savings": {"value": measured_savings, "honesty_label": "ROW_DERIVED_EXTERNAL_USER_SAVINGS", "provenance": external_user_evidence},
         "active_contributors_consumers": {"value": "UNKNOWN", "honesty_label": "MISSING_BORG_ANALYTICS_ARTIFACT", "provenance": "No Borg analytics export artifact was found under eval/ or docs/."},
         "packs": {"value": pcount if pcount is not None else "MISSING", "honesty_label": "REPO_FILE_COUNT" if pcount is not None else "MISSING", "provenance": "borg/seeds_data/packs/*.yaml"},
         "first_user_release_gate": {"value": status_bool(first_gate_pass), "honesty_label": "LOCAL_ARTIFACT", "provenance": "eval/first_user_release_gate_snapshot.json" if first else "MISSING"},
@@ -225,16 +257,18 @@ def build_model() -> dict:
         "real_user_100_rollout_gate": {"value": status_bool(real_user_100_pass), "honesty_label": "REAL_EXTERNAL_USERS", "provenance": "eval/real_user_rollout_gate_snapshot.json" if real_user else "MISSING"},
         "max_recommended_real_users_now": {"value": max_recommended_real_users, "honesty_label": "REAL_EXTERNAL_USERS", "provenance": "eval/real_user_rollout_gate_snapshot.json" if real_user else "MISSING"},
         "public_self_serve_launch_gate": {"value": status_bool(public_self_serve_pass), "honesty_label": "PUBLIC_LAUNCH_GATE", "provenance": "eval/public_self_serve_launch_gate_snapshot.json" if public_gate else "MISSING"},
-        "pypi_fresh_install_canary": {"value": status_bool(pypi_fresh_pass), "honesty_label": "PYPI_FRESH_INSTALL", "provenance": "eval/pypi_fresh_install_snapshot.json" if pypi_fresh else "MISSING"},
+        "cold_start_trust_hardening_gate": {"value": status_bool(cold_start_trust_pass), "honesty_label": "FIRST_ANSWER_TRUST_GATE", "provenance": "eval/cold_start_trust_gate_snapshot.json" if cold_start_trust else "MISSING"},
+        "pypi_fresh_install_canary": {"value": status_bool(pypi_fresh_current), "honesty_label": "PYPI_FRESH_INSTALL_CURRENT_VERSION", "provenance": "eval/pypi_fresh_install_snapshot.json" if pypi_fresh else "MISSING"},
         "source_version_consistency": {"value": f"pyproject={pv or 'MISSING'} runtime={rv or 'MISSING'}", "honesty_label": "REPO_SOURCE", "provenance": "pyproject.toml; borg/__init__.py"},
-        "host_runtime_split_brain": {"value": "NOT_REPRODUCED_IN_THIS_BUILD", "honesty_label": "EVIDENCE_GAP", "provenance": "Prior docs mention runtime/host issues, but this dashboard build did not run environment probes."},
+        "host_runtime_split_brain": {"value": "NOT_EVALUATED_BY_THIS_BUILD", "honesty_label": "EVIDENCE_GAP", "provenance": "This dashboard build does not restart or fingerprint long-lived served Hermes/MCP runtimes; it is not live cutover proof. Served runtime GO requires borg_runtime_fingerprint with version_matches_source=true and observe_behavior_canary.passed=true."},
         "load_gates": {"value": load_summary, "honesty_label": "LOGICAL_USERS_NOT_REAL_USERS", "provenance": "eval/load_*_snapshot.json and eval/uat_scoreboard_snapshot.json"},
     }
 
     blockers = {
         "user_affecting": [
             "No real external first-user install/rescue outcome has been recorded yet.",
-            "PyPI fresh-install canary is not green yet." if pypi_fresh_pass is not True else "PyPI fresh-install canary is green.",
+            "PyPI fresh-install canary is not green for the current source version yet." if not pypi_fresh_current else "PyPI fresh-install canary is green for the current source version.",
+            "Cold-start trust gate is not green yet." if cold_start_trust_pass is not True else "Cold-start trust gate is green: meta/readiness prompts fail closed before random framework guidance reaches first users.",
             "Unattended Git-only onboarding remains unproven until external user can install, configure MCP, and receive a useful rescue without maintainer intervention.",
         ],
         "investor_affecting": [
@@ -253,11 +287,11 @@ def build_model() -> dict:
             "No Borg analytics export proving active contributors or consumers was found.",
             "No first-10-user scoreboard with real outcomes exists yet.",
             f"100-real-user gate remains blocked: {real_user_blockers or ['no blocker detail found']}",
-            "Host/runtime split-brain was not freshly reproduced by this dashboard build.",
+            "Served/runtime split-brain was not evaluated by this dashboard build; source/fresh-process green is not live cutover proof.",
         ],
     }
 
-    if pypi_fresh_pass is True:
+    if controlled_beta_ready and pypi_fresh_current:
         first_tester_action = f"Use `pipx install agent-borg=={pypi_fresh_version or pv or 'CURRENT_VERSION'}` with controlled first-10 beta testers and label it as beta evidence capture, not public launch."
     else:
         first_tester_action = f"After `agent-borg=={pv or 'CURRENT_VERSION'}` is published and the PyPI fresh-install + stdio MCP canary passes, use that exact PyPI version with controlled first-10 beta testers."
@@ -276,21 +310,30 @@ def build_model() -> dict:
     else:
         evidence.append(source_record("eval/first_user_release_gate_snapshot.json", "first-user release gate status unknown"))
     if uat:
-        evidence.append(source_record("eval/uat_scoreboard_snapshot.json", f"UAT synthetic_load_all_pass={uat_pass}; real_user_100_all_pass={real_user_100_pass}; ready_for_10={nested(uat, ['ready_for_10'])}; ready_for_1000={nested(uat, ['ready_for_1000'])}", nested(uat, ["timestamp"])))
+        evidence.append(source_record("eval/uat_scoreboard_snapshot.json", f"UAT synthetic_load_all_pass={uat_pass}; real_user_100_all_pass={real_user_100_pass}; ready_for_10_logical_load={nested(uat, ['ready_for_10'])}; ready_for_1000_logical_load={nested(uat, ['ready_for_1000'])}; not_real_user_or_public_beta_evidence=True", nested(uat, ["timestamp"])))
     else:
         evidence.append(source_record("eval/uat_scoreboard_snapshot.json", "UAT scoreboard missing"))
     if gate:
-        evidence.append(source_record("eval/gate_run_snapshot.json", f"gate run synthetic_load_all_pass={gate_pass}; overall_100_real_user_pass={real_user_100_pass}; ready_for_10={nested(gate, ['ready_for_10'])}; ready_for_1000={nested(gate, ['ready_for_1000'])}", nested(gate, ["timestamp"])))
+        evidence.append(source_record("eval/gate_run_snapshot.json", f"gate run synthetic_load_all_pass={gate_pass}; overall_100_real_user_pass={real_user_100_pass}; ready_for_10_logical_load={nested(gate, ['ready_for_10'])}; ready_for_1000_logical_load={nested(gate, ['ready_for_1000'])}; not_real_user_or_public_beta_evidence=True", nested(gate, ["timestamp"])))
     else:
         evidence.append(source_record("eval/gate_run_snapshot.json", "gate run missing"))
     if real_user:
         evidence.append(source_record("eval/real_user_rollout_gate_snapshot.json", f"100-real-user gate={real_user_100_pass}; max_recommended_real_users={max_recommended_real_users}; blockers={real_user_blockers}", nested(real_user, ["generated_at_utc"])))
     else:
         evidence.append(source_record("eval/real_user_rollout_gate_snapshot.json", "real-user rollout gate missing"))
+    if first10_scoreboard:
+        evidence.append(source_record("eval/first_10_user_scoreboard.json", f"first-10 row evidence users={verified_external_users}; measured_savings={measured_savings}; gate={nested(first10_evaluation, ['public_self_serve_launch_gate']) if isinstance(first10_evaluation, dict) else 'UNKNOWN'}", nested(first10_scoreboard, ["generated_at_utc"])))
+    else:
+        evidence.append(source_record("eval/first_10_user_scoreboard.json", "first-10 row evidence scoreboard missing"))
     if public_gate:
         evidence.append(source_record("eval/public_self_serve_launch_gate_snapshot.json", f"public self-serve gate={public_self_serve_pass}; max_recommended_real_users={nested(public_gate, ['max_recommended_real_users_now'])}; blockers={nested(public_gate, ['blockers'], [])}", nested(public_gate, ["generated_at_utc"])))
     else:
         evidence.append(source_record("eval/public_self_serve_launch_gate_snapshot.json", "public self-serve launch gate missing"))
+    if cold_start_trust:
+        cold_start_generated_at = nested(cold_start_trust, ["generated_at_utc"])
+        evidence.append(source_record("eval/cold_start_trust_gate_snapshot.json", f"cold-start trust gate={cold_start_trust_pass}; blockers={nested(cold_start_trust, ['blockers'], [])}", cold_start_generated_at if isinstance(cold_start_generated_at, str) else None))
+    else:
+        evidence.append(source_record("eval/cold_start_trust_gate_snapshot.json", "cold-start trust hardening gate missing"))
     if pypi_fresh:
         evidence.append(source_record("eval/pypi_fresh_install_snapshot.json", f"PyPI fresh-install canary success={pypi_fresh_pass}; version={nested(pypi_fresh, ['version'])}", nested(pypi_fresh, ["generated_at_utc"])))
     else:
@@ -303,7 +346,24 @@ def build_model() -> dict:
         if (ROOT / rel).exists():
             evidence.append(source_record(rel, "prior local status/readiness narrative used as contextual evidence only, not external adoption proof"))
 
-    first10_cols = ["user id/pseudonym", "install success", "time to first rescue", "rescue useful yes/no", "MCP setup success", "blocker", "outcome recorded"]
+    first10_cols = [
+        "user id/pseudonym",
+        "install success",
+        "time to first rescue",
+        "rescue useful yes/no",
+        "MCP setup success",
+        "blocker",
+        "outcome recorded",
+        "baseline minutes without Borg",
+        "actual minutes with Borg",
+        "net minutes saved",
+        "baseline tokens without Borg",
+        "actual tokens with Borg",
+        "net tokens saved",
+        "savings counterfactual basis",
+        "dead end avoided confirmed",
+        "user confirmed value",
+    ]
     first10_rows = [{c: "" for c in first10_cols} for _ in range(10)]
 
     return {
@@ -427,6 +487,7 @@ def build_public_payloads(model: dict) -> tuple[dict, dict, dict]:
     blockers = model.get("blockers", {})
     metrics = model.get("metrics", {})
     source_version = str(metrics.get("source_version_consistency", {}).get("value", "UNKNOWN"))
+    measured_savings = metrics.get("measured_savings", {}).get("value", {}) or {}
     generated = model["generated_at_utc"]
     controlled_is_green = controlled.get("verdict") == "CONDITIONAL"
     broad_is_green = broad.get("verdict") == "GO"
@@ -458,10 +519,12 @@ def build_public_payloads(model: dict) -> tuple[dict, dict, dict]:
         "broad_public_launch": broad,
         "max_recommended_real_users_now": metrics.get("max_recommended_real_users_now", {}).get("value", 0),
         "verified_external_users": metrics.get("verified_external_users", {}).get("value", 0),
+        "cold_start_trust_hardening_gate": metrics.get("cold_start_trust_hardening_gate", {}).get("value", "UNKNOWN"),
         "blockers": blockers,
         "evidence": [
             "eval/first_user_release_gate_snapshot.json",
             "eval/public_self_serve_launch_gate_snapshot.json",
+            "eval/cold_start_trust_gate_snapshot.json",
             "eval/pypi_fresh_install_snapshot.json",
             "eval/real_user_rollout_gate_snapshot.json",
         ],
@@ -472,8 +535,23 @@ def build_public_payloads(model: dict) -> tuple[dict, dict, dict]:
         "headline": "ACTION / STOP / VERIFY rescue packets are green in first-user package gates",
         "summary": "Borg gives coding agents a concrete next action, a dead end to avoid, and a verification step for known failure classes.",
         "detail": value_detail,
-        "primary_metric": metrics.get("first_user_release_gate", {}).get("value", "UNKNOWN"),
+        "primary_metric": "LOCAL_SOURCE_FIRST_USER_GATE_" + str(metrics.get("first_user_release_gate", {}).get("value", "UNKNOWN")),
+        "primary_metric_scope": "local/source first-user release gate; not external adoption or public-package beta proof",
         "honesty_label": "LOCAL_SOURCE_GATE_NOT_EXTERNAL_ADOPTION",
+        "value_honesty_label": "ROW_DERIVED_EXTERNAL_USER_SAVINGS_REQUIRED",
+        "verified_external_users": metrics.get("verified_external_users", {}).get("value", 0),
+        "measured_savings": {
+            "rows_with_measured_value": int(measured_savings.get("rows_with_measured_value") or 0),
+            "dead_ends_avoided_confirmed": int(measured_savings.get("dead_ends_avoided_confirmed") or 0),
+            "net_minutes_saved": float(measured_savings.get("net_minutes_saved") or 0.0),
+            "positive_minutes_saved": float(measured_savings.get("positive_minutes_saved") or 0.0),
+            "negative_minutes_cost": float(measured_savings.get("negative_minutes_cost") or 0.0),
+            "net_tokens_saved": int(measured_savings.get("net_tokens_saved") or 0),
+            "positive_tokens_saved": int(measured_savings.get("positive_tokens_saved") or 0),
+            "negative_tokens_cost": int(measured_savings.get("negative_tokens_cost") or 0),
+            "counterfactual_basis_counts": measured_savings.get("counterfactual_basis_counts") or {},
+        },
+        "measurement_contract": "Only consented external first-10 rows with before/after time or token data can create measured savings. Estimates and maintainer runs do not count.",
     }
     impact_payload = {
         "schema_version": 1,
@@ -482,6 +560,7 @@ def build_public_payloads(model: dict) -> tuple[dict, dict, dict]:
         "summary": "0 verified external users in row-derived first-10 evidence; synthetic/logical load does not count as adoption.",
         "detail": "Public self-serve launch requires 10 consented external users, at least 8 installs, at least 6 useful rescues, and 0 critical privacy/security incidents.",
         "primary_impact": "NO-GO public self-serve",
+        "measured_savings": value_payload["measured_savings"],
         "honesty_label": "REAL_EXTERNAL_USERS_REQUIRED",
     }
     return status_payload, value_payload, impact_payload
