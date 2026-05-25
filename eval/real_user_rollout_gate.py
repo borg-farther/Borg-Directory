@@ -282,6 +282,14 @@ def write_report(snapshot: dict[str, Any]) -> None:
     REPORT.write_text("\n".join(lines), encoding="utf-8")
 
 
+def display_path(path: Path) -> str:
+    """Return a stable path for CLI output even when tests redirect outputs."""
+    try:
+        return str(path.relative_to(ROOT))
+    except ValueError:
+        return str(path)
+
+
 def main() -> int:
     snapshot = compile_rollout_gate()
     SNAPSHOT.write_text(json.dumps(snapshot, indent=2, sort_keys=True), encoding="utf-8")
@@ -292,8 +300,8 @@ def main() -> int:
         "ready_for_100_real_users": snapshot["ready_for_100_real_users"],
         "max_recommended_real_users_now": snapshot["max_recommended_real_users_now"],
         "blockers": snapshot["blockers"],
-        "snapshot": str(SNAPSHOT.relative_to(ROOT)),
-        "report": str(REPORT.relative_to(ROOT)),
+        "snapshot": display_path(SNAPSHOT),
+        "report": display_path(REPORT),
     }, indent=2))
     return 0 if snapshot["ready_for_100_real_users"] else 1
 

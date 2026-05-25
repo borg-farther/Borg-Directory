@@ -7,16 +7,18 @@
   "ready_for_100_real_users": false,
   "real_user_rollout": {
     "blockers": [
+      "PyPI latest/fresh-install package evidence is not green: latest metadata does not match source version",
+      "PyPI latest/fresh-install package evidence is not green: fresh install + MCP stdio canary is not green",
       "first-10 external-user evidence has not passed: verified=0/10, real_users=0/10, installs=0/8, useful=0/6, critical_incidents=0/0"
     ],
-    "infrastructure_ready_for_100": true,
-    "max_recommended_real_users_now": 10,
+    "infrastructure_ready_for_100": false,
+    "max_recommended_real_users_now": 0,
     "rc": 1,
     "ready_for_100_real_users": false,
-    "ready_for_10_controlled_beta": true
+    "ready_for_10_controlled_beta": false
   },
   "run_parameters": {
-    "soak_duration_seconds": 30.0
+    "soak_duration_seconds": 1.0
   },
   "steps": [
     {
@@ -31,7 +33,7 @@
       ],
       "name": "version_distribution_tests",
       "rc": 0,
-      "started": "2026-05-24T07:37:23.561278+00:00",
+      "started": "2026-05-25T09:28:21.412291+00:00",
       "stderr": "",
       "stdout": "..........                                                               [100%]\n10 passed in 0.05s\n"
     },
@@ -54,9 +56,9 @@
       ],
       "name": "atom_security_tests",
       "rc": 0,
-      "started": "2026-05-24T07:37:24.146240+00:00",
+      "started": "2026-05-25T09:28:22.031214+00:00",
       "stderr": "",
-      "stdout": "........................................................................ [ 82%]\n...............                                                          [100%]\n87 passed in 0.26s\n"
+      "stdout": "........................................................................ [ 82%]\n...............                                                          [100%]\n87 passed in 0.27s\n"
     },
     {
       "cmd": [
@@ -64,10 +66,10 @@
         "scripts/security_gate_check.py"
       ],
       "name": "security_gate",
-      "rc": 1,
-      "started": "2026-05-24T07:37:24.921815+00:00",
+      "rc": 0,
+      "started": "2026-05-25T09:28:22.844318+00:00",
       "stderr": "",
-      "stdout": "FAIL: PRIVACY_MODEL.md missing required exact privacy sentence\n"
+      "stdout": "PASS: Borg security hardening policy gate\n"
     },
     {
       "cmd": [
@@ -76,7 +78,7 @@
       ],
       "name": "atom_fixture_corpus",
       "rc": 0,
-      "started": "2026-05-24T07:37:24.955064+00:00",
+      "started": "2026-05-25T09:28:22.919831+00:00",
       "stderr": "",
       "stdout": "{\n  \"success\": true,\n  \"total\": 10,\n  \"failed\": []\n}\n"
     },
@@ -87,13 +89,13 @@
         "--users",
         "10",
         "--duration",
-        "30.0"
+        "1.0"
       ],
       "name": "load_10",
       "rc": 0,
-      "started": "2026-05-24T07:37:25.041542+00:00",
+      "started": "2026-05-25T09:28:23.001263+00:00",
       "stderr": "",
-      "stdout": "{\n  \"concurrency_model\": \"asyncio_logical_users\",\n  \"duration_seconds\": 30.0,\n  \"failures\": 0,\n  \"latency_ms\": {\n    \"avg\": 0.42872132702416554,\n    \"max\": 0.7930488791316748,\n    \"p50\": 0.40635885670781136,\n    \"p95\": 0.5755376303568482,\n    \"p99\": 0.6008552201092243\n  },\n  \"operation\": \"learning_atom_retrieval_firewall_privacy_prompt_scan\",\n  \"passed\": true,\n  \"per_user_min_requests\": 6896,\n  \"requests_per_second\": 2298.733333333333,\n  \"sample_failures\": [],\n  \"success_rate\": 1.0,\n  \"successes\": 68962,\n  \"thresholds\": {\n    \"min_requests_per_user\": 1.0,\n    \"p95_ms_max\": 2000.0,\n    \"p99_ms_max\": 4000.0,\n    \"success_rate_min\": 0.95\n  },\n  \"timestamp\": \"2026-05-24T07:37:55.127417+00:00\",\n  \"total_requests\": 68962,\n  \"users\": 10\n}\n"
+      "stdout": "{\n  \"concurrency_model\": \"asyncio_logical_users\",\n  \"duration_seconds\": 1.0,\n  \"failures\": 0,\n  \"latency_ms\": {\n    \"avg\": 0.43705896717882253,\n    \"max\": 0.7805498316884041,\n    \"p50\": 0.42178540024906397,\n    \"p95\": 0.5594801041297615,\n    \"p99\": 0.5933718127198517\n  },\n  \"operation\": \"learning_atom_retrieval_firewall_privacy_prompt_scan\",\n  \"passed\": true,\n  \"per_user_min_requests\": 223,\n  \"requests_per_second\": 2234.0,\n  \"sample_failures\": [],\n  \"success_rate\": 1.0,\n  \"successes\": 2234,\n  \"thresholds\": {\n    \"min_requests_per_user\": 1.0,\n    \"p95_ms_max\": 2000.0,\n    \"p99_ms_max\": 4000.0,\n    \"success_rate_min\": 0.95\n  },\n  \"timestamp\": \"2026-05-25T09:28:24.069323+00:00\",\n  \"total_requests\": 2234,\n  \"users\": 10\n}\n"
     },
     {
       "cmd": [
@@ -102,13 +104,13 @@
         "--users",
         "100",
         "--duration",
-        "30.0"
+        "1.0"
       ],
       "name": "load_100",
       "rc": 0,
-      "started": "2026-05-24T07:37:55.143677+00:00",
+      "started": "2026-05-25T09:28:24.084745+00:00",
       "stderr": "",
-      "stdout": "{\n  \"concurrency_model\": \"asyncio_logical_users\",\n  \"duration_seconds\": 30.0,\n  \"failures\": 0,\n  \"latency_ms\": {\n    \"avg\": 0.4469398032950682,\n    \"max\": 11.739321053028107,\n    \"p50\": 0.419059069827199,\n    \"p95\": 0.5981309339404106,\n    \"p99\": 0.6571157835423953\n  },\n  \"operation\": \"learning_atom_retrieval_firewall_privacy_prompt_scan\",\n  \"passed\": true,\n  \"per_user_min_requests\": 649,\n  \"requests_per_second\": 2164.633333333333,\n  \"sample_failures\": [],\n  \"success_rate\": 1.0,\n  \"successes\": 64939,\n  \"thresholds\": {\n    \"min_requests_per_user\": 1.0,\n    \"p95_ms_max\": 1000.0,\n    \"p99_ms_max\": 3000.0,\n    \"success_rate_min\": 0.95\n  },\n  \"timestamp\": \"2026-05-24T07:38:25.246013+00:00\",\n  \"total_requests\": 64939,\n  \"users\": 100\n}\n"
+      "stdout": "{\n  \"concurrency_model\": \"asyncio_logical_users\",\n  \"duration_seconds\": 1.0,\n  \"failures\": 0,\n  \"latency_ms\": {\n    \"avg\": 0.4487749799052284,\n    \"max\": 1.7502009868621826,\n    \"p50\": 0.4241198766976595,\n    \"p95\": 0.5969941150397062,\n    \"p99\": 0.6344049051403998\n  },\n  \"operation\": \"learning_atom_retrieval_firewall_privacy_prompt_scan\",\n  \"passed\": true,\n  \"per_user_min_requests\": 21,\n  \"requests_per_second\": 2137.0,\n  \"sample_failures\": [],\n  \"success_rate\": 1.0,\n  \"successes\": 2137,\n  \"thresholds\": {\n    \"min_requests_per_user\": 1.0,\n    \"p95_ms_max\": 1000.0,\n    \"p99_ms_max\": 3000.0,\n    \"success_rate_min\": 0.95\n  },\n  \"timestamp\": \"2026-05-25T09:28:25.163348+00:00\",\n  \"total_requests\": 2137,\n  \"users\": 100\n}\n"
     },
     {
       "cmd": [
@@ -117,13 +119,13 @@
         "--users",
         "1000",
         "--duration",
-        "30.0"
+        "1.0"
       ],
       "name": "load_1000",
       "rc": 0,
-      "started": "2026-05-24T07:38:25.265442+00:00",
+      "started": "2026-05-25T09:28:25.181005+00:00",
       "stderr": "",
-      "stdout": "{\n  \"concurrency_model\": \"asyncio_logical_users\",\n  \"duration_seconds\": 30.0,\n  \"failures\": 0,\n  \"latency_ms\": {\n    \"avg\": 0.41382298878476836,\n    \"max\": 1.9302580039948225,\n    \"p50\": 0.3934691194444895,\n    \"p95\": 0.560709391720593,\n    \"p99\": 0.5917398957535625\n  },\n  \"operation\": \"learning_atom_retrieval_firewall_privacy_prompt_scan\",\n  \"passed\": true,\n  \"per_user_min_requests\": 70,\n  \"requests_per_second\": 2337.0333333333333,\n  \"sample_failures\": [],\n  \"success_rate\": 1.0,\n  \"successes\": 70111,\n  \"thresholds\": {\n    \"min_requests_per_user\": 1.0,\n    \"p95_ms_max\": 500.0,\n    \"p99_ms_max\": 1500.0,\n    \"success_rate_min\": 0.99\n  },\n  \"timestamp\": \"2026-05-24T07:38:55.423045+00:00\",\n  \"total_requests\": 70111,\n  \"users\": 1000\n}\n"
+      "stdout": "{\n  \"concurrency_model\": \"asyncio_logical_users\",\n  \"duration_seconds\": 1.0,\n  \"failures\": 0,\n  \"latency_ms\": {\n    \"avg\": 0.4264471360227519,\n    \"max\": 1.6471908893436193,\n    \"p50\": 0.4021449713036418,\n    \"p95\": 0.5754714016802609,\n    \"p99\": 0.6166691356338562\n  },\n  \"operation\": \"learning_atom_retrieval_firewall_privacy_prompt_scan\",\n  \"passed\": true,\n  \"per_user_min_requests\": 2,\n  \"requests_per_second\": 2230.0,\n  \"sample_failures\": [],\n  \"success_rate\": 1.0,\n  \"successes\": 2230,\n  \"thresholds\": {\n    \"min_requests_per_user\": 1.0,\n    \"p95_ms_max\": 500.0,\n    \"p99_ms_max\": 1500.0,\n    \"success_rate_min\": 0.99\n  },\n  \"timestamp\": \"2026-05-25T09:28:26.298618+00:00\",\n  \"total_requests\": 2230,\n  \"users\": 1000\n}\n"
     },
     {
       "cmd": [
@@ -135,9 +137,9 @@
       ],
       "name": "readiness_1000_tests",
       "rc": 0,
-      "started": "2026-05-24T07:38:55.441887+00:00",
+      "started": "2026-05-25T09:28:26.316214+00:00",
       "stderr": "",
-      "stdout": "........                                                                 [100%]\n8 passed in 0.02s\n"
+      "stdout": "........                                                                 [100%]\n8 passed in 0.01s\n"
     },
     {
       "cmd": [
@@ -146,9 +148,9 @@
       ],
       "name": "real_user_rollout_gate",
       "rc": 1,
-      "started": "2026-05-24T07:38:55.940295+00:00",
+      "started": "2026-05-25T09:28:26.799311+00:00",
       "stderr": "",
-      "stdout": "{\n  \"ready_for_10_controlled_beta\": true,\n  \"infrastructure_ready_for_100\": true,\n  \"ready_for_100_real_users\": false,\n  \"max_recommended_real_users_now\": 10,\n  \"blockers\": [\n    \"first-10 external-user evidence has not passed: verified=0/10, real_users=0/10, installs=0/8, useful=0/6, critical_incidents=0/0\"\n  ],\n  \"snapshot\": \"eval/real_user_rollout_gate_snapshot.json\",\n  \"report\": \"docs/20260517_BORG_100_REAL_USER_READINESS.md\"\n}\n"
+      "stdout": "{\n  \"ready_for_10_controlled_beta\": false,\n  \"infrastructure_ready_for_100\": false,\n  \"ready_for_100_real_users\": false,\n  \"max_recommended_real_users_now\": 0,\n  \"blockers\": [\n    \"PyPI latest/fresh-install package evidence is not green: latest metadata does not match source version\",\n    \"PyPI latest/fresh-install package evidence is not green: fresh install + MCP stdio canary is not green\",\n    \"first-10 external-user evidence has not passed: verified=0/10, real_users=0/10, installs=0/8, useful=0/6, critical_incidents=0/0\"\n  ],\n  \"snapshot\": \"eval/real_user_rollout_gate_snapshot.json\",\n  \"report\": \"docs/20260517_BORG_100_REAL_USER_READINESS.md\"\n}\n"
     },
     {
       "cmd": [
@@ -157,7 +159,7 @@
       ],
       "name": "scoreboard_final",
       "rc": 0,
-      "started": "2026-05-24T07:38:55.984491+00:00",
+      "started": "2026-05-25T09:28:26.892524+00:00",
       "stderr": "",
       "stdout": "/root/hermes-workspace/borg/PROJECT_STATUS.md\n/root/hermes-workspace/borg/eval/uat_scoreboard_snapshot.json\n"
     },
@@ -168,11 +170,11 @@
       ],
       "name": "scoreboard_after_decision",
       "rc": 0,
-      "started": "2026-05-24T07:38:56.026350+00:00",
+      "started": "2026-05-25T09:28:26.936930+00:00",
       "stderr": "",
       "stdout": "/root/hermes-workspace/borg/PROJECT_STATUS.md\n/root/hermes-workspace/borg/eval/uat_scoreboard_snapshot.json\n"
     }
   ],
-  "synthetic_load_all_pass": false,
-  "timestamp": "2026-05-24T07:38:56.025585+00:00"
+  "synthetic_load_all_pass": true,
+  "timestamp": "2026-05-25T09:28:26.936250+00:00"
 }

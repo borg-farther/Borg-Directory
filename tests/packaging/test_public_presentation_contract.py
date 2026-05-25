@@ -1,6 +1,7 @@
 from __future__ import annotations
 
 from pathlib import Path
+import json
 import subprocess
 
 ROOT = Path(__file__).resolve().parents[2]
@@ -148,6 +149,27 @@ def test_non_current_public_docs_are_bannered_or_operator_scoped() -> None:
         if "Historical/internal — not current product documentation" not in text:
             failures.append(str(rel))
     assert not failures, "non-current docs missing historical/internal banner: " + ", ".join(failures[:20])
+
+
+def test_public_live_dashboard_json_endpoints_exist_and_no_go_is_badge_red() -> None:
+    for relative in [
+        "docs/public/status.json",
+        "docs/public/value.json",
+        "docs/public/impact/impact.json",
+    ]:
+        payload = json.loads(read(relative))
+        assert payload["schema_version"] == 1
+        assert payload["updated_at"]
+
+    status = json.loads(read("docs/public/status.json"))
+    assert status["repo"] == "https://github.com/borg-farther/Borg-Directory"
+    assert status["state"].startswith("NO-GO public self-serve")
+    assert status["verified_external_users"] == 0
+
+    html = read("docs/public/borg-live-dashboard.html")
+    bad_idx = html.index("/(fail|red|block|no-go)/")
+    ok_idx = html.index("/(go|ready|ok|green|pass)/")
+    assert bad_idx < ok_idx, "NO-GO must render red before generic GO regex can match"
 
 
 def test_public_docs_do_not_expose_credential_reconnaissance() -> None:

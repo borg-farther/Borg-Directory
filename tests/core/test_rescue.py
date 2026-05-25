@@ -25,6 +25,22 @@ def test_rescue_returns_agent_contract_for_known_error():
     assert "Borg matched" in result.human_receipt
 
 
+def test_missing_dependency_rescue_maps_common_import_to_distribution_name():
+    result = rescue("ModuleNotFoundError: No module named yaml", source="test", show_guidance=False)
+
+    assert result.success is True
+    assert result.problem_class == "missing_dependency"
+    assert any("pip install PyYAML" in action for action in result.action)
+    assert "pip install PyYAML" in result.agent_instruction
+
+
+def test_missing_dependency_rescue_uses_import_name_when_mapping_unknown():
+    result = rescue("ModuleNotFoundError: No module named flask", source="test", show_guidance=False)
+
+    assert result.success is True
+    assert any("pip install flask" in action for action in result.action)
+
+
 def test_rescue_fails_closed_on_unknown_or_non_python_error():
     result = rescue("error[E0382]: borrow of moved value: `x`", source="test", show_guidance=False)
 

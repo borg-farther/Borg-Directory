@@ -4,7 +4,7 @@ build-backend = "setuptools.build_meta"
 
 [project]
 name = "agent-borg"
-version = "3.3.11"
+version = "3.3.12"
 description = "Failure memory CLI and MCP server for AI coding agents"
 readme = "README.md"
 requires-python = ">=3.10"
@@ -80,7 +80,7 @@ include = ["borg*"]
 borg = ["seeds_data/*.yaml", "seeds_data/*.json", "seeds_data/*.md", "seeds_data/*/*.yaml", "seeds_data/*/*.json", "seeds_data/*/*.md", "seeds_data/packs/*.yaml"]
 
 [tool.pytest.ini_options]
-testpaths = ["tests"]
+testpaths = ["tests", "eval/tests"]
 norecursedirs = ["docs", "build", "dist", ".git", ".pytest_cache", "*.egg-info"]
 markers = [
     "network: tests that mock or exercise network-style pack retrieval paths",

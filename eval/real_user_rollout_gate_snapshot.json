@@ -1,5 +1,7 @@
 {
   "blockers": [
+    "PyPI latest/fresh-install package evidence is not green: latest metadata does not match source version",
+    "PyPI latest/fresh-install package evidence is not green: fresh install + MCP stdio canary is not green",
     "first-10 external-user evidence has not passed: verified=0/10, real_users=0/10, installs=0/8, useful=0/6, critical_incidents=0/0"
   ],
   "first_10_external_evidence": {
@@ -32,38 +34,38 @@
     "exists": true,
     "failed_count": 0,
     "failures": [],
-    "generated_at_utc": "2026-05-24T19:44:51Z",
+    "generated_at_utc": "2026-05-25T09:28:21Z",
     "passed": true,
     "passed_count": 26
   },
   "gate_type": "real_user_rollout",
-  "generated_at_utc": "2026-05-24T21:14:17.777855+00:00",
+  "generated_at_utc": "2026-05-25T09:28:26.877922+00:00",
   "important_distinction": "load/readiness snapshots are synthetic/logical users; this gate controls real external-user rollout",
-  "infrastructure_ready_for_100": true,
+  "infrastructure_ready_for_100": false,
   "load_gates": {
     "10": {
-      "duration_seconds": 30.0,
+      "duration_seconds": 1.0,
       "exists": true,
       "latency_ms": {
-        "avg": 0.42872132702416554,
-        "max": 0.7930488791316748,
-        "p50": 0.40635885670781136,
-        "p95": 0.5755376303568482,
-        "p99": 0.6008552201092243
+        "avg": 0.43705896717882253,
+        "max": 0.7805498316884041,
+        "p50": 0.42178540024906397,
+        "p95": 0.5594801041297615,
+        "p99": 0.5933718127198517
       },
       "passed": true,
       "success_rate": 1.0,
       "users": 10
     },
     "100": {
-      "duration_seconds": 30.0,
+      "duration_seconds": 1.0,
       "exists": true,
       "latency_ms": {
-        "avg": 0.4469398032950682,
-        "max": 11.739321053028107,
-        "p50": 0.419059069827199,
-        "p95": 0.5981309339404106,
-        "p99": 0.6571157835423953
+        "avg": 0.4487749799052284,
+        "max": 1.7502009868621826,
+        "p50": 0.4241198766976595,
+        "p95": 0.5969941150397062,
+        "p99": 0.6344049051403998
       },
       "passed": true,
       "success_rate": 1.0,
@@ -71,30 +73,32 @@
     }
   },
   "local_infrastructure_ready_for_10": true,
-  "max_recommended_real_users_now": 10,
+  "max_recommended_real_users_now": 0,
   "no_fake_user_policy": "Do not mark first-10 complete or 100-real-user ready without consented external evidence rows.",
   "public_package_gate": {
-    "blockers": [],
-    "passed": true,
+    "blockers": [
+      "PyPI latest/fresh-install package evidence is not green: latest metadata does not match source version",
+      "PyPI latest/fresh-install package evidence is not green: fresh install + MCP stdio canary is not green"
+    ],
+    "passed": false,
     "pypi_fresh_install_and_mcp_stdio": {
       "exists": true,
-      "expected_version": "3.3.11",
-      "failed_count": 0,
-      "failures": [],
-      "generated_at_utc": "2026-05-24T21:09:22Z",
-      "mcp_server_info": {
-        "name": "borg-mcp-server",
-        "version": "3.3.11"
-      },
-      "mcp_stdio_canary_passed": true,
-      "passed": true,
+      "expected_version": "3.3.12",
+      "failed_count": 1,
+      "failures": [
+        "pip_install_agent_borg"
+      ],
+      "generated_at_utc": "2026-05-25T09:26:49Z",
+      "mcp_server_info": null,
+      "mcp_stdio_canary_passed": false,
+      "passed": false,
       "path": "eval/pypi_fresh_install_snapshot.json",
-      "version": "3.3.11"
+      "version": "3.3.12"
     },
     "pypi_latest": {
       "banned_keywords_present": [],
       "expected_summary": "Failure memory CLI and MCP server for AI coding agents",
-      "expected_version": "3.3.11",
+      "expected_version": "3.3.12",
       "keyword_missing": false,
       "keywords": [
         "agent-tools",
@@ -105,7 +109,7 @@
       ],
       "latest_version": "3.3.11",
       "package": "agent-borg",
-      "passed": true,
+      "passed": false,
       "project_urls": {
         "Documentation": "https://github.com/borg-farther/Borg-Directory#readme",
         "Homepage": "https://github.com/borg-farther/Borg-Directory",
@@ -141,7 +145,7 @@
     }
   },
   "ready_for_100_real_users": false,
-  "ready_for_10_controlled_beta": true,
+  "ready_for_10_controlled_beta": false,
   "schema_version": 1,
   "security": {
     "missing": [],
@@ -157,7 +161,7 @@
   },
   "version": {
     "passed": true,
-    "project_version": "3.3.11",
-    "runtime_version": "3.3.11"
+    "project_version": "3.3.12",
+    "runtime_version": "3.3.12"
   }
 }

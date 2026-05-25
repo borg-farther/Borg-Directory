@@ -37,7 +37,7 @@ jobs:
 
       - name: Run tests
         run: |
-          python -m pytest tests/ --tb=short -q
+          python -m pytest --tb=short -q
 
       - name: Run public-readiness fail-closed tests
         run: |

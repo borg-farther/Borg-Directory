@@ -3,26 +3,38 @@ from __future__ import annotations
 import json
 import hashlib
 import re
-import subprocess
 from pathlib import Path
+
+from scripts import build_borg_proof_dashboard as dashboard
 
 ROOT = Path(__file__).resolve().parents[2]
 
 
-def test_borg_proof_dashboard_artifacts_exist_and_are_honest():
-    subprocess.run(
-        ["python", "scripts/build_borg_proof_dashboard.py"],
-        cwd=ROOT,
-        check=True,
-        stdout=subprocess.PIPE,
-        stderr=subprocess.PIPE,
-        text=True,
-    )
-    json_path = ROOT / "eval" / "borg_proof_dashboard.json"
-    md_path = ROOT / "docs" / "BORG_PROOF_DASHBOARD.md"
-    html_path = ROOT / "docs" / "BORG_PROOF_DASHBOARD.html"
-    public_path = ROOT / "docs" / "public" / "proof-dashboard" / "index.html"
-    for path in [json_path, md_path, html_path, public_path]:
+def test_borg_proof_dashboard_artifacts_exist_and_are_honest(tmp_path, monkeypatch):
+    docs = tmp_path / "docs"
+    eval_dir = tmp_path / "eval"
+    public = docs / "public" / "proof-dashboard"
+    monkeypatch.setattr(dashboard, "DOCS", docs)
+    monkeypatch.setattr(dashboard, "EVAL", eval_dir)
+    monkeypatch.setattr(dashboard, "PUBLIC", public)
+    monkeypatch.setattr(dashboard, "JSON_OUT", eval_dir / "borg_proof_dashboard.json")
+    monkeypatch.setattr(dashboard, "MD_OUT", docs / "BORG_PROOF_DASHBOARD.md")
+    monkeypatch.setattr(dashboard, "HTML_OUT", docs / "BORG_PROOF_DASHBOARD.html")
+    monkeypatch.setattr(dashboard, "PUBLIC_OUT", public / "index.html")
+    monkeypatch.setattr(dashboard, "PUBLIC_STATUS_OUT", docs / "public" / "status.json")
+    monkeypatch.setattr(dashboard, "PUBLIC_VALUE_OUT", docs / "public" / "value.json")
+    monkeypatch.setattr(dashboard, "PUBLIC_IMPACT_OUT", docs / "public" / "impact" / "impact.json")
+
+    assert dashboard.main() == 0
+
+    json_path = dashboard.JSON_OUT
+    md_path = dashboard.MD_OUT
+    html_path = dashboard.HTML_OUT
+    public_path = dashboard.PUBLIC_OUT
+    status_path = dashboard.PUBLIC_STATUS_OUT
+    value_path = dashboard.PUBLIC_VALUE_OUT
+    impact_path = dashboard.PUBLIC_IMPACT_OUT
+    for path in [json_path, md_path, html_path, public_path, status_path, value_path, impact_path]:
         assert path.exists(), path
     data = json.loads(json_path.read_text(encoding="utf-8"))
     assert data["repo"] == "https://github.com/borg-farther/Borg-Directory"
@@ -40,6 +52,14 @@ def test_borg_proof_dashboard_artifacts_exist_and_are_honest():
     assert data["top_verdict"]["unattended_git_onboarding"]["verdict"] == "NO-GO"
     assert data["anti_hype"]["simulated_users_are_not_real_users"] is True
     assert "Simulated/logical users are not real users" in data["anti_hype"]["text"]
+    status = json.loads(status_path.read_text(encoding="utf-8"))
+    value = json.loads(value_path.read_text(encoding="utf-8"))
+    impact = json.loads(impact_path.read_text(encoding="utf-8"))
+    assert status["repo"] == "https://github.com/borg-farther/Borg-Directory"
+    assert status["state"].startswith("NO-GO public self-serve")
+    assert status["controlled_first_10_beta"]["verdict"] in {"NO-GO", "CONDITIONAL"}
+    assert "ACTION / STOP / VERIFY" in value["headline"]
+    assert impact["primary_impact"] == "NO-GO public self-serve"
     assert data["first_10_user_scoreboard_template"]["columns"] == [
         "user id/pseudonym",
         "install success",

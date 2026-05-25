@@ -18,10 +18,14 @@ ROOT = Path(__file__).resolve().parents[1]
 DOCS = ROOT / "docs"
 EVAL = ROOT / "eval"
 PUBLIC = DOCS / "public" / "proof-dashboard"
+PUBLIC_ROOT = DOCS / "public"
 JSON_OUT = EVAL / "borg_proof_dashboard.json"
 MD_OUT = DOCS / "BORG_PROOF_DASHBOARD.md"
 HTML_OUT = DOCS / "BORG_PROOF_DASHBOARD.html"
 PUBLIC_OUT = PUBLIC / "index.html"
+PUBLIC_STATUS_OUT = PUBLIC_ROOT / "status.json"
+PUBLIC_VALUE_OUT = PUBLIC_ROOT / "value.json"
+PUBLIC_IMPACT_OUT = PUBLIC_ROOT / "impact" / "impact.json"
 CANONICAL_REPO_URL = "https://github.com/borg-farther/Borg-Directory"
 
 SOURCE_PATHS = [
@@ -253,8 +257,12 @@ def build_model() -> dict:
         ],
     }
 
+    if pypi_fresh_pass is True:
+        first_tester_action = f"Use `pipx install agent-borg=={pypi_fresh_version or pv or 'CURRENT_VERSION'}` with controlled first-10 beta testers and label it as beta evidence capture, not public launch."
+    else:
+        first_tester_action = f"After `agent-borg=={pv or 'CURRENT_VERSION'}` is published and the PyPI fresh-install + stdio MCP canary passes, use that exact PyPI version with controlled first-10 beta testers."
     next_actions = [
-        f"Use `pipx install agent-borg=={pypi_fresh_version or pv or 'CURRENT_VERSION'}` with controlled first-10 beta testers and label it as beta evidence capture, not public launch.",
+        first_tester_action,
         "Create a fresh-PyPI runbook: install package, run borg --version, configure MCP, run one rescue, capture exact timestamps and blockers.",
         "Record first user in the first-10 scoreboard template using a pseudonym and consented outcome fields.",
         "If any onboarding step fails, add artifact path/stdout/stderr and keep broad launch at NO-GO.",
@@ -411,21 +419,96 @@ body{font-family:system-ui,-apple-system,Segoe UI,sans-serif;max-width:1180px;ma
 </body></html>"""
 
 
+def build_public_payloads(model: dict) -> tuple[dict, dict, dict]:
+    """Return compact JSON payloads consumed by docs/public/borg-live-dashboard.html."""
+    controlled = model["top_verdict"]["controlled_first_10_beta"]
+    broad = model["top_verdict"]["broad_public_launch"]
+    local = model["top_verdict"]["local_release_candidate"]
+    blockers = model.get("blockers", {})
+    metrics = model.get("metrics", {})
+    source_version = str(metrics.get("source_version_consistency", {}).get("value", "UNKNOWN"))
+    generated = model["generated_at_utc"]
+
+    status_payload = {
+        "schema_version": 1,
+        "source": "docs/public/status.json",
+        "updated_at": generated,
+        "repo": model["repo"],
+        "source_revision": model.get("source_revision"),
+        "source_version_consistency": source_version,
+        "readiness": broad["verdict"],
+        "state": "NO-GO public self-serve; source/local release-candidate only",
+        "status": broad["verdict"],
+        "decision": broad["verdict"],
+        "go_no_go": broad["why"],
+        "distribution_gate": controlled["verdict"],
+        "local_release_candidate": local,
+        "controlled_first_10_beta": controlled,
+        "broad_public_launch": broad,
+        "max_recommended_real_users_now": metrics.get("max_recommended_real_users_now", {}).get("value", 0),
+        "verified_external_users": metrics.get("verified_external_users", {}).get("value", 0),
+        "blockers": blockers,
+        "evidence": [
+            "eval/first_user_release_gate_snapshot.json",
+            "eval/public_self_serve_launch_gate_snapshot.json",
+            "eval/pypi_fresh_install_snapshot.json",
+            "eval/real_user_rollout_gate_snapshot.json",
+        ],
+    }
+    value_payload = {
+        "schema_version": 1,
+        "updated_at": generated,
+        "headline": "ACTION / STOP / VERIFY rescue packets are green in source/local first-user gates",
+        "summary": "Borg gives coding agents a concrete next action, a dead end to avoid, and a verification step for known failure classes.",
+        "detail": "Public-package controlled beta remains blocked until PyPI latest and fresh PyPI install + stdio MCP canaries pass for the current source version.",
+        "primary_metric": metrics.get("first_user_release_gate", {}).get("value", "UNKNOWN"),
+        "honesty_label": "LOCAL_SOURCE_GATE_NOT_EXTERNAL_ADOPTION",
+    }
+    impact_payload = {
+        "schema_version": 1,
+        "updated_at": generated,
+        "headline": "external-user impact not proven yet",
+        "summary": "0 verified external users in row-derived first-10 evidence; synthetic/logical load does not count as adoption.",
+        "detail": "Public self-serve launch requires 10 consented external users, at least 8 installs, at least 6 useful rescues, and 0 critical privacy/security incidents.",
+        "primary_impact": "NO-GO public self-serve",
+        "honesty_label": "REAL_EXTERNAL_USERS_REQUIRED",
+    }
+    return status_payload, value_payload, impact_payload
+
+
+def display_path(path: Path) -> str:
+    """Return a stable path for CLI output even when tests redirect outputs."""
+    try:
+        return str(path.relative_to(ROOT))
+    except ValueError:
+        return str(path)
+
+
 def main() -> int:
     DOCS.mkdir(parents=True, exist_ok=True)
     EVAL.mkdir(parents=True, exist_ok=True)
     PUBLIC.mkdir(parents=True, exist_ok=True)
+    PUBLIC_STATUS_OUT.parent.mkdir(parents=True, exist_ok=True)
+    PUBLIC_VALUE_OUT.parent.mkdir(parents=True, exist_ok=True)
+    PUBLIC_IMPACT_OUT.parent.mkdir(parents=True, exist_ok=True)
     model = build_model()
     md = render_md(model)
     html_text = render_html(model, md)
+    status_payload, value_payload, impact_payload = build_public_payloads(model)
     JSON_OUT.write_text(json.dumps(model, indent=2, sort_keys=True) + "\n", encoding="utf-8")
     MD_OUT.write_text(md, encoding="utf-8")
     HTML_OUT.write_text(html_text, encoding="utf-8")
     PUBLIC_OUT.write_text(html_text, encoding="utf-8")
-    print(MD_OUT.relative_to(ROOT))
-    print(HTML_OUT.relative_to(ROOT))
-    print(JSON_OUT.relative_to(ROOT))
-    print(PUBLIC_OUT.relative_to(ROOT))
+    PUBLIC_STATUS_OUT.write_text(json.dumps(status_payload, indent=2, sort_keys=True) + "\n", encoding="utf-8")
+    PUBLIC_VALUE_OUT.write_text(json.dumps(value_payload, indent=2, sort_keys=True) + "\n", encoding="utf-8")
+    PUBLIC_IMPACT_OUT.write_text(json.dumps(impact_payload, indent=2, sort_keys=True) + "\n", encoding="utf-8")
+    print(display_path(MD_OUT))
+    print(display_path(HTML_OUT))
+    print(display_path(JSON_OUT))
+    print(display_path(PUBLIC_OUT))
+    print(display_path(PUBLIC_STATUS_OUT))
+    print(display_path(PUBLIC_VALUE_OUT))
+    print(display_path(PUBLIC_IMPACT_OUT))
     return 0
 
 if __name__ == "__main__":

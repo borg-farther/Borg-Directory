@@ -186,9 +186,9 @@
 
     const badge = (txt) => {
       const s = String(txt || '').toLowerCase();
-      if (/(go|ready|ok|green|pass)/.test(s)) return `<span class="status-ok">${txt}</span>`;
-      if (/(warn|hold|yellow|caution)/.test(s)) return `<span class="status-warn">${txt}</span>`;
       if (/(fail|red|block|no-go)/.test(s)) return `<span class="status-bad">${txt}</span>`;
+      if (/(warn|hold|yellow|caution)/.test(s)) return `<span class="status-warn">${txt}</span>`;
+      if (/(go|ready|ok|green|pass)/.test(s)) return `<span class="status-ok">${txt}</span>`;
       return txt || '—';
     };
 
