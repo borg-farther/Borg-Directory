@@ -41,7 +41,7 @@
     "public_self_serve_launch_gate": "BLOCKED",
     "reason": "First-10 external-user evidence thresholds have not passed."
   },
-  "generated_at_utc": "2026-05-25T16:08:49Z",
+  "generated_at_utc": "2026-05-25T17:04:55Z",
   "purpose": "Hard evidence scoreboard for Borg first-10 external beta users. Empty rows are placeholders only and must never be counted as adoption.",
   "rows": [],
   "schema_version": 1,

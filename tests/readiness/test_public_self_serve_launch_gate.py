@@ -425,3 +425,39 @@ def test_pypi_fresh_install_canary_fails_closed_when_release_not_on_pypi(monkeyp
     assert "--index-url" in install_result["command"]
     assert "https://pypi.org/simple" in install_result["command"]
     assert snapshot["mcp_stdio_canary"]["detail"] == "not run because PyPI install failed"
+
+
+def test_pypi_mcp_canary_accepts_installed_package_runtime_fingerprint(monkeypatch) -> None:
+    fingerprint_payload = {
+        "success": True,
+        "borg_version": "9.9.9",
+        "source_version": None,
+        "version_matches_source": False,
+        "loaded_function_hashes": {
+            "borg.core.confidence_gate.trace_match_is_confident": {"sha256": "abc"},
+            "borg.integrations.mcp_server.borg_observe": {"sha256": "def"},
+        },
+        "observe_behavior_canary": {
+            "passed": True,
+            "meta_prompt_failed_closed": True,
+        },
+        "confidence_gate_canary": {"passed": True},
+    }
+    responses = [
+        {"jsonrpc": "2.0", "id": 1, "result": {"serverInfo": {"name": "borg-mcp-server", "version": "9.9.9"}}},
+        {"jsonrpc": "2.0", "id": 2, "result": {"tools": [{"name": "error_lookup"}, {"name": "borg_runtime_fingerprint"}, {"name": "borg_observe"}]}},
+        {"jsonrpc": "2.0", "id": 3, "result": {"content": [{"text": "ACTION\nSTOP\nVERIFY"}]}},
+        {"jsonrpc": "2.0", "id": 4, "result": {"content": [{"text": json.dumps(fingerprint_payload)}]}},
+    ]
+    stdout = "\n".join(json.dumps(response) for response in responses) + "\n"
+
+    def fake_run_cmd(name, cmd, **kwargs):  # type: ignore[no-untyped-def]
+        return canary.CommandResult(name, list(cmd), 0, True, stdout, "", 0.0, "exit=0")
+
+    monkeypatch.setattr(canary, "run_cmd", fake_run_cmd)
+
+    result = canary.mcp_stdio_canary(Path("/tmp/borg-mcp"), {}, "9.9.9")
+
+    assert result["passed"] is True
+    assert result["fingerprint_signal"] is True
+    assert result["server_info"] == {"name": "borg-mcp-server", "version": "9.9.9"}

@@ -1,11 +1,11 @@
 # Borg public self-serve launch go/no-go
 
-Generated: 2026-05-25T16:30:14.262678+00:00
+Generated: 2026-05-25T17:05:59.967842+00:00
 Source version: `3.3.14`
 
 Public self-serve launch: **NO-GO**
-Controlled first-10 beta infrastructure: **NO-GO**
-Max recommended real users now: **0**
+Controlled first-10 beta infrastructure: **GO**
+Max recommended real users now: **10**
 
 ## Hard rule
 
@@ -14,16 +14,14 @@ Public self-serve is GO only after PyPI/fresh-install/MCP/docs/cold-start-trust 
 ## Gate results
 
 - `first_user_release`: `PASS`
-- `pypi_latest`: `FAIL`
-- `pypi_fresh_install_and_mcp_stdio`: `FAIL`
+- `pypi_latest`: `PASS`
+- `pypi_fresh_install_and_mcp_stdio`: `PASS`
 - `cold_start_trust_hardening`: `PASS`
 - `docs_claim_guard`: `PASS`
 - `first_10_external_evidence`: `FAIL`
 
 ## Blockers
 
-- PyPI latest metadata does not match source version or required project URLs
-- PyPI fresh-install + MCP stdio canary snapshot is missing or failing
 - first-10 external-user evidence has not passed: verified=0/10, real_users=0/10, installs=0/8, useful=0/6, critical_incidents=0/0
 
 ## Evidence artifacts
