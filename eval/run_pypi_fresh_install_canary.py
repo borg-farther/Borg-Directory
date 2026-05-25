@@ -126,8 +126,27 @@ def mcp_stdio_canary(borg_mcp: Path, env: dict[str, str], expected_version: str)
     except (KeyError, IndexError, TypeError):
         fingerprint_text = ""
 
+    fingerprint_payload: dict[str, Any] = {}
+    try:
+        decoded = json.loads(fingerprint_text)
+        if isinstance(decoded, dict):
+            fingerprint_payload = decoded
+    except json.JSONDecodeError:
+        fingerprint_payload = {}
+
     server_info = ((by_id.get(1) or {}).get("result") or {}).get("serverInfo") or {}
-    fingerprint_signal = all(token in fingerprint_text for token in ["borg_version", expected_version, "loaded_code_has_confidence_gate"])
+    loaded_hashes = fingerprint_payload.get("loaded_function_hashes") or {}
+    observe_canary = fingerprint_payload.get("observe_behavior_canary") or {}
+    confidence_canary = fingerprint_payload.get("confidence_gate_canary") or {}
+    fingerprint_signal = (
+        fingerprint_payload.get("success") is True
+        and fingerprint_payload.get("borg_version") == expected_version
+        and bool(loaded_hashes.get("borg.core.confidence_gate.trace_match_is_confident"))
+        and bool(loaded_hashes.get("borg.integrations.mcp_server.borg_observe"))
+        and observe_canary.get("passed") is True
+        and observe_canary.get("meta_prompt_failed_closed") is True
+        and confidence_canary.get("passed") is True
+    )
     passed = (
         result.passed
         and not parse_errors

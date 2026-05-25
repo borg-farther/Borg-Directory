@@ -1,7 +1,5 @@
 {
   "blockers": [
-    "PyPI latest metadata does not match source version or required project URLs",
-    "PyPI fresh-install + MCP stdio canary snapshot is missing or failing",
     "first-10 external-user evidence has not passed: verified=0/10, real_users=0/10, installs=0/8, useful=0/6, critical_incidents=0/0"
   ],
   "gate_type": "public_self_serve_launch",
@@ -10,7 +8,7 @@
       "exists": true,
       "failed_count": 0,
       "failures": [],
-      "generated_at_utc": "2026-05-25T16:30:12.581344+00:00",
+      "generated_at_utc": "2026-05-25T17:05:58.450437+00:00",
       "has_bad_answer_feedback_path": true,
       "missing_required_checks": [],
       "observed_check_count": 7,
@@ -101,15 +99,15 @@
       "expected_version": "3.3.14",
       "failed_count": 0,
       "failures": [],
-      "generated_at_utc": "2026-05-25T10:24:34Z",
+      "generated_at_utc": "2026-05-25T17:04:55Z",
       "mcp_server_info": {
         "name": "borg-mcp-server",
-        "version": "3.3.13"
+        "version": "3.3.14"
       },
       "mcp_stdio_canary_passed": true,
-      "passed": false,
+      "passed": true,
       "path": "eval/pypi_fresh_install_snapshot.json",
-      "version": "3.3.13"
+      "version": "3.3.14"
     },
     "pypi_latest": {
       "banned_keywords_present": [],
@@ -123,9 +121,9 @@
         "failure-memory",
         "mcp"
       ],
-      "latest_version": "3.3.13",
+      "latest_version": "3.3.14",
       "package": "agent-borg",
-      "passed": false,
+      "passed": true,
       "project_urls": {
         "Documentation": "https://github.com/borg-farther/Borg-Directory#readme",
         "Homepage": "https://github.com/borg-farther/Borg-Directory",
@@ -160,9 +158,9 @@
       "url_missing": []
     }
   },
-  "generated_at_utc": "2026-05-25T16:30:14.262678+00:00",
-  "max_recommended_real_users_now": 0,
-  "ready_for_controlled_first_10_beta": false,
+  "generated_at_utc": "2026-05-25T17:05:59.967842+00:00",
+  "max_recommended_real_users_now": 10,
+  "ready_for_controlled_first_10_beta": true,
   "ready_for_public_self_serve_launch": false,
   "schema_version": 1,
   "source_version": "3.3.14",
