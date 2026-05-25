@@ -54,12 +54,15 @@ def test_current_docs_do_not_contradict_3310_published_state() -> None:
         "docs/PUBLIC_SELF_SERVE_LAUNCH_GO_NO_GO.md": read("docs/PUBLIC_SELF_SERVE_LAUNCH_GO_NO_GO.md"),
         "docs/BORG_PROOF_DASHBOARD.md": read("docs/BORG_PROOF_DASHBOARD.md"),
         "docs/VALUE_COMMUNICATION_DASHBOARD.md": read("docs/VALUE_COMMUNICATION_DASHBOARD.md"),
+        "docs/VALUE_COMMUNICATION_DASHBOARD.html": read("docs/VALUE_COMMUNICATION_DASHBOARD.html"),
         "docs/20260514_PUBLIC_SELF_SERVE_LAUNCH_CLOSURE_PLAN.md": read("docs/20260514_PUBLIC_SELF_SERVE_LAUNCH_CLOSURE_PLAN.md"),
     }
     stale = [
         "PyPI latest remains 3.3.7",
         "upload aborted on release-provenance gates",
         "NO-GO until PyPI latest/fresh-install/MCP canary passes",
+        "PyPI latest/fresh-install/stdio MCP package evidence is not green yet",
+        "no controlled first-10 beta invites until package evidence is green",
         "blocked until `agent-borg==3.3.8` is published",
         "BORG_338_RELEASE_PREFLIGHT",
         "BORG_339_RELEASE_PREFLIGHT",
@@ -164,6 +167,8 @@ def test_public_live_dashboard_json_endpoints_exist_and_no_go_is_badge_red() -> 
     status = json.loads(read("docs/public/status.json"))
     assert status["repo"] == "https://github.com/borg-farther/Borg-Directory"
     assert status["state"].startswith("NO-GO public self-serve")
+    assert "controlled first-10 beta GO" in status["state"]
+    assert "source/local release-candidate only" not in status["state"]
     assert status["verified_external_users"] == 0
 
     html = read("docs/public/borg-live-dashboard.html")
