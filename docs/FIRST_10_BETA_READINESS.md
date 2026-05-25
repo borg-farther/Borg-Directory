@@ -1,6 +1,6 @@
 # Borg First-10 Beta Readiness Contract
 
-**Status:** controlled first-10 public-package beta infrastructure is green for `agent-borg==3.3.12`: PyPI latest metadata, fresh PyPI install, stdio MCP canary, GitHub CI/security gates, and source/local first-user gates passed. Invite at most 10 controlled testers with consented evidence capture. Public self-serve launch is still gated by row-derived real external-user evidence.
+**Status:** controlled first-10 public-package beta infrastructure is green for `agent-borg==3.3.13`: PyPI latest metadata, fresh PyPI install, stdio MCP canary, GitHub CI/security gates, and source/local first-user gates passed. Invite at most 10 controlled testers with consented evidence capture. Public self-serve launch is still gated by row-derived real external-user evidence.
 
 **Success metric:** At least 6 of the first 10 users get one relevant ACTION/STOP/VERIFY moment without maintainer handholding, and every miss is recorded as NO_CONFIDENT_MATCH or explicit negative feedback instead of being hidden.
 

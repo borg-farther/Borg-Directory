@@ -1,14 +1,14 @@
 # borg value communication dashboard
 
 ## operator benefits (validated internally)
-- first visible value path after PyPI release: `pipx install agent-borg==3.3.12` -> `borg rescue "<redacted error>"` -> ACTION / STOP / VERIFY
+- first visible value path after PyPI release: `pipx install agent-borg==3.3.13` -> `borg rescue "<redacted error>"` -> ACTION / STOP / VERIFY
 - pre-release value path: local wheel/source first-user gate is green, but this is not public self-serve proof
 - local/synthetic gate status: first-user release gate and logical load gates are green in current artifacts
 - external-user proof status: **not proven yet**; verified external users remain `0`
 - statistically significant agent-level lift: **not claimed** until a controlled external-user benchmark passes
 
 ## readiness status
-- controlled first-10 PyPI beta infrastructure: **GO for up to 10 controlled testers** — PyPI latest/fresh-install/stdio MCP package evidence is green for `agent-borg==3.3.12`
+- controlled first-10 PyPI beta infrastructure: **GO for up to 10 controlled testers** — PyPI latest/fresh-install/stdio MCP package evidence is green for `agent-borg==3.3.13`
 - supervised local first-user path: GO in current artifacts
 - public self-serve launch: **NO-GO until first-10 row-derived external evidence passes**
 - 100 real-user rollout: **NO-GO until 10 external users, >=8 installs, >=6 useful rescues, and 0 critical incidents**

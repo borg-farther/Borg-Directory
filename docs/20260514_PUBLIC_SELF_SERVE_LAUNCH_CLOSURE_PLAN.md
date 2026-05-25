@@ -4,14 +4,14 @@ Generated: 2026-05-14 18:39 UTC
 
 ## Current state
 
-Borg's source package path is **ready for controlled first-10 beta after release publication**: local `agent-borg==3.3.12` wheel/fresh-install gates pass, but production PyPI upload and post-upload canary are still pending.
+Borg's public package path is **ready for controlled first-10 beta evidence capture** on `agent-borg==3.3.13`: production PyPI upload plus fresh-install/stdout CLI and stdio MCP canaries pass for the package path.
 
 Public self-serve launch remains **NO-GO** until row-derived first-10 external-user evidence passes. Served remote MCP remains a separate runtime cutover/canary channel, not proven by the PyPI stdio release.
 
 Hard evidence already completed:
 
-- Branch/source hardening for 3.3.11: local release candidate in this branch
-- Local wheel/fresh-install/MCP canary for `agent-borg==3.3.12`: PASS
+- Branch/source hardening for 3.3.13: merged to main and published to PyPI
+- Fresh PyPI install/MCP canary for `agent-borg==3.3.13`: PASS
 - security baseline: PASS
 - privacy/prompt-injection/atom/firewall tests: PASS
 - source canaries: PASS
@@ -57,14 +57,14 @@ Two true blockers remain before broader launch claims:
    - `docs/LIVE_MCP_SELF_SERVE_CANARY.md`
 5. If any stale guidance appears, self-serve remains NO.
 
-### Phase B — package release/canary closure (pending for 3.3.11)
+### Phase B — package release/canary closure
 
 Prior 3.3.10 proof lives in:
 
 - `docs/20260522_BORG_3310_RELEASE_PREFLIGHT_PUBLISHED.md` (historical)
-- `eval/pypi_fresh_install_snapshot.json` (current 3.3.11 canary fails until upload)
+- `eval/pypi_fresh_install_snapshot.json` (current exact-version package canary)
 
-Current package path status: source `agent-borg==3.3.12` local wheel/fresh-install canary passes. Production PyPI latest remains 3.3.10 until explicit upload approval; the PyPI fresh-install canary is expected to fail before that upload.
+Current package path status: `agent-borg==3.3.13` is the public controlled-beta package line after the docs-sync patch release; PyPI latest, fresh-install, and stdio MCP canaries pass. This still does not authorize public self-serve launch without first-10 row-derived external evidence.
 
 ### Phase C — first-10 user sprint
 
@@ -75,8 +75,8 @@ For each user:
 1. Send invite and privacy warning.
 2. Record consent.
 3. User runs one of:
-   - `pipx install agent-borg==3.3.12`
-   - fallback venv install from PyPI: `/tmp/borg-beta-venv/bin/python -m pip install agent-borg==3.3.12`
+   - `pipx install agent-borg==3.3.13`
+   - fallback venv install from PyPI: `/tmp/borg-beta-venv/bin/python -m pip install agent-borg==3.3.13`
    - source-branch install only for maintainer-approved pre-release testing, never the default first-10 path.
 4. User runs:
    - `borg --version`

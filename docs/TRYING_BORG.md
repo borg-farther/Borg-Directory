@@ -200,4 +200,4 @@ Before attempting technical fixes for errors, bugs, installs, configs, deploymen
 
 ## 7. Readiness boundary
 
-Borg's controlled first-10 public-package beta infrastructure is green for `agent-borg==3.3.12`: PyPI latest, fresh-install, and stdio MCP canaries pass. Borg is not yet claiming public self-serve launch readiness or agent-level success lift at statistical confidence. See [`READINESS.md`](READINESS.md).
+Borg's controlled first-10 public-package beta infrastructure is green for `agent-borg==3.3.13`: PyPI latest, fresh-install, and stdio MCP canaries pass. Borg is not yet claiming public self-serve launch readiness or agent-level success lift at statistical confidence. See [`READINESS.md`](READINESS.md).
