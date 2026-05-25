@@ -2,11 +2,11 @@
 
 ## Current verdict
 
-- Controlled first-10 beta: **GO for up to 10 controlled public-package testers** with consented evidence capture and limits disclosed.
-- Public waitlist / narrow beta: **CONDITIONAL GO for controlled first-10 only**; do not broaden beyond 10 real users until row-derived evidence passes.
+- Controlled first-10 beta: **NO-GO for this source revision until `agent-borg==3.3.14` is published and PyPI fresh-install + stdio MCP canaries pass.**
+- Public waitlist / narrow beta: **NO-GO for `agent-borg==3.3.14` until PyPI latest, fresh-install, and stdio MCP canaries pass for that exact version**; after that, keep the rollout controlled to at most 10 consented users until row-derived evidence passes.
 - Public self-serve launch: **NO-GO until real external-user evidence exists**.
 
-## What passed for controlled beta package infrastructure
+## What passed for source/local package infrastructure
 
 - Public install path exists: `python3 -m pip install agent-borg`.
 - CLI entrypoints exist: `borg`, `borg-mcp`, `borg-doctor`.
@@ -14,7 +14,7 @@
 - First-10 contract exists: [`FIRST_10_BETA_READINESS.md`](FIRST_10_BETA_READINESS.md).
 - Security/privacy/prompt-injection surface has a baseline and CI gates.
 - Current default-branch GitHub CI and security gates are green.
-- PyPI latest is `agent-borg==3.3.13` and the fresh PyPI install + stdio MCP canary passes.
+- PyPI latest/fresh-install/stdio MCP canary must be rerun for `agent-borg==3.3.14`; until then this source revision is not controlled-beta package ready.
 
 ## What is not proven
 

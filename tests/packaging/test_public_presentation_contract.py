@@ -110,6 +110,37 @@ def test_public_examples_and_benchmark_readmes_do_not_overclaim_external_lift() 
         "examples/openclaw-skill/references/packs/systematic-debugging.md"
     ]
 
+
+def test_value_communication_dashboard_exposes_row_derived_savings_contract() -> None:
+    md = read("docs/VALUE_COMMUNICATION_DASHBOARD.md")
+    html = read("docs/VALUE_COMMUNICATION_DASHBOARD.html")
+    value = json.loads(read("docs/public/value.json"))
+
+    for text in [md, html]:
+        assert "baseline_minutes_without_borg" in text
+        assert "actual_minutes_with_borg" in text
+        assert "net_minutes_saved" in text
+        assert "savings_claim_type=none" in text
+        assert "row-derived measured savings" in text
+    assert value["value_honesty_label"] == "ROW_DERIVED_EXTERNAL_USER_SAVINGS_REQUIRED"
+    assert value["measured_savings"]["rows_with_measured_value"] == 0
+    assert value["measured_savings"]["net_minutes_saved"] == 0.0
+    assert value["measured_savings"]["net_tokens_saved"] == 0
+
+
+def test_bad_answer_feedback_path_is_public_and_redaction_first() -> None:
+    issue = read(".github/ISSUE_TEMPLATE/classifier-feedback.yml")
+    cold = read("docs/COLD_START_TRUST_HARDENING.md")
+
+    assert "bad-answer" in issue
+    assert "No, unrelated guidance" in issue
+    assert "Please do not paste API keys" in issue
+    assert "Bad first answers are launch blockers" in issue
+    assert "Bad-answer feedback path" in cold
+    assert "borg_record_failure" in cold
+    assert "redacted transcript" in cold
+
+
 def test_non_current_public_docs_are_bannered_or_operator_scoped() -> None:
     current = {
         "README.md",
@@ -128,6 +159,7 @@ def test_non_current_public_docs_are_bannered_or_operator_scoped() -> None:
         "PUBLIC_SELF_SERVE_LAUNCH_GO_NO_GO.md",
         "BORG_PROOF_DASHBOARD.md",
         "VALUE_COMMUNICATION_DASHBOARD.md",
+        "COLD_START_TRUST_HARDENING.md",
         "SECURITY_HARDENING_BASELINE.md",
         "PRIVACY_MODEL.md",
         "PROMPT_INJECTION_THREAT_MODEL.md",
@@ -167,8 +199,11 @@ def test_public_live_dashboard_json_endpoints_exist_and_no_go_is_badge_red() -> 
     status = json.loads(read("docs/public/status.json"))
     assert status["repo"] == "https://github.com/borg-farther/Borg-Directory"
     assert status["state"].startswith("NO-GO public self-serve")
-    assert "controlled first-10 beta GO" in status["state"]
-    assert "source/local release-candidate only" not in status["state"]
+    if status["controlled_first_10_beta"]["verdict"] == "CONDITIONAL":
+        assert "controlled first-10 beta GO" in status["state"]
+        assert "source/local release-candidate only" not in status["state"]
+    else:
+        assert "source/local release-candidate only" in status["state"]
     assert status["verified_external_users"] == 0
 
     html = read("docs/public/borg-live-dashboard.html")

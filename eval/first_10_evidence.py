@@ -41,6 +41,15 @@ DEFAULT_COLUMNS = [
     "privacy_security_incident",
     "repeat_use_within_7_days",
     "outcome_recorded",
+    "baseline_minutes_without_borg",
+    "actual_minutes_with_borg",
+    "net_minutes_saved",
+    "baseline_tokens_without_borg",
+    "actual_tokens_with_borg",
+    "net_tokens_saved",
+    "savings_counterfactual_basis",
+    "dead_end_avoided_confirmed",
+    "user_confirmed_value",
 ]
 
 SECRET_PATTERNS = [
@@ -118,6 +127,127 @@ def _int_or_default(raw: dict[str, Any], key: str, default: int) -> int:
         return default
 
 
+def _number_or_none(value: Any) -> float | None:
+    if value is None or value == "":
+        return None
+    if isinstance(value, bool):
+        return None
+    try:
+        number = float(value)
+    except (TypeError, ValueError):
+        return None
+    if number != number or number in (float("inf"), float("-inf")):
+        return None
+    return number
+
+
+def _number_is_present(value: Any) -> bool:
+    return value is not None and value != ""
+
+
+def _round_float(value: float) -> float:
+    rounded = round(float(value), 6)
+    if rounded == -0.0:
+        return 0.0
+    return rounded
+
+
+def _counterfactual_basis(row: dict[str, Any]) -> str:
+    return str(row.get("savings_counterfactual_basis") or "unknown").strip().lower() or "unknown"
+
+
+def _value_reasons_and_measurement(row: dict[str, Any]) -> tuple[list[str], dict[str, Any] | None]:
+    """Validate optional savings fields and return a derived measurement.
+
+    Measurement is optional for first-10 adoption. Once any savings/value field is
+    present, it must be internally consistent, consented, and externally sourced.
+    """
+    value_fields = [
+        "baseline_minutes_without_borg",
+        "actual_minutes_with_borg",
+        "net_minutes_saved",
+        "baseline_tokens_without_borg",
+        "actual_tokens_with_borg",
+        "net_tokens_saved",
+        "savings_counterfactual_basis",
+        "dead_end_avoided_confirmed",
+        "user_confirmed_value",
+    ]
+    def field_has_value(field: str) -> bool:
+        value = row.get(field)
+        if field in {"dead_end_avoided_confirmed", "user_confirmed_value"}:
+            return _truthy(value)
+        if field == "savings_counterfactual_basis":
+            return isinstance(value, str) and value.strip().lower() not in {"", "unknown", "none", "n/a"}
+        return _number_is_present(value)
+
+    has_any_value_field = any(field_has_value(field) for field in value_fields)
+    if not has_any_value_field:
+        return [], None
+
+    reasons: list[str] = []
+    baseline_minutes = _number_or_none(row.get("baseline_minutes_without_borg"))
+    actual_minutes = _number_or_none(row.get("actual_minutes_with_borg"))
+    stated_minutes = _number_or_none(row.get("net_minutes_saved"))
+    baseline_tokens = _number_or_none(row.get("baseline_tokens_without_borg"))
+    actual_tokens = _number_or_none(row.get("actual_tokens_with_borg"))
+    stated_tokens = _number_or_none(row.get("net_tokens_saved"))
+    basis = _counterfactual_basis(row)
+
+    if not _truthy(row.get("user_confirmed_value")):
+        reasons.append("user_confirmed_value is required before savings can count")
+    if basis not in {"randomized_control", "same_user_before_after", "agent_trace_baseline", "user_estimate"}:
+        reasons.append("savings_counterfactual_basis must be randomized_control, same_user_before_after, agent_trace_baseline, or user_estimate")
+
+    if baseline_minutes is None and actual_minutes is None and stated_minutes is not None:
+        reasons.append("net_minutes_saved cannot be supplied without baseline_minutes_without_borg and actual_minutes_with_borg")
+    if baseline_tokens is None and actual_tokens is None and stated_tokens is not None:
+        reasons.append("net_tokens_saved cannot be supplied without baseline_tokens_without_borg and actual_tokens_with_borg")
+
+    net_minutes: float | None = None
+    if baseline_minutes is not None or actual_minutes is not None:
+        if baseline_minutes is None or actual_minutes is None:
+            reasons.append("baseline_minutes_without_borg and actual_minutes_with_borg must be supplied together")
+        elif baseline_minutes < 0 or actual_minutes < 0:
+            reasons.append("baseline/actual minutes must be non-negative")
+        else:
+            net_minutes = _round_float(baseline_minutes - actual_minutes)
+            if stated_minutes is not None and abs(stated_minutes - net_minutes) > 1e-6:
+                reasons.append("net_minutes_saved does not match baseline_minutes_without_borg - actual_minutes_with_borg")
+    elif stated_minutes is not None:
+        reasons.append("net_minutes_saved cannot be derived without baseline and actual minutes")
+
+    net_tokens: int | None = None
+    if baseline_tokens is not None or actual_tokens is not None:
+        if baseline_tokens is None or actual_tokens is None:
+            reasons.append("baseline_tokens_without_borg and actual_tokens_with_borg must be supplied together")
+        elif baseline_tokens < 0 or actual_tokens < 0:
+            reasons.append("baseline/actual tokens must be non-negative")
+        else:
+            net_tokens = int(round(baseline_tokens - actual_tokens))
+            if stated_tokens is not None and int(round(stated_tokens)) != net_tokens:
+                reasons.append("net_tokens_saved does not match baseline_tokens_without_borg - actual_tokens_with_borg")
+    elif stated_tokens is not None:
+        reasons.append("net_tokens_saved cannot be derived without baseline and actual tokens")
+
+    if net_minutes is None and net_tokens is None:
+        reasons.append("at least one before/after minutes or token pair is required for measured savings")
+
+    if reasons:
+        return reasons, None
+
+    return [], {
+        "net_minutes_saved": net_minutes or 0.0,
+        "positive_minutes_saved": max(net_minutes or 0.0, 0.0),
+        "negative_minutes_cost": abs(min(net_minutes or 0.0, 0.0)),
+        "net_tokens_saved": net_tokens or 0,
+        "positive_tokens_saved": max(net_tokens or 0, 0),
+        "negative_tokens_cost": abs(min(net_tokens or 0, 0)),
+        "dead_end_avoided_confirmed": _truthy(row.get("dead_end_avoided_confirmed")),
+        "savings_counterfactual_basis": basis,
+    }
+
+
 def normalize_row(row: Any, columns: list[str] | None = None) -> dict[str, Any]:
     """Normalize dict or list-style scoreboard rows to a dict."""
     if isinstance(row, dict):
@@ -177,7 +307,12 @@ def _row_reasons(row: dict[str, Any]) -> list[str]:
     return reasons
 
 
-def _stored_consistency(data: dict[str, Any], derived: dict[str, int], thresholds_passed: bool) -> dict[str, Any]:
+def _stored_consistency(
+    data: dict[str, Any],
+    derived: dict[str, int],
+    thresholds_passed: bool,
+    derived_value: dict[str, Any] | None = None,
+) -> dict[str, Any]:
     counts = data.get("current_counts") or {}
     truth = data.get("truth_policy") or {}
     verdict = data.get("current_verdict") or {}
@@ -206,6 +341,32 @@ def _stored_consistency(data: dict[str, Any], derived: dict[str, int], threshold
         if actual.get(key) != expected_value:
             mismatches.append({"field": key, "expected": expected_value, "actual": actual.get(key)})
 
+    if derived_value is not None and ("current_value_counts" in data or any(derived_value.get(key, 0) for key in derived_value)):
+        value_counts = data.get("current_value_counts") or {}
+        value_expected = {
+            "current_value_counts.rows_with_measured_value": int(derived_value["rows_with_measured_value"]),
+            "current_value_counts.dead_ends_avoided_confirmed": int(derived_value["dead_ends_avoided_confirmed"]),
+            "current_value_counts.net_minutes_saved": _round_float(float(derived_value["net_minutes_saved"])),
+            "current_value_counts.positive_minutes_saved": _round_float(float(derived_value["positive_minutes_saved"])),
+            "current_value_counts.negative_minutes_cost": _round_float(float(derived_value["negative_minutes_cost"])),
+            "current_value_counts.net_tokens_saved": int(derived_value["net_tokens_saved"]),
+            "current_value_counts.positive_tokens_saved": int(derived_value["positive_tokens_saved"]),
+            "current_value_counts.negative_tokens_cost": int(derived_value["negative_tokens_cost"]),
+        }
+        value_actual = {
+            "current_value_counts.rows_with_measured_value": int(value_counts.get("rows_with_measured_value") or 0),
+            "current_value_counts.dead_ends_avoided_confirmed": int(value_counts.get("dead_ends_avoided_confirmed") or 0),
+            "current_value_counts.net_minutes_saved": _round_float(float(value_counts.get("net_minutes_saved") or 0.0)),
+            "current_value_counts.positive_minutes_saved": _round_float(float(value_counts.get("positive_minutes_saved") or 0.0)),
+            "current_value_counts.negative_minutes_cost": _round_float(float(value_counts.get("negative_minutes_cost") or 0.0)),
+            "current_value_counts.net_tokens_saved": int(value_counts.get("net_tokens_saved") or 0),
+            "current_value_counts.positive_tokens_saved": int(value_counts.get("positive_tokens_saved") or 0),
+            "current_value_counts.negative_tokens_cost": int(value_counts.get("negative_tokens_cost") or 0),
+        }
+        for key, expected_value in value_expected.items():
+            if value_actual.get(key) != expected_value:
+                mismatches.append({"field": key, "expected": expected_value, "actual": value_actual.get(key)})
+
     gate = str(verdict.get("public_self_serve_launch_gate") or "").upper()
     expected_gate = "READY" if thresholds_passed else "BLOCKED"
     allowed_gate_values = {"READY", "GO", "PASS", "ALLOWED"} if thresholds_passed else {"BLOCKED", "NO-GO", "NO_GO", "NO"}
@@ -225,9 +386,12 @@ def evaluate_scoreboard(data: dict[str, Any]) -> dict[str, Any]:
     duplicate_user_ids: list[str] = []
     seen_user_ids: set[str] = set()
     counted_rows: list[dict[str, Any]] = []
+    value_measurements: list[dict[str, Any]] = []
 
     for idx, row in enumerate(normalized_rows):
         reasons = _row_reasons(row)
+        value_reasons, value_measurement = _value_reasons_and_measurement(row)
+        reasons.extend(value_reasons)
         user_id = str(row.get("user_id_pseudonym") or "").strip()
         if user_id:
             if user_id in seen_user_ids:
@@ -238,6 +402,8 @@ def evaluate_scoreboard(data: dict[str, Any]) -> dict[str, Any]:
             invalid_rows.append({"index": idx, "user_id_pseudonym": user_id or None, "reasons": reasons})
         else:
             counted_rows.append(row)
+            if value_measurement is not None:
+                value_measurements.append(value_measurement)
 
     derived = {
         "verified_external_users": len(counted_rows),
@@ -251,6 +417,21 @@ def evaluate_scoreboard(data: dict[str, Any]) -> dict[str, Any]:
         "critical_privacy_security_failures": sum(1 for row in counted_rows if _truthy(row.get("privacy_security_incident"))),
         "repeat_use_within_7_days": sum(1 for row in counted_rows if _truthy(row.get("repeat_use_within_7_days"))),
     }
+    basis_counts: dict[str, int] = {}
+    for measurement in value_measurements:
+        basis = str(measurement.get("savings_counterfactual_basis") or "unknown")
+        basis_counts[basis] = basis_counts.get(basis, 0) + 1
+    derived_value = {
+        "rows_with_measured_value": len(value_measurements),
+        "dead_ends_avoided_confirmed": sum(1 for item in value_measurements if item.get("dead_end_avoided_confirmed")),
+        "net_minutes_saved": _round_float(sum(float(item.get("net_minutes_saved") or 0.0) for item in value_measurements)),
+        "positive_minutes_saved": _round_float(sum(float(item.get("positive_minutes_saved") or 0.0) for item in value_measurements)),
+        "negative_minutes_cost": _round_float(sum(float(item.get("negative_minutes_cost") or 0.0) for item in value_measurements)),
+        "net_tokens_saved": int(sum(int(item.get("net_tokens_saved") or 0) for item in value_measurements)),
+        "positive_tokens_saved": int(sum(int(item.get("positive_tokens_saved") or 0) for item in value_measurements)),
+        "negative_tokens_cost": int(sum(int(item.get("negative_tokens_cost") or 0) for item in value_measurements)),
+        "counterfactual_basis_counts": basis_counts,
+    }
     thresholds = _thresholds(data)
     thresholds_passed = (
         derived["verified_external_users"] >= thresholds["required_total_real_users"]
@@ -260,7 +441,7 @@ def evaluate_scoreboard(data: dict[str, Any]) -> dict[str, Any]:
         and derived["critical_privacy_security_failures"] <= thresholds["max_critical_privacy_security_failures"]
     )
 
-    consistency = _stored_consistency(data, derived, thresholds_passed)
+    consistency = _stored_consistency(data, derived, thresholds_passed, derived_value)
     schema_valid = not invalid_rows and not duplicate_user_ids
 
     blockers: list[str] = []
@@ -294,6 +475,7 @@ def evaluate_scoreboard(data: dict[str, Any]) -> dict[str, Any]:
         "duplicate_user_ids": sorted(set(duplicate_user_ids)),
         "thresholds": thresholds,
         "derived_counts": derived,
+        "derived_value": derived_value,
         "stored_consistency": consistency,
         "blockers": blockers,
         "counted_user_ids": [str(row.get("user_id_pseudonym")) for row in counted_rows],
@@ -305,6 +487,7 @@ def scoreboard_with_derived_fields(data: dict[str, Any], evaluation: dict[str, A
     updated = copy.deepcopy(data)
     evaluation = evaluation or evaluate_scoreboard(updated)
     derived = evaluation["derived_counts"]
+    derived_value = evaluation["derived_value"]
     thresholds_passed = bool(evaluation["thresholds_passed"])
     schema_valid = bool(evaluation["schema_valid"])
 
@@ -316,6 +499,17 @@ def scoreboard_with_derived_fields(data: dict[str, Any], evaluation: dict[str, A
         "useful_rescue_moments": derived["useful_rescue_moments"],
         "critical_privacy_security_failures": derived["critical_privacy_security_failures"],
         "repeat_use_within_7_days": derived["repeat_use_within_7_days"],
+    }
+    updated["current_value_counts"] = {
+        "rows_with_measured_value": derived_value["rows_with_measured_value"],
+        "dead_ends_avoided_confirmed": derived_value["dead_ends_avoided_confirmed"],
+        "net_minutes_saved": derived_value["net_minutes_saved"],
+        "positive_minutes_saved": derived_value["positive_minutes_saved"],
+        "negative_minutes_cost": derived_value["negative_minutes_cost"],
+        "net_tokens_saved": derived_value["net_tokens_saved"],
+        "positive_tokens_saved": derived_value["positive_tokens_saved"],
+        "negative_tokens_cost": derived_value["negative_tokens_cost"],
+        "counterfactual_basis_counts": derived_value["counterfactual_basis_counts"],
     }
     ready = thresholds_passed and schema_valid
     updated["current_verdict"] = {

@@ -177,6 +177,18 @@ class TestFetchWithRetry:
             fetch_with_retry("https://example.com/pack.yaml")
             assert mock_urlopen.call_count == 2
 
+    def test_url_fetch_uses_bounded_default_timeout(self):
+        """Invalid URL paths must fail well inside subprocess test timeouts."""
+        fake_yaml = "type: workflow"
+        with patch("borg.core.uri.urlopen") as mock_urlopen:
+            mock_urlopen.return_value = MagicMock(read=lambda: fake_yaml.encode("utf-8"))
+
+            content, error = fetch_with_retry("https://example.com/pack.yaml")
+
+        assert error == ""
+        assert content == fake_yaml
+        assert mock_urlopen.call_args.kwargs["timeout"] <= 5
+
 
 # ---------------------------------------------------------------------------
 # get_available_pack_names tests

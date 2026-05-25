@@ -1,21 +1,4 @@
 {
-  "schema_version": 1,
-  "generated_at_utc": "2026-05-14T14:48:00Z",
-  "status": "pre_first_user_no_real_rows",
-  "purpose": "Hard evidence scoreboard for Borg first-10 external beta users. Empty rows are placeholders only and must never be counted as adoption.",
-  "truth_policy": {
-    "simulated_users_count_as_real": false,
-    "internal_sessions_count_as_real": false,
-    "maintainer_runs_count_as_real": false,
-    "verified_external_users": 0,
-    "public_self_serve_launch_allowed_before_thresholds": false
-  },
-  "thresholds": {
-    "min_install_successes_for_public_self_serve": 8,
-    "min_useful_rescue_moments_for_public_self_serve": 6,
-    "max_critical_privacy_security_failures": 0,
-    "required_total_real_users": 10
-  },
   "columns": [
     "user_id_pseudonym",
     "external_user_evidence_uri",
@@ -35,17 +18,45 @@
     "repeat_use_within_7_days",
     "outcome_recorded"
   ],
-  "rows": [],
   "current_counts": {
-    "real_users": 0,
-    "install_successes": 0,
-    "useful_rescue_moments": 0,
     "critical_privacy_security_failures": 0,
-    "repeat_use_within_7_days": 0
+    "install_successes": 0,
+    "real_users": 0,
+    "repeat_use_within_7_days": 0,
+    "useful_rescue_moments": 0
+  },
+  "current_value_counts": {
+    "counterfactual_basis_counts": {},
+    "dead_ends_avoided_confirmed": 0,
+    "negative_minutes_cost": 0.0,
+    "negative_tokens_cost": 0,
+    "net_minutes_saved": 0.0,
+    "net_tokens_saved": 0,
+    "positive_minutes_saved": 0.0,
+    "positive_tokens_saved": 0,
+    "rows_with_measured_value": 0
   },
   "current_verdict": {
     "first_10_complete": false,
     "public_self_serve_launch_gate": "BLOCKED",
-    "reason": "No verified external user rows exist yet."
+    "reason": "First-10 external-user evidence thresholds have not passed."
+  },
+  "generated_at_utc": "2026-05-25T16:08:49Z",
+  "purpose": "Hard evidence scoreboard for Borg first-10 external beta users. Empty rows are placeholders only and must never be counted as adoption.",
+  "rows": [],
+  "schema_version": 1,
+  "status": "pre_first_user_no_real_rows",
+  "thresholds": {
+    "max_critical_privacy_security_failures": 0,
+    "min_install_successes_for_public_self_serve": 8,
+    "min_useful_rescue_moments_for_public_self_serve": 6,
+    "required_total_real_users": 10
+  },
+  "truth_policy": {
+    "internal_sessions_count_as_real": false,
+    "maintainer_runs_count_as_real": false,
+    "public_self_serve_launch_allowed_before_thresholds": false,
+    "simulated_users_count_as_real": false,
+    "verified_external_users": 0
   }
 }

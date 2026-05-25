@@ -2,8 +2,19 @@
   "detail": "Public self-serve launch requires 10 consented external users, at least 8 installs, at least 6 useful rescues, and 0 critical privacy/security incidents.",
   "headline": "external-user impact not proven yet",
   "honesty_label": "REAL_EXTERNAL_USERS_REQUIRED",
+  "measured_savings": {
+    "counterfactual_basis_counts": {},
+    "dead_ends_avoided_confirmed": 0,
+    "negative_minutes_cost": 0.0,
+    "negative_tokens_cost": 0,
+    "net_minutes_saved": 0.0,
+    "net_tokens_saved": 0,
+    "positive_minutes_saved": 0.0,
+    "positive_tokens_saved": 0,
+    "rows_with_measured_value": 0
+  },
   "primary_impact": "NO-GO public self-serve",
   "schema_version": 1,
   "summary": "0 verified external users in row-derived first-10 evidence; synthetic/logical load does not count as adoption.",
-  "updated_at": "2026-05-25T11:01:31Z"
+  "updated_at": "2026-05-25T16:09:12Z"
 }

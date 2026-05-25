@@ -143,6 +143,20 @@ PACK GUIDANCE (bash-permission-denied)
     assert mcp_server._permission_guidance_matches_task(pasted_task, "") is False
 
 
+def test_meta_question_about_irrelevant_django_guidance_does_not_set_django_tech():
+    assert mcp_server._detect_technology(
+        "Audit why irrelevant Django migration guidance leaked into a product-readiness answer",
+        "public self-service trust gate; do not debug Django migrations",
+    ) == ""
+
+
+def test_meta_question_about_irrelevant_permission_guidance_does_not_set_permission_signal():
+    assert mcp_server._permission_guidance_matches_task(
+        "Audit why irrelevant permission/chmod guidance leaked into a product-readiness answer",
+        "public self-service trust gate; do not debug chmod",
+    ) is False
+
+
 def test_guidance_safety_suppresses_real_traces_zero_pack_guidance():
     guidance = """
 ACTION: Open conflicting files.

@@ -40,6 +40,7 @@ def test_borg_proof_dashboard_artifacts_exist_and_are_honest(tmp_path, monkeypat
     assert data["repo"] == "https://github.com/borg-farther/Borg-Directory"
     assert re.fullmatch(r"[0-9a-f]{40}(?:\+dirty)?", data["source_revision"])
     if data["metrics"]["pypi_fresh_install_canary"]["value"] == "PASS":
+        assert data["metrics"]["pypi_fresh_install_canary"]["honesty_label"] == "PYPI_FRESH_INSTALL_CURRENT_VERSION"
         assert data["controlled_first_10_beta"]["answer"] == "GO"
         assert data["top_verdict"]["controlled_first_10_beta"]["verdict"] == "CONDITIONAL"
         assert "infrastructure is green" in data["top_verdict"]["controlled_first_10_beta"]["why"]
@@ -48,6 +49,9 @@ def test_borg_proof_dashboard_artifacts_exist_and_are_honest(tmp_path, monkeypat
         assert data["top_verdict"]["controlled_first_10_beta"]["verdict"] == "NO-GO"
         assert "PyPI latest" in data["top_verdict"]["controlled_first_10_beta"]["why"]
     assert data["metrics"]["verified_external_users"]["value"] == 0
+    assert data["metrics"]["cold_start_trust_hardening_gate"]["honesty_label"] == "FIRST_ANSWER_TRUST_GATE"
+    assert data["metrics"]["host_runtime_split_brain"]["value"] == "NOT_EVALUATED_BY_THIS_BUILD"
+    assert "live cutover proof" in data["metrics"]["host_runtime_split_brain"]["provenance"]
     assert data["top_verdict"]["broad_public_launch"]["verdict"] == "NO-GO"
     assert data["top_verdict"]["unattended_git_onboarding"]["verdict"] == "NO-GO"
     assert data["anti_hype"]["simulated_users_are_not_real_users"] is True
@@ -57,6 +61,8 @@ def test_borg_proof_dashboard_artifacts_exist_and_are_honest(tmp_path, monkeypat
     impact = json.loads(impact_path.read_text(encoding="utf-8"))
     assert status["repo"] == "https://github.com/borg-farther/Borg-Directory"
     assert status["state"].startswith("NO-GO public self-serve")
+    assert status["cold_start_trust_hardening_gate"] in {"PASS", "FAIL", "UNKNOWN"}
+    assert "eval/cold_start_trust_gate_snapshot.json" in status["evidence"]
     assert status["controlled_first_10_beta"]["verdict"] in {"NO-GO", "CONDITIONAL"}
     if status["controlled_first_10_beta"]["verdict"] == "CONDITIONAL":
         assert "controlled first-10 beta GO" in status["state"]
@@ -65,6 +71,11 @@ def test_borg_proof_dashboard_artifacts_exist_and_are_honest(tmp_path, monkeypat
     else:
         assert "source/local release-candidate only" in status["state"]
     assert "ACTION / STOP / VERIFY" in value["headline"]
+    assert "measured_savings" in value
+    assert value["measured_savings"]["rows_with_measured_value"] == 0
+    assert value["measured_savings"]["net_minutes_saved"] == 0.0
+    assert value["measured_savings"]["net_tokens_saved"] == 0
+    assert value["value_honesty_label"] == "ROW_DERIVED_EXTERNAL_USER_SAVINGS_REQUIRED"
     assert impact["primary_impact"] == "NO-GO public self-serve"
     assert data["first_10_user_scoreboard_template"]["columns"] == [
         "user id/pseudonym",
@@ -74,6 +85,15 @@ def test_borg_proof_dashboard_artifacts_exist_and_are_honest(tmp_path, monkeypat
         "MCP setup success",
         "blocker",
         "outcome recorded",
+        "baseline minutes without Borg",
+        "actual minutes with Borg",
+        "net minutes saved",
+        "baseline tokens without Borg",
+        "actual tokens with Borg",
+        "net tokens saved",
+        "savings counterfactual basis",
+        "dead end avoided confirmed",
+        "user confirmed value",
     ]
     assert len(data["first_10_user_scoreboard_template"]["rows"]) >= 10
     for row in data["evidence"]:

@@ -10,6 +10,7 @@ from __future__ import annotations
 import hashlib
 import importlib
 import json
+import marshal
 import os
 import sys
 import time
@@ -37,6 +38,50 @@ PACK GUIDANCE (bash-permission-denied)
 """
 
 REAL_PERMISSION_TASK = "bash: ./deploy.sh: Permission denied"
+META_TRUST_TASK = (
+    "Audit product readiness and cold-start trust hardening. Explain why "
+    "irrelevant Django/permission guidance leaked; do not debug Django."
+)
+META_TRUST_CONTEXT = "public self-service first-answer trust gate"
+BANNED_META_TOKENS = ("pack guidance", "django", "migrate", "migration", "chmod", "permission denied", "apk", "apt-get", "npm")
+
+
+def _source_version() -> Optional[str]:
+    try:
+        import tomllib  # type: ignore[attr-defined]
+    except Exception:  # pragma: no cover - Python <3.11 fallback
+        try:
+            import tomli as tomllib  # type: ignore[no-redef]
+        except Exception:
+            return None
+    try:
+        root = Path(__file__).resolve().parents[2]
+        pyproject = root / "pyproject.toml"
+        if not pyproject.exists():
+            return None
+        return tomllib.loads(pyproject.read_text(encoding="utf-8")).get("project", {}).get("version")
+    except Exception:
+        return None
+
+
+def _function_code_hash(module_name: str, function_name: str) -> Dict[str, Any]:
+    try:
+        module = importlib.import_module(module_name)
+        func = getattr(module, function_name)
+        code = getattr(func, "__code__", None)
+        if code is None:
+            return {"exists": False, "sha256": None, "error": "no __code__"}
+        payload = marshal.dumps(code)
+        return {
+            "exists": True,
+            "module": module_name,
+            "function": function_name,
+            "sha256": hashlib.sha256(payload).hexdigest(),
+            "firstlineno": getattr(code, "co_firstlineno", None),
+            "argcount": getattr(code, "co_argcount", None),
+        }
+    except Exception as exc:
+        return {"exists": False, "module": module_name, "function": function_name, "sha256": None, "error": str(exc), "type": type(exc).__name__}
 
 
 def _sha256_file(path: Optional[str]) -> Optional[str]:
@@ -125,6 +170,63 @@ def _confidence_gate_canary() -> Dict[str, Any]:
         return {"passed": False, "error": str(exc), "type": type(exc).__name__}
 
 
+def _observe_behavior_canary() -> Dict[str, Any]:
+    """Probe loaded observe policy without calling full retrieval.
+
+    `borg_runtime_fingerprint` must be side-effect safe: no seeding, no trace
+    recording, no retrieval, and no network/embedder path.  This canary checks
+    the loaded MCP module's final injection boundary and technology detection
+    helpers with synthetic strings. A separate stdio subprocess canary proves
+    full `borg_observe` behavior before release.
+    """
+    try:
+        from borg.integrations import mcp_server
+
+        meta_task = "Audit why previous Borg answer said chmod +x; do not debug permissions."
+        stale_permission_safe = mcp_server._guidance_is_safe_to_inject(
+            STALE_PERMISSION_GUIDANCE,
+            meta_task,
+            "operator meta instruction",
+        )
+        meta_tech = mcp_server._detect_technology(META_TRUST_TASK, META_TRUST_CONTEXT)
+        concrete_permission_safe = mcp_server._guidance_is_safe_to_inject(
+            STALE_PERMISSION_GUIDANCE,
+            REAL_PERMISSION_TASK,
+            REAL_PERMISSION_TASK,
+        )
+        synthetic_permission_safe = mcp_server._guidance_is_safe_to_inject(
+            SYNTHETIC_PACK_GUIDANCE,
+            "continue production readiness implementation",
+            "operator meta instruction",
+        )
+        blockers = []
+        if stale_permission_safe:
+            blockers.append("meta prior-answer prompt allowed permission guidance injection")
+        if meta_tech in {"django", "bash", "nodejs"}:
+            blockers.append(f"meta trust prompt was misclassified as concrete tech: {meta_tech}")
+        if not concrete_permission_safe:
+            blockers.append("concrete permission prompt did not allow permission guidance")
+        if synthetic_permission_safe:
+            blockers.append("synthetic permission guidance was injectable for meta readiness prompt")
+        meta_failed_closed = not stale_permission_safe and meta_tech not in {"django", "bash", "nodejs"}
+        return {
+            "passed": not blockers,
+            "blockers": blockers,
+            "side_effect_safe": True,
+            "meta_prior_answer_permission_guidance_safe": stale_permission_safe,
+            "meta_detected_technology": meta_tech,
+            "permission_prompt_specific": concrete_permission_safe,
+            "synthetic_meta_guidance_safe": synthetic_permission_safe,
+            # Backward-compatible field names for older canary consumers. These
+            # are derived from helper-level policy checks, not full retrieval.
+            "meta_prompt_failed_closed": meta_failed_closed,
+            "meta_excerpt": "NO_CONFIDENT_MATCH (side-effect-safe helper canary; full stdio canary lives in eval/cold_start_trust_gate.py)",
+            "permission_excerpt": "ACTION: concrete Permission denied prompt is eligible for permission-specific guidance.",
+        }
+    except Exception as exc:
+        return {"passed": False, "error": str(exc), "type": type(exc).__name__}
+
+
 def runtime_fingerprint() -> Dict[str, Any]:
     """Return a machine-readable fingerprint of the loaded Borg runtime."""
     borg_file = _module_file("borg")
@@ -139,6 +241,8 @@ def runtime_fingerprint() -> Dict[str, Any]:
         borg_version = None
 
     canary = _confidence_gate_canary()
+    observe_canary = _observe_behavior_canary()
+    source_version = _source_version()
     try:
         from borg.core.dirs import get_paths_summary
         paths = get_paths_summary()
@@ -156,6 +260,8 @@ def runtime_fingerprint() -> Dict[str, Any]:
         "borg_dir": paths.get("borg_dir"),
         "paths": paths,
         "borg_version": borg_version,
+        "source_version": source_version,
+        "version_matches_source": bool(source_version and borg_version == source_version),
         "modules": {
             "borg": _file_info(borg_file),
             "borg.integrations.mcp_server": _file_info(mcp_file),
@@ -163,8 +269,14 @@ def runtime_fingerprint() -> Dict[str, Any]:
             "borg.core.runtime_fingerprint": _file_info(runtime_file),
         },
         "sys_path_head": sys.path[:8],
+        "loaded_function_hashes": {
+            "borg.integrations.mcp_server.borg_observe": _function_code_hash("borg.integrations.mcp_server", "borg_observe"),
+            "borg.integrations.mcp_server._detect_technology": _function_code_hash("borg.integrations.mcp_server", "_detect_technology"),
+            "borg.core.confidence_gate.trace_match_is_confident": _function_code_hash("borg.core.confidence_gate", "trace_match_is_confident"),
+        },
         "confidence_gate_canary": canary,
-        "reload_status": "loaded_code_has_confidence_gate" if canary.get("passed") else "reload_or_patch_required",
+        "observe_behavior_canary": observe_canary,
+        "reload_status": "loaded_code_matches_source_behavior" if canary.get("passed") and observe_canary.get("passed") and bool(source_version and borg_version == source_version) else "reload_or_patch_required",
     }
 
 

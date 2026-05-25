@@ -152,6 +152,41 @@ def test_trace_confidence_rejects_medium_similarity_meta_overlap_only():
     ) is False
 
 
+def test_trace_confidence_rejects_high_similarity_meta_only_trace():
+    trace = {
+        "similarity": 0.92,
+        "root_cause": "BORG_HOME was not set in the Hermes plugin service file.",
+        "approach_summary": "Patch the real plugin runtime path and verify traces.db loading.",
+    }
+
+    assert confidence_gate.trace_match_is_confident(
+        trace,
+        query="public self-service trust hardening product readiness first-answer relevance",
+    ) is False
+
+
+def test_guidance_safety_rejects_irrelevant_real_trace_only_guidance():
+    guidance = """
+ACTION: Edit /root/.hermes/hermes-agent/hermes_cli/plugins/borg_auto_trace/__init__.py and set BORG_HOME=/root/.borg.
+CONFIDENCE: Real traces: 202 | Synthetic: 0 | BORG [HIGH CONFIDENCE]
+WHAT WORKED (2 prior sessions)
+Root cause: BORG_HOME not set in Hermes service.
+"""
+
+    assert confidence_gate.guidance_is_safe_to_inject(
+        guidance,
+        "Harden public self-service trust/readiness first-answer relevance.",
+        "",
+    ) is False
+
+
+def test_permission_guidance_ignores_meta_mentions_of_bad_permission_guidance():
+    assert confidence_gate.permission_guidance_matches_task(
+        "Audit why irrelevant permission guidance leaked into a product-readiness answer",
+        "do not debug chmod or file permissions",
+    ) is False
+
+
 def test_trace_confidence_rejects_missing_similarity_meta_overlap_only():
     trace = {
         "root_cause": "BORG_HOME was not set in the Hermes plugin service file.",

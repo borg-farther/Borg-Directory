@@ -93,7 +93,7 @@ FIRST_10_GATES: List[ReadinessGate] = [
         id="G3",
         title="Day-one packet answers what to do, avoid, and verify",
         pass_criteria=[
-            "borg_rescue / error_lookup returns ACTION, STOP, VERIFY, human_receipt, automation_policy.",
+            "borg_rescue / error_lookup returns ACTION, STOP, VERIFY, human_receipt, automation_policy, and a no-hype value_receipt.",
             "borg_observe returns ACTION, STOP or explicit no-match STOP, VERIFY, CONFIDENCE.",
             "Agents are instructed not to blend weak retrieval into normal reasoning.",
         ],
@@ -147,7 +147,8 @@ FIRST_10_GATES: List[ReadinessGate] = [
         title="10-user beta is instrumented as learning, not theatre",
         pass_criteria=[
             "Each tester gets the same install, priming, three tasks, and feedback receipt.",
-            "Outcomes are captured as helpful/not helpful/no match.",
+            "Outcomes are captured as helpful/not helpful/no match plus optional before/after minutes or tokens.",
+            "Measured savings are derived only from consented external-user rows; rescue packets may not claim savings at call time.",
             "GO/NO-GO after first 10 is binary against the 6/10 useful moment threshold.",
         ],
         proof=[
@@ -185,6 +186,15 @@ def first_10_readiness_packet() -> Dict[str, Any]:
             "did_it_prevent_a_dead_end",
             "helpful_true_false",
             "exact_no_match_or_miss_reason",
+            "baseline_minutes_without_borg",
+            "actual_minutes_with_borg",
+            "net_minutes_saved",
+            "baseline_tokens_without_borg",
+            "actual_tokens_with_borg",
+            "net_tokens_saved",
+            "savings_counterfactual_basis",
+            "dead_end_avoided_confirmed",
+            "user_confirmed_value",
         ],
     }
 

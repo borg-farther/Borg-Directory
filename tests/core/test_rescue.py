@@ -23,6 +23,12 @@ def test_rescue_returns_agent_contract_for_known_error():
     assert result.automation_policy["default"] == "automatic_for_agents"
     assert result.automation_policy["fail_closed"] is True
     assert "Borg matched" in result.human_receipt
+    assert result.value_receipt["schema_version"] == 1
+    assert result.value_receipt["matched_pack_id"] == "missing_dependency"
+    assert result.value_receipt["savings_claim_type"] == "none"
+    assert result.value_receipt["measured_minutes_saved"] is None
+    assert result.value_receipt["measurement_status"] == "ready_to_measure"
+    assert "not measured" in result.value_receipt["human_visible_summary"].lower()
 
 
 def test_missing_dependency_rescue_maps_common_import_to_distribution_name():
@@ -70,6 +76,8 @@ def test_render_rescue_text_has_visible_human_value_sections():
     assert "VERIFY" in text
     assert "AGENT INSTRUCTION" in text
     assert "HUMAN RECEIPT" in text
+    assert "VALUE RECEIPT" in text
+    assert "measured savings: not yet measured" in text
 
 
 def test_mcp_borg_rescue_returns_json_contract():
@@ -84,6 +92,8 @@ def test_mcp_borg_rescue_returns_json_contract():
     assert data["status"] == "matched"
     assert data["problem_class"] == "type_mismatch"
     assert data["automation_policy"]["default"] == "automatic_for_agents"
+    assert data["value_receipt"]["measurement_status"] == "ready_to_measure"
+    assert data["value_receipt"]["savings_claim_type"] == "none"
 
 
 def test_mcp_call_tool_dispatches_borg_rescue():

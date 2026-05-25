@@ -523,7 +523,10 @@ def borg_pull(uri: str) -> str:
             except Exception as e:
                 error_msg = str(e)
                 if "HTTP Error 404" in error_msg or "404" in error_msg or "Failed to fetch" in error_msg:
-                    suggestions = fuzzy_match_pack(uri)
+                    # Direct URLs are already fully specified. Avoid slow remote
+                    # index/fuzzy suggestion lookups after URL fetch failures so
+                    # invalid URL paths fail fast in CI and for first users.
+                    suggestions = [] if uri.startswith(("http://", "https://")) else fuzzy_match_pack(uri)
                     return json.dumps({
                         "success": False,
                         "error": f"Pack not found: {uri}",
@@ -614,7 +617,7 @@ def borg_pull(uri: str) -> str:
     except (ValueError, Exception) as e:
         error_msg = str(e)
         if "HTTP Error 404" in error_msg or "404" in error_msg:
-            suggestions = fuzzy_match_pack(uri)
+            suggestions = [] if uri.startswith(("http://", "https://")) else fuzzy_match_pack(uri)
             return json.dumps({
                 "success": False,
                 "error": f"Pack not found: {uri}",
@@ -693,7 +696,7 @@ def borg_try(uri: str, task_id: Optional[str] = None) -> str:
     except Exception as e:
         error_msg = str(e)
         if "HTTP Error 404" in error_msg or "404" in error_msg:
-            suggestions = fuzzy_match_pack(uri)
+            suggestions = [] if uri.startswith(("http://", "https://")) else fuzzy_match_pack(uri)
             return json.dumps({
                 "success": False,
                 "error": f"Pack not found: {uri}",

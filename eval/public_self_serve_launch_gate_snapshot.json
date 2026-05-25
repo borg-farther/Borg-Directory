@@ -1,9 +1,24 @@
 {
   "blockers": [
+    "PyPI latest metadata does not match source version or required project URLs",
+    "PyPI fresh-install + MCP stdio canary snapshot is missing or failing",
     "first-10 external-user evidence has not passed: verified=0/10, real_users=0/10, installs=0/8, useful=0/6, critical_incidents=0/0"
   ],
   "gate_type": "public_self_serve_launch",
   "gates": {
+    "cold_start_trust_hardening": {
+      "exists": true,
+      "failed_count": 0,
+      "failures": [],
+      "generated_at_utc": "2026-05-25T16:30:12.581344+00:00",
+      "has_bad_answer_feedback_path": true,
+      "missing_required_checks": [],
+      "observed_check_count": 7,
+      "passed": true,
+      "path": "eval/cold_start_trust_gate_snapshot.json",
+      "required_check_count": 7,
+      "trust_policy": "Borg must fail closed with NO_CONFIDENT_MATCH for meta/product/readiness prompts, must not inject unrelated framework guidance, and must preserve concrete error guidance for exact failures."
+    },
     "docs_claim_guard": {
       "checked": [
         "README.md",
@@ -26,6 +41,8 @@
         "docs/PUBLIC_SELF_SERVE_LAUNCH_GO_NO_GO.md",
         "docs/VALUE_COMMUNICATION_DASHBOARD.md",
         "docs/VALUE_COMMUNICATION_DASHBOARD.html",
+        "docs/COLD_START_TRUST_HARDENING.md",
+        "docs/LIVE_MCP_SELF_SERVE_CANARY.md",
         "docs/BORG_PROOF_DASHBOARD.md",
         "docs/BORG_PROOF_DASHBOARD.html",
         "docs/public/proof-dashboard/index.html",
@@ -74,14 +91,14 @@
       "exists": true,
       "failed_count": 0,
       "failures": [],
-      "generated_at_utc": "2026-05-25T10:25:17Z",
+      "generated_at_utc": "2026-05-25T16:29:23Z",
       "passed": true,
-      "passed_count": 26,
+      "passed_count": 24,
       "path": "eval/first_user_release_gate_snapshot.json"
     },
     "pypi_fresh_install_and_mcp_stdio": {
       "exists": true,
-      "expected_version": "3.3.13",
+      "expected_version": "3.3.14",
       "failed_count": 0,
       "failures": [],
       "generated_at_utc": "2026-05-25T10:24:34Z",
@@ -90,14 +107,14 @@
         "version": "3.3.13"
       },
       "mcp_stdio_canary_passed": true,
-      "passed": true,
+      "passed": false,
       "path": "eval/pypi_fresh_install_snapshot.json",
       "version": "3.3.13"
     },
     "pypi_latest": {
       "banned_keywords_present": [],
       "expected_summary": "Failure memory CLI and MCP server for AI coding agents",
-      "expected_version": "3.3.13",
+      "expected_version": "3.3.14",
       "keyword_missing": false,
       "keywords": [
         "agent-tools",
@@ -108,7 +125,7 @@
       ],
       "latest_version": "3.3.13",
       "package": "agent-borg",
-      "passed": true,
+      "passed": false,
       "project_urls": {
         "Documentation": "https://github.com/borg-farther/Borg-Directory#readme",
         "Homepage": "https://github.com/borg-farther/Borg-Directory",
@@ -143,11 +160,11 @@
       "url_missing": []
     }
   },
-  "generated_at_utc": "2026-05-25T11:02:24.623797+00:00",
-  "max_recommended_real_users_now": 10,
-  "ready_for_controlled_first_10_beta": true,
+  "generated_at_utc": "2026-05-25T16:30:14.262678+00:00",
+  "max_recommended_real_users_now": 0,
+  "ready_for_controlled_first_10_beta": false,
   "ready_for_public_self_serve_launch": false,
   "schema_version": 1,
-  "source_version": "3.3.13",
-  "truth_policy": "Public self-serve is GO only after PyPI/fresh-install/MCP/docs gates pass AND row-derived first-10 external-user evidence passes. Synthetic users and aggregate-only edits never count."
+  "source_version": "3.3.14",
+  "truth_policy": "Public self-serve is GO only after PyPI/fresh-install/MCP/docs/cold-start-trust gates pass AND row-derived first-10 external-user evidence passes. Synthetic users and aggregate-only edits never count."
 }

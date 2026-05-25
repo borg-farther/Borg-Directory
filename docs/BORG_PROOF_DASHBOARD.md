@@ -1,81 +1,85 @@
 # Borg Proof Dashboard
 
-Generated: `2026-05-25T11:01:31Z`
+Generated: `2026-05-25T16:09:12Z`
 Repo: `https://github.com/borg-farther/Borg-Directory`
-Source snapshot: `024de24445975c0216536e94d7c6ea44f1709ced+dirty`
+Source snapshot: `d8e1c416dbce0e54b1a275355c6868d917d29a91+dirty`
 
 ## Big top verdict
 
 | Scope | Verdict | Why |
 | --- | --- | --- |
-| controlled first 10 beta | CONDITIONAL | Controlled first-10 beta infrastructure is green; keep broad launch blocked until row-derived external-user evidence passes. |
+| controlled first 10 beta | NO-GO | Controlled first-10 beta is blocked until the public package path is green: PyPI latest metadata, fresh-install canary, stdio MCP canary, cold-start trust gate, and docs guard must all pass. |
 | local release candidate | CONDITIONAL | Local source/wheel gates pass, but this does not authorize public beta without PyPI/latest/fresh-install proof. |
 | unattended git onboarding | NO-GO | No verified external install/onboarding evidence yet; Git-only flow should not be treated as self-serve until at least the first-10 scoreboard has real outcomes. |
-| broad public launch | NO-GO | Public self-serve gate is blocked only by row-derived first-10 external-user evidence; PyPI/latest/fresh-install/MCP/docs gates are green. |
+| broad public launch | NO-GO | Public self-serve gate is blocked until PyPI latest/fresh-install/MCP/docs/cold-start-trust gates pass and first-10 external evidence exists. |
 
-**Controlled first-10 beta only?** GO — Controlled testers only.; Do not present as unattended public launch ready.; Capture real first-user outcome evidence immediately.
+**Controlled first-10 beta only?** NO-GO — Do not invite controlled beta users until PyPI latest, fresh-install, and stdio MCP canaries are green.; Do not present as unattended public launch ready.; Keep first-10 evidence capture prepared, but blocked until package evidence is green.
 
 ## Metrics with provenance and honesty labels
 
 | Metric | Value | Honesty label | Provenance |
 | --- | --- | --- | --- |
-| verified_external_users | 0 | HARD_EVIDENCE_ABSENT_DEFAULT_ZERO | No artifact found that identifies real verified external users; simulated/logical load users are excluded. |
+| verified_external_users | 0 | ROW_DERIVED_EXTERNAL_USERS | eval/first_10_user_scoreboard.json row-derived external-user evidence |
+| measured_savings | `{"counterfactual_basis_counts": {}, "dead_ends_avoided_confirmed": 0, "negative_minutes_cost": 0.0, "negative_tokens_cost": 0, "net_minutes_saved": 0.0, "net_tokens_saved": 0, "positive_minutes_saved": 0.0, "positive_tokens_saved": 0, "rows_with_measured_value": 0}` | ROW_DERIVED_EXTERNAL_USER_SAVINGS | eval/first_10_user_scoreboard.json row-derived external-user evidence |
 | active_contributors_consumers | UNKNOWN | MISSING_BORG_ANALYTICS_ARTIFACT | No Borg analytics export artifact was found under eval/ or docs/. |
 | packs | 11 | REPO_FILE_COUNT | borg/seeds_data/packs/*.yaml |
 | first_user_release_gate | PASS | LOCAL_ARTIFACT | eval/first_user_release_gate_snapshot.json |
 | uat_scoreboard_synthetic_load | PASS | LOCAL_ARTIFACT_LOGICAL_USERS | eval/uat_scoreboard_snapshot.json |
 | gate_run_synthetic_load | PASS | LOCAL_ARTIFACT_LOGICAL_USERS | eval/gate_run_snapshot.json |
 | real_user_100_rollout_gate | FAIL | REAL_EXTERNAL_USERS | eval/real_user_rollout_gate_snapshot.json |
-| max_recommended_real_users_now | 10 | REAL_EXTERNAL_USERS | eval/real_user_rollout_gate_snapshot.json |
+| max_recommended_real_users_now | 0 | REAL_EXTERNAL_USERS | eval/real_user_rollout_gate_snapshot.json |
 | public_self_serve_launch_gate | FAIL | PUBLIC_LAUNCH_GATE | eval/public_self_serve_launch_gate_snapshot.json |
-| pypi_fresh_install_canary | PASS | PYPI_FRESH_INSTALL | eval/pypi_fresh_install_snapshot.json |
-| source_version_consistency | pyproject=3.3.13 runtime=3.3.13 | REPO_SOURCE | pyproject.toml; borg/__init__.py |
-| host_runtime_split_brain | NOT_REPRODUCED_IN_THIS_BUILD | EVIDENCE_GAP | Prior docs mention runtime/host issues, but this dashboard build did not run environment probes. |
-| load_gates | `{"10": {"concurrency_model": "asyncio_logical_users", "exists": true, "p95_ms": 0.5851601017639041, "p99_ms": 0.6082637002691627, "passed": true, "success_rate": 1.0, "timestamp": "2026-05-25T10:25:20.529162+00:00", "total_requests": 2171, "users_label": 10}, "100": {"concurrency_model": "asyncio_logical_users", "exists": true, "p95_ms": 0.5741093773394823, "p99_ms": 0.6039737351238728, "passed": true, "success_rate": 1.0, "timestamp": "2026-05-25T10:25:21.633314+00:00", "total_requests": 2129, "users_label": 100}, "1000": {"concurrency_model": "asyncio_logical_users", "exists": true, "p95_ms": 0.5724917049519718, "p99_ms": 0.6040538428351281, "passed": true, "success_rate": 1.0, "timestamp": "2026-05-25T10:25:22.773460+00:00", "total_requests": 2114, "users_label": 1000}}` | LOGICAL_USERS_NOT_REAL_USERS | eval/load_*_snapshot.json and eval/uat_scoreboard_snapshot.json |
+| cold_start_trust_hardening_gate | PASS | FIRST_ANSWER_TRUST_GATE | eval/cold_start_trust_gate_snapshot.json |
+| pypi_fresh_install_canary | FAIL | PYPI_FRESH_INSTALL_CURRENT_VERSION | eval/pypi_fresh_install_snapshot.json |
+| source_version_consistency | pyproject=3.3.14 runtime=3.3.14 | REPO_SOURCE | pyproject.toml; borg/__init__.py |
+| host_runtime_split_brain | NOT_EVALUATED_BY_THIS_BUILD | EVIDENCE_GAP | This dashboard build does not restart or fingerprint long-lived served Hermes/MCP runtimes; it is not live cutover proof. Served runtime GO requires borg_runtime_fingerprint with version_matches_source=true and observe_behavior_canary.passed=true. |
+| load_gates | `{"10": {"concurrency_model": "asyncio_logical_users", "exists": true, "p95_ms": 0.7021749624982476, "p99_ms": 1.1334862792864464, "passed": true, "success_rate": 1.0, "timestamp": "2026-05-25T16:03:01.823442+00:00", "total_requests": 1886, "users_label": 10}, "100": {"concurrency_model": "asyncio_logical_users", "exists": true, "p95_ms": 0.6465265178121626, "p99_ms": 0.827525625936687, "passed": true, "success_rate": 1.0, "timestamp": "2026-05-25T16:03:02.943176+00:00", "total_requests": 1816, "users_label": 100}, "1000": {"concurrency_model": "asyncio_logical_users", "exists": true, "p95_ms": 0.5889080930501222, "p99_ms": 0.6321987789124252, "passed": true, "success_rate": 1.0, "timestamp": "2026-05-25T16:03:04.106780+00:00", "total_requests": 1934, "users_label": 1000}}` | LOGICAL_USERS_NOT_REAL_USERS | eval/load_*_snapshot.json and eval/uat_scoreboard_snapshot.json |
 
 ## Evidence table
 
 | Source file path | Exists | SHA256 | Freshness timestamp | Exact claim derived |
 | --- | --- | --- | --- | --- |
-| eval/first_user_release_gate_snapshot.json | True | dd08f1c95c376af47413b94bf7f5d04453606fc535cdb9d1d9d7d1ddd3aa2fc9 | 2026-05-25T10:25:17Z | first-user release gate all_pass=True |
-| eval/uat_scoreboard_snapshot.json | True | 88c183536a95aa0fbe821b91e8cfc01e6482fa6d694545c553aafaeae87d54a0 | 2026-05-25T10:25:23.534324+00:00 | UAT synthetic_load_all_pass=True; real_user_100_all_pass=False; ready_for_10=True; ready_for_1000=True |
-| eval/gate_run_snapshot.json | True | c12e864a473c53fb8b731aed0c6a1bd0deb213da29ebe461b1db76e3a8b5bbc7 | 2026-05-25T10:25:23.499358+00:00 | gate run synthetic_load_all_pass=True; overall_100_real_user_pass=False; ready_for_10=True; ready_for_1000=True |
-| eval/real_user_rollout_gate_snapshot.json | True | fb39aac92ca0f3016976ab5727b38b56e141c9cc23e29e7c2e5e2a9e84d9d4ee | 2026-05-25T10:25:23.442872+00:00 | 100-real-user gate=False; max_recommended_real_users=10; blockers=['first-10 external-user evidence has not passed: verified=0/10, real_users=0/10, installs=0/8, useful=0/6, critical_incidents=0/0'] |
-| eval/public_self_serve_launch_gate_snapshot.json | True | a3ea3ec90d01d9ff53adcb280f9246781c262a7ff515eb1c417e08809c88469f | 2026-05-25T10:25:23.857642+00:00 | public self-serve gate=False; max_recommended_real_users=10; blockers=['first-10 external-user evidence has not passed: verified=0/10, real_users=0/10, installs=0/8, useful=0/6, critical_incidents=0/0'] |
+| eval/first_user_release_gate_snapshot.json | True | cd519e1a1aad2904a8e2e0f63954b63a0ba49eeda6bbf645d6a26704797e227e | 2026-05-25T16:02:38Z | first-user release gate all_pass=True |
+| eval/uat_scoreboard_snapshot.json | True | 3c51ab357a4f552a577d23ae47d5aa578a6d3b0069a37dbb4225afe19a9b3377 | 2026-05-25T16:03:04.905843+00:00 | UAT synthetic_load_all_pass=True; real_user_100_all_pass=False; ready_for_10_logical_load=True; ready_for_1000_logical_load=True; not_real_user_or_public_beta_evidence=True |
+| eval/gate_run_snapshot.json | True | 65d2958c7966f79110ffc0fedbff47fb154222a91573110880b1d3023d4e7688 | 2026-05-25T16:03:04.867432+00:00 | gate run synthetic_load_all_pass=True; overall_100_real_user_pass=False; ready_for_10_logical_load=True; ready_for_1000_logical_load=True; not_real_user_or_public_beta_evidence=True |
+| eval/real_user_rollout_gate_snapshot.json | True | cfdfbf93dfdd9bb46bbbbeb917b08c1ee634b94e84f930c292aaa1462f0fed2a | 2026-05-25T16:03:04.806999+00:00 | 100-real-user gate=False; max_recommended_real_users=0; blockers=['PyPI latest/fresh-install package evidence is not green: latest metadata does not match source version', 'PyPI latest/fresh-install package evidence is not green: fresh install + MCP stdio canary is not green', 'first-10 external-user evidence has not passed: verified=0/10, real_users=0/10, installs=0/8, useful=0/6, critical_incidents=0/0'] |
+| eval/first_10_user_scoreboard.json | True | 24a4123d546aa319da8ebf23817bab54f052ff68f559a5b4eaf1ccb226b33ffc | 2026-05-25T16:08:49Z | first-10 row evidence users=0; measured_savings={'rows_with_measured_value': 0, 'dead_ends_avoided_confirmed': 0, 'net_minutes_saved': 0.0, 'positive_minutes_saved': 0.0, 'negative_minutes_cost': 0.0, 'net_tokens_saved': 0, 'positive_tokens_saved': 0, 'negative_tokens_cost': 0, 'counterfactual_basis_counts': {}}; gate=BLOCKED |
+| eval/public_self_serve_launch_gate_snapshot.json | True | 5a2439491e2e4176e1e19e22681bd74500dbca13e666ce44d610662b0e555949 | 2026-05-25T16:09:12.753399+00:00 | public self-serve gate=False; max_recommended_real_users=0; blockers=['PyPI latest metadata does not match source version or required project URLs', 'PyPI fresh-install + MCP stdio canary snapshot is missing or failing', 'first-10 external-user evidence has not passed: verified=0/10, real_users=0/10, installs=0/8, useful=0/6, critical_incidents=0/0'] |
+| eval/cold_start_trust_gate_snapshot.json | True | 32044c0bbd1bf1349a3fa569a39c3e1320a0f4b1c38f173a2b793c99a97ba0c1 | 2026-05-25T16:09:10.892388+00:00 | cold-start trust gate=True; blockers=[] |
 | eval/pypi_fresh_install_snapshot.json | True | 1dc93d7ba6abb8c7e52f5afb3f26317bf66c7768d9ebc4da62a705221fab226f | 2026-05-25T10:24:34Z | PyPI fresh-install canary success=True; version=3.3.13 |
-| eval/load_10_snapshot.json | True | 754c139b6766f020b0215bd5a9bc966cf564f95fbac9e427350b2ca06934a459 | 2026-05-25T10:25:20.529162+00:00 | logical load 10: passed=True; total_requests=2171; success_rate=1.0; p95_ms=0.5851601017639041; model=asyncio_logical_users |
-| eval/load_100_snapshot.json | True | 7f1ff2972fc99fdbce239112fe588e1d4879e69c638e1f7e83de96fa5977c3c0 | 2026-05-25T10:25:21.633314+00:00 | logical load 100: passed=True; total_requests=2129; success_rate=1.0; p95_ms=0.5741093773394823; model=asyncio_logical_users |
-| eval/load_1000_snapshot.json | True | dd89c902e6c0b9ce04aeeaaa05fa49c0c9af12b32df383fe950ee32f6c242a47 | 2026-05-25T10:25:22.773460+00:00 | logical load 1000: passed=True; total_requests=2114; success_rate=1.0; p95_ms=0.5724917049519718; model=asyncio_logical_users |
-| pyproject.toml | True | 17f37d190f878a6f2aa5429d1c68b33256a7cf6fe79ddbf04940c1d38862a3cd | 2026-05-25T10:19:13Z | package version=3.3.13; scripts declared in project metadata |
-| borg/__init__.py | True | bfc9e1fefbd02a99ebd1dc6746f5d1dfb9d8edf9f0edb9f63b848202ebc6b44a | 2026-05-25T10:19:13Z | runtime __version__=3.3.13; top-level check() delegates to search |
-| PROJECT_STATUS.md | True | 354cc3bacf9633df012dcf9555736ac004b36968eabcb5e6f50bdd9ba66a76b2 | 2026-05-25T10:25:23Z | prior local status/readiness narrative used as contextual evidence only, not external adoption proof |
-| GO_NO_GO_DECISION.md | True | 31592dec9fdb3256201207964586b2f15469c1638316d35c660dafd706822b43 | 2026-05-25T10:25:23Z | prior local status/readiness narrative used as contextual evidence only, not external adoption proof |
-| UAT_RESULTS.md | True | 2e3c451b911b4f65ed643ec59ec2995854d9bf247a252cb84b018f0a9842e35f | 2026-05-25T10:25:23Z | prior local status/readiness narrative used as contextual evidence only, not external adoption proof |
+| eval/load_10_snapshot.json | True | c9ee4fdec11df4cb0ddebb6f5f1827a40249820fdc670bd30dc13b6c6e5d85f0 | 2026-05-25T16:03:01.823442+00:00 | logical load 10: passed=True; total_requests=1886; success_rate=1.0; p95_ms=0.7021749624982476; model=asyncio_logical_users |
+| eval/load_100_snapshot.json | True | fbbd1559156a135728a7bd43c147bd1f6098e503d1b0fcc888bad90658832505 | 2026-05-25T16:03:02.943176+00:00 | logical load 100: passed=True; total_requests=1816; success_rate=1.0; p95_ms=0.6465265178121626; model=asyncio_logical_users |
+| eval/load_1000_snapshot.json | True | ddf2ba572275c781aa4c3b9ffaf9e652ebacdfe5b4219fb31c39d1edb9da390c | 2026-05-25T16:03:04.106780+00:00 | logical load 1000: passed=True; total_requests=1934; success_rate=1.0; p95_ms=0.5889080930501222; model=asyncio_logical_users |
+| pyproject.toml | True | 2c1888f1f9c22ec2d75394d1e8b0a821b8b50a6de9515440fca1032ef6445d43 | 2026-05-25T15:02:34Z | package version=3.3.14; scripts declared in project metadata |
+| borg/__init__.py | True | 20fd27330f31ba0829ebd6ab9fbe42834584418ac761947113c22e871438a5c9 | 2026-05-25T15:02:34Z | runtime __version__=3.3.14; top-level check() delegates to search |
+| PROJECT_STATUS.md | True | 89bb39b0084a4c0705e9ca5c251efafa7667bce5890cf7d1d749143571c39795 | 2026-05-25T16:03:04Z | prior local status/readiness narrative used as contextual evidence only, not external adoption proof |
+| GO_NO_GO_DECISION.md | True | 1f06bd2ed89c0879f03ac99e1a8cf711e05c5c2c520e1f0a30ea86833d73ddf0 | 2026-05-25T16:03:04Z | prior local status/readiness narrative used as contextual evidence only, not external adoption proof |
+| UAT_RESULTS.md | True | 4dc02e5a817f36ff4aff0874dc55f89dac696fc8783f58256e7c10cec5bb9c8f | 2026-05-25T16:03:04Z | prior local status/readiness narrative used as contextual evidence only, not external adoption proof |
 
 ## Blockers
 
 | Category | Blockers |
 | --- | --- |
-| user affecting | No real external first-user install/rescue outcome has been recorded yet.<br>PyPI fresh-install canary is green.<br>Unattended Git-only onboarding remains unproven until external user can install, configure MCP, and receive a useful rescue without maintainer intervention. |
+| user affecting | No real external first-user install/rescue outcome has been recorded yet.<br>PyPI fresh-install canary is not green for the current source version yet.<br>Cold-start trust gate is green: meta/readiness prompts fail closed before random framework guidance reaches first users.<br>Unattended Git-only onboarding remains unproven until external user can install, configure MCP, and receive a useful rescue without maintainer intervention. |
 | investor affecting | Verified external users: 0 based on available hard evidence.<br>Local/logical load gates prove engineering readiness, not market adoption or retention. |
 | security privacy | Security surface artifacts/gates exist in local snapshots, but no third-party audit or live adversarial user evidence is present.<br>Do not collect/share user traces until consent, redaction, revocation, and privacy policy are explicitly confirmed in the onboarding script. |
 | release hygiene | Do not change repo visibility from this proof build.<br>Need one supervised dry run from a clean PyPI install by a non-author before claiming self-serve readiness. |
-| evidence gaps | No Borg analytics export proving active contributors or consumers was found.<br>No first-10-user scoreboard with real outcomes exists yet.<br>100-real-user gate remains blocked: ['first-10 external-user evidence has not passed: verified=0/10, real_users=0/10, installs=0/8, useful=0/6, critical_incidents=0/0']<br>Host/runtime split-brain was not freshly reproduced by this dashboard build. |
+| evidence gaps | No Borg analytics export proving active contributors or consumers was found.<br>No first-10-user scoreboard with real outcomes exists yet.<br>100-real-user gate remains blocked: ['PyPI latest/fresh-install package evidence is not green: latest metadata does not match source version', 'PyPI latest/fresh-install package evidence is not green: fresh install + MCP stdio canary is not green', 'first-10 external-user evidence has not passed: verified=0/10, real_users=0/10, installs=0/8, useful=0/6, critical_incidents=0/0']<br>Served/runtime split-brain was not evaluated by this dashboard build; source/fresh-process green is not live cutover proof. |
 
 ## First-10-user scoreboard template
 
-| # | user id/pseudonym | install success | time to first rescue | rescue useful yes/no | MCP setup success | blocker | outcome recorded |
-| --- | --- | --- | --- | --- | --- | --- | --- |
-| 1 |  |  |  |  |  |  |  |
-| 2 |  |  |  |  |  |  |  |
-| 3 |  |  |  |  |  |  |  |
-| 4 |  |  |  |  |  |  |  |
-| 5 |  |  |  |  |  |  |  |
-| 6 |  |  |  |  |  |  |  |
-| 7 |  |  |  |  |  |  |  |
-| 8 |  |  |  |  |  |  |  |
-| 9 |  |  |  |  |  |  |  |
-| 10 |  |  |  |  |  |  |  |
+| # | user id/pseudonym | install success | time to first rescue | rescue useful yes/no | MCP setup success | blocker | outcome recorded | baseline minutes without Borg | actual minutes with Borg | net minutes saved | baseline tokens without Borg | actual tokens with Borg | net tokens saved | savings counterfactual basis | dead end avoided confirmed | user confirmed value |
+| --- | --- | --- | --- | --- | --- | --- | --- | --- | --- | --- | --- | --- | --- | --- | --- | --- |
+| 1 |  |  |  |  |  |  |  |  |  |  |  |  |  |  |  |  |
+| 2 |  |  |  |  |  |  |  |  |  |  |  |  |  |  |  |  |
+| 3 |  |  |  |  |  |  |  |  |  |  |  |  |  |  |  |  |
+| 4 |  |  |  |  |  |  |  |  |  |  |  |  |  |  |  |  |
+| 5 |  |  |  |  |  |  |  |  |  |  |  |  |  |  |  |  |
+| 6 |  |  |  |  |  |  |  |  |  |  |  |  |  |  |  |  |
+| 7 |  |  |  |  |  |  |  |  |  |  |  |  |  |  |  |  |
+| 8 |  |  |  |  |  |  |  |  |  |  |  |  |  |  |  |  |
+| 9 |  |  |  |  |  |  |  |  |  |  |  |  |  |  |  |  |
+| 10 |  |  |  |  |  |  |  |  |  |  |  |  |  |  |  |  |
 
 ## Anti-hype section
 
@@ -85,7 +89,7 @@ Simulated/logical users are not real users. Internal sessions, tool calls, local
 
 | # | Action |
 | --- | --- |
-| 1 | Use `pipx install agent-borg==3.3.13` with controlled first-10 beta testers and label it as beta evidence capture, not public launch. |
+| 1 | After `agent-borg==3.3.14` is published and the PyPI fresh-install + stdio MCP canary passes, use that exact PyPI version with controlled first-10 beta testers. |
 | 2 | Create a fresh-PyPI runbook: install package, run borg --version, configure MCP, run one rescue, capture exact timestamps and blockers. |
 | 3 | Record first user in the first-10 scoreboard template using a pseudonym and consented outcome fields. |
 | 4 | If any onboarding step fails, add artifact path/stdout/stderr and keep broad launch at NO-GO. |

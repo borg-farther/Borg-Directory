@@ -13,7 +13,7 @@ Give Borg an error, traceback, failed test, install problem, config failure, or 
 - **MCP server command:** `borg-mcp`
 - **Canonical repo:** https://github.com/borg-farther/Borg-Directory
 
-**Status:** controlled first-10 public-package beta infrastructure is green for `agent-borg==3.3.13`: GitHub main CI/security gates passed, PyPI 3.3.13 is published, and the fresh PyPI install + stdio MCP canary passes. Public self-serve launch, 100-user rollout, served remote MCP, and measured external lift are not claimed until row-derived external-user evidence passes.
+**Status:** source/local hardening is ready for release-candidate review as `agent-borg==3.3.14`, but controlled first-10 public-package beta infrastructure is **NO-GO for this source revision** until PyPI latest, fresh-install, and stdio MCP canaries pass for that exact version. Public self-serve launch, 100-user rollout, served remote MCP, and measured external lift are not claimed until row-derived external-user evidence passes.
 
 ## Try Borg in 60 seconds
 
@@ -324,15 +324,15 @@ Why: agents often do not discover optional tools unless explicitly primed.
 
 ## 5. What is ready now
 
-Package infrastructure is green for **controlled first-10 public-package beta**:
+Source/local infrastructure is a **release candidate** for controlled first-10 beta, but the public-package beta is **NO-GO for `agent-borg==3.3.14` until PyPI latest, fresh-install, and stdio MCP canaries pass for that version**:
 
-- Install, CLI, Python API, and MCP entrypoints are present.
-- First-user rescue path returns ACTION / STOP / VERIFY.
-- Security/privacy/prompt-injection surface: PASS.
-- GitHub main CI/security gates, PyPI latest metadata, and fresh PyPI install + stdio MCP canary are green for `agent-borg==3.3.13`.
+- Install, CLI, Python API, and MCP entrypoints are present in source/local gates.
+- First-user rescue path returns ACTION / STOP / VERIFY or `NO_CONFIDENT_MATCH`.
+- Security/privacy/prompt-injection surface: PASS in local gates.
+- GitHub main CI/security gates, PyPI latest metadata, and fresh PyPI install + stdio MCP canary must be rerun for `agent-borg==3.3.14` before controlled beta resumes.
 - First-10 beta contract is published: [`docs/FIRST_10_BETA_READINESS.md`](https://github.com/borg-farther/Borg-Directory/blob/main/docs/FIRST_10_BETA_READINESS.md).
 
-Ready to invite up to 10 controlled public-package beta testers with consented evidence capture and the limits disclosed in this README. `python eval/public_self_serve_launch_gate.py` must still keep broad public self-serve blocked until real first-10 evidence passes.
+Do **not** invite controlled public-package beta testers for `agent-borg==3.3.14` until the merged/tagged release is on PyPI and the fresh-install + stdio MCP package canary is green. After those package gates pass, invite at most 10 controlled testers with consented evidence capture. `python eval/public_self_serve_launch_gate.py` must still keep broad public self-serve blocked until real first-10 evidence passes.
 
 Not yet claimed:
 

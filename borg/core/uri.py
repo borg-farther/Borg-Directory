@@ -37,6 +37,8 @@ BORG_DIR = get_borg_dir()
 INDEX_URL = f"https://raw.githubusercontent.com/{DEFAULT_REPO}/{DEFAULT_BRANCH}/index.json"
 
 _CACHE_TTL = 300  # 5 minutes
+_DEFAULT_FETCH_TIMEOUT_SECONDS = float(os.environ.get("BORG_FETCH_TIMEOUT_SECONDS", "5"))
+_DEFAULT_INDEX_TIMEOUT_SECONDS = float(os.environ.get("BORG_INDEX_TIMEOUT_SECONDS", "5"))
 _index_cache: Tuple[object, float] = (None, 0.0)
 
 # ---------------------------------------------------------------------------
@@ -131,7 +133,11 @@ def resolve_guild_uri(uri: str) -> str:
 # Content fetching with retry
 # ---------------------------------------------------------------------------
 
-def fetch_with_retry(url_or_path: str, retries: int = 1) -> Tuple[str, str]:
+def fetch_with_retry(
+    url_or_path: str,
+    retries: int = 1,
+    timeout: float = _DEFAULT_FETCH_TIMEOUT_SECONDS,
+) -> Tuple[str, str]:
     """Fetch content from a URL or local path with optional retry.
 
     Attempts local file read first, then URL fetch with retry on failure.
@@ -140,6 +146,8 @@ def fetch_with_retry(url_or_path: str, retries: int = 1) -> Tuple[str, str]:
     Args:
         url_or_path: A local file path (absolute) or a http(s):// URL.
         retries: Number of retries on failure (default 1, meaning 2 attempts).
+        timeout: Per-attempt network timeout in seconds. Defaults low because
+            `borg pull` must fail fast for first users and CI invalid-URL paths.
 
     Returns:
         A (content, error) tuple. On success content is the fetched text and
@@ -155,7 +163,7 @@ def fetch_with_retry(url_or_path: str, retries: int = 1) -> Tuple[str, str]:
     last_err = ""
     for attempt in range(retries + 1):
         try:
-            req = urlopen(url_or_path, timeout=15)
+            req = urlopen(url_or_path, timeout=timeout)
             content = req.read().decode("utf-8")
             return (content, "")
         except Exception as exc:
@@ -178,7 +186,7 @@ def _fetch_index() -> dict:
         return _index_cache[0]
 
     try:
-        with urlopen(INDEX_URL, timeout=15) as resp:
+        with urlopen(INDEX_URL, timeout=_DEFAULT_INDEX_TIMEOUT_SECONDS) as resp:
             import json
             data = json.loads(resp.read().decode("utf-8"))
         _index_cache = (data, now)
@@ -243,7 +251,7 @@ def get_available_pack_names() -> List[str]:
             result = subprocess.run(
                 ["gh", "api", f"repos/{DEFAULT_REPO}/git/trees/{DEFAULT_BRANCH}?recursive=1",
                  "--jq", ".tree[].path"],
-                capture_output=True, text=True, timeout=10,
+                capture_output=True, text=True, timeout=5,
             )
             if result.returncode == 0:
                 prefix = f"{REMOTE_PACKS_PATH}/"

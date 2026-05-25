@@ -39,6 +39,16 @@ BANNED_PYPI_COPY = [
     "collective intelligence for AI agents",
 ]
 
+REQUIRED_COLD_START_TRUST_CHECKS = {
+    "meta_permission_mentions_are_not_permission_tasks",
+    "meta_django_mentions_do_not_set_django_tech",
+    "high_similarity_meta_only_trace_rejected",
+    "irrelevant_real_trace_only_guidance_not_injectable",
+    "concrete_permission_signal_still_allowed",
+    "stdio_meta_trust_prompt_fails_closed",
+    "stdio_concrete_permission_prompt_gets_specific_guidance",
+}
+
 CURRENT_CLAIM_DOCS = [
     Path("README.md"),
     Path("PROJECT_STATUS.md"),
@@ -60,6 +70,8 @@ CURRENT_CLAIM_DOCS = [
     Path("docs/PUBLIC_SELF_SERVE_LAUNCH_GO_NO_GO.md"),
     Path("docs/VALUE_COMMUNICATION_DASHBOARD.md"),
     Path("docs/VALUE_COMMUNICATION_DASHBOARD.html"),
+    Path("docs/COLD_START_TRUST_HARDENING.md"),
+    Path("docs/LIVE_MCP_SELF_SERVE_CANARY.md"),
     Path("docs/BORG_PROOF_DASHBOARD.md"),
     Path("docs/BORG_PROOF_DASHBOARD.html"),
     Path("docs/public/proof-dashboard/index.html"),
@@ -81,6 +93,7 @@ UNSUPPORTED_WHEN_BLOCKED = [
     (re.compile(r"(?i)\bfrontier[- ]better[- ]than\b.*\b(proven|yes|true|go)"), "frontier-better-than proven claim"),
     (re.compile(r"(?i)Ready\s+to\s+share\s+Git\s+now\?\W{0,80}YES"), "stale Git-sharing YES claim"),
     (re.compile(r"(?i)version_package"), "stale proof-dashboard version metric"),
+    (re.compile(r"\bready_for_(?:10|1000)=True\b"), "unqualified logical-load readiness claim"),
 ]
 
 
@@ -258,6 +271,26 @@ def docs_claim_guard(
                     violations.append({"path": str(rel), "line": line, "kind": label, "detail": match.group(0)[:180]})
 
         if not package_evidence_ready:
+            blocked_package_claims = [
+                (r"(?i)Package infrastructure is green for \*\*controlled first-10 public-package beta\*\*", "controlled beta package infrastructure green before PyPI canary"),
+                (r"(?i)Published controlled-beta package line:\s*`?agent-borg==", "published controlled-beta package line before PyPI canary"),
+                (r"(?i)production PyPI upload and fresh-install \+ stdio MCP canary are green", "production PyPI canary green before PyPI canary"),
+                (r"(?i)Ready to invite .*controlled .*beta testers", "ready-to-invite claim before PyPI canary"),
+                (r"(?i)controlled first-10 beta invites may start", "controlled beta invites-may-start before PyPI canary"),
+                (r"(?i)CONDITIONAL GO for controlled first-10", "controlled first-10 conditional GO before PyPI canary"),
+                (r"(?i)PyPI latest metadata, fresh PyPI install, stdio MCP canary, GitHub CI/security gates, and source/local first-user gates passed", "package canaries-passed claim before PyPI canary"),
+            ]
+            for pattern, label in blocked_package_claims:
+                match = re.search(pattern, text)
+                if match:
+                    line = text[: match.start()].count("\n") + 1
+                    violations.append({
+                        "path": str(rel),
+                        "line": line,
+                        "kind": label,
+                        "detail": text.splitlines()[line - 1][:180] if line - 1 < len(text.splitlines()) else match.group(0)[:180],
+                    })
+
             for line_number, line_text in enumerate(text.splitlines(), start=1):
                 lower = line_text.lower()
                 claims_controlled_go = (
@@ -281,7 +314,20 @@ def docs_claim_guard(
                     and "not yet" not in lower
                     and not re.search(r"(?i)\b(after|until|pending|not yet|only after|before)\b", line_text)
                 )
-                if claims_controlled_go or claims_controlled_ready or claims_package_green:
+                claims_controlled_green = (
+                    "controlled first-10" in lower
+                    and "green" in lower
+                    and "no-go" not in lower
+                    and "not green" not in lower
+                    and not re.search(r"(?i)\b(after|until|pending|not yet|only after|before|blocked)\b", line_text)
+                )
+                claims_invites_start = (
+                    ("invite" in lower or "invites" in lower or "testers" in lower)
+                    and ("may start" in lower or "ready to invite" in lower or "invite up to" in lower)
+                    and "no-go" not in lower
+                    and not re.search(r"(?i)\b(after|until|pending|not yet|only after|before|blocked|do not|no invites)\b", line_text)
+                )
+                if claims_controlled_go or claims_controlled_ready or claims_package_green or claims_controlled_green or claims_invites_start:
                     violations.append({
                         "path": str(rel),
                         "line": line_number,
@@ -314,12 +360,47 @@ def first_10_evidence_check(path: Path) -> dict[str, Any]:
     }
 
 
+def cold_start_trust_check(path: Path) -> dict[str, Any]:
+    data = _read_json(path)
+    rel_path = str(path.relative_to(ROOT)) if path.is_relative_to(ROOT) else str(path)
+    if not data:
+        return {"passed": False, "exists": False, "path": rel_path, "error": "missing cold-start trust gate snapshot"}
+    checks = data.get("checks") or []
+    names = {str(item.get("name")) for item in checks if isinstance(item, dict)}
+    missing = sorted(REQUIRED_COLD_START_TRUST_CHECKS - names)
+    failed = [item.get("name") for item in checks if isinstance(item, dict) and not item.get("passed")]
+    trust_policy = str(data.get("trust_policy") or "")
+    has_feedback_path = isinstance(data.get("bad_answer_feedback_path"), dict) and bool(data.get("bad_answer_feedback_path"))
+    passed = bool(
+        data.get("passed")
+        and checks
+        and not missing
+        and not failed
+        and "fail closed" in trust_policy.lower()
+        and has_feedback_path
+    )
+    return {
+        "passed": passed,
+        "exists": True,
+        "path": rel_path,
+        "generated_at_utc": data.get("generated_at_utc"),
+        "failed_count": len(failed),
+        "failures": failed,
+        "missing_required_checks": missing,
+        "required_check_count": len(REQUIRED_COLD_START_TRUST_CHECKS),
+        "observed_check_count": len(names),
+        "has_bad_answer_feedback_path": has_feedback_path,
+        "trust_policy": data.get("trust_policy"),
+    }
+
+
 def compile_gate(*, fetch_network: bool = True, pypi_data: dict[str, Any] | None = None) -> dict[str, Any]:
     version = source_version()
     first_10 = first_10_evidence_check(ROOT / "eval" / "first_10_user_scoreboard.json")
     first_user = first_user_release_check(ROOT / "eval" / "first_user_release_gate_snapshot.json")
     pypi_latest = pypi_latest_check(version, fetch_network=fetch_network, pypi_data=pypi_data)
     pypi_fresh = pypi_fresh_install_check(ROOT / "eval" / "pypi_fresh_install_snapshot.json", version)
+    cold_start_trust = cold_start_trust_check(ROOT / "eval" / "cold_start_trust_gate_snapshot.json")
     package_evidence_ready = bool(pypi_latest["passed"] and pypi_fresh["passed"])
     docs = docs_claim_guard(
         CURRENT_CLAIM_DOCS,
@@ -328,7 +409,7 @@ def compile_gate(*, fetch_network: bool = True, pypi_data: dict[str, Any] | None
         package_evidence_ready=package_evidence_ready,
     )
 
-    infrastructure_ready = bool(first_user["passed"] and package_evidence_ready and docs["passed"])
+    infrastructure_ready = bool(first_user["passed"] and package_evidence_ready and cold_start_trust["passed"] and docs["passed"])
     public_self_serve_ready = bool(infrastructure_ready and first_10["passed"])
     blockers: list[str] = []
     if not first_user["passed"]:
@@ -337,6 +418,8 @@ def compile_gate(*, fetch_network: bool = True, pypi_data: dict[str, Any] | None
         blockers.append("PyPI latest metadata does not match source version or required project URLs")
     if not pypi_fresh["passed"]:
         blockers.append("PyPI fresh-install + MCP stdio canary snapshot is missing or failing")
+    if not cold_start_trust["passed"]:
+        blockers.append("cold-start trust hardening gate snapshot is missing or failing")
     if not docs["passed"]:
         blockers.append("public docs/claim guard found stale install pins or unsupported launch/value claims")
     if not first_10["passed"]:
@@ -354,11 +437,12 @@ def compile_gate(*, fetch_network: bool = True, pypi_data: dict[str, Any] | None
             "first_user_release": first_user,
             "pypi_latest": pypi_latest,
             "pypi_fresh_install_and_mcp_stdio": pypi_fresh,
+            "cold_start_trust_hardening": cold_start_trust,
             "docs_claim_guard": docs,
             "first_10_external_evidence": first_10,
         },
         "blockers": blockers,
-        "truth_policy": "Public self-serve is GO only after PyPI/fresh-install/MCP/docs gates pass AND row-derived first-10 external-user evidence passes. Synthetic users and aggregate-only edits never count.",
+        "truth_policy": "Public self-serve is GO only after PyPI/fresh-install/MCP/docs/cold-start-trust gates pass AND row-derived first-10 external-user evidence passes. Synthetic users and aggregate-only edits never count.",
     }
 
 
@@ -396,6 +480,7 @@ def write_report(snapshot: dict[str, Any]) -> None:
         "- `eval/first_10_user_scoreboard.json`",
         "- `eval/pypi_fresh_install_snapshot.json`",
         "- `eval/first_user_release_gate_snapshot.json`",
+        "- `eval/cold_start_trust_gate_snapshot.json`",
         "",
     ])
     REPORT.write_text("\n".join(lines), encoding="utf-8")
