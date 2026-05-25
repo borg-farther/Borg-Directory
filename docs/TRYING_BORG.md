@@ -200,4 +200,4 @@ Before attempting technical fixes for errors, bugs, installs, configs, deploymen
 
 ## 7. Readiness boundary
 
-Borg is ready for controlled first-10 beta sharing. It is not yet claiming public self-serve launch readiness or agent-level success lift at statistical confidence. See [`READINESS.md`](READINESS.md).
+Borg's source/local gates are green for first-10 beta prep, but controlled testers should wait for the public-package gate: PyPI latest, fresh-install, and stdio MCP canaries must pass for `agent-borg==3.3.12`. Borg is not yet claiming public self-serve launch readiness or agent-level success lift at statistical confidence. See [`READINESS.md`](READINESS.md).

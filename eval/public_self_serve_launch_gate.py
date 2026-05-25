@@ -266,6 +266,12 @@ def docs_claim_guard(
                     and "no-go" not in lower
                     and not re.search(r"(?i)\b(after|until|pending|not yet|only after)\b", line_text)
                 )
+                claims_controlled_ready = (
+                    "controlled first-10" in lower
+                    and re.search(r"(?i)\b(ready|share|sharing)\b", line_text)
+                    and "no-go" not in lower
+                    and not re.search(r"(?i)\b(after|until|pending|not yet|not ready|blocked|only after)\b", line_text)
+                )
                 claims_package_green = (
                     "pypi latest" in lower
                     and "fresh-install" in lower
@@ -275,7 +281,7 @@ def docs_claim_guard(
                     and "not yet" not in lower
                     and not re.search(r"(?i)\b(after|until|pending|not yet|only after|before)\b", line_text)
                 )
-                if claims_controlled_go or claims_package_green:
+                if claims_controlled_go or claims_controlled_ready or claims_package_green:
                     violations.append({
                         "path": str(rel),
                         "line": line_number,

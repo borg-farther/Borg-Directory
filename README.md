@@ -13,7 +13,7 @@ Give Borg an error, traceback, failed test, install problem, config failure, or 
 - **MCP server command:** `borg-mcp`
 - **Canonical repo:** https://github.com/borg-farther/Borg-Directory
 
-**Status:** first-10 beta. Borg's install, CLI, stdio MCP, security, and confidence-gating paths are ready for controlled testers. Public self-serve launch, 100-user rollout, served remote MCP, and measured external lift are not claimed until the required real-user evidence passes.
+**Status:** source release-candidate for first-10 beta. Local source/install, CLI, stdio MCP, security, and confidence-gating paths pass for `agent-borg==3.3.12`, but controlled testers should not use the public PyPI path until 3.3.12 is published and the fresh PyPI install + stdio MCP canary passes. Public self-serve launch, 100-user rollout, served remote MCP, and measured external lift are not claimed until row-derived external-user evidence passes.
 
 ## Try Borg in 60 seconds
 
@@ -324,13 +324,19 @@ Why: agents often do not discover optional tools unless explicitly primed.
 
 ## 5. What is ready now
 
-Ready for **controlled first-10 beta sharing**:
+Source/local release-candidate gates are green for **controlled first-10 beta prep**:
 
 - Install, CLI, Python API, and MCP entrypoints are present.
 - First-user rescue path returns ACTION / STOP / VERIFY.
 - Security/privacy/prompt-injection surface: PASS.
-- GitHub CI and security gates are green on the current default branch.
+- Local release/security gates are green in the current evidence packet.
 - First-10 beta contract is published: [`docs/FIRST_10_BETA_READINESS.md`](https://github.com/borg-farther/Borg-Directory/blob/main/docs/FIRST_10_BETA_READINESS.md).
+
+Not ready to invite public-package controlled testers until:
+
+- `agent-borg==3.3.12` is published to PyPI.
+- `python eval/run_pypi_fresh_install_canary.py --version 3.3.12` passes from a clean environment.
+- `python eval/public_self_serve_launch_gate.py` shows package infrastructure green while keeping public self-serve blocked on real first-10 evidence.
 
 Not yet claimed:
 

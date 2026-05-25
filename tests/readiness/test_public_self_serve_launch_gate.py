@@ -222,6 +222,7 @@ def test_docs_claim_guard_blocks_controlled_beta_go_until_package_canary_passes(
     doc = tmp_path / "docs" / "VALUE_COMMUNICATION_DASHBOARD.md"
     doc.parent.mkdir()
     doc.write_text(
+        "Ready for **controlled first-10 beta sharing**:\n"
         "controlled first-10 PyPI beta infrastructure: **GO** — PyPI latest, "
         "fresh-install, stdio MCP, docs claim guard, and security gates are green\n",
         encoding="utf-8",

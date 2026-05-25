@@ -76,7 +76,7 @@
       "exists": true,
       "failed_count": 0,
       "failures": [],
-      "generated_at_utc": "2026-05-24T19:44:51Z",
+      "generated_at_utc": "2026-05-25T09:28:21Z",
       "passed": true,
       "passed_count": 26,
       "path": "eval/first_user_release_gate_snapshot.json"
@@ -88,7 +88,7 @@
       "failures": [
         "pip_install_agent_borg"
       ],
-      "generated_at_utc": "2026-05-24T22:47:52Z",
+      "generated_at_utc": "2026-05-25T09:35:04Z",
       "mcp_server_info": null,
       "mcp_stdio_canary_passed": false,
       "passed": false,
@@ -144,7 +144,7 @@
       "url_missing": []
     }
   },
-  "generated_at_utc": "2026-05-24T22:48:10.769056+00:00",
+  "generated_at_utc": "2026-05-25T09:35:05.119721+00:00",
   "max_recommended_real_users_now": 0,
   "ready_for_controlled_first_10_beta": false,
   "ready_for_public_self_serve_launch": false,

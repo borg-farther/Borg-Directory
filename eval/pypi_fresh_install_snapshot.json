@@ -1,5 +1,5 @@
 {
-  "generated_at_utc": "2026-05-24T22:47:52Z",
+  "generated_at_utc": "2026-05-25T09:35:04Z",
   "install_source": "pypi",
   "mcp_stdio_canary": {
     "detail": "not run because PyPI install failed",
@@ -13,10 +13,10 @@
         "/root/.hermes/hermes-agent/venv/bin/python",
         "-m",
         "venv",
-        "/tmp/borg-pypi-fresh-tvv8dqk9"
+        "/tmp/borg-pypi-fresh-vll0l_ku"
       ],
       "detail": "exit=0",
-      "duration_s": 3.098,
+      "duration_s": 4.978,
       "name": "fresh_venv_create",
       "passed": true,
       "returncode": 0,
@@ -25,7 +25,7 @@
     },
     {
       "command": [
-        "/tmp/borg-pypi-fresh-tvv8dqk9/bin/pip",
+        "/tmp/borg-pypi-fresh-vll0l_ku/bin/pip",
         "install",
         "--isolated",
         "--disable-pip-version-check",
@@ -35,7 +35,7 @@
         "agent-borg==3.3.12"
       ],
       "detail": "exit=1",
-      "duration_s": 0.433,
+      "duration_s": 0.631,
       "name": "pip_install_agent_borg",
       "passed": false,
       "returncode": 1,

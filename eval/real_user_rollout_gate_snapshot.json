@@ -34,38 +34,38 @@
     "exists": true,
     "failed_count": 0,
     "failures": [],
-    "generated_at_utc": "2026-05-24T19:44:51Z",
+    "generated_at_utc": "2026-05-25T09:28:21Z",
     "passed": true,
     "passed_count": 26
   },
   "gate_type": "real_user_rollout",
-  "generated_at_utc": "2026-05-24T22:48:10.871404+00:00",
+  "generated_at_utc": "2026-05-25T09:28:26.877922+00:00",
   "important_distinction": "load/readiness snapshots are synthetic/logical users; this gate controls real external-user rollout",
   "infrastructure_ready_for_100": false,
   "load_gates": {
     "10": {
-      "duration_seconds": 30.0,
+      "duration_seconds": 1.0,
       "exists": true,
       "latency_ms": {
-        "avg": 0.42872132702416554,
-        "max": 0.7930488791316748,
-        "p50": 0.40635885670781136,
-        "p95": 0.5755376303568482,
-        "p99": 0.6008552201092243
+        "avg": 0.43705896717882253,
+        "max": 0.7805498316884041,
+        "p50": 0.42178540024906397,
+        "p95": 0.5594801041297615,
+        "p99": 0.5933718127198517
       },
       "passed": true,
       "success_rate": 1.0,
       "users": 10
     },
     "100": {
-      "duration_seconds": 30.0,
+      "duration_seconds": 1.0,
       "exists": true,
       "latency_ms": {
-        "avg": 0.4469398032950682,
-        "max": 11.739321053028107,
-        "p50": 0.419059069827199,
-        "p95": 0.5981309339404106,
-        "p99": 0.6571157835423953
+        "avg": 0.4487749799052284,
+        "max": 1.7502009868621826,
+        "p50": 0.4241198766976595,
+        "p95": 0.5969941150397062,
+        "p99": 0.6344049051403998
       },
       "passed": true,
       "success_rate": 1.0,
@@ -88,7 +88,7 @@
       "failures": [
         "pip_install_agent_borg"
       ],
-      "generated_at_utc": "2026-05-24T22:47:52Z",
+      "generated_at_utc": "2026-05-25T09:26:49Z",
       "mcp_server_info": null,
       "mcp_stdio_canary_passed": false,
       "passed": false,

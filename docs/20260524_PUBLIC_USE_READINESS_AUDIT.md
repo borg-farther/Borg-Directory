@@ -1,5 +1,7 @@
 # Borg public-use readiness audit
 
+> Historical/internal — not current product documentation. Use `docs/READINESS.md`, `docs/PUBLIC_SELF_SERVE_LAUNCH_GO_NO_GO.md`, and generated `docs/public/status.json` for current rollout truth.
+
 Rev: 20260524-2304
 Repository: `/root/hermes-workspace/borg`
 Question: "is Borg ready for public use?"
