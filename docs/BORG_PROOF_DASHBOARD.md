@@ -1,8 +1,8 @@
 # Borg Proof Dashboard
 
-Generated: `2026-05-25T10:25:23Z`
+Generated: `2026-05-25T11:01:31Z`
 Repo: `https://github.com/borg-farther/Borg-Directory`
-Source snapshot: `99b7f3105db973975fafc255714899d94836e848+dirty`
+Source snapshot: `024de24445975c0216536e94d7c6ea44f1709ced+dirty`
 
 ## Big top verdict
 

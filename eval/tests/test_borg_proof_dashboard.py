@@ -58,6 +58,12 @@ def test_borg_proof_dashboard_artifacts_exist_and_are_honest(tmp_path, monkeypat
     assert status["repo"] == "https://github.com/borg-farther/Borg-Directory"
     assert status["state"].startswith("NO-GO public self-serve")
     assert status["controlled_first_10_beta"]["verdict"] in {"NO-GO", "CONDITIONAL"}
+    if status["controlled_first_10_beta"]["verdict"] == "CONDITIONAL":
+        assert "controlled first-10 beta GO" in status["state"]
+        assert "source/local release-candidate only" not in status["state"]
+        assert "infrastructure is green" in value["detail"]
+    else:
+        assert "source/local release-candidate only" in status["state"]
     assert "ACTION / STOP / VERIFY" in value["headline"]
     assert impact["primary_impact"] == "NO-GO public self-serve"
     assert data["first_10_user_scoreboard_template"]["columns"] == [

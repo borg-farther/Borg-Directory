@@ -428,6 +428,17 @@ def build_public_payloads(model: dict) -> tuple[dict, dict, dict]:
     metrics = model.get("metrics", {})
     source_version = str(metrics.get("source_version_consistency", {}).get("value", "UNKNOWN"))
     generated = model["generated_at_utc"]
+    controlled_is_green = controlled.get("verdict") == "CONDITIONAL"
+    broad_is_green = broad.get("verdict") == "GO"
+    if broad_is_green:
+        public_state = "GO public self-serve"
+        value_detail = "Public self-serve launch gate is green with row-derived external-user evidence."
+    elif controlled_is_green:
+        public_state = "NO-GO public self-serve; controlled first-10 beta GO"
+        value_detail = "Controlled first-10 public-package beta infrastructure is green; public self-serve remains blocked until row-derived first-10 external-user evidence passes."
+    else:
+        public_state = "NO-GO public self-serve; source/local release-candidate only"
+        value_detail = "Public-package controlled beta remains blocked until PyPI latest and fresh PyPI install + stdio MCP canaries pass for the current source version."
 
     status_payload = {
         "schema_version": 1,
@@ -437,7 +448,7 @@ def build_public_payloads(model: dict) -> tuple[dict, dict, dict]:
         "source_revision": model.get("source_revision"),
         "source_version_consistency": source_version,
         "readiness": broad["verdict"],
-        "state": "NO-GO public self-serve; source/local release-candidate only",
+        "state": public_state,
         "status": broad["verdict"],
         "decision": broad["verdict"],
         "go_no_go": broad["why"],
@@ -458,9 +469,9 @@ def build_public_payloads(model: dict) -> tuple[dict, dict, dict]:
     value_payload = {
         "schema_version": 1,
         "updated_at": generated,
-        "headline": "ACTION / STOP / VERIFY rescue packets are green in source/local first-user gates",
+        "headline": "ACTION / STOP / VERIFY rescue packets are green in first-user package gates",
         "summary": "Borg gives coding agents a concrete next action, a dead end to avoid, and a verification step for known failure classes.",
-        "detail": "Public-package controlled beta remains blocked until PyPI latest and fresh PyPI install + stdio MCP canaries pass for the current source version.",
+        "detail": value_detail,
         "primary_metric": metrics.get("first_user_release_gate", {}).get("value", "UNKNOWN"),
         "honesty_label": "LOCAL_SOURCE_GATE_NOT_EXTERNAL_ADOPTION",
     }
