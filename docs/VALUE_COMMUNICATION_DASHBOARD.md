@@ -8,11 +8,11 @@
 - statistically significant agent-level lift: **not claimed** until a controlled external-user benchmark passes
 
 ## readiness status
-- controlled first-10 PyPI beta infrastructure: **NO-GO** — PyPI latest/fresh-install/stdio MCP package evidence is not green yet
+- controlled first-10 PyPI beta infrastructure: **GO for up to 10 controlled testers** — PyPI latest/fresh-install/stdio MCP package evidence is green for `agent-borg==3.3.12`
 - supervised local first-user path: GO in current artifacts
 - public self-serve launch: **NO-GO until first-10 row-derived external evidence passes**
 - 100 real-user rollout: **NO-GO until 10 external users, >=8 installs, >=6 useful rescues, and 0 critical incidents**
-- decision: no controlled first-10 beta invites until package evidence is green; no broad self-serve or frontier-better-than claim
+- decision: controlled first-10 beta invites may start with consented evidence capture; no broad self-serve or frontier-better-than claim
 
 ## evidence
 - `eval/public_self_serve_launch_gate_snapshot.json`

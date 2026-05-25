@@ -2,11 +2,11 @@
 
 ## Current verdict
 
-- Controlled first-10 beta: **NO-GO until PyPI latest, fresh-install, and stdio MCP canaries are green**.
-- Public waitlist / narrow beta: **NO-GO until controlled first-10 package infrastructure is green and limits are disclosed**.
+- Controlled first-10 beta: **GO for up to 10 controlled public-package testers** with consented evidence capture and limits disclosed.
+- Public waitlist / narrow beta: **CONDITIONAL GO for controlled first-10 only**; do not broaden beyond 10 real users until row-derived evidence passes.
 - Public self-serve launch: **NO-GO until real external-user evidence exists**.
 
-## What must pass before controlled beta
+## What passed for controlled beta package infrastructure
 
 - Public install path exists: `python3 -m pip install agent-borg`.
 - CLI entrypoints exist: `borg`, `borg-mcp`, `borg-doctor`.
@@ -14,6 +14,7 @@
 - First-10 contract exists: [`FIRST_10_BETA_READINESS.md`](FIRST_10_BETA_READINESS.md).
 - Security/privacy/prompt-injection surface has a baseline and CI gates.
 - Current default-branch GitHub CI and security gates are green.
+- PyPI latest is `agent-borg==3.3.12` and the fresh PyPI install + stdio MCP canary passes.
 
 ## What is not proven
 

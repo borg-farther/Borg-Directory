@@ -3,7 +3,7 @@
     "evidence_gaps": [
       "No Borg analytics export proving active contributors or consumers was found.",
       "No first-10-user scoreboard with real outcomes exists yet.",
-      "100-real-user gate remains blocked: ['PyPI latest/fresh-install package evidence is not green: latest metadata does not match source version', 'PyPI latest/fresh-install package evidence is not green: fresh install + MCP stdio canary is not green', 'first-10 external-user evidence has not passed: verified=0/10, real_users=0/10, installs=0/8, useful=0/6, critical_incidents=0/0']",
+      "100-real-user gate remains blocked: ['first-10 external-user evidence has not passed: verified=0/10, real_users=0/10, installs=0/8, useful=0/6, critical_incidents=0/0']",
       "Host/runtime split-brain was not freshly reproduced by this dashboard build."
     ],
     "investor_affecting": [
@@ -20,40 +20,40 @@
     ],
     "user_affecting": [
       "No real external first-user install/rescue outcome has been recorded yet.",
-      "PyPI fresh-install canary is not green yet.",
+      "PyPI fresh-install canary is green.",
       "Unattended Git-only onboarding remains unproven until external user can install, configure MCP, and receive a useful rescue without maintainer intervention."
     ]
   },
   "broad_public_launch": {
     "verdict": "NO-GO",
-    "why": "Public self-serve gate is blocked until PyPI latest/fresh-install/MCP/docs gates pass and first-10 external evidence exists."
+    "why": "Public self-serve gate is blocked only by row-derived first-10 external-user evidence; PyPI/latest/fresh-install/MCP/docs gates are green."
   },
   "controlled_first_10_beta": {
-    "verdict": "NO-GO",
-    "why": "Controlled first-10 beta is blocked until the public package path is green: PyPI latest metadata, fresh-install canary, stdio MCP canary, and docs guard must all pass."
+    "verdict": "CONDITIONAL",
+    "why": "Controlled first-10 beta infrastructure is green; keep broad launch blocked until row-derived external-user evidence passes."
   },
   "decision": "NO-GO",
-  "distribution_gate": "NO-GO",
+  "distribution_gate": "CONDITIONAL",
   "evidence": [
     "eval/first_user_release_gate_snapshot.json",
     "eval/public_self_serve_launch_gate_snapshot.json",
     "eval/pypi_fresh_install_snapshot.json",
     "eval/real_user_rollout_gate_snapshot.json"
   ],
-  "go_no_go": "Public self-serve gate is blocked until PyPI latest/fresh-install/MCP/docs gates pass and first-10 external evidence exists.",
+  "go_no_go": "Public self-serve gate is blocked only by row-derived first-10 external-user evidence; PyPI/latest/fresh-install/MCP/docs gates are green.",
   "local_release_candidate": {
     "verdict": "CONDITIONAL",
     "why": "Local source/wheel gates pass, but this does not authorize public beta without PyPI/latest/fresh-install proof."
   },
-  "max_recommended_real_users_now": 0,
+  "max_recommended_real_users_now": 10,
   "readiness": "NO-GO",
   "repo": "https://github.com/borg-farther/Borg-Directory",
   "schema_version": 1,
   "source": "docs/public/status.json",
-  "source_revision": "12451cbcaea5581fa72a2380aa878d87d6345602+dirty",
+  "source_revision": "d0de486518bc0363e6ea12accf9a00fd127d5f6e+dirty",
   "source_version_consistency": "pyproject=3.3.12 runtime=3.3.12",
   "state": "NO-GO public self-serve; source/local release-candidate only",
   "status": "NO-GO",
-  "updated_at": "2026-05-25T09:35:05Z",
+  "updated_at": "2026-05-25T09:57:55Z",
   "verified_external_users": 0
 }
