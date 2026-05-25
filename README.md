@@ -13,7 +13,7 @@ Give Borg an error, traceback, failed test, install problem, config failure, or 
 - **MCP server command:** `borg-mcp`
 - **Canonical repo:** https://github.com/borg-farther/Borg-Directory
 
-**Status:** controlled first-10 public-package beta infrastructure is green for `agent-borg==3.3.12`: GitHub main CI/security gates passed, PyPI 3.3.12 is published, and the fresh PyPI install + stdio MCP canary passes. Public self-serve launch, 100-user rollout, served remote MCP, and measured external lift are not claimed until row-derived external-user evidence passes.
+**Status:** controlled first-10 public-package beta infrastructure is green for `agent-borg==3.3.13`: GitHub main CI/security gates passed, PyPI 3.3.13 is published, and the fresh PyPI install + stdio MCP canary passes. Public self-serve launch, 100-user rollout, served remote MCP, and measured external lift are not claimed until row-derived external-user evidence passes.
 
 ## Try Borg in 60 seconds
 
@@ -329,7 +329,7 @@ Package infrastructure is green for **controlled first-10 public-package beta**:
 - Install, CLI, Python API, and MCP entrypoints are present.
 - First-user rescue path returns ACTION / STOP / VERIFY.
 - Security/privacy/prompt-injection surface: PASS.
-- GitHub main CI/security gates, PyPI latest metadata, and fresh PyPI install + stdio MCP canary are green for `agent-borg==3.3.12`.
+- GitHub main CI/security gates, PyPI latest metadata, and fresh PyPI install + stdio MCP canary are green for `agent-borg==3.3.13`.
 - First-10 beta contract is published: [`docs/FIRST_10_BETA_READINESS.md`](https://github.com/borg-farther/Borg-Directory/blob/main/docs/FIRST_10_BETA_READINESS.md).
 
 Ready to invite up to 10 controlled public-package beta testers with consented evidence capture and the limits disclosed in this README. `python eval/public_self_serve_launch_gate.py` must still keep broad public self-serve blocked until real first-10 evidence passes.

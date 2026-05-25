@@ -14,7 +14,7 @@
 - First-10 contract exists: [`FIRST_10_BETA_READINESS.md`](FIRST_10_BETA_READINESS.md).
 - Security/privacy/prompt-injection surface has a baseline and CI gates.
 - Current default-branch GitHub CI and security gates are green.
-- PyPI latest is `agent-borg==3.3.12` and the fresh PyPI install + stdio MCP canary passes.
+- PyPI latest is `agent-borg==3.3.13` and the fresh PyPI install + stdio MCP canary passes.
 
 ## What is not proven
 
