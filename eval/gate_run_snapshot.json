@@ -7,15 +7,13 @@
   "ready_for_100_real_users": false,
   "real_user_rollout": {
     "blockers": [
-      "PyPI latest/fresh-install package evidence is not green: latest metadata does not match source version",
-      "PyPI latest/fresh-install package evidence is not green: fresh install + MCP stdio canary is not green",
       "first-10 external-user evidence has not passed: verified=0/10, real_users=0/10, installs=0/8, useful=0/6, critical_incidents=0/0"
     ],
-    "infrastructure_ready_for_100": false,
-    "max_recommended_real_users_now": 0,
+    "infrastructure_ready_for_100": true,
+    "max_recommended_real_users_now": 10,
     "rc": 1,
     "ready_for_100_real_users": false,
-    "ready_for_10_controlled_beta": false
+    "ready_for_10_controlled_beta": true
   },
   "run_parameters": {
     "soak_duration_seconds": 1.0
@@ -33,7 +31,7 @@
       ],
       "name": "version_distribution_tests",
       "rc": 0,
-      "started": "2026-05-25T09:28:21.412291+00:00",
+      "started": "2026-05-25T09:57:03.102272+00:00",
       "stderr": "",
       "stdout": "..........                                                               [100%]\n10 passed in 0.05s\n"
     },
@@ -56,9 +54,9 @@
       ],
       "name": "atom_security_tests",
       "rc": 0,
-      "started": "2026-05-25T09:28:22.031214+00:00",
+      "started": "2026-05-25T09:57:03.732773+00:00",
       "stderr": "",
-      "stdout": "........................................................................ [ 82%]\n...............                                                          [100%]\n87 passed in 0.27s\n"
+      "stdout": "........................................................................ [ 82%]\n...............                                                          [100%]\n87 passed in 0.26s\n"
     },
     {
       "cmd": [
@@ -67,7 +65,7 @@
       ],
       "name": "security_gate",
       "rc": 0,
-      "started": "2026-05-25T09:28:22.844318+00:00",
+      "started": "2026-05-25T09:57:04.570006+00:00",
       "stderr": "",
       "stdout": "PASS: Borg security hardening policy gate\n"
     },
@@ -78,7 +76,7 @@
       ],
       "name": "atom_fixture_corpus",
       "rc": 0,
-      "started": "2026-05-25T09:28:22.919831+00:00",
+      "started": "2026-05-25T09:57:04.646521+00:00",
       "stderr": "",
       "stdout": "{\n  \"success\": true,\n  \"total\": 10,\n  \"failed\": []\n}\n"
     },
@@ -93,9 +91,9 @@
       ],
       "name": "load_10",
       "rc": 0,
-      "started": "2026-05-25T09:28:23.001263+00:00",
+      "started": "2026-05-25T09:57:04.733255+00:00",
       "stderr": "",
-      "stdout": "{\n  \"concurrency_model\": \"asyncio_logical_users\",\n  \"duration_seconds\": 1.0,\n  \"failures\": 0,\n  \"latency_ms\": {\n    \"avg\": 0.43705896717882253,\n    \"max\": 0.7805498316884041,\n    \"p50\": 0.42178540024906397,\n    \"p95\": 0.5594801041297615,\n    \"p99\": 0.5933718127198517\n  },\n  \"operation\": \"learning_atom_retrieval_firewall_privacy_prompt_scan\",\n  \"passed\": true,\n  \"per_user_min_requests\": 223,\n  \"requests_per_second\": 2234.0,\n  \"sample_failures\": [],\n  \"success_rate\": 1.0,\n  \"successes\": 2234,\n  \"thresholds\": {\n    \"min_requests_per_user\": 1.0,\n    \"p95_ms_max\": 2000.0,\n    \"p99_ms_max\": 4000.0,\n    \"success_rate_min\": 0.95\n  },\n  \"timestamp\": \"2026-05-25T09:28:24.069323+00:00\",\n  \"total_requests\": 2234,\n  \"users\": 10\n}\n"
+      "stdout": "{\n  \"concurrency_model\": \"asyncio_logical_users\",\n  \"duration_seconds\": 1.0,\n  \"failures\": 0,\n  \"latency_ms\": {\n    \"avg\": 0.4388746978753519,\n    \"max\": 0.8521010167896748,\n    \"p50\": 0.4194549983367324,\n    \"p95\": 0.5667443969286978,\n    \"p99\": 0.5931002832949162\n  },\n  \"operation\": \"learning_atom_retrieval_firewall_privacy_prompt_scan\",\n  \"passed\": true,\n  \"per_user_min_requests\": 222,\n  \"requests_per_second\": 2228.0,\n  \"sample_failures\": [],\n  \"success_rate\": 1.0,\n  \"successes\": 2228,\n  \"thresholds\": {\n    \"min_requests_per_user\": 1.0,\n    \"p95_ms_max\": 2000.0,\n    \"p99_ms_max\": 4000.0,\n    \"success_rate_min\": 0.95\n  },\n  \"timestamp\": \"2026-05-25T09:57:05.799889+00:00\",\n  \"total_requests\": 2228,\n  \"users\": 10\n}\n"
     },
     {
       "cmd": [
@@ -108,9 +106,9 @@
       ],
       "name": "load_100",
       "rc": 0,
-      "started": "2026-05-25T09:28:24.084745+00:00",
+      "started": "2026-05-25T09:57:05.814462+00:00",
       "stderr": "",
-      "stdout": "{\n  \"concurrency_model\": \"asyncio_logical_users\",\n  \"duration_seconds\": 1.0,\n  \"failures\": 0,\n  \"latency_ms\": {\n    \"avg\": 0.4487749799052284,\n    \"max\": 1.7502009868621826,\n    \"p50\": 0.4241198766976595,\n    \"p95\": 0.5969941150397062,\n    \"p99\": 0.6344049051403998\n  },\n  \"operation\": \"learning_atom_retrieval_firewall_privacy_prompt_scan\",\n  \"passed\": true,\n  \"per_user_min_requests\": 21,\n  \"requests_per_second\": 2137.0,\n  \"sample_failures\": [],\n  \"success_rate\": 1.0,\n  \"successes\": 2137,\n  \"thresholds\": {\n    \"min_requests_per_user\": 1.0,\n    \"p95_ms_max\": 1000.0,\n    \"p99_ms_max\": 3000.0,\n    \"success_rate_min\": 0.95\n  },\n  \"timestamp\": \"2026-05-25T09:28:25.163348+00:00\",\n  \"total_requests\": 2137,\n  \"users\": 100\n}\n"
+      "stdout": "{\n  \"concurrency_model\": \"asyncio_logical_users\",\n  \"duration_seconds\": 1.0,\n  \"failures\": 0,\n  \"latency_ms\": {\n    \"avg\": 0.46707074953256733,\n    \"max\": 1.6355609986931086,\n    \"p50\": 0.4713800735771656,\n    \"p95\": 0.5870543187484145,\n    \"p99\": 0.6074796989560127\n  },\n  \"operation\": \"learning_atom_retrieval_firewall_privacy_prompt_scan\",\n  \"passed\": true,\n  \"per_user_min_requests\": 20,\n  \"requests_per_second\": 2055.0,\n  \"sample_failures\": [],\n  \"success_rate\": 1.0,\n  \"successes\": 2055,\n  \"thresholds\": {\n    \"min_requests_per_user\": 1.0,\n    \"p95_ms_max\": 1000.0,\n    \"p99_ms_max\": 3000.0,\n    \"success_rate_min\": 0.95\n  },\n  \"timestamp\": \"2026-05-25T09:57:06.889657+00:00\",\n  \"total_requests\": 2055,\n  \"users\": 100\n}\n"
     },
     {
       "cmd": [
@@ -123,9 +121,9 @@
       ],
       "name": "load_1000",
       "rc": 0,
-      "started": "2026-05-25T09:28:25.181005+00:00",
+      "started": "2026-05-25T09:57:06.907214+00:00",
       "stderr": "",
-      "stdout": "{\n  \"concurrency_model\": \"asyncio_logical_users\",\n  \"duration_seconds\": 1.0,\n  \"failures\": 0,\n  \"latency_ms\": {\n    \"avg\": 0.4264471360227519,\n    \"max\": 1.6471908893436193,\n    \"p50\": 0.4021449713036418,\n    \"p95\": 0.5754714016802609,\n    \"p99\": 0.6166691356338562\n  },\n  \"operation\": \"learning_atom_retrieval_firewall_privacy_prompt_scan\",\n  \"passed\": true,\n  \"per_user_min_requests\": 2,\n  \"requests_per_second\": 2230.0,\n  \"sample_failures\": [],\n  \"success_rate\": 1.0,\n  \"successes\": 2230,\n  \"thresholds\": {\n    \"min_requests_per_user\": 1.0,\n    \"p95_ms_max\": 500.0,\n    \"p99_ms_max\": 1500.0,\n    \"success_rate_min\": 0.99\n  },\n  \"timestamp\": \"2026-05-25T09:28:26.298618+00:00\",\n  \"total_requests\": 2230,\n  \"users\": 1000\n}\n"
+      "stdout": "{\n  \"concurrency_model\": \"asyncio_logical_users\",\n  \"duration_seconds\": 1.0,\n  \"failures\": 0,\n  \"latency_ms\": {\n    \"avg\": 0.4413712589714164,\n    \"max\": 1.2058590073138475,\n    \"p50\": 0.41825545486062765,\n    \"p95\": 0.5786204012110829,\n    \"p99\": 0.6155471736565232\n  },\n  \"operation\": \"learning_atom_retrieval_firewall_privacy_prompt_scan\",\n  \"passed\": true,\n  \"per_user_min_requests\": 2,\n  \"requests_per_second\": 2152.0,\n  \"sample_failures\": [],\n  \"success_rate\": 1.0,\n  \"successes\": 2152,\n  \"thresholds\": {\n    \"min_requests_per_user\": 1.0,\n    \"p95_ms_max\": 500.0,\n    \"p99_ms_max\": 1500.0,\n    \"success_rate_min\": 0.99\n  },\n  \"timestamp\": \"2026-05-25T09:57:08.023236+00:00\",\n  \"total_requests\": 2152,\n  \"users\": 1000\n}\n"
     },
     {
       "cmd": [
@@ -137,9 +135,9 @@
       ],
       "name": "readiness_1000_tests",
       "rc": 0,
-      "started": "2026-05-25T09:28:26.316214+00:00",
+      "started": "2026-05-25T09:57:08.040454+00:00",
       "stderr": "",
-      "stdout": "........                                                                 [100%]\n8 passed in 0.01s\n"
+      "stdout": "........                                                                 [100%]\n8 passed in 0.02s\n"
     },
     {
       "cmd": [
@@ -148,9 +146,9 @@
       ],
       "name": "real_user_rollout_gate",
       "rc": 1,
-      "started": "2026-05-25T09:28:26.799311+00:00",
+      "started": "2026-05-25T09:57:08.579447+00:00",
       "stderr": "",
-      "stdout": "{\n  \"ready_for_10_controlled_beta\": false,\n  \"infrastructure_ready_for_100\": false,\n  \"ready_for_100_real_users\": false,\n  \"max_recommended_real_users_now\": 0,\n  \"blockers\": [\n    \"PyPI latest/fresh-install package evidence is not green: latest metadata does not match source version\",\n    \"PyPI latest/fresh-install package evidence is not green: fresh install + MCP stdio canary is not green\",\n    \"first-10 external-user evidence has not passed: verified=0/10, real_users=0/10, installs=0/8, useful=0/6, critical_incidents=0/0\"\n  ],\n  \"snapshot\": \"eval/real_user_rollout_gate_snapshot.json\",\n  \"report\": \"docs/20260517_BORG_100_REAL_USER_READINESS.md\"\n}\n"
+      "stdout": "{\n  \"ready_for_10_controlled_beta\": true,\n  \"infrastructure_ready_for_100\": true,\n  \"ready_for_100_real_users\": false,\n  \"max_recommended_real_users_now\": 10,\n  \"blockers\": [\n    \"first-10 external-user evidence has not passed: verified=0/10, real_users=0/10, installs=0/8, useful=0/6, critical_incidents=0/0\"\n  ],\n  \"snapshot\": \"eval/real_user_rollout_gate_snapshot.json\",\n  \"report\": \"docs/20260517_BORG_100_REAL_USER_READINESS.md\"\n}\n"
     },
     {
       "cmd": [
@@ -159,7 +157,7 @@
       ],
       "name": "scoreboard_final",
       "rc": 0,
-      "started": "2026-05-25T09:28:26.892524+00:00",
+      "started": "2026-05-25T09:57:08.687099+00:00",
       "stderr": "",
       "stdout": "/root/hermes-workspace/borg/PROJECT_STATUS.md\n/root/hermes-workspace/borg/eval/uat_scoreboard_snapshot.json\n"
     },
@@ -170,11 +168,11 @@
       ],
       "name": "scoreboard_after_decision",
       "rc": 0,
-      "started": "2026-05-25T09:28:26.936930+00:00",
+      "started": "2026-05-25T09:57:08.737169+00:00",
       "stderr": "",
       "stdout": "/root/hermes-workspace/borg/PROJECT_STATUS.md\n/root/hermes-workspace/borg/eval/uat_scoreboard_snapshot.json\n"
     }
   ],
   "synthetic_load_all_pass": true,
-  "timestamp": "2026-05-25T09:28:26.936250+00:00"
+  "timestamp": "2026-05-25T09:57:08.736349+00:00"
 }
