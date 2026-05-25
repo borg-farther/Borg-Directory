@@ -74,30 +74,30 @@
       "exists": true,
       "failed_count": 0,
       "failures": [],
-      "generated_at_utc": "2026-05-25T09:28:21Z",
+      "generated_at_utc": "2026-05-25T10:25:17Z",
       "passed": true,
       "passed_count": 26,
       "path": "eval/first_user_release_gate_snapshot.json"
     },
     "pypi_fresh_install_and_mcp_stdio": {
       "exists": true,
-      "expected_version": "3.3.12",
+      "expected_version": "3.3.13",
       "failed_count": 0,
       "failures": [],
-      "generated_at_utc": "2026-05-25T09:55:55Z",
+      "generated_at_utc": "2026-05-25T10:24:34Z",
       "mcp_server_info": {
         "name": "borg-mcp-server",
-        "version": "3.3.12"
+        "version": "3.3.13"
       },
       "mcp_stdio_canary_passed": true,
       "passed": true,
       "path": "eval/pypi_fresh_install_snapshot.json",
-      "version": "3.3.12"
+      "version": "3.3.13"
     },
     "pypi_latest": {
       "banned_keywords_present": [],
       "expected_summary": "Failure memory CLI and MCP server for AI coding agents",
-      "expected_version": "3.3.12",
+      "expected_version": "3.3.13",
       "keyword_missing": false,
       "keywords": [
         "agent-tools",
@@ -106,7 +106,7 @@
         "failure-memory",
         "mcp"
       ],
-      "latest_version": "3.3.12",
+      "latest_version": "3.3.13",
       "package": "agent-borg",
       "passed": true,
       "project_urls": {
@@ -143,11 +143,11 @@
       "url_missing": []
     }
   },
-  "generated_at_utc": "2026-05-25T09:57:55.075307+00:00",
+  "generated_at_utc": "2026-05-25T10:25:23.857642+00:00",
   "max_recommended_real_users_now": 10,
   "ready_for_controlled_first_10_beta": true,
   "ready_for_public_self_serve_launch": false,
   "schema_version": 1,
-  "source_version": "3.3.12",
+  "source_version": "3.3.13",
   "truth_policy": "Public self-serve is GO only after PyPI/fresh-install/MCP/docs gates pass AND row-derived first-10 external-user evidence passes. Synthetic users and aggregate-only edits never count."
 }

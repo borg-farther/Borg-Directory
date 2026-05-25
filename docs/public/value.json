@@ -5,5 +5,5 @@
   "primary_metric": "PASS",
   "schema_version": 1,
   "summary": "Borg gives coding agents a concrete next action, a dead end to avoid, and a verification step for known failure classes.",
-  "updated_at": "2026-05-25T09:57:55Z"
+  "updated_at": "2026-05-25T10:25:23Z"
 }

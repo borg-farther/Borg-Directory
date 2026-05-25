@@ -31,9 +31,9 @@
       ],
       "name": "version_distribution_tests",
       "rc": 0,
-      "started": "2026-05-25T09:57:03.102272+00:00",
+      "started": "2026-05-25T10:25:17.679027+00:00",
       "stderr": "",
-      "stdout": "..........                                                               [100%]\n10 passed in 0.05s\n"
+      "stdout": "..........                                                               [100%]\n10 passed in 0.06s\n"
     },
     {
       "cmd": [
@@ -54,9 +54,9 @@
       ],
       "name": "atom_security_tests",
       "rc": 0,
-      "started": "2026-05-25T09:57:03.732773+00:00",
+      "started": "2026-05-25T10:25:18.376270+00:00",
       "stderr": "",
-      "stdout": "........................................................................ [ 82%]\n...............                                                          [100%]\n87 passed in 0.26s\n"
+      "stdout": "........................................................................ [ 82%]\n...............                                                          [100%]\n87 passed in 0.29s\n"
     },
     {
       "cmd": [
@@ -65,7 +65,7 @@
       ],
       "name": "security_gate",
       "rc": 0,
-      "started": "2026-05-25T09:57:04.570006+00:00",
+      "started": "2026-05-25T10:25:19.313727+00:00",
       "stderr": "",
       "stdout": "PASS: Borg security hardening policy gate\n"
     },
@@ -76,7 +76,7 @@
       ],
       "name": "atom_fixture_corpus",
       "rc": 0,
-      "started": "2026-05-25T09:57:04.646521+00:00",
+      "started": "2026-05-25T10:25:19.382615+00:00",
       "stderr": "",
       "stdout": "{\n  \"success\": true,\n  \"total\": 10,\n  \"failed\": []\n}\n"
     },
@@ -91,9 +91,9 @@
       ],
       "name": "load_10",
       "rc": 0,
-      "started": "2026-05-25T09:57:04.733255+00:00",
+      "started": "2026-05-25T10:25:19.460908+00:00",
       "stderr": "",
-      "stdout": "{\n  \"concurrency_model\": \"asyncio_logical_users\",\n  \"duration_seconds\": 1.0,\n  \"failures\": 0,\n  \"latency_ms\": {\n    \"avg\": 0.4388746978753519,\n    \"max\": 0.8521010167896748,\n    \"p50\": 0.4194549983367324,\n    \"p95\": 0.5667443969286978,\n    \"p99\": 0.5931002832949162\n  },\n  \"operation\": \"learning_atom_retrieval_firewall_privacy_prompt_scan\",\n  \"passed\": true,\n  \"per_user_min_requests\": 222,\n  \"requests_per_second\": 2228.0,\n  \"sample_failures\": [],\n  \"success_rate\": 1.0,\n  \"successes\": 2228,\n  \"thresholds\": {\n    \"min_requests_per_user\": 1.0,\n    \"p95_ms_max\": 2000.0,\n    \"p99_ms_max\": 4000.0,\n    \"success_rate_min\": 0.95\n  },\n  \"timestamp\": \"2026-05-25T09:57:05.799889+00:00\",\n  \"total_requests\": 2228,\n  \"users\": 10\n}\n"
+      "stdout": "{\n  \"concurrency_model\": \"asyncio_logical_users\",\n  \"duration_seconds\": 1.0,\n  \"failures\": 0,\n  \"latency_ms\": {\n    \"avg\": 0.44995818187610065,\n    \"max\": 0.7858991157263517,\n    \"p50\": 0.43403985910117626,\n    \"p95\": 0.5851601017639041,\n    \"p99\": 0.6082637002691627\n  },\n  \"operation\": \"learning_atom_retrieval_firewall_privacy_prompt_scan\",\n  \"passed\": true,\n  \"per_user_min_requests\": 217,\n  \"requests_per_second\": 2171.0,\n  \"sample_failures\": [],\n  \"success_rate\": 1.0,\n  \"successes\": 2171,\n  \"thresholds\": {\n    \"min_requests_per_user\": 1.0,\n    \"p95_ms_max\": 2000.0,\n    \"p99_ms_max\": 4000.0,\n    \"success_rate_min\": 0.95\n  },\n  \"timestamp\": \"2026-05-25T10:25:20.529162+00:00\",\n  \"total_requests\": 2171,\n  \"users\": 10\n}\n"
     },
     {
       "cmd": [
@@ -106,9 +106,9 @@
       ],
       "name": "load_100",
       "rc": 0,
-      "started": "2026-05-25T09:57:05.814462+00:00",
+      "started": "2026-05-25T10:25:20.547816+00:00",
       "stderr": "",
-      "stdout": "{\n  \"concurrency_model\": \"asyncio_logical_users\",\n  \"duration_seconds\": 1.0,\n  \"failures\": 0,\n  \"latency_ms\": {\n    \"avg\": 0.46707074953256733,\n    \"max\": 1.6355609986931086,\n    \"p50\": 0.4713800735771656,\n    \"p95\": 0.5870543187484145,\n    \"p99\": 0.6074796989560127\n  },\n  \"operation\": \"learning_atom_retrieval_firewall_privacy_prompt_scan\",\n  \"passed\": true,\n  \"per_user_min_requests\": 20,\n  \"requests_per_second\": 2055.0,\n  \"sample_failures\": [],\n  \"success_rate\": 1.0,\n  \"successes\": 2055,\n  \"thresholds\": {\n    \"min_requests_per_user\": 1.0,\n    \"p95_ms_max\": 1000.0,\n    \"p99_ms_max\": 3000.0,\n    \"success_rate_min\": 0.95\n  },\n  \"timestamp\": \"2026-05-25T09:57:06.889657+00:00\",\n  \"total_requests\": 2055,\n  \"users\": 100\n}\n"
+      "stdout": "{\n  \"concurrency_model\": \"asyncio_logical_users\",\n  \"duration_seconds\": 1.0,\n  \"failures\": 0,\n  \"latency_ms\": {\n    \"avg\": 0.4491390195181318,\n    \"max\": 1.766798086464405,\n    \"p50\": 0.4366789944469929,\n    \"p95\": 0.5741093773394823,\n    \"p99\": 0.6039737351238728\n  },\n  \"operation\": \"learning_atom_retrieval_firewall_privacy_prompt_scan\",\n  \"passed\": true,\n  \"per_user_min_requests\": 21,\n  \"requests_per_second\": 2129.0,\n  \"sample_failures\": [],\n  \"success_rate\": 1.0,\n  \"successes\": 2129,\n  \"thresholds\": {\n    \"min_requests_per_user\": 1.0,\n    \"p95_ms_max\": 1000.0,\n    \"p99_ms_max\": 3000.0,\n    \"success_rate_min\": 0.95\n  },\n  \"timestamp\": \"2026-05-25T10:25:21.633314+00:00\",\n  \"total_requests\": 2129,\n  \"users\": 100\n}\n"
     },
     {
       "cmd": [
@@ -121,9 +121,9 @@
       ],
       "name": "load_1000",
       "rc": 0,
-      "started": "2026-05-25T09:57:06.907214+00:00",
+      "started": "2026-05-25T10:25:21.651113+00:00",
       "stderr": "",
-      "stdout": "{\n  \"concurrency_model\": \"asyncio_logical_users\",\n  \"duration_seconds\": 1.0,\n  \"failures\": 0,\n  \"latency_ms\": {\n    \"avg\": 0.4413712589714164,\n    \"max\": 1.2058590073138475,\n    \"p50\": 0.41825545486062765,\n    \"p95\": 0.5786204012110829,\n    \"p99\": 0.6155471736565232\n  },\n  \"operation\": \"learning_atom_retrieval_firewall_privacy_prompt_scan\",\n  \"passed\": true,\n  \"per_user_min_requests\": 2,\n  \"requests_per_second\": 2152.0,\n  \"sample_failures\": [],\n  \"success_rate\": 1.0,\n  \"successes\": 2152,\n  \"thresholds\": {\n    \"min_requests_per_user\": 1.0,\n    \"p95_ms_max\": 500.0,\n    \"p99_ms_max\": 1500.0,\n    \"success_rate_min\": 0.99\n  },\n  \"timestamp\": \"2026-05-25T09:57:08.023236+00:00\",\n  \"total_requests\": 2152,\n  \"users\": 1000\n}\n"
+      "stdout": "{\n  \"concurrency_model\": \"asyncio_logical_users\",\n  \"duration_seconds\": 1.0,\n  \"failures\": 0,\n  \"latency_ms\": {\n    \"avg\": 0.4494661744375596,\n    \"max\": 1.3140779919922352,\n    \"p50\": 0.43317442759871483,\n    \"p95\": 0.5724917049519718,\n    \"p99\": 0.6040538428351281\n  },\n  \"operation\": \"learning_atom_retrieval_firewall_privacy_prompt_scan\",\n  \"passed\": true,\n  \"per_user_min_requests\": 2,\n  \"requests_per_second\": 2114.0,\n  \"sample_failures\": [],\n  \"success_rate\": 1.0,\n  \"successes\": 2114,\n  \"thresholds\": {\n    \"min_requests_per_user\": 1.0,\n    \"p95_ms_max\": 500.0,\n    \"p99_ms_max\": 1500.0,\n    \"success_rate_min\": 0.99\n  },\n  \"timestamp\": \"2026-05-25T10:25:22.773460+00:00\",\n  \"total_requests\": 2114,\n  \"users\": 1000\n}\n"
     },
     {
       "cmd": [
@@ -135,7 +135,7 @@
       ],
       "name": "readiness_1000_tests",
       "rc": 0,
-      "started": "2026-05-25T09:57:08.040454+00:00",
+      "started": "2026-05-25T10:25:22.796240+00:00",
       "stderr": "",
       "stdout": "........                                                                 [100%]\n8 passed in 0.02s\n"
     },
@@ -146,7 +146,7 @@
       ],
       "name": "real_user_rollout_gate",
       "rc": 1,
-      "started": "2026-05-25T09:57:08.579447+00:00",
+      "started": "2026-05-25T10:25:23.348353+00:00",
       "stderr": "",
       "stdout": "{\n  \"ready_for_10_controlled_beta\": true,\n  \"infrastructure_ready_for_100\": true,\n  \"ready_for_100_real_users\": false,\n  \"max_recommended_real_users_now\": 10,\n  \"blockers\": [\n    \"first-10 external-user evidence has not passed: verified=0/10, real_users=0/10, installs=0/8, useful=0/6, critical_incidents=0/0\"\n  ],\n  \"snapshot\": \"eval/real_user_rollout_gate_snapshot.json\",\n  \"report\": \"docs/20260517_BORG_100_REAL_USER_READINESS.md\"\n}\n"
     },
@@ -157,7 +157,7 @@
       ],
       "name": "scoreboard_final",
       "rc": 0,
-      "started": "2026-05-25T09:57:08.687099+00:00",
+      "started": "2026-05-25T10:25:23.454342+00:00",
       "stderr": "",
       "stdout": "/root/hermes-workspace/borg/PROJECT_STATUS.md\n/root/hermes-workspace/borg/eval/uat_scoreboard_snapshot.json\n"
     },
@@ -168,11 +168,11 @@
       ],
       "name": "scoreboard_after_decision",
       "rc": 0,
-      "started": "2026-05-25T09:57:08.737169+00:00",
+      "started": "2026-05-25T10:25:23.499881+00:00",
       "stderr": "",
       "stdout": "/root/hermes-workspace/borg/PROJECT_STATUS.md\n/root/hermes-workspace/borg/eval/uat_scoreboard_snapshot.json\n"
     }
   ],
   "synthetic_load_all_pass": true,
-  "timestamp": "2026-05-25T09:57:08.736349+00:00"
+  "timestamp": "2026-05-25T10:25:23.499358+00:00"
 }
