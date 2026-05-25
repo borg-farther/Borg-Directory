@@ -32,12 +32,12 @@
     "exists": true,
     "failed_count": 0,
     "failures": [],
-    "generated_at_utc": "2026-05-25T09:28:21Z",
+    "generated_at_utc": "2026-05-25T10:25:17Z",
     "passed": true,
     "passed_count": 26
   },
   "gate_type": "real_user_rollout",
-  "generated_at_utc": "2026-05-25T09:57:08.673332+00:00",
+  "generated_at_utc": "2026-05-25T10:25:23.442872+00:00",
   "important_distinction": "load/readiness snapshots are synthetic/logical users; this gate controls real external-user rollout",
   "infrastructure_ready_for_100": true,
   "load_gates": {
@@ -45,11 +45,11 @@
       "duration_seconds": 1.0,
       "exists": true,
       "latency_ms": {
-        "avg": 0.4388746978753519,
-        "max": 0.8521010167896748,
-        "p50": 0.4194549983367324,
-        "p95": 0.5667443969286978,
-        "p99": 0.5931002832949162
+        "avg": 0.44995818187610065,
+        "max": 0.7858991157263517,
+        "p50": 0.43403985910117626,
+        "p95": 0.5851601017639041,
+        "p99": 0.6082637002691627
       },
       "passed": true,
       "success_rate": 1.0,
@@ -59,11 +59,11 @@
       "duration_seconds": 1.0,
       "exists": true,
       "latency_ms": {
-        "avg": 0.46707074953256733,
-        "max": 1.6355609986931086,
-        "p50": 0.4713800735771656,
-        "p95": 0.5870543187484145,
-        "p99": 0.6074796989560127
+        "avg": 0.4491390195181318,
+        "max": 1.766798086464405,
+        "p50": 0.4366789944469929,
+        "p95": 0.5741093773394823,
+        "p99": 0.6039737351238728
       },
       "passed": true,
       "success_rate": 1.0,
@@ -78,23 +78,23 @@
     "passed": true,
     "pypi_fresh_install_and_mcp_stdio": {
       "exists": true,
-      "expected_version": "3.3.12",
+      "expected_version": "3.3.13",
       "failed_count": 0,
       "failures": [],
-      "generated_at_utc": "2026-05-25T09:55:55Z",
+      "generated_at_utc": "2026-05-25T10:24:34Z",
       "mcp_server_info": {
         "name": "borg-mcp-server",
-        "version": "3.3.12"
+        "version": "3.3.13"
       },
       "mcp_stdio_canary_passed": true,
       "passed": true,
       "path": "eval/pypi_fresh_install_snapshot.json",
-      "version": "3.3.12"
+      "version": "3.3.13"
     },
     "pypi_latest": {
       "banned_keywords_present": [],
       "expected_summary": "Failure memory CLI and MCP server for AI coding agents",
-      "expected_version": "3.3.12",
+      "expected_version": "3.3.13",
       "keyword_missing": false,
       "keywords": [
         "agent-tools",
@@ -103,7 +103,7 @@
         "failure-memory",
         "mcp"
       ],
-      "latest_version": "3.3.12",
+      "latest_version": "3.3.13",
       "package": "agent-borg",
       "passed": true,
       "project_urls": {
@@ -157,7 +157,7 @@
   },
   "version": {
     "passed": true,
-    "project_version": "3.3.12",
-    "runtime_version": "3.3.12"
+    "project_version": "3.3.13",
+    "runtime_version": "3.3.13"
   }
 }

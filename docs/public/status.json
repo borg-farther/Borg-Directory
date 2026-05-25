@@ -50,10 +50,10 @@
   "repo": "https://github.com/borg-farther/Borg-Directory",
   "schema_version": 1,
   "source": "docs/public/status.json",
-  "source_revision": "d0de486518bc0363e6ea12accf9a00fd127d5f6e+dirty",
-  "source_version_consistency": "pyproject=3.3.12 runtime=3.3.12",
+  "source_revision": "99b7f3105db973975fafc255714899d94836e848+dirty",
+  "source_version_consistency": "pyproject=3.3.13 runtime=3.3.13",
   "state": "NO-GO public self-serve; source/local release-candidate only",
   "status": "NO-GO",
-  "updated_at": "2026-05-25T09:57:55Z",
+  "updated_at": "2026-05-25T10:25:23Z",
   "verified_external_users": 0
 }

@@ -1,8 +1,8 @@
 # Borg Proof Dashboard
 
-Generated: `2026-05-25T09:57:55Z`
+Generated: `2026-05-25T10:25:23Z`
 Repo: `https://github.com/borg-farther/Borg-Directory`
-Source snapshot: `d0de486518bc0363e6ea12accf9a00fd127d5f6e+dirty`
+Source snapshot: `99b7f3105db973975fafc255714899d94836e848+dirty`
 
 ## Big top verdict
 
@@ -29,28 +29,28 @@ Source snapshot: `d0de486518bc0363e6ea12accf9a00fd127d5f6e+dirty`
 | max_recommended_real_users_now | 10 | REAL_EXTERNAL_USERS | eval/real_user_rollout_gate_snapshot.json |
 | public_self_serve_launch_gate | FAIL | PUBLIC_LAUNCH_GATE | eval/public_self_serve_launch_gate_snapshot.json |
 | pypi_fresh_install_canary | PASS | PYPI_FRESH_INSTALL | eval/pypi_fresh_install_snapshot.json |
-| source_version_consistency | pyproject=3.3.12 runtime=3.3.12 | REPO_SOURCE | pyproject.toml; borg/__init__.py |
+| source_version_consistency | pyproject=3.3.13 runtime=3.3.13 | REPO_SOURCE | pyproject.toml; borg/__init__.py |
 | host_runtime_split_brain | NOT_REPRODUCED_IN_THIS_BUILD | EVIDENCE_GAP | Prior docs mention runtime/host issues, but this dashboard build did not run environment probes. |
-| load_gates | `{"10": {"concurrency_model": "asyncio_logical_users", "exists": true, "p95_ms": 0.5667443969286978, "p99_ms": 0.5931002832949162, "passed": true, "success_rate": 1.0, "timestamp": "2026-05-25T09:57:05.799889+00:00", "total_requests": 2228, "users_label": 10}, "100": {"concurrency_model": "asyncio_logical_users", "exists": true, "p95_ms": 0.5870543187484145, "p99_ms": 0.6074796989560127, "passed": true, "success_rate": 1.0, "timestamp": "2026-05-25T09:57:06.889657+00:00", "total_requests": 2055, "users_label": 100}, "1000": {"concurrency_model": "asyncio_logical_users", "exists": true, "p95_ms": 0.5786204012110829, "p99_ms": 0.6155471736565232, "passed": true, "success_rate": 1.0, "timestamp": "2026-05-25T09:57:08.023236+00:00", "total_requests": 2152, "users_label": 1000}}` | LOGICAL_USERS_NOT_REAL_USERS | eval/load_*_snapshot.json and eval/uat_scoreboard_snapshot.json |
+| load_gates | `{"10": {"concurrency_model": "asyncio_logical_users", "exists": true, "p95_ms": 0.5851601017639041, "p99_ms": 0.6082637002691627, "passed": true, "success_rate": 1.0, "timestamp": "2026-05-25T10:25:20.529162+00:00", "total_requests": 2171, "users_label": 10}, "100": {"concurrency_model": "asyncio_logical_users", "exists": true, "p95_ms": 0.5741093773394823, "p99_ms": 0.6039737351238728, "passed": true, "success_rate": 1.0, "timestamp": "2026-05-25T10:25:21.633314+00:00", "total_requests": 2129, "users_label": 100}, "1000": {"concurrency_model": "asyncio_logical_users", "exists": true, "p95_ms": 0.5724917049519718, "p99_ms": 0.6040538428351281, "passed": true, "success_rate": 1.0, "timestamp": "2026-05-25T10:25:22.773460+00:00", "total_requests": 2114, "users_label": 1000}}` | LOGICAL_USERS_NOT_REAL_USERS | eval/load_*_snapshot.json and eval/uat_scoreboard_snapshot.json |
 
 ## Evidence table
 
 | Source file path | Exists | SHA256 | Freshness timestamp | Exact claim derived |
 | --- | --- | --- | --- | --- |
-| eval/first_user_release_gate_snapshot.json | True | d7e2f6788c3c2043e0cab2fea49098d52429fc424b0130f145b98c33d8d00146 | 2026-05-25T09:28:21Z | first-user release gate all_pass=True |
-| eval/uat_scoreboard_snapshot.json | True | dab3d7fb3a7422b4b1df44b86b1820ef593e94373665f2b81afb08e30b56cd1f | 2026-05-25T09:57:08.771788+00:00 | UAT synthetic_load_all_pass=True; real_user_100_all_pass=False; ready_for_10=True; ready_for_1000=True |
-| eval/gate_run_snapshot.json | True | 86c7faab73ab153ab95246199dbe7728b4850e84788979c63145b36c56a6ab6e | 2026-05-25T09:57:08.736349+00:00 | gate run synthetic_load_all_pass=True; overall_100_real_user_pass=False; ready_for_10=True; ready_for_1000=True |
-| eval/real_user_rollout_gate_snapshot.json | True | 2dcdd3b93ff1efe6862e5c14a841be0ce70cb790ab93d836723cacbc17c4b213 | 2026-05-25T09:57:08.673332+00:00 | 100-real-user gate=False; max_recommended_real_users=10; blockers=['first-10 external-user evidence has not passed: verified=0/10, real_users=0/10, installs=0/8, useful=0/6, critical_incidents=0/0'] |
-| eval/public_self_serve_launch_gate_snapshot.json | True | ba22299cdb6e9ebb54941486067ccd0ec57bf2020baf30fa214abcd8f2886634 | 2026-05-25T09:57:55.075307+00:00 | public self-serve gate=False; max_recommended_real_users=10; blockers=['first-10 external-user evidence has not passed: verified=0/10, real_users=0/10, installs=0/8, useful=0/6, critical_incidents=0/0'] |
-| eval/pypi_fresh_install_snapshot.json | True | a3efad4c6c4e5b84902edfe6b490ad12e73a1ae633255c54bd547354a3627c1f | 2026-05-25T09:55:55Z | PyPI fresh-install canary success=True; version=3.3.12 |
-| eval/load_10_snapshot.json | True | d38ef47dd2526d3c2fef14d056add1ee4d8539a59ed081c7be23c03c1085357b | 2026-05-25T09:57:05.799889+00:00 | logical load 10: passed=True; total_requests=2228; success_rate=1.0; p95_ms=0.5667443969286978; model=asyncio_logical_users |
-| eval/load_100_snapshot.json | True | dbaa86138266a4c0946e516d65fda28e0ab8bca247c292627a0b98141c502dea | 2026-05-25T09:57:06.889657+00:00 | logical load 100: passed=True; total_requests=2055; success_rate=1.0; p95_ms=0.5870543187484145; model=asyncio_logical_users |
-| eval/load_1000_snapshot.json | True | 8ebb3c94afe6912d7a1a35fe46e9a3c23563d843f9257a96a1c468f48b64963c | 2026-05-25T09:57:08.023236+00:00 | logical load 1000: passed=True; total_requests=2152; success_rate=1.0; p95_ms=0.5786204012110829; model=asyncio_logical_users |
-| pyproject.toml | True | a6898c4a2abd5f7e5f6f1dbd01eedb39fd7beb43f01a2c2a031deb89c73eaf54 | 2026-05-24T22:42:25Z | package version=3.3.12; scripts declared in project metadata |
-| borg/__init__.py | True | 392f554ea0c3768fd4940de71a267bc30d97b98cc1e52ca4fba2e0e29cfb38dc | 2026-05-24T22:42:26Z | runtime __version__=3.3.12; top-level check() delegates to search |
-| PROJECT_STATUS.md | True | 441c70a8b1a6d968af3cbd5305d00d892f2c97572327c6afa78f6f24855a0f71 | 2026-05-25T09:57:08Z | prior local status/readiness narrative used as contextual evidence only, not external adoption proof |
-| GO_NO_GO_DECISION.md | True | b4f64bdf48fd48990634d35c4db3abd7b4d4a698c5cf766d8996b791b00cded0 | 2026-05-25T09:57:08Z | prior local status/readiness narrative used as contextual evidence only, not external adoption proof |
-| UAT_RESULTS.md | True | e5c1885af0eb718eb1fcf6ceb9a74b0ab12b769ac2e45e846ddcef27a84e58b9 | 2026-05-25T09:57:08Z | prior local status/readiness narrative used as contextual evidence only, not external adoption proof |
+| eval/first_user_release_gate_snapshot.json | True | dd08f1c95c376af47413b94bf7f5d04453606fc535cdb9d1d9d7d1ddd3aa2fc9 | 2026-05-25T10:25:17Z | first-user release gate all_pass=True |
+| eval/uat_scoreboard_snapshot.json | True | 88c183536a95aa0fbe821b91e8cfc01e6482fa6d694545c553aafaeae87d54a0 | 2026-05-25T10:25:23.534324+00:00 | UAT synthetic_load_all_pass=True; real_user_100_all_pass=False; ready_for_10=True; ready_for_1000=True |
+| eval/gate_run_snapshot.json | True | c12e864a473c53fb8b731aed0c6a1bd0deb213da29ebe461b1db76e3a8b5bbc7 | 2026-05-25T10:25:23.499358+00:00 | gate run synthetic_load_all_pass=True; overall_100_real_user_pass=False; ready_for_10=True; ready_for_1000=True |
+| eval/real_user_rollout_gate_snapshot.json | True | fb39aac92ca0f3016976ab5727b38b56e141c9cc23e29e7c2e5e2a9e84d9d4ee | 2026-05-25T10:25:23.442872+00:00 | 100-real-user gate=False; max_recommended_real_users=10; blockers=['first-10 external-user evidence has not passed: verified=0/10, real_users=0/10, installs=0/8, useful=0/6, critical_incidents=0/0'] |
+| eval/public_self_serve_launch_gate_snapshot.json | True | a3ea3ec90d01d9ff53adcb280f9246781c262a7ff515eb1c417e08809c88469f | 2026-05-25T10:25:23.857642+00:00 | public self-serve gate=False; max_recommended_real_users=10; blockers=['first-10 external-user evidence has not passed: verified=0/10, real_users=0/10, installs=0/8, useful=0/6, critical_incidents=0/0'] |
+| eval/pypi_fresh_install_snapshot.json | True | 1dc93d7ba6abb8c7e52f5afb3f26317bf66c7768d9ebc4da62a705221fab226f | 2026-05-25T10:24:34Z | PyPI fresh-install canary success=True; version=3.3.13 |
+| eval/load_10_snapshot.json | True | 754c139b6766f020b0215bd5a9bc966cf564f95fbac9e427350b2ca06934a459 | 2026-05-25T10:25:20.529162+00:00 | logical load 10: passed=True; total_requests=2171; success_rate=1.0; p95_ms=0.5851601017639041; model=asyncio_logical_users |
+| eval/load_100_snapshot.json | True | 7f1ff2972fc99fdbce239112fe588e1d4879e69c638e1f7e83de96fa5977c3c0 | 2026-05-25T10:25:21.633314+00:00 | logical load 100: passed=True; total_requests=2129; success_rate=1.0; p95_ms=0.5741093773394823; model=asyncio_logical_users |
+| eval/load_1000_snapshot.json | True | dd89c902e6c0b9ce04aeeaaa05fa49c0c9af12b32df383fe950ee32f6c242a47 | 2026-05-25T10:25:22.773460+00:00 | logical load 1000: passed=True; total_requests=2114; success_rate=1.0; p95_ms=0.5724917049519718; model=asyncio_logical_users |
+| pyproject.toml | True | 17f37d190f878a6f2aa5429d1c68b33256a7cf6fe79ddbf04940c1d38862a3cd | 2026-05-25T10:19:13Z | package version=3.3.13; scripts declared in project metadata |
+| borg/__init__.py | True | bfc9e1fefbd02a99ebd1dc6746f5d1dfb9d8edf9f0edb9f63b848202ebc6b44a | 2026-05-25T10:19:13Z | runtime __version__=3.3.13; top-level check() delegates to search |
+| PROJECT_STATUS.md | True | 354cc3bacf9633df012dcf9555736ac004b36968eabcb5e6f50bdd9ba66a76b2 | 2026-05-25T10:25:23Z | prior local status/readiness narrative used as contextual evidence only, not external adoption proof |
+| GO_NO_GO_DECISION.md | True | 31592dec9fdb3256201207964586b2f15469c1638316d35c660dafd706822b43 | 2026-05-25T10:25:23Z | prior local status/readiness narrative used as contextual evidence only, not external adoption proof |
+| UAT_RESULTS.md | True | 2e3c451b911b4f65ed643ec59ec2995854d9bf247a252cb84b018f0a9842e35f | 2026-05-25T10:25:23Z | prior local status/readiness narrative used as contextual evidence only, not external adoption proof |
 
 ## Blockers
 
@@ -85,7 +85,7 @@ Simulated/logical users are not real users. Internal sessions, tool calls, local
 
 | # | Action |
 | --- | --- |
-| 1 | Use `pipx install agent-borg==3.3.12` with controlled first-10 beta testers and label it as beta evidence capture, not public launch. |
+| 1 | Use `pipx install agent-borg==3.3.13` with controlled first-10 beta testers and label it as beta evidence capture, not public launch. |
 | 2 | Create a fresh-PyPI runbook: install package, run borg --version, configure MCP, run one rescue, capture exact timestamps and blockers. |
 | 3 | Record first user in the first-10 scoreboard template using a pseudonym and consented outcome fields. |
 | 4 | If any onboarding step fails, add artifact path/stdout/stderr and keep broad launch at NO-GO. |
