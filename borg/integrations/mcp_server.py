@@ -194,12 +194,25 @@ def _dead_end_count(result: Dict[str, Any]) -> int:
     return 0
 
 
+def _plural(count: int, singular: str, plural: Optional[str] = None) -> str:
+    return singular if int(count) == 1 else (plural or f"{singular}s")
+
+
 def _session_line(state: Dict[str, Any]) -> str:
     traces = int(state.get("traces_contributed", 0) or 0)
     dead_ends = int(state.get("dead_ends_avoided", 0) or 0)
-    if int(state.get("matched_lookups", 0) or 0) > 0:
-        return _single_line_ascii(f"Borg: avoided {dead_ends} dead ends this session, +{traces} traces")
-    return _single_line_ascii(f"Borg: no matches this session, +{traces} traces seeded")
+    helped = int(state.get("matched_lookups", 0) or 0)
+    if helped > 0:
+        return _single_line_ascii(
+            f"Borg helped {helped} {_plural(helped, 'time')}, "
+            f"avoided {dead_ends} {_plural(dead_ends, 'dead end')}, "
+            f"learned {traces} new {_plural(traces, 'fix', 'fixes')}."
+        )
+    if traces > 0:
+        return _single_line_ascii(
+            f"Borg had no prior memory for this one. Learned {traces} new {_plural(traces, 'fix', 'fixes')}."
+        )
+    return _single_line_ascii("Borg had no prior memory for this one.")
 
 
 def _attach_human_comms(result: Dict[str, Any], *, session_id: str) -> Dict[str, Any]:
@@ -230,13 +243,16 @@ def _attach_human_comms(result: Dict[str, Any], *, session_id: str) -> Dict[str,
             state["matched_lookups"] = int(state.get("matched_lookups", 0) or 0) + 1
             state["dead_ends_avoided"] = int(state.get("dead_ends_avoided", 0) or 0) + dead_ends
             if not state.get("first_hit_shown"):
-                user_message = _single_line_ascii(
-                    f"Borg: {match_count} matches, skipped {dead_ends} dead ends"
-                )
+                if dead_ends > 0:
+                    user_message = _single_line_ascii(
+                        f"Borg found a proven rescue path. Avoiding {dead_ends} known {_plural(dead_ends, 'dead end')}."
+                    )
+                else:
+                    user_message = "Borg found a proven rescue path."
                 state["first_hit_shown"] = True
         elif matched:
             # Weak match: visible caution, but do not consume the first-hit badge.
-            user_message = "Borg: weak match, treat as a hint"
+            user_message = "Borg found a weak hint. Treating it cautiously."
 
         session_message = _session_line(state)
         snapshot = dict(state)
@@ -249,6 +265,7 @@ def _attach_human_comms(result: Dict[str, Any], *, session_id: str) -> Dict[str,
         "confidence": confidence,
         "match_count": match_count,
         "dead_ends_surfaced": dead_ends,
+        "display_policy": "fire_user_message_only; keep_session_message_for_summaries",
         "user_message": user_message or None,
         "session_message": session_message,
         "state": snapshot,

@@ -6,7 +6,7 @@ functions, because first users hit console scripts first.
 """
 
 from __future__ import annotations
-
+import io
 import json
 import re
 import subprocess
@@ -102,6 +102,33 @@ def test_rescue_subcommand_accepts_readme_usage(monkeypatch):
     assert "ACTION" in out
     assert "STOP" in out
     assert "VERIFY" in out
+    assert err == ""
+
+
+def test_rescue_human_receipt_uses_product_language():
+    """CLI rescue should explain Borg's value, not narrate internal match metrics."""
+    code, out, err = capture_main(["rescue", "ModuleNotFoundError: No module named flask", "--short"])
+
+    assert code == 0
+    assert "HUMAN RECEIPT" in out
+    assert "Borg found a proven rescue path for missing_dependency" in out
+    assert "Borg matched `" not in out
+    assert "matches" not in out
+    assert err == ""
+
+
+def test_start_onboarding_uses_cache_layer_language(monkeypatch):
+    """`borg start` should teach the fire/watch model without noisy Borg cosplay."""
+    monkeypatch.setattr(sys, "stdin", io.StringIO("ModuleNotFoundError: No module named flask\n"))
+
+    code, out, err = capture_main(["start"])
+
+    assert code == 0
+    assert "Borg is a cache layer for agent reasoning." in out
+    assert "It watches for failure loops, fires only when it can change the path" in out
+    assert "Welcome to the Borg Collective" not in out
+    assert "Resistance is futile" not in out
+    assert "╔" not in out
     assert err == ""
 
 

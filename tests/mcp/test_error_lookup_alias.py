@@ -117,7 +117,8 @@ def test_error_lookup_json_rpc_call_returns_text_content_packet():
     assert payload["problem_class"] == "type_mismatch"
     assert payload["agent_instruction"].startswith("ACTION:")
     assert "structuredContent" in resp["result"]
-    assert resp["result"]["user_message"].startswith("Borg:")
+    assert resp["result"]["user_message"].startswith("Borg found a proven rescue path")
+    assert "matches" not in resp["result"]["user_message"]
     assert resp["result"]["structuredContent"]["borg_human"]["first_hit"] is True
 
 
@@ -138,12 +139,12 @@ def test_error_lookup_human_badge_fires_once_per_session():
     first = json.loads(mcp_server.call_tool("error_lookup", args))
     second = json.loads(mcp_server.call_tool("error_lookup", args))
 
-    assert first["user_message"].startswith("Borg: ")
-    assert "matches, skipped" in first["user_message"]
+    assert first["user_message"] == "Borg found a proven rescue path. Avoiding 3 known dead ends."
+    assert "matches" not in first["user_message"]
     assert first["borg_human"]["first_hit"] is True
     assert "user_message" not in second
     assert second["borg_human"]["first_hit"] is False
-    assert second["session_message"].startswith("Borg: avoided ")
+    assert second["session_message"] == "Borg helped 2 times, avoided 6 dead ends, learned 0 new fixes."
     for line in [first["user_message"], first["session_message"], second["session_message"]]:
         _assert_renderer_safe(line)
 
@@ -158,7 +159,7 @@ def test_error_lookup_no_match_still_carries_session_line():
 
     assert result["success"] is False
     assert "user_message" not in result
-    assert result["session_message"] == "Borg: no matches this session, +0 traces seeded"
+    assert result["session_message"] == "Borg had no prior memory for this one."
     assert result["borg_human"]["matched"] is False
     _assert_renderer_safe(result["session_message"])
 
@@ -174,7 +175,7 @@ def test_error_lookup_low_confidence_warning_does_not_consume_first_hit():
 
     enriched = mcp_server._attach_human_comms(payload, session_id="weak-session")
 
-    assert enriched["user_message"] == "Borg: weak match, treat as a hint"
+    assert enriched["user_message"] == "Borg found a weak hint. Treating it cautiously."
     assert enriched["borg_human"]["first_hit"] is False
     with mcp_server._human_session_lock:
         assert mcp_server._human_session_state["weak-session"]["first_hit_shown"] is False

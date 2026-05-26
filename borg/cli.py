@@ -535,14 +535,11 @@ def _cmd_rescue(args: argparse.Namespace) -> int:
 def _cmd_start(args: argparse.Namespace) -> int:
     """Interactive onboarding — get value from borg in 30 seconds."""
     print()
-    print("  ╔══════════════════════════════════════════════════╗")
-    print("  ║          Welcome to the Borg Collective          ║")
-    print("  ╚══════════════════════════════════════════════════╝")
+    print("  Borg is a cache layer for agent reasoning.")
+    print("  It watches for failure loops, fires only when it can change the path,")
+    print("  and stays quiet when it has no useful memory.")
     print()
-    print("  Your agent forgets everything between sessions.")
-    print("  Borg remembers.")
-    print()
-    print("  ── Try it now ─────────────────────────────────────")
+    print("  Try it now")
     print()
     print("  Paste any error message you're dealing with:")
     print()
@@ -552,7 +549,7 @@ def _cmd_start(args: argparse.Namespace) -> int:
     if not error:
         print()
         print("  No error entered. Try:")
-        print("    borg debug 'your error message here'")
+        print("    borg rescue 'your error message here'")
         print()
         return 0
 
@@ -579,16 +576,15 @@ def _cmd_start(args: argparse.Namespace) -> int:
 
     # Next steps
     print()
-    print("  ── What's next ───────────────────────────────────")
+    print("  Next steps")
     print()
-    print("  • Run again anytime:   borg debug 'your error'")
-    print("  • Browse workflows:    borg search debugging")
-    print("  • Export for Cursor:   borg generate systematic-debugging --format cursorrules")
-    print("  • Export for Claude:   borg setup-claude")
-    print("  • Record what worked:  borg feedback-v3 --pack systematic-debugging --success yes")
+    print("  - Run again anytime:   borg rescue 'your error'")
+    print("  - Browse workflows:    borg search debugging")
+    print("  - Export for Cursor:   borg generate systematic-debugging --format cursorrules")
+    print("  - Export for Claude:   borg setup-claude")
+    print("  - Record what worked:  borg feedback-v3 --pack systematic-debugging --success yes")
     print()
-    print("  The more you use borg, the smarter it gets.")
-    print("  Resistance is futile.")
+    print("  Your fixes stay yours; Borg shares what prevents repeat failures.")
     print()
     return 0
 

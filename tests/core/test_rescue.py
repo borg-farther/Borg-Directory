@@ -22,7 +22,7 @@ def test_rescue_returns_agent_contract_for_known_error():
     assert "VERIFY:" in result.agent_instruction
     assert result.automation_policy["default"] == "automatic_for_agents"
     assert result.automation_policy["fail_closed"] is True
-    assert "Borg matched" in result.human_receipt
+    assert "Borg found a proven rescue path" in result.human_receipt
     assert result.value_receipt["schema_version"] == 1
     assert result.value_receipt["matched_pack_id"] == "missing_dependency"
     assert result.value_receipt["savings_claim_type"] == "none"
