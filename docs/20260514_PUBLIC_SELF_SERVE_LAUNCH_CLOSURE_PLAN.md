@@ -4,14 +4,15 @@ Generated: 2026-05-14 18:39 UTC
 
 ## Current state
 
-Borg's public package path is **not ready for controlled first-10 beta evidence capture** on `agent-borg==3.3.14` until production PyPI upload plus fresh-install/stdout CLI and stdio MCP canaries pass for the package path.
+Borg's controlled first-10 package path is **conditional GO for evidence capture** on `agent-borg==3.3.14` only while PyPI latest, fresh-install, stdio MCP, cold-start trust, self-service ops, and watchdog gates remain green.
 
 Public self-serve launch remains **NO-GO** until row-derived first-10 external-user evidence passes. Served remote MCP remains a separate runtime cutover/canary channel, not proven by the PyPI stdio release.
 
 Hard evidence already completed:
 
 - Branch/source hardening for 3.3.14: merged to main and published to PyPI
-- Fresh PyPI install/MCP canary for `agent-borg==3.3.14`: PENDING until publish
+- Fresh PyPI install/MCP canary for `agent-borg==3.3.14`: PASS
+- self-service ops/watchdog gates: PASS when `eval/self_service_ops_gate.py` and `eval/ops_readiness_watchdog.py` are green
 - security baseline: PASS
 - privacy/prompt-injection/atom/firewall tests: PASS
 - source canaries: PASS
@@ -64,7 +65,7 @@ Prior 3.3.10 proof lives in:
 - `docs/20260522_BORG_3310_RELEASE_PREFLIGHT_PUBLISHED.md` (historical)
 - `eval/pypi_fresh_install_snapshot.json` (current exact-version package canary)
 
-Current package path status: `agent-borg==3.3.14` is the next patch release line; PyPI latest, fresh-install, and stdio MCP canaries must pass after publish before controlled beta resumes. This still does not authorize public self-serve launch without first-10 row-derived external evidence.
+Current package path status: `agent-borg==3.3.14` is published and PyPI latest, fresh-install, and stdio MCP canaries are green. Controlled first-10 may proceed only while self-service ops/watchdog gates remain green. This still does not authorize public self-serve launch without first-10 row-derived external evidence.
 
 ### Phase C — first-10 user sprint
 

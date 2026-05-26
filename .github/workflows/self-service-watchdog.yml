@@ -1,0 +1,65 @@
+name: Self-service readiness watchdog
+
+on:
+  pull_request:
+  push:
+    branches: [main]
+  schedule:
+    - cron: "17 */6 * * *"
+  workflow_dispatch:
+
+jobs:
+  ops-readiness-watchdog:
+    runs-on: ubuntu-latest
+    timeout-minutes: 20
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.11"
+
+      - name: Install Borg with test dependencies
+        run: |
+          python -m pip install --upgrade pip
+          python -m pip install -e ".[all]"
+          python -m pip install pytest
+
+      - name: Run self-service ops gate
+        run: |
+          python eval/rollback_comms_drill.py --no-write
+          python eval/self_service_ops_gate.py --no-write
+
+      - name: Run fail-closed public launch gate
+        run: |
+          set -euo pipefail
+          set +e
+          python eval/public_self_serve_launch_gate.py --no-write > /tmp/public_gate.json
+          rc=$?
+          set -e
+          cat /tmp/public_gate.json
+          if [ "$rc" -ne 1 ]; then
+            echo "expected public self-serve gate to fail closed with rc=1 until first-10 evidence passes; got rc=$rc"
+            exit 1
+          fi
+          python - <<'PY'
+          import json
+          data=json.load(open('/tmp/public_gate.json'))
+          assert data['ready_for_controlled_first_10_beta'] is True
+          assert data['ready_for_public_self_serve_launch'] is False
+          assert data['max_recommended_real_users_now'] == 10
+          PY
+
+      - name: Run ops readiness watchdog
+        run: |
+          python eval/ops_readiness_watchdog.py --mode pr --json --no-write --max-snapshot-age-hours 24 --allow-public-blocker first_10_external_evidence --require-ci-schedule
+
+      - name: Lint proof dashboard
+        run: |
+          python scripts/borg_proof_dashboard_lint.py
+
+      - name: Run watchdog regression tests
+        run: |
+          python -m pytest -q tests/readiness/test_self_service_ops_gate.py tests/readiness/test_ops_readiness_watchdog.py tests/readiness/test_public_self_serve_launch_gate.py eval/tests/test_borg_proof_dashboard.py --tb=short

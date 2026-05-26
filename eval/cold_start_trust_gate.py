@@ -210,9 +210,9 @@ def compile_gate() -> dict[str, Any]:
             "must not inject unrelated framework guidance, and must preserve concrete error guidance for exact failures."
         ),
         "bad_answer_feedback_path": {
-            "agent_fast_path": "call borg_rate(helpful=False) immediately after a bad suggestion",
-            "durable_memory_path": "call borg_record_failure(error_pattern, pack_id, phase, approach, outcome='failure') when the bad path is concrete",
-            "human_path": "open a GitHub issue using the bad-answer report template or paste the redacted transcript into first-10 evidence intake",
+            "agent_mcp_durable_path": "call borg_record_failure(error_pattern, pack_id, phase, approach, outcome='failure') when the bad path is concrete",
+            "cli_durable_path": "run borg feedback-v3 --pack <pack> --success no --notes <redacted summary>",
+            "human_path": "open .github/ISSUE_TEMPLATE/bad-answer.yml or submit redacted first-10 evidence via .github/ISSUE_TEMPLATE/first-10-evidence.yml",
         },
     }
 
@@ -245,9 +245,9 @@ def write_report(snapshot: dict[str, Any]) -> None:
     lines.extend(["", "## Bad-answer feedback path", ""])
     feedback = snapshot["bad_answer_feedback_path"]
     lines.extend([
-        f"- Agent fast path: `{feedback['agent_fast_path']}`",
-        f"- Durable memory path: `{feedback['durable_memory_path']}`",
-        f"- Human path: {feedback['human_path']}",
+        f"- Agent/MCP durable path: `{feedback['agent_mcp_durable_path']}`",
+        f"- CLI durable path: `{feedback['cli_durable_path']}`",
+        f"- Human path: {feedback['human_path']} with a redacted transcript and no secrets.",
         "",
         "## Public rollout boundary",
         "",

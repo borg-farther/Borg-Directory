@@ -73,6 +73,8 @@ def main() -> int:
         fail("security workflow contains fail-open scanner command")
     if "pip-audit" not in workflow_text:
         fail("security workflow missing dependency audit command")
+    if "python -m pip install -e" not in workflow_text or ".[http,crypto]" not in workflow_text:
+        fail("dependency audit must install Borg package runtime/security extras before running pip-audit")
 
     for key in ["threat_model", "controls", "ci_gates", "release_blockers"]:
         if key not in baseline or not baseline[key]:

@@ -1,0 +1,188 @@
+name: First-10 evidence row
+description: Submit one consented external-user first-10 beta evidence row.
+title: "[first-10-evidence]: "
+labels: ["first-10-evidence", "controlled-beta", "needs-validation"]
+body:
+  - type: markdown
+    attributes:
+      value: |
+        Submit one tester outcome row. This does not make public self-serve GO by itself. Maintainers validate/redact and then update `eval/first_10_user_scoreboard.json`. Do not include secrets or raw private traces.
+  - type: input
+    id: user-id-pseudonym
+    attributes:
+      label: user-id-pseudonym
+      description: Stable pseudonym; no real names/emails.
+      placeholder: "external-user-01"
+    validations:
+      required: true
+  - type: input
+    id: external-user-evidence-uri
+    attributes:
+      label: external-user-evidence-uri
+      description: HTTPS evidence URI or issue link for this row.
+      placeholder: "https://github.com/borg-farther/Borg-Directory/issues/123"
+    validations:
+      required: true
+  - type: checkboxes
+    id: consent-confirmed
+    attributes:
+      label: consent-confirmed
+      options:
+        - label: The tester consented to a redacted evidence row being used for first-10 readiness.
+          required: true
+  - type: input
+    id: install-method
+    attributes:
+      label: install-method
+      placeholder: "pipx install agent-borg==3.3.14"
+    validations:
+      required: true
+  - type: dropdown
+    id: install-success
+    attributes:
+      label: install-success
+      options: ["true", "false"]
+    validations:
+      required: true
+  - type: input
+    id: time-to-first-rescue-minutes
+    attributes:
+      label: time-to-first-rescue-minutes
+      placeholder: "5"
+    validations:
+      required: true
+  - type: textarea
+    id: rescue-input-redacted
+    attributes:
+      label: rescue-input-redacted
+      description: Redacted error/prompt used for first rescue.
+    validations:
+      required: true
+  - type: dropdown
+    id: rescue-returned-action-stop-verify
+    attributes:
+      label: rescue-returned-action-stop-verify
+      options: ["true", "false"]
+    validations:
+      required: true
+  - type: dropdown
+    id: rescue-useful
+    attributes:
+      label: rescue-useful
+      options: ["true", "false"]
+    validations:
+      required: true
+  - type: dropdown
+    id: mcp-setup-attempted
+    attributes:
+      label: mcp-setup-attempted
+      options: ["true", "false"]
+    validations:
+      required: true
+  - type: dropdown
+    id: mcp-setup-success
+    attributes:
+      label: mcp-setup-success
+      options: ["true", "false", "not-attempted"]
+    validations:
+      required: true
+  - type: dropdown
+    id: no-confident-match-when-unknown
+    attributes:
+      label: no-confident-match-when-unknown
+      options: ["true", "false", "not-tested"]
+    validations:
+      required: true
+  - type: input
+    id: blocker-category
+    attributes:
+      label: blocker-category
+      placeholder: "none | install | mcp | bad-answer | docs | privacy-security"
+    validations:
+      required: true
+  - type: textarea
+    id: blocker-notes-redacted
+    attributes:
+      label: blocker-notes-redacted
+      description: Redacted notes only.
+  - type: dropdown
+    id: privacy-security-incident
+    attributes:
+      label: privacy-security-incident
+      options: ["true", "false"]
+    validations:
+      required: true
+  - type: dropdown
+    id: repeat-use-within-7-days
+    attributes:
+      label: repeat-use-within-7-days
+      options: ["true", "false", "unknown"]
+    validations:
+      required: true
+  - type: dropdown
+    id: outcome-recorded
+    attributes:
+      label: outcome-recorded
+      options: ["true", "false"]
+    validations:
+      required: true
+  - type: input
+    id: baseline-minutes-without-borg
+    attributes:
+      label: baseline-minutes-without-borg
+      placeholder: "optional numeric; leave blank if not measured"
+  - type: input
+    id: actual-minutes-with-borg
+    attributes:
+      label: actual-minutes-with-borg
+      placeholder: "optional numeric; leave blank if not measured"
+  - type: input
+    id: net-minutes-saved
+    attributes:
+      label: net-minutes-saved
+      placeholder: "optional numeric; leave blank if not measured"
+  - type: input
+    id: baseline-tokens-without-borg
+    attributes:
+      label: baseline-tokens-without-borg
+      placeholder: "optional integer; leave blank if not measured"
+  - type: input
+    id: actual-tokens-with-borg
+    attributes:
+      label: actual-tokens-with-borg
+      placeholder: "optional integer; leave blank if not measured"
+  - type: input
+    id: net-tokens-saved
+    attributes:
+      label: net-tokens-saved
+      placeholder: "optional integer; leave blank if not measured"
+  - type: dropdown
+    id: savings-counterfactual-basis
+    attributes:
+      label: savings-counterfactual-basis
+      options: ["not-measured", "user-estimate", "timer-before-after", "paired-control", "other"]
+    validations:
+      required: true
+  - type: dropdown
+    id: dead-end-avoided-confirmed
+    attributes:
+      label: dead-end-avoided-confirmed
+      options: ["true", "false", "unknown"]
+    validations:
+      required: true
+  - type: dropdown
+    id: user-confirmed-value
+    attributes:
+      label: user-confirmed-value
+      options: ["true", "false", "unknown"]
+    validations:
+      required: true
+  - type: checkboxes
+    id: privacy-confirmation
+    attributes:
+      label: Privacy confirmation
+      options:
+        - label: I redacted secrets, private repo names, tokens, credentials, and personal data.
+          required: true
+        - label: I understand this row must be validated before it counts toward public self-serve readiness.
+          required: true

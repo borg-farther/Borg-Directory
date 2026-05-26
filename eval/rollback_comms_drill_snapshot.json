@@ -1,0 +1,48 @@
+{
+  "dry_run_only": true,
+  "gate_type": "rollback_comms_drill",
+  "generated_at_utc": "2026-05-26T09:22:46.288396+00:00",
+  "missing_runbook_phrases": [],
+  "operator_boundary": "Agents must not restart/kill/reload the Hermes gateway; served runtime rollback is operator-supervised.",
+  "passed": true,
+  "runbook": "docs/ROLLBACK_AND_COMMS_RUNBOOK.md",
+  "schema_version": 1,
+  "steps": [
+    {
+      "dry_run_action": "Mark controlled beta paused and stop inviting new testers until the incident owner clears the blocker.",
+      "name": "pause_first_10_invites",
+      "no_mutation": true,
+      "passed": true
+    },
+    {
+      "dry_run_action": "If a release is harmful, yank the bad file on PyPI, pin the prior known-good version in docs, and publish a status note.",
+      "name": "pypi_bad_release_response",
+      "no_mutation": true,
+      "passed": true
+    },
+    {
+      "dry_run_action": "Do not kill the gateway from an agent session; operator runs fingerprint/canary and supervised rollback/reload.",
+      "name": "served_mcp_operator_rollback",
+      "no_mutation": true,
+      "passed": true
+    },
+    {
+      "dry_run_action": "Record the bad guidance via bad-answer issue plus borg_record_failure; disable or narrow the matching path before more testers.",
+      "name": "bad_guidance_disable_path",
+      "no_mutation": true,
+      "passed": true
+    },
+    {
+      "dry_run_action": "Update docs/public/status.json and PUBLIC_SELF_SERVE_LAUNCH_GO_NO_GO with the incident state.",
+      "name": "public_status_update",
+      "no_mutation": true,
+      "passed": true
+    },
+    {
+      "dry_run_action": "Send affected testers a concise notice: what happened, whether secrets were involved, current workaround, and next update time.",
+      "name": "user_notification_template",
+      "no_mutation": true,
+      "passed": true
+    }
+  ]
+}

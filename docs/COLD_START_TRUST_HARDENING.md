@@ -1,6 +1,6 @@
 # Borg cold-start trust hardening
 
-Generated: `2026-05-25T17:05:58.450437+00:00`
+Generated: `2026-05-26T09:26:36.610547+00:00`
 Gate: **PASS**
 
 ## Why this gate exists
@@ -27,9 +27,9 @@ This gate proves fresh source/stdio behavior from this checkout. It does not pro
 
 ## Bad-answer feedback path
 
-- Agent fast path: `call borg_rate(helpful=False) immediately after a bad suggestion`
-- Durable memory path: `call borg_record_failure(error_pattern, pack_id, phase, approach, outcome='failure') when the bad path is concrete`
-- Human path: open a GitHub issue using the bad-answer report template or paste the redacted transcript into first-10 evidence intake
+- Agent/MCP durable path: `call borg_record_failure(error_pattern, pack_id, phase, approach, outcome='failure') when the bad path is concrete`
+- CLI durable path: `run borg feedback-v3 --pack <pack> --success no --notes <redacted summary>`
+- Human path: open .github/ISSUE_TEMPLATE/bad-answer.yml or submit redacted first-10 evidence via .github/ISSUE_TEMPLATE/first-10-evidence.yml with a redacted transcript and no secrets.
 
 ## Public rollout boundary
 

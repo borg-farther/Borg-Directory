@@ -2,6 +2,7 @@
 """Compile Borg synthetic/load and real-user rollout readiness gates."""
 from __future__ import annotations
 
+import argparse
 import json
 import os
 import re
@@ -201,14 +202,21 @@ def _write_markdown(snapshot: dict[str, Any]) -> None:
     (ROOT / "PROJECT_STATUS.md").write_text("\n".join(lines), encoding="utf-8")
 
 
-def main() -> int:
+def main(argv: list[str] | None = None) -> int:
+    parser = argparse.ArgumentParser(description="Compile Borg synthetic/load and real-user rollout readiness gates")
+    parser.add_argument(
+        "--synthetic-only",
+        action="store_true",
+        help="Exit 0 when synthetic/logical load gates pass even if 100-real-user rollout is still blocked. Default exits nonzero unless all real-user gates pass.",
+    )
+    args = parser.parse_args(argv)
     snapshot = compile_scoreboard()
     out = ROOT / "eval" / "uat_scoreboard_snapshot.json"
     out.write_text(json.dumps(snapshot, indent=2, sort_keys=True), encoding="utf-8")
     _write_markdown(snapshot)
     print(ROOT / "PROJECT_STATUS.md")
     print(out)
-    return 0 if snapshot["synthetic_load_all_pass"] else 1
+    return 0 if (snapshot["synthetic_load_all_pass"] if args.synthetic_only else snapshot["all_pass"]) else 1
 
 
 if __name__ == "__main__":

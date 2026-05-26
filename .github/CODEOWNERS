@@ -1,0 +1,13 @@
+* @borg-farther/maintainers
+
+# Public readiness and security surfaces need owner review.
+README.md @borg-farther/maintainers
+SUPPORT.md @borg-farther/maintainers
+SECURITY.md @borg-farther/maintainers
+.github/ISSUE_TEMPLATE/ @borg-farther/maintainers
+.github/workflows/ @borg-farther/maintainers
+docs/SELF_SERVICE_OPS_READINESS.md @borg-farther/maintainers
+docs/ROLLBACK_AND_COMMS_RUNBOOK.md @borg-farther/maintainers
+docs/FIRST_10_EVIDENCE_INTAKE.md @borg-farther/maintainers
+eval/*_gate*.py @borg-farther/maintainers
+eval/*_snapshot.json @borg-farther/maintainers

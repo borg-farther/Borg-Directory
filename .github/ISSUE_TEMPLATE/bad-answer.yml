@@ -1,0 +1,97 @@
+name: Bad first answer / trust erosion report
+description: Report a wrong, irrelevant, unsafe, or overconfident Borg first answer. Bad first answers are launch blockers.
+title: "[bad-answer]: "
+labels: ["bad-answer", "first-answer-trust", "needs-triage"]
+body:
+  - type: markdown
+    attributes:
+      value: |
+        Use this when Borg gave a bad first answer. Redact secrets, private repository names, tokens, credentials, and personal data. Do not paste raw private traces.
+  - type: input
+    id: borg-version
+    attributes:
+      label: Borg version
+      description: Output of `borg --version` or MCP serverInfo version.
+      placeholder: "borg 3.3.14"
+    validations:
+      required: true
+  - type: dropdown
+    id: surface
+    attributes:
+      label: Surface
+      options:
+        - CLI borg rescue/debug/observe
+        - MCP stdio borg_observe/error_lookup
+        - Agent integration
+        - Documentation/example
+        - Other
+    validations:
+      required: true
+  - type: textarea
+    id: sanitized-input
+    attributes:
+      label: Sanitized input
+      description: The exact user/error prompt after redacting secrets.
+      placeholder: "ModuleNotFoundError: No module named yaml"
+    validations:
+      required: true
+  - type: textarea
+    id: returned-action-stop-verify
+    attributes:
+      label: Returned ACTION / STOP / VERIFY
+      description: Paste the bad answer's key output, redacted.
+    validations:
+      required: true
+  - type: textarea
+    id: confidence-block
+    attributes:
+      label: Confidence block / NO_CONFIDENT_MATCH state
+      description: Paste the confidence/no-match block if present.
+    validations:
+      required: true
+  - type: textarea
+    id: expected-guidance
+    attributes:
+      label: Expected guidance
+      description: What should Borg have said instead?
+    validations:
+      required: true
+  - type: textarea
+    id: actual-wrong-guidance
+    attributes:
+      label: Actual wrong guidance
+      description: Why was the guidance irrelevant, unsafe, or overconfident?
+    validations:
+      required: true
+  - type: textarea
+    id: reproduction-command
+    attributes:
+      label: Reproduction command
+      description: Copy-pasteable command or MCP request, with secrets redacted.
+      placeholder: "borg rescue 'ModuleNotFoundError: No module named yaml' --short"
+    validations:
+      required: true
+  - type: input
+    id: trace-session-id
+    attributes:
+      label: Trace/session id if available
+      placeholder: "optional; do not include private tokens"
+  - type: dropdown
+    id: severity
+    attributes:
+      label: Severity
+      options:
+        - P0 harmful/security/privacy; pause first-10 invites
+        - P1 common bad first answer; fix before adding testers
+        - P2 confusing/non-blocking
+    validations:
+      required: true
+  - type: checkboxes
+    id: privacy-confirmation
+    attributes:
+      label: Privacy confirmation
+      options:
+        - label: I redacted secrets, credentials, private repo URLs, and personal data.
+          required: true
+        - label: I understand this report may be used as first-answer trust evidence.
+          required: true

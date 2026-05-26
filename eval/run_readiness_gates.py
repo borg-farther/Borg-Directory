@@ -2,6 +2,7 @@
 """Run Borg synthetic/load gates and report separate real-user rollout status."""
 from __future__ import annotations
 
+import argparse
 import json
 import os
 import subprocess
@@ -107,7 +108,14 @@ def _write_decision(snapshot: dict[str, Any]) -> None:
     )
 
 
-def main() -> int:
+def main(argv: list[str] | None = None) -> int:
+    parser = argparse.ArgumentParser(description="Run Borg readiness gates and write GO/NO-GO artifacts")
+    parser.add_argument(
+        "--synthetic-only",
+        action="store_true",
+        help="Exit 0 when synthetic/logical load gates pass even if real-user rollout remains blocked. Default exits nonzero unless 100-real-user readiness is also green.",
+    )
+    args = parser.parse_args(argv)
     soak = float(os.getenv("BORG_READINESS_SOAK_SECONDS", "30"))
     py = sys.executable
     steps = [
@@ -148,7 +156,7 @@ def main() -> int:
         "rc": real_user["rc"],
     }
 
-    scoreboard = _run("scoreboard_final", [py, "eval/uat_scoreboard.py"], 180)
+    scoreboard = _run("scoreboard_final", [py, "eval/uat_scoreboard.py", "--synthetic-only"], 180)
     results.append(scoreboard)
     scoreboard_snapshot = json.loads((ROOT / "eval" / "uat_scoreboard_snapshot.json").read_text(encoding="utf-8")) if (ROOT / "eval" / "uat_scoreboard_snapshot.json").exists() else {}
     ready_for_10 = bool(scoreboard_snapshot.get("ready_for_10"))
@@ -172,7 +180,7 @@ def main() -> int:
     (ROOT / "eval" / "gate_run_snapshot.json").write_text(json.dumps(final, indent=2, sort_keys=True), encoding="utf-8")
     _write_decision(final)
     # Final scoreboard refresh after canonical decision docs exist.
-    final_scoreboard = _run("scoreboard_after_decision", [py, "eval/uat_scoreboard.py"], 180)
+    final_scoreboard = _run("scoreboard_after_decision", [py, "eval/uat_scoreboard.py", "--synthetic-only"], 180)
     final["steps"].append(final_scoreboard)
     (ROOT / "eval" / "gate_run_snapshot.json").write_text(json.dumps(final, indent=2, sort_keys=True), encoding="utf-8")
     print(json.dumps({
@@ -184,9 +192,10 @@ def main() -> int:
         "ready_for_100_real_external_users": real_user_rollout["ready_for_100_real_users"],
         "max_recommended_real_users_now": real_user_rollout["max_recommended_real_users_now"],
         "overall_100_real_user_pass": overall_100_real_user_pass,
+        "exit_mode": "synthetic_only" if args.synthetic_only else "full_real_user_readiness",
         "blockers": real_user_rollout["blockers"],
     }, indent=2))
-    return 0 if synthetic_load_all_pass else 1
+    return 0 if (synthetic_load_all_pass if args.synthetic_only else overall_100_real_user_pass) else 1
 
 
 if __name__ == "__main__":

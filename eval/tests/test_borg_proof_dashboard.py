@@ -43,13 +43,18 @@ def test_borg_proof_dashboard_artifacts_exist_and_are_honest(tmp_path, monkeypat
         assert data["metrics"]["pypi_fresh_install_canary"]["honesty_label"] == "PYPI_FRESH_INSTALL_CURRENT_VERSION"
         assert data["controlled_first_10_beta"]["answer"] == "GO"
         assert data["top_verdict"]["controlled_first_10_beta"]["verdict"] == "CONDITIONAL"
-        assert "infrastructure is green" in data["top_verdict"]["controlled_first_10_beta"]["why"]
+        assert "infrastructure and ops guardrails are green" in data["top_verdict"]["controlled_first_10_beta"]["why"]
     else:
         assert data["controlled_first_10_beta"]["answer"] == "NO-GO"
         assert data["top_verdict"]["controlled_first_10_beta"]["verdict"] == "NO-GO"
         assert "PyPI latest" in data["top_verdict"]["controlled_first_10_beta"]["why"]
     assert data["metrics"]["verified_external_users"]["value"] == 0
     assert data["metrics"]["cold_start_trust_hardening_gate"]["honesty_label"] == "FIRST_ANSWER_TRUST_GATE"
+    assert data["metrics"]["self_service_ops_gate"]["honesty_label"] == "SELF_SERVICE_OPS_GATE"
+    assert data["metrics"]["first_10_privacy_security_incidents"]["value"] == 0
+    assert data["metrics"]["first_10_privacy_security_incidents"]["honesty_label"] == "ROW_DERIVED_EXTERNAL_USER_RISK"
+    assert data["metrics"]["ops_readiness_watchdog"]["honesty_label"] == "OPS_PROOF_FRESHNESS_GATE"
+    assert data["metrics"]["rollback_comms_drill"]["honesty_label"] == "DRY_RUN_ROLLBACK_COMMS_DRILL"
     assert data["metrics"]["host_runtime_split_brain"]["value"] == "NOT_EVALUATED_BY_THIS_BUILD"
     assert "live cutover proof" in data["metrics"]["host_runtime_split_brain"]["provenance"]
     assert data["top_verdict"]["broad_public_launch"]["verdict"] == "NO-GO"
@@ -59,15 +64,24 @@ def test_borg_proof_dashboard_artifacts_exist_and_are_honest(tmp_path, monkeypat
     status = json.loads(status_path.read_text(encoding="utf-8"))
     value = json.loads(value_path.read_text(encoding="utf-8"))
     impact = json.loads(impact_path.read_text(encoding="utf-8"))
+    assert status["updated_at"] == data["generated_at_utc"]
+    assert value["updated_at"] == data["generated_at_utc"]
+    assert impact["updated_at"] == data["generated_at_utc"]
+    assert status["source_revision"] == data["source_revision"]
+    assert status["controlled_first_10_beta"] == data["top_verdict"]["controlled_first_10_beta"]
+    assert status["broad_public_launch"] == data["top_verdict"]["broad_public_launch"]
     assert status["repo"] == "https://github.com/borg-farther/Borg-Directory"
     assert status["state"].startswith("NO-GO public self-serve")
     assert status["cold_start_trust_hardening_gate"] in {"PASS", "FAIL", "UNKNOWN"}
+    assert status["self_service_ops_gate"] in {"PASS", "FAIL", "UNKNOWN"}
+    assert status["ops_readiness_watchdog"] in {"PASS", "FAIL", "UNKNOWN"}
     assert "eval/cold_start_trust_gate_snapshot.json" in status["evidence"]
+    assert "eval/self_service_ops_gate_snapshot.json" in status["evidence"]
     assert status["controlled_first_10_beta"]["verdict"] in {"NO-GO", "CONDITIONAL"}
     if status["controlled_first_10_beta"]["verdict"] == "CONDITIONAL":
         assert "controlled first-10 beta GO" in status["state"]
         assert "source/local release-candidate only" not in status["state"]
-        assert "infrastructure is green" in value["detail"]
+        assert "infrastructure and ops guardrails are green" in value["detail"]
     else:
         assert "source/local release-candidate only" in status["state"]
     assert "ACTION / STOP / VERIFY" in value["headline"]
@@ -98,6 +112,7 @@ def test_borg_proof_dashboard_artifacts_exist_and_are_honest(tmp_path, monkeypat
     assert len(data["first_10_user_scoreboard_template"]["rows"]) >= 10
     for row in data["evidence"]:
         assert row["path"]
+        assert row["path"] not in {"PROJECT_STATUS.md", "GO_NO_GO_DECISION.md", "UAT_RESULTS.md", "ROADMAP.md"}
         assert "exists" in row
         assert row["claim_derived"]
         if row["exists"]:

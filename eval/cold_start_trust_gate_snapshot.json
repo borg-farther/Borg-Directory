@@ -1,8 +1,8 @@
 {
   "bad_answer_feedback_path": {
-    "agent_fast_path": "call borg_rate(helpful=False) immediately after a bad suggestion",
-    "durable_memory_path": "call borg_record_failure(error_pattern, pack_id, phase, approach, outcome='failure') when the bad path is concrete",
-    "human_path": "open a GitHub issue using the bad-answer report template or paste the redacted transcript into first-10 evidence intake"
+    "agent_mcp_durable_path": "call borg_record_failure(error_pattern, pack_id, phase, approach, outcome='failure') when the bad path is concrete",
+    "cli_durable_path": "run borg feedback-v3 --pack <pack> --success no --notes <redacted summary>",
+    "human_path": "open .github/ISSUE_TEMPLATE/bad-answer.yml or submit redacted first-10 evidence via .github/ISSUE_TEMPLATE/first-10-evidence.yml"
   },
   "blockers": [],
   "checks": [
@@ -31,7 +31,7 @@
       "name": "stdio_meta_trust_prompt_fails_closed",
       "passed": true,
       "stderr_tail": "borg-mcp-server v3.3.14 ready (stdio transport)\n",
-      "text_excerpt": "ACTION: proceed with normal debugging for this task; Borg has no proven cache hit.\n\nSTOP: do not force a weak or unrelated pack onto this task.\n\nVERIFY: collect the exact failing command/output and rerun borg_observe or borg_rescue only if new evidence appears.\n\nCONFIDENCE: BORG [NO CONFIDENT MATCH] -- no relevant traces, synthetic hits, or pack matches.\n\nNO_CONFIDENT_MATCH: No confident Borg match for this task.\nBorg found no relevant real traces, synthetic hits, or exact pack class match.\nProceed with normal reasoning; do not treat Borg as evidence for this task.\nAfter resolving: call borg_rate(helpful=True) only if Borg guidance was actually useful."
+      "text_excerpt": "ACTION: proceed with normal debugging for this task; Borg has no proven cache hit.\n\nSTOP: do not force a weak or unrelated pack onto this task.\n\nVERIFY: collect the exact failing command/output and rerun borg_observe or borg_rescue only if new evidence appears.\n\nCONFIDENCE: BORG [NO CONFIDENT MATCH] -- no relevant traces, synthetic hits, or pack matches.\n\nNO_CONFIDENT_MATCH: No confident Borg match for this task.\nBorg found no relevant real traces, synthetic hits, or exact pack class match.\nProceed with normal reasoning; do not treat Borg as evidence for this task.\nAfter resolving: record concrete bad/good paths with borg_record_failure(...) or borg feedback-v3 when useful."
     },
     {
       "name": "stdio_concrete_permission_prompt_gets_specific_guidance",
@@ -41,7 +41,7 @@
     }
   ],
   "gate_type": "cold_start_trust_hardening",
-  "generated_at_utc": "2026-05-25T17:05:58.450437+00:00",
+  "generated_at_utc": "2026-05-26T09:26:36.610547+00:00",
   "passed": true,
   "schema_version": 1,
   "trust_policy": "Borg must fail closed with NO_CONFIDENT_MATCH for meta/product/readiness prompts, must not inject unrelated framework guidance, and must preserve concrete error guidance for exact failures."

@@ -70,6 +70,23 @@ MIN_USEFUL_RESCUES = 6
 MAX_CRITICAL_PRIVACY_SECURITY_FAILURES = 0
 RESERVED_EVIDENCE_HOSTS = {"example.com", "example.org", "example.net", "localhost", "127.0.0.1", "0.0.0.0"}
 RESERVED_EVIDENCE_SUFFIXES = (".test", ".invalid", ".localhost", ".example")
+SAVINGS_BASIS_ALIASES = {
+    "user-estimate": "user_estimate",
+    "user_estimate": "user_estimate",
+    "timer-before-after": "same_user_before_after",
+    "timer_before_after": "same_user_before_after",
+    "same-user-before-after": "same_user_before_after",
+    "same_user_before_after": "same_user_before_after",
+    "paired-control": "randomized_control",
+    "paired_control": "randomized_control",
+    "randomized-control": "randomized_control",
+    "randomized_control": "randomized_control",
+    "agent-trace-baseline": "agent_trace_baseline",
+    "agent_trace_baseline": "agent_trace_baseline",
+    "not-measured": "not_measured",
+    "not_measured": "not_measured",
+}
+UNMEASURED_SAVINGS_BASIS = {"", "unknown", "none", "n/a", "not_measured"}
 
 
 def _truthy(value: Any) -> bool:
@@ -153,7 +170,9 @@ def _round_float(value: float) -> float:
 
 
 def _counterfactual_basis(row: dict[str, Any]) -> str:
-    return str(row.get("savings_counterfactual_basis") or "unknown").strip().lower() or "unknown"
+    raw = str(row.get("savings_counterfactual_basis") or "unknown").strip().lower()
+    normalized = raw.replace(" ", "_")
+    return SAVINGS_BASIS_ALIASES.get(normalized, normalized) or "unknown"
 
 
 def _value_reasons_and_measurement(row: dict[str, Any]) -> tuple[list[str], dict[str, Any] | None]:
@@ -178,7 +197,7 @@ def _value_reasons_and_measurement(row: dict[str, Any]) -> tuple[list[str], dict
         if field in {"dead_end_avoided_confirmed", "user_confirmed_value"}:
             return _truthy(value)
         if field == "savings_counterfactual_basis":
-            return isinstance(value, str) and value.strip().lower() not in {"", "unknown", "none", "n/a"}
+            return _counterfactual_basis(row) not in UNMEASURED_SAVINGS_BASIS
         return _number_is_present(value)
 
     has_any_value_field = any(field_has_value(field) for field in value_fields)
@@ -197,7 +216,7 @@ def _value_reasons_and_measurement(row: dict[str, Any]) -> tuple[list[str], dict
     if not _truthy(row.get("user_confirmed_value")):
         reasons.append("user_confirmed_value is required before savings can count")
     if basis not in {"randomized_control", "same_user_before_after", "agent_trace_baseline", "user_estimate"}:
-        reasons.append("savings_counterfactual_basis must be randomized_control, same_user_before_after, agent_trace_baseline, or user_estimate")
+        reasons.append("savings_counterfactual_basis must be randomized_control/paired-control, same_user_before_after/timer-before-after, agent_trace_baseline, or user_estimate/user-estimate")
 
     if baseline_minutes is None and actual_minutes is None and stated_minutes is not None:
         reasons.append("net_minutes_saved cannot be supplied without baseline_minutes_without_borg and actual_minutes_with_borg")
@@ -405,6 +424,7 @@ def evaluate_scoreboard(data: dict[str, Any]) -> dict[str, Any]:
             if value_measurement is not None:
                 value_measurements.append(value_measurement)
 
+    raw_privacy_security_incidents = sum(1 for row in normalized_rows if _truthy(row.get("privacy_security_incident")))
     derived = {
         "verified_external_users": len(counted_rows),
         "real_users": len(counted_rows),
@@ -414,7 +434,7 @@ def evaluate_scoreboard(data: dict[str, Any]) -> dict[str, Any]:
             for row in counted_rows
             if _truthy(row.get("rescue_useful")) and _truthy(row.get("rescue_returned_action_stop_verify"))
         ),
-        "critical_privacy_security_failures": sum(1 for row in counted_rows if _truthy(row.get("privacy_security_incident"))),
+        "critical_privacy_security_failures": raw_privacy_security_incidents,
         "repeat_use_within_7_days": sum(1 for row in counted_rows if _truthy(row.get("repeat_use_within_7_days"))),
     }
     basis_counts: dict[str, int] = {}
