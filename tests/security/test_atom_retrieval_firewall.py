@@ -46,3 +46,14 @@ def test_format_strips_instruction_override_but_keeps_safe_advice():
     assert "Direct SQL" in output
     assert "Ignore previous" not in output
     assert "~/.env" not in output
+
+
+def test_format_uses_verified_tenant_count_over_payload_hint():
+    atom = _atom()
+    atom["trust"]["independent_tenant_count"] = 99
+    atom["trust"]["verified_tenant_count"] = 3
+
+    output = format_atom_for_agent(atom)
+
+    assert "tenants=3" in output
+    assert "tenants=99" not in output

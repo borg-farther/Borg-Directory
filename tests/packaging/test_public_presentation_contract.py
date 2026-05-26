@@ -181,6 +181,7 @@ def test_non_current_public_docs_are_bannered_or_operator_scoped() -> None:
         "READINESS.md",
         "ROADMAP.md",
         "20260522_BORG_PRODUCTION_DAY_ONE_HARDENING_PLAN.md",
+        "20260526-1302_OPTIMAL_SAFE_COLLECTIVE_LEARNING_LOOP.md",
         "20260514_PUBLIC_SELF_SERVE_LAUNCH_CLOSURE_PLAN.md",
         "20260517_BORG_100_REAL_USER_READINESS.md",
         "PUBLIC_SELF_SERVE_LAUNCH_GO_NO_GO.md",

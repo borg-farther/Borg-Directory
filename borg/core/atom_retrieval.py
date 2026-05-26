@@ -20,6 +20,7 @@ def format_atom_for_agent(atom: dict, max_chars: int = 900) -> str:
     learning = atom.get("learning") or {}
     evidence = atom.get("evidence") or {}
     trust = atom.get("trust") or {}
+    tenant_count = trust.get("verified_tenant_count", trust.get("independent_tenant_count", 1))
 
     avoid = learning.get("avoid") or []
     if isinstance(avoid, list):
@@ -33,7 +34,7 @@ def format_atom_for_agent(atom: dict, max_chars: int = 900) -> str:
         f"Tech: {', '.join(str(t) for t in task.get('technology', [])[:4])}",
         f"Worked before: {_safe(learning.get('worked', ''))}",
         f"Avoid: {avoid_text}",
-        f"Evidence: {evidence.get('type', 'unknown')} / {evidence.get('strength', 'unknown')}; tenants={trust.get('independent_tenant_count', 1)}",
+        f"Evidence: {evidence.get('type', 'unknown')} / {evidence.get('strength', 'unknown')}; tenants={tenant_count}",
     ]
     output = "\n".join(line for line in lines if line.strip())
     return output[:max_chars]

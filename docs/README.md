@@ -18,6 +18,9 @@ belong under [`archive/`](archive/) and are not current product claims.
 - [`READINESS.md`](READINESS.md) — current readiness status and honest launch boundary
 - [`ROADMAP.md`](ROADMAP.md) — current roadmap and intentionally-not-claimed boundaries
 - [`20260522_BORG_PRODUCTION_DAY_ONE_HARDENING_PLAN.md`](20260522_BORG_PRODUCTION_DAY_ONE_HARDENING_PLAN.md) — hard-gated production/day-one hardening plan and proof checklist
+- [`20260526-1302_OPTIMAL_SAFE_COLLECTIVE_LEARNING_LOOP.md`](20260526-1302_OPTIMAL_SAFE_COLLECTIVE_LEARNING_LOOP.md) — optimal safe collective learning loop, gates, current GO/NO-GO, and verification evidence
+- [`../eval/collective_learning_loop_controls.json`](../eval/collective_learning_loop_controls.json) — machine-readable safe collective learning control contract
+- [`20260526_ALWAYS_CURRENT_RUNTIME_AND_FEDERATED_LEARNING_PLAN.md`](20260526_ALWAYS_CURRENT_RUNTIME_AND_FEDERATED_LEARNING_PLAN.md) — served runtime freshness and staging propagation plan
 - [`20260514_PUBLIC_SELF_SERVE_LAUNCH_CLOSURE_PLAN.md`](20260514_PUBLIC_SELF_SERVE_LAUNCH_CLOSURE_PLAN.md) — exact remaining evidence sequence before public self-serve launch can be claimed
 - [`20260517_BORG_100_REAL_USER_READINESS.md`](20260517_BORG_100_REAL_USER_READINESS.md) — 100-real-user rollout gate: currently blocked by first-10 external-user evidence
 - [`PUBLIC_SELF_SERVE_LAUNCH_GO_NO_GO.md`](PUBLIC_SELF_SERVE_LAUNCH_GO_NO_GO.md) — canonical public self-serve launch gate output

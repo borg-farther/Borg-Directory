@@ -9,6 +9,7 @@ Uses tmp_path for all tests — no writes to real ~/.hermes/borg/failures/.
 
 import json
 import sys
+from concurrent.futures import ThreadPoolExecutor, as_completed
 from pathlib import Path
 from typing import Any
 
@@ -195,6 +196,30 @@ class TestRecordFailure:
         # Should be aggregated under one file
         assert len(yaml_files) == 1
         assert len(data["wrong_approaches"]) == 2
+
+    def test_concurrent_record_failure_preserves_all_increments(self, tmp_path):
+        import yaml
+
+        error = "ConcurrentError: collective memory race"
+        writes = 30
+
+        def write_once(_idx):
+            fm = FailureMemory(memory_dir=tmp_path)
+            fm.record_failure(error, "pack1", "phase1", "same approach", "failure")
+
+        with ThreadPoolExecutor(max_workers=10) as pool:
+            futures = [pool.submit(write_once, i) for i in range(writes)]
+            for future in as_completed(futures):
+                future.result()
+
+        packs_dir = tmp_path / "default" / "pack1"
+        yaml_files = list(packs_dir.glob("*.yaml"))
+        assert len(yaml_files) == 1
+        data = yaml.safe_load(yaml_files[0].read_text())
+        assert data["total_sessions"] == writes
+        assert data["wrong_approaches"][0]["failure_count"] == writes
+        assert list(packs_dir.glob("*.lock")) == []
+        assert list(packs_dir.glob("*.tmp")) == []
 
 
 # ============================================================================

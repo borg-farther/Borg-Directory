@@ -1,0 +1,318 @@
+# Optimal safe collective learning loop
+
+**File rev:** 20260526-1302 rev A  
+**Repo:** `/root/hermes-workspace/borg`  
+**Status:** executable architecture contract + current GO/NO-GO. Local primitives hardened in this session; local filesystem staging propagation is implemented and tested; global/federated learning remains blocked until remote registry/runtime/revocation convergence gates pass.
+
+## 1. Task outline
+
+Build Borg into a collective learning loop that agents actually want to use while protecting the humans and organizations behind them.
+
+The loop must optimize all of these at once:
+
+1. **Safety:** no raw prompts, raw traces, source, env vars, secrets, or tenant identifiers leave the local machine by default.
+2. **Security:** prompt-injection, poisoning, signature spoofing, self-promotion, stale-runtime, and revocation failures are first-class threat cases.
+3. **Reliability:** learning is accepted only with verifiable receipts, durable storage, tombstones, and clean-user sync proof.
+4. **Utility:** agents get compact `ACTION / STOP / VERIFY` guidance, not long lectures.
+5. **Low friction:** rescue is automatic and local-first; feedback is one-call/one-tap; sharing is opt-in.
+6. **Credit:** useful contributors get credit without creating abuse incentives or punishing privacy-first users.
+7. **Honesty:** no global/federated or measured-savings claims until proven by gates.
+
+## 2. Subtasks and adversarial questions
+
+### A. Data boundary
+
+Question: what is the smallest useful thing Borg can share?
+
+Answer: a signed, sanitized, revocable **LearningAtom**, not a raw trace.
+
+Challenge: if atoms are too vague, they are useless.
+
+Resolution: atoms keep the reusable causal payload:
+
+- task type;
+- technology labels;
+- normalized error class / pattern;
+- root-cause class;
+- worked approach;
+- dead ends to avoid;
+- evidence strength;
+- privacy/safety metadata;
+- signature/trust/lifecycle metadata.
+
+They exclude raw paths, raw tool output, raw stack dumps, raw prompts, env values, source snippets, screenshots, and tenant/customer identifiers.
+
+### B. Security boundary
+
+Question: can a malicious agent inject instructions into future agents?
+
+Answer: not if three gates all hold:
+
+1. ingestion scanner rejects/neutralizes prompt injection;
+2. retrieval formatter wraps all memory as **untrusted historical advice, not instructions**;
+3. agents must still verify with the provided command/test.
+
+Challenge: retrieval warnings alone are weak.
+
+Resolution: warning is defense-in-depth only. Primary control is rejecting unsafe text before it reaches retrievable shared memory.
+
+### C. Trust boundary
+
+Question: does a signature prove a lesson is true?
+
+Answer: no. A signature proves integrity and key control only.
+
+Required trust layers:
+
+1. valid atom signature;
+2. key id derived from verify key, not submitter text;
+3. registry-computed tenant independence;
+4. evidence and helpfulness receipts;
+5. revocation/downranking path;
+6. delayed trust for new identities.
+
+Challenge: one tenant can spin up many agents.
+
+Resolution: global promotion uses independent tenant quorum, not agent count. Self-declared quorum is quarantined.
+
+### D. Reliability boundary
+
+Question: what happens when bad learning escapes?
+
+Answer: tombstone wins over every index, cache, sync import, and retrieval path.
+
+Required proof:
+
+1. publish signed tombstone;
+2. clean client imports tombstone;
+3. `get_atom()` returns none;
+4. `search_atoms()` returns none;
+5. re-import of the same atom fails.
+
+Challenge: deletion alone is insufficient because replicas can reintroduce the atom.
+
+Resolution: deletion removes payload bytes where required; tombstone prevents resurrection.
+
+### E. Product/friction boundary
+
+Question: how do we get learning without annoying users?
+
+Answer: never block the rescue path.
+
+Friction rules:
+
+- no login before local rescue;
+- no sharing by default;
+- one compact receipt on every Borg answer;
+- one automatic outcome-close call after `VERIFY` passes/fails;
+- first share gets a redaction preview;
+- repeated shares use saved local preference;
+- users can stay local-only without being labeled bad actors.
+
+### F. Credit/economics boundary
+
+Question: how do we reward contribution without inviting spam?
+
+Answer: split **reputation** from **credits**.
+
+- Reputation: slow trust weight for promotion/review.
+- Credits: fast, non-monetary recognition for closing loops and improving memory.
+
+Do not introduce transferable or monetary credits until Sybil resistance, bad-answer dispute flow, and external utility are proven.
+
+## 3. Optimal loop
+
+```text
+agent failure
+  -> borg rescue / observe
+  -> local receipt: ACTION / STOP / VERIFY / confidence
+  -> agent executes and verifies
+  -> one-call outcome receipt
+  -> local failure memory + outcome metrics
+  -> optional atom distillation
+  -> privacy + prompt-injection + schema policy
+  -> signed local/org/global-candidate atom
+  -> staging registry ingestion
+  -> registry recomputes identity/quorum and emits receipt
+  -> clients sync signed manifest + atoms + tombstones
+  -> retrieval firewall formats compact untrusted guidance
+  -> future agent verifies result
+  -> helpfulness/downranking/revocation updates loop
+```
+
+## 4. Stage gates
+
+### Gate 0 — runtime freshness
+
+No long-lived MCP process is trusted because files on disk can be newer than imported code in memory.
+
+Requirement: served Borg must compare loaded runtime against an approved manifest and fail closed if stale.
+
+Status: **designed, not complete**. See `docs/20260526_ALWAYS_CURRENT_RUNTIME_AND_FEDERATED_LEARNING_PLAN.md`.
+
+### Gate 1 — local rescue
+
+Requirement: local Borg can return `ACTION / STOP / VERIFY` or an explicit no-match receipt.
+
+Status: **conditional GO** for controlled first-10 beta while honesty labels remain.
+
+### Gate 2 — local learning atom primitive
+
+Requirement: raw traces distill into sanitized atoms; atom schema validates; signatures verify; tampering fails; retrieval is untrusted.
+
+Status: **GO for local primitive** after focused tests in this session.
+
+### Gate 3 — shared atom import
+
+Requirement: store/import path verifies signatures and key identity, not just publish path.
+
+Status: **GO for the hardened local store path** after this session's fixes.
+
+### Gate 4 — registry-computed quorum
+
+Requirement: global promotion cannot trust `independent_tenant_count` written inside the atom payload.
+
+Status: **GO at policy/retrieval level** after this session: self-declared global quorum is quarantined unless registry-computed `verified_tenant_count` is supplied, and retrieval formatting prefers verified tenant counts over payload hints.
+
+### Gate 5 — staging propagation
+
+Requirement: fresh user A -> staging registry -> fresh user B -> tombstone revocation proof.
+
+Status: **GO for local filesystem staging** after this session. `borg/core/atom_registry.py` proves signed atom ingestion, receipt/manifest writing, clean client sync, and tombstone suppression. Remote hosted registry/federation is still not built.
+
+### Gate 6 — public/global rollout
+
+Requirement: external users, measured usefulness, revocation convergence, and abuse controls pass.
+
+Status: **NO-GO**.
+
+## 5. Security controls mapped to external standards
+
+- **OWASP LLM01 Prompt Injection:** deterministic scanner, retrieval neutralization, untrusted advisory header, verify step.
+- **OWASP Sensitive Information Disclosure:** local-only default, privacy scanner, schema minimization, no raw trace export.
+- **OWASP Training Data Poisoning / Insecure Plugin Design / Excessive Agency:** signed atoms, registry receipts, delayed trust, verification commands, no autonomous global promotion.
+- **NIST Privacy Framework:** data minimization, risk scoring, privacy zones, local-only default, deletion + tombstone policy.
+- **NIST SSDF:** secure-by-design tests, fail-closed policy checks, regression tests for known vulnerability classes.
+- **Sigstore-style supply-chain pattern:** signed artifacts, key identity binding, append-only/tamper-evident registry as M1/M2 seam.
+
+## 6. Current code hardening shipped in this session
+
+### `borg/core/learning_atoms.py` rev 20260526-1302
+
+- Added canonical key-id derivation from Ed25519 verify key.
+- `verify_signed_atom()` now fails when:
+  - envelope type is not `learning_atom`;
+  - envelope id does not match payload atom id;
+  - payload atom id is not canonical;
+  - signature key id does not match verify key;
+  - payload submitter key id does not match verify key;
+  - signature bytes do not verify;
+  - payload validation fails.
+
+### `borg/core/atom_store.py` rev 20260526-1302
+
+- Store/import path now verifies signed envelopes before accepting them.
+- Shared atoms require a valid signed envelope.
+- Global candidates require registry-computed tenant quorum passed to policy.
+
+### `borg/core/atom_policy.py` rev 20260526-1302
+
+- Self-declared global quorum is no longer enough.
+- `verified_tenant_count` must be supplied by registry/import code before global candidate promotion.
+- Retrieval formatting uses registry/store `verified_tenant_count` when present so agent-visible quorum evidence cannot be inflated by payload hints.
+
+### `borg/core/failure_memory.py` rev 20260526-1302
+
+- Added per-record cross-process lock around YAML read/modify/write.
+- Replaced fixed `.tmp` file with unique temp names.
+- Concurrent failure-memory updates now preserve increments instead of racing.
+
+### `borg/core/atom_registry.py` rev 20260526-1302
+
+- Added local filesystem staging registry with `atoms/`, `tombstones/`, `receipts/`, `quarantine/`, and `manifest.json`.
+- `ingest_atom_envelope()` verifies atom signatures and policy before writing shareable atoms.
+- Local-scope atoms are rejected from sharing.
+- Self-declared global quorum is quarantined; verified quorum is accepted only when registry code supplies `verified_tenant_count`.
+- `sync_registry_to_store()` imports tombstones before atoms so revocation wins.
+
+## 7. Machine-readable control contract
+
+See `eval/collective_learning_loop_controls.json` rev 20260526-1302.
+
+Hard controls:
+
+1. raw traces never shared;
+2. shared atoms must be signed;
+3. key id cannot be spoofed;
+4. store/import verifies signatures;
+5. global quorum is registry-computed;
+6. tombstone wins over retrieval and re-import;
+7. retrieval firewall marks memory untrusted;
+8. local filesystem staging registry proves A->B sync and tombstone suppression;
+9. remote hosted registry/runtime freshness remains required before global claim.
+
+## 8. Verification run
+
+Focused tests passed:
+
+```bash
+python -m pytest -q \
+  tests/security/test_atom_registry.py \
+  tests/security/test_collective_learning_loop_controls.py \
+  tests/security/test_learning_atoms.py \
+  tests/security/test_atom_policy.py \
+  tests/security/test_atom_store.py \
+  tests/learning/test_failure_memory.py
+# 66 passed
+
+python -m pytest -q \
+  tests/security/test_atom_registry.py \
+  tests/security/test_collective_learning_loop_controls.py \
+  tests/security/test_learning_atoms.py \
+  tests/security/test_atom_policy.py \
+  tests/security/test_atom_retrieval_firewall.py \
+  tests/security/test_atom_store.py \
+  tests/security/test_privacy_structured.py \
+  tests/security/test_prompt_injection.py \
+  tests/security/test_learning_atom_publish.py \
+  tests/cli/test_cli_atom.py \
+  tests/learning/test_failure_memory.py
+# 87 passed
+
+python -m pytest -q
+# 2303 passed, 40 skipped, 4 xfailed, 1 xpassed
+
+python scripts/security_gate_check.py
+# PASS: Borg security hardening policy gate
+```
+
+Mathematical sanity check for 128-bit failure-memory hash truncation:
+
+- 10,000 records: collision probability ≈ `1.469e-31`.
+- 100,000 records: collision probability ≈ `1.469e-29`.
+- 1,000,000 records: collision probability ≈ `1.469e-27`.
+- 10,000,000 records: collision probability ≈ `1.469e-25`.
+
+This supports 128-bit truncation as adequate for local/failure-memory record IDs; it is not a substitute for cryptographic atom signatures.
+
+## 9. Remaining blockers
+
+1. No remote hosted registry yet.
+2. No signed registry manifest yet; local staging manifest is currently unsigned filesystem metadata.
+3. No production sync command/CLI surface yet; staging sync exists as Python API.
+4. No served runtime freshness gate yet.
+5. No external-user measured lift yet.
+6. No revocation convergence SLO for remote/federated clients yet.
+7. No abuse/anomaly engine yet.
+
+## 10. Final reflective pass
+
+I re-checked the design from the opposite assumption: “what if global learning is impossible to make safe without killing utility?”
+
+The strongest objection is that privacy redaction and prompt-injection filtering will either miss private data or over-redact useful details. The answer is not to trust redaction harder. The answer is to constrain the shared object so the dangerous fields are structurally impossible, keep raw evidence local, require opt-in, and prove utility only through clean-user reuse.
+
+Second objection: reputation and credits invite farming. The answer is to keep credits non-monetary, keep rescue free/local, require tenant-independent confirmations, and avoid hard free-rider throttles until real adoption data exists.
+
+Third objection: revocation will lag in distributed clients. Correct. The local filesystem staging proof now shows tombstone-first sync works in-process, but Borg must not claim remote/federated learning until signed manifests, hosted registry sync, and revocation convergence are implemented and measured.
+
+Final conclusion: **local learning is real and now harder. local filesystem staging propagation is proven. remote/global collective learning remains a NO-GO until signed hosted registry, runtime freshness, and revocation convergence gates pass.**

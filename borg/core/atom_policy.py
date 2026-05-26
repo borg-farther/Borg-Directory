@@ -31,7 +31,12 @@ class AtomPolicyResult:
     injection: object
 
 
-def classify_atom_policy(atom: dict, has_valid_signature: bool | None = None, min_tenant_quorum: int = 3) -> AtomPolicyResult:
+def classify_atom_policy(
+    atom: dict,
+    has_valid_signature: bool | None = None,
+    min_tenant_quorum: int = 3,
+    verified_tenant_count: int | None = None,
+) -> AtomPolicyResult:
     """Classify an atom using fail-closed privacy, injection, signature, and quorum gates."""
     reasons: List[str] = []
     privacy = privacy_risk_score(atom)
@@ -76,7 +81,14 @@ def classify_atom_policy(atom: dict, has_valid_signature: bool | None = None, mi
     if scope in {"global_candidate", "global"}:
         if not is_valid_tenant_pseudonym(trust.get("tenant_pseudonym")):
             return AtomPolicyResult(AtomDecision.QUARANTINE, ["global atom requires tenant HMAC pseudonym"], privacy, injection)
-        tenant_count = int(trust.get("independent_tenant_count") or 0)
+        if verified_tenant_count is None:
+            return AtomPolicyResult(
+                AtomDecision.QUARANTINE,
+                ["global promotion requires registry-computed independent tenant quorum"],
+                privacy,
+                injection,
+            )
+        tenant_count = int(verified_tenant_count or 0)
         if tenant_count < min_tenant_quorum:
             return AtomPolicyResult(AtomDecision.QUARANTINE, ["insufficient independent tenant quorum"], privacy, injection)
         return AtomPolicyResult(AtomDecision.GLOBAL_CANDIDATE, reasons, privacy, injection)

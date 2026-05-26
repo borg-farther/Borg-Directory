@@ -7,8 +7,9 @@ from borg.core.learning_atoms import (
     canonical_atom_json,
     sign_learning_atom,
     verify_signed_atom,
+    learning_atom_key_id_from_verify_key,
 )
-from borg.core.crypto import generate_signing_key
+from borg.core.crypto import derive_verify_key, encode_key, generate_signing_key
 
 
 def _valid_atom():
@@ -109,3 +110,54 @@ def test_signed_atom_verifies_and_tampering_fails():
 
     envelope["payload"]["learning"]["worked"] = "tampered"
     assert verify_signed_atom(envelope).valid is False
+
+
+def test_signed_atom_rejects_spoofed_signature_key_id():
+    envelope = sign_learning_atom(_valid_atom(), generate_signing_key())
+    envelope["signature"]["key_id"] = "ed25519:trusted-but-spoofed"
+
+    result = verify_signed_atom(envelope)
+
+    assert result.valid is False
+    assert "key_id" in result.error
+
+
+def test_signed_atom_rejects_spoofed_payload_submitter_key_id_even_if_signed():
+    signing_key = generate_signing_key()
+    verify_key = derive_verify_key(signing_key)
+    actual_key_id = learning_atom_key_id_from_verify_key(verify_key)
+    atom = _valid_atom()
+    atom.setdefault("trust", {})["submitter_key_id"] = "ed25519:trusted-but-spoofed"
+    atom["atom_id"] = compute_atom_id(atom)
+
+    from nacl import encoding
+
+    signed = signing_key.sign(canonical_atom_json(atom, include_atom_id=True), encoder=encoding.RawEncoder)
+    envelope = {
+        "type": "learning_atom",
+        "id": atom["atom_id"],
+        "envelope_version": "1.0",
+        "payload": atom,
+        "signature": {
+            "algorithm": "ed25519",
+            "key_id": actual_key_id,
+            "verify_key": encode_key(bytes(verify_key)),
+            "signature_b64url": encode_key(bytes(signed.signature)),
+            "signed_at": "2026-05-03T00:00:00Z",
+        },
+    }
+
+    result = verify_signed_atom(envelope)
+
+    assert result.valid is False
+    assert "submitter_key_id" in result.error
+
+
+def test_signed_atom_rejects_envelope_id_mismatch():
+    envelope = sign_learning_atom(_valid_atom(), generate_signing_key())
+    envelope["id"] = "sha256:" + "0" * 64
+
+    result = verify_signed_atom(envelope)
+
+    assert result.valid is False
+    assert "envelope id" in result.error
