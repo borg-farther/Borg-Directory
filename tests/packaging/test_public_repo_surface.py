@@ -2,9 +2,15 @@ from __future__ import annotations
 
 import re
 import subprocess
+import sys
 from pathlib import Path
 
 import pytest
+
+if sys.version_info >= (3, 11):
+    import tomllib
+else:  # pragma: no cover
+    import tomli as tomllib
 
 ROOT = Path(__file__).resolve().parents[2]
 
@@ -83,6 +89,16 @@ def test_security_workflow_dependency_audit_is_fail_closed() -> None:
     assert "continue-on-error: true" not in workflow
     assert "python -m pip install -e \".[http,crypto]\"" in workflow
     assert "pip-audit" in workflow
+
+
+def test_http_extra_excludes_known_malicious_fastapi_release() -> None:
+    pyproject = tomllib.loads((ROOT / "pyproject.toml").read_text(encoding="utf-8"))
+    http_deps = pyproject["project"]["optional-dependencies"]["http"]
+    all_deps = pyproject["project"]["optional-dependencies"]["all"]
+
+    assert "fastapi>=0.110,<0.136.3" in http_deps
+    assert "fastapi>=0.110,<0.136.3" in all_deps
+    assert all("fastapi>=0.110\"" not in dep and "fastapi>=0.110," in dep for dep in http_deps + all_deps if dep.startswith("fastapi"))
 
 
 def test_archive_has_a_public_boundary_note() -> None:

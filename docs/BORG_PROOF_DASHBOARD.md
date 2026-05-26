@@ -1,8 +1,8 @@
 # Borg Proof Dashboard
 
-Generated: `2026-05-26T09:26:42Z`
+Generated: `2026-05-26T09:32:54Z`
 Repo: `https://github.com/borg-farther/Borg-Directory`
-Source snapshot: `57336f3bc1af677ca2bf5d21448727b865906133+dirty`
+Source snapshot: `a5414ee77898e47bab755d6f56d2e96b2ecaea8f+dirty`
 
 ## Big top verdict
 
@@ -57,7 +57,7 @@ Source snapshot: `57336f3bc1af677ca2bf5d21448727b865906133+dirty`
 | eval/load_10_snapshot.json | True | 0f344efa7f331ad0565edec7620ce931d89fc78be773b55a94915a0505b4966d | 2026-05-26T09:26:39.134280+00:00 | logical load 10: passed=True; total_requests=2347; success_rate=1.0; p95_ms=0.5692170001566409; model=asyncio_logical_users |
 | eval/load_100_snapshot.json | True | d493d1fb532fcfec8e7e6a80b8689b488c242b218b3bb1642d473bcd04bb433a | 2026-05-26T09:26:40.226635+00:00 | logical load 100: passed=True; total_requests=2245; success_rate=1.0; p95_ms=0.5549177061766385; model=asyncio_logical_users |
 | eval/load_1000_snapshot.json | True | 41600915b30893f0bf8c82fe17c58af32ed71e52c9c310b5f0eb4108d5ed0e5c | 2026-05-26T09:26:41.357996+00:00 | logical load 1000: passed=True; total_requests=2143; success_rate=1.0; p95_ms=0.5571870831772685; model=asyncio_logical_users |
-| pyproject.toml | True | 2c1888f1f9c22ec2d75394d1e8b0a821b8b50a6de9515440fca1032ef6445d43 | 2026-05-25T16:54:20Z | package version=3.3.14; scripts declared in project metadata |
+| pyproject.toml | True | 1cbad6f3f0895c472618b67b54ec68f4073ae78e420dc5eea9e5f26aaa946e66 | 2026-05-26T09:32:22Z | package version=3.3.14; scripts declared in project metadata |
 | borg/__init__.py | True | 20fd27330f31ba0829ebd6ab9fbe42834584418ac761947113c22e871438a5c9 | 2026-05-25T16:54:20Z | runtime __version__=3.3.14; top-level check() delegates to search |
 
 ## Blockers

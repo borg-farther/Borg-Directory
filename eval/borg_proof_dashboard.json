@@ -144,9 +144,9 @@
     {
       "claim_derived": "package version=3.3.14; scripts declared in project metadata",
       "exists": true,
-      "freshness_timestamp": "2026-05-25T16:54:20Z",
+      "freshness_timestamp": "2026-05-26T09:32:22Z",
       "path": "pyproject.toml",
-      "sha256": "2c1888f1f9c22ec2d75394d1e8b0a821b8b50a6de9515440fca1032ef6445d43"
+      "sha256": "1cbad6f3f0895c472618b67b54ec68f4073ae78e420dc5eea9e5f26aaa946e66"
     },
     {
       "claim_derived": "runtime __version__=3.3.14; top-level check() delegates to search",
@@ -358,7 +358,7 @@
       }
     ]
   },
-  "generated_at_utc": "2026-05-26T09:26:42Z",
+  "generated_at_utc": "2026-05-26T09:32:54Z",
   "metrics": {
     "active_contributors_consumers": {
       "honesty_label": "MISSING_BORG_ANALYTICS_ARTIFACT",
@@ -510,7 +510,7 @@
     "Before any public claim, replace logical-user load evidence with real external-user evidence or clearly label the distinction."
   ],
   "repo": "https://github.com/borg-farther/Borg-Directory",
-  "source_revision": "57336f3bc1af677ca2bf5d21448727b865906133+dirty",
+  "source_revision": "a5414ee77898e47bab755d6f56d2e96b2ecaea8f+dirty",
   "top_verdict": {
     "broad_public_launch": {
       "verdict": "NO-GO",
