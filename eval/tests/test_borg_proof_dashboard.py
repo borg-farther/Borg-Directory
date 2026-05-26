@@ -64,6 +64,12 @@ def test_borg_proof_dashboard_artifacts_exist_and_are_honest(tmp_path, monkeypat
     status = json.loads(status_path.read_text(encoding="utf-8"))
     value = json.loads(value_path.read_text(encoding="utf-8"))
     impact = json.loads(impact_path.read_text(encoding="utf-8"))
+    assert status["updated_at"] == data["generated_at_utc"]
+    assert value["updated_at"] == data["generated_at_utc"]
+    assert impact["updated_at"] == data["generated_at_utc"]
+    assert status["source_revision"] == data["source_revision"]
+    assert status["controlled_first_10_beta"] == data["top_verdict"]["controlled_first_10_beta"]
+    assert status["broad_public_launch"] == data["top_verdict"]["broad_public_launch"]
     assert status["repo"] == "https://github.com/borg-farther/Borg-Directory"
     assert status["state"].startswith("NO-GO public self-serve")
     assert status["cold_start_trust_hardening_gate"] in {"PASS", "FAIL", "UNKNOWN"}
@@ -106,6 +112,7 @@ def test_borg_proof_dashboard_artifacts_exist_and_are_honest(tmp_path, monkeypat
     assert len(data["first_10_user_scoreboard_template"]["rows"]) >= 10
     for row in data["evidence"]:
         assert row["path"]
+        assert row["path"] not in {"PROJECT_STATUS.md", "GO_NO_GO_DECISION.md", "UAT_RESULTS.md", "ROADMAP.md"}
         assert "exists" in row
         assert row["claim_derived"]
         if row["exists"]:

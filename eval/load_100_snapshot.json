@@ -1,28 +1,28 @@
 {
   "concurrency_model": "asyncio_logical_users",
-  "duration_seconds": 30.0,
+  "duration_seconds": 1.0,
   "failures": 0,
   "latency_ms": {
-    "avg": 0.4517485221138187,
-    "max": 2.7633681893348694,
-    "p50": 0.43132901191711426,
-    "p95": 0.5965669173747301,
-    "p99": 0.6592570338398211
+    "avg": 0.42711044620216426,
+    "max": 1.269741915166378,
+    "p50": 0.4107300192117691,
+    "p95": 0.5549177061766385,
+    "p99": 0.5802797991782427
   },
   "operation": "learning_atom_retrieval_firewall_privacy_prompt_scan",
   "passed": true,
-  "per_user_min_requests": 642,
-  "requests_per_second": 2142.233333333333,
+  "per_user_min_requests": 22,
+  "requests_per_second": 2245.0,
   "sample_failures": [],
   "success_rate": 1.0,
-  "successes": 64267,
+  "successes": 2245,
   "thresholds": {
     "min_requests_per_user": 1.0,
     "p95_ms_max": 1000.0,
     "p99_ms_max": 3000.0,
     "success_rate_min": 0.95
   },
-  "timestamp": "2026-05-26T06:21:33.075867+00:00",
-  "total_requests": 64267,
+  "timestamp": "2026-05-26T09:26:40.226635+00:00",
+  "total_requests": 2245,
   "users": 100
 }

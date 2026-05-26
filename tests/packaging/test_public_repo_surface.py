@@ -80,6 +80,8 @@ def test_generated_and_internal_artifacts_are_not_tracked_at_root() -> None:
 def test_security_workflow_dependency_audit_is_fail_closed() -> None:
     workflow = (ROOT / ".github" / "workflows" / "security-gates.yml").read_text(encoding="utf-8")
     assert "pip-audit || true" not in workflow
+    assert "continue-on-error: true" not in workflow
+    assert "python -m pip install -e \".[http,crypto]\"" in workflow
     assert "pip-audit" in workflow
 
 

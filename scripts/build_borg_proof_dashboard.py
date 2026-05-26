@@ -48,10 +48,6 @@ SOURCE_PATHS = [
     "eval/load_10_snapshot.json",
     "eval/load_100_snapshot.json",
     "eval/load_1000_snapshot.json",
-    "PROJECT_STATUS.md",
-    "GO_NO_GO_DECISION.md",
-    "UAT_RESULTS.md",
-    "ROADMAP.md",
 ]
 
 HYPE_RE = re.compile(r"\b(proven external adoption|hundreds of users|production ready)\b", re.I)
@@ -383,9 +379,6 @@ def build_model() -> dict:
         evidence.append(source_record(f"eval/load_{n}_snapshot.json", f"logical load {n}: passed={load_summary[str(n)]['passed']}; total_requests={load_summary[str(n)]['total_requests']}; success_rate={load_summary[str(n)]['success_rate']}; p95_ms={load_summary[str(n)]['p95_ms']}; model={load_summary[str(n)]['concurrency_model']}", load_summary[str(n)]["timestamp"]))
     evidence.append(source_record("pyproject.toml", f"package version={pv}; scripts declared in project metadata"))
     evidence.append(source_record("borg/__init__.py", f"runtime __version__={rv}; top-level check() delegates to search"))
-    for rel in ["PROJECT_STATUS.md", "GO_NO_GO_DECISION.md", "UAT_RESULTS.md", "ROADMAP.md"]:
-        if (ROOT / rel).exists():
-            evidence.append(source_record(rel, "prior local status/readiness narrative used as contextual evidence only, not external adoption proof"))
 
     first10_cols = [
         "user id/pseudonym",

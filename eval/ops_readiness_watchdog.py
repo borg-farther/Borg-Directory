@@ -111,6 +111,8 @@ def compile_watchdog(*, max_snapshot_age_hours: float = 24.0, allow_public_block
     version = public_gate.source_version()
     public_snapshot = _read_json(ROOT / "eval" / "public_self_serve_launch_gate_snapshot.json")
     status = _read_json(ROOT / "docs" / "public" / "status.json")
+    value = _read_json(ROOT / "docs" / "public" / "value.json")
+    impact = _read_json(ROOT / "docs" / "public" / "impact" / "impact.json")
     dashboard = _read_json(ROOT / "eval" / "borg_proof_dashboard.json")
     pypi = _read_json(ROOT / "eval" / "pypi_fresh_install_snapshot.json")
     cold = _read_json(ROOT / "eval" / "cold_start_trust_gate_snapshot.json")
@@ -139,6 +141,9 @@ def compile_watchdog(*, max_snapshot_age_hours: float = 24.0, allow_public_block
         "pypi_fresh_install_snapshot": pypi,
         "cold_start_trust_gate_snapshot": cold,
         "borg_proof_dashboard": dashboard,
+        "public_status_json": status,
+        "public_value_json": value,
+        "public_impact_json": impact,
         "self_service_ops_gate_snapshot": _read_json(ROOT / "eval" / "self_service_ops_gate_snapshot.json"),
         "rollback_comms_drill_snapshot": _read_json(ROOT / "eval" / "rollback_comms_drill_snapshot.json"),
     }.items():
@@ -178,6 +183,37 @@ def compile_watchdog(*, max_snapshot_age_hours: float = 24.0, allow_public_block
         "controlled_verdict": (status.get("controlled_first_10_beta") or {}).get("verdict"),
         "max_recommended_real_users_now": status.get("max_recommended_real_users_now"),
         "verified_external_users": status.get("verified_external_users"),
+    }
+    metrics = dashboard.get("metrics") or {}
+    measured = ((metrics.get("measured_savings") or {}).get("value") or {}) if isinstance(metrics, dict) else {}
+    normalized_measured = {
+        "rows_with_measured_value": int(measured.get("rows_with_measured_value") or 0),
+        "dead_ends_avoided_confirmed": int(measured.get("dead_ends_avoided_confirmed") or 0),
+        "net_minutes_saved": float(measured.get("net_minutes_saved") or 0.0),
+        "positive_minutes_saved": float(measured.get("positive_minutes_saved") or 0.0),
+        "negative_minutes_cost": float(measured.get("negative_minutes_cost") or 0.0),
+        "net_tokens_saved": int(measured.get("net_tokens_saved") or 0),
+        "positive_tokens_saved": int(measured.get("positive_tokens_saved") or 0),
+        "negative_tokens_cost": int(measured.get("negative_tokens_cost") or 0),
+        "counterfactual_basis_counts": measured.get("counterfactual_basis_counts") or {},
+    }
+    checks["public_json_dashboard_consistency"] = {
+        "passed": bool(
+            status.get("updated_at") == dashboard.get("generated_at_utc")
+            and value.get("updated_at") == dashboard.get("generated_at_utc")
+            and impact.get("updated_at") == dashboard.get("generated_at_utc")
+            and status.get("source_revision") == dashboard.get("source_revision")
+            and status.get("controlled_first_10_beta") == (dashboard.get("top_verdict") or {}).get("controlled_first_10_beta")
+            and status.get("broad_public_launch") == (dashboard.get("top_verdict") or {}).get("broad_public_launch")
+            and status.get("max_recommended_real_users_now") == (metrics.get("max_recommended_real_users_now") or {}).get("value", 0)
+            and status.get("verified_external_users") == (metrics.get("verified_external_users") or {}).get("value", 0)
+            and value.get("measured_savings") == normalized_measured
+            and impact.get("measured_savings") == value.get("measured_savings")
+        ),
+        "status_updated_at": status.get("updated_at"),
+        "dashboard_generated_at_utc": dashboard.get("generated_at_utc"),
+        "status_source_revision": status.get("source_revision"),
+        "dashboard_source_revision": dashboard.get("source_revision"),
     }
     head = _git_head()
     clean = _git_clean()

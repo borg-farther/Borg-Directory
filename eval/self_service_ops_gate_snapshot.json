@@ -98,12 +98,12 @@
         "path": ".github/CODEOWNERS"
       },
       "rollback_drill_snapshot": {
-        "age_hours": 2.262277777777778e-05,
+        "age_hours": 2.2976944444444442e-05,
         "dry_run_only": true,
         "exists": true,
         "failed_steps": [],
         "fresh": true,
-        "generated_at_utc": "2026-05-26T06:22:04.233435+00:00",
+        "generated_at_utc": "2026-05-26T09:22:46.288396+00:00",
         "max_age_hours": 24.0,
         "missing_steps": [],
         "passed": true,
@@ -118,7 +118,7 @@
     }
   },
   "gate_type": "self_service_ops_readiness",
-  "generated_at_utc": "2026-05-26T06:22:04.315107+00:00",
+  "generated_at_utc": "2026-05-26T09:22:46.371352+00:00",
   "passed": true,
   "rollout_policy": "Controlled first-10 may proceed only when ops readiness passes; broad public self-serve still requires row-derived first-10 external evidence.",
   "schema_version": 1
