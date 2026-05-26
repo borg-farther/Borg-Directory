@@ -81,6 +81,7 @@ CURRENT_CLAIM_DOCS = [
     Path("docs/ROLLBACK_AND_COMMS_RUNBOOK.md"),
     Path("docs/COLD_START_TRUST_HARDENING.md"),
     Path("docs/LIVE_MCP_SELF_SERVE_CANARY.md"),
+    Path("docs/20260526_7_USER_CONTROLLED_LAUNCH_AND_100_USER_STAGE_GATES.md"),
     Path("docs/BORG_PROOF_DASHBOARD.md"),
     Path("docs/BORG_PROOF_DASHBOARD.html"),
     Path("docs/public/proof-dashboard/index.html"),
@@ -346,7 +347,7 @@ def docs_claim_guard(
 
         if package_evidence_ready:
             stale_package_blockers_after_release = [
-                (r"(?i)NO-GO for this source revision until .*PyPI", "stale package NO-GO after PyPI canary"),
+                (r"(?i)NO-GO for this source revision\W{0,40}until .*PyPI", "stale package NO-GO after PyPI canary"),
                 (r"(?i)blocked for `?agent-borg==" + re.escape(expected_version) + r"`? until PyPI", "stale package-blocked wording after PyPI canary"),
                 (r"(?i)until `?agent-borg==" + re.escape(expected_version) + r"`? is published", "stale unpublished-version wording after PyPI canary"),
                 (r"(?i)PENDING until publish", "stale pending-publish wording after PyPI canary"),

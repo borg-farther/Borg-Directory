@@ -260,6 +260,27 @@ def test_docs_claim_guard_blocks_controlled_beta_go_until_package_canary_passes(
     assert any(v["kind"] == "controlled first-10 package GO before PyPI canary" for v in result["violations"])
 
 
+def test_docs_claim_guard_blocks_markdown_stale_package_no_go_after_canary(tmp_path: Path, monkeypatch) -> None:
+    monkeypatch.setattr(gate, "ROOT", tmp_path)
+    doc = tmp_path / "README.md"
+    doc.write_text(
+        "**Status:** controlled first-10 public-package beta infrastructure is "
+        "**NO-GO for this source revision** until PyPI latest, fresh-install, "
+        "and stdio MCP canaries pass for that exact version.\n",
+        encoding="utf-8",
+    )
+
+    result = gate.docs_claim_guard(
+        [Path("README.md")],
+        "9.9.9",
+        public_evidence_ready=False,
+        package_evidence_ready=True,
+    )
+
+    assert result["passed"] is False
+    assert any(v["kind"] == "stale package NO-GO after PyPI canary" for v in result["violations"])
+
+
 def test_docs_claim_guard_blocks_known_package_beta_contradictions(tmp_path: Path, monkeypatch) -> None:
     monkeypatch.setattr(gate, "ROOT", tmp_path)
     doc = tmp_path / "README.md"

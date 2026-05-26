@@ -3,26 +3,26 @@
   "duration_seconds": 1.0,
   "failures": 0,
   "latency_ms": {
-    "avg": 0.4164500366959881,
-    "max": 1.2168618850409985,
-    "p50": 0.38569094613194466,
-    "p95": 0.5692170001566409,
-    "p99": 0.5936667695641518
+    "avg": 0.4734740885272984,
+    "max": 0.9529609233140945,
+    "p50": 0.4707559710368514,
+    "p95": 0.5990194738842546,
+    "p99": 0.6211620359681547
   },
   "operation": "learning_atom_retrieval_firewall_privacy_prompt_scan",
   "passed": true,
-  "per_user_min_requests": 234,
-  "requests_per_second": 2347.0,
+  "per_user_min_requests": 206,
+  "requests_per_second": 2060.0,
   "sample_failures": [],
   "success_rate": 1.0,
-  "successes": 2347,
+  "successes": 2060,
   "thresholds": {
     "min_requests_per_user": 1.0,
     "p95_ms_max": 2000.0,
     "p99_ms_max": 4000.0,
     "success_rate_min": 0.95
   },
-  "timestamp": "2026-05-26T09:26:39.134280+00:00",
-  "total_requests": 2347,
+  "timestamp": "2026-05-26T10:13:24.573071+00:00",
+  "total_requests": 2060,
   "users": 10
 }

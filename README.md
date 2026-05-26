@@ -13,7 +13,7 @@ Give Borg an error, traceback, failed test, install problem, config failure, or 
 - **MCP server command:** `borg-mcp`
 - **Canonical repo:** https://github.com/borg-farther/Borg-Directory
 
-**Status:** source/local hardening is ready for release-candidate review as `agent-borg==3.3.14`, but controlled first-10 public-package beta infrastructure is **NO-GO for this source revision** until PyPI latest, fresh-install, and stdio MCP canaries pass for that exact version. Public self-serve launch, 100-user rollout, served remote MCP, and measured external lift are not claimed until row-derived external-user evidence passes.
+**Status:** `agent-borg==3.3.14` is ready for a controlled first-10 public-package beta through the local CLI / stdio MCP install path, capped at 10 consented external users. Broad public self-serve launch, 100-user rollout, served remote MCP, and measured external lift are **not claimed** until row-derived external-user evidence passes and any served runtime is fingerprinted to the current package/source version.
 
 ## Try Borg in 60 seconds
 
