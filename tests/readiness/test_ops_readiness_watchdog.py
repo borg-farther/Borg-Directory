@@ -22,6 +22,17 @@ def test_watchdog_allows_only_first_10_external_evidence_as_public_blocker() -> 
     assert watchdog._public_blockers_are_allowed(["self-service ops readiness gate is missing"], "first_10_external_evidence") is False
 
 
+def test_source_revision_honesty_accepts_dirty_ancestor_in_clean_pr_checkout(monkeypatch) -> None:
+    base = "a" * 40
+    head = "b" * 40
+    monkeypatch.setattr(watchdog, "_git_is_ancestor", lambda candidate, current: candidate == base and current == head)
+
+    assert watchdog._source_revision_is_honest(f"{base}+dirty", head, clean=True) is True
+    assert watchdog._source_revision_is_honest(f"{'c' * 40}+dirty", head, clean=True) is False
+    assert watchdog._source_revision_is_honest(f"{head}+dirty", head, clean=True) is True
+    assert watchdog._source_revision_is_honest(head, head, clean=True) is True
+
+
 def test_ops_watchdog_compiles_consistent_green_ops_snapshot(monkeypatch) -> None:
     monkeypatch.setattr(watchdog.public_gate, "source_version", lambda: "9.9.9")
     monkeypatch.setattr(watchdog.public_gate, "compile_gate", lambda fetch_network=True: _public_snapshot())

@@ -19,6 +19,8 @@ ALLOWED_ROOT_FILES = {
     "LICENSE",
     "llms.txt",
     "README.md",
+    "SECURITY.md",
+    "SUPPORT.md",
     "pyproject.toml",
 }
 

@@ -63,6 +63,33 @@ def _git_clean() -> bool:
         return False
 
 
+def _git_is_ancestor(candidate: str, head: str | None) -> bool:
+    if not candidate or not head:
+        return False
+    try:
+        subprocess.check_call(
+            ["git", "merge-base", "--is-ancestor", candidate, head],
+            cwd=ROOT,
+            stdout=subprocess.DEVNULL,
+            stderr=subprocess.DEVNULL,
+        )
+        return True
+    except Exception:
+        return False
+
+
+def _source_revision_is_honest(source_rev: Any, head: str | None, clean: bool) -> bool:
+    if not source_rev or not head:
+        return False
+    source = str(source_rev)
+    if source == head or source == f"{head}+dirty":
+        return True
+    if source.endswith("+dirty"):
+        base = source.removesuffix("+dirty")
+        return (not clean) or _git_is_ancestor(base, head)
+    return False
+
+
 def _workflow_has_schedule() -> dict[str, Any]:
     path = ROOT / ".github" / "workflows" / "self-service-watchdog.yml"
     text = path.read_text(encoding="utf-8") if path.exists() else ""
@@ -156,11 +183,11 @@ def compile_watchdog(*, max_snapshot_age_hours: float = 24.0, allow_public_block
     clean = _git_clean()
     source_rev = dashboard.get("source_revision") or status.get("source_revision")
     checks["source_revision_honesty"] = {
-        "passed": bool(source_rev and (source_rev == head or source_rev == f"{head}+dirty" or (not clean and str(source_rev).endswith("+dirty")))),
+        "passed": _source_revision_is_honest(source_rev, head, clean),
         "head": head,
         "git_clean": clean,
         "source_revision": source_rev,
-        "policy": "Committed dashboards may be generated from a dirty tree and must mark +dirty; clean-tree status endpoints should match HEAD.",
+        "policy": "Committed dashboards may be generated from a dirty tree and must mark +dirty; clean-tree status endpoints should match HEAD or a dirty ancestor used to generate committed proof artifacts.",
     }
 
     blockers: list[str] = []
