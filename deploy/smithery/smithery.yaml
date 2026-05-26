@@ -40,7 +40,7 @@ longDescription: |
   learning from previous agent experiences.
   
   Features:
-  - 13 built-in tools for problem-solving efficiency
+  - 24 built-in MCP tools for failure memory, rescue, feedback, runtime fingerprinting, and readiness-safe diagnostics
   - Search previously solved problems
   - Retrieve solution patterns and approaches
   - Reduce token waste by avoiding redundant work
@@ -68,11 +68,10 @@ authorAvatarUrl: ""
 
 # Server connection details
 # ===========================================================
-# The MCP server command to run
-serverCommand: "python"
-serverArgs:
-  - "-m"
-  - "borg.integrations.mcp_server"
+# The MCP server command to run. Use the installed console script so users run the
+# same package-managed runtime proven by the PyPI/stdout MCP freshness gate.
+serverCommand: "borg-mcp"
+serverArgs: []
 
 # Environment variables (if needed - leave empty for borg)
 serverEnv: {}
@@ -85,11 +84,8 @@ serverConfig: |
   {
     "mcpServers": {
       "borg": {
-        "command": "python",
-        "args": [
-          "-m",
-          "borg.integrations.mcp_server"
-        ]
+        "command": "borg-mcp",
+        "args": []
       }
     }
   }
@@ -110,23 +106,15 @@ requiresAuth: false
 serverInfo: |
   {
     "name": "borg-mcp-server",
-    "version": "1.0.0"
+    "version": "3.3.14"
   }
 
-# Tools exposed by this MCP server (13 total):
-# - borg_search: Search the knowledge base
-# - borg_pull: Pull solutions
-# - borg_try: Try a solution
-# - borg_init: Initialize
-# - borg_apply: Apply a solution
-# - borg_publish: Publish to the knowledge base
-# - borg_feedback: Give feedback
-# - borg_suggest: Suggest improvements
-# - borg_observe: Observe agent behavior
-# - borg_convert: Convert between formats
-# - borg_context: Get context
-# - borg_recall: Recall past solutions
-# - borg_reputation: Check reputation
+# Tools exposed by this MCP server (24 total; authoritative list is discovered from borg-mcp tools/list):
+# - borg_rescue / error_lookup: ACTION / STOP / VERIFY rescue for concrete failures
+# - borg_observe / borg_recall / borg_record_failure: task-start guidance and durable learning memory
+# - borg_feedback / borg_apply / borg_search / borg_pull / borg_try / borg_generate / borg_convert: workflow-pack operations
+# - borg_runtime_fingerprint: version/path/hash/canary proof for stale-runtime detection
+# - reputation, analytics, dashboard, dojo, context, publish, init, first-10/readiness helpers
 
 # OAuth configuration (if requiresAuth is true)
 # oauthConfig: |
@@ -157,7 +145,7 @@ metadata: |
   {
     "language": "Python",
     "license": "MIT",
-    "mcpTools": 13,
+    "mcpTools": 24,
     "description": "Stop your agent burning tokens on problems someone else already solved"
   }
 
@@ -189,7 +177,7 @@ metadata: |
 # 4. Server card JSON at /.well-known/mcp/server-card.json is auto-discovered
 #
 # To test locally with Smithery CLI:
-#   smithery mcp add "python -m borg.integrations.mcp_server" --id borg
+#   smithery mcp add "borg-mcp" --id borg
 #
 # To publish:
 #   1. Login at https://smithery.ai/dashboard

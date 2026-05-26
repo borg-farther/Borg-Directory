@@ -2,7 +2,9 @@ from __future__ import annotations
 
 from pathlib import Path
 import json
+import re
 import subprocess
+import tomllib
 
 ROOT = Path(__file__).resolve().parents[2]
 
@@ -42,6 +44,27 @@ def test_readme_leads_with_concrete_value_before_install_matrix() -> None:
     assert "BORG RESCUE" in top and "status: matched" in top
     assert "Canonical/no-loss policy" not in top
     assert top.index("## Try Borg in 60 seconds") < text.index("## 1. Install `agent-borg`")
+
+
+def test_runtime_distribution_drafts_do_not_pin_stale_borg_versions() -> None:
+    project = tomllib.loads(read("pyproject.toml"))["project"]
+    current_version = project["version"]
+
+    dockerfile = read("deploy/docker/Dockerfile.borg")
+    assert f"ARG BORG_VERSION={current_version}" in dockerfile
+    assert f"agent-borg=={current_version}" not in dockerfile, "Docker build should use the tested BORG_VERSION ARG"
+    stale_pins = [pin for pin in re.findall(r"agent-borg==([0-9]+\.[0-9]+\.[0-9]+)", dockerfile) if pin != current_version]
+    assert stale_pins == []
+    assert 'borg --version | grep -q "${BORG_VERSION}"' in dockerfile
+
+    smithery = read("deploy/smithery/smithery.yaml")
+    assert 'serverCommand: "borg-mcp"' in smithery
+    assert '"version": "' + current_version + '"' in smithery
+    assert '"mcpTools": 24' in smithery
+    assert 'borg_runtime_fingerprint' in smithery
+    assert "python -m borg.integrations.mcp_server" not in smithery
+    assert '"version": "1.0.0"' not in smithery
+    assert "13 built-in tools" not in smithery
 
 
 def test_current_docs_do_not_contradict_3310_published_state() -> None:
@@ -177,6 +200,7 @@ def test_non_current_public_docs_are_bannered_or_operator_scoped() -> None:
         "CANONICAL_REPO.md",
         "LIVE_MCP_SELF_SERVE_CANARY.md",
         "20260526_7_USER_CONTROLLED_LAUNCH_AND_100_USER_STAGE_GATES.md",
+        "20260526_ALWAYS_CURRENT_RUNTIME_AND_FEDERATED_LEARNING_PLAN.md",
     }
     docs = ROOT / "docs"
     gitlink_roots = _gitlink_doc_roots()
