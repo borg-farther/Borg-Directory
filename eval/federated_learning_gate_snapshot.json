@@ -1,0 +1,240 @@
+{
+  "adversarial_coverage": {
+    "in_gate": [
+      "clean_client_http_sync",
+      "tombstone_revocation_convergence",
+      "manifest_replay_rejected"
+    ],
+    "in_tests": [
+      "unsigned_manifest_rejected",
+      "manifest_payload_tamper_rejected",
+      "untrusted_registry_key_rejected",
+      "expired_manifest_rejected",
+      "channel_mismatch_rejected",
+      "hash_mismatch_no_partial_import",
+      "payload_inflated_tenant_count_ignored",
+      "revoked_atom_search_get_reimport_blocked"
+    ]
+  },
+  "broad_public_self_serve": "NO-GO",
+  "clean_client_sync": {
+    "after_matches": 1,
+    "before_matches": 0,
+    "first_sync": {
+      "imported": 1,
+      "manifest_hash": "da651d69c99f024a665b359833145bc999249e132a7995aad67a7f62bd5bf640",
+      "manifest_sequence": 1,
+      "remote": true,
+      "revocation_convergence_seconds": 0.0,
+      "revoked": 0,
+      "skipped": 0
+    },
+    "passed": true,
+    "verified_tenant_count_source": "signed_registry_manifest"
+  },
+  "external_user_lift_claimed": false,
+  "external_user_lift_note": "This gate proves clean-client protocol lift, not row-derived real external-user usefulness.",
+  "generated_at_utc": "2026-05-26T21:30:37Z",
+  "proof_provenance": {
+    "command": "python eval/run_federated_learning_gate.py --output eval/federated_learning_gate_snapshot.json",
+    "git": {
+      "branch": "fix/runtime-freshness-federated-learning-plan",
+      "commit": "4066bbfbbaaaed29d415ba6023ff923892dd144d",
+      "dirty": true,
+      "dirty_files": [
+        "M borg/cli.py",
+        " M borg/core/atom_registry.py",
+        " M docs/20260526-1302_OPTIMAL_SAFE_COLLECTIVE_LEARNING_LOOP.md",
+        " M docs/20260526_ALWAYS_CURRENT_RUNTIME_AND_FEDERATED_LEARNING_PLAN.md",
+        " M docs/LEARNING_ATOM_SCHEMA.md",
+        " M docs/README.md",
+        " M eval/collective_learning_loop_controls.json",
+        " M tests/cli/test_cli_atom.py",
+        " M tests/packaging/test_public_presentation_contract.py",
+        " M tests/security/test_collective_learning_loop_controls.py",
+        "?? docs/20260526-2046_REMOTE_FEDERATED_LEARNING_GO_PROOF.md",
+        "?? docs/20260526-2115_FEDERATED_LEARNING_OPTIMALITY_AUDIT.md",
+        "?? eval/federated_learning_gate_snapshot.json",
+        "?? eval/federated_learning_optimality_audit.json",
+        "?? eval/run_federated_learning_gate.py",
+        "?? eval/run_federated_learning_optimality_audit.py",
+        "?? eval/tests/test_federated_learning_optimality_audit.py",
+        "?? tests/security/test_federated_atom_registry.py",
+        "?? tests/security/test_federated_learning_gate.py"
+      ]
+    },
+    "max_revocation_convergence_seconds": 2.0
+  },
+  "references": [
+    "https://theupdateframework.github.io/specification/latest/",
+    "https://docs.sigstore.dev/logging/overview/",
+    "https://slsa.dev/attestation-model"
+  ],
+  "remote_http_signed_manifest": {
+    "atom_count": 1,
+    "atom_envelope_hash": "07c8a53d7153b3ac9c1b34ebdf2437fbbbc6a20f6f2cf66a6111133bb212da2e",
+    "atom_id": "sha256:bce29b8c36e58e29358c011d79708c7900e622172ea77c4f5e3a4b83e09d9887",
+    "channel": "global",
+    "expires_at": "2026-05-26T21:32:43Z",
+    "manifest_hash": "da651d69c99f024a665b359833145bc999249e132a7995aad67a7f62bd5bf640",
+    "manifest_signature_key_id": "ed25519:db9d6dce1e8e4a38",
+    "passed": true,
+    "receipt_decision": "global_candidate",
+    "receipt_hash": "4d8e4d3f5a0689f8c80aa6247c0888749af967b4ec34077d78d1decfe4e8a24b",
+    "receipt_id": "receipt-sha256:7d634e073c699eb8efcdb19a6e1b4b5942933946fd3340e3273a64fbcd07caf3",
+    "registry_key_id": "ed25519:db9d6dce1e8e4a38",
+    "sequence": 1,
+    "tombstone_count_after_revoke": 1,
+    "tombstone_hash": "cda4ae4006c0ab1442eb1bee55c18724be67bf5a31428d48859cd637b2afe195"
+  },
+  "replay_protection": {
+    "error": "registry manifest replay detected",
+    "passed": true
+  },
+  "revocation_convergence": {
+    "after_revocation_matches": 0,
+    "observed_seconds": 0.06837701797485352,
+    "passed": true,
+    "post_revocation_get_atom_is_none": true,
+    "reimport_suppressed": true,
+    "second_sync": {
+      "imported": 0,
+      "manifest_hash": "926af408c73652a1814b51720791fa2136932c142c3571cf8c766f8b7939c142",
+      "manifest_sequence": 2,
+      "remote": true,
+      "revocation_convergence_seconds": 0.06837701797485352,
+      "revoked": 1,
+      "skipped": 1
+    },
+    "slo_seconds": 2.0
+  },
+  "runtime_freshness": {
+    "borg_version": "3.3.14",
+    "confidence_gate_canary": true,
+    "fingerprint": {
+      "borg_dir": "/root/.borg/guild",
+      "borg_home": "/root/.borg",
+      "borg_version": "3.3.14",
+      "confidence_gate_canary": {
+        "passed": true,
+        "real_permission_positive_control_safe": true,
+        "stale_guidance_stripped": true,
+        "stale_permission_match": false,
+        "stale_permission_safe": false,
+        "synthetic_pack_safe": false
+      },
+      "cwd": "/root/hermes-workspace/borg",
+      "executable": "/root/.hermes/hermes-agent/venv/bin/python",
+      "loaded_function_hashes": {
+        "borg.core.confidence_gate.trace_match_is_confident": {
+          "argcount": 2,
+          "exists": true,
+          "firstlineno": 200,
+          "function": "trace_match_is_confident",
+          "module": "borg.core.confidence_gate",
+          "sha256": "1be4413b51e246e489cb06856d5b585958baef0f746acc339b74f70d291ccd85"
+        },
+        "borg.integrations.mcp_server._detect_technology": {
+          "argcount": 2,
+          "exists": true,
+          "firstlineno": 2360,
+          "function": "_detect_technology",
+          "module": "borg.integrations.mcp_server",
+          "sha256": "9f9f6ccd2c1fc94a1ee6e67c5e9c802751dbf018eb5ddd364013e86270b09f34"
+        },
+        "borg.integrations.mcp_server.borg_observe": {
+          "argcount": 5,
+          "exists": true,
+          "firstlineno": 3573,
+          "function": "borg_observe",
+          "module": "borg.integrations.mcp_server",
+          "sha256": "c5cbab54cccf5860f0d66006daf604f0942bebbec5f147367704d4b38751b5de"
+        }
+      },
+      "modules": {
+        "borg": {
+          "exists": true,
+          "mtime": 1779728060.2381442,
+          "mtime_iso_utc": "2026-05-25T16:54:20Z",
+          "path": "/root/hermes-workspace/borg/borg/__init__.py",
+          "sha256": "20fd27330f31ba0829ebd6ab9fbe42834584418ac761947113c22e871438a5c9",
+          "size": 2796
+        },
+        "borg.core.confidence_gate": {
+          "exists": true,
+          "mtime": 1779788441.6747067,
+          "mtime_iso_utc": "2026-05-26T09:40:41Z",
+          "path": "/root/hermes-workspace/borg/borg/core/confidence_gate.py",
+          "sha256": "d49af128af42f25ce52f92c7ac6705eaf69be243bb1184fba452fe6cafc029cf",
+          "size": 12529
+        },
+        "borg.core.runtime_fingerprint": {
+          "exists": true,
+          "mtime": 1779728060.239144,
+          "mtime_iso_utc": "2026-05-25T16:54:20Z",
+          "path": "/root/hermes-workspace/borg/borg/core/runtime_fingerprint.py",
+          "sha256": "085714818e306dc34be78a1aaa31ef298388501217a31b34686d60eeaac8b32a",
+          "size": 11572
+        },
+        "borg.integrations.mcp_server": {
+          "exists": true,
+          "mtime": 1779811573.050663,
+          "mtime_iso_utc": "2026-05-26T16:06:13Z",
+          "path": "/root/hermes-workspace/borg/borg/integrations/mcp_server.py",
+          "sha256": "e4e6aebac8cdb83199fbdf8a86ac41ac7bce8cd1e50c80cedad85863cb06c733",
+          "size": 149513
+        }
+      },
+      "observe_behavior_canary": {
+        "blockers": [],
+        "meta_detected_technology": "",
+        "meta_excerpt": "NO_CONFIDENT_MATCH (side-effect-safe helper canary; full stdio canary lives in eval/cold_start_trust_gate.py)",
+        "meta_prior_answer_permission_guidance_safe": false,
+        "meta_prompt_failed_closed": true,
+        "passed": true,
+        "permission_excerpt": "ACTION: concrete Permission denied prompt is eligible for permission-specific guidance.",
+        "permission_prompt_specific": true,
+        "side_effect_safe": true,
+        "synthetic_meta_guidance_safe": false
+      },
+      "paths": {
+        "atom_db_path": "/root/.borg/atoms.db",
+        "borg_dir": "/root/.borg/guild",
+        "borg_home": "/root/.borg",
+        "embedding_cache_path": "/root/.borg/embeddings.pkl",
+        "embedding_index_path": "/root/.borg/embeddings_index.pkl",
+        "failure_memory_dir": "/root/.borg/failures",
+        "guild_db_path": "/root/.borg/guild/guild.db",
+        "tenant_secret_path": "/root/.borg/tenant_secret",
+        "trace_db_path": "/root/.borg/traces.db",
+        "v3_db_path": "/root/.borg/borg_v3.db"
+      },
+      "pid": 674442,
+      "python": "3.11.15",
+      "reload_status": "loaded_code_matches_source_behavior",
+      "schema_version": 1,
+      "source_version": "3.3.14",
+      "success": true,
+      "sys_path_head": [
+        "/root/hermes-workspace/borg",
+        "/root/hermes-workspace/borg/eval",
+        "/root/.local/share/uv/python/cpython-3.11.15-linux-x86_64-gnu/lib/python311.zip",
+        "/root/.local/share/uv/python/cpython-3.11.15-linux-x86_64-gnu/lib/python3.11",
+        "/root/.local/share/uv/python/cpython-3.11-linux-x86_64-gnu/lib/python3.11/lib-dynload",
+        "/root/.hermes/hermes-agent/venv/lib/python3.11/site-packages",
+        "__editable__.hermes_agent-0.14.0.finder.__path_hook__",
+        "/root/.hermes/hermes-agent/mini-swe-agent/src"
+      ],
+      "tool": "borg_runtime_fingerprint",
+      "version_matches_source": true
+    },
+    "observe_behavior_canary": true,
+    "passed": true,
+    "source_version": "3.3.14",
+    "version_matches_source": true
+  },
+  "schema_version": 1,
+  "scope": "remote_global_federated_protocol",
+  "success": true,
+  "verdict": "GO"
+}

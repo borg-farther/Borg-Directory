@@ -1,0 +1,101 @@
+{
+  "evidence": {
+    "federated_protocol_verdict": "GO",
+    "federated_scope": "remote_global_federated_protocol",
+    "federated_snapshot": "/root/hermes-workspace/borg/eval/federated_learning_gate_snapshot.json",
+    "first10_counts": {
+      "critical_privacy_security_failures": 0,
+      "install_successes": 0,
+      "real_users": 0,
+      "rows_with_measured_value": 0,
+      "useful_rescue_moments": 0
+    },
+    "first10_scoreboard": "/root/hermes-workspace/borg/eval/first_10_user_scoreboard.json",
+    "trace_stats": {
+      "available": true,
+      "distinct_task_descriptions": 78,
+      "duplicate_pressure": 0.7719,
+      "outcomes": {
+        "failure": 19,
+        "success": 323
+      },
+      "path": "/root/.borg/traces.db",
+      "total_traces": 342
+    }
+  },
+  "external_design_anchors": [
+    {
+      "lesson": "Signed metadata, file hashes, expiry, rollback/replay resistance are necessary for safe propagation.",
+      "name": "TUF",
+      "url": "https://theupdateframework.github.io/specification/latest/"
+    },
+    {
+      "lesson": "Transparency logs make metadata tamper-resistant/auditable; Borg does not yet implement this append-only layer.",
+      "name": "Sigstore/Rekor",
+      "url": "https://docs.sigstore.dev/logging/overview/"
+    },
+    {
+      "lesson": "Artifact metadata should say where, when, and how something was produced; Borg proof packets now need this provenance.",
+      "name": "SLSA provenance",
+      "url": "https://slsa.dev/spec/v0.1/provenance"
+    },
+    {
+      "lesson": "Multiple identities can overpower honest clients; Borg needs outcome-derived tenant independence, not self-reported quorum.",
+      "name": "Federated-learning Sybil/poisoning literature",
+      "url": "https://ar5iv.labs.arxiv.org/html/1808.04866"
+    }
+  ],
+  "generated_at_utc": "2026-05-26T21:30:44Z",
+  "git": {
+    "branch": "fix/runtime-freshness-federated-learning-plan",
+    "commit": "4066bbfbbaaaed29d415ba6023ff923892dd144d",
+    "dirty": true,
+    "dirty_files": [
+      "M borg/cli.py",
+      " M borg/core/atom_registry.py",
+      " M docs/20260526-1302_OPTIMAL_SAFE_COLLECTIVE_LEARNING_LOOP.md",
+      " M docs/20260526_ALWAYS_CURRENT_RUNTIME_AND_FEDERATED_LEARNING_PLAN.md",
+      " M docs/LEARNING_ATOM_SCHEMA.md",
+      " M docs/README.md",
+      " M eval/collective_learning_loop_controls.json",
+      " M tests/cli/test_cli_atom.py",
+      " M tests/packaging/test_public_presentation_contract.py",
+      " M tests/security/test_collective_learning_loop_controls.py",
+      "?? docs/20260526-2046_REMOTE_FEDERATED_LEARNING_GO_PROOF.md",
+      "?? docs/20260526-2115_FEDERATED_LEARNING_OPTIMALITY_AUDIT.md",
+      "?? eval/federated_learning_gate_snapshot.json",
+      "?? eval/federated_learning_optimality_audit.json",
+      "?? eval/run_federated_learning_gate.py",
+      "?? eval/run_federated_learning_optimality_audit.py",
+      "?? eval/tests/test_federated_learning_optimality_audit.py",
+      "?? tests/security/test_federated_atom_registry.py",
+      "?? tests/security/test_federated_learning_gate.py"
+    ]
+  },
+  "hard_boundary": "Protocol GO is not evidence of maximum agent value, public adoption, or measured external lift.",
+  "p0_gaps_to_google_tier": [
+    "Tie every guidance event to an outcome receipt: exact guidance shown, verification command, worked/failed result, time/tokens/dead-ends avoided.",
+    "Deduplicate and generalize traces into canonical atoms before promotion; repeated seed-like traces must not inflate confidence.",
+    "Compute tenant quorum from signed independent outcome receipts, not caller-supplied counts at registry ingestion time.",
+    "Unify packs, traces, atoms, failure memory, negative evidence, recency, and project context into one scored retrieval/routing API.",
+    "Run the 3-condition knowledge-system evaluation: no Borg, empty Borg scaffold, seeded Borg knowledge; report pure knowledge lift separately.",
+    "Keep public/self-serve and measured lift NO-GO until first-10 row-derived evidence passes."
+  ],
+  "schema_version": 1,
+  "scores_0_to_10": {
+    "effective_collective_learning": 4.0,
+    "external_truth_grounding": 1.0,
+    "overall_optimality_ceiling": 2.0,
+    "proof_packet_richness": 10.0,
+    "protocol_security": 9.0,
+    "routing_value_speed": 5.0,
+    "signal_quality": 3.0
+  },
+  "verdict": {
+    "effective_collective_learning": "NO-GO_REAL_WORLD_VALUE_NOT_PROVEN",
+    "external_user_lift": "NO-GO",
+    "google_god_tier_optimal": "NO-GO",
+    "public_self_serve_launch": "NO-GO",
+    "remote_global_federated_protocol": "GO"
+  }
+}

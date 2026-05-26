@@ -1,8 +1,8 @@
 # Optimal safe collective learning loop
 
-**File rev:** 20260526-1302 rev A  
-**Repo:** `/root/hermes-workspace/borg`  
-**Status:** executable architecture contract + current GO/NO-GO. Local primitives hardened in this session; local filesystem staging propagation is implemented and tested; global/federated learning remains blocked until remote registry/runtime/revocation convergence gates pass.
+**File rev:** 20260526-1302 rev B
+**Repo:** `/root/hermes-workspace/borg`
+**Status:** executable architecture contract + current GO/NO-GO. Local primitives and local filesystem staging are GO; remote/global/federated protocol is GO. Broad public self-serve launch and real external-user lift remain separate NO-GO claims until first-10 evidence rows pass.
 
 ## 1. Task outline
 
@@ -16,7 +16,7 @@ The loop must optimize all of these at once:
 4. **Utility:** agents get compact `ACTION / STOP / VERIFY` guidance, not long lectures.
 5. **Low friction:** rescue is automatic and local-first; feedback is one-call/one-tap; sharing is opt-in.
 6. **Credit:** useful contributors get credit without creating abuse incentives or punishing privacy-first users.
-7. **Honesty:** no global/federated or measured-savings claims until proven by gates.
+7. **Honesty:** remote/global/federated protocol claims require signed-hosted-registry proof; measured-savings and public launch claims require separate external-user gates.
 
 ## 2. Subtasks and adversarial questions
 
@@ -146,9 +146,9 @@ agent failure
 
 No long-lived MCP process is trusted because files on disk can be newer than imported code in memory.
 
-Requirement: served Borg must compare loaded runtime against an approved manifest and fail closed if stale.
+Requirement: every protocol/launch GO gate must include runtime fingerprint and behavior canaries. Served Borg should eventually compare loaded runtime against an approved manifest and fail closed if stale.
 
-Status: **designed, not complete**. See `docs/20260526_ALWAYS_CURRENT_RUNTIME_AND_FEDERATED_LEARNING_PLAN.md`.
+Status: **GO for the executable protocol gate process; not complete for served fail-closed MCP runtime enforcement**. `eval/run_federated_learning_gate.py` records `runtime_freshness.fingerprint`; operator-served runtime cutover remains a separate gate. See `docs/20260526_ALWAYS_CURRENT_RUNTIME_AND_FEDERATED_LEARNING_PLAN.md`.
 
 ### Gate 1 — local rescue
 
@@ -178,13 +178,19 @@ Status: **GO at policy/retrieval level** after this session: self-declared globa
 
 Requirement: fresh user A -> staging registry -> fresh user B -> tombstone revocation proof.
 
-Status: **GO for local filesystem staging** after this session. `borg/core/atom_registry.py` proves signed atom ingestion, receipt/manifest writing, clean client sync, and tombstone suppression. Remote hosted registry/federation is still not built.
+Status: **GO for local filesystem staging and remote signed-manifest protocol** after this session. `borg/core/atom_registry.py` proves signed atom ingestion, signed hosted manifest generation, remote HTTP sync, clean client import, replay rejection, and tombstone suppression. See `docs/20260526-2046_REMOTE_FEDERATED_LEARNING_GO_PROOF.md`.
 
-### Gate 6 — public/global rollout
+### Gate 6 — public self-serve / external-user lift rollout
 
-Requirement: external users, measured usefulness, revocation convergence, and abuse controls pass.
+Requirement: external users, measured usefulness, abuse controls, support/incident process, and production hosted registry operations pass.
 
-Status: **NO-GO**.
+Status: **NO-GO for broad public self-serve and external-user lift claims**. Remote/global/federated protocol is GO, but the first-10 evidence scoreboard is still the gate for public launch and measured usefulness.
+
+### Gate 7 — Google/God-tier learning optimality
+
+Requirement: Borg must prove not only safe propagation, but fast, truthful, outcome-grounded agent improvement across independent users.
+
+Status: **NO-GO for optimality today**. `eval/run_federated_learning_optimality_audit.py` and `docs/20260526-2115_FEDERATED_LEARNING_OPTIMALITY_AUDIT.md` intentionally split protocol GO from value proof. Current blockers are zero external outcome rows, duplicate-heavy local trace evidence, missing guidance-event outcome receipts, caller-supplied registry quorum input, and fragmented retrieval/routing.
 
 ## 5. Security controls mapped to external standards
 
@@ -233,7 +239,9 @@ Status: **NO-GO**.
 - `ingest_atom_envelope()` verifies atom signatures and policy before writing shareable atoms.
 - Local-scope atoms are rejected from sharing.
 - Self-declared global quorum is quarantined; verified quorum is accepted only when registry code supplies `verified_tenant_count`.
-- `sync_registry_to_store()` imports tombstones before atoms so revocation wins.
+- `write_signed_registry_manifest()` signs hosted registry metadata with Ed25519 and records file hashes/sizes, expiry, sequence, and channel.
+- `sync_signed_registry_to_store()` verifies the trusted registry key, expiry, replay state, per-file hashes, and tombstones-before-atoms ordering across HTTP or filesystem registries.
+- `sync_registry_to_store()` imports tombstones before atoms so revocation wins in local staging too.
 
 ## 7. Machine-readable control contract
 
@@ -249,7 +257,8 @@ Hard controls:
 6. tombstone wins over retrieval and re-import;
 7. retrieval firewall marks memory untrusted;
 8. local filesystem staging registry proves A->B sync and tombstone suppression;
-9. remote hosted registry/runtime freshness remains required before global claim.
+9. remote signed hosted-manifest protocol proves HTTP sync, runtime freshness, replay protection, and revocation convergence;
+10. first-10 external-user scoreboard remains required before public launch or measured-savings claims.
 
 ## 8. Verification run
 
@@ -267,6 +276,8 @@ python -m pytest -q \
 
 python -m pytest -q \
   tests/security/test_atom_registry.py \
+  tests/security/test_federated_atom_registry.py \
+  tests/security/test_federated_learning_gate.py \
   tests/security/test_collective_learning_loop_controls.py \
   tests/security/test_learning_atoms.py \
   tests/security/test_atom_policy.py \
@@ -277,7 +288,7 @@ python -m pytest -q \
   tests/security/test_learning_atom_publish.py \
   tests/cli/test_cli_atom.py \
   tests/learning/test_failure_memory.py
-# 87 passed
+# 97 passed
 
 python -m pytest -q
 # 2303 passed, 40 skipped, 4 xfailed, 1 xpassed
@@ -297,22 +308,27 @@ This supports 128-bit truncation as adequate for local/failure-memory record IDs
 
 ## 9. Remaining blockers
 
-1. No remote hosted registry yet.
-2. No signed registry manifest yet; local staging manifest is currently unsigned filesystem metadata.
-3. No production sync command/CLI surface yet; staging sync exists as Python API.
-4. No served runtime freshness gate yet.
-5. No external-user measured lift yet.
-6. No revocation convergence SLO for remote/federated clients yet.
-7. No abuse/anomaly engine yet.
+No remaining blocker for the remote/global/federated **protocol** GO gate.
+
+Still separate NO-GO gates:
+
+1. Production hosted registry operations: uptime monitoring, backup/restore, key rotation, and incident runbooks.
+2. Transparency-log anchoring for high-trust public claims.
+3. First-10 external-user scoreboard for public self-serve launch.
+4. Consented external outcome rows for measured usefulness/lift.
+5. 100-user rollout support/incident readiness.
+6. Abuse/anomaly engine for public contribution volume.
 
 ## 10. Final reflective pass
 
 I re-checked the design from the opposite assumption: “what if global learning is impossible to make safe without killing utility?”
 
-The strongest objection is that privacy redaction and prompt-injection filtering will either miss private data or over-redact useful details. The answer is not to trust redaction harder. The answer is to constrain the shared object so the dangerous fields are structurally impossible, keep raw evidence local, require opt-in, and prove utility only through clean-user reuse.
+The strongest objection is that privacy redaction and prompt-injection filtering will either miss private data or over-redact useful details. The answer is not to trust redaction harder. The answer is to constrain the shared object so dangerous fields are structurally impossible, keep raw evidence local, require opt-in, and prove utility only through clean-client reuse.
 
-Second objection: reputation and credits invite farming. The answer is to keep credits non-monetary, keep rescue free/local, require tenant-independent confirmations, and avoid hard free-rider throttles until real adoption data exists.
+Second objection: signed manifests do not prove the lesson is correct. Correct. The signature proves authenticity/integrity of the registry metadata; usefulness still requires evidence, tenant-independent receipts, and later external outcome rows.
 
-Third objection: revocation will lag in distributed clients. Correct. The local filesystem staging proof now shows tombstone-first sync works in-process, but Borg must not claim remote/federated learning until signed manifests, hosted registry sync, and revocation convergence are implemented and measured.
+Third objection: a malicious registry could replay old metadata or inflate quorum. The signed remote gate now rejects replayed sequence state, expired metadata, untrusted registry keys, and file-hash mismatches; retrieval prefers registry/store `verified_tenant_count` over payload hints.
 
-Final conclusion: **local learning is real and now harder. local filesystem staging propagation is proven. remote/global collective learning remains a NO-GO until signed hosted registry, runtime freshness, and revocation convergence gates pass.**
+Fourth objection: revocation will lag in distributed clients. Correct. The protocol GO is bounded by an explicit convergence SLO and the executable gate proves tombstone-first remote sync removes the atom from a clean client. Production operations must monitor that SLO continuously.
+
+Final conclusion: **local learning is GO. local filesystem staging is GO. remote/global/federated protocol is GO. broad public self-serve launch and measured external-user lift remain NO-GO until their separate evidence gates pass.**

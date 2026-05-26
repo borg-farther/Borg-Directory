@@ -19,7 +19,11 @@ belong under [`archive/`](archive/) and are not current product claims.
 - [`ROADMAP.md`](ROADMAP.md) — current roadmap and intentionally-not-claimed boundaries
 - [`20260522_BORG_PRODUCTION_DAY_ONE_HARDENING_PLAN.md`](20260522_BORG_PRODUCTION_DAY_ONE_HARDENING_PLAN.md) — hard-gated production/day-one hardening plan and proof checklist
 - [`20260526-1302_OPTIMAL_SAFE_COLLECTIVE_LEARNING_LOOP.md`](20260526-1302_OPTIMAL_SAFE_COLLECTIVE_LEARNING_LOOP.md) — optimal safe collective learning loop, gates, current GO/NO-GO, and verification evidence
+- [`20260526-2046_REMOTE_FEDERATED_LEARNING_GO_PROOF.md`](20260526-2046_REMOTE_FEDERATED_LEARNING_GO_PROOF.md) — remote signed-registry protocol GO proof, explicitly not public launch or utility-lift proof
+- [`20260526-2115_FEDERATED_LEARNING_OPTIMALITY_AUDIT.md`](20260526-2115_FEDERATED_LEARNING_OPTIMALITY_AUDIT.md) — blunt optimality audit: protocol GO, Google-tier value loop NO-GO
 - [`../eval/collective_learning_loop_controls.json`](../eval/collective_learning_loop_controls.json) — machine-readable safe collective learning control contract
+- [`../eval/federated_learning_gate_snapshot.json`](../eval/federated_learning_gate_snapshot.json) — machine-readable remote signed-registry protocol proof snapshot
+- [`../eval/federated_learning_optimality_audit.json`](../eval/federated_learning_optimality_audit.json) — machine-readable optimality/value-truth audit
 - [`20260526_ALWAYS_CURRENT_RUNTIME_AND_FEDERATED_LEARNING_PLAN.md`](20260526_ALWAYS_CURRENT_RUNTIME_AND_FEDERATED_LEARNING_PLAN.md) — served runtime freshness and staging propagation plan
 - [`20260514_PUBLIC_SELF_SERVE_LAUNCH_CLOSURE_PLAN.md`](20260514_PUBLIC_SELF_SERVE_LAUNCH_CLOSURE_PLAN.md) — exact remaining evidence sequence before public self-serve launch can be claimed
 - [`20260517_BORG_100_REAL_USER_READINESS.md`](20260517_BORG_100_REAL_USER_READINESS.md) — 100-real-user rollout gate: currently blocked by first-10 external-user evidence

@@ -2,12 +2,15 @@
   "schema_version": "1.0",
   "rev": "20260526-1302",
   "name": "optimal_safe_collective_learning_loop_controls",
-  "summary": "Executable control contract for Borg's safe collective learning loop. Implemented local atom/store/security fixes are distinguished from blocked global/federated claims.",
+  "summary": "Executable control contract for Borg safe collective learning. Remote/global/federated protocol is GO for signed hosted-registry propagation and revocation; public self-serve and external-user lift remain separate NO-GO claims.",
   "go_no_go": {
     "local_learning_atom_primitive": "GO",
     "shared_store_import_path": "GO_AFTER_HARDENING",
     "staging_a_to_b_propagation": "GO_LOCAL_FILESYSTEM_STAGING",
-    "global_federated_learning_claim": "NO_GO_NOT_PROVEN"
+    "global_federated_learning_claim": "GO_REMOTE_SIGNED_PROTOCOL_ONLY",
+    "google_god_tier_learning_optimality": "NO_GO_VALUE_LOOP_NOT_PROVEN",
+    "public_self_serve_launch": "NO_GO_FIRST_10_EXTERNAL_EVIDENCE_NOT_PROVEN",
+    "external_user_lift_claim": "NO_GO_NO_CONSENTED_OUTCOME_ROWS"
   },
   "controls": [
     {
@@ -15,8 +18,14 @@
       "priority": "P0",
       "category": "privacy_boundary",
       "invariant": "Raw traces, raw prompts, source files, tool outputs, env vars, screenshots, and tenant identifiers are not accepted as shared memory.",
-      "implementation_files": ["borg/core/learning_atoms.py", "borg/core/privacy.py"],
-      "tests": ["tests/security/test_learning_atoms.py", "tests/security/test_privacy_structured.py"],
+      "implementation_files": [
+        "borg/core/learning_atoms.py",
+        "borg/core/privacy.py"
+      ],
+      "tests": [
+        "tests/security/test_learning_atoms.py",
+        "tests/security/test_privacy_structured.py"
+      ],
       "status": "implemented_local"
     },
     {
@@ -24,8 +33,16 @@
       "priority": "P0",
       "category": "signature_integrity",
       "invariant": "Every shared atom must be inside a valid signed learning-atom envelope before store/import/publish acceptance.",
-      "implementation_files": ["borg/core/learning_atoms.py", "borg/core/atom_store.py", "borg/core/publish.py"],
-      "tests": ["tests/security/test_learning_atoms.py", "tests/security/test_atom_store.py", "tests/security/test_learning_atom_publish.py"],
+      "implementation_files": [
+        "borg/core/learning_atoms.py",
+        "borg/core/atom_store.py",
+        "borg/core/publish.py"
+      ],
+      "tests": [
+        "tests/security/test_learning_atoms.py",
+        "tests/security/test_atom_store.py",
+        "tests/security/test_learning_atom_publish.py"
+      ],
       "status": "implemented_local"
     },
     {
@@ -33,8 +50,12 @@
       "priority": "P0",
       "category": "identity_binding",
       "invariant": "signature.key_id and payload.trust.submitter_key_id must equal the key id derived from the Ed25519 verify key.",
-      "implementation_files": ["borg/core/learning_atoms.py"],
-      "tests": ["tests/security/test_learning_atoms.py"],
+      "implementation_files": [
+        "borg/core/learning_atoms.py"
+      ],
+      "tests": [
+        "tests/security/test_learning_atoms.py"
+      ],
       "status": "implemented_local"
     },
     {
@@ -42,8 +63,16 @@
       "priority": "P0",
       "category": "quorum_sybil_resistance",
       "invariant": "Global promotion cannot rely on self-declared independent_tenant_count from the atom payload; quorum must be registry-computed.",
-      "implementation_files": ["borg/core/atom_policy.py", "borg/core/atom_store.py", "borg/core/atom_retrieval.py"],
-      "tests": ["tests/security/test_atom_policy.py", "tests/security/test_atom_store.py", "tests/security/test_atom_retrieval_firewall.py"],
+      "implementation_files": [
+        "borg/core/atom_policy.py",
+        "borg/core/atom_store.py",
+        "borg/core/atom_retrieval.py"
+      ],
+      "tests": [
+        "tests/security/test_atom_policy.py",
+        "tests/security/test_atom_store.py",
+        "tests/security/test_atom_retrieval_firewall.py"
+      ],
       "status": "implemented_policy_gate"
     },
     {
@@ -51,8 +80,14 @@
       "priority": "P0",
       "category": "prompt_injection",
       "invariant": "Prompt-injection and retrieval-poisoning payloads are blocked or neutralized before appearing in agent retrieval context.",
-      "implementation_files": ["borg/core/prompt_injection.py", "borg/core/atom_retrieval.py"],
-      "tests": ["tests/security/test_prompt_injection.py", "tests/security/test_atom_retrieval_firewall.py"],
+      "implementation_files": [
+        "borg/core/prompt_injection.py",
+        "borg/core/atom_retrieval.py"
+      ],
+      "tests": [
+        "tests/security/test_prompt_injection.py",
+        "tests/security/test_atom_retrieval_firewall.py"
+      ],
       "status": "implemented_local"
     },
     {
@@ -60,8 +95,12 @@
       "priority": "P0",
       "category": "revocation",
       "invariant": "Tombstone wins over get/search/re-import for revoked atoms.",
-      "implementation_files": ["borg/core/atom_store.py"],
-      "tests": ["tests/security/test_atom_store.py"],
+      "implementation_files": [
+        "borg/core/atom_store.py"
+      ],
+      "tests": [
+        "tests/security/test_atom_store.py"
+      ],
       "status": "implemented_local"
     },
     {
@@ -69,34 +108,54 @@
       "priority": "P0",
       "category": "concurrency",
       "invariant": "Concurrent failure-memory writes preserve all increments and do not collide on fixed temporary paths.",
-      "implementation_files": ["borg/core/failure_memory.py"],
-      "tests": ["tests/learning/test_failure_memory.py"],
+      "implementation_files": [
+        "borg/core/failure_memory.py"
+      ],
+      "tests": [
+        "tests/learning/test_failure_memory.py"
+      ],
       "status": "implemented_local"
     },
     {
       "id": "CLC-008",
       "priority": "P0",
-      "category": "staging_propagation",
-      "invariant": "Before any global/federated claim, a fresh user A atom must sync through a staging registry to clean user B, then a tombstone must remove it from B.",
-      "implementation_files": ["borg/core/atom_registry.py"],
-      "tests": ["tests/security/test_atom_registry.py"],
-      "status": "implemented_local_staging"
+      "category": "remote_federated_propagation",
+      "invariant": "A fresh signed global atom must sync through a signed hosted registry manifest over HTTP to a clean client, and a tombstone must remove it from retrieval within the declared SLO.",
+      "implementation_files": [
+        "borg/core/atom_registry.py",
+        "borg/core/atom_store.py",
+        "eval/run_federated_learning_gate.py"
+      ],
+      "tests": [
+        "tests/security/test_atom_registry.py",
+        "tests/security/test_federated_atom_registry.py",
+        "tests/security/test_federated_learning_gate.py"
+      ],
+      "status": "implemented_remote_protocol"
     },
     {
       "id": "CLC-009",
       "priority": "P0",
       "category": "runtime_freshness",
-      "invariant": "Served Borg runtimes must fail closed when loaded code is stale versus the approved runtime manifest.",
-      "implementation_files": [],
-      "tests": [],
-      "status": "blocked_next_build"
+      "invariant": "Remote/federated GO gates must include runtime fingerprint freshness checks so stale served code cannot claim current protocol readiness.",
+      "implementation_files": [
+        "borg/core/runtime_fingerprint.py",
+        "eval/run_federated_learning_gate.py"
+      ],
+      "tests": [
+        "tests/mcp/test_runtime_fingerprint.py",
+        "tests/security/test_federated_learning_gate.py"
+      ],
+      "status": "implemented_runtime_gate"
     },
     {
       "id": "CLC-010",
       "priority": "P1",
       "category": "credit_and_friction",
       "invariant": "Rescue remains local/free/non-blocking; feedback closes with one receipt; sharing is explicit opt-in; credits remain non-monetary until abuse resistance and external utility are proven.",
-      "implementation_files": ["borg/core/rescue.py"],
+      "implementation_files": [
+        "borg/core/rescue.py"
+      ],
       "tests": [],
       "status": "documented_design"
     }
@@ -108,6 +167,8 @@
     "docs/PRIVACY_MODEL.md",
     "docs/PROMPT_INJECTION_THREAT_MODEL.md",
     "docs/TRUST_AND_PROMOTION.md",
-    "docs/REVOCATION_AND_DELETION.md"
+    "docs/REVOCATION_AND_DELETION.md",
+    "docs/20260526-2046_REMOTE_FEDERATED_LEARNING_GO_PROOF.md",
+    "docs/20260526-2115_FEDERATED_LEARNING_OPTIMALITY_AUDIT.md"
   ]
 }

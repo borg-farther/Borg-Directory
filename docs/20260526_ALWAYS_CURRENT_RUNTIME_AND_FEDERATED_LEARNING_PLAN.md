@@ -187,14 +187,23 @@ Working local primitives:
 - local atom store and tombstone/revocation support
 - GitHub PR/outbox publish path
 
-Not yet proven:
+Protocol now proven by `eval/run_federated_learning_gate.py`:
 
-- user A learns something
-- sanitized learning leaves A safely
-- global/org registry ingests it
-- user B on a clean install retrieves it
-- bad/revoked learning disappears everywhere
-- independent tenants can promote learning without Sybil/self-vote pollution
+- sanitized signed atom enters a registry directory;
+- registry signs `manifest.signed.json`;
+- clean client syncs over an HTTP boundary;
+- manifest signature/key/channel/expiry/hash/size/replay checks pass;
+- tombstone propagates and removes the atom from search/get/reimport in the tested client.
+
+Still not proven for production Google-tier collective learning:
+
+- real external user A learns something useful;
+- that useful outcome is tied to a signed guidance-event receipt;
+- production hosted registry ingests independent outcome receipts;
+- real external user B benefits on a clean install;
+- bad/revoked learning disappears across a monitored fleet;
+- independent tenants can promote learning without Sybil/self-vote pollution;
+- measured external-user lift is positive.
 
 ## Federated learning architecture
 
@@ -347,4 +356,4 @@ Pause invites or block served channel if any are true:
 
 ## Bottom line
 
-For the current controlled beta, local CLI and local stdio MCP can continue. The served Hermes MCP channel must stay excluded until fingerprint/cutover proves current code. Global/federated learning should not be claimed until Borg has a signed atom ingestion/sync/revocation proof across at least two clean external environments.
+For the current controlled beta, local CLI and local stdio MCP can continue. The remote/global/federated protocol can now be claimed as GO for signed hosted-registry sync/revocation because `eval/run_federated_learning_gate.py` proves signed HTTP manifest sync into a clean client plus tombstone convergence. Broad public self-serve, 100-user rollout, and measured external-user lift still require their separate first-10/user-evidence gates.

@@ -202,6 +202,8 @@ def test_non_current_public_docs_are_bannered_or_operator_scoped() -> None:
         "LIVE_MCP_SELF_SERVE_CANARY.md",
         "20260526_7_USER_CONTROLLED_LAUNCH_AND_100_USER_STAGE_GATES.md",
         "20260526_ALWAYS_CURRENT_RUNTIME_AND_FEDERATED_LEARNING_PLAN.md",
+        "20260526-2046_REMOTE_FEDERATED_LEARNING_GO_PROOF.md",
+        "20260526-2115_FEDERATED_LEARNING_OPTIMALITY_AUDIT.md",
     }
     docs = ROOT / "docs"
     gitlink_roots = _gitlink_doc_roots()

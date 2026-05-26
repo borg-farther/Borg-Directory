@@ -880,6 +880,39 @@ def _cmd_atom(args: argparse.Namespace) -> int:
         except Exception:
             return 1
 
+    if args.atom_action == "sign-manifest":
+        from borg.core.atom_registry import write_signed_registry_manifest
+        from borg.core.crypto import load_signing_key
+        key = load_signing_key(args.sign_agent)
+        if key is None:
+            print(f"Error: signing key not found for {args.sign_agent}", file=sys.stderr)
+            return 1
+        signed = write_signed_registry_manifest(
+            args.registry_dir,
+            key,
+            sequence=args.sequence,
+            channel=args.channel,
+            expires_in_seconds=args.expires_in,
+            previous_manifest_hash=args.previous_manifest_hash or None,
+        )
+        print(json.dumps({"success": True, "manifest": signed, "path": str(Path(args.registry_dir) / "manifest.signed.json")}, indent=2))
+        return 0
+
+    if args.atom_action == "sync-remote":
+        from borg.core.atom_registry import sync_signed_registry_to_store
+        from borg.core.atom_store import AtomStore
+        store = AtomStore(getattr(args, "db", None))
+        result = sync_signed_registry_to_store(
+            args.registry_url,
+            store,
+            trusted_registry_key_id=args.registry_key_id,
+            channel=args.channel,
+            state_path=args.state,
+            max_revocation_convergence_seconds=args.revocation_slo_seconds,
+        )
+        print(json.dumps({"success": True, **result}, indent=2))
+        return 0
+
     print("Error: unknown atom action", file=sys.stderr)
     return 1
 
@@ -1907,6 +1940,8 @@ Examples:
   borg atom distill --trace-id abc123 --scope org --tenant acme
   borg atom validate ./atom.yaml
   borg atom publish ./signed-atom.yaml
+  borg atom sign-manifest --registry-dir ./registry --sign-agent registry --sequence 1
+  borg atom sync-remote https://registry.example --registry-key-id ed25519:abc --state ./sync.json
   borg atom search 'TypeError optional config'
   borg atom revoke sha256:abc --reason 'privacy request'""")
     atom_sub = p.add_subparsers(dest="atom_action", required=True)
@@ -1941,6 +1976,28 @@ Examples:
     ap.add_argument("atom_id", help="Atom ID to revoke")
     ap.add_argument("--reason", required=True, help="Revocation reason")
     ap.add_argument("--db", default=None, help="Optional atom DB path")
+    ap.set_defaults(func=_cmd_atom)
+
+    ap = atom_sub.add_parser("sign-manifest", help="Sign a hosted registry manifest")
+    ap.add_argument("--registry-dir", required=True, help="Filesystem registry directory containing atoms/tombstones/receipts")
+    ap.add_argument("--sign-agent", required=True, help="Agent id whose stored Ed25519 key signs manifest.signed.json")
+    ap.add_argument("--sequence", type=int, required=True, help="Monotonic manifest sequence number")
+    ap.add_argument("--channel", default="global", help="Registry channel/scope (default: global)")
+    ap.add_argument("--expires-in", type=int, default=300, help="Manifest expiry window in seconds (default: 300)")
+    ap.add_argument("--previous-manifest-hash", default="", help="Optional previous signed manifest hash")
+    ap.set_defaults(func=_cmd_atom)
+
+    ap = atom_sub.add_parser(
+        "sync-remote",
+        help="Sync from a signed hosted registry manifest",
+        description="Sync learning atoms from a signed hosted registry manifest. Refuses unsigned/replayed/tampered manifests and applies tombstones before atoms.",
+    )
+    ap.add_argument("registry_url", help="Base URL or directory containing manifest.signed.json")
+    ap.add_argument("--registry-key-id", required=True, help="Trusted registry Ed25519 key id")
+    ap.add_argument("--channel", default="global", help="Expected manifest channel/scope (default: global)")
+    ap.add_argument("--db", default=None, help="Optional atom DB path")
+    ap.add_argument("--state", default=None, help="Sync state JSON path for replay protection")
+    ap.add_argument("--revocation-slo-seconds", type=float, default=None, help="Optional max revocation convergence seconds")
     ap.set_defaults(func=_cmd_atom)
 
     # guild reputation <agent_id>

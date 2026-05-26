@@ -63,7 +63,9 @@ Verification must fail unless:
 - raw user prompts
 - `.env` values
 
-## Example safe payload
+## Partial example safe payload
+
+This snippet shows the human-readable core only. A validating payload must also include `atom_id`, `evidence`, `privacy`, `safety`, `trust`, and `lifecycle` as listed above; executable tests in `tests/security/test_learning_atoms.py` cover full valid payloads.
 
 ```json
 {
