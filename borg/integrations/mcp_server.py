@@ -121,6 +121,157 @@ class _ThreadTimeout:
 
 _MAINTENANCE_INTERVAL: int = 10  # Run maintenance every N feedback calls
 
+# Human-facing Borg value lines.  These are intentionally separate from the
+# agent-facing ACTION/STOP payload so any renderer (terminal, Telegram, web,
+# logs) can surface the same short ASCII line without parsing prose.
+_human_session_lock = threading.Lock()
+_human_session_state: Dict[str, Dict[str, Any]] = {}
+
+
+_CONFIDENCE_RANK = {
+    "none": 0,
+    "unknown": 0,
+    "guessed": 0,
+    "low": 1,
+    "inferred": 1,
+    "weak": 1,
+    "observed": 2,
+    "medium": 2,
+    "med": 2,
+    "tested": 3,
+    "validated": 3,
+    "high": 3,
+}
+
+
+def _single_line_ascii(text: str) -> str:
+    """Collapse to one renderer-safe ASCII line."""
+    line = " ".join(str(text or "").split())
+    return line.encode("ascii", "ignore").decode("ascii")
+
+
+def _human_session_key(arguments: Optional[Dict[str, Any]] = None, explicit: str = "") -> str:
+    """Return the best available session key for human-message gating."""
+    if explicit:
+        return str(explicit)
+    args = arguments or {}
+    meta = args.get("_meta") if isinstance(args, dict) else None
+    if isinstance(meta, dict):
+        for key in ("hermes_session_id", "session_id"):
+            if meta.get(key):
+                return str(meta[key])
+    if isinstance(args, dict):
+        for key in ("_hermes_session_id", "session_id"):
+            if args.get(key):
+                return str(args[key])
+    return _current_session_id.get() or "__process__"
+
+
+def _confidence_is_med_or_better(confidence: str) -> bool:
+    return _CONFIDENCE_RANK.get(str(confidence or "").lower(), 0) >= 2
+
+
+def _match_count_from_evidence(evidence: Dict[str, Any]) -> int:
+    if not isinstance(evidence, dict):
+        return 0
+    for key in ("uses", "match_count", "matched_sessions"):
+        try:
+            value = int(evidence.get(key, 0) or 0)
+        except (TypeError, ValueError):
+            value = 0
+        if value > 0:
+            return value
+    try:
+        return int(evidence.get("success_count", 0) or 0) + int(evidence.get("failure_count", 0) or 0)
+    except (TypeError, ValueError):
+        return 0
+
+
+def _dead_end_count(result: Dict[str, Any]) -> int:
+    stop = result.get("stop") if isinstance(result, dict) else None
+    if isinstance(stop, list):
+        return len([item for item in stop if str(item or "").strip()])
+    return 0
+
+
+def _session_line(state: Dict[str, Any]) -> str:
+    traces = int(state.get("traces_contributed", 0) or 0)
+    dead_ends = int(state.get("dead_ends_avoided", 0) or 0)
+    if int(state.get("matched_lookups", 0) or 0) > 0:
+        return _single_line_ascii(f"Borg: avoided {dead_ends} dead ends this session, +{traces} traces")
+    return _single_line_ascii(f"Borg: no matches this session, +{traces} traces seeded")
+
+
+def _attach_human_comms(result: Dict[str, Any], *, session_id: str) -> Dict[str, Any]:
+    """Attach additive human-facing comms fields to a rescue/error lookup result."""
+    if not isinstance(result, dict):
+        return result
+
+    matched = bool(result.get("success") is True and result.get("status") == "matched")
+    confidence = str(result.get("confidence") or "unknown")
+    evidence_obj = result.get("evidence")
+    evidence: Dict[str, Any] = evidence_obj if isinstance(evidence_obj, dict) else {}
+    match_count = _match_count_from_evidence(evidence)
+    dead_ends = _dead_end_count(result)
+    med_or_better = matched and _confidence_is_med_or_better(confidence)
+
+    with _human_session_lock:
+        state = _human_session_state.setdefault(session_id, {
+            "first_hit_shown": False,
+            "dead_ends_avoided": 0,
+            "traces_contributed": 0,
+            "matched_lookups": 0,
+            "lookup_count": 0,
+        })
+        state["lookup_count"] = int(state.get("lookup_count", 0) or 0) + 1
+
+        user_message = ""
+        if med_or_better:
+            state["matched_lookups"] = int(state.get("matched_lookups", 0) or 0) + 1
+            state["dead_ends_avoided"] = int(state.get("dead_ends_avoided", 0) or 0) + dead_ends
+            if not state.get("first_hit_shown"):
+                user_message = _single_line_ascii(
+                    f"Borg: {match_count} matches, skipped {dead_ends} dead ends"
+                )
+                state["first_hit_shown"] = True
+        elif matched:
+            # Weak match: visible caution, but do not consume the first-hit badge.
+            user_message = "Borg: weak match, treat as a hint"
+
+        session_message = _session_line(state)
+        snapshot = dict(state)
+
+    human = {
+        "schema_version": 1,
+        "session_id": session_id,
+        "first_hit": bool(user_message and med_or_better),
+        "matched": matched,
+        "confidence": confidence,
+        "match_count": match_count,
+        "dead_ends_surfaced": dead_ends,
+        "user_message": user_message or None,
+        "session_message": session_message,
+        "state": snapshot,
+    }
+    result["borg_human"] = human
+    if user_message:
+        result["user_message"] = user_message
+    result["session_message"] = session_message
+    return result
+
+
+def _record_human_trace_contributed(session_id: str) -> None:
+    key = session_id or "__process__"
+    with _human_session_lock:
+        state = _human_session_state.setdefault(key, {
+            "first_hit_shown": False,
+            "dead_ends_avoided": 0,
+            "traces_contributed": 0,
+            "matched_lookups": 0,
+            "lookup_count": 0,
+        })
+        state["traces_contributed"] = int(state.get("traces_contributed", 0) or 0) + 1
+
 
 def init_trace_capture(session_id: str, task: str = "", agent_id: str = ""):
     """Initialize trace capture for a session."""
@@ -134,12 +285,13 @@ def _trace_has_meaningful_root_cause(trace: Dict[str, Any]) -> bool:
     return len(str(trace.get("root_cause") or "").strip()) >= 10
 
 
-def _save_trace_if_meaningful(trace: Dict[str, Any]) -> bool:
+def _save_trace_if_meaningful(trace: Dict[str, Any], *, session_id: str = "") -> bool:
     """Persist trace only when it is not a hollow auto-capture."""
     if not _trace_has_meaningful_root_cause(trace):
         logger.warning("borg: skipped hollow trace")
         return False
     save_trace(trace)
+    _record_human_trace_contributed(session_id or _current_session_id.get() or "__process__")
     return True
 
 
@@ -160,7 +312,7 @@ def _feed_trace_capture(tool_name: str, args: Dict[str, Any], result: str):
             if capture.task:  # Only save if we have a task
                 trace = capture.extract_trace(outcome="auto_truncated")
                 if trace["tool_calls"] > 5:
-                    _save_trace_if_meaningful(trace)
+                    _save_trace_if_meaningful(trace, session_id=session_id)
             del _trace_captures[session_id]
 
 # ---------------------------------------------------------------------------
@@ -1440,7 +1592,7 @@ def borg_feedback(
                         root_cause=what_changed[:200] if what_changed else "",
                         approach_summary=where_to_reuse[:200] if where_to_reuse else ""
                     )
-                    _save_trace_if_meaningful(trace)
+                    _save_trace_if_meaningful(trace, session_id=session_id_from_ctx)
                     del _trace_captures[session_id_from_ctx]
 
                     # Do not recursively call borg_feedback here: this block already runs
@@ -1791,25 +1943,27 @@ def _guidance_is_safe_to_inject(guidance: str, task: str, context: str = "") -> 
     return _confidence_gate.guidance_is_safe_to_inject(guidance, task, context)
 
 
-def borg_rescue(input: str = "", source: str = "mcp", show_guidance: bool = True) -> str:
+def borg_rescue(input: str = "", source: str = "mcp", show_guidance: bool = True, session_id: str = "") -> str:
     """Return an agent-ready day-one rescue packet as JSON."""
     try:
         from borg.core.rescue import rescue
 
         result = rescue(input, source=source or "mcp", show_guidance=bool(show_guidance))
-        return json.dumps(result.to_dict(), ensure_ascii=False)
+        payload = result.to_dict()
+        _attach_human_comms(payload, session_id=_human_session_key(explicit=session_id))
+        return json.dumps(payload, ensure_ascii=False)
     except Exception as e:
         return json.dumps({"success": False, "error": str(e), "type": type(e).__name__})
 
 
-def error_lookup(input: str = "", source: str = "mcp", show_guidance: bool = True) -> str:
+def error_lookup(input: str = "", source: str = "mcp", show_guidance: bool = True, session_id: str = "") -> str:
     """Plain-English MCP alias for :func:`borg_rescue`.
 
     First users search for an "error lookup" tool before they know Borg's
     internal naming.  Keep the alias behaviorally identical to borg_rescue so
     docs, MCP discovery, and agent priming all point to one rescue contract.
     """
-    return borg_rescue(input=input, source=source or "mcp", show_guidance=show_guidance)
+    return borg_rescue(input=input, source=source or "mcp", show_guidance=show_guidance, session_id=session_id)
 
 
 def borg_first_10() -> str:
@@ -3078,6 +3232,7 @@ def _call_tool_impl(name: str, arguments: Dict[str, Any]) -> str:
             input=arguments.get("input", ""),
             source=arguments.get("source", "mcp"),
             show_guidance=arguments.get("show_guidance", True),
+            session_id=_human_session_key(arguments),
         )
 
     elif name == "borg_first_10":
@@ -3193,6 +3348,38 @@ def make_response(id: Any, result: Dict[str, Any]) -> Dict[str, Any]:
 def make_error(id: Any, code: int, message: str) -> Dict[str, Any]:
     """Build a JSON-RPC 2.0 error response."""
     return {"jsonrpc": "2.0", "id": id, "error": {"code": code, "message": message}}
+
+
+def _mcp_call_result(result_text: str, *, is_error: bool, parsed: Any = None) -> Dict[str, Any]:
+    """Build a CallToolResult, preserving Borg human-facing metadata if present."""
+    result: Dict[str, Any] = {
+        "content": [{"type": "text", "text": result_text}],
+        "isError": is_error,
+    }
+    if not isinstance(parsed, dict):
+        return result
+
+    human = parsed.get("borg_human") if isinstance(parsed.get("borg_human"), dict) else None
+    user_message = parsed.get("user_message")
+    session_message = parsed.get("session_message")
+    if not (human or user_message or session_message):
+        return result
+
+    structured: Dict[str, Any] = {"schema_version": 1}
+    if human:
+        structured["borg_human"] = human
+    if user_message:
+        structured["user_message"] = user_message
+    if session_message:
+        structured["session_message"] = session_message
+    result["structuredContent"] = structured
+    if user_message:
+        result["user_message"] = user_message
+    if session_message:
+        result["session_message"] = session_message
+    if human:
+        result["borg_human"] = human
+    return result
 
 
 # ---------------------------------------------------------------------------
@@ -3316,17 +3503,15 @@ def handle_request(request: Dict[str, Any]) -> Optional[Dict[str, Any]]:
         arguments = params.get("arguments", {})
         result_text = call_tool(tool_name, arguments)
 
-        # Parse result to determine isError
+        # Parse result to determine isError and preserve structured human metadata.
+        parsed = None
         try:
             parsed = json.loads(result_text)
-            is_error = parsed.get("success") is False or "error" in parsed
+            is_error = parsed.get("success") is False or "error" in parsed if isinstance(parsed, dict) else False
         except (json.JSONDecodeError, TypeError):
             is_error = False
 
-        return make_response(req_id, {
-            "content": [{"type": "text", "text": result_text}],
-            "isError": is_error,
-        })
+        return make_response(req_id, _mcp_call_result(result_text, is_error=is_error, parsed=parsed))
 
     elif method == "ping":
         return make_response(req_id, {})
