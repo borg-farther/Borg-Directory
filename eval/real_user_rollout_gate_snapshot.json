@@ -1,7 +1,5 @@
 {
   "blockers": [
-    "PyPI latest/fresh-install package evidence is not green: latest metadata does not match source version",
-    "PyPI latest/fresh-install package evidence is not green: fresh install + MCP stdio canary is not green",
     "first-10 external-user evidence has not passed: verified=0/10, real_users=0/10, installs=0/8, useful=0/6, critical_incidents=0/0"
   ],
   "first_10_external_evidence": {
@@ -30,42 +28,43 @@
     "useful_rescue_moments": 0,
     "verified_external_users": 0
   },
+  "first_10_privacy_security_incident_pause_clear": true,
   "first_user_release_gate": {
     "exists": true,
     "failed_count": 0,
     "failures": [],
-    "generated_at_utc": "2026-05-25T16:29:23Z",
+    "generated_at_utc": "2026-05-26T06:20:09Z",
     "passed": true,
-    "passed_count": 24
+    "passed_count": 26
   },
   "gate_type": "real_user_rollout",
-  "generated_at_utc": "2026-05-25T16:29:49.062909+00:00",
+  "generated_at_utc": "2026-05-26T06:22:04.626288+00:00",
   "important_distinction": "load/readiness snapshots are synthetic/logical users; this gate controls real external-user rollout",
-  "infrastructure_ready_for_100": false,
+  "infrastructure_ready_for_100": true,
   "load_gates": {
     "10": {
-      "duration_seconds": 1.0,
+      "duration_seconds": 30.0,
       "exists": true,
       "latency_ms": {
-        "avg": 0.43470740997698987,
-        "max": 0.75554009526968,
-        "p50": 0.41853589937090874,
-        "p95": 0.5729895550757647,
-        "p99": 0.5962290475144982
+        "avg": 0.46108552356593924,
+        "max": 4.460217198356986,
+        "p50": 0.44613005593419075,
+        "p95": 0.592048978433013,
+        "p99": 0.6219720584340394
       },
       "passed": true,
       "success_rate": 1.0,
       "users": 10
     },
     "100": {
-      "duration_seconds": 1.0,
+      "duration_seconds": 30.0,
       "exists": true,
       "latency_ms": {
-        "avg": 0.4552572292411296,
-        "max": 1.847642008215189,
-        "p50": 0.4273501690477133,
-        "p95": 0.603423360735178,
-        "p99": 0.6225142069160939
+        "avg": 0.4517485221138187,
+        "max": 2.7633681893348694,
+        "p50": 0.43132901191711426,
+        "p95": 0.5965669173747301,
+        "p99": 0.6592570338398211
       },
       "passed": true,
       "success_rate": 1.0,
@@ -73,28 +72,25 @@
     }
   },
   "local_infrastructure_ready_for_10": true,
-  "max_recommended_real_users_now": 0,
+  "max_recommended_real_users_now": 10,
   "no_fake_user_policy": "Do not mark first-10 complete or 100-real-user ready without consented external evidence rows.",
   "public_package_gate": {
-    "blockers": [
-      "PyPI latest/fresh-install package evidence is not green: latest metadata does not match source version",
-      "PyPI latest/fresh-install package evidence is not green: fresh install + MCP stdio canary is not green"
-    ],
-    "passed": false,
+    "blockers": [],
+    "passed": true,
     "pypi_fresh_install_and_mcp_stdio": {
       "exists": true,
       "expected_version": "3.3.14",
       "failed_count": 0,
       "failures": [],
-      "generated_at_utc": "2026-05-25T10:24:34Z",
+      "generated_at_utc": "2026-05-25T17:04:55Z",
       "mcp_server_info": {
         "name": "borg-mcp-server",
-        "version": "3.3.13"
+        "version": "3.3.14"
       },
       "mcp_stdio_canary_passed": true,
-      "passed": false,
+      "passed": true,
       "path": "eval/pypi_fresh_install_snapshot.json",
-      "version": "3.3.13"
+      "version": "3.3.14"
     },
     "pypi_latest": {
       "banned_keywords_present": [],
@@ -108,9 +104,9 @@
         "failure-memory",
         "mcp"
       ],
-      "latest_version": "3.3.13",
+      "latest_version": "3.3.14",
       "package": "agent-borg",
-      "passed": false,
+      "passed": true,
       "project_urls": {
         "Documentation": "https://github.com/borg-farther/Borg-Directory#readme",
         "Homepage": "https://github.com/borg-farther/Borg-Directory",
@@ -146,7 +142,7 @@
     }
   },
   "ready_for_100_real_users": false,
-  "ready_for_10_controlled_beta": false,
+  "ready_for_10_controlled_beta": true,
   "schema_version": 1,
   "security": {
     "missing": [],
@@ -159,6 +155,12 @@
       "scripts/security_gate_check.py",
       ".github/workflows/security-gates.yml"
     ]
+  },
+  "self_service_ops_gate": {
+    "blockers": [],
+    "generated_at_utc": "2026-05-26T06:22:04.625967+00:00",
+    "passed": true,
+    "rollout_policy": "Controlled first-10 may proceed only when ops readiness passes; broad public self-serve still requires row-derived first-10 external evidence."
   },
   "version": {
     "passed": true,

@@ -1,0 +1,125 @@
+{
+  "blockers": [],
+  "checks": {
+    "bad_answer_feedback_path": {
+      "feedback_path": {
+        "banned_hits": [],
+        "missing_required_tokens": [],
+        "passed": true,
+        "paths": [
+          "docs/COLD_START_TRUST_HARDENING.md",
+          "eval/cold_start_trust_gate_snapshot.json",
+          ".github/ISSUE_TEMPLATE/bad-answer.yml",
+          "docs/SELF_SERVICE_OPS_READINESS.md"
+        ],
+        "policy": "Bad first-answer reporting must use shipped CLI/MCP paths and GitHub issue intake; nonexistent borg_rate paths are blocked."
+      }
+    },
+    "docs": {
+      "cold_start_trust": {
+        "exists": true,
+        "minimum_bytes": 2161,
+        "missing_phrases": [],
+        "passed": true,
+        "path": "docs/COLD_START_TRUST_HARDENING.md"
+      },
+      "first_10_intake": {
+        "exists": true,
+        "minimum_bytes": 2791,
+        "missing_phrases": [],
+        "passed": true,
+        "path": "docs/FIRST_10_EVIDENCE_INTAKE.md"
+      },
+      "ops_readiness": {
+        "exists": true,
+        "minimum_bytes": 3296,
+        "missing_phrases": [],
+        "passed": true,
+        "path": "docs/SELF_SERVICE_OPS_READINESS.md"
+      },
+      "rollback_comms": {
+        "exists": true,
+        "minimum_bytes": 3455,
+        "missing_phrases": [],
+        "passed": true,
+        "path": "docs/ROLLBACK_AND_COMMS_RUNBOOK.md"
+      },
+      "security_policy": {
+        "exists": true,
+        "missing_phrases": [],
+        "passed": true,
+        "path": "SECURITY.md"
+      },
+      "support_policy": {
+        "exists": true,
+        "missing_phrases": [],
+        "passed": true,
+        "path": "SUPPORT.md"
+      }
+    },
+    "issue_templates": {
+      "bad_answer": {
+        "exists": true,
+        "has_secret_redaction_warning": true,
+        "missing_fields": [],
+        "non_required_fields": [],
+        "parse_error": "",
+        "passed": true,
+        "path": ".github/ISSUE_TEMPLATE/bad-answer.yml"
+      },
+      "first_10_evidence": {
+        "exists": true,
+        "has_secret_redaction_warning": true,
+        "missing_fields": [],
+        "non_required_fields": [],
+        "parse_error": "",
+        "passed": true,
+        "path": ".github/ISSUE_TEMPLATE/first-10-evidence.yml"
+      },
+      "install_mcp_support": {
+        "exists": true,
+        "has_secret_redaction_warning": true,
+        "missing_fields": [],
+        "non_required_fields": [],
+        "parse_error": "",
+        "passed": true,
+        "path": ".github/ISSUE_TEMPLATE/install-mcp-support.yml"
+      },
+      "issue_config": {
+        "exists": true,
+        "passed": true,
+        "path": ".github/ISSUE_TEMPLATE/config.yml"
+      }
+    },
+    "static_files": {
+      "codeowners": {
+        "exists": true,
+        "passed": true,
+        "path": ".github/CODEOWNERS"
+      },
+      "rollback_drill_snapshot": {
+        "age_hours": 2.262277777777778e-05,
+        "dry_run_only": true,
+        "exists": true,
+        "failed_steps": [],
+        "fresh": true,
+        "generated_at_utc": "2026-05-26T06:22:04.233435+00:00",
+        "max_age_hours": 24.0,
+        "missing_steps": [],
+        "passed": true,
+        "path": "eval/rollback_comms_drill_snapshot.json"
+      },
+      "watchdog_workflow": {
+        "exists": true,
+        "missing_snippets": [],
+        "passed": true,
+        "path": ".github/workflows/self-service-watchdog.yml"
+      }
+    }
+  },
+  "gate_type": "self_service_ops_readiness",
+  "generated_at_utc": "2026-05-26T06:22:04.315107+00:00",
+  "passed": true,
+  "rollout_policy": "Controlled first-10 may proceed only when ops readiness passes; broad public self-serve still requires row-derived first-10 external evidence.",
+  "schema_version": 1
+}

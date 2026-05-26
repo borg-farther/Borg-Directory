@@ -1,6 +1,6 @@
 # Borg First-10 Beta Readiness Contract
 
-**Status:** controlled first-10 public-package beta infrastructure is blocked for `agent-borg==3.3.14` until PyPI latest, fresh-install, and stdio MCP canaries pass for that version. Source/local first-user and security gates may pass before release, but they do not authorize tester invites. After the package gates pass, invite at most 10 controlled testers with consented evidence capture. Public self-serve launch is still gated by row-derived real external-user evidence.
+**Status:** controlled first-10 public-package beta is conditional GO for `agent-borg==3.3.14` only while PyPI latest, fresh-install, stdio MCP, cold-start trust, self-service ops, and watchdog gates remain green. Invite at most 10 controlled testers with consented evidence capture. Public self-serve launch is still gated by row-derived real external-user evidence.
 
 **Success metric:** At least 6 of the first 10 users get one relevant ACTION/STOP/VERIFY moment without maintainer handholding, and every miss is recorded as NO_CONFIDENT_MATCH or explicit negative feedback instead of being hidden.
 

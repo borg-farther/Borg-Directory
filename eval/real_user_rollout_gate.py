@@ -24,6 +24,7 @@ if str(ROOT) not in sys.path:
 
 from eval.first_10_evidence import evaluate_scoreboard
 from eval import public_self_serve_launch_gate as public_gate
+from eval import self_service_ops_gate
 
 SNAPSHOT = ROOT / "eval" / "real_user_rollout_gate_snapshot.json"
 REPORT = ROOT / "docs" / "20260517_BORG_100_REAL_USER_READINESS.md"
@@ -104,6 +105,16 @@ def _public_package_ready() -> dict[str, Any]:
     }
 
 
+def _ops_ready() -> dict[str, Any]:
+    data = self_service_ops_gate.compile_gate()
+    return {
+        "passed": bool(data.get("passed")),
+        "generated_at_utc": data.get("generated_at_utc"),
+        "blockers": data.get("blockers") or [],
+        "rollout_policy": data.get("rollout_policy"),
+    }
+
+
 def _first_10_evidence() -> dict[str, Any]:
     data = _read_json(ROOT / "eval" / "first_10_user_scoreboard.json")
     if not data:
@@ -162,6 +173,7 @@ def compile_rollout_gate() -> dict[str, Any]:
     security = _security_ready()
     first_user = _first_user_release_ready()
     package = _public_package_ready()
+    ops = _ops_ready()
     load_10 = _load_ready(10)
     load_100 = _load_ready(100)
     first_10 = _first_10_evidence()
@@ -171,7 +183,13 @@ def compile_rollout_gate() -> dict[str, Any]:
         first_user["passed"],
         load_10["passed"],
     ])
-    ready_for_10_controlled_beta = bool(local_infra_ready_for_10 and package["passed"])
+    no_first_10_privacy_security_incidents = int(first_10.get("critical_privacy_security_failures") or 0) == 0
+    ready_for_10_controlled_beta = bool(
+        local_infra_ready_for_10
+        and package["passed"]
+        and ops["passed"]
+        and no_first_10_privacy_security_incidents
+    )
     infrastructure_ready_for_100 = bool(ready_for_10_controlled_beta and load_100["passed"])
     ready_for_100_real_users = infrastructure_ready_for_100 and first_10["passed"]
     max_recommended_real_users_now = 0
@@ -193,6 +211,13 @@ def compile_rollout_gate() -> dict[str, Any]:
         blockers.append("100-user load gate is not green")
     if not package["passed"]:
         blockers.extend(package.get("blockers") or ["public PyPI package/fresh-install evidence is not green"])
+    if not ops["passed"]:
+        blockers.extend(ops.get("blockers") or ["self-service ops readiness gate is not green"])
+    if not no_first_10_privacy_security_incidents:
+        blockers.append(
+            "controlled first-10 beta is paused because first-10 evidence reports "
+            f"{first_10['critical_privacy_security_failures']} privacy/security incident(s)"
+        )
     if not first_10["passed"]:
         row_blockers = first_10.get("row_level_blockers") or []
         if row_blockers:
@@ -215,10 +240,12 @@ def compile_rollout_gate() -> dict[str, Any]:
         "security": security,
         "first_user_release_gate": first_user,
         "public_package_gate": package,
+        "self_service_ops_gate": ops,
         "load_gates": {"10": load_10, "100": load_100},
         "first_10_external_evidence": first_10,
         "local_infrastructure_ready_for_10": local_infra_ready_for_10,
         "ready_for_10_controlled_beta": ready_for_10_controlled_beta,
+        "first_10_privacy_security_incident_pause_clear": no_first_10_privacy_security_incidents,
         "infrastructure_ready_for_100": infrastructure_ready_for_100,
         "ready_for_100_real_users": ready_for_100_real_users,
         "max_recommended_real_users_now": max_recommended_real_users_now,
@@ -245,6 +272,7 @@ def write_report(snapshot: dict[str, Any]) -> None:
         "## Current gates",
         "",
         f"- ready_for_10_controlled_beta: `{snapshot['ready_for_10_controlled_beta']}`",
+        f"- self_service_ops_ready: `{snapshot['self_service_ops_gate'].get('passed')}`",
         f"- infrastructure_ready_for_100: `{snapshot['infrastructure_ready_for_100']}`",
         f"- ready_for_100_real_users: `{snapshot['ready_for_100_real_users']}`",
         "",
@@ -274,7 +302,8 @@ def write_report(snapshot: dict[str, Any]) -> None:
         "1. Run 10 consented external users through the published PyPI path.",
         "2. Record evidence rows in `eval/first_10_user_scoreboard.json`.",
         "3. Require at least 8 install successes, 6 useful rescue moments, and 0 critical privacy/security incidents.",
-        "4. Rerun `python eval/real_user_rollout_gate.py`; only a green gate authorizes 100 real users.",
+        "4. Keep self-service ops/watchdog gates green; pause controlled beta if bad-answer/support/privacy intake fails.",
+        "5. Rerun `python eval/real_user_rollout_gate.py`; only a green gate authorizes 100 real users.",
         "",
         "Machine snapshot: `eval/real_user_rollout_gate_snapshot.json`",
         "",
@@ -296,6 +325,7 @@ def main() -> int:
     write_report(snapshot)
     print(json.dumps({
         "ready_for_10_controlled_beta": snapshot["ready_for_10_controlled_beta"],
+        "self_service_ops_ready": snapshot["self_service_ops_gate"].get("passed"),
         "infrastructure_ready_for_100": snapshot["infrastructure_ready_for_100"],
         "ready_for_100_real_users": snapshot["ready_for_100_real_users"],
         "max_recommended_real_users_now": snapshot["max_recommended_real_users_now"],

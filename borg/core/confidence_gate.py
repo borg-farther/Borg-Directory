@@ -171,7 +171,7 @@ def no_confident_match_response(tech: str = "") -> str:
         f"NO_CONFIDENT_MATCH: No confident Borg match for {tech_display}.\n"
         "Borg found no relevant real traces, synthetic hits, or exact pack class match.\n"
         "Proceed with normal reasoning; do not treat Borg as evidence for this task.\n"
-        "After resolving: call borg_rate(helpful=True) only if Borg guidance was actually useful."
+        "After resolving: record concrete bad/good paths with borg_record_failure(...) or borg feedback-v3 when useful."
     )
 
 

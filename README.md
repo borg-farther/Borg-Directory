@@ -324,15 +324,16 @@ Why: agents often do not discover optional tools unless explicitly primed.
 
 ## 5. What is ready now
 
-Source/local infrastructure is a **release candidate** for controlled first-10 beta, but the public-package beta is **NO-GO for `agent-borg==3.3.14` until PyPI latest, fresh-install, and stdio MCP canaries pass for that version**:
+Published package infrastructure is **conditional GO for controlled first-10 beta** on `agent-borg==3.3.14` while PyPI latest, fresh-install, stdio MCP, cold-start trust, self-service ops, watchdog, GitHub CI/security, and source/local first-user gates remain green:
 
 - Install, CLI, Python API, and MCP entrypoints are present in source/local gates.
 - First-user rescue path returns ACTION / STOP / VERIFY or `NO_CONFIDENT_MATCH`.
 - Security/privacy/prompt-injection surface: PASS in local gates.
-- GitHub main CI/security gates, PyPI latest metadata, and fresh PyPI install + stdio MCP canary must be rerun for `agent-borg==3.3.14` before controlled beta resumes.
+- PyPI latest metadata and fresh PyPI install + stdio MCP canary are green for `agent-borg==3.3.14`.
+- Self-service ops guardrails are present: bad-answer intake, install/MCP support intake, first-10 evidence intake, support/SLA, rollback/comms dry-run, and watchdog workflow.
 - First-10 beta contract is published: [`docs/FIRST_10_BETA_READINESS.md`](https://github.com/borg-farther/Borg-Directory/blob/main/docs/FIRST_10_BETA_READINESS.md).
 
-Do **not** invite controlled public-package beta testers for `agent-borg==3.3.14` until the merged/tagged release is on PyPI and the fresh-install + stdio MCP package canary is green. After those package gates pass, invite at most 10 controlled testers with consented evidence capture. `python eval/public_self_serve_launch_gate.py` must still keep broad public self-serve blocked until real first-10 evidence passes.
+Invite at most 10 controlled testers with consented evidence capture. `python eval/public_self_serve_launch_gate.py` must still keep broad public self-serve blocked until real first-10 evidence passes.
 
 Not yet claimed:
 

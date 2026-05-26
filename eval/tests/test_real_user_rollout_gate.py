@@ -20,6 +20,7 @@ def test_real_user_rollout_gate_blocks_100_when_first_10_scoreboard_empty(tmp_pa
     monkeypatch.setattr(rollout_gate, "SNAPSHOT", tmp_path / "real_user_rollout_gate_snapshot.json")
     monkeypatch.setattr(rollout_gate, "REPORT", tmp_path / "20260517_BORG_100_REAL_USER_READINESS.md")
 
+    monkeypatch.setattr(rollout_gate, "_ops_ready", lambda: {"passed": True, "blockers": [], "rollout_policy": "test"})
     assert rollout_gate.main() == 1
     payload = json.loads(capsys.readouterr().out)
     assert payload["ready_for_100_real_users"] is False
@@ -69,6 +70,7 @@ def test_real_user_rollout_gate_blocks_controlled_beta_when_public_package_path_
         "passed": False,
         "blockers": ["PyPI latest/fresh-install package evidence is not green"],
     })
+    monkeypatch.setattr(rollout_gate, "_ops_ready", lambda: {"passed": True, "blockers": [], "rollout_policy": "test"})
 
     snapshot = rollout_gate.compile_rollout_gate()
 
@@ -77,6 +79,64 @@ def test_real_user_rollout_gate_blocks_controlled_beta_when_public_package_path_
     assert snapshot["ready_for_100_real_users"] is False
     assert snapshot["max_recommended_real_users_now"] == 0
     assert "PyPI latest/fresh-install package evidence is not green" in snapshot["blockers"]
+
+
+def test_real_user_rollout_gate_blocks_controlled_beta_when_ops_readiness_fails(monkeypatch) -> None:
+    monkeypatch.setattr(rollout_gate, "_version_consistent", lambda: {"passed": True})
+    monkeypatch.setattr(rollout_gate, "_security_ready", lambda: {"passed": True, "missing": []})
+    monkeypatch.setattr(rollout_gate, "_first_user_release_ready", lambda: {"passed": True})
+    monkeypatch.setattr(rollout_gate, "_load_ready", lambda users: {"passed": True, "users": users})
+    monkeypatch.setattr(rollout_gate, "_public_package_ready", lambda: {"passed": True, "blockers": []})
+    monkeypatch.setattr(rollout_gate, "_ops_ready", lambda: {"passed": False, "blockers": ["support SLA missing"], "rollout_policy": "test"})
+    monkeypatch.setattr(rollout_gate, "_first_10_evidence", lambda: {
+        "passed": False,
+        "verified_external_users": 0,
+        "real_users": 0,
+        "install_successes": 0,
+        "useful_rescue_moments": 0,
+        "critical_privacy_security_failures": 0,
+        "required_total_real_users": 10,
+        "required_install_successes": 8,
+        "required_useful_rescue_moments": 6,
+        "max_critical_privacy_security_failures": 0,
+        "row_level_blockers": [],
+    })
+
+    snapshot = rollout_gate.compile_rollout_gate()
+
+    assert snapshot["ready_for_10_controlled_beta"] is False
+    assert snapshot["max_recommended_real_users_now"] == 0
+    assert snapshot["self_service_ops_gate"]["passed"] is False
+    assert "support SLA missing" in snapshot["blockers"]
+
+
+def test_real_user_rollout_gate_pauses_controlled_beta_when_first_10_privacy_incident_reported(monkeypatch) -> None:
+    monkeypatch.setattr(rollout_gate, "_version_consistent", lambda: {"passed": True})
+    monkeypatch.setattr(rollout_gate, "_security_ready", lambda: {"passed": True, "missing": []})
+    monkeypatch.setattr(rollout_gate, "_first_user_release_ready", lambda: {"passed": True})
+    monkeypatch.setattr(rollout_gate, "_load_ready", lambda users: {"passed": True, "users": users})
+    monkeypatch.setattr(rollout_gate, "_public_package_ready", lambda: {"passed": True, "blockers": []})
+    monkeypatch.setattr(rollout_gate, "_ops_ready", lambda: {"passed": True, "blockers": [], "rollout_policy": "test"})
+    monkeypatch.setattr(rollout_gate, "_first_10_evidence", lambda: {
+        "passed": False,
+        "verified_external_users": 1,
+        "real_users": 1,
+        "install_successes": 1,
+        "useful_rescue_moments": 1,
+        "critical_privacy_security_failures": 1,
+        "required_total_real_users": 10,
+        "required_install_successes": 8,
+        "required_useful_rescue_moments": 6,
+        "max_critical_privacy_security_failures": 0,
+        "row_level_blockers": [],
+    })
+
+    snapshot = rollout_gate.compile_rollout_gate()
+
+    assert snapshot["ready_for_10_controlled_beta"] is False
+    assert snapshot["first_10_privacy_security_incident_pause_clear"] is False
+    assert snapshot["max_recommended_real_users_now"] == 0
+    assert any("privacy/security incident" in blocker for blocker in snapshot["blockers"])
 
 
 def test_first_10_evidence_is_derived_from_rows_not_aggregate_counts(monkeypatch) -> None:

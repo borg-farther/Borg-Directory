@@ -7,18 +7,16 @@
   "ready_for_100_real_users": false,
   "real_user_rollout": {
     "blockers": [
-      "PyPI latest/fresh-install package evidence is not green: latest metadata does not match source version",
-      "PyPI latest/fresh-install package evidence is not green: fresh install + MCP stdio canary is not green",
       "first-10 external-user evidence has not passed: verified=0/10, real_users=0/10, installs=0/8, useful=0/6, critical_incidents=0/0"
     ],
-    "infrastructure_ready_for_100": false,
-    "max_recommended_real_users_now": 0,
+    "infrastructure_ready_for_100": true,
+    "max_recommended_real_users_now": 10,
     "rc": 1,
     "ready_for_100_real_users": false,
-    "ready_for_10_controlled_beta": false
+    "ready_for_10_controlled_beta": true
   },
   "run_parameters": {
-    "soak_duration_seconds": 1.0
+    "soak_duration_seconds": 30.0
   },
   "steps": [
     {
@@ -33,9 +31,9 @@
       ],
       "name": "version_distribution_tests",
       "rc": 0,
-      "started": "2026-05-25T16:29:23.157507+00:00",
+      "started": "2026-05-26T06:20:09.251796+00:00",
       "stderr": "",
-      "stdout": "..........                                                               [100%]\n10 passed in 0.05s\n"
+      "stdout": "..........                                                               [100%]\n10 passed in 0.06s\n"
     },
     {
       "cmd": [
@@ -56,9 +54,9 @@
       ],
       "name": "atom_security_tests",
       "rc": 0,
-      "started": "2026-05-25T16:29:23.781874+00:00",
+      "started": "2026-05-26T06:20:09.934342+00:00",
       "stderr": "",
-      "stdout": "........................................................................ [ 82%]\n...............                                                          [100%]\n87 passed in 0.25s\n"
+      "stdout": "........................................................................ [ 82%]\n...............                                                          [100%]\n87 passed in 0.35s\n"
     },
     {
       "cmd": [
@@ -67,7 +65,7 @@
       ],
       "name": "security_gate",
       "rc": 0,
-      "started": "2026-05-25T16:29:24.629370+00:00",
+      "started": "2026-05-26T06:20:10.992165+00:00",
       "stderr": "",
       "stdout": "PASS: Borg security hardening policy gate\n"
     },
@@ -78,9 +76,9 @@
       ],
       "name": "cold_start_trust_gate",
       "rc": 0,
-      "started": "2026-05-25T16:29:24.700580+00:00",
+      "started": "2026-05-26T06:20:11.071998+00:00",
       "stderr": "",
-      "stdout": "{\n  \"bad_answer_feedback_path\": {\n    \"agent_fast_path\": \"call borg_rate(helpful=False) immediately after a bad suggestion\",\n    \"durable_memory_path\": \"call borg_record_failure(error_pattern, pack_id, phase, approach, outcome='failure') when the bad path is concrete\",\n    \"human_path\": \"open a GitHub issue using the bad-answer report template or paste the redacted transcript into first-10 evidence intake\"\n  },\n  \"blockers\": [],\n  \"checks\": [\n    {\n      \"name\": \"meta_permission_mentions_are_not_permission_tasks\",\n      \"passed\": true\n    },\n    {\n      \"name\": \"meta_django_mentions_do_not_set_django_tech\",\n      \"passed\": true\n    },\n    {\n      \"name\": \"high_similarity_meta_only_trace_rejected\",\n      \"passed\": true\n    },\n    {\n      \"name\": \"irrelevant_real_trace_only_guidance_not_injectable\",\n      \"passed\": true\n    },\n    {\n      \"name\": \"concrete_permission_signal_still_allowed\",\n      \"passed\": true\n    },\n    {\n      \"blockers\": [],\n      \"name\": \"stdio_meta_trust_prompt_fails_closed\",\n      \"passed\": true,\n      \"stderr_tail\": \"borg-mcp-server v3.3.14 ready (stdio transport)\\n\",\n      \"text_excerpt\": \"ACTION: proceed with normal debugging for this task; Borg has no proven cache hit.\\n\\nSTOP: do not force a weak or unrelated pack onto this task.\\n\\nVERIFY: collect the exact failing command/output and rerun borg_observe or borg_rescue only if new evidence appears.\\n\\nCONFIDENCE: BORG [NO CONFIDENT MATCH] -- no relevant traces, synthetic hits, or pack matches.\\n\\nNO_CONFIDENT_MATCH: No confident Borg match for this task.\\nBorg found no relevant real traces, synthetic hits, or exact pack class match.\\nProceed with normal reasoning; do not treat Borg as evidence for this task.\\nAfter resolving: call borg_rate(helpful=True) only if Borg guidance was actually useful.\"\n    },\n    {\n      \"name\": \"stdio_concrete_permission_prompt_gets_specific_guidance\",\n      \"passed\": true,\n      \"stderr_tail\": \"borg-mcp-server v3.3.14 ready (stdio transport)\\n\",\n      \"text_excerpt\": \"ACTION: from matched seed pack, 1. Check file permissions: ls -la <file>\\n\\nVERIFY: execute the pack's first checkpoint, then rerun the exact failing command\\n\\nSTOP: do not use chmod 777 or blanket sudo; identify the exact file, owner, and minimum required permission.\\n\\nCONFIDENCE: Real traces: 0 | Synthetic: 0 | BORG [SYNTHETIC ONLY]\\n\\n------------------------------------------------------------\\nWHAT FAILED (7 prior sessions)\\n   Skip these approaches:\\n   \\u2022 1 agent tried: Ran sudo pip install to fix permission error on system packages\\n     Why it failed: DEAD END: sudo pip breaks system Python and future pip installs\\n   \\u2022 1 agent tried: Ran sudo npm install -g to fix permission denied error on global package\\n     Why it failed: DEAD END: sudo npm creates root-owned files in /usr/lib/node_modules breaking all future npm operati\\n   \\u2022 1 agent tried: Added sudo to the failing command in the workflow step\\n     Why it failed: DEAD END: github-actions runner already runs as appropriate user, sudo causes authentication failure\\nPACK GUIDANCE (bash-permission-denied)\\n1. Check file permissions: ls -la <file>\\n2. Add execute permission: chmod +x <script.sh>\\n3. For directories: chmod +x <directory>\\n4\"\n    }\n  ],\n  \"gate_type\": \"cold_start_trust_hardening\",\n  \"generated_at_utc\": \"2026-05-25T16:29:43.737048+00:00\",\n  \"passed\": true,\n  \"schema_version\": 1,\n  \"trust_policy\": \"Borg must fail closed with NO_CONFIDENT_MATCH for meta/product/readiness prompts, must not inject unrelated framework guidance, and must preserve concrete error guidance for exact failures.\"\n}\n"
+      "stdout": "{\n  \"bad_answer_feedback_path\": {\n    \"agent_mcp_durable_path\": \"call borg_record_failure(error_pattern, pack_id, phase, approach, outcome='failure') when the bad path is concrete\",\n    \"cli_durable_path\": \"run borg feedback-v3 --pack <pack> --success no --notes <redacted summary>\",\n    \"human_path\": \"open .github/ISSUE_TEMPLATE/bad-answer.yml or submit redacted first-10 evidence via .github/ISSUE_TEMPLATE/first-10-evidence.yml\"\n  },\n  \"blockers\": [],\n  \"checks\": [\n    {\n      \"name\": \"meta_permission_mentions_are_not_permission_tasks\",\n      \"passed\": true\n    },\n    {\n      \"name\": \"meta_django_mentions_do_not_set_django_tech\",\n      \"passed\": true\n    },\n    {\n      \"name\": \"high_similarity_meta_only_trace_rejected\",\n      \"passed\": true\n    },\n    {\n      \"name\": \"irrelevant_real_trace_only_guidance_not_injectable\",\n      \"passed\": true\n    },\n    {\n      \"name\": \"concrete_permission_signal_still_allowed\",\n      \"passed\": true\n    },\n    {\n      \"blockers\": [],\n      \"name\": \"stdio_meta_trust_prompt_fails_closed\",\n      \"passed\": true,\n      \"stderr_tail\": \"borg-mcp-server v3.3.14 ready (stdio transport)\\n\",\n      \"text_excerpt\": \"ACTION: proceed with normal debugging for this task; Borg has no proven cache hit.\\n\\nSTOP: do not force a weak or unrelated pack onto this task.\\n\\nVERIFY: collect the exact failing command/output and rerun borg_observe or borg_rescue only if new evidence appears.\\n\\nCONFIDENCE: BORG [NO CONFIDENT MATCH] -- no relevant traces, synthetic hits, or pack matches.\\n\\nNO_CONFIDENT_MATCH: No confident Borg match for this task.\\nBorg found no relevant real traces, synthetic hits, or exact pack class match.\\nProceed with normal reasoning; do not treat Borg as evidence for this task.\\nAfter resolving: record concrete bad/good paths with borg_record_failure(...) or borg feedback-v3 when useful.\"\n    },\n    {\n      \"name\": \"stdio_concrete_permission_prompt_gets_specific_guidance\",\n      \"passed\": true,\n      \"stderr_tail\": \"borg-mcp-server v3.3.14 ready (stdio transport)\\n\",\n      \"text_excerpt\": \"ACTION: from matched seed pack, 1. Check file permissions: ls -la <file>\\n\\nVERIFY: execute the pack's first checkpoint, then rerun the exact failing command\\n\\nSTOP: do not use chmod 777 or blanket sudo; identify the exact file, owner, and minimum required permission.\\n\\nCONFIDENCE: Real traces: 0 | Synthetic: 0 | BORG [SYNTHETIC ONLY]\\n\\n------------------------------------------------------------\\nWHAT FAILED (7 prior sessions)\\n   Skip these approaches:\\n   \\u2022 1 agent tried: Ran sudo pip install to fix permission error on system packages\\n     Why it failed: DEAD END: sudo pip breaks system Python and future pip installs\\n   \\u2022 1 agent tried: Ran sudo npm install -g to fix permission denied error on global package\\n     Why it failed: DEAD END: sudo npm creates root-owned files in /usr/lib/node_modules breaking all future npm operati\\n   \\u2022 1 agent tried: Added sudo to the failing command in the workflow step\\n     Why it failed: DEAD END: github-actions runner already runs as appropriate user, sudo causes authentication failure\\nPACK GUIDANCE (bash-permission-denied)\\n1. Check file permissions: ls -la <file>\\n2. Add execute permission: chmod +x <script.sh>\\n3. For directories: chmod +x <directory>\\n4\"\n    }\n  ],\n  \"gate_type\": \"cold_start_trust_hardening\",\n  \"generated_at_utc\": \"2026-05-26T06:20:31.391916+00:00\",\n  \"passed\": true,\n  \"schema_version\": 1,\n  \"trust_policy\": \"Borg must fail closed with NO_CONFIDENT_MATCH for meta/product/readiness prompts, must not inject unrelated framework guidance, and must preserve concrete error guidance for exact failures.\"\n}\n"
     },
     {
       "cmd": [
@@ -89,7 +87,7 @@
       ],
       "name": "atom_fixture_corpus",
       "rc": 0,
-      "started": "2026-05-25T16:29:45.017744+00:00",
+      "started": "2026-05-26T06:20:32.764393+00:00",
       "stderr": "",
       "stdout": "{\n  \"success\": true,\n  \"total\": 10,\n  \"failed\": []\n}\n"
     },
@@ -100,13 +98,13 @@
         "--users",
         "10",
         "--duration",
-        "1.0"
+        "30.0"
       ],
       "name": "load_10",
       "rc": 0,
-      "started": "2026-05-25T16:29:45.110989+00:00",
+      "started": "2026-05-26T06:20:32.847679+00:00",
       "stderr": "",
-      "stdout": "{\n  \"concurrency_model\": \"asyncio_logical_users\",\n  \"duration_seconds\": 1.0,\n  \"failures\": 0,\n  \"latency_ms\": {\n    \"avg\": 0.43470740997698987,\n    \"max\": 0.75554009526968,\n    \"p50\": 0.41853589937090874,\n    \"p95\": 0.5729895550757647,\n    \"p99\": 0.5962290475144982\n  },\n  \"operation\": \"learning_atom_retrieval_firewall_privacy_prompt_scan\",\n  \"passed\": true,\n  \"per_user_min_requests\": 224,\n  \"requests_per_second\": 2244.0,\n  \"sample_failures\": [],\n  \"success_rate\": 1.0,\n  \"successes\": 2244,\n  \"thresholds\": {\n    \"min_requests_per_user\": 1.0,\n    \"p95_ms_max\": 2000.0,\n    \"p99_ms_max\": 4000.0,\n    \"success_rate_min\": 0.95\n  },\n  \"timestamp\": \"2026-05-25T16:29:46.179824+00:00\",\n  \"total_requests\": 2244,\n  \"users\": 10\n}\n"
+      "stdout": "{\n  \"concurrency_model\": \"asyncio_logical_users\",\n  \"duration_seconds\": 30.0,\n  \"failures\": 0,\n  \"latency_ms\": {\n    \"avg\": 0.46108552356593924,\n    \"max\": 4.460217198356986,\n    \"p50\": 0.44613005593419075,\n    \"p95\": 0.592048978433013,\n    \"p99\": 0.6219720584340394\n  },\n  \"operation\": \"learning_atom_retrieval_firewall_privacy_prompt_scan\",\n  \"passed\": true,\n  \"per_user_min_requests\": 6408,\n  \"requests_per_second\": 2136.2,\n  \"sample_failures\": [],\n  \"success_rate\": 1.0,\n  \"successes\": 64086,\n  \"thresholds\": {\n    \"min_requests_per_user\": 1.0,\n    \"p95_ms_max\": 2000.0,\n    \"p99_ms_max\": 4000.0,\n    \"success_rate_min\": 0.95\n  },\n  \"timestamp\": \"2026-05-26T06:21:02.945566+00:00\",\n  \"total_requests\": 64086,\n  \"users\": 10\n}\n"
     },
     {
       "cmd": [
@@ -115,13 +113,13 @@
         "--users",
         "100",
         "--duration",
-        "1.0"
+        "30.0"
       ],
       "name": "load_100",
       "rc": 0,
-      "started": "2026-05-25T16:29:46.197587+00:00",
+      "started": "2026-05-26T06:21:02.963173+00:00",
       "stderr": "",
-      "stdout": "{\n  \"concurrency_model\": \"asyncio_logical_users\",\n  \"duration_seconds\": 1.0,\n  \"failures\": 0,\n  \"latency_ms\": {\n    \"avg\": 0.4552572292411296,\n    \"max\": 1.847642008215189,\n    \"p50\": 0.4273501690477133,\n    \"p95\": 0.603423360735178,\n    \"p99\": 0.6225142069160939\n  },\n  \"operation\": \"learning_atom_retrieval_firewall_privacy_prompt_scan\",\n  \"passed\": true,\n  \"per_user_min_requests\": 21,\n  \"requests_per_second\": 2109.0,\n  \"sample_failures\": [],\n  \"success_rate\": 1.0,\n  \"successes\": 2109,\n  \"thresholds\": {\n    \"min_requests_per_user\": 1.0,\n    \"p95_ms_max\": 1000.0,\n    \"p99_ms_max\": 3000.0,\n    \"success_rate_min\": 0.95\n  },\n  \"timestamp\": \"2026-05-25T16:29:47.280417+00:00\",\n  \"total_requests\": 2109,\n  \"users\": 100\n}\n"
+      "stdout": "{\n  \"concurrency_model\": \"asyncio_logical_users\",\n  \"duration_seconds\": 30.0,\n  \"failures\": 0,\n  \"latency_ms\": {\n    \"avg\": 0.4517485221138187,\n    \"max\": 2.7633681893348694,\n    \"p50\": 0.43132901191711426,\n    \"p95\": 0.5965669173747301,\n    \"p99\": 0.6592570338398211\n  },\n  \"operation\": \"learning_atom_retrieval_firewall_privacy_prompt_scan\",\n  \"passed\": true,\n  \"per_user_min_requests\": 642,\n  \"requests_per_second\": 2142.233333333333,\n  \"sample_failures\": [],\n  \"success_rate\": 1.0,\n  \"successes\": 64267,\n  \"thresholds\": {\n    \"min_requests_per_user\": 1.0,\n    \"p95_ms_max\": 1000.0,\n    \"p99_ms_max\": 3000.0,\n    \"success_rate_min\": 0.95\n  },\n  \"timestamp\": \"2026-05-26T06:21:33.075867+00:00\",\n  \"total_requests\": 64267,\n  \"users\": 100\n}\n"
     },
     {
       "cmd": [
@@ -130,13 +128,13 @@
         "--users",
         "1000",
         "--duration",
-        "1.0"
+        "30.0"
       ],
       "name": "load_1000",
       "rc": 0,
-      "started": "2026-05-25T16:29:47.298747+00:00",
+      "started": "2026-05-26T06:21:33.093523+00:00",
       "stderr": "",
-      "stdout": "{\n  \"concurrency_model\": \"asyncio_logical_users\",\n  \"duration_seconds\": 1.0,\n  \"failures\": 0,\n  \"latency_ms\": {\n    \"avg\": 0.4203062567740035,\n    \"max\": 1.1676307767629623,\n    \"p50\": 0.3897699061781168,\n    \"p95\": 0.5894859321415424,\n    \"p99\": 0.6199854891747236\n  },\n  \"operation\": \"learning_atom_retrieval_firewall_privacy_prompt_scan\",\n  \"passed\": true,\n  \"per_user_min_requests\": 2,\n  \"requests_per_second\": 2269.0,\n  \"sample_failures\": [],\n  \"success_rate\": 1.0,\n  \"successes\": 2269,\n  \"thresholds\": {\n    \"min_requests_per_user\": 1.0,\n    \"p95_ms_max\": 500.0,\n    \"p99_ms_max\": 1500.0,\n    \"success_rate_min\": 0.99\n  },\n  \"timestamp\": \"2026-05-25T16:29:48.411265+00:00\",\n  \"total_requests\": 2269,\n  \"users\": 1000\n}\n"
+      "stdout": "{\n  \"concurrency_model\": \"asyncio_logical_users\",\n  \"duration_seconds\": 30.0,\n  \"failures\": 0,\n  \"latency_ms\": {\n    \"avg\": 0.4384984210586632,\n    \"max\": 5.374607164412737,\n    \"p50\": 0.4157510120421648,\n    \"p95\": 0.5857031792402266,\n    \"p99\": 0.6507343892008066\n  },\n  \"operation\": \"learning_atom_retrieval_firewall_privacy_prompt_scan\",\n  \"passed\": true,\n  \"per_user_min_requests\": 66,\n  \"requests_per_second\": 2202.1666666666665,\n  \"sample_failures\": [],\n  \"success_rate\": 1.0,\n  \"successes\": 66065,\n  \"thresholds\": {\n    \"min_requests_per_user\": 1.0,\n    \"p95_ms_max\": 500.0,\n    \"p99_ms_max\": 1500.0,\n    \"success_rate_min\": 0.99\n  },\n  \"timestamp\": \"2026-05-26T06:22:03.238142+00:00\",\n  \"total_requests\": 66065,\n  \"users\": 1000\n}\n"
     },
     {
       "cmd": [
@@ -148,7 +146,7 @@
       ],
       "name": "readiness_1000_tests",
       "rc": 0,
-      "started": "2026-05-25T16:29:48.429971+00:00",
+      "started": "2026-05-26T06:22:03.260183+00:00",
       "stderr": "",
       "stdout": "........                                                                 [100%]\n8 passed in 0.02s\n"
     },
@@ -159,9 +157,9 @@
       ],
       "name": "real_user_rollout_gate",
       "rc": 1,
-      "started": "2026-05-25T16:29:48.974169+00:00",
+      "started": "2026-05-26T06:22:03.860266+00:00",
       "stderr": "",
-      "stdout": "{\n  \"ready_for_10_controlled_beta\": false,\n  \"infrastructure_ready_for_100\": false,\n  \"ready_for_100_real_users\": false,\n  \"max_recommended_real_users_now\": 0,\n  \"blockers\": [\n    \"PyPI latest/fresh-install package evidence is not green: latest metadata does not match source version\",\n    \"PyPI latest/fresh-install package evidence is not green: fresh install + MCP stdio canary is not green\",\n    \"first-10 external-user evidence has not passed: verified=0/10, real_users=0/10, installs=0/8, useful=0/6, critical_incidents=0/0\"\n  ],\n  \"snapshot\": \"eval/real_user_rollout_gate_snapshot.json\",\n  \"report\": \"docs/20260517_BORG_100_REAL_USER_READINESS.md\"\n}\n"
+      "stdout": "{\n  \"ready_for_10_controlled_beta\": true,\n  \"self_service_ops_ready\": true,\n  \"infrastructure_ready_for_100\": true,\n  \"ready_for_100_real_users\": false,\n  \"max_recommended_real_users_now\": 10,\n  \"blockers\": [\n    \"first-10 external-user evidence has not passed: verified=0/10, real_users=0/10, installs=0/8, useful=0/6, critical_incidents=0/0\"\n  ],\n  \"snapshot\": \"eval/real_user_rollout_gate_snapshot.json\",\n  \"report\": \"docs/20260517_BORG_100_REAL_USER_READINESS.md\"\n}\n"
     },
     {
       "cmd": [
@@ -170,7 +168,7 @@
       ],
       "name": "scoreboard_final",
       "rc": 0,
-      "started": "2026-05-25T16:29:49.076451+00:00",
+      "started": "2026-05-26T06:22:04.007285+00:00",
       "stderr": "",
       "stdout": "/root/hermes-workspace/borg/PROJECT_STATUS.md\n/root/hermes-workspace/borg/eval/uat_scoreboard_snapshot.json\n"
     },
@@ -181,11 +179,11 @@
       ],
       "name": "scoreboard_after_decision",
       "rc": 0,
-      "started": "2026-05-25T16:29:49.123726+00:00",
+      "started": "2026-05-26T06:22:04.060574+00:00",
       "stderr": "",
       "stdout": "/root/hermes-workspace/borg/PROJECT_STATUS.md\n/root/hermes-workspace/borg/eval/uat_scoreboard_snapshot.json\n"
     }
   ],
   "synthetic_load_all_pass": true,
-  "timestamp": "2026-05-25T16:29:49.123089+00:00"
+  "timestamp": "2026-05-26T06:22:04.059871+00:00"
 }

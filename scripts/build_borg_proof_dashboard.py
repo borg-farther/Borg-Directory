@@ -41,6 +41,9 @@ SOURCE_PATHS = [
     "eval/first_10_user_scoreboard.json",
     "eval/public_self_serve_launch_gate_snapshot.json",
     "eval/cold_start_trust_gate_snapshot.json",
+    "eval/self_service_ops_gate_snapshot.json",
+    "eval/ops_readiness_watchdog_snapshot.json",
+    "eval/rollback_comms_drill_snapshot.json",
     "eval/pypi_fresh_install_snapshot.json",
     "eval/load_10_snapshot.json",
     "eval/load_100_snapshot.json",
@@ -142,6 +145,10 @@ def source_record(rel: str, claim: str, freshness: str | None = None) -> dict:
     }
 
 
+def freshness_value(value) -> str | None:
+    return value if isinstance(value, str) else None
+
+
 def pack_count() -> int | None:
     packs = ROOT / "borg" / "seeds_data" / "packs"
     if not packs.exists():
@@ -157,6 +164,9 @@ def build_model() -> dict:
     first10_scoreboard = load_json("eval/first_10_user_scoreboard.json")
     public_gate = load_json("eval/public_self_serve_launch_gate_snapshot.json")
     cold_start_trust = load_json("eval/cold_start_trust_gate_snapshot.json")
+    self_service_ops = load_json("eval/self_service_ops_gate_snapshot.json")
+    ops_watchdog = load_json("eval/ops_readiness_watchdog_snapshot.json")
+    rollback_drill = load_json("eval/rollback_comms_drill_snapshot.json")
     pypi_fresh = load_json("eval/pypi_fresh_install_snapshot.json")
     loads = {str(n): load_json(f"eval/load_{n}_snapshot.json") for n in (10, 100, 1000)}
     pv, rv = pyproject_version(), init_version()
@@ -197,11 +207,14 @@ def build_model() -> dict:
     real_user_100_pass = nested(real_user, ["ready_for_100_real_users"], nested(uat, ["real_user_rollout", "ready_for_100_real_users"]))
     public_self_serve_pass = nested(public_gate, ["ready_for_public_self_serve_launch"])
     cold_start_trust_pass = nested(cold_start_trust, ["passed"])
+    self_service_ops_pass = nested(self_service_ops, ["passed"])
+    ops_watchdog_pass = nested(ops_watchdog, ["passed"])
+    rollback_drill_pass = nested(rollback_drill, ["passed"])
     pypi_fresh_pass = nested(pypi_fresh, ["success"])
     pypi_fresh_version = nested(pypi_fresh, ["version"])
     pypi_fresh_current = bool(pypi_fresh_pass is True and pypi_fresh_version == pv)
-    max_recommended_real_users = nested(public_gate, ["max_recommended_real_users_now"], nested(real_user, ["max_recommended_real_users_now"], nested(uat, ["real_user_rollout", "max_recommended_real_users_now"], 0)))
-    controlled_beta_ready = nested(public_gate, ["ready_for_controlled_first_10_beta"]) is True
+    first10_counts = first10_evaluation.get("derived_counts") if isinstance(first10_evaluation, dict) else {}
+    first10_privacy_security_incidents = int(first10_counts.get("critical_privacy_security_failures") or 0) if isinstance(first10_counts, dict) else 0
     real_user_blockers = nested(real_user, ["blockers"], nested(uat, ["real_user_rollout", "blockers"], []))
     load_summary = {}
     for n, data in loads.items():
@@ -218,10 +231,18 @@ def build_model() -> dict:
         }
 
     local_release_candidate_ready = bool(version_consistent and (first_gate_pass is True) and (uat_pass is True) and (gate_pass is True))
+    controlled_beta_ready = bool(
+        pypi_fresh_current
+        and cold_start_trust_pass is True
+        and self_service_ops_pass is True
+        and local_release_candidate_ready
+        and first10_privacy_security_incidents == 0
+    )
+    max_recommended_real_users = 100 if public_self_serve_pass is True else 10 if controlled_beta_ready else 0
     controlled_beta_why = (
-        "Controlled first-10 beta infrastructure is green; keep broad launch blocked until row-derived external-user evidence passes."
+        "Controlled first-10 beta infrastructure and ops guardrails are green; keep broad launch blocked until row-derived external-user evidence passes."
         if controlled_beta_ready
-        else "Controlled first-10 beta is blocked until the public package path is green: PyPI latest metadata, fresh-install canary, stdio MCP canary, cold-start trust gate, and docs guard must all pass."
+        else "Controlled first-10 beta is blocked until the public package path and ops layer are green, and any first-10 privacy/security incidents are triaged: PyPI latest metadata, fresh-install canary, stdio MCP canary, cold-start trust gate, self-service ops gate, and docs guard must all pass."
     )
     verdicts = {
         "controlled_first_10_beta": {
@@ -239,9 +260,9 @@ def build_model() -> dict:
         "broad_public_launch": {
             "verdict": "NO-GO" if public_self_serve_pass is not True else "GO",
             "why": (
-                "Public self-serve gate is blocked only by row-derived first-10 external-user evidence; PyPI/latest/fresh-install/MCP/docs/cold-start-trust gates are green."
-                if pypi_fresh_current and cold_start_trust_pass is True and public_self_serve_pass is not True
-                else "Public self-serve gate is blocked until PyPI latest/fresh-install/MCP/docs/cold-start-trust gates pass and first-10 external evidence exists."
+                "Public self-serve gate is blocked only by row-derived first-10 external-user evidence; PyPI/latest/fresh-install/MCP/docs/cold-start-trust/self-service-ops gates are green."
+                if pypi_fresh_current and cold_start_trust_pass is True and self_service_ops_pass is True and public_self_serve_pass is not True
+                else "Public self-serve gate is blocked until PyPI latest/fresh-install/MCP/docs/cold-start-trust/self-service-ops gates pass and first-10 external evidence exists."
             ) if public_self_serve_pass is not True else "Public self-serve gate has passed with row-derived external evidence.",
         },
     }
@@ -258,6 +279,10 @@ def build_model() -> dict:
         "max_recommended_real_users_now": {"value": max_recommended_real_users, "honesty_label": "REAL_EXTERNAL_USERS", "provenance": "eval/real_user_rollout_gate_snapshot.json" if real_user else "MISSING"},
         "public_self_serve_launch_gate": {"value": status_bool(public_self_serve_pass), "honesty_label": "PUBLIC_LAUNCH_GATE", "provenance": "eval/public_self_serve_launch_gate_snapshot.json" if public_gate else "MISSING"},
         "cold_start_trust_hardening_gate": {"value": status_bool(cold_start_trust_pass), "honesty_label": "FIRST_ANSWER_TRUST_GATE", "provenance": "eval/cold_start_trust_gate_snapshot.json" if cold_start_trust else "MISSING"},
+        "self_service_ops_gate": {"value": status_bool(self_service_ops_pass), "honesty_label": "SELF_SERVICE_OPS_GATE", "provenance": "eval/self_service_ops_gate_snapshot.json" if self_service_ops else "MISSING"},
+        "first_10_privacy_security_incidents": {"value": first10_privacy_security_incidents, "honesty_label": "ROW_DERIVED_EXTERNAL_USER_RISK", "provenance": external_user_evidence},
+        "ops_readiness_watchdog": {"value": status_bool(ops_watchdog_pass), "honesty_label": "OPS_PROOF_FRESHNESS_GATE", "provenance": "eval/ops_readiness_watchdog_snapshot.json" if ops_watchdog else "MISSING"},
+        "rollback_comms_drill": {"value": status_bool(rollback_drill_pass), "honesty_label": "DRY_RUN_ROLLBACK_COMMS_DRILL", "provenance": "eval/rollback_comms_drill_snapshot.json" if rollback_drill else "MISSING"},
         "pypi_fresh_install_canary": {"value": status_bool(pypi_fresh_current), "honesty_label": "PYPI_FRESH_INSTALL_CURRENT_VERSION", "provenance": "eval/pypi_fresh_install_snapshot.json" if pypi_fresh else "MISSING"},
         "source_version_consistency": {"value": f"pyproject={pv or 'MISSING'} runtime={rv or 'MISSING'}", "honesty_label": "REPO_SOURCE", "provenance": "pyproject.toml; borg/__init__.py"},
         "host_runtime_split_brain": {"value": "NOT_EVALUATED_BY_THIS_BUILD", "honesty_label": "EVIDENCE_GAP", "provenance": "This dashboard build does not restart or fingerprint long-lived served Hermes/MCP runtimes; it is not live cutover proof. Served runtime GO requires borg_runtime_fingerprint with version_matches_source=true and observe_behavior_canary.passed=true."},
@@ -269,6 +294,8 @@ def build_model() -> dict:
             "No real external first-user install/rescue outcome has been recorded yet.",
             "PyPI fresh-install canary is not green for the current source version yet." if not pypi_fresh_current else "PyPI fresh-install canary is green for the current source version.",
             "Cold-start trust gate is not green yet." if cold_start_trust_pass is not True else "Cold-start trust gate is green: meta/readiness prompts fail closed before random framework guidance reaches first users.",
+            "Self-service ops gate is not green yet." if self_service_ops_pass is not True else "Self-service ops gate is green: bad-answer intake, first-10 evidence intake, support/SLA, rollback/comms, and watchdog workflow exist.",
+            "Ops watchdog has not produced a fresh green snapshot yet." if ops_watchdog_pass is not True else "Ops watchdog is green: proof snapshots and public status are internally consistent.",
             "Unattended Git-only onboarding remains unproven until external user can install, configure MCP, and receive a useful rescue without maintainer intervention.",
         ],
         "investor_affecting": [
@@ -286,6 +313,7 @@ def build_model() -> dict:
         "evidence_gaps": [
             "No Borg analytics export proving active contributors or consumers was found.",
             "No first-10-user scoreboard with real outcomes exists yet.",
+            "Ops readiness/watchdog must stay green; any P0/P1 bad-answer, privacy, support, or stale-proof failure pauses controlled beta invites.",
             f"100-real-user gate remains blocked: {real_user_blockers or ['no blocker detail found']}",
             "Served/runtime split-brain was not evaluated by this dashboard build; source/fresh-process green is not live cutover proof.",
         ],
@@ -298,6 +326,7 @@ def build_model() -> dict:
     next_actions = [
         first_tester_action,
         "Create a fresh-PyPI runbook: install package, run borg --version, configure MCP, run one rescue, capture exact timestamps and blockers.",
+        "Keep the self-service ops gate and watchdog green before each tester invite; pause if bad-answer/support/privacy intake fails.",
         "Record first user in the first-10 scoreboard template using a pseudonym and consented outcome fields.",
         "If any onboarding step fails, add artifact path/stdout/stderr and keep broad launch at NO-GO.",
         "Export Borg analytics or explicitly keep contributor/consumer metrics UNKNOWN.",
@@ -334,6 +363,18 @@ def build_model() -> dict:
         evidence.append(source_record("eval/cold_start_trust_gate_snapshot.json", f"cold-start trust gate={cold_start_trust_pass}; blockers={nested(cold_start_trust, ['blockers'], [])}", cold_start_generated_at if isinstance(cold_start_generated_at, str) else None))
     else:
         evidence.append(source_record("eval/cold_start_trust_gate_snapshot.json", "cold-start trust hardening gate missing"))
+    if self_service_ops:
+        evidence.append(source_record("eval/self_service_ops_gate_snapshot.json", f"self-service ops gate={self_service_ops_pass}; blockers={nested(self_service_ops, ['blockers'], [])}", freshness_value(nested(self_service_ops, ["generated_at_utc"]))))
+    else:
+        evidence.append(source_record("eval/self_service_ops_gate_snapshot.json", "self-service ops readiness gate missing"))
+    if ops_watchdog:
+        evidence.append(source_record("eval/ops_readiness_watchdog_snapshot.json", f"ops readiness watchdog={ops_watchdog_pass}; blocker details live in eval/ops_readiness_watchdog_snapshot.json", freshness_value(nested(ops_watchdog, ["generated_at_utc"]))))
+    else:
+        evidence.append(source_record("eval/ops_readiness_watchdog_snapshot.json", "ops readiness watchdog snapshot missing"))
+    if rollback_drill:
+        evidence.append(source_record("eval/rollback_comms_drill_snapshot.json", f"rollback/comms drill={rollback_drill_pass}; dry_run_only={nested(rollback_drill, ['dry_run_only'])}", freshness_value(nested(rollback_drill, ["generated_at_utc"]))))
+    else:
+        evidence.append(source_record("eval/rollback_comms_drill_snapshot.json", "rollback/comms dry-run drill missing"))
     if pypi_fresh:
         evidence.append(source_record("eval/pypi_fresh_install_snapshot.json", f"PyPI fresh-install canary success={pypi_fresh_pass}; version={nested(pypi_fresh, ['version'])}", nested(pypi_fresh, ["generated_at_utc"])))
     else:
@@ -374,9 +415,9 @@ def build_model() -> dict:
         "controlled_first_10_beta": {
             "answer": "GO" if controlled_beta_ready else "NO-GO",
             "conditions": [
-                "Controlled testers only." if controlled_beta_ready else "Do not invite controlled beta users until PyPI latest, fresh-install, and stdio MCP canaries are green.",
+                "Controlled testers only." if controlled_beta_ready else "Do not invite controlled beta users until PyPI latest, fresh-install, stdio MCP, cold-start trust, self-service ops, and watchdog gates are green.",
                 "Do not present as unattended public launch ready.",
-                "Capture real first-user outcome evidence immediately." if controlled_beta_ready else "Keep first-10 evidence capture prepared, but blocked until package evidence is green.",
+                "Capture real first-user outcome evidence immediately." if controlled_beta_ready else "Keep first-10 evidence capture prepared, but blocked until package/ops evidence is green.",
             ],
         },
         "metrics": metrics,
@@ -496,7 +537,7 @@ def build_public_payloads(model: dict) -> tuple[dict, dict, dict]:
         value_detail = "Public self-serve launch gate is green with row-derived external-user evidence."
     elif controlled_is_green:
         public_state = "NO-GO public self-serve; controlled first-10 beta GO"
-        value_detail = "Controlled first-10 public-package beta infrastructure is green; public self-serve remains blocked until row-derived first-10 external-user evidence passes."
+        value_detail = "Controlled first-10 public-package beta infrastructure and ops guardrails are green; public self-serve remains blocked until row-derived first-10 external-user evidence passes."
     else:
         public_state = "NO-GO public self-serve; source/local release-candidate only"
         value_detail = "Public-package controlled beta remains blocked until PyPI latest and fresh PyPI install + stdio MCP canaries pass for the current source version."
@@ -520,11 +561,17 @@ def build_public_payloads(model: dict) -> tuple[dict, dict, dict]:
         "max_recommended_real_users_now": metrics.get("max_recommended_real_users_now", {}).get("value", 0),
         "verified_external_users": metrics.get("verified_external_users", {}).get("value", 0),
         "cold_start_trust_hardening_gate": metrics.get("cold_start_trust_hardening_gate", {}).get("value", "UNKNOWN"),
+        "self_service_ops_gate": metrics.get("self_service_ops_gate", {}).get("value", "UNKNOWN"),
+        "ops_readiness_watchdog": metrics.get("ops_readiness_watchdog", {}).get("value", "UNKNOWN"),
+        "rollback_comms_drill": metrics.get("rollback_comms_drill", {}).get("value", "UNKNOWN"),
         "blockers": blockers,
         "evidence": [
             "eval/first_user_release_gate_snapshot.json",
             "eval/public_self_serve_launch_gate_snapshot.json",
             "eval/cold_start_trust_gate_snapshot.json",
+            "eval/self_service_ops_gate_snapshot.json",
+            "eval/ops_readiness_watchdog_snapshot.json",
+            "eval/rollback_comms_drill_snapshot.json",
             "eval/pypi_fresh_install_snapshot.json",
             "eval/real_user_rollout_gate_snapshot.json",
         ],

@@ -1,0 +1,68 @@
+name: Install or MCP support
+description: Report a controlled-beta install, CLI, or MCP stdio setup blocker.
+title: "[install-mcp]: "
+labels: ["install-mcp", "controlled-beta", "needs-triage"]
+body:
+  - type: markdown
+    attributes:
+      value: |
+        Use this for install or MCP setup failures. Redact secrets, tokens, private paths, and private repository names.
+  - type: input
+    id: borg-version
+    attributes:
+      label: borg-version
+      placeholder: "borg 3.3.14"
+    validations:
+      required: true
+  - type: input
+    id: install-method
+    attributes:
+      label: install-method
+      placeholder: "pipx install agent-borg==3.3.14"
+    validations:
+      required: true
+  - type: input
+    id: operating-system
+    attributes:
+      label: operating-system
+      placeholder: "macOS 14, Ubuntu 24.04, Windows 11"
+    validations:
+      required: true
+  - type: input
+    id: python-version
+    attributes:
+      label: python-version
+      placeholder: "Python 3.11.9"
+    validations:
+      required: true
+  - type: textarea
+    id: command-output-redacted
+    attributes:
+      label: command-output-redacted
+      description: Paste stdout/stderr with secrets redacted.
+    validations:
+      required: true
+  - type: input
+    id: mcp-client
+    attributes:
+      label: mcp-client
+      placeholder: "Claude Desktop, Cursor, Hermes, other, not attempted"
+    validations:
+      required: true
+  - type: dropdown
+    id: severity
+    attributes:
+      label: severity
+      options:
+        - P0 most users blocked/security risk
+        - P1 current tester blocked
+        - P2 confusing docs or minor setup friction
+    validations:
+      required: true
+  - type: checkboxes
+    id: privacy-confirmation
+    attributes:
+      label: privacy-confirmation
+      options:
+        - label: I redacted secrets, credentials, private repo URLs, and personal data.
+          required: true

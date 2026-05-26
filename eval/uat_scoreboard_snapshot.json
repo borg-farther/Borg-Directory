@@ -14,7 +14,7 @@
     "ready_for_10": true,
     "ready_for_100": true,
     "ready_for_1000": true,
-    "timestamp": "2026-05-25T16:29:49.123089+00:00"
+    "timestamp": "2026-05-26T06:22:04.059871+00:00"
   },
   "gates": {
     "first_user_surface": true,
@@ -27,30 +27,30 @@
   "loads": {
     "10": {
       "exists": true,
-      "p95_ms": 0.5729895550757647,
-      "p99_ms": 0.5962290475144982,
+      "p95_ms": 0.592048978433013,
+      "p99_ms": 0.6219720584340394,
       "passed": true,
       "success_rate": 1.0,
-      "timestamp": "2026-05-25T16:29:46.179824+00:00",
-      "total_requests": 2244
+      "timestamp": "2026-05-26T06:21:02.945566+00:00",
+      "total_requests": 64086
     },
     "100": {
       "exists": true,
-      "p95_ms": 0.603423360735178,
-      "p99_ms": 0.6225142069160939,
+      "p95_ms": 0.5965669173747301,
+      "p99_ms": 0.6592570338398211,
       "passed": true,
       "success_rate": 1.0,
-      "timestamp": "2026-05-25T16:29:47.280417+00:00",
-      "total_requests": 2109
+      "timestamp": "2026-05-26T06:21:33.075867+00:00",
+      "total_requests": 64267
     },
     "1000": {
       "exists": true,
-      "p95_ms": 0.5894859321415424,
-      "p99_ms": 0.6199854891747236,
+      "p95_ms": 0.5857031792402266,
+      "p99_ms": 0.6507343892008066,
       "passed": true,
       "success_rate": 1.0,
-      "timestamp": "2026-05-25T16:29:48.411265+00:00",
-      "total_requests": 2269
+      "timestamp": "2026-05-26T06:22:03.238142+00:00",
+      "total_requests": 66065
     }
   },
   "ready_for_10": true,
@@ -59,16 +59,14 @@
   "real_user_100_all_pass": false,
   "real_user_rollout": {
     "blockers": [
-      "PyPI latest/fresh-install package evidence is not green: latest metadata does not match source version",
-      "PyPI latest/fresh-install package evidence is not green: fresh install + MCP stdio canary is not green",
       "first-10 external-user evidence has not passed: verified=0/10, real_users=0/10, installs=0/8, useful=0/6, critical_incidents=0/0"
     ],
     "exists": true,
-    "generated_at_utc": "2026-05-25T16:29:49.062909+00:00",
-    "infrastructure_ready_for_100": false,
-    "max_recommended_real_users_now": 0,
+    "generated_at_utc": "2026-05-26T06:22:03.988866+00:00",
+    "infrastructure_ready_for_100": true,
+    "max_recommended_real_users_now": 10,
     "ready_for_100_real_users": false,
-    "ready_for_10_controlled_beta": false
+    "ready_for_10_controlled_beta": true
   },
   "security_surface": {
     "missing": [],
@@ -92,7 +90,7 @@
   },
   "source": "eval/uat_scoreboard.py",
   "synthetic_load_all_pass": true,
-  "timestamp": "2026-05-25T16:29:49.164672+00:00",
+  "timestamp": "2026-05-26T06:22:04.101159+00:00",
   "version": {
     "passed": true,
     "project_version": "3.3.14",

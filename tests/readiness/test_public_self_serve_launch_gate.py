@@ -95,8 +95,9 @@ def _write_cold_start_trust_snapshot(root: Path, *, passed: bool = True) -> None
             ],
             "trust_policy": "fail closed on irrelevant first answers",
             "bad_answer_feedback_path": {
-                "agent_fast_path": "borg_rate(helpful=False)",
-                "human_path": ".github/ISSUE_TEMPLATE/classifier-feedback.yml",
+                "agent_mcp_durable_path": "call borg_record_failure(error_pattern, pack_id, phase, approach, outcome='failure') when the bad path is concrete",
+                "cli_durable_path": "borg feedback-v3 --task-context ...",
+                "human_path": ".github/ISSUE_TEMPLATE/bad-answer.yml",
             },
         }),
         encoding="utf-8",
@@ -317,6 +318,66 @@ def test_pypi_latest_check_requires_source_version_and_urls() -> None:
     assert stale["passed"] is False
 
 
+def test_first_10_issue_form_not_measured_basis_does_not_invalidate_unmeasured_rows() -> None:
+    row = _row(1)
+    row.update({
+        "savings_counterfactual_basis": "not-measured",
+        "dead_end_avoided_confirmed": "unknown",
+        "user_confirmed_value": "unknown",
+    })
+
+    result = evidence.evaluate_scoreboard(_scoreboard([row]))
+
+    assert result["schema_valid"] is True
+    assert result["invalid_rows"] == []
+    assert result["derived_value"]["rows_with_measured_value"] == 0
+
+
+def test_first_10_issue_form_savings_basis_aliases_are_normalized() -> None:
+    row = _row(1)
+    row.update({
+        "baseline_minutes_without_borg": 30,
+        "actual_minutes_with_borg": 10,
+        "net_minutes_saved": 20,
+        "savings_counterfactual_basis": "timer-before-after",
+        "dead_end_avoided_confirmed": True,
+        "user_confirmed_value": True,
+    })
+
+    result = evidence.evaluate_scoreboard(_scoreboard([row]))
+
+    assert result["schema_valid"] is True
+    assert result["invalid_rows"] == []
+    assert result["derived_value"]["counterfactual_basis_counts"] == {"same_user_before_after": 1}
+
+
+def test_public_gate_pauses_controlled_first_10_when_privacy_security_incident_reported(tmp_path: Path, monkeypatch) -> None:
+    monkeypatch.setattr(gate, "ROOT", tmp_path)
+    monkeypatch.setattr(gate, "CURRENT_CLAIM_DOCS", [Path("README.md")])
+    (tmp_path / "eval").mkdir()
+    (tmp_path / "pyproject.toml").write_text('[project]\nname = "agent-borg"\nversion = "9.9.9"\n', encoding="utf-8")
+    (tmp_path / "README.md").write_text("pipx install agent-borg==9.9.9\nPublic self-serve launch: NO-GO until evidence.\n", encoding="utf-8")
+    (tmp_path / "eval" / "first_10_user_scoreboard.json").write_text(json.dumps(_scoreboard([_row(1, incident=True)])), encoding="utf-8")
+    (tmp_path / "eval" / "first_user_release_gate_snapshot.json").write_text(json.dumps({"success": True, "results": [{"name": "ok", "passed": True}]}), encoding="utf-8")
+    _write_cold_start_trust_snapshot(tmp_path)
+    monkeypatch.setattr(gate, "self_service_ops_check", lambda: {"passed": True, "blockers": [], "rollout_policy": "test"})
+    (tmp_path / "eval" / "pypi_fresh_install_snapshot.json").write_text(
+        json.dumps({
+            "success": True,
+            "version": "9.9.9",
+            "results": [{"name": "install", "passed": True}],
+            "mcp_stdio_canary": {"passed": True},
+        }),
+        encoding="utf-8",
+    )
+
+    snapshot = gate.compile_gate(fetch_network=False, pypi_data=_pypi_fixture())
+
+    assert snapshot["ready_for_controlled_first_10_beta"] is False
+    assert snapshot["gates"]["privacy_security_incident_pause"]["passed"] is False
+    assert any("privacy/security incident" in blocker for blocker in snapshot["blockers"])
+
+
 def test_public_self_serve_gate_passes_only_when_all_artifacts_and_real_rows_pass(tmp_path: Path, monkeypatch) -> None:
     monkeypatch.setattr(gate, "ROOT", tmp_path)
     monkeypatch.setattr(gate, "CURRENT_CLAIM_DOCS", [Path("README.md")])
@@ -327,6 +388,7 @@ def test_public_self_serve_gate_passes_only_when_all_artifacts_and_real_rows_pas
     (tmp_path / "eval" / "first_10_user_scoreboard.json").write_text(json.dumps(_scoreboard([_row(i) for i in range(1, 11)])), encoding="utf-8")
     (tmp_path / "eval" / "first_user_release_gate_snapshot.json").write_text(json.dumps({"success": True, "results": [{"name": "ok", "passed": True}]}), encoding="utf-8")
     _write_cold_start_trust_snapshot(tmp_path)
+    monkeypatch.setattr(gate, "self_service_ops_check", lambda: {"passed": True, "blockers": [], "rollout_policy": "test"})
     (tmp_path / "eval" / "pypi_fresh_install_snapshot.json").write_text(
         json.dumps({
             "success": True,
@@ -355,6 +417,7 @@ def test_public_self_serve_gate_blocks_empty_evidence_even_when_infra_passes(tmp
     (tmp_path / "eval" / "first_10_user_scoreboard.json").write_text(json.dumps(_scoreboard([])), encoding="utf-8")
     (tmp_path / "eval" / "first_user_release_gate_snapshot.json").write_text(json.dumps({"success": True, "results": [{"name": "ok", "passed": True}]}), encoding="utf-8")
     _write_cold_start_trust_snapshot(tmp_path)
+    monkeypatch.setattr(gate, "self_service_ops_check", lambda: {"passed": True, "blockers": [], "rollout_policy": "test"})
     (tmp_path / "eval" / "pypi_fresh_install_snapshot.json").write_text(
         json.dumps({
             "success": True,
@@ -385,6 +448,7 @@ def test_public_self_serve_gate_blocks_when_cold_start_trust_snapshot_fails(tmp_
     (tmp_path / "eval" / "first_10_user_scoreboard.json").write_text(json.dumps(_scoreboard([_row(i) for i in range(1, 11)])), encoding="utf-8")
     (tmp_path / "eval" / "first_user_release_gate_snapshot.json").write_text(json.dumps({"success": True, "results": [{"name": "ok", "passed": True}]}), encoding="utf-8")
     _write_cold_start_trust_snapshot(tmp_path, passed=False)
+    monkeypatch.setattr(gate, "self_service_ops_check", lambda: {"passed": True, "blockers": [], "rollout_policy": "test"})
     (tmp_path / "eval" / "pypi_fresh_install_snapshot.json").write_text(
         json.dumps({
             "success": True,
@@ -402,6 +466,33 @@ def test_public_self_serve_gate_blocks_when_cold_start_trust_snapshot_fails(tmp_
     assert snapshot["gates"]["cold_start_trust_hardening"]["passed"] is False
     assert any("cold-start trust" in blocker for blocker in snapshot["blockers"])
 
+
+def test_public_self_serve_gate_blocks_when_self_service_ops_fails(tmp_path: Path, monkeypatch) -> None:
+    monkeypatch.setattr(gate, "ROOT", tmp_path)
+    monkeypatch.setattr(gate, "CURRENT_CLAIM_DOCS", [Path("README.md")])
+    (tmp_path / "eval").mkdir()
+    (tmp_path / "pyproject.toml").write_text('[project]\nname = "agent-borg"\nversion = "9.9.9"\n', encoding="utf-8")
+    (tmp_path / "README.md").write_text("pipx install agent-borg==9.9.9\nPublic self-serve launch: NO-GO until evidence.\n", encoding="utf-8")
+    (tmp_path / "eval" / "first_10_user_scoreboard.json").write_text(json.dumps(_scoreboard([_row(i) for i in range(1, 11)])), encoding="utf-8")
+    (tmp_path / "eval" / "first_user_release_gate_snapshot.json").write_text(json.dumps({"success": True, "results": [{"name": "ok", "passed": True}]}), encoding="utf-8")
+    _write_cold_start_trust_snapshot(tmp_path)
+    monkeypatch.setattr(gate, "self_service_ops_check", lambda: {"passed": False, "blockers": ["bad-answer intake missing"], "rollout_policy": "test"})
+    (tmp_path / "eval" / "pypi_fresh_install_snapshot.json").write_text(
+        json.dumps({
+            "success": True,
+            "version": "9.9.9",
+            "results": [{"name": "install", "passed": True}],
+            "mcp_stdio_canary": {"passed": True, "server_info": {"name": "borg-mcp-server", "version": "9.9.9"}},
+        }),
+        encoding="utf-8",
+    )
+
+    snapshot = gate.compile_gate(fetch_network=False, pypi_data=_pypi_fixture())
+
+    assert snapshot["ready_for_controlled_first_10_beta"] is False
+    assert snapshot["ready_for_public_self_serve_launch"] is False
+    assert snapshot["gates"]["self_service_ops_readiness"]["passed"] is False
+    assert "bad-answer intake missing" in snapshot["blockers"]
 
 def test_pypi_fresh_install_canary_fails_closed_when_release_not_on_pypi(monkeypatch) -> None:
     calls: list[str] = []

@@ -129,16 +129,18 @@ def test_value_communication_dashboard_exposes_row_derived_savings_contract() ->
 
 
 def test_bad_answer_feedback_path_is_public_and_redaction_first() -> None:
-    issue = read(".github/ISSUE_TEMPLATE/classifier-feedback.yml")
+    issue = read(".github/ISSUE_TEMPLATE/bad-answer.yml")
     cold = read("docs/COLD_START_TRUST_HARDENING.md")
 
     assert "bad-answer" in issue
-    assert "No, unrelated guidance" in issue
-    assert "Please do not paste API keys" in issue
+    assert "expected-guidance" in issue
+    assert "privacy-confirmation" in issue
+    assert "do not paste" in issue.lower() or "do not include" in issue.lower()
     assert "Bad first answers are launch blockers" in issue
     assert "Bad-answer feedback path" in cold
     assert "borg_record_failure" in cold
     assert "redacted transcript" in cold
+    assert "borg_rate" not in cold
 
 
 def test_non_current_public_docs_are_bannered_or_operator_scoped() -> None:
@@ -159,6 +161,10 @@ def test_non_current_public_docs_are_bannered_or_operator_scoped() -> None:
         "PUBLIC_SELF_SERVE_LAUNCH_GO_NO_GO.md",
         "BORG_PROOF_DASHBOARD.md",
         "VALUE_COMMUNICATION_DASHBOARD.md",
+        "SELF_SERVICE_OPS_READINESS.md",
+        "SELF_SERVICE_OPS_READINESS_REPORT.md",
+        "FIRST_10_EVIDENCE_INTAKE.md",
+        "ROLLBACK_AND_COMMS_RUNBOOK.md",
         "COLD_START_TRUST_HARDENING.md",
         "SECURITY_HARDENING_BASELINE.md",
         "PRIVACY_MODEL.md",

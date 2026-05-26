@@ -200,4 +200,4 @@ Before attempting technical fixes for errors, bugs, installs, configs, deploymen
 
 ## 7. Readiness boundary
 
-Borg's controlled first-10 public-package beta infrastructure is blocked for `agent-borg==3.3.14` until PyPI latest, fresh-install, and stdio MCP canaries pass for that version: PyPI latest, fresh-install, and stdio MCP canaries must pass for `agent-borg==3.3.14` before this source revision is shared. Borg is not yet claiming public self-serve launch readiness or agent-level success lift at statistical confidence. See [`READINESS.md`](READINESS.md).
+Borg's controlled first-10 public-package beta is conditional GO for `agent-borg==3.3.14` only while PyPI latest, fresh-install, stdio MCP, cold-start trust, self-service ops, and watchdog gates remain green. Borg is not yet claiming public self-serve launch readiness or agent-level success lift at statistical confidence. See [`READINESS.md`](READINESS.md).

@@ -47,7 +47,24 @@ def main() -> int:
 
     scoreboard = data.get("first_10_user_scoreboard_template", {})
     cols = scoreboard.get("columns", [])
-    required_cols = ["user id/pseudonym", "install success", "time to first rescue", "rescue useful yes/no", "MCP setup success", "blocker", "outcome recorded"]
+    required_cols = [
+        "user id/pseudonym",
+        "install success",
+        "time to first rescue",
+        "rescue useful yes/no",
+        "MCP setup success",
+        "blocker",
+        "outcome recorded",
+        "baseline minutes without Borg",
+        "actual minutes with Borg",
+        "net minutes saved",
+        "baseline tokens without Borg",
+        "actual tokens with Borg",
+        "net tokens saved",
+        "savings counterfactual basis",
+        "dead end avoided confirmed",
+        "user confirmed value",
+    ]
     if cols != required_cols:
         return fail("first-10 scoreboard columns are missing or reordered")
     if len(scoreboard.get("rows", [])) < 10:
