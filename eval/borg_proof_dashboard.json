@@ -46,30 +46,30 @@
     {
       "claim_derived": "first-user release gate all_pass=True",
       "exists": true,
-      "freshness_timestamp": "2026-05-26T06:20:09Z",
+      "freshness_timestamp": "2026-05-26T10:12:00Z",
       "path": "eval/first_user_release_gate_snapshot.json",
-      "sha256": "296e1466193b627e9c37737f0cdedabe2cfdb0b8fcdeb0836f213812373c79dc"
+      "sha256": "ae8dfbb3e02879d0e7213ae7d4fb316166eafae47953bd06136181f00fe0607a"
     },
     {
       "claim_derived": "UAT synthetic_load_all_pass=True; real_user_100_all_pass=False; ready_for_10_logical_load=True; ready_for_1000_logical_load=True; not_real_user_or_public_beta_evidence=True",
       "exists": true,
-      "freshness_timestamp": "2026-05-26T09:26:42.173063+00:00",
+      "freshness_timestamp": "2026-05-26T10:13:27.630827+00:00",
       "path": "eval/uat_scoreboard_snapshot.json",
-      "sha256": "a02cef3c08ca364fc58421e1726e0ae23f64363acbe25cb83be2a71a40c6ad0f"
+      "sha256": "f768ad5540096868e213657b855e9a4d28224d1424f69a3b3e1917a522b4a73b"
     },
     {
       "claim_derived": "gate run synthetic_load_all_pass=True; overall_100_real_user_pass=False; ready_for_10_logical_load=True; ready_for_1000_logical_load=True; not_real_user_or_public_beta_evidence=True",
       "exists": true,
-      "freshness_timestamp": "2026-05-26T09:26:42.127240+00:00",
+      "freshness_timestamp": "2026-05-26T10:13:27.590039+00:00",
       "path": "eval/gate_run_snapshot.json",
-      "sha256": "9f0c2dc18a217bcd69bfe55d0623c6c0ba4e035836545c997f457939cc37f440"
+      "sha256": "9198a839c319ef17f789c99487771422e95dabedf76cbcef6a4c8bb7fa3896b4"
     },
     {
       "claim_derived": "100-real-user gate=False; max_recommended_real_users=10; blockers=['first-10 external-user evidence has not passed: verified=0/10, real_users=0/10, installs=0/8, useful=0/6, critical_incidents=0/0']",
       "exists": true,
-      "freshness_timestamp": "2026-05-26T09:26:42.059180+00:00",
+      "freshness_timestamp": "2026-05-26T10:13:27.930659+00:00",
       "path": "eval/real_user_rollout_gate_snapshot.json",
-      "sha256": "4e961ba6b6fb4b9dee04b07e66cf7f9f8100c474807ecc292e4599c92537779b"
+      "sha256": "13f984a1c557121d20a3021b815a5b03e7544e1dffccf0585e1bf8a5cf4667a1"
     },
     {
       "claim_derived": "first-10 row evidence users=0; measured_savings={'rows_with_measured_value': 0, 'dead_ends_avoided_confirmed': 0, 'net_minutes_saved': 0.0, 'positive_minutes_saved': 0.0, 'negative_minutes_cost': 0.0, 'net_tokens_saved': 0, 'positive_tokens_saved': 0, 'negative_tokens_cost': 0, 'counterfactual_basis_counts': {}}; gate=BLOCKED",
@@ -88,9 +88,9 @@
     {
       "claim_derived": "cold-start trust gate=True; blockers=[]",
       "exists": true,
-      "freshness_timestamp": "2026-05-26T09:26:36.610547+00:00",
+      "freshness_timestamp": "2026-05-26T10:13:22.047215+00:00",
       "path": "eval/cold_start_trust_gate_snapshot.json",
-      "sha256": "4ed7101dd1653c9297f684c337aaca1c0f298606179c67d86940a4d38da396b9"
+      "sha256": "d07aaaae3faaa350827f64a7e1be10bd65b32da2d6982acaec846eb8204fa437"
     },
     {
       "claim_derived": "self-service ops gate=True; blockers=[]",
@@ -109,9 +109,9 @@
     {
       "claim_derived": "rollback/comms drill=True; dry_run_only=True",
       "exists": true,
-      "freshness_timestamp": "2026-05-26T09:22:46.288396+00:00",
+      "freshness_timestamp": "2026-05-26T10:12:23.434840+00:00",
       "path": "eval/rollback_comms_drill_snapshot.json",
-      "sha256": "3fb6ffafa4312fa80164e3e5aa34195e81bce30a84f3a548547710c15a61a65b"
+      "sha256": "0f384ce592be113340886fc31a9a49f64455e79b3486c6d9c5662c3c6c0a56e4"
     },
     {
       "claim_derived": "PyPI fresh-install canary success=True; version=3.3.14",
@@ -121,32 +121,32 @@
       "sha256": "eb443a71e5d6b34ff9c390983d2e038acdcdbd83aba2f95a9c689e059b7c2634"
     },
     {
-      "claim_derived": "logical load 10: passed=True; total_requests=2347; success_rate=1.0; p95_ms=0.5692170001566409; model=asyncio_logical_users",
+      "claim_derived": "logical load 10: passed=True; total_requests=2060; success_rate=1.0; p95_ms=0.5990194738842546; model=asyncio_logical_users",
       "exists": true,
-      "freshness_timestamp": "2026-05-26T09:26:39.134280+00:00",
+      "freshness_timestamp": "2026-05-26T10:13:24.573071+00:00",
       "path": "eval/load_10_snapshot.json",
-      "sha256": "0f344efa7f331ad0565edec7620ce931d89fc78be773b55a94915a0505b4966d"
+      "sha256": "5f9ed0b21e755d5936030ea50b72fcffad04e5ceae3dc7371ab791c493991c92"
     },
     {
-      "claim_derived": "logical load 100: passed=True; total_requests=2245; success_rate=1.0; p95_ms=0.5549177061766385; model=asyncio_logical_users",
+      "claim_derived": "logical load 100: passed=True; total_requests=2096; success_rate=1.0; p95_ms=0.5893629277125001; model=asyncio_logical_users",
       "exists": true,
-      "freshness_timestamp": "2026-05-26T09:26:40.226635+00:00",
+      "freshness_timestamp": "2026-05-26T10:13:25.677348+00:00",
       "path": "eval/load_100_snapshot.json",
-      "sha256": "d493d1fb532fcfec8e7e6a80b8689b488c242b218b3bb1642d473bcd04bb433a"
+      "sha256": "ed9f8a1e5a81f12c169565a533119063c10efce794c1e5473e8ffdcaa2c2e546"
     },
     {
-      "claim_derived": "logical load 1000: passed=True; total_requests=2143; success_rate=1.0; p95_ms=0.5571870831772685; model=asyncio_logical_users",
+      "claim_derived": "logical load 1000: passed=True; total_requests=2288; success_rate=1.0; p95_ms=0.5626976257190108; model=asyncio_logical_users",
       "exists": true,
-      "freshness_timestamp": "2026-05-26T09:26:41.357996+00:00",
+      "freshness_timestamp": "2026-05-26T10:13:26.812907+00:00",
       "path": "eval/load_1000_snapshot.json",
-      "sha256": "41600915b30893f0bf8c82fe17c58af32ed71e52c9c310b5f0eb4108d5ed0e5c"
+      "sha256": "9333a8cb891e72d816e8b14670c1503d9925f5e4dcb7719ea005c04b808cb7a7"
     },
     {
       "claim_derived": "package version=3.3.14; scripts declared in project metadata",
       "exists": true,
-      "freshness_timestamp": "2026-05-26T09:32:22Z",
+      "freshness_timestamp": "2026-05-26T10:10:33Z",
       "path": "pyproject.toml",
-      "sha256": "1cbad6f3f0895c472618b67b54ec68f4073ae78e420dc5eea9e5f26aaa946e66"
+      "sha256": "d0bc7249b4c0f2119b4d22d23ea59b58f19968f766dc188655ecf28f7c0823d6"
     },
     {
       "claim_derived": "runtime __version__=3.3.14; top-level check() delegates to search",
@@ -358,7 +358,7 @@
       }
     ]
   },
-  "generated_at_utc": "2026-05-26T09:32:54Z",
+  "generated_at_utc": "2026-05-26T10:13:28Z",
   "metrics": {
     "active_contributors_consumers": {
       "honesty_label": "MISSING_BORG_ANALYTICS_ARTIFACT",
@@ -397,34 +397,34 @@
         "10": {
           "concurrency_model": "asyncio_logical_users",
           "exists": true,
-          "p95_ms": 0.5692170001566409,
-          "p99_ms": 0.5936667695641518,
+          "p95_ms": 0.5990194738842546,
+          "p99_ms": 0.6211620359681547,
           "passed": true,
           "success_rate": 1.0,
-          "timestamp": "2026-05-26T09:26:39.134280+00:00",
-          "total_requests": 2347,
+          "timestamp": "2026-05-26T10:13:24.573071+00:00",
+          "total_requests": 2060,
           "users_label": 10
         },
         "100": {
           "concurrency_model": "asyncio_logical_users",
           "exists": true,
-          "p95_ms": 0.5549177061766385,
-          "p99_ms": 0.5802797991782427,
+          "p95_ms": 0.5893629277125001,
+          "p99_ms": 0.6130644236691297,
           "passed": true,
           "success_rate": 1.0,
-          "timestamp": "2026-05-26T09:26:40.226635+00:00",
-          "total_requests": 2245,
+          "timestamp": "2026-05-26T10:13:25.677348+00:00",
+          "total_requests": 2096,
           "users_label": 100
         },
         "1000": {
           "concurrency_model": "asyncio_logical_users",
           "exists": true,
-          "p95_ms": 0.5571870831772685,
-          "p99_ms": 0.5805724440142512,
+          "p95_ms": 0.5626976257190108,
+          "p99_ms": 0.6110555166378617,
           "passed": true,
           "success_rate": 1.0,
-          "timestamp": "2026-05-26T09:26:41.357996+00:00",
-          "total_requests": 2143,
+          "timestamp": "2026-05-26T10:13:26.812907+00:00",
+          "total_requests": 2288,
           "users_label": 1000
         }
       }
@@ -510,7 +510,7 @@
     "Before any public claim, replace logical-user load evidence with real external-user evidence or clearly label the distinction."
   ],
   "repo": "https://github.com/borg-farther/Borg-Directory",
-  "source_revision": "a5414ee77898e47bab755d6f56d2e96b2ecaea8f+dirty",
+  "source_revision": "4d38c3d710d597122d022d77977c9574679483a8+dirty",
   "top_verdict": {
     "broad_public_launch": {
       "verdict": "NO-GO",

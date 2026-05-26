@@ -130,6 +130,7 @@ class TestRunAggregator:
                 VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
             """, f)
 
+        conn.commit()
         conn.close()
 
     def _create_sample_telemetry(self, borg_dir: Path) -> None:
@@ -227,6 +228,25 @@ class TestRunAggregator:
         assert len(negative_packs) >= 1
         pack_ids_with_negative = [p["pack_id"] for p in negative_packs]
         assert "pack-002" in pack_ids_with_negative
+
+    def test_report_ignores_operator_home_feedback_when_borg_dir_explicit(self, mock_env, tmp_path, monkeypatch):
+        """Explicit Borg dirs must not ingest unrelated HOME feedback receipts."""
+        self._create_sample_feedback_db(mock_env / "guild.db")
+        fake_home = tmp_path / "home"
+        home_feedback = fake_home / ".hermes" / "guild" / "feedback"
+        home_feedback.mkdir(parents=True)
+        (home_feedback / "fb-home.yaml").write_text(
+            "pack_id: home-only-pack\noutcome: failure\nevidence: should not leak into test report\n",
+            encoding="utf-8",
+        )
+        monkeypatch.setenv("HOME", str(fake_home))
+
+        from scripts.run_aggregator import generate_report_for_dir
+
+        report = generate_report_for_dir(mock_env)
+        pack_ids = {pack["pack_id"] for pack in report["all_pack_reports"]}
+
+        assert "home-only-pack" not in pack_ids
 
     def test_pack_report_has_required_fields(self, mock_env):
         """Test that each pack report contains all required fields."""

@@ -61,6 +61,8 @@ def test_current_docs_do_not_contradict_3310_published_state() -> None:
         "PyPI latest remains 3.3.7",
         "upload aborted on release-provenance gates",
         "NO-GO until PyPI latest/fresh-install/MCP canary passes",
+        "NO-GO for this source revision",
+        "controlled first-10 beta invites may not start",
         "PyPI latest/fresh-install/stdio MCP package evidence is not green yet",
         "no controlled first-10 beta invites until package evidence is green",
         "blocked until `agent-borg==3.3.8` is published",
@@ -174,6 +176,7 @@ def test_non_current_public_docs_are_bannered_or_operator_scoped() -> None:
         "LEARNING_ATOM_SCHEMA.md",
         "CANONICAL_REPO.md",
         "LIVE_MCP_SELF_SERVE_CANARY.md",
+        "20260526_7_USER_CONTROLLED_LAUNCH_AND_100_USER_STAGE_GATES.md",
     }
     docs = ROOT / "docs"
     gitlink_roots = _gitlink_doc_roots()

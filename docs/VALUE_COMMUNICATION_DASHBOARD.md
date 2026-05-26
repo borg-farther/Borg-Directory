@@ -1,9 +1,9 @@
 # borg value communication dashboard
 
 ## operator benefits (validated internally)
-- first visible value path after PyPI release: `pipx install agent-borg==3.3.14` -> `borg rescue "<redacted error>"` -> ACTION / STOP / VERIFY
-- pre-release value path: local wheel/source first-user gate is green, but this is not public self-serve proof
-- local/synthetic gate status: first-user release gate and logical load gates are green in current artifacts
+- first visible value path for controlled beta: `pipx install agent-borg==3.3.14` -> `borg rescue "<redacted error>"` -> ACTION / STOP / VERIFY
+- controlled package beta path: PyPI latest, fresh-install, and stdio MCP package gates are green for `agent-borg==3.3.14`, but this is not broad public self-serve proof
+- local/synthetic gate status: first-user release gate and logical load gates are green in current artifacts; synthetic users are not external-user evidence
 - external-user proof status: **not proven yet**; verified external users remain `0`
 - measured savings status: **0 measured rows, 0.0 net minutes saved, 0 net tokens saved**; savings are not claimed until consented external-user rows include before/after measurements
 - statistically significant agent-level lift: **not claimed** until a controlled external-user benchmark passes
@@ -16,11 +16,11 @@
 - rescue rule: `borg rescue --json` exposes `value_receipt.measurement_status=ready_to_measure` and `savings_claim_type=none` until a later first-10 row records the outcome
 
 ## readiness status
-- controlled first-10 PyPI beta infrastructure: **NO-GO for this source revision** — publish `agent-borg==3.3.14`, then rerun fresh-install/stdio MCP package evidence before inviting testers
+- controlled first-10 PyPI beta infrastructure: **GO/CONDITIONAL for `agent-borg==3.3.14`** — invite at most 10 consented external users through the local CLI / stdio MCP package path while evidence intake and incident pause gates remain green
 - supervised local first-user path: GO in current artifacts
 - public self-serve launch: **NO-GO until first-10 row-derived external evidence passes**
 - 100 real-user rollout: **NO-GO until 10 external users, >=8 installs, >=6 useful rescues, and 0 critical incidents**
-- decision: controlled first-10 beta invites may not start for `agent-borg==3.3.14` until PyPI latest, fresh-install, and stdio MCP package evidence are green; no broad self-serve or frontier-better-than claim
+- decision: controlled first-10 beta invites may start for `agent-borg==3.3.14` on the local CLI / stdio MCP path, capped at 10 users; no broad self-serve, served remote MCP, 100-user, measured-savings, or frontier-better-than claim
 
 ## evidence
 - `eval/public_self_serve_launch_gate_snapshot.json`

@@ -79,10 +79,40 @@ def _identify_negative_feedback(feedbacks: list[dict[str, Any]]) -> list[dict[st
     """Filter to only negative/outcome=failure feedback."""
     negative: list[dict[str, Any]] = []
     for fb in feedbacks:
-        outcome = fb.get("outcome", "").lower()
+        outcome = str(fb.get("outcome", "")).lower()
         if outcome in ("failure", "partial"):
             negative.append(fb)
     return negative
+
+
+def _load_yaml_feedback_files(feedback_dir: Path) -> list[dict[str, Any]]:
+    """Load filesystem feedback receipts from the selected Borg directory only.
+
+    The aggregator is used as a production learning-loop proof. It must not read
+    the operator's real ``~/.hermes`` feedback when a test, beta tenant, or cron
+    run passes an explicit Borg directory; otherwise reports mix tenants and
+    tests become dependent on host state.
+    """
+    if not feedback_dir.exists():
+        return []
+    try:
+        import yaml as _yaml
+    except Exception:
+        return []
+
+    loaded: list[dict[str, Any]] = []
+    for receipt in sorted(feedback_dir.glob("fb-*.yaml")):
+        try:
+            data = _yaml.safe_load(receipt.read_text(encoding="utf-8"))
+        except Exception:
+            continue
+        if not isinstance(data, dict):
+            continue
+        data.setdefault("type", "feedback")
+        if "outcome" not in data:
+            data["outcome"] = (data.get("after") or {}).get("outcome", "success")
+        loaded.append(data)
+    return loaded
 
 
 def _compute_pack_report(
@@ -177,36 +207,30 @@ def generate_report_for_dir(borg_dir: Path) -> dict[str, Any]:
     Returns:
         The aggregator report dict
     """
-    # Load data
+    # Load data from the explicitly selected Borg directory.
+    # Keep tenant/test runs isolated: do not fall back to HOME/.hermes here.
     store = AgentStore(db_path=str(borg_dir / "guild.db"))
-    feedbacks = store.list_feedback(limit=10000)
+    try:
+        feedbacks = store.list_feedback(limit=10000)
+        packs = store.list_packs(limit=10000)
+    finally:
+        store.close()
 
-    # Also ingest yaml feedback files from guild/feedback/ (the actual Hermy output)
-    import yaml as _yaml
-    import os as _os; _fb_dir = Path(_os.environ.get('HOME', '/root')) / '.hermes' / 'guild' / 'feedback'
-    if _fb_dir.exists():
-        _loaded = 0
-        for _f in sorted(_fb_dir.glob('fb-*.yaml')):
-            try:
-                _d = _yaml.safe_load(_f.read_text())
-                if isinstance(_d, dict):
-                    _d.setdefault('type', 'feedback')
-                    if 'outcome' not in _d:
-                        _d['outcome'] = (_d.get('after') or {}).get('outcome', 'success')
-                    feedbacks.append(_d)
-                    _loaded += 1
-            except Exception:
-                pass
-        if _loaded:
-            print(f"  Loaded {_loaded} yaml feedback files from {_fb_dir}")
+    yaml_feedbacks = _load_yaml_feedback_files(borg_dir / "feedback")
+    if yaml_feedbacks:
+        feedbacks.extend(yaml_feedbacks)
+        print(f"  Loaded {len(yaml_feedbacks)} yaml feedback files from {borg_dir / 'feedback'}")
     telemetry = _load_telemetry(borg_dir)
 
     # Group by pack
     feedback_by_pack = _group_feedback_by_pack(feedbacks)
     telemetry_by_pack = _group_telemetry_by_pack(telemetry)
 
-    # Get all pack IDs
-    all_pack_ids = set(feedback_by_pack.keys()) | set(telemetry_by_pack.keys())
+    # Get all pack IDs, including packs that have no feedback yet. This keeps
+    # adoption/learning reports honest about empty packs instead of silently
+    # dropping them from the improvement loop.
+    all_pack_ids: set[str] = {str(pack["id"]) for pack in packs if pack.get("id")}
+    all_pack_ids |= set(feedback_by_pack.keys()) | set(telemetry_by_pack.keys())
 
     # Compute per-pack reports
     pack_reports: list[dict[str, Any]] = []
