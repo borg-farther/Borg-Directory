@@ -204,6 +204,7 @@ def test_non_current_public_docs_are_bannered_or_operator_scoped() -> None:
         "20260526_ALWAYS_CURRENT_RUNTIME_AND_FEDERATED_LEARNING_PLAN.md",
         "20260526-2046_REMOTE_FEDERATED_LEARNING_GO_PROOF.md",
         "20260526-2115_FEDERATED_LEARNING_OPTIMALITY_AUDIT.md",
+        "20260526-2230_MAX_VALUE_COLLECTIVE_INTELLIGENCE_LOOP.md",
     }
     docs = ROOT / "docs"
     gitlink_roots = _gitlink_doc_roots()

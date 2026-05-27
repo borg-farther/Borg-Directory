@@ -9,11 +9,37 @@ ROOT = Path(__file__).resolve().parents[2]
 
 
 def test_federated_learning_optimality_audit_splits_protocol_go_from_value_no_go(tmp_path):
+    collective = tmp_path / "collective.json"
+    collective_proc = subprocess.run(
+        [sys.executable, "eval/run_collective_intelligence_loop_gate.py", "--output", str(collective)],
+        cwd=ROOT,
+        text=True,
+        capture_output=True,
+        timeout=60,
+        check=False,
+    )
+    assert collective_proc.returncode == 0, collective_proc.stderr + collective_proc.stdout
+
+    federated = tmp_path / "federated.json"
+    federated_proc = subprocess.run(
+        [sys.executable, "eval/run_federated_learning_gate.py", "--output", str(federated)],
+        cwd=ROOT,
+        text=True,
+        capture_output=True,
+        timeout=60,
+        check=False,
+    )
+    assert federated_proc.returncode == 0, federated_proc.stderr + federated_proc.stdout
+
     output = tmp_path / "optimality.json"
     proc = subprocess.run(
         [
             sys.executable,
             "eval/run_federated_learning_optimality_audit.py",
+            "--federated-snapshot",
+            str(federated),
+            "--collective-loop-snapshot",
+            str(collective),
             "--output",
             str(output),
             "--trace-db",
@@ -38,7 +64,12 @@ def test_federated_learning_optimality_audit_splits_protocol_go_from_value_no_go
     assert data["scores_0_to_10"]["protocol_security"] >= 8.0
     assert data["scores_0_to_10"]["external_truth_grounding"] <= 1.0
     assert data["scores_0_to_10"]["overall_optimality_ceiling"] < 8.0
-    assert len(data["p0_gaps_to_google_tier"]) >= 5
+    assert data["evidence"]["collective_loop"]["verdict"] == "GO"
+    assert data["evidence"]["collective_loop"]["public_external_lift"].startswith("NO-GO")
+    assert data["resolved_internal_primitives"]["outcome_receipts"] is True
+    assert data["resolved_internal_primitives"]["unified_scored_retrieval"] is True
+    assert all("Tie every guidance event" not in gap for gap in data["p0_gaps_to_google_tier"])
+    assert len(data["p0_gaps_to_google_tier"]) >= 3
     assert "Protocol GO is not evidence" in data["hard_boundary"]
 
 

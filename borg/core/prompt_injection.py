@@ -23,7 +23,7 @@ class PromptInjectionScanResult:
 
 
 _PATTERNS = [
-    (re.compile(r"\b(ignore|disregard|override)\s+(all\s+)?(previous|prior|system|developer)\s+instructions\b", re.I), "instruction_override", "critical", 90),
+    (re.compile(r"\b(ignore|disregard|override)\s+(all\s+)?((previous|prior)\s+)?(system|developer)?\s*instructions\b", re.I), "instruction_override", "critical", 90),
     (re.compile(r"\b(reveal|print|show|dump)\s+(the\s+)?(system|developer)\s+prompt\b", re.I), "instruction_override", "critical", 90),
     (re.compile(r"\b(cat|read|open)\s+~?/\.?(env|ssh/id_rsa|aws/credentials)\b", re.I), "exfiltration", "critical", 100),
     (re.compile(r"\b(send|upload|post|exfiltrate|leak)\b[^.\n]*(credential|secret|token|api[_ -]?key|\.env|id_rsa)", re.I), "exfiltration", "critical", 100),

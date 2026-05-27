@@ -111,11 +111,7 @@ class AtomStore:
         evidence = payload.get("evidence") or {}
         trust = payload.get("trust") or {}
         lifecycle = payload.get("lifecycle") or {}
-        indexed_tenant_count = (
-            int(verified_tenant_count)
-            if verified_tenant_count is not None
-            else int(trust.get("independent_tenant_count", 1))
-        )
+        indexed_tenant_count = int(verified_tenant_count) if verified_tenant_count is not None else 0
         with _connect(self.db_path) as conn:
             conn.execute(
                 """

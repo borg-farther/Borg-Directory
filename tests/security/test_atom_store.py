@@ -137,3 +137,20 @@ def test_store_search_exposes_verified_tenant_count_not_payload_hint(tmp_path):
     assert results
     assert results[0]["trust"]["independent_tenant_count"] == 99
     assert results[0]["trust"]["verified_tenant_count"] == 3
+
+
+def test_store_search_does_not_label_org_payload_tenant_count_as_verified(tmp_path):
+    store = AtomStore(str(tmp_path / "atoms.db"))
+    atom = _atom()
+    atom["scope"] = "org"
+    atom["trust"]["tenant_pseudonym"] = tenant_pseudonym("tenant-a", b"test-secret")
+    atom["trust"]["independent_tenant_count"] = 99
+    atom["atom_id"] = compute_atom_id(atom)
+    envelope = sign_learning_atom(atom, generate_signing_key())
+
+    store.add_atom(envelope)
+    results = store.search_atoms("optional")
+
+    assert results
+    assert results[0]["trust"]["independent_tenant_count"] == 99
+    assert results[0]["trust"]["verified_tenant_count"] == 0

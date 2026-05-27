@@ -20,7 +20,8 @@ belong under [`archive/`](archive/) and are not current product claims.
 - [`20260522_BORG_PRODUCTION_DAY_ONE_HARDENING_PLAN.md`](20260522_BORG_PRODUCTION_DAY_ONE_HARDENING_PLAN.md) — hard-gated production/day-one hardening plan and proof checklist
 - [`20260526-1302_OPTIMAL_SAFE_COLLECTIVE_LEARNING_LOOP.md`](20260526-1302_OPTIMAL_SAFE_COLLECTIVE_LEARNING_LOOP.md) — optimal safe collective learning loop, gates, current GO/NO-GO, and verification evidence
 - [`20260526-2046_REMOTE_FEDERATED_LEARNING_GO_PROOF.md`](20260526-2046_REMOTE_FEDERATED_LEARNING_GO_PROOF.md) — remote signed-registry protocol GO proof, explicitly not public launch or utility-lift proof
-- [`20260526-2115_FEDERATED_LEARNING_OPTIMALITY_AUDIT.md`](20260526-2115_FEDERATED_LEARNING_OPTIMALITY_AUDIT.md) — blunt optimality audit: protocol GO, Google-tier value loop NO-GO
+- [`20260526-2115_FEDERATED_LEARNING_OPTIMALITY_AUDIT.md`](20260526-2115_FEDERATED_LEARNING_OPTIMALITY_AUDIT.md) — blunt optimality audit: protocol GO, internal loop primitives GO, Google-tier product impact NO-GO
+- [`20260526-2230_MAX_VALUE_COLLECTIVE_INTELLIGENCE_LOOP.md`](20260526-2230_MAX_VALUE_COLLECTIVE_INTELLIGENCE_LOOP.md) — outcome-grounded value-loop proof: intervention receipts, helpfulness, dedupe, registry quorum, unified retrieval, first-10 boundary
 - [`../eval/collective_learning_loop_controls.json`](../eval/collective_learning_loop_controls.json) — machine-readable safe collective learning control contract
 - [`../eval/federated_learning_gate_snapshot.json`](../eval/federated_learning_gate_snapshot.json) — machine-readable remote signed-registry protocol proof snapshot
 - [`../eval/federated_learning_optimality_audit.json`](../eval/federated_learning_optimality_audit.json) — machine-readable optimality/value-truth audit
@@ -58,3 +59,4 @@ They are retained for provenance, but they are not current product claims or fir
 - Controlled first-10 public-package beta infrastructure: CONDITIONAL GO for `agent-borg==3.3.14` while PyPI latest, fresh-install, stdio MCP, cold-start trust, self-service ops, watchdog, source/local first-user, and GitHub CI/security gates remain green.
 - Public self-serve launch: not yet; requires real external-user evidence.
 - Agent-level success lift at statistical confidence: not yet proven.
+- Internal max-value collective intelligence loop primitives: GO; external lift still requires first-10 rows.

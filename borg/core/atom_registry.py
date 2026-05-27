@@ -18,12 +18,13 @@ import json
 import time
 from dataclasses import dataclass
 from pathlib import Path
-from typing import Any, Dict, List
+from typing import Any, Dict, List, Sequence
 from urllib.parse import urljoin
 from urllib.request import urlopen
 
 from borg.core.atom_policy import AtomDecision, classify_atom_policy
 from borg.core.atom_store import AtomStore
+from borg.core.collective_learning import compute_verified_tenant_count_from_outcomes, normalize_problem_signature
 from borg.core.crypto import derive_verify_key, decode_key, encode_key, verify_key_from_string
 from borg.core.learning_atoms import learning_atom_key_id_from_verify_key, verify_signed_atom
 
@@ -251,11 +252,33 @@ def ingest_atom_envelope(
     envelope: Dict[str, Any],
     registry_dir: str | Path,
     verified_tenant_count: int | None = None,
+    *,
+    allow_trusted_verified_tenant_count: bool = False,
+    allow_cluster_receipt_rebind: bool = False,
+    trusted_receipt_signer_key_ids: Sequence[str] | None = None,
+    trusted_cluster_rebind_atom_id: str | None = None,
 ) -> RegistryReceipt:
     """Validate and store a signed atom envelope in a local staging registry.
 
     Local-scope atoms are intentionally not accepted: callers must explicitly
     choose org/global_candidate scope before anything becomes shareable.
+
+    `verified_tenant_count` is ignored unless `allow_trusted_verified_tenant_count`
+    is set by trusted test/operator code.  Normal registry ingestion computes
+    quorum from signed outcome-receipt envelopes under `outcomes/`, never from a
+    caller-supplied count or from the atom payload.
+
+    `trusted_receipt_signer_key_ids` must come from trusted local/operator state
+    (for example the store that exported the receipts), not from files in the
+    registry. Outcome receipt envelopes are self-signed integrity checks; signer
+    trust is a separate anchor.
+
+    `allow_cluster_receipt_rebind` is reserved for the local cluster-promotion
+    path that mints a new atom after outcomes were recorded against a source
+    atom. It still computes quorum from signed receipt envelopes, an explicit
+    supporting-receipt allowlist, trusted receipt signers, and an explicit trusted
+    candidate atom id; direct public ingestion leaves it disabled so arbitrary
+    atoms cannot piggyback on another atom's receipts.
     """
     root = _ensure_registry_dirs(registry_dir)
     signature = verify_signed_atom(envelope)
@@ -266,6 +289,47 @@ def ingest_atom_envelope(
 
     payload = envelope["payload"]
     atom_id = payload["atom_id"]
+    if verified_tenant_count is not None and not allow_trusted_verified_tenant_count:
+        verified_tenant_count = None
+    if verified_tenant_count is None:
+        task = payload.get("task") or {}
+        evidence = payload.get("evidence") or {}
+        payload_cluster_id = normalize_problem_signature(
+            task.get("type", "other"),
+            task.get("technology", []),
+            task.get("error_class", ""),
+            task.get("error_pattern", ""),
+        )
+        computed_quorum = compute_verified_tenant_count_from_outcomes(
+            root,
+            atom_id=atom_id,
+            cluster_id=payload_cluster_id,
+            trusted_receipt_signer_key_ids=trusted_receipt_signer_key_ids,
+        )
+        if computed_quorum == 0 and allow_cluster_receipt_rebind:
+            supporting_ids = evidence.get("supporting_receipt_ids")
+            evidence_cluster_id = str(evidence.get("cluster_id") or "")
+            if (
+                evidence.get("type") == "outcome_receipt"
+                and evidence_cluster_id == payload_cluster_id
+                and isinstance(supporting_ids, list)
+                and supporting_ids
+            ):
+                if str(trusted_cluster_rebind_atom_id or "") != atom_id:
+                    raise ValueError("cluster receipt rebind requires trusted candidate atom id")
+                computed_quorum = compute_verified_tenant_count_from_outcomes(
+                    root,
+                    atom_id=atom_id,
+                    cluster_id=payload_cluster_id,
+                    supporting_receipt_ids=[str(rid) for rid in supporting_ids],
+                    allow_supported_receipt_rebind=True,
+                    trusted_receipt_signer_key_ids=trusted_receipt_signer_key_ids,
+                )
+        # Preserve the hard distinction between "no registry-computed quorum"
+        # and "registry computed an insufficient quorum".  Existing gates use
+        # the former to catch self-declared tenant-count inflation.
+        if computed_quorum > 0:
+            verified_tenant_count = computed_quorum
     if payload.get("scope") == "local":
         receipt = _quarantine(root, envelope, "local-scope atoms are not shareable")
         rebuild_manifest(root)
@@ -459,6 +523,9 @@ def sync_signed_registry_to_store(
     sequence, expiry, and per-file hashes all have to pass before any atom is
     imported. Tombstones are applied first so revocation always wins.
     """
+    is_remote = str(registry_url).startswith(("http://", "https://"))
+    if is_remote and state_path is None:
+        raise ValueError("state_path is required for remote signed registry replay protection")
     manifest_bytes = _fetch_registry_bytes(registry_url, "manifest.signed.json")
     signed_manifest = json.loads(manifest_bytes.decode("utf-8"))
     payload = _verify_registry_manifest_signature(
@@ -518,7 +585,7 @@ def sync_signed_registry_to_store(
         },
     )
     return {
-        "remote": str(registry_url).startswith(("http://", "https://")),
+        "remote": is_remote,
         "manifest_sequence": sequence,
         "manifest_hash": manifest_hash,
         "imported": imported,

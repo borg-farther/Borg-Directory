@@ -1,5 +1,12 @@
 {
   "evidence": {
+    "collective_loop": {
+      "public_external_lift": "NO-GO_REAL_FIRST_10_ROWS_REQUIRED",
+      "scope": "max_value_collective_intelligence_loop_primitives",
+      "success": true,
+      "verdict": "GO"
+    },
+    "collective_loop_snapshot": "/root/hermes-workspace/borg/eval/collective_intelligence_loop_gate.json",
     "federated_protocol_verdict": "GO",
     "federated_scope": "remote_global_federated_protocol",
     "federated_snapshot": "/root/hermes-workspace/borg/eval/federated_learning_gate_snapshot.json",
@@ -14,13 +21,13 @@
     "trace_stats": {
       "available": true,
       "distinct_task_descriptions": 78,
-      "duplicate_pressure": 0.7719,
+      "duplicate_pressure": 0.7759,
       "outcomes": {
         "failure": 19,
-        "success": 323
+        "success": 329
       },
       "path": "/root/.borg/traces.db",
-      "total_traces": 342
+      "total_traces": 348
     }
   },
   "external_design_anchors": [
@@ -45,51 +52,79 @@
       "url": "https://ar5iv.labs.arxiv.org/html/1808.04866"
     }
   ],
-  "generated_at_utc": "2026-05-26T21:30:44Z",
+  "generated_at_utc": "2026-05-27T22:49:41Z",
   "git": {
     "branch": "fix/runtime-freshness-federated-learning-plan",
-    "commit": "4066bbfbbaaaed29d415ba6023ff923892dd144d",
+    "commit": "643f6671e8563b65c579189a449cb29b90b8edb6",
     "dirty": true,
     "dirty_files": [
-      "M borg/cli.py",
+      "M README.md",
+      " M borg/cli.py",
       " M borg/core/atom_registry.py",
+      " M borg/core/atom_store.py",
+      " M borg/core/first_user_readiness.py",
+      " M borg/core/prompt_injection.py",
+      " M borg/integrations/mcp_server.py",
       " M docs/20260526-1302_OPTIMAL_SAFE_COLLECTIVE_LEARNING_LOOP.md",
-      " M docs/20260526_ALWAYS_CURRENT_RUNTIME_AND_FEDERATED_LEARNING_PLAN.md",
-      " M docs/LEARNING_ATOM_SCHEMA.md",
+      " M docs/20260526-2115_FEDERATED_LEARNING_OPTIMALITY_AUDIT.md",
+      " M docs/FIRST_10_BETA_READINESS.md",
+      " M docs/INTEGRATION_GUIDE.md",
+      " M docs/MCP_SETUP.md",
+      " M docs/ONBOARDING.md",
+      " M docs/QUICKSTART.md",
       " M docs/README.md",
+      " M docs/TRYING_BORG.md",
+      " M docs/landing-page/install-snippets.md",
       " M eval/collective_learning_loop_controls.json",
-      " M tests/cli/test_cli_atom.py",
+      " M eval/federated_learning_gate_snapshot.json",
+      " M eval/federated_learning_optimality_audit.json",
+      " M eval/rollback_comms_drill_snapshot.json",
+      " M eval/run_federated_learning_gate.py",
+      " M eval/run_federated_learning_optimality_audit.py",
+      " M eval/tests/test_federated_learning_optimality_audit.py",
+      " M tests/cli/test_cli.py",
+      " M tests/mcp/test_mcp_server.py",
       " M tests/packaging/test_public_presentation_contract.py",
+      " M tests/readiness/test_first_10_readiness.py",
+      " M tests/security/test_atom_registry.py",
+      " M tests/security/test_atom_store.py",
       " M tests/security/test_collective_learning_loop_controls.py",
-      "?? docs/20260526-2046_REMOTE_FEDERATED_LEARNING_GO_PROOF.md",
-      "?? docs/20260526-2115_FEDERATED_LEARNING_OPTIMALITY_AUDIT.md",
-      "?? eval/federated_learning_gate_snapshot.json",
-      "?? eval/federated_learning_optimality_audit.json",
-      "?? eval/run_federated_learning_gate.py",
-      "?? eval/run_federated_learning_optimality_audit.py",
-      "?? eval/tests/test_federated_learning_optimality_audit.py",
-      "?? tests/security/test_federated_atom_registry.py",
-      "?? tests/security/test_federated_learning_gate.py"
+      " M tests/security/test_federated_atom_registry.py",
+      "?? borg/core/collective_learning.py",
+      "?? docs/20260526-2230_MAX_VALUE_COLLECTIVE_INTELLIGENCE_LOOP.md",
+      "?? eval/collective_intelligence_loop_gate.json",
+      "?? eval/run_collective_intelligence_loop_gate.py",
+      "?? eval/tests/test_collective_intelligence_loop_gate.py",
+      "?? tests/learning/test_collective_intelligence_loop.py",
+      "?? tests/mcp/test_collective_outcome_receipts.py"
     ]
   },
   "hard_boundary": "Protocol GO is not evidence of maximum agent value, public adoption, or measured external lift.",
   "p0_gaps_to_google_tier": [
-    "Tie every guidance event to an outcome receipt: exact guidance shown, verification command, worked/failed result, time/tokens/dead-ends avoided.",
-    "Deduplicate and generalize traces into canonical atoms before promotion; repeated seed-like traces must not inflate confidence.",
-    "Compute tenant quorum from signed independent outcome receipts, not caller-supplied counts at registry ingestion time.",
-    "Unify packs, traces, atoms, failure memory, negative evidence, recency, and project context into one scored retrieval/routing API.",
+    "Collect consented first-10 external outcome rows with measured minutes/tokens/dead-ends impact; internal/synthetic gates must not count.",
+    "Pass row-derived first-10 public-package evidence: 10 real users, 8 installs, 6 useful rescues, 0 critical privacy/security incidents.",
     "Run the 3-condition knowledge-system evaluation: no Borg, empty Borg scaffold, seeded Borg knowledge; report pure knowledge lift separately.",
-    "Keep public/self-serve and measured lift NO-GO until first-10 row-derived evidence passes."
+    "Operate a production hosted registry with monitoring, key rotation, backup/restore, incident response, and revocation SLO telemetry.",
+    "Add transparency-log anchoring before high-trust public federation claims."
   ],
+  "resolved_internal_primitives": {
+    "dedupe_generalization": true,
+    "first10_not_faked": true,
+    "negative_evidence_retained": true,
+    "outcome_receipts": true,
+    "payload_quorum_ignored": true,
+    "registry_computed_quorum": true,
+    "unified_scored_retrieval": true
+  },
   "schema_version": 1,
   "scores_0_to_10": {
-    "effective_collective_learning": 4.0,
+    "effective_collective_learning": 6.0,
     "external_truth_grounding": 1.0,
     "overall_optimality_ceiling": 2.0,
     "proof_packet_richness": 10.0,
     "protocol_security": 9.0,
-    "routing_value_speed": 5.0,
-    "signal_quality": 3.0
+    "routing_value_speed": 6.0,
+    "signal_quality": 4.0
   },
   "verdict": {
     "effective_collective_learning": "NO-GO_REAL_WORLD_VALUE_NOT_PROVEN",

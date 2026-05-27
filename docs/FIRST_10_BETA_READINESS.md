@@ -15,7 +15,7 @@ A weak match is worse than no match.
 Put this in `CLAUDE.md`, the agent system prompt, or the first user message:
 
 ```text
-Before attempting technical fixes for errors, bugs, installs, configs, deployments, or tests, call Borg first. For a concrete failure in MCP, call error_lookup(input="<exact error or failing command output>"); it is the plain-English alias for borg_rescue(input="<exact error or failing command output>") and returns the same ACTION/STOP/VERIFY packet. The CLI equivalent is borg rescue "<exact error>". Use borg_observe(task="<exact task or error>", context="<tech stack>") for broader task-start guidance when there is not yet a concrete failure. Treat Borg output as advisory: follow ACTION when relevant, avoid STOP/AVOID patterns, disclose NO_CONFIDENT_MATCH or weak guidance, and verify with the exact failing command or smallest regression test. After the outcome, record it with borg_feedback if you used a pack session, or borg_record_failure if you are recording a concrete error-pattern success/failure.
+Before attempting technical fixes for errors, bugs, installs, configs, deployments, or tests, call Borg first. For a concrete failure in MCP, call error_lookup(input="<exact error or failing command output>"); it is the plain-English alias for borg_rescue(input="<exact error or failing command output>") and returns the same ACTION/STOP/VERIFY packet. The CLI equivalent is borg rescue "<exact error>". Use borg_observe(task="<exact task or error>", context="<tech stack>") for broader task-start guidance when there is not yet a concrete failure. Treat Borg output as advisory: follow ACTION when relevant, avoid STOP/AVOID patterns, disclose NO_CONFIDENT_MATCH or weak guidance, and verify with the exact failing command or smallest regression test. After the outcome, record it with borg_record_outcome when Borg returned an intervention_id, borg_feedback if you used a pack session, or borg_record_failure if you are recording a concrete error-pattern success/failure.
 ```
 
 ## Clean-user smoke path
@@ -32,6 +32,7 @@ borg rescue 'ModuleNotFoundError: No module named flask' --json
 borg search 'django migration table already exists'
 borg setup-claude --scope user --verify --fix
 borg first-10 --json
+borg collective summary --json
 ```
 
 After `borg setup-claude --scope user --verify --fix`, fully restart Claude Code and verify Claude lists Borg tools such as `error_lookup`, `borg_rescue`, `borg_observe`, and `borg_search`.
@@ -144,6 +145,7 @@ Pass criteria:
 
 - Each tester gets the same install, priming, tasks, and feedback receipt.
 - Outcomes are captured as helpful/not helpful/no match plus optional before/after minutes or tokens.
+- Borg interventions with `intervention_id` are closed with signed `borg_record_outcome` receipts and visible through `borg collective summary --json`.
 - Measured savings are row-derived only: consented external-user rows in `eval/first_10_user_scoreboard.json` must supply before/after fields before dashboards may show minutes or tokens saved.
 - Rescue packets never claim savings at call time; they expose a `value_receipt` saying measurement is pending until outcome rows exist.
 - GO/NO-GO after first 10 is binary against the useful-moment threshold.
@@ -151,6 +153,7 @@ Pass criteria:
 Proof:
 
 - `borg first-10 --json`
+- `borg collective summary --json`
 - This document.
 
 ## First-10 tester packet
@@ -177,13 +180,25 @@ Send each tester this:
    - did it prevent a dead end?
    - did the fix work?
    - if no, what was the exact miss/no-match reason?
+   - intervention_id, outcome_receipt_id, and contribution_event_id when Borg returned an intervention.
    - optional measured value fields: baseline minutes without Borg, actual minutes with Borg, net minutes saved, baseline tokens without Borg, actual tokens with Borg, net tokens saved, savings counterfactual basis, dead-end avoided confirmed, and user-confirmed value.
 5. Record feedback:
-   ```bash
-   borg feedback-v3 --pack <pack-or-problem-class> --success yes
-   # or
-   borg feedback-v3 --pack <pack-or-problem-class> --success no
-   ```
+   - If MCP returned an `intervention_id`, close it with signed outcome evidence:
+     ```text
+     borg_record_outcome(
+       intervention_id="<intervention_id>",
+       outcome="success|failure|partial",
+       helpful=true|false,
+       verified=true,
+       verification_command="<command or check that proves the outcome>"
+     )
+     ```
+   - If this was a pack-session/CLI-only run with no intervention id, use legacy pack feedback:
+     ```bash
+     borg feedback-v3 --pack <pack-or-problem-class> --success yes
+     # or
+     borg feedback-v3 --pack <pack-or-problem-class> --success no
+     ```
 
 ## GO / NO-GO after 10 users
 

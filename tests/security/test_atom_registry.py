@@ -12,6 +12,7 @@ from borg.core.atom_registry import (
 )
 from borg.core.atom_store import AtomStore
 from borg.core.atom_tenant import tenant_pseudonym
+from borg.core.collective_learning import CollectiveLearningStore, normalize_problem_signature
 from borg.core.crypto import generate_signing_key
 from borg.core.learning_atoms import compute_atom_id, sign_learning_atom
 
@@ -85,6 +86,75 @@ def test_staging_registry_quarantines_self_declared_global_quorum(tmp_path):
         ingest_atom_envelope(envelope, tmp_path / "registry")
 
 
+def test_staging_registry_rejects_untrusted_explicit_verified_quorum(tmp_path):
+    atom = _atom(scope="global_candidate")
+    atom["trust"]["independent_tenant_count"] = 1
+    atom["atom_id"] = compute_atom_id(atom)
+    envelope = sign_learning_atom(atom, generate_signing_key())
+
+    with pytest.raises(ValueError, match="registry-computed"):
+        ingest_atom_envelope(envelope, tmp_path / "registry", verified_tenant_count=99)
+
+
+def test_direct_global_ingest_cannot_piggyback_other_atom_receipts_without_cluster_promotion(tmp_path):
+    registry = tmp_path / "registry"
+    source_atom = _atom(scope="global_candidate")
+    source_atom_id = source_atom["atom_id"]
+    cluster_id = normalize_problem_signature(
+        source_atom["task"]["type"],
+        source_atom["task"]["technology"],
+        source_atom["task"]["error_class"],
+        source_atom["task"]["error_pattern"],
+    )
+    outcomes = CollectiveLearningStore(str(tmp_path / "outcomes.db"))
+    receipt_ids = []
+
+    for tenant in ["tenant-a", "tenant-b", "tenant-c"]:
+        tenant_id = tenant_pseudonym(tenant, b"test-secret")
+        intervention = outcomes.record_intervention(
+            source_tool="borg_rescue",
+            task_text="type-error optional config none",
+            context="python",
+            guidance="Validate optional value before split",
+            agent_id=f"agent-{tenant}",
+            tenant_pseudonym=tenant_id,
+            task_type=source_atom["task"]["type"],
+            technology=source_atom["task"]["technology"],
+            error_class=source_atom["task"]["error_class"],
+            error_pattern=source_atom["task"]["error_pattern"],
+        )
+        receipt = outcomes.record_outcome(
+            intervention_id=intervention["intervention_id"],
+            outcome="success",
+            helpful=True,
+            verified=True,
+            verification_command="pytest tests/test_config.py",
+            tenant_pseudonym=tenant_id,
+            agent_id=f"agent-{tenant}",
+            atom_id=source_atom_id,
+            cluster_id=cluster_id,
+        )
+        receipt_ids.append(receipt["receipt_id"])
+
+    assert outcomes.export_verified_outcomes(registry)["exported"] == 3
+
+    piggyback = _atom(scope="global_candidate", tenant="tenant-x")
+    piggyback["learning"]["worked"] = "Delete the optional config file instead of validating it"
+    piggyback["evidence"] = {
+        "type": "outcome_receipt",
+        "strength": "verified_quorum",
+        "support_count": 3,
+        "cluster_id": cluster_id,
+        "supporting_receipt_ids": receipt_ids,
+    }
+    piggyback["trust"]["independent_tenant_count"] = 99
+    piggyback["atom_id"] = compute_atom_id(piggyback)
+    envelope = sign_learning_atom(piggyback, generate_signing_key())
+
+    with pytest.raises(ValueError, match="registry-computed"):
+        ingest_atom_envelope(envelope, registry)
+
+
 def test_staging_registry_accepts_global_candidate_with_verified_quorum(tmp_path):
     atom = _atom(scope="global_candidate")
     atom["trust"]["independent_tenant_count"] = 99
@@ -93,7 +163,7 @@ def test_staging_registry_accepts_global_candidate_with_verified_quorum(tmp_path
     registry = tmp_path / "registry"
     store_b = AtomStore(str(tmp_path / "client-b-atoms.db"))
 
-    receipt = ingest_atom_envelope(envelope, registry, verified_tenant_count=3)
+    receipt = ingest_atom_envelope(envelope, registry, verified_tenant_count=3, allow_trusted_verified_tenant_count=True)
     sync = sync_registry_to_store(registry, store_b)
 
     assert receipt.decision == "global_candidate"

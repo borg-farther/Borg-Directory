@@ -19,16 +19,17 @@ def test_collective_learning_loop_control_contract_exists_and_is_complete():
     assert data["schema_version"] == "1.0"
     assert data["rev"] == "20260526-1302"
     assert data["go_no_go"]["global_federated_learning_claim"] == "GO_REMOTE_SIGNED_PROTOCOL_ONLY"
-    assert data["go_no_go"]["google_god_tier_learning_optimality"] == "NO_GO_VALUE_LOOP_NOT_PROVEN"
+    assert data["go_no_go"]["google_god_tier_learning_optimality"] == "NO_GO_EXTERNAL_LIFT_NOT_PROVEN"
+    assert data["go_no_go"]["max_value_collective_intelligence_loop_primitives"] == "GO_INTERNAL_MECHANISM_ONLY"
     assert data["go_no_go"]["public_self_serve_launch"].startswith("NO_GO")
     assert len(data["controls"]) >= 10
 
     ids = {control["id"] for control in data["controls"]}
-    assert ids == {f"CLC-{idx:03d}" for idx in range(1, 11)}
+    assert ids == {f"CLC-{idx:03d}" for idx in range(1, 12)}
 
     p0_controls = [control for control in data["controls"] if control["priority"] == "P0"]
     assert len(p0_controls) >= 9
-    assert {"implemented_local", "implemented_policy_gate", "implemented_remote_protocol", "implemented_runtime_gate"}.issubset(
+    assert {"implemented_local", "implemented_policy_gate", "implemented_remote_protocol", "implemented_runtime_gate", "implemented_internal_loop_primitives"}.issubset(
         {control["status"] for control in data["controls"]}
     )
 
@@ -55,11 +56,12 @@ def test_collective_learning_loop_required_docs_exist_and_link_current_contract(
         assert (ROOT / relative_path).exists(), relative_path
 
     doc = DOC_PATH.read_text(encoding="utf-8")
-    assert "**File rev:** 20260526-1302 rev B" in doc
+    assert "**File rev:** 20260527-2225 rev E" in doc
     assert "remote/global/federated protocol is GO" in doc
     assert "docs/20260526-2046_REMOTE_FEDERATED_LEARNING_GO_PROOF.md" in doc
     assert "docs/20260526-2115_FEDERATED_LEARNING_OPTIMALITY_AUDIT.md" in doc
-    assert "NO-GO for optimality today" in doc
+    assert "docs/20260526-2230_MAX_VALUE_COLLECTIVE_INTELLIGENCE_LOOP.md" in doc
+    assert "NO-GO for Google/God-tier optimality until external lift is measured" in doc
     assert "eval/collective_learning_loop_controls.json" in doc
     assert "66 passed" in doc
     assert "97 passed" in doc

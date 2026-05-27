@@ -41,8 +41,8 @@ PRIMING_PARAGRAPH = (
     "guidance when there is not yet a concrete failure. Treat Borg output as advisory: follow ACTION "
     "when relevant, avoid STOP/AVOID patterns, disclose NO_CONFIDENT_MATCH or weak guidance, "
     "and verify with the exact failing command or smallest regression test. After the outcome, "
-    "record it with borg_feedback if you used a pack session, or borg_record_failure if you are "
-    "recording a concrete error-pattern success/failure."
+    "record it with borg_record_outcome when Borg returned an intervention_id, borg_feedback if you used a pack session, "
+    "or borg_record_failure if you are recording a concrete error-pattern success/failure."
 )
 
 MCP_FIRST_CALL = (
@@ -148,11 +148,13 @@ FIRST_10_GATES: List[ReadinessGate] = [
         pass_criteria=[
             "Each tester gets the same install, priming, three tasks, and feedback receipt.",
             "Outcomes are captured as helpful/not helpful/no match plus optional before/after minutes or tokens.",
+            "Borg interventions with intervention_id are closed with signed borg_record_outcome receipts and visible in the contribution ledger.",
             "Measured savings are derived only from consented external-user rows; rescue packets may not claim savings at call time.",
             "GO/NO-GO after first 10 is binary against the 6/10 useful moment threshold.",
         ],
         proof=[
             "first_10_readiness_packet()",
+            "borg collective summary --json",
             "docs/FIRST_10_BETA_READINESS.md",
         ],
     ),
@@ -177,10 +179,14 @@ def first_10_readiness_packet() -> Dict[str, Any]:
             "borg search 'django migration table already exists'",
             "borg setup-claude --scope user --verify --fix",
             "borg first-10 --json",
+            "borg collective summary --json",
         ],
         "feedback_fields": [
             "tester_id",
             "task_id",
+            "intervention_id",
+            "outcome_receipt_id",
+            "contribution_event_id",
             "did_borg_return_action_stop_verify",
             "was_guidance_relevant",
             "did_it_prevent_a_dead_end",

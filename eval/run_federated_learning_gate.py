@@ -173,7 +173,7 @@ def run_gate(max_revocation_convergence_seconds: float = 2.0) -> Dict[str, Any]:
         )
 
         envelope = sign_learning_atom(_atom(), atom_signing_key)
-        receipt = ingest_atom_envelope(envelope, registry, verified_tenant_count=3)
+        receipt = ingest_atom_envelope(envelope, registry, verified_tenant_count=3, allow_trusted_verified_tenant_count=True)
         manifest_1 = write_signed_registry_manifest(
             registry,
             registry_signing_key,

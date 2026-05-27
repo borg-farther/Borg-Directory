@@ -2,15 +2,16 @@
   "schema_version": "1.0",
   "rev": "20260526-1302",
   "name": "optimal_safe_collective_learning_loop_controls",
-  "summary": "Executable control contract for Borg safe collective learning. Remote/global/federated protocol is GO for signed hosted-registry propagation and revocation; public self-serve and external-user lift remain separate NO-GO claims.",
+  "summary": "Executable control contract for Borg safe collective learning. Remote/global/federated protocol is GO for signed hosted-registry propagation and revocation; max-value collective intelligence loop primitives are GO for internal outcome-grounded routing; public self-serve and external-user lift remain separate NO-GO claims.",
   "go_no_go": {
     "local_learning_atom_primitive": "GO",
-    "shared_store_import_path": "GO_AFTER_HARDENING",
+    "shared_store_import_path": "GO_HARDENED_STORE_IMPORT_PATH",
     "staging_a_to_b_propagation": "GO_LOCAL_FILESYSTEM_STAGING",
     "global_federated_learning_claim": "GO_REMOTE_SIGNED_PROTOCOL_ONLY",
-    "google_god_tier_learning_optimality": "NO_GO_VALUE_LOOP_NOT_PROVEN",
+    "google_god_tier_learning_optimality": "NO_GO_EXTERNAL_LIFT_NOT_PROVEN",
     "public_self_serve_launch": "NO_GO_FIRST_10_EXTERNAL_EVIDENCE_NOT_PROVEN",
-    "external_user_lift_claim": "NO_GO_NO_CONSENTED_OUTCOME_ROWS"
+    "external_user_lift_claim": "NO_GO_NO_CONSENTED_OUTCOME_ROWS",
+    "max_value_collective_intelligence_loop_primitives": "GO_INTERNAL_MECHANISM_ONLY"
   },
   "controls": [
     {
@@ -158,6 +159,24 @@
       ],
       "tests": [],
       "status": "documented_design"
+    },
+    {
+      "id": "CLC-011",
+      "priority": "P0",
+      "category": "outcome_grounded_value_loop",
+      "invariant": "Every Borg rescue/error-lookup guidance intervention can be tied to a verified, signed outcome receipt; registry quorum is computed from HMAC-pseudonymous helpful outcome receipts; unified retrieval ranks by text match, helpfulness, verified quorum, and negative evidence.",
+      "implementation_files": [
+        "borg/core/collective_learning.py",
+        "borg/integrations/mcp_server.py",
+        "borg/core/atom_registry.py",
+        "eval/run_collective_intelligence_loop_gate.py"
+      ],
+      "tests": [
+        "tests/learning/test_collective_intelligence_loop.py",
+        "tests/mcp/test_collective_outcome_receipts.py",
+        "eval/tests/test_collective_intelligence_loop_gate.py"
+      ],
+      "status": "implemented_internal_loop_primitives"
     }
   ],
   "required_docs": [
@@ -169,6 +188,7 @@
     "docs/TRUST_AND_PROMOTION.md",
     "docs/REVOCATION_AND_DELETION.md",
     "docs/20260526-2046_REMOTE_FEDERATED_LEARNING_GO_PROOF.md",
-    "docs/20260526-2115_FEDERATED_LEARNING_OPTIMALITY_AUDIT.md"
+    "docs/20260526-2115_FEDERATED_LEARNING_OPTIMALITY_AUDIT.md",
+    "docs/20260526-2230_MAX_VALUE_COLLECTIVE_INTELLIGENCE_LOOP.md"
   ]
 }

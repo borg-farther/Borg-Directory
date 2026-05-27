@@ -1,8 +1,8 @@
 # Optimal safe collective learning loop
 
-**File rev:** 20260526-1302 rev B
+**File rev:** 20260527-2225 rev E
 **Repo:** `/root/hermes-workspace/borg`
-**Status:** executable architecture contract + current GO/NO-GO. Local primitives and local filesystem staging are GO; remote/global/federated protocol is GO. Broad public self-serve launch and real external-user lift remain separate NO-GO claims until first-10 evidence rows pass.
+**Status:** executable architecture contract + current GO/NO-GO. Local primitives and local filesystem staging are GO; remote/global/federated protocol is GO; internal outcome-grounded max-value loop primitives are GO. Broad public self-serve launch, Google/God-tier product optimality, and real external-user lift remain separate NO-GO claims until first-10 evidence rows pass.
 
 ## 1. Task outline
 
@@ -103,8 +103,8 @@ Friction rules:
 
 - no login before local rescue;
 - no sharing by default;
-- one compact receipt on every Borg answer;
-- one automatic outcome-close call after `VERIFY` passes/fails;
+- one compact receipt on every Borg rescue/error-lookup answer;
+- one outcome-close call after `VERIFY` passes/fails, via `borg_record_outcome` or equivalent automation;
 - first share gets a redaction preview;
 - repeated shares use saved local preference;
 - users can stay local-only without being labeled bad actors.
@@ -172,7 +172,7 @@ Status: **GO for the hardened local store path** after this session's fixes.
 
 Requirement: global promotion cannot trust `independent_tenant_count` written inside the atom payload.
 
-Status: **GO at policy/retrieval level** after this session: self-declared global quorum is quarantined unless registry-computed `verified_tenant_count` is supplied, and retrieval formatting prefers verified tenant counts over payload hints.
+Status: **GO at policy/retrieval level** after this session: self-declared global quorum is quarantined unless registry-computed `verified_tenant_count` is supplied, retrieval formatting prefers verified tenant counts over payload hints, and cluster-derived promotion may rebind source-atom receipts only through an explicit same-cluster supporting-receipt allowlist. Direct public ingestion cannot piggyback on unrelated receipts.
 
 ### Gate 5 — staging propagation
 
@@ -190,7 +190,7 @@ Status: **NO-GO for broad public self-serve and external-user lift claims**. Rem
 
 Requirement: Borg must prove not only safe propagation, but fast, truthful, outcome-grounded agent improvement across independent users.
 
-Status: **NO-GO for optimality today**. `eval/run_federated_learning_optimality_audit.py` and `docs/20260526-2115_FEDERATED_LEARNING_OPTIMALITY_AUDIT.md` intentionally split protocol GO from value proof. Current blockers are zero external outcome rows, duplicate-heavy local trace evidence, missing guidance-event outcome receipts, caller-supplied registry quorum input, and fragmented retrieval/routing.
+Status: **GO for internal max-value loop primitives; NO-GO for Google/God-tier optimality until external lift is measured**. `eval/run_collective_intelligence_loop_gate.py` and `docs/20260526-2230_MAX_VALUE_COLLECTIVE_INTELLIGENCE_LOOP.md` now prove intervention receipts, verified helpfulness, dedupe/generalization, registry-computed quorum from receipts, unified scored retrieval, and no fake first-10 rows. `eval/run_federated_learning_optimality_audit.py` and `docs/20260526-2115_FEDERATED_LEARNING_OPTIMALITY_AUDIT.md` still split internal mechanism GO from real product-impact GO. Remaining blockers are first-10 external outcome rows, measured lift, repeat-use proof, and production hosted registry operations.
 
 ## 5. Security controls mapped to external standards
 
@@ -239,6 +239,8 @@ Status: **NO-GO for optimality today**. `eval/run_federated_learning_optimality_
 - `ingest_atom_envelope()` verifies atom signatures and policy before writing shareable atoms.
 - Local-scope atoms are rejected from sharing.
 - Self-declared global quorum is quarantined; verified quorum is accepted only when registry code supplies `verified_tenant_count`.
+- Registry-computed quorum normally requires receipts to target the candidate `atom_id`.
+- Cluster-derived promotion has a narrow source-receipt rebind: same `cluster_id`, explicit supporting receipt IDs in candidate evidence, trusted receipt signer key IDs from the local/export trust boundary, an explicit trusted candidate atom id, and signed receipt verification. Direct ingestion keeps this disabled.
 - `write_signed_registry_manifest()` signs hosted registry metadata with Ed25519 and records file hashes/sizes, expiry, sequence, and channel.
 - `sync_signed_registry_to_store()` verifies the trusted registry key, expiry, replay state, per-file hashes, and tombstones-before-atoms ordering across HTTP or filesystem registries.
 - `sync_registry_to_store()` imports tombstones before atoms so revocation wins in local staging too.
@@ -258,7 +260,8 @@ Hard controls:
 7. retrieval firewall marks memory untrusted;
 8. local filesystem staging registry proves A->B sync and tombstone suppression;
 9. remote signed hosted-manifest protocol proves HTTP sync, runtime freshness, replay protection, and revocation convergence;
-10. first-10 external-user scoreboard remains required before public launch or measured-savings claims.
+10. outcome-grounded value loop proves contribution ledger capture, intervention receipts, verified helpfulness, dedupe, sanitized atom candidates, registry-computed quorum from trusted-signer signed receipts, cluster-derived promotion from same-cluster explicit receipts, unified scored retrieval, and negative-evidence retention;
+11. first-10 external-user scoreboard remains required before public launch or measured-savings claims.
 
 ## 8. Verification run
 
@@ -327,8 +330,8 @@ The strongest objection is that privacy redaction and prompt-injection filtering
 
 Second objection: signed manifests do not prove the lesson is correct. Correct. The signature proves authenticity/integrity of the registry metadata; usefulness still requires evidence, tenant-independent receipts, and later external outcome rows.
 
-Third objection: a malicious registry could replay old metadata or inflate quorum. The signed remote gate now rejects replayed sequence state, expired metadata, untrusted registry keys, and file-hash mismatches; retrieval prefers registry/store `verified_tenant_count` over payload hints.
+Third objection: a malicious registry or submitter could replay old metadata, self-sign forged outcome receipts, or inflate quorum with payload hints. The signed remote gate now rejects replayed sequence state, expired metadata, untrusted registry keys, and file-hash mismatches; outcome quorum requires trusted receipt signer keys; retrieval displays registry/store `verified_tenant_count` and does not relabel org/local payload `independent_tenant_count` hints as verified.
 
 Fourth objection: revocation will lag in distributed clients. Correct. The protocol GO is bounded by an explicit convergence SLO and the executable gate proves tombstone-first remote sync removes the atom from a clean client. Production operations must monitor that SLO continuously.
 
-Final conclusion: **local learning is GO. local filesystem staging is GO. remote/global/federated protocol is GO. broad public self-serve launch and measured external-user lift remain NO-GO until their separate evidence gates pass.**
+Final conclusion: **local learning is GO. local filesystem staging is GO. remote/global/federated protocol is GO. internal max-value collective intelligence loop primitives are GO. broad public self-serve launch, Google/God-tier product optimality, and measured external-user lift remain NO-GO until their separate evidence gates pass.**

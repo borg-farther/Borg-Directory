@@ -1,8 +1,8 @@
 # Federated learning optimality audit
 
-**Date:** 2026-05-26 21:15 UTC  
+**Date:** 2026-05-27 22:25 UTC
 **Scope:** Borg remote/global/federated learning mechanism, value path, truth discipline, and agent impact.  
-**Verdict:** **NO-GO for Google/God-tier optimality today. GO only for the signed remote protocol slice.**
+**Verdict:** **NO-GO for Google/God-tier product optimality today. GO for the signed remote protocol slice and GO for internal outcome-grounded loop primitives.**
 
 ## Task breakdown
 
@@ -16,9 +16,9 @@ The question was not simply “does sync work?” It splits into five subtasks:
 
 ## Executive answer
 
-**No — the mechanism is not yet optimal or Google/God-tier.**
+**No — Borg is not yet Google/God-tier in the market because external outcome rows are still zero.**
 
-It is **strong, safety-first infrastructure** for remote signed propagation. That is real progress. But it is not yet the maximal-value collective-learning machine.
+It is **strong, safety-first infrastructure** for remote signed propagation, and the follow-up max-value loop work now adds **internal outcome-grounded primitives**: contribution ledger events, signed outcome receipts, trusted receipt signer allowlists, dedupe clusters, sanitized atom candidates, registry-computed quorum from trusted receipts, cluster-derived promotion with explicit supporting receipt IDs and trusted candidate atom id, and unified scored retrieval. Those are mechanism GO, not product-impact GO.
 
 Current machine verdict from `eval/federated_learning_optimality_audit.json`:
 
@@ -36,12 +36,12 @@ Current machine verdict from `eval/federated_learning_optimality_audit.json`:
   - Snapshot now includes timestamp, git state, manifest/atom/receipt/tombstone hashes, runtime fingerprint, revocation get/search/reimport facts, and adversarial coverage.
 - **External truth grounding:** 1.0 / 10
   - First-10 evidence rows are empty: 0 real users, 0 installs, 0 useful rescues, 0 measured-value rows.
-- **Signal quality:** 3.0 / 10
-  - Local trace DB exists, but current stats show 342 traces, 78 distinct task descriptions, duplicate pressure 0.7719. That is useful for debugging the system, not proof of clean collective intelligence.
-- **Routing value/speed:** 5.0 / 10
-  - Borg has useful fail-closed rescue/observe mechanics, but atoms, traces, packs, failure memory, negative evidence, recency, project context, and semantic signals are not unified behind one production ranker.
-- **Effective collective learning:** 4.0 / 10
-  - Signed propagation exists; outcome-grounded cross-agent improvement is not yet proven.
+- **Signal quality:** 4.0 / 10 after internal-loop proof
+  - Local trace DB still has duplicate pressure; outcome receipts and dedupe clusters give the value loop a first-class truth signal, but the machine audit keeps this score conservative until real external rows and duplicate-pressure reduction improve it.
+- **Routing value/speed:** 6.0 / 10 after internal-loop proof
+  - `unified_collective_retrieve()` now combines atom text match, verified quorum, helpful outcomes, and negative evidence for the atom/outcome lane. Packs/traces/failure memory can still be folded into the same ranker later.
+- **Effective collective learning:** 6.0 / 10 after internal-loop proof
+  - Signed propagation plus signed outcome receipts and registry-computed quorum exist; real external cross-agent improvement is not yet proven.
 - **Overall optimality ceiling today:** 2.0 / 10
   - The ceiling is forced down by zero external outcome evidence and weak truth grounding. A beautiful protocol does not prove useful learning.
 
@@ -63,58 +63,33 @@ Current machine verdict from `eval/federated_learning_optimality_audit.json`:
    - Privacy and prompt-injection gates are fail-closed.
    - The user-facing communication path was already quieted to fire only when useful.
 
-## What is not yet Google/God-tier
+## Internal gaps closed after the follow-up max-value loop pass
 
-### P0-1 — outcome grounding is missing
+### Resolved internally — outcome grounding and contribution ledger primitives
 
-The global path can move a signed atom. It does not yet prove the atom came from a verified fix.
+`docs/20260526-2230_MAX_VALUE_COLLECTIVE_INTELLIGENCE_LOOP.md` and `eval/run_collective_intelligence_loop_gate.py` now prove the internal path:
 
-Needed:
-- guidance event id when Borg speaks;
-- exact guidance shown;
-- exact command/test used to verify the result;
-- worked/failed outcome;
-- time/tokens/dead ends avoided;
-- link that outcome back to trace helpfulness, atom helpfulness, selector posterior, promotion, demotion, and revocation.
+- Borg rescue/error-lookup guidance gets an `intervention_id`;
+- contribution events record interventions, outcome receipts, atom candidates, and registry promotions without raw tenants or private paths;
+- `borg_record_outcome` records worked/failed, helpful, verified, redacted verification command, time/tokens/dead-end fields;
+- exported outcome receipts are signed `borg_outcome_receipt` envelopes;
+- unsigned/tampered receipt files and self-signed receipts from untrusted signer keys do not count toward registry quorum.
 
-### P0-2 — quorum is safer, but not truth-complete
+### Resolved internally — quorum is registry-computed from signed receipts
 
-Current gates prevent trusting `independent_tenant_count` from the atom payload. Good.
+Current gates prevent trusting `independent_tenant_count` from the atom payload, normal registry ingestion ignores direct caller-supplied `verified_tenant_count`, and org/local payload tenant-count hints are not relabeled as verified in clean-client retrieval. Global candidate promotion now uses signed exported outcome receipts only when their signer key IDs come from the trusted local/export boundary. The remaining production caveat is Sybil-resistant external identity, which belongs to first-10/hosted-registry operations, not this internal mechanism proof.
 
-But the registry still accepts `verified_tenant_count` at ingestion as an input. For a production Google-tier registry, tenant independence should be computed from signed receipts/outcomes, not caller-supplied as a decisive value.
+### Resolved internally — duplicate wording and trace-like repeats collapse into clusters
 
-### P0-3 — duplicate traces can inflate the feeling of learning
+Interventions now normalize into a stable `cluster_id` from task type, technology, error class, and normalized error pattern. Duplicate tenant receipts do not increase helpful quorum.
 
-Latest trace stats:
+### Resolved internally — atom/outcome retrieval is unified
 
-- total traces: 342
-- distinct task descriptions: 78
-- duplicate pressure: 0.7719
+`unified_collective_retrieve()` ranks learning atoms by text match, verified tenant quorum, helpful outcome receipts, and negative evidence. The current ranker covers the atom/outcome lane; packs, traces, failure memory, recency, and project context can be added behind the same score contract.
 
-This means repeated/seed-like records can dominate local memory unless dedup/generalization becomes first-class.
+## Still not Google/God-tier
 
-Needed:
-- cluster repeated traces;
-- create one canonical atom per failure signature;
-- support counts and negative counts live on the atom;
-- repeated seed imports never inflate global confidence.
-
-### P0-4 — retrieval is fragmented
-
-Today, value can come from packs, traces, rescue rules, failure memory, and learning atoms. That is powerful but fragmented.
-
-Google-tier design needs one scored retrieval/routing API combining:
-
-- exact error class and stack context;
-- technology and project path;
-- semantic similarity;
-- verified helpfulness;
-- tenant quorum;
-- recency/decay;
-- negative evidence/dead ends;
-- no-match precision.
-
-### P0-5 — external value is still zero rows
+### P0 — external value is still zero rows
 
 `eval/first_10_user_scoreboard.json` still has:
 
@@ -140,7 +115,7 @@ Rejected. Signatures prove origin/integrity, not correctness/usefulness. Bad adv
 Rejected. It proves mechanics only. External-user lift requires consented rows.
 
 ### View E: “The next fix is more docs.”
-Rejected. Docs are now useful mainly as gates. The next true value leap is outcome-grounded feedback and unified retrieval.
+Rejected. Docs are now useful mainly as gates. The next true value leap is row-derived external proof, production hosted-registry operations, and measured lift from consented first-10 users.
 
 ## External anchors used
 
@@ -160,20 +135,19 @@ I re-ran the reasoning chain from scratch:
 
 ## Next hard gates to become truly Google-tier
 
-1. Build guidance-event receipts and outcome-grounded atom promotion/demotion.
-2. Deduplicate/generalize trace memory before sharing or confidence scoring.
-3. Make registry tenant quorum computed from signed independent outcome receipts.
-4. Unify all memory sources behind one scored routing API.
-5. Run the 3-condition knowledge-system experiment:
+1. Fill first-10 external-user evidence rows honestly.
+2. Measure minutes/tokens/dead-end lift from consented external rows, not synthetic gates.
+3. Run the 3-condition knowledge-system experiment:
    - no Borg;
    - empty Borg scaffold;
    - seeded Borg knowledge.
-6. Fill first-10 external-user evidence rows honestly.
+4. Operate a production hosted registry with monitoring, key rotation, backup/restore, incident response, revocation SLO telemetry, and abuse/anomaly review.
+5. Add transparency-log anchoring before high-trust public federation claims.
 
 ## Bottom line
 
-**Borg now has a credible signed remote learning protocol.**
+**Borg has a credible signed remote learning protocol and internal outcome-grounded loop primitives.**
 
-**Borg does not yet have a Google-tier optimal collective learning system.**
+**Borg does not yet have Google-tier proven product impact.**
 
-The next job is not more protocol theater. The next job is proving that the network makes agents better, faster, and more truthful through verified outcomes.
+The next job is not more protocol theater. The next job is proving that external users' agents get better, faster, and more truthful through verified outcomes.

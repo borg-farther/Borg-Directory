@@ -98,7 +98,7 @@ def _registry_key_id(signing_key) -> str:
 
 def _publish_one_global_atom(registry: Path, atom_signing_key, registry_signing_key, sequence: int = 1) -> dict:
     envelope = sign_learning_atom(_atom(), atom_signing_key)
-    ingest_atom_envelope(envelope, registry, verified_tenant_count=3)
+    ingest_atom_envelope(envelope, registry, verified_tenant_count=3, allow_trusted_verified_tenant_count=True)
     return write_signed_registry_manifest(
         registry,
         registry_signing_key,
@@ -159,6 +159,22 @@ def test_remote_signed_manifest_a_to_b_sync_then_tombstone_converges(tmp_path):
     assert second["revocation_convergence_seconds"] <= 2.0
     assert store_b.get_atom(atom_id) is None
     assert store_b.search_atoms("optional") == []
+
+
+def test_remote_sync_requires_state_path_for_replay_protection(tmp_path):
+    registry = tmp_path / "registry"
+    store = AtomStore(str(tmp_path / "client.db"))
+    registry_signing_key = generate_signing_key()
+    trusted_key_id = _registry_key_id(registry_signing_key)
+    _publish_one_global_atom(registry, generate_signing_key(), registry_signing_key, sequence=1)
+
+    with _serve_directory(registry) as base_url, pytest.raises(ValueError, match="state_path"):
+        sync_signed_registry_to_store(
+            base_url,
+            store,
+            trusted_registry_key_id=trusted_key_id,
+            channel="global",
+        )
 
 
 def test_remote_sync_rejects_unsigned_manifest(tmp_path):

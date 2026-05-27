@@ -88,9 +88,11 @@ def compile_audit(
     *,
     federated_snapshot: Path,
     first10_scoreboard: Path,
+    collective_loop_snapshot: Path | None = None,
     trace_db: Path | None = None,
 ) -> Dict[str, Any]:
     federated = _load_json(federated_snapshot)
+    collective_loop = _load_json(collective_loop_snapshot) if collective_loop_snapshot else {}
     first10 = _load_json(first10_scoreboard)
     counts = first10.get("current_counts", {}) if isinstance(first10, dict) else {}
     value_counts = first10.get("current_value_counts", {}) if isinstance(first10, dict) else {}
@@ -101,6 +103,12 @@ def compile_audit(
         and federated.get("verdict") == "GO"
         and federated.get("scope") == "remote_global_federated_protocol"
         and federated.get("external_user_lift_claimed") is False
+    )
+    collective_loop_go = bool(
+        collective_loop.get("success") is True
+        and collective_loop.get("verdict") == "GO"
+        and collective_loop.get("scope") == "max_value_collective_intelligence_loop_primitives"
+        and str(collective_loop.get("public_external_lift", "")).startswith("NO-GO")
     )
     proof_fields = [
         federated.get("generated_at_utc"),
@@ -132,23 +140,23 @@ def compile_audit(
     if measured_rows >= 6:
         external_truth_score = 8.0
 
-    signal_quality_score = 4.0
+    signal_quality_score = 5.0 if collective_loop_go else 4.0
     if trace.get("available") and trace.get("total_traces", 0) > 0:
         duplicate_pressure = trace.get("duplicate_pressure")
         if duplicate_pressure is not None and duplicate_pressure > 0.5:
-            signal_quality_score = 3.0
+            signal_quality_score = 4.0 if collective_loop_go else 3.0
         else:
-            signal_quality_score = 5.0
+            signal_quality_score = 6.0 if collective_loop_go else 5.0
     if useful_rescues >= 6:
         signal_quality_score = max(signal_quality_score, 6.0)
 
-    routing_value_score = 5.0 if protocol_go else 3.0
+    routing_value_score = 6.0 if collective_loop_go else (5.0 if protocol_go else 3.0)
     if useful_rescues >= 6 and measured_rows > 0:
         routing_value_score = 7.0
 
-    collective_learning_score = 4.0 if protocol_go else 2.0
+    collective_learning_score = 6.0 if collective_loop_go else (4.0 if protocol_go else 2.0)
     if real_users >= 10 and useful_rescues >= 6 and measured_rows >= 6:
-        collective_learning_score = 7.0
+        collective_learning_score = 8.0
 
     optimality_score = min(
         protocol_security_score,
@@ -160,16 +168,33 @@ def compile_audit(
 
     google_tier_optimal = bool(optimality_score >= 8.0 and external_truth_score >= 8.0 and collective_learning_score >= 8.0)
 
+    resolved_internal_primitives = {
+        "outcome_receipts": collective_loop_go and bool(collective_loop.get("checks", {}).get("outcome_receipts_exported")),
+        "dedupe_generalization": collective_loop_go and bool(collective_loop.get("checks", {}).get("dedupe_cluster_stable")),
+        "registry_computed_quorum": collective_loop_go and bool(collective_loop.get("checks", {}).get("registry_computed_quorum")),
+        "payload_quorum_ignored": collective_loop_go and bool(collective_loop.get("checks", {}).get("payload_quorum_ignored")),
+        "unified_scored_retrieval": collective_loop_go and bool(collective_loop.get("checks", {}).get("unified_retrieval_ranked")),
+        "negative_evidence_retained": collective_loop_go and bool(collective_loop.get("checks", {}).get("negative_evidence_retained")),
+        "first10_not_faked": collective_loop_go and bool(collective_loop.get("checks", {}).get("first10_not_faked")),
+    }
+
     p0_gaps = []
-    if not google_tier_optimal:
+    if not collective_loop_go:
         p0_gaps.extend([
             "Tie every guidance event to an outcome receipt: exact guidance shown, verification command, worked/failed result, time/tokens/dead-ends avoided.",
             "Deduplicate and generalize traces into canonical atoms before promotion; repeated seed-like traces must not inflate confidence.",
             "Compute tenant quorum from signed independent outcome receipts, not caller-supplied counts at registry ingestion time.",
             "Unify packs, traces, atoms, failure memory, negative evidence, recency, and project context into one scored retrieval/routing API.",
-            "Run the 3-condition knowledge-system evaluation: no Borg, empty Borg scaffold, seeded Borg knowledge; report pure knowledge lift separately.",
-            "Keep public/self-serve and measured lift NO-GO until first-10 row-derived evidence passes.",
         ])
+    if measured_rows < 6:
+        p0_gaps.append("Collect consented first-10 external outcome rows with measured minutes/tokens/dead-ends impact; internal/synthetic gates must not count.")
+    if real_users < 10 or install_successes < 8 or useful_rescues < 6 or critical_incidents != 0:
+        p0_gaps.append("Pass row-derived first-10 public-package evidence: 10 real users, 8 installs, 6 useful rescues, 0 critical privacy/security incidents.")
+    p0_gaps.extend([
+        "Run the 3-condition knowledge-system evaluation: no Borg, empty Borg scaffold, seeded Borg knowledge; report pure knowledge lift separately.",
+        "Operate a production hosted registry with monitoring, key rotation, backup/restore, incident response, and revocation SLO telemetry.",
+        "Add transparency-log anchoring before high-trust public federation claims.",
+    ])
 
     return {
         "schema_version": 1,
@@ -191,10 +216,18 @@ def compile_audit(
             "effective_collective_learning": round(collective_learning_score, 1),
             "overall_optimality_ceiling": round(optimality_score, 1),
         },
+        "resolved_internal_primitives": resolved_internal_primitives,
         "evidence": {
             "federated_snapshot": str(federated_snapshot),
             "federated_protocol_verdict": federated.get("verdict"),
             "federated_scope": federated.get("scope"),
+            "collective_loop_snapshot": str(collective_loop_snapshot) if collective_loop_snapshot else "",
+            "collective_loop": {
+                "verdict": collective_loop.get("verdict"),
+                "scope": collective_loop.get("scope"),
+                "public_external_lift": collective_loop.get("public_external_lift"),
+                "success": collective_loop.get("success"),
+            },
             "first10_scoreboard": str(first10_scoreboard),
             "first10_counts": {
                 "real_users": real_users,
@@ -236,6 +269,7 @@ def main(argv: list[str] | None = None) -> int:
     parser = argparse.ArgumentParser(description="Audit whether Borg federated learning is optimal/value-proven")
     parser.add_argument("--federated-snapshot", default=str(ROOT / "eval" / "federated_learning_gate_snapshot.json"))
     parser.add_argument("--first10-scoreboard", default=str(ROOT / "eval" / "first_10_user_scoreboard.json"))
+    parser.add_argument("--collective-loop-snapshot", default=str(ROOT / "eval" / "collective_intelligence_loop_gate.json"))
     parser.add_argument("--trace-db", default="")
     parser.add_argument("--output", default=str(ROOT / "eval" / "federated_learning_optimality_audit.json"))
     args = parser.parse_args(argv)
@@ -244,6 +278,7 @@ def main(argv: list[str] | None = None) -> int:
     result = compile_audit(
         federated_snapshot=Path(args.federated_snapshot),
         first10_scoreboard=Path(args.first10_scoreboard),
+        collective_loop_snapshot=Path(args.collective_loop_snapshot),
         trace_db=trace_db,
     )
     out = Path(args.output)
