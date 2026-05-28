@@ -383,8 +383,20 @@ def _verified_count_for_atom(root: Path, atom_id: str) -> int | None:
     return max(counts) if counts else None
 
 
-def sync_registry_to_store(registry_dir: str | Path, store: AtomStore) -> Dict[str, int]:
-    """Import registry tombstones first, then accepted atom envelopes."""
+def sync_registry_to_store(
+    registry_dir: str | Path,
+    store: AtomStore,
+    *,
+    allow_unsigned_global_candidates: bool = False,
+) -> Dict[str, int]:
+    """Import registry tombstones first, then accepted atom envelopes.
+
+    The local filesystem registry is a staging path, not a signed remote trust
+    root. By default it refuses global/global_candidate atoms because unsigned
+    local receipt files can be forged. Tests/operator tooling may explicitly set
+    `allow_unsigned_global_candidates=True`; production federation should use
+    `sync_signed_registry_to_store` instead.
+    """
     root = _ensure_registry_dirs(registry_dir)
     imported = 0
     revoked = 0
@@ -400,6 +412,10 @@ def sync_registry_to_store(registry_dir: str | Path, store: AtomStore) -> Dict[s
     for path in sorted((root / "atoms").glob("*.json")):
         envelope = json.loads(path.read_text(encoding="utf-8"))
         atom_id = envelope["payload"]["atom_id"]
+        scope = str((envelope.get("payload") or {}).get("scope") or "")
+        if scope in {"global", "global_candidate"} and not allow_unsigned_global_candidates:
+            skipped += 1
+            continue
         if store.is_revoked(atom_id):
             skipped += 1
             continue

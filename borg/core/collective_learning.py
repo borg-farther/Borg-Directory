@@ -38,6 +38,8 @@ _SECRETISH_RE = re.compile(
     r"(?i)(sk-[a-z0-9_-]{16,}|gh[pousr]_[a-z0-9_]{16,}|xox[baprs]-[a-z0-9-]{16,}|"
     r"akia[0-9a-z]{16}|password\s*=\s*\S+|api[_-]?key\s*=\s*\S+|token\s*=\s*\S+)"
 )
+_SHA256_REF_RE = re.compile(r"^(?:sha256:)?[0-9a-f]{64}$", re.I)
+_TRUSTED_TENANT_ID_RE = re.compile(r"^[a-z0-9][a-z0-9_.:@/\\-]{2,240}$", re.I)
 
 
 def get_collective_learning_db_path() -> Path:
@@ -140,6 +142,46 @@ def _normalize_tenant_pseudonym(value: Any) -> str:
     return derive_tenant_pseudonym(text or "local")
 
 
+def _normalize_sha256_ref(value: Any) -> str:
+    """Normalize a verification transcript/output hash reference."""
+    text = _safe_text(value, max_chars=96).lower()
+    if not text:
+        return ""
+    if not _SHA256_REF_RE.match(text):
+        return ""
+    return text if text.startswith("sha256:") else f"sha256:{text}"
+
+
+def _normalize_trusted_tenant_id(value: Any) -> str:
+    """Return a privacy-preserving trusted tenant identity hash for quorum.
+
+    HMAC tenant pseudonyms are good privacy labels but are Sybil-able because a
+    caller can mint many raw tenant strings.  Shareable quorum therefore counts a
+    separate operator/identity-provider scoped ID.  Raw IDs never leave the local
+    store; receipts carry only `tenant-identity-sha256:<hash>`.
+    """
+    text = _safe_text(value, max_chars=256)
+    if not text or text.lower() in {"local", "default", "unknown", "anonymous"}:
+        return ""
+    if text.startswith("tenant-identity-sha256:") and _SHA256_REF_RE.match(text.removeprefix("tenant-identity-")):
+        return text.lower()
+    if not _TRUSTED_TENANT_ID_RE.match(text):
+        return ""
+    return "tenant-identity-sha256:" + _sha256_text(text.lower())
+
+
+def _has_shareable_verification_evidence(payload: Dict[str, Any]) -> bool:
+    if not _as_bool(payload.get("verified")):
+        return False
+    if not _safe_text(payload.get("verification_command_redacted"), max_chars=800):
+        return False
+    if payload.get("verification_exit_code") is None:
+        return False
+    if not _normalize_sha256_ref(payload.get("verification_output_sha256")):
+        return False
+    return bool(_normalize_trusted_tenant_id(payload.get("trusted_tenant_id")))
+
+
 def _outcome_key_path(db_path: str | Path | None = None) -> Path:
     if db_path:
         return Path(db_path).with_suffix(Path(db_path).suffix + ".outcome-signing-key")
@@ -207,6 +249,7 @@ def verify_outcome_receipt_envelope(
     envelope: Dict[str, Any],
     *,
     trusted_receipt_signer_key_ids: Sequence[str] | None = None,
+    require_shareable_evidence: bool = False,
 ) -> Dict[str, Any]:
     """Verify a signed outcome receipt and return its payload.
 
@@ -255,6 +298,18 @@ def verify_outcome_receipt_envelope(
             raise ValueError("outcome receipt tenant_pseudonym must be an HMAC pseudonym")
         if _as_bool(payload.get("verified")) and not _safe_text(payload.get("verification_command_redacted"), max_chars=800):
             raise ValueError("verified outcome receipt requires verification evidence")
+        normalized_hash = _normalize_sha256_ref(payload.get("verification_output_sha256"))
+        if payload.get("verification_output_sha256") and not normalized_hash:
+            raise ValueError("verification_output_sha256 must be sha256:<64 hex>")
+        if normalized_hash:
+            payload["verification_output_sha256"] = normalized_hash
+        trusted_tenant_id = _normalize_trusted_tenant_id(payload.get("trusted_tenant_id"))
+        if payload.get("trusted_tenant_id") and not trusted_tenant_id:
+            raise ValueError("trusted_tenant_id must be a valid trusted tenant identity")
+        if trusted_tenant_id:
+            payload["trusted_tenant_id"] = trusted_tenant_id
+        if require_shareable_evidence and not _has_shareable_verification_evidence(payload):
+            raise ValueError("shareable outcome receipt requires trusted tenant identity and strong verification evidence")
         return payload
     except ValueError:
         raise
@@ -381,6 +436,9 @@ def _ensure_schema(conn: sqlite3.Connection) -> None:
             receipt_nonce TEXT NOT NULL DEFAULT '',
             receipt_envelope_json TEXT NOT NULL DEFAULT '{}',
             receipt_signer_key_id TEXT NOT NULL DEFAULT '',
+            verification_exit_code INTEGER,
+            verification_output_sha256 TEXT NOT NULL DEFAULT '',
+            trusted_tenant_id TEXT NOT NULL DEFAULT '',
             FOREIGN KEY(intervention_id) REFERENCES interventions(intervention_id)
         );
         CREATE INDEX IF NOT EXISTS idx_outcomes_intervention ON outcome_receipts(intervention_id);
@@ -419,6 +477,9 @@ def _ensure_schema(conn: sqlite3.Connection) -> None:
         "receipt_nonce": "ALTER TABLE outcome_receipts ADD COLUMN receipt_nonce TEXT NOT NULL DEFAULT ''",
         "receipt_envelope_json": "ALTER TABLE outcome_receipts ADD COLUMN receipt_envelope_json TEXT NOT NULL DEFAULT '{}'",
         "receipt_signer_key_id": "ALTER TABLE outcome_receipts ADD COLUMN receipt_signer_key_id TEXT NOT NULL DEFAULT ''",
+        "verification_exit_code": "ALTER TABLE outcome_receipts ADD COLUMN verification_exit_code INTEGER",
+        "verification_output_sha256": "ALTER TABLE outcome_receipts ADD COLUMN verification_output_sha256 TEXT NOT NULL DEFAULT ''",
+        "trusted_tenant_id": "ALTER TABLE outcome_receipts ADD COLUMN trusted_tenant_id TEXT NOT NULL DEFAULT ''",
     }.items():
         if column not in existing:
             conn.execute(ddl)
@@ -669,6 +730,9 @@ class CollectiveLearningStore:
         helpful: Any,
         verified: Any,
         verification_command: str = "",
+        verification_exit_code: int | None = None,
+        verification_output_sha256: str = "",
+        trusted_tenant_id: str = "",
         tenant_pseudonym: str = "local",
         agent_id: str = "default",
         atom_id: str | None = None,
@@ -686,6 +750,13 @@ class CollectiveLearningStore:
         verification_redacted = _safe_text(verification_command, max_chars=800)
         if verified_bool and not verification_redacted:
             raise ValueError("verification_command is required when verified=True")
+        verification_hash = _normalize_sha256_ref(verification_output_sha256)
+        if verification_output_sha256 and not verification_hash:
+            raise ValueError("verification_output_sha256 must be sha256:<64 hex>")
+        normalized_trusted_tenant_id = _normalize_trusted_tenant_id(trusted_tenant_id)
+        if trusted_tenant_id and not normalized_trusted_tenant_id:
+            raise ValueError("trusted_tenant_id must be a valid trusted tenant identity")
+        verification_exit_code_norm = int(verification_exit_code) if verification_exit_code is not None else None
         with _connect(self.db_path) as conn:
             intervention = conn.execute(
                 "SELECT cluster_id, tenant_pseudonym, agent_id, source_refs_json FROM interventions WHERE intervention_id = ?",
@@ -724,6 +795,9 @@ class CollectiveLearningStore:
                 "helpful": helpful_bool,
                 "verified": verified_bool,
                 "verification_command_redacted": verification_redacted,
+                "verification_exit_code": verification_exit_code_norm,
+                "verification_output_sha256": verification_hash,
+                "trusted_tenant_id": normalized_trusted_tenant_id,
                 "tenant_pseudonym": resolved_tenant,
                 "agent_id": resolved_agent,
                 "atom_id": resolved_atom_id or None,
@@ -744,14 +818,16 @@ class CollectiveLearningStore:
                 (receipt_id, intervention_id, created_at, outcome, helpful, verified,
                  verification_command_redacted, tenant_pseudonym, agent_id, atom_id, cluster_id,
                  time_saved_minutes, tokens_saved, dead_ends_avoided, notes_redacted,
-                 receipt_nonce, receipt_envelope_json, receipt_signer_key_id)
-                VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
+                 receipt_nonce, receipt_envelope_json, receipt_signer_key_id,
+                 verification_exit_code, verification_output_sha256, trusted_tenant_id)
+                VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
                 """,
                 (
                     row["receipt_id"], row["intervention_id"], row["created_at"], row["outcome"], int(row["helpful"]), int(row["verified"]),
                     row["verification_command_redacted"], row["tenant_pseudonym"], row["agent_id"], row["atom_id"], row["cluster_id"],
                     row["time_saved_minutes"], row["tokens_saved"], row["dead_ends_avoided"], row["notes_redacted"],
                     row["receipt_nonce"], _canonical_json(envelope), row["receipt_signer_key_id"],
+                    row["verification_exit_code"], row["verification_output_sha256"], row["trusted_tenant_id"],
                 ),
             )
             conn.commit()
@@ -773,6 +849,10 @@ class CollectiveLearningStore:
                 "helpful": row["helpful"],
                 "verified": row["verified"],
                 "verification_command_redacted": row["verification_command_redacted"],
+                "verification_exit_code": row["verification_exit_code"],
+                "verification_output_sha256": row["verification_output_sha256"],
+                "trusted_tenant_id_present": bool(row["trusted_tenant_id"]),
+                "shareable_evidence": _has_shareable_verification_evidence(row),
                 "time_saved_minutes": row["time_saved_minutes"],
                 "tokens_saved": row["tokens_saved"],
                 "dead_ends_avoided": row["dead_ends_avoided"],
@@ -857,7 +937,7 @@ class CollectiveLearningStore:
         for row in rows:
             try:
                 envelope = json.loads(str(row["receipt_envelope_json"] or "{}"))
-                verify_outcome_receipt_envelope(envelope)
+                verify_outcome_receipt_envelope(envelope, require_shareable_evidence=True)
             except (KeyError, TypeError, json.JSONDecodeError, ValueError):
                 # Unsigned legacy rows are intentionally not shareable evidence.
                 continue
@@ -928,9 +1008,24 @@ class CollectiveLearningStore:
         if not interventions:
             raise ValueError("cluster_id not found")
 
-        helpful_rows = [row for row in outcomes if int(row["verified"] or 0) == 1 and int(row["helpful"] or 0) == 1 and str(row["outcome"]).lower() in {"success", "partial"}]
-        unhelpful_rows = [row for row in outcomes if int(row["verified"] or 0) == 1 and (int(row["helpful"] or 0) == 0 or str(row["outcome"]).lower() == "failure")]
-        helpful_tenants = sorted({str(row["tenant_pseudonym"]) for row in helpful_rows if is_valid_tenant_pseudonym(str(row["tenant_pseudonym"]))})
+        helpful_rows = [
+            row for row in outcomes
+            if int(row["verified"] or 0) == 1
+            and int(row["helpful"] or 0) == 1
+            and str(row["outcome"]).lower() in {"success", "partial"}
+            and _has_shareable_verification_evidence(dict(row))
+        ]
+        unhelpful_rows = [
+            row for row in outcomes
+            if int(row["verified"] or 0) == 1
+            and (int(row["helpful"] or 0) == 0 or str(row["outcome"]).lower() == "failure")
+            and _has_shareable_verification_evidence(dict(row))
+        ]
+        helpful_tenants = sorted({
+            _normalize_trusted_tenant_id(row["trusted_tenant_id"])
+            for row in helpful_rows
+            if _normalize_trusted_tenant_id(row["trusted_tenant_id"])
+        })
         blockers: List[str] = []
         if not helpful_rows:
             blockers.append("no verified helpful outcomes")
@@ -966,8 +1061,16 @@ class CollectiveLearningStore:
             avoid_values = ["Do not repeat an unverified fix without rerunning the smallest failing command or regression test."]
         why = (
             f"Derived from {len(helpful_rows)} verified helpful outcome receipt(s) "
-            f"across {len(helpful_tenants)} tenant pseudonym(s); "
+            f"across {len(helpful_tenants)} trusted tenant identity/identities; "
             f"{len(unhelpful_rows)} verified negative receipt(s) retained for scoring."
+        )
+        representative_tenant_pseudonym = next(
+            (
+                str(row["tenant_pseudonym"])
+                for row in helpful_rows
+                if is_valid_tenant_pseudonym(str(row["tenant_pseudonym"]))
+            ),
+            str(interventions[0]["tenant_pseudonym"]),
         )
         technology = [item for item, _ in tech_counter.most_common(5)] or ["unknown"]
         error_class = error_classes.most_common(1)[0][0]
@@ -1020,7 +1123,7 @@ class CollectiveLearningStore:
             },
             "trust": {
                 "submitter_key_id": "",
-                "tenant_pseudonym": helpful_tenants[0] if helpful_tenants else str(interventions[0]["tenant_pseudonym"]),
+                "tenant_pseudonym": representative_tenant_pseudonym,
                 "agent_reputation_at_submit": 0,
                 "independent_tenant_count": len(helpful_tenants),
                 "verified_tenant_count": len(helpful_tenants),
@@ -1046,7 +1149,7 @@ class CollectiveLearningStore:
             status="promotable" if promotable else "blocked",
             atom_id=atom["atom_id"],
             cluster_id=cluster_id,
-            tenant_pseudonym=(helpful_tenants[0] if helpful_tenants else str(interventions[0]["tenant_pseudonym"])),
+            tenant_pseudonym=representative_tenant_pseudonym,
             payload={"atom_id": atom["atom_id"], "promotable": promotable, "blockers": blockers, "support_count": len(helpful_rows), "helpful_tenants": len(helpful_tenants)},
         )
         return {
@@ -1136,6 +1239,7 @@ def _iter_outcome_files(
             yield verify_outcome_receipt_envelope(
                 envelope,
                 trusted_receipt_signer_key_ids=trusted_receipt_signer_key_ids,
+                require_shareable_evidence=True,
             )
         except (OSError, json.JSONDecodeError, ValueError):
             continue
@@ -1195,8 +1299,8 @@ def compute_verified_tenant_count_from_outcomes(
             continue
         if str(receipt.get("outcome") or "").lower() not in {"success", "partial"}:
             continue
-        tenant = _safe_text(receipt.get("tenant_pseudonym"), max_chars=160)
-        if tenant and is_valid_tenant_pseudonym(tenant):
+        tenant = _normalize_trusted_tenant_id(receipt.get("trusted_tenant_id"))
+        if tenant:
             tenants.add(tenant)
     return len(tenants)
 

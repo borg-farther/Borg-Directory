@@ -939,6 +939,9 @@ TOOLS: List[Dict[str, Any]] = [
                 "helpful": {"type": "boolean", "description": "Whether the Borg guidance helped."},
                 "verified": {"type": "boolean", "description": "Whether the outcome was verified by command/test/user evidence."},
                 "verification_command": {"type": "string", "description": "Command or evidence used to verify, redacted before storage."},
+                "verification_exit_code": {"type": "integer", "description": "Exit code from the verification command. Required with verification_output_sha256 + trusted_tenant_id before a receipt can count toward shareable quorum."},
+                "verification_output_sha256": {"type": "string", "description": "sha256:<64 hex> of the verification transcript/output. Required for shareable quorum."},
+                "trusted_tenant_id": {"type": "string", "description": "Operator/identity-provider scoped tenant/user ID. Locally hashed before export; required for Sybil-resistant shareable quorum."},
                 "tenant_pseudonym": {"type": "string", "description": "Optional raw tenant name or hmac-sha256 pseudonym. Defaults to BORG_TENANT_PSEUDONYM, then local; must match the intervention tenant after normalization."},
                 "agent_id": {"type": "string", "default": "default"},
                 "atom_id": {"type": "string", "description": "Optional learning atom this outcome supports. Must match an atom id recorded in the intervention source_refs; omit for cluster-level evidence."},
@@ -2706,6 +2709,9 @@ def borg_record_outcome(
     helpful: bool = False,
     verified: bool = False,
     verification_command: str = "",
+    verification_exit_code: int | None = None,
+    verification_output_sha256: str = "",
+    trusted_tenant_id: str = "",
     tenant_pseudonym: str = "",
     agent_id: str = "default",
     atom_id: str = "",
@@ -2731,6 +2737,9 @@ def borg_record_outcome(
             helpful=helpful,
             verified=verified,
             verification_command=verification_command,
+            verification_exit_code=verification_exit_code,
+            verification_output_sha256=verification_output_sha256,
+            trusted_tenant_id=trusted_tenant_id,
             tenant_pseudonym=tenant_pseudonym or (os.environ.get("BORG_TENANT_PSEUDONYM") or "local"),
             agent_id=agent_id,
             atom_id=atom_id or None,
@@ -2746,6 +2755,38 @@ def borg_record_outcome(
         return json.dumps({"success": False, "error": str(e), "type": type(e).__name__})
 
 
+def _collective_match_advisory(match: dict) -> dict:
+    """Return the MCP-safe advisory projection for a collective retrieval match.
+
+    The raw signed atom remains an untrusted storage payload. MCP callers get the
+    fields needed to reason about whether to use the advice, not the complete
+    atom JSON (which may contain advisory trust hints or future extension fields).
+    """
+    atom = match.get("atom") if isinstance(match, dict) else {}
+    atom = atom if isinstance(atom, dict) else {}
+    learning_value = atom.get("learning")
+    learning = learning_value if isinstance(learning_value, dict) else {}
+    safety_value = atom.get("safety")
+    safety = safety_value if isinstance(safety_value, dict) else {}
+    return {
+        "source": match.get("source", "collective_memory"),
+        "atom_id": match.get("atom_id", ""),
+        "cluster_id": match.get("cluster_id", ""),
+        "score": match.get("score", 0),
+        "score_reasons": match.get("score_reasons", []),
+        "verified_tenant_count": match.get("verified_tenant_count", 0),
+        "helpfulness_score": match.get("helpfulness_score", 0),
+        "helpful_outcomes": match.get("helpful_outcomes", 0),
+        "unhelpful_outcomes": match.get("unhelpful_outcomes", 0),
+        "retrieval_treatment": safety.get("retrieval_treatment", "untrusted_advisory"),
+        "advisory": {
+            "worked": learning.get("worked", ""),
+            "avoid": learning.get("avoid", []),
+            "why": learning.get("why", ""),
+        },
+    }
+
+
 def borg_collective_retrieve(query: str = "", limit: int = 5) -> str:
     """Return unified scored collective memory for a task/error query."""
     try:
@@ -2753,7 +2794,8 @@ def borg_collective_retrieve(query: str = "", limit: int = 5) -> str:
         if not query:
             return json.dumps({"success": False, "error": "query is required"})
         results = unified_collective_retrieve(query, limit=limit)
-        return json.dumps({"success": True, "query": query, "matches": results, "total": len(results)}, ensure_ascii=False)
+        safe_matches = [_collective_match_advisory(match) for match in results]
+        return json.dumps({"success": True, "query": query, "matches": safe_matches, "total": len(safe_matches)}, ensure_ascii=False)
     except (KeyboardInterrupt, SystemExit):
         raise
     except (ValueError, KeyError, OSError, json.JSONDecodeError) as e:
@@ -3514,6 +3556,9 @@ def _call_tool_impl(name: str, arguments: Dict[str, Any]) -> str:
             helpful=arguments.get("helpful", False),
             verified=arguments.get("verified", False),
             verification_command=arguments.get("verification_command", ""),
+            verification_exit_code=arguments.get("verification_exit_code"),
+            verification_output_sha256=arguments.get("verification_output_sha256", ""),
+            trusted_tenant_id=arguments.get("trusted_tenant_id", ""),
             tenant_pseudonym=arguments.get("tenant_pseudonym", ""),
             agent_id=arguments.get("agent_id", "default"),
             atom_id=arguments.get("atom_id", ""),

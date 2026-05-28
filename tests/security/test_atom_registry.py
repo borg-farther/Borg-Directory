@@ -17,6 +17,14 @@ from borg.core.crypto import generate_signing_key
 from borg.core.learning_atoms import compute_atom_id, sign_learning_atom
 
 
+def _strong_evidence(name: str, marker: str = "a") -> dict:
+    return {
+        "verification_exit_code": 0,
+        "verification_output_sha256": "sha256:" + marker * 64,
+        "trusted_tenant_id": f"tenant:test:{name}",
+    }
+
+
 def _atom(scope="org", tenant="tenant-a"):
     atom = {
         "schema_version": "1.0",
@@ -130,6 +138,7 @@ def test_direct_global_ingest_cannot_piggyback_other_atom_receipts_without_clust
             helpful=True,
             verified=True,
             verification_command="pytest tests/test_config.py",
+            **_strong_evidence(tenant, "a"),
             tenant_pseudonym=tenant_id,
             agent_id=f"agent-{tenant}",
             atom_id=source_atom_id,
@@ -189,6 +198,7 @@ def test_direct_global_ingest_cannot_piggyback_cluster_only_receipts_without_clu
             helpful=True,
             verified=True,
             verification_command="pytest tests/test_config.py",
+            **_strong_evidence(tenant, "a"),
             tenant_pseudonym=tenant_id,
             agent_id=f"agent-{tenant}",
             # Cluster-level receipts are useful to the local promotion path but
@@ -215,7 +225,7 @@ def test_direct_global_ingest_cannot_piggyback_cluster_only_receipts_without_clu
         )
 
 
-def test_staging_registry_accepts_global_candidate_with_verified_quorum(tmp_path):
+def test_staging_registry_default_sync_does_not_import_global_candidate_from_unsigned_local_receipts(tmp_path):
     atom = _atom(scope="global_candidate")
     atom["trust"]["independent_tenant_count"] = 99
     atom["atom_id"] = compute_atom_id(atom)
@@ -225,6 +235,23 @@ def test_staging_registry_accepts_global_candidate_with_verified_quorum(tmp_path
 
     receipt = ingest_atom_envelope(envelope, registry, verified_tenant_count=3, allow_trusted_verified_tenant_count=True)
     sync = sync_registry_to_store(registry, store_b)
+
+    assert receipt.decision == "global_candidate"
+    assert sync["imported"] == 0
+    assert sync["skipped"] >= 1
+    assert store_b.get_atom(envelope["payload"]["atom_id"]) is None
+
+
+def test_staging_registry_explicit_operator_sync_can_import_global_candidate(tmp_path):
+    atom = _atom(scope="global_candidate")
+    atom["trust"]["independent_tenant_count"] = 99
+    atom["atom_id"] = compute_atom_id(atom)
+    envelope = sign_learning_atom(atom, generate_signing_key())
+    registry = tmp_path / "registry"
+    store_b = AtomStore(str(tmp_path / "client-b-atoms.db"))
+
+    receipt = ingest_atom_envelope(envelope, registry, verified_tenant_count=3, allow_trusted_verified_tenant_count=True)
+    sync = sync_registry_to_store(registry, store_b, allow_unsigned_global_candidates=True)
 
     assert receipt.decision == "global_candidate"
     assert sync["imported"] == 1

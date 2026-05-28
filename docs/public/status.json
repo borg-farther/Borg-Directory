@@ -4,7 +4,7 @@
       "No Borg analytics export proving active contributors or consumers was found.",
       "No first-10-user scoreboard with real outcomes exists yet.",
       "Ops readiness/watchdog must stay green; any P0/P1 bad-answer, privacy, support, or stale-proof failure pauses controlled beta invites.",
-      "100-real-user gate remains blocked: ['PyPI latest/fresh-install package evidence is not green: latest metadata does not match source version', 'PyPI latest/fresh-install package evidence is not green: fresh install + MCP stdio canary is not green', 'first-10 external-user evidence has not passed: verified=0/10, real_users=0/10, installs=0/8, useful=0/6, critical_incidents=0/0']",
+      "100-real-user gate remains blocked: ['first-10 external-user evidence has not passed: verified=0/10, real_users=0/10, installs=0/8, useful=0/6, critical_incidents=0/0']",
       "Served/runtime split-brain was not evaluated by this dashboard build; source/fresh-process green is not live cutover proof."
     ],
     "investor_affecting": [
@@ -21,7 +21,7 @@
     ],
     "user_affecting": [
       "No real external first-user install/rescue outcome has been recorded yet.",
-      "PyPI fresh-install canary is not green for the current source version yet.",
+      "PyPI fresh-install canary is green for the current source version.",
       "Cold-start trust gate is green: meta/readiness prompts fail closed before random framework guidance reaches first users.",
       "Self-service ops gate is green: bad-answer intake, first-10 evidence intake, support/SLA, rollback/comms, and watchdog workflow exist.",
       "Ops watchdog is green: proof snapshots and public status are internally consistent.",
@@ -30,15 +30,15 @@
   },
   "broad_public_launch": {
     "verdict": "NO-GO",
-    "why": "Public self-serve gate is blocked until PyPI latest/fresh-install/MCP/docs/cold-start-trust/self-service-ops gates pass and first-10 external evidence exists."
+    "why": "Public self-serve gate is blocked only by row-derived first-10 external-user evidence; PyPI/latest/fresh-install/MCP/docs/cold-start-trust/self-service-ops gates are green."
   },
   "cold_start_trust_hardening_gate": "PASS",
   "controlled_first_10_beta": {
-    "verdict": "NO-GO",
-    "why": "Controlled first-10 beta is blocked until the public package path and ops layer are green, and any first-10 privacy/security incidents are triaged: PyPI latest metadata, fresh-install canary, stdio MCP canary, cold-start trust gate, self-service ops gate, and docs guard must all pass."
+    "verdict": "CONDITIONAL",
+    "why": "Controlled first-10 beta infrastructure and ops guardrails are green; keep broad launch blocked until row-derived external-user evidence passes."
   },
   "decision": "NO-GO",
-  "distribution_gate": "NO-GO",
+  "distribution_gate": "CONDITIONAL",
   "evidence": [
     "eval/first_user_release_gate_snapshot.json",
     "eval/public_self_serve_launch_gate_snapshot.json",
@@ -49,12 +49,12 @@
     "eval/pypi_fresh_install_snapshot.json",
     "eval/real_user_rollout_gate_snapshot.json"
   ],
-  "go_no_go": "Public self-serve gate is blocked until PyPI latest/fresh-install/MCP/docs/cold-start-trust/self-service-ops gates pass and first-10 external evidence exists.",
+  "go_no_go": "Public self-serve gate is blocked only by row-derived first-10 external-user evidence; PyPI/latest/fresh-install/MCP/docs/cold-start-trust/self-service-ops gates are green.",
   "local_release_candidate": {
     "verdict": "CONDITIONAL",
     "why": "Local source/wheel gates pass, but this does not authorize public beta without PyPI/latest/fresh-install proof."
   },
-  "max_recommended_real_users_now": 0,
+  "max_recommended_real_users_now": 10,
   "ops_readiness_watchdog": "PASS",
   "readiness": "NO-GO",
   "repo": "https://github.com/borg-farther/Borg-Directory",
@@ -62,10 +62,10 @@
   "schema_version": 1,
   "self_service_ops_gate": "PASS",
   "source": "docs/public/status.json",
-  "source_revision": "0097aec9a1069786b533cdfe79e2fba006ea9066+dirty",
+  "source_revision": "dadf73f2aa8c1103b882addad57aacb262c5f14a+dirty",
   "source_version_consistency": "pyproject=3.3.15 runtime=3.3.15",
-  "state": "NO-GO public self-serve; source/local release-candidate only",
+  "state": "NO-GO public self-serve; controlled first-10 beta GO",
   "status": "NO-GO",
-  "updated_at": "2026-05-28T17:22:09Z",
+  "updated_at": "2026-05-28T21:27:08Z",
   "verified_external_users": 0
 }
