@@ -3,6 +3,7 @@
 from __future__ import annotations
 
 import argparse
+import hashlib
 import io
 import json
 import sys
@@ -28,6 +29,15 @@ def clean_argv(monkeypatch):
 # ---------------------------------------------------------------------------
 # Helpers
 # ---------------------------------------------------------------------------
+
+def _strong_evidence(tenant: str) -> dict:
+    digest = hashlib.sha256(f"cli-collective:{tenant}".encode("utf-8")).hexdigest()
+    return {
+        "verification_exit_code": 0,
+        "verification_output_sha256": f"sha256:{digest}",
+        "trusted_tenant_id": f"tenant:cli:{tenant}",
+    }
+
 
 def capture_main(args: list[str]) -> tuple[int, str, str]:
     """Run main() with given args, return (exit_code, stdout, stderr)."""
@@ -831,6 +841,7 @@ def test_collective_candidate_json_blocks_without_quorum(tmp_path):
         helpful=True,
         verified=True,
         verification_command="python -c 'import flask'",
+        **_strong_evidence("tenant-a"),
         tenant_pseudonym=intervention["tenant_pseudonym"],
     )
 
@@ -875,6 +886,7 @@ def test_collective_promote_json_accepts_cluster_derived_source_atom_receipts(tm
             helpful=True,
             verified=True,
             verification_command="python -c 'import flask'",
+            **_strong_evidence(tenant),
             tenant_pseudonym=intervention["tenant_pseudonym"],
             agent_id=f"agent-{idx}",
             atom_id=source_atom_id,

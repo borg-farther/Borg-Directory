@@ -4,16 +4,16 @@ Generated: 2026-05-14 18:39 UTC
 
 ## Current state
 
-Borg's controlled first-10 package path is **NO-GO for evidence capture** on `agent-borg==3.3.15` until GitHub main, PyPI latest, fresh-install, stdio MCP, generated-rules/OpenClaw, cold-start trust, self-service ops, watchdog, docs guard, proof dashboards, and GitHub CI/security evidence are green for the same version.
+Borg's controlled first-10 package path is **GO for package-level evidence capture** on `agent-borg==3.3.15` after GitHub main, PyPI latest, fresh-install, stdio MCP, generated-rules/OpenClaw, cold-start trust, self-service ops, watchdog, docs guard, proof dashboards, and GitHub CI/security evidence went green for that release. New hardening PRs must still pass their own CI before merge.
 
 Public self-serve launch remains **NO-GO** until row-derived first-10 external-user evidence passes. Served remote MCP remains a separate runtime cutover/canary channel, not proven by the PyPI stdio release.
 
 Hard evidence already completed or pending:
 
-- Branch/source hardening for 3.3.15: pending merge to main and PyPI publish
+- Branch/source readiness for 3.3.15: PASS on main; current collective-learning hardening PR is additive and must pass CI before merge
 - Local source first-user release gate for `agent-borg==3.3.15`: PASS
-- Fresh PyPI install/MCP/generate/OpenClaw canary for `agent-borg==3.3.15`: PENDING until publish
-- self-service ops/watchdog gates: must be rerun after release proof artifacts are regenerated
+- Fresh PyPI install/MCP/generate/OpenClaw canary for `agent-borg==3.3.15`: PASS
+- self-service ops/watchdog gates: PASS for package-level evidence capture; broad public self-serve remains blocked by first-10 rows
 - security baseline: PASS in local gates
 - privacy/prompt-injection/atom/firewall tests: PASS in local gates
 - first-10 invite packet exists

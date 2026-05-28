@@ -27,6 +27,14 @@ def _tenant(name: str) -> str:
     return tenant_pseudonym(name, TENANT_SECRET)
 
 
+def _strong_evidence(name: str, marker: str = "1") -> dict:
+    return {
+        "verification_exit_code": 0,
+        "verification_output_sha256": "sha256:" + marker * 64,
+        "trusted_tenant_id": f"tenant:test:{name}",
+    }
+
+
 def _payload(error_pattern: str = "ModuleNotFoundError flask", worked: str = "Install Flask in the active venv", scope: str = "global_candidate") -> dict:
     payload = {
         "schema_version": "1.0",
@@ -353,6 +361,7 @@ def test_exported_outcome_quorum_ignores_unsigned_and_tampered_receipts(tmp_path
         helpful=True,
         verified=True,
         verification_command="python -c 'import flask'",
+        **_strong_evidence("tenant-a", "b"),
         tenant_pseudonym=tenant_a,
         agent_id="agent-a",
         atom_id=atom_id,
@@ -425,6 +434,7 @@ def test_outcome_quorum_requires_trusted_receipt_signer_keys(tmp_path):
         helpful=True,
         verified=True,
         verification_command="python -c 'import flask'",
+        **_strong_evidence("tenant-a", "b"),
         tenant_pseudonym=tenant_a,
         agent_id="agent-a",
         atom_id=atom_id,
@@ -445,6 +455,119 @@ def test_outcome_quorum_requires_trusted_receipt_signer_keys(tmp_path):
         atom_id=atom_id,
         cluster_id=cluster_id,
         trusted_receipt_signer_key_ids=trusted_signers,
+    ) == 1
+
+
+def test_exported_outcome_quorum_requires_strong_verification_evidence_and_trusted_identity(tmp_path):
+    registry = tmp_path / "registry"
+    store = CollectiveLearningStore(str(tmp_path / "collective.db"))
+    atom_id = "sha256:" + "d" * 64
+    cluster_id = normalize_problem_signature("debug", ["python"], "ModuleNotFoundError", "flask")
+    tenant_a = _tenant("tenant-a")
+
+    weak = store.record_intervention(
+        source_tool="borg_rescue",
+        task_text="ModuleNotFoundError flask",
+        context="python",
+        guidance="Install Flask",
+        agent_id="agent-a",
+        tenant_pseudonym=tenant_a,
+        source_refs=[atom_id],
+    )
+    store.record_outcome(
+        intervention_id=weak["intervention_id"],
+        outcome="success",
+        helpful=True,
+        verified=True,
+        verification_command="python -c 'import flask'",
+        tenant_pseudonym=tenant_a,
+        agent_id="agent-a",
+        atom_id=atom_id,
+        cluster_id=cluster_id,
+    )
+
+    weak_export = store.export_verified_outcomes(registry)
+    assert weak_export["exported"] == 0
+    assert compute_verified_tenant_count_from_outcomes(
+        registry,
+        atom_id=atom_id,
+        cluster_id=cluster_id,
+        trusted_receipt_signer_key_ids=weak_export["trusted_receipt_signer_key_ids"],
+    ) == 0
+
+    strong = store.record_intervention(
+        source_tool="borg_rescue",
+        task_text="ModuleNotFoundError flask",
+        context="python",
+        guidance="Install Flask",
+        agent_id="agent-a",
+        tenant_pseudonym=tenant_a,
+        source_refs=[atom_id],
+    )
+    store.record_outcome(
+        intervention_id=strong["intervention_id"],
+        outcome="success",
+        helpful=True,
+        verified=True,
+        verification_command="python -c 'import flask'",
+        verification_exit_code=0,
+        verification_output_sha256="sha256:" + "1" * 64,
+        trusted_tenant_id="tenant:acme:user-a",
+        tenant_pseudonym=tenant_a,
+        agent_id="agent-a",
+        atom_id=atom_id,
+        cluster_id=cluster_id,
+    )
+
+    strong_export = store.export_verified_outcomes(registry)
+    assert strong_export["exported"] == 1
+    assert compute_verified_tenant_count_from_outcomes(
+        registry,
+        atom_id=atom_id,
+        cluster_id=cluster_id,
+        trusted_receipt_signer_key_ids=strong_export["trusted_receipt_signer_key_ids"],
+    ) == 1
+
+
+def test_outcome_quorum_counts_trusted_identity_not_hmac_pseudonym_sybil(tmp_path):
+    registry = tmp_path / "registry"
+    store = CollectiveLearningStore(str(tmp_path / "collective.db"))
+    atom_id = "sha256:" + "e" * 64
+    cluster_id = normalize_problem_signature("debug", ["python"], "ModuleNotFoundError", "flask")
+
+    for idx, tenant in enumerate(["sybil-a", "sybil-b", "sybil-c"]):
+        tenant_id = _tenant(tenant)
+        intervention = store.record_intervention(
+            source_tool="borg_rescue",
+            task_text="ModuleNotFoundError flask",
+            context="python",
+            guidance="Install Flask",
+            agent_id=f"agent-{idx}",
+            tenant_pseudonym=tenant_id,
+            source_refs=[atom_id],
+        )
+        store.record_outcome(
+            intervention_id=intervention["intervention_id"],
+            outcome="success",
+            helpful=True,
+            verified=True,
+            verification_command="python -c 'import flask'",
+            verification_exit_code=0,
+            verification_output_sha256="sha256:" + f"{idx + 2}" * 64,
+            trusted_tenant_id="tenant:acme:same-real-user",
+            tenant_pseudonym=tenant_id,
+            agent_id=f"agent-{idx}",
+            atom_id=atom_id,
+            cluster_id=cluster_id,
+        )
+
+    exported = store.export_verified_outcomes(registry)
+    assert exported["exported"] == 3
+    assert compute_verified_tenant_count_from_outcomes(
+        registry,
+        atom_id=atom_id,
+        cluster_id=cluster_id,
+        trusted_receipt_signer_key_ids=exported["trusted_receipt_signer_key_ids"],
     ) == 1
 
 
@@ -477,6 +600,7 @@ def test_registry_computes_verified_quorum_from_outcome_receipts_not_payload_hin
             helpful=True,
             verified=True,
             verification_command="python -c 'import flask'",
+            **_strong_evidence(str(tenant_id), "c"),
             tenant_pseudonym=tenant_id,
             agent_id=f"agent-{tenant}",
             atom_id=atom_id,
@@ -503,6 +627,7 @@ def test_registry_computes_verified_quorum_from_outcome_receipts_not_payload_hin
         helpful=True,
         verified=True,
         verification_command="python -c 'import flask'",
+        **_strong_evidence(str(dup_tenant), "c"),
         tenant_pseudonym=dup_tenant,
         agent_id="agent-dup",
         atom_id=atom_id,
@@ -528,6 +653,7 @@ def test_registry_computes_verified_quorum_from_outcome_receipts_not_payload_hin
         helpful=False,
         verified=True,
         verification_command="python -c 'import flask'",
+        **_strong_evidence(str(bad_tenant), "c"),
         tenant_pseudonym=bad_tenant,
         agent_id="agent-bad",
         atom_id=atom_id,
@@ -668,6 +794,7 @@ def test_unverified_atom_does_not_inherit_same_cluster_outcome_helpfulness(tmp_p
         helpful=True,
         verified=True,
         verification_command="python -c 'import flask'",
+        **_strong_evidence(str(tenant_id), "c"),
         tenant_pseudonym=tenant_id,
         agent_id="agent-a",
         cluster_id=intervention["cluster_id"],
@@ -709,6 +836,7 @@ def test_contribution_ledger_and_cluster_atom_promotion_are_end_to_end(tmp_path)
             helpful=True,
             verified=True,
             verification_command="python -c 'import flask'",
+            **_strong_evidence(str(tenant_id), "c"),
             tenant_pseudonym=tenant_id,
             agent_id=f"agent-{idx}",
             cluster_id=cluster_id,
@@ -785,6 +913,7 @@ def test_cluster_promotion_rebinds_explicit_source_atom_receipts_without_trustin
             helpful=True,
             verified=True,
             verification_command="python -c 'import flask'",
+            **_strong_evidence(str(tenant_id), "c"),
             tenant_pseudonym=tenant_id,
             agent_id=f"agent-{idx}",
             atom_id=source_atom_id,
@@ -807,6 +936,7 @@ def test_cluster_promotion_rebinds_explicit_source_atom_receipts_without_trustin
         helpful=True,
         verified=True,
         verification_command="python -c 'import flask'",
+        **_strong_evidence(str(_tenant("tenant-a")), "c"),
         tenant_pseudonym=_tenant("tenant-a"),
         agent_id="agent-dup",
         atom_id=source_atom_id,
@@ -827,6 +957,7 @@ def test_cluster_promotion_rebinds_explicit_source_atom_receipts_without_trustin
         helpful=False,
         verified=True,
         verification_command="python -c 'import flask'",
+        **_strong_evidence("tenant-z", "c"),
         tenant_pseudonym=_tenant("tenant-z"),
         agent_id="agent-negative",
         atom_id=source_atom_id,
@@ -899,6 +1030,7 @@ def test_cluster_receipt_rebind_flag_alone_does_not_authorize_candidate_promotio
             helpful=True,
             verified=True,
             verification_command="python -c 'import flask'",
+            **_strong_evidence(str(tenant_id), "c"),
             tenant_pseudonym=tenant_id,
             agent_id=f"agent-{idx}",
             atom_id=source_atom_id,
@@ -945,6 +1077,7 @@ def test_cluster_atom_candidate_blocks_until_verified_tenant_quorum(tmp_path):
         helpful=True,
         verified=True,
         verification_command="python -c 'import flask'",
+        **_strong_evidence(str(tenant_id), "c"),
         tenant_pseudonym=tenant_id,
         agent_id="agent-a",
     )

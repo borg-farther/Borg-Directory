@@ -10,6 +10,7 @@ quorum -> signed atom promotion -> unified scored retrieval -> first-10 truth bo
 from __future__ import annotations
 
 import argparse
+import hashlib
 import json
 import subprocess
 import sys
@@ -46,6 +47,15 @@ def _git_context() -> Dict[str, Any]:
 
     status = run("status", "--short")
     return {"commit": run("rev-parse", "HEAD"), "branch": run("branch", "--show-current"), "dirty": bool(status), "dirty_files": status.splitlines()}
+
+
+def _strong_evidence(tenant: str) -> Dict[str, Any]:
+    digest = hashlib.sha256(f"borg-collective-loop:{tenant}".encode("utf-8")).hexdigest()
+    return {
+        "verification_exit_code": 0,
+        "verification_output_sha256": f"sha256:{digest}",
+        "trusted_tenant_id": f"tenant:gate:{tenant}",
+    }
 
 
 def _payload() -> Dict[str, Any]:
@@ -105,6 +115,7 @@ def run_gate() -> Dict[str, Any]:
                 helpful=True,
                 verified=True,
                 verification_command="python -c 'import flask'",
+                **_strong_evidence(tenant),
                 tenant_pseudonym=tenant,
                 agent_id=f"agent-{tenant}",
                 atom_id=atom_id,
@@ -131,6 +142,7 @@ def run_gate() -> Dict[str, Any]:
             helpful=False,
             verified=True,
             verification_command="python -c 'import flask'",
+            **_strong_evidence("tenant-z"),
             tenant_pseudonym="tenant-z",
             agent_id="agent-negative",
             atom_id=atom_id,

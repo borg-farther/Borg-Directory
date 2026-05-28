@@ -1,5 +1,6 @@
 import json
 
+from borg.core import collective_learning as collective_module
 from borg.integrations import mcp_server
 
 
@@ -143,3 +144,42 @@ def test_borg_record_outcome_rejects_unshown_atom_id(tmp_path, monkeypatch):
 
     assert receipt_payload["success"] is False
     assert "source_refs" in receipt_payload["error"]
+
+
+def test_borg_collective_retrieve_returns_advisory_summary_not_raw_atom(monkeypatch):
+    def fake_retrieve(query, limit=5):
+        return [
+            {
+                "source": "learning_atom",
+                "atom_id": "sha256:" + "a" * 64,
+                "cluster_id": "cluster:debug:python",
+                "score": 0.91,
+                "score_reasons": ["text_match", "verified_quorum"],
+                "verified_tenant_count": 3,
+                "helpfulness_score": 0.8,
+                "helpful_outcomes": 3,
+                "unhelpful_outcomes": 1,
+                "atom": {
+                    "learning": {
+                        "worked": "Install Flask in the active venv",
+                        "avoid": ["Do not reinstall Python"],
+                        "why": "Verified by outcomes",
+                    },
+                    "safety": {"retrieval_treatment": "untrusted_advisory"},
+                    "trust": {"independent_tenant_count": 999, "verified_tenant_count": 3},
+                },
+            }
+        ]
+
+    monkeypatch.setattr(collective_module, "unified_collective_retrieve", fake_retrieve)
+
+    payload = json.loads(mcp_server.borg_collective_retrieve("flask", limit=1))
+
+    assert payload["success"] is True
+    assert payload["matches"]
+    match = payload["matches"][0]
+    assert "atom" not in match
+    assert match["retrieval_treatment"] == "untrusted_advisory"
+    assert match["advisory"]["worked"] == "Install Flask in the active venv"
+    assert match["advisory"]["avoid"] == ["Do not reinstall Python"]
+    assert match["advisory"]["why"] == "Verified by outcomes"
