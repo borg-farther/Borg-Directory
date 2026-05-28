@@ -7,6 +7,7 @@ but real-user rollout must be gated by first-10 external evidence.
 """
 from __future__ import annotations
 
+import argparse
 import json
 import re
 import sys
@@ -319,10 +320,19 @@ def display_path(path: Path) -> str:
         return str(path)
 
 
-def main() -> int:
+def main(argv: list[str] | None = None) -> int:
+    parser = argparse.ArgumentParser(description="Compile Borg real-user rollout readiness")
+    parser.add_argument(
+        "--no-write",
+        action="store_true",
+        help="Compute and print the gate without rewriting the committed snapshot or markdown report.",
+    )
+    args = parser.parse_args(argv)
+
     snapshot = compile_rollout_gate()
-    SNAPSHOT.write_text(json.dumps(snapshot, indent=2, sort_keys=True), encoding="utf-8")
-    write_report(snapshot)
+    if not args.no_write:
+        SNAPSHOT.write_text(json.dumps(snapshot, indent=2, sort_keys=True), encoding="utf-8")
+        write_report(snapshot)
     print(json.dumps({
         "ready_for_10_controlled_beta": snapshot["ready_for_10_controlled_beta"],
         "self_service_ops_ready": snapshot["self_service_ops_gate"].get("passed"),
@@ -332,6 +342,7 @@ def main() -> int:
         "blockers": snapshot["blockers"],
         "snapshot": display_path(SNAPSHOT),
         "report": display_path(REPORT),
+        "wrote_artifacts": not args.no_write,
     }, indent=2))
     return 0 if snapshot["ready_for_100_real_users"] else 1
 

@@ -65,6 +65,12 @@ def test_runtime_distribution_drafts_do_not_pin_stale_borg_versions() -> None:
     assert 'serverCommand: "borg-mcp"' in smithery
     assert '"version": "' + current_version + '"' in smithery
     assert '"mcpTools": 24' in smithery
+    assert 'authorName: "Borg contributors"' in smithery
+    assert "punkrocker" not in smithery
+    assert 'remote: false' in smithery
+    assert "Remote/HTTP listing remains NO-GO until served runtime cutover proof passes" in smithery
+    assert "Reduce token waste" not in smithery
+    assert "measured savings until first-10 evidence exists" in smithery
     assert 'borg_runtime_fingerprint' in smithery
     assert "python -m borg.integrations.mcp_server" not in smithery
     assert '"version": "1.0.0"' not in smithery
@@ -140,6 +146,24 @@ def test_public_examples_and_benchmark_readmes_do_not_overclaim_external_lift() 
     ]
 
 
+def test_final_production_ready_todo_preserves_hard_gate_boundaries() -> None:
+    todo = read("docs/20260528_BORG_PRODUCTION_READY_FINAL_TODO.md")
+    required = [
+        "controlled first-10 beta ready",
+        "not yet broad-public-production ready",
+        "Served/remote MCP production channel",
+        "NO-GO until the actual served process is fingerprinted",
+        "verified external users are `0/10`",
+        "Merge PR #39",
+        "Run the first-10 external beta",
+        "external lift",
+        "no-write semantics",
+        "Smithery draft metadata",
+    ]
+    for phrase in required:
+        assert phrase in todo
+
+
 def test_value_communication_dashboard_exposes_row_derived_savings_contract() -> None:
     md = read("docs/VALUE_COMMUNICATION_DASHBOARD.md")
     html = read("docs/VALUE_COMMUNICATION_DASHBOARD.html")
@@ -209,6 +233,7 @@ def test_non_current_public_docs_are_bannered_or_operator_scoped() -> None:
         "20260526-2046_REMOTE_FEDERATED_LEARNING_GO_PROOF.md",
         "20260526-2115_FEDERATED_LEARNING_OPTIMALITY_AUDIT.md",
         "20260526-2230_MAX_VALUE_COLLECTIVE_INTELLIGENCE_LOOP.md",
+        "20260528_BORG_PRODUCTION_READY_FINAL_TODO.md",
     }
     docs = ROOT / "docs"
     gitlink_roots = _gitlink_doc_roots()
