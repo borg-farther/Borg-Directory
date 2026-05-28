@@ -22,7 +22,7 @@
     "before_matches": 0,
     "first_sync": {
       "imported": 1,
-      "manifest_hash": "d4df3f7f7aa02d44e2c97b38e34281e00aaf90065c69a7c300a3c1f374286d19",
+      "manifest_hash": "1ae152e946af7fbdc2f48f0e7802d1f65f83141b2d18d8c0a8cf793f81cfaf5f",
       "manifest_sequence": 1,
       "remote": true,
       "revocation_convergence_seconds": 0.0,
@@ -34,53 +34,26 @@
   },
   "external_user_lift_claimed": false,
   "external_user_lift_note": "This gate proves clean-client protocol lift, not row-derived real external-user usefulness.",
-  "generated_at_utc": "2026-05-27T22:49:33Z",
+  "generated_at_utc": "2026-05-28T08:04:55Z",
   "proof_provenance": {
     "command": "python eval/run_federated_learning_gate.py --output eval/federated_learning_gate_snapshot.json",
     "git": {
       "branch": "fix/runtime-freshness-federated-learning-plan",
-      "commit": "643f6671e8563b65c579189a449cb29b90b8edb6",
+      "commit": "f4e9dff4971f21f9e69e6c4dfed65208ebff8b74",
       "dirty": true,
       "dirty_files": [
-        "M README.md",
-        " M borg/cli.py",
-        " M borg/core/atom_registry.py",
-        " M borg/core/atom_store.py",
-        " M borg/core/first_user_readiness.py",
-        " M borg/core/prompt_injection.py",
-        " M borg/integrations/mcp_server.py",
-        " M docs/20260526-1302_OPTIMAL_SAFE_COLLECTIVE_LEARNING_LOOP.md",
-        " M docs/20260526-2115_FEDERATED_LEARNING_OPTIMALITY_AUDIT.md",
-        " M docs/FIRST_10_BETA_READINESS.md",
-        " M docs/INTEGRATION_GUIDE.md",
-        " M docs/MCP_SETUP.md",
-        " M docs/ONBOARDING.md",
-        " M docs/QUICKSTART.md",
-        " M docs/README.md",
-        " M docs/TRYING_BORG.md",
-        " M docs/landing-page/install-snippets.md",
-        " M eval/collective_learning_loop_controls.json",
-        " M eval/federated_learning_gate_snapshot.json",
-        " M eval/federated_learning_optimality_audit.json",
-        " M eval/rollback_comms_drill_snapshot.json",
-        " M eval/run_federated_learning_gate.py",
-        " M eval/run_federated_learning_optimality_audit.py",
-        " M eval/tests/test_federated_learning_optimality_audit.py",
-        " M tests/cli/test_cli.py",
-        " M tests/mcp/test_mcp_server.py",
-        " M tests/packaging/test_public_presentation_contract.py",
-        " M tests/readiness/test_first_10_readiness.py",
-        " M tests/security/test_atom_registry.py",
-        " M tests/security/test_atom_store.py",
-        " M tests/security/test_collective_learning_loop_controls.py",
-        " M tests/security/test_federated_atom_registry.py",
-        "?? borg/core/collective_learning.py",
-        "?? docs/20260526-2230_MAX_VALUE_COLLECTIVE_INTELLIGENCE_LOOP.md",
-        "?? eval/collective_intelligence_loop_gate.json",
-        "?? eval/run_collective_intelligence_loop_gate.py",
-        "?? eval/tests/test_collective_intelligence_loop_gate.py",
-        "?? tests/learning/test_collective_intelligence_loop.py",
-        "?? tests/mcp/test_collective_outcome_receipts.py"
+        "M docs/20260517_BORG_100_REAL_USER_READINESS.md",
+        " M docs/COLD_START_TRUST_HARDENING.md",
+        " M docs/SELF_SERVICE_OPS_READINESS_REPORT.md",
+        " M eval/cold_start_trust_gate_snapshot.json",
+        " M eval/first_user_release_gate_snapshot.json",
+        " M eval/gate_run_snapshot.json",
+        " M eval/load_1000_snapshot.json",
+        " M eval/load_100_snapshot.json",
+        " M eval/load_10_snapshot.json",
+        " M eval/real_user_rollout_gate_snapshot.json",
+        " M eval/self_service_ops_gate_snapshot.json",
+        " M eval/uat_scoreboard_snapshot.json"
       ]
     },
     "max_revocation_convergence_seconds": 2.0
@@ -92,20 +65,20 @@
   ],
   "remote_http_signed_manifest": {
     "atom_count": 1,
-    "atom_envelope_hash": "32ece60cf75a869a27b36803a9a88fd6bbd3707d9a3ec3907d0ad82090d8dc17",
-    "atom_id": "sha256:c468437c80152ffde96dd45ad869751faf3f7767fe012c175824e6303915f85e",
+    "atom_envelope_hash": "b848302546f4c88732fd2d1c608649254610947ead77555879e2feb8d77e3cab",
+    "atom_id": "sha256:f03ace24a0ed2390e406f0c304e90a85e62e418b44c1fd7f1c6ef3d1b1ce88dd",
     "channel": "global",
-    "expires_at": "2026-05-27T22:51:39Z",
-    "manifest_hash": "d4df3f7f7aa02d44e2c97b38e34281e00aaf90065c69a7c300a3c1f374286d19",
-    "manifest_signature_key_id": "ed25519:c5208f7a329ba0e8",
+    "expires_at": "2026-05-28T08:07:01Z",
+    "manifest_hash": "1ae152e946af7fbdc2f48f0e7802d1f65f83141b2d18d8c0a8cf793f81cfaf5f",
+    "manifest_signature_key_id": "ed25519:f0d574e0fa771b17",
     "passed": true,
     "receipt_decision": "global_candidate",
-    "receipt_hash": "9995b551e574c3a555d146a293b53cfb39ac99536da62d746c412d1655949b5f",
-    "receipt_id": "receipt-sha256:06545fea091702f9891b65400a44359d0f72b589d33511b16442bb3eb477ab6f",
-    "registry_key_id": "ed25519:c5208f7a329ba0e8",
+    "receipt_hash": "42f7a7a1cb9efd0d90bee615f4b51fa69c30ecef60c2a93b160d33126ba1617f",
+    "receipt_id": "receipt-sha256:cf965afe3ab9c71d6f0db4d4957101efc50e8b7db52c0f1ed9117c925a406479",
+    "registry_key_id": "ed25519:f0d574e0fa771b17",
     "sequence": 1,
     "tombstone_count_after_revoke": 1,
-    "tombstone_hash": "520bd10cec89b35dc6721bc2287aea59f723e0573bf53bd985ff609d3823e797"
+    "tombstone_hash": "d051f68c5b3859a42081bace1ca186d522a272b91cb19152fc5ec46871956f12"
   },
   "replay_protection": {
     "error": "registry manifest replay detected",
@@ -113,16 +86,16 @@
   },
   "revocation_convergence": {
     "after_revocation_matches": 0,
-    "observed_seconds": 0.33627915382385254,
+    "observed_seconds": 0.18581461906433105,
     "passed": true,
     "post_revocation_get_atom_is_none": true,
     "reimport_suppressed": true,
     "second_sync": {
       "imported": 0,
-      "manifest_hash": "8ca9e736da40b68a7191487c26999a42dc128a93dbaf63a1232e0448ca645001",
+      "manifest_hash": "3692e1f3b00d9932ee5731e165f5ac69acdde4cb6df21c00c838e0cf83dfffe5",
       "manifest_sequence": 2,
       "remote": true,
-      "revocation_convergence_seconds": 0.33627915382385254,
+      "revocation_convergence_seconds": 0.18581461906433105,
       "revoked": 1,
       "skipped": 1
     },
@@ -132,8 +105,8 @@
     "borg_version": "3.3.14",
     "confidence_gate_canary": true,
     "fingerprint": {
-      "borg_dir": "/tmp/tmp.MDrzMacGTt/borg-home/guild",
-      "borg_home": "/tmp/tmp.MDrzMacGTt/borg-home",
+      "borg_dir": "/root/.borg/guild",
+      "borg_home": "/root/.borg",
       "borg_version": "3.3.14",
       "confidence_gate_canary": {
         "passed": true,
@@ -157,18 +130,18 @@
         "borg.integrations.mcp_server._detect_technology": {
           "argcount": 2,
           "exists": true,
-          "firstlineno": 2478,
+          "firstlineno": 2479,
           "function": "_detect_technology",
           "module": "borg.integrations.mcp_server",
-          "sha256": "af11ec5e7c38a6247834bdfca52d964417e1b60de43fb7f69b4044fd8259cc6e"
+          "sha256": "cc73c659d83088b24445050d7df03aceb1d5c4f4537c1982bfb86daccbbf1339"
         },
         "borg.integrations.mcp_server.borg_observe": {
           "argcount": 5,
           "exists": true,
-          "firstlineno": 3807,
+          "firstlineno": 3818,
           "function": "borg_observe",
           "module": "borg.integrations.mcp_server",
-          "sha256": "b52f09f7af18b0868cfc2df7f4a6d2b9089f7149f9eab0f8e111092f7c06371e"
+          "sha256": "4e894045db9a0ee073cc12453e96f247b602d6969ed60ee5f303572c2c7bce7e"
         }
       },
       "modules": {
@@ -198,11 +171,11 @@
         },
         "borg.integrations.mcp_server": {
           "exists": true,
-          "mtime": 1779921903.7747402,
-          "mtime_iso_utc": "2026-05-27T22:45:03Z",
+          "mtime": 1779948089.6942778,
+          "mtime_iso_utc": "2026-05-28T06:01:29Z",
           "path": "/root/hermes-workspace/borg/borg/integrations/mcp_server.py",
-          "sha256": "d39e98c3c35f31f31790d76fce11df86f254c053ca5f842ad13ed24c363c9fbb",
-          "size": 160589
+          "sha256": "ed85db93c8733f095688b5bf7becf07fb767fc9fc83c6631cd53f7b162235144",
+          "size": 161601
         }
       },
       "observe_behavior_canary": {
@@ -218,18 +191,18 @@
         "synthetic_meta_guidance_safe": false
       },
       "paths": {
-        "atom_db_path": "/tmp/tmp.MDrzMacGTt/borg-home/atoms.db",
-        "borg_dir": "/tmp/tmp.MDrzMacGTt/borg-home/guild",
-        "borg_home": "/tmp/tmp.MDrzMacGTt/borg-home",
-        "embedding_cache_path": "/tmp/tmp.MDrzMacGTt/borg-home/embeddings.pkl",
-        "embedding_index_path": "/tmp/tmp.MDrzMacGTt/borg-home/embeddings_index.pkl",
-        "failure_memory_dir": "/tmp/tmp.MDrzMacGTt/borg-home/failures",
-        "guild_db_path": "/tmp/tmp.MDrzMacGTt/borg-home/guild/guild.db",
-        "tenant_secret_path": "/tmp/tmp.MDrzMacGTt/borg-home/tenant_secret",
-        "trace_db_path": "/tmp/tmp.MDrzMacGTt/borg-home/traces.db",
-        "v3_db_path": "/tmp/tmp.MDrzMacGTt/borg-home/borg_v3.db"
+        "atom_db_path": "/root/.borg/atoms.db",
+        "borg_dir": "/root/.borg/guild",
+        "borg_home": "/root/.borg",
+        "embedding_cache_path": "/root/.borg/embeddings.pkl",
+        "embedding_index_path": "/root/.borg/embeddings_index.pkl",
+        "failure_memory_dir": "/root/.borg/failures",
+        "guild_db_path": "/root/.borg/guild/guild.db",
+        "tenant_secret_path": "/root/.borg/tenant_secret",
+        "trace_db_path": "/root/.borg/traces.db",
+        "v3_db_path": "/root/.borg/borg_v3.db"
       },
-      "pid": 726014,
+      "pid": 742874,
       "python": "3.11.15",
       "reload_status": "loaded_code_matches_source_behavior",
       "schema_version": 1,
