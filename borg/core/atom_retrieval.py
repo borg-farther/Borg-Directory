@@ -20,21 +20,27 @@ def format_atom_for_agent(atom: dict, max_chars: int = 900) -> str:
     learning = atom.get("learning") or {}
     evidence = atom.get("evidence") or {}
     trust = atom.get("trust") or {}
-    tenant_count = trust.get("verified_tenant_count", trust.get("independent_tenant_count", 1))
+    try:
+        tenant_count = max(int(trust.get("verified_tenant_count") or 0), 0)
+    except (TypeError, ValueError):
+        tenant_count = 0
 
     avoid = learning.get("avoid") or []
     if isinstance(avoid, list):
         avoid_text = "; ".join(_safe(x) for x in avoid[:3] if x)
     else:
         avoid_text = _safe(avoid)
+    tech_text = ", ".join(_safe(t) for t in task.get("technology", [])[:4] if str(t).strip())
+    evidence_type = _safe(evidence.get("type", "unknown"))
+    evidence_strength = _safe(evidence.get("strength", "unknown"))
 
     lines = [
         HEADER,
         f"Pattern: {_safe(task.get('error_class', 'unknown'))} / {_safe(task.get('error_pattern', 'unknown'))}",
-        f"Tech: {', '.join(str(t) for t in task.get('technology', [])[:4])}",
+        f"Tech: {tech_text}",
         f"Worked before: {_safe(learning.get('worked', ''))}",
         f"Avoid: {avoid_text}",
-        f"Evidence: {evidence.get('type', 'unknown')} / {evidence.get('strength', 'unknown')}; tenants={tenant_count}",
+        f"Evidence: {evidence_type} / {evidence_strength}; tenants={tenant_count}",
     ]
     output = "\n".join(line for line in lines if line.strip())
     return output[:max_chars]

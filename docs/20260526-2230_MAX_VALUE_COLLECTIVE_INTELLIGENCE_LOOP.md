@@ -1,6 +1,6 @@
 # Max-value collective intelligence loop proof
 
-**File rev:** 20260527-2225 rev D
+**File rev:** 20260528-0534 rev F
 **Scope:** Borg outcome-grounded value loop primitives.
 **Verdict:** **GO for internal max-value loop primitives; NO-GO for external-user lift until first-10 rows exist.**
 
@@ -14,6 +14,9 @@ The requested loop is:
    - A privacy-safe contribution ledger records intervention/outcome/atom-candidate/registry-promotion events with HMAC tenant pseudonyms and redacted metadata.
    - Receipts are exported as signed `borg_outcome_receipt` envelopes; unsigned hand-written JSON, tampered envelopes, and self-signed envelopes from untrusted receipt signer keys do not count toward registry quorum.
    - Outcome tenant pseudonyms must be HMAC-shaped and must match the intervention tenant; one intervention cannot mint multiple tenant outcomes.
+   - Outcome receipts cannot be rebound to a different intervention cluster; caller-supplied `cluster_id` must match the recorded intervention cluster.
+   - Atom-bound outcome receipts must match an atom id that was recorded in the intervention `source_refs`; interventions with no source atom can only create cluster-level receipts.
+   - When `intervention_id` is omitted, MCP outcome recording requires an explicit session key; it no longer falls back to process-global state.
 
 2. **Verified helpfulness**
    - Outcome receipts store `outcome`, `helpful`, `verified`, redacted verification command, tenant pseudonym, time saved, tokens saved, and dead ends avoided.
@@ -27,7 +30,7 @@ The requested loop is:
    - Registry promotion computes tenant quorum from signed exported verified helpful outcome receipts in `registry/outcomes/`.
    - Payload `trust.independent_tenant_count` remains advisory and is ignored for global quorum.
    - Direct caller-supplied `verified_tenant_count` is ignored unless trusted operator/test code explicitly opts into the bypass; normal ingestion fails closed to registry-computed receipts.
-   - Cluster-derived atom promotion may rebind receipts from an older source atom only through the local promotion path, only when the candidate evidence names an explicit same-cluster supporting receipt allowlist, the receipt signer keys are trusted by the local/export boundary, and the candidate atom id is explicitly trusted. Direct public ingestion cannot piggyback on another atom's receipts.
+   - Cluster-derived atom promotion may rebind receipts from an older source atom or cluster-level receipts only through the local promotion path, only when the candidate evidence names an explicit same-cluster supporting receipt allowlist, the receipt signer keys are trusted by the local/export boundary, and the candidate atom id is explicitly trusted. Direct public ingestion cannot piggyback on another atom's or cluster-only receipts.
 
 5. **Sanitized atom candidate and promotion path**
    - `build_learning_atom_candidate()` distills a cluster into a sanitized global-candidate atom only after independent verified-helpful tenant quorum.
@@ -36,6 +39,7 @@ The requested loop is:
 
 6. **Unified scored retrieval**
    - `unified_collective_retrieve()` ranks learning atoms using text match, verified tenant quorum, helpful outcome receipts, and negative evidence.
+   - Cluster-level helpfulness is borrowed only for atoms that already carry store/registry-verified quorum and outcome-receipt evidence for the same cluster; unverified same-cluster atoms do not inherit someone else's receipt history.
    - Retrieval returns score reasons so agents can see why a memory was ranked.
 
 7. **First-10 measured lift boundary**
@@ -77,10 +81,13 @@ The requested loop is:
   - direct ingestion keeps cross-atom receipt rebinding disabled; local cluster promotion enables it only with same-cluster supporting receipt IDs, trusted receipt signer keys, and an explicit trusted candidate atom id
 
 - `borg/core/atom_store.py`
-  - `AtomStore.search_atoms()` exposes store/registry-verified tenant counts only; org/local payload tenant-count hints remain visible as hints but are not labeled verified
+  - `AtomStore.search_atoms()` and `AtomStore.get_atom()` expose store/registry-verified tenant counts only; org/local payload tenant-count hints remain visible as hints but are not labeled verified
+
+- `borg/core/atom_retrieval.py`
+  - `format_atom_for_agent()` treats missing verified quorum as `0` instead of falling back to payload hints, and sanitizes evidence/technology fields before rendering
 
 - `eval/run_collective_intelligence_loop_gate.py`
-  - executable end-to-end gate for the full internal loop
+  - executable end-to-end gate for the full internal loop, including strict direct recompute (`0`) versus explicit trusted rebind recompute (`3`) for promoted cluster atoms
 
 ## Proof command
 
@@ -100,16 +107,18 @@ Expected summary:
 
 ## Gate invariants
 
-The executable gate asserts:
+The executable gate plus focused security/MCP/retrieval tests assert:
 
 - interventions are recorded;
 - verified outcome receipts are exported as signed envelopes;
 - dedupe cluster is stable;
 - registry computes quorum from trusted-signer receipts;
 - cluster-derived promotion stages a signed atom from same-cluster supporting receipt IDs;
-- payload tenant-count inflation is ignored and org/local payload hints are not exposed as verified quorum;
+- direct public ingestion rejects both source-atom and cluster-only receipt piggybacking unless the trusted local promotion path supplies explicit lineage;
+- outcome receipts reject cross-cluster rebinding and reject atom ids that were not recorded in the intervention `source_refs`;
+- payload tenant-count inflation is ignored and org/local payload hints are not exposed as verified quorum through search, get-by-id, or agent formatting;
 - unified retrieval ranks the promoted atom;
-- retrieval explains verified quorum and helpful outcomes;
+- retrieval explains verified quorum and helpful outcomes only when those evidence paths are bound to the atom or a trusted promoted candidate;
 - negative evidence is retained;
 - first-10 external-user rows are not faked.
 
@@ -121,7 +130,7 @@ No. The gate deliberately sets payload `independent_tenant_count` to `99`; regis
 
 ### Could a new atom steal quorum from an unrelated old atom?
 
-No. Direct registry ingestion cannot count receipts tied to another atom. The only allowed cross-atom case is the local cluster-promotion path: the candidate must carry same-cluster evidence plus exact supporting receipt IDs, the caller must provide the trusted candidate atom id, receipt signer keys must be in the trusted export allowlist, and quorum is still recomputed by reading and verifying those signed receipts.
+No. Direct registry ingestion cannot count receipts tied to another atom or cluster-only receipts. Earlier in the chain, `record_outcome()` also refuses to mint an atom-bound receipt unless that atom id was part of the recorded intervention `source_refs`; interventions with no source atom can only produce cluster-level evidence. The only allowed cross-atom/cluster-level case is the local cluster-promotion path: the candidate must carry same-cluster evidence plus exact supporting receipt IDs, the caller must provide the trusted candidate atom id, receipt signer keys must be in the trusted export allowlist, and quorum is still recomputed by reading and verifying those signed receipts.
 
 ### Could duplicate wording inflate learning?
 

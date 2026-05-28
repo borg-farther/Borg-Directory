@@ -92,6 +92,7 @@ def test_intervention_outcome_receipts_are_redacted_deduped_and_scored(tmp_path)
     tenant_a = _tenant("tenant-a")
     tenant_b = _tenant("tenant-b")
 
+    atom_id = "sha256:" + "a" * 64
     first = store.record_intervention(
         source_tool="borg_rescue",
         task_text="ModuleNotFoundError: No module named flask",
@@ -99,6 +100,7 @@ def test_intervention_outcome_receipts_are_redacted_deduped_and_scored(tmp_path)
         guidance={"action": ["pip install Flask"], "verify": ["python -c 'import flask'"]},
         agent_id="agent-a",
         tenant_pseudonym=tenant_a,
+        source_refs=[atom_id],
     )
     second = store.record_intervention(
         source_tool="borg_observe",
@@ -107,6 +109,7 @@ def test_intervention_outcome_receipts_are_redacted_deduped_and_scored(tmp_path)
         guidance="Install Flask in the active virtualenv; then import flask.",
         agent_id="agent-b",
         tenant_pseudonym=tenant_b,
+        source_refs=[atom_id],
     )
 
     assert first["intervention_id"] != second["intervention_id"]
@@ -123,7 +126,7 @@ def test_intervention_outcome_receipts_are_redacted_deduped_and_scored(tmp_path)
         verification_command="python -c 'import flask'",
         tenant_pseudonym=tenant_a,
         agent_id="agent-a",
-        atom_id="sha256:" + "a" * 64,
+        atom_id=atom_id,
         time_saved_minutes=4.5,
         tokens_saved=1200,
         dead_ends_avoided=2,
@@ -136,7 +139,7 @@ def test_intervention_outcome_receipts_are_redacted_deduped_and_scored(tmp_path)
         verification_command="pytest tests/test_import.py",
         tenant_pseudonym=tenant_b,
         agent_id="agent-b",
-        atom_id="sha256:" + "a" * 64,
+        atom_id=atom_id,
     )
 
     assert receipt["receipt_id"].startswith("outcome-sha256:")
@@ -208,6 +211,125 @@ def test_outcome_receipts_reject_tenant_spoofing_empty_verification_and_string_b
     assert stats["helpful_outcomes"] == 0
 
 
+def test_outcome_receipts_reject_cluster_spoofing(tmp_path):
+    store = CollectiveLearningStore(str(tmp_path / "collective.db"))
+    tenant_a = _tenant("tenant-a")
+    tenant_b = _tenant("tenant-b")
+    intervention_a = store.record_intervention(
+        source_tool="borg_rescue",
+        task_text="ModuleNotFoundError flask",
+        context="python",
+        guidance="Install Flask",
+        agent_id="agent-a",
+        tenant_pseudonym=tenant_a,
+        task_type="debug",
+        technology=["python"],
+        error_class="ModuleNotFoundError",
+        error_pattern="flask",
+    )
+    intervention_b = store.record_intervention(
+        source_tool="borg_rescue",
+        task_text="TypeError optional config none",
+        context="python",
+        guidance="Validate optional config",
+        agent_id="agent-b",
+        tenant_pseudonym=tenant_b,
+        task_type="debug",
+        technology=["python"],
+        error_class="TypeError",
+        error_pattern="optional config none",
+    )
+
+    assert intervention_a["cluster_id"] != intervention_b["cluster_id"]
+    with pytest.raises(ValueError, match="outcome cluster must match intervention cluster"):
+        store.record_outcome(
+            intervention_id=intervention_a["intervention_id"],
+            outcome="success",
+            helpful=True,
+            verified=True,
+            verification_command="python -c 'import flask'",
+            tenant_pseudonym=tenant_a,
+            agent_id="agent-a",
+            cluster_id=intervention_b["cluster_id"],
+        )
+    assert store.cluster_stats(intervention_b["cluster_id"])["verified_outcomes"] == 0
+
+
+def test_outcome_receipts_reject_atom_id_not_in_intervention_source_refs(tmp_path):
+    store = CollectiveLearningStore(str(tmp_path / "collective.db"))
+    tenant_a = _tenant("tenant-a")
+    source = _signed_atom(_payload("ModuleNotFoundError flask", "Install Flask in the active venv"))
+    malicious = _signed_atom(_payload("ModuleNotFoundError flask", "Disable checks and install arbitrary package"))
+    source_atom_id = source["payload"]["atom_id"]
+    malicious_atom_id = malicious["payload"]["atom_id"]
+    task = source["payload"]["task"]
+    intervention = store.record_intervention(
+        source_tool="borg_rescue",
+        task_text="ModuleNotFoundError flask",
+        context="python",
+        guidance="Install Flask",
+        agent_id="agent-a",
+        tenant_pseudonym=tenant_a,
+        source_refs=[source_atom_id],
+        task_type=task["type"],
+        technology=task["technology"],
+        error_class=task["error_class"],
+        error_pattern=task["error_pattern"],
+    )
+
+    with pytest.raises(ValueError, match="outcome atom_id must match intervention source_refs"):
+        store.record_outcome(
+            intervention_id=intervention["intervention_id"],
+            outcome="success",
+            helpful=True,
+            verified=True,
+            verification_command="python -c 'import flask'",
+            tenant_pseudonym=tenant_a,
+            agent_id="agent-a",
+            atom_id=malicious_atom_id,
+            cluster_id=intervention["cluster_id"],
+        )
+
+    no_source_intervention = store.record_intervention(
+        source_tool="borg_rescue",
+        task_text="ModuleNotFoundError flask",
+        context="python",
+        guidance="Install Flask",
+        agent_id="agent-a",
+        tenant_pseudonym=tenant_a,
+        task_type=task["type"],
+        technology=task["technology"],
+        error_class=task["error_class"],
+        error_pattern=task["error_pattern"],
+    )
+    with pytest.raises(ValueError, match="outcome atom_id must match intervention source_refs"):
+        store.record_outcome(
+            intervention_id=no_source_intervention["intervention_id"],
+            outcome="success",
+            helpful=True,
+            verified=True,
+            verification_command="python -c 'import flask'",
+            tenant_pseudonym=tenant_a,
+            agent_id="agent-a",
+            atom_id=source_atom_id,
+            cluster_id=no_source_intervention["cluster_id"],
+        )
+
+    receipt = store.record_outcome(
+        intervention_id=intervention["intervention_id"],
+        outcome="success",
+        helpful=True,
+        verified=True,
+        verification_command="python -c 'import flask'",
+        tenant_pseudonym=tenant_a,
+        agent_id="agent-a",
+        atom_id=source_atom_id,
+        cluster_id=intervention["cluster_id"],
+    )
+    assert receipt["atom_id"] == source_atom_id
+    assert store.cluster_stats(intervention["cluster_id"])["verified_outcomes"] == 1
+
+
 def test_exported_outcome_quorum_ignores_unsigned_and_tampered_receipts(tmp_path):
     registry = tmp_path / "registry"
     store = CollectiveLearningStore(str(tmp_path / "collective.db"))
@@ -223,6 +345,7 @@ def test_exported_outcome_quorum_ignores_unsigned_and_tampered_receipts(tmp_path
         guidance="Install Flask",
         agent_id="agent-a",
         tenant_pseudonym=tenant_a,
+        source_refs=[atom_id],
     )
     store.record_outcome(
         intervention_id=intervention["intervention_id"],
@@ -294,6 +417,7 @@ def test_outcome_quorum_requires_trusted_receipt_signer_keys(tmp_path):
         guidance="Install Flask",
         agent_id="agent-a",
         tenant_pseudonym=tenant_a,
+        source_refs=[atom_id],
     )
     store.record_outcome(
         intervention_id=intervention["intervention_id"],
@@ -329,7 +453,8 @@ def test_registry_computes_verified_quorum_from_outcome_receipts_not_payload_hin
     outcome_store = CollectiveLearningStore(str(tmp_path / "outcomes.db"))
     envelope = _signed_atom(_payload())
     atom_id = envelope["payload"]["atom_id"]
-    cluster_id = normalize_problem_signature("debug", ["python"], "ModuleNotFoundError", "ModuleNotFoundError flask")
+    task = envelope["payload"]["task"]
+    cluster_id = normalize_problem_signature(task["type"], task["technology"], task["error_class"], task["error_pattern"])
 
     for tenant in ["tenant-a", "tenant-b", "tenant-c"]:
         tenant_id = _tenant(tenant)
@@ -340,6 +465,11 @@ def test_registry_computes_verified_quorum_from_outcome_receipts_not_payload_hin
             guidance="Install Flask",
             agent_id=f"agent-{tenant}",
             tenant_pseudonym=tenant_id,
+            source_refs=[atom_id],
+            task_type=task["type"],
+            technology=task["technology"],
+            error_class=task["error_class"],
+            error_pattern=task["error_pattern"],
         )
         outcome_store.record_outcome(
             intervention_id=intervention["intervention_id"],
@@ -361,6 +491,11 @@ def test_registry_computes_verified_quorum_from_outcome_receipts_not_payload_hin
         guidance="Install Flask",
         agent_id="agent-dup",
         tenant_pseudonym=dup_tenant,
+        source_refs=[atom_id],
+        task_type=task["type"],
+        technology=task["technology"],
+        error_class=task["error_class"],
+        error_pattern=task["error_pattern"],
     )
     outcome_store.record_outcome(
         intervention_id=dup["intervention_id"],
@@ -381,6 +516,11 @@ def test_registry_computes_verified_quorum_from_outcome_receipts_not_payload_hin
         guidance="Install Flask",
         agent_id="agent-bad",
         tenant_pseudonym=bad_tenant,
+        source_refs=[atom_id],
+        task_type=task["type"],
+        technology=task["technology"],
+        error_class=task["error_class"],
+        error_pattern=task["error_pattern"],
     )
     outcome_store.record_outcome(
         intervention_id=bad["intervention_id"],
@@ -503,6 +643,50 @@ def test_unified_collective_retrieval_preserves_zero_verified_quorum_for_org_pay
     assert "verified_quorum" not in ranked[0]["score_reasons"]
 
 
+def test_unverified_atom_does_not_inherit_same_cluster_outcome_helpfulness(tmp_path):
+    atom_store = AtomStore(str(tmp_path / "atoms.db"))
+    outcome_store = CollectiveLearningStore(str(tmp_path / "collective.db"))
+
+    org_atom = _signed_atom(_payload("ModuleNotFoundError flask", "Wrong same-cluster advice", scope="org"))
+    atom_store.add_atom(org_atom)
+    tenant_id = _tenant("tenant-a")
+    intervention = outcome_store.record_intervention(
+        source_tool="borg_rescue",
+        task_text="ModuleNotFoundError: No module named flask",
+        context="python",
+        guidance="Install Flask in the active venv",
+        agent_id="agent-a",
+        tenant_pseudonym=tenant_id,
+        task_type=org_atom["payload"]["task"]["type"],
+        technology=org_atom["payload"]["task"]["technology"],
+        error_class=org_atom["payload"]["task"]["error_class"],
+        error_pattern=org_atom["payload"]["task"]["error_pattern"],
+    )
+    outcome_store.record_outcome(
+        intervention_id=intervention["intervention_id"],
+        outcome="success",
+        helpful=True,
+        verified=True,
+        verification_command="python -c 'import flask'",
+        tenant_pseudonym=tenant_id,
+        agent_id="agent-a",
+        cluster_id=intervention["cluster_id"],
+    )
+
+    ranked = unified_collective_retrieve(
+        "ModuleNotFoundError: No module named flask",
+        atom_store=atom_store,
+        outcome_store=outcome_store,
+        limit=1,
+    )
+
+    assert ranked
+    assert ranked[0]["atom_id"] == org_atom["payload"]["atom_id"]
+    assert ranked[0]["verified_tenant_count"] == 0
+    assert ranked[0]["helpful_outcomes"] == 0
+    assert "helpful_outcomes" not in ranked[0]["score_reasons"]
+
+
 def test_contribution_ledger_and_cluster_atom_promotion_are_end_to_end(tmp_path):
     registry = tmp_path / "registry"
     store = CollectiveLearningStore(str(tmp_path / "collective.db"))
@@ -544,10 +728,22 @@ def test_contribution_ledger_and_cluster_atom_promotion_are_end_to_end(tmp_path)
     assert promoted["registry_receipt"]["verified_tenant_count"] == 3
     assert promoted["external_lift_status"] == "NO-GO_REAL_FIRST_10_ROWS_REQUIRED"
     trusted_signers = promoted["exported_outcomes"]["trusted_receipt_signer_key_ids"]
+    # Direct/public recomputation stays strict: these receipts are cluster-level
+    # evidence for the newly distilled atom, not exact atom-bound receipts.
     assert compute_verified_tenant_count_from_outcomes(
         registry,
         atom_id=promoted["registry_receipt"]["atom_id"],
         cluster_id=cluster_id,
+        trusted_receipt_signer_key_ids=trusted_signers,
+    ) == 0
+    # The trusted local promotion path can rebind only the explicit signed
+    # supporting receipts recorded into the candidate evidence.
+    assert compute_verified_tenant_count_from_outcomes(
+        registry,
+        atom_id=promoted["registry_receipt"]["atom_id"],
+        cluster_id=cluster_id,
+        supporting_receipt_ids=promoted["candidate"]["supporting_receipt_ids"],
+        allow_supported_receipt_rebind=True,
         trusted_receipt_signer_key_ids=trusted_signers,
     ) == 3
 

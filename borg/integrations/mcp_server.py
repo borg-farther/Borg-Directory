@@ -939,13 +939,14 @@ TOOLS: List[Dict[str, Any]] = [
                 "helpful": {"type": "boolean", "description": "Whether the Borg guidance helped."},
                 "verified": {"type": "boolean", "description": "Whether the outcome was verified by command/test/user evidence."},
                 "verification_command": {"type": "string", "description": "Command or evidence used to verify, redacted before storage."},
-                "tenant_pseudonym": {"type": "string", "default": "local"},
+                "tenant_pseudonym": {"type": "string", "description": "Optional raw tenant name or hmac-sha256 pseudonym. Defaults to BORG_TENANT_PSEUDONYM, then local; must match the intervention tenant after normalization."},
                 "agent_id": {"type": "string", "default": "default"},
-                "atom_id": {"type": "string", "description": "Optional learning atom this outcome supports."},
+                "atom_id": {"type": "string", "description": "Optional learning atom this outcome supports. Must match an atom id recorded in the intervention source_refs; omit for cluster-level evidence."},
                 "time_saved_minutes": {"type": "number", "default": 0},
                 "tokens_saved": {"type": "integer", "default": 0},
                 "dead_ends_avoided": {"type": "integer", "default": 0},
                 "notes": {"type": "string"},
+                "session_id": {"type": "string", "description": "Session key used to resolve the last Borg intervention when intervention_id is omitted."},
             },
             "required": ["outcome", "helpful", "verified"],
         },
@@ -2718,7 +2719,10 @@ def borg_record_outcome(
     try:
         from borg.core.collective_learning import CollectiveLearningStore
 
-        resolved_intervention = intervention_id or _last_collective_intervention(session_id)
+        resolved_session = session_id
+        if not intervention_id and not resolved_session:
+            return json.dumps({"success": False, "error": "session_id is required when intervention_id is omitted"})
+        resolved_intervention = intervention_id or _last_collective_intervention(resolved_session)
         if not resolved_intervention:
             return json.dumps({"success": False, "error": "intervention_id is required"})
         receipt = CollectiveLearningStore().record_outcome(
@@ -3497,6 +3501,13 @@ def _call_tool_impl(name: str, arguments: Dict[str, Any]) -> str:
         )
 
     elif name == "borg_record_outcome":
+        meta = arguments.get("_meta") if isinstance(arguments, dict) else None
+        explicit_session_id = (
+            arguments.get("session_id", "")
+            or arguments.get("_hermes_session_id", "")
+            or ((meta or {}).get("hermes_session_id", "") if isinstance(meta, dict) else "")
+            or ((meta or {}).get("session_id", "") if isinstance(meta, dict) else "")
+        )
         return borg_record_outcome(
             intervention_id=arguments.get("intervention_id", ""),
             outcome=arguments.get("outcome", ""),
@@ -3510,7 +3521,7 @@ def _call_tool_impl(name: str, arguments: Dict[str, Any]) -> str:
             tokens_saved=arguments.get("tokens_saved", 0),
             dead_ends_avoided=arguments.get("dead_ends_avoided", 0),
             notes=arguments.get("notes", ""),
-            session_id=_human_session_key(arguments),
+            session_id=explicit_session_id,
         )
 
     elif name == "borg_collective_retrieve":

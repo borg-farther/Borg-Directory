@@ -151,6 +151,20 @@ def run_gate() -> Dict[str, Any]:
         value_summary = outcomes.recent_value_summary()
         atom_candidate = outcomes.build_learning_atom_candidate(cluster_id)
         promoted = outcomes.promote_cluster_to_registry(cluster_id, registry, generate_signing_key())
+        promoted_direct_quorum = compute_verified_tenant_count_from_outcomes(
+            registry,
+            atom_id=promoted["registry_receipt"]["atom_id"],
+            cluster_id=cluster_id,
+            trusted_receipt_signer_key_ids=trusted_signers,
+        )
+        promoted_rebind_quorum = compute_verified_tenant_count_from_outcomes(
+            registry,
+            atom_id=promoted["registry_receipt"]["atom_id"],
+            cluster_id=cluster_id,
+            supporting_receipt_ids=promoted["candidate"]["supporting_receipt_ids"],
+            allow_supported_receipt_rebind=True,
+            trusted_receipt_signer_key_ids=trusted_signers,
+        )
         promoted_atoms = AtomStore(str(root / "promoted-atoms.db"))
         promoted_atoms.add_atom(promoted["envelope"], verified_tenant_count=promoted["registry_receipt"]["verified_tenant_count"])
         ranked = unified_collective_retrieve("ModuleNotFoundError: No module named flask", atom_store=promoted_atoms, outcome_store=outcomes, limit=3)
@@ -171,6 +185,8 @@ def run_gate() -> Dict[str, Any]:
             "contribution_ledger_complete": contribution_summary["by_type"].get("intervention") == 4 and contribution_summary["by_type"].get("outcome_receipt") == 4,
             "atom_candidate_distilled_from_receipts": atom_candidate["promotable"] is True and atom_candidate["helpful_verified_tenants"] == 3,
             "cluster_promotion_signed_and_staged": promoted["registry_receipt"]["decision"] == "global_candidate" and promoted["registry_receipt"]["reason"] == "accepted" and promoted["registry_receipt"]["verified_tenant_count"] == 3,
+            "cluster_promotion_direct_recompute_strict": promoted_direct_quorum == 0,
+            "cluster_promotion_rebind_requires_supporting_receipts": promoted_rebind_quorum == 3,
             "first10_not_faked": int(first10_counts.get("real_users", 0)) == 0 and int(first10_value.get("rows_with_measured_value", 0)) == 0,
         }
         success = all(checks.values())
@@ -193,7 +209,13 @@ def run_gate() -> Dict[str, Any]:
                 "helpful_verified_tenants": atom_candidate["helpful_verified_tenants"],
             },
             "registry_promotion": promoted["registry_receipt"],
-            "registry_quorum": {"computed_from_outcome_receipts": computed_quorum, "payload_hint": payload["trust"]["independent_tenant_count"], "receipt_verified_tenant_count": receipt.verified_tenant_count},
+            "registry_quorum": {
+                "computed_from_outcome_receipts": computed_quorum,
+                "payload_hint": payload["trust"]["independent_tenant_count"],
+                "receipt_verified_tenant_count": receipt.verified_tenant_count,
+                "promoted_direct_recompute": promoted_direct_quorum,
+                "promoted_explicit_rebind_recompute": promoted_rebind_quorum,
+            },
             "retrieval_top": ranked[0] if ranked else None,
             "first10_counts": first10_counts,
             "first10_value_counts": first10_value,

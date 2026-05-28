@@ -28,6 +28,10 @@ def test_collective_intelligence_loop_gate_proves_internal_loop_without_external
     assert data["registry_quorum"]["computed_from_outcome_receipts"] == 3
     assert data["registry_quorum"]["payload_hint"] == 99
     assert data["registry_quorum"]["receipt_verified_tenant_count"] == 3
+    assert data["registry_quorum"]["promoted_direct_recompute"] == 0
+    assert data["registry_quorum"]["promoted_explicit_rebind_recompute"] == 3
+    assert data["checks"]["cluster_promotion_direct_recompute_strict"] is True
+    assert data["checks"]["cluster_promotion_rebind_requires_supporting_receipts"] is True
     assert data["retrieval_top"]["source"] == "learning_atom"
     assert data["contribution_summary"]["by_type"]["intervention"] == 4
     assert data["contribution_summary"]["by_type"]["outcome_receipt"] == 4

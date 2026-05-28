@@ -1,6 +1,6 @@
 # Federated learning optimality audit
 
-**Date:** 2026-05-27 22:25 UTC
+**Date:** 2026-05-28 05:34 UTC
 **Scope:** Borg remote/global/federated learning mechanism, value path, truth discipline, and agent impact.  
 **Verdict:** **NO-GO for Google/God-tier product optimality today. GO for the signed remote protocol slice and GO for internal outcome-grounded loop primitives.**
 
@@ -18,7 +18,7 @@ The question was not simply “does sync work?” It splits into five subtasks:
 
 **No — Borg is not yet Google/God-tier in the market because external outcome rows are still zero.**
 
-It is **strong, safety-first infrastructure** for remote signed propagation, and the follow-up max-value loop work now adds **internal outcome-grounded primitives**: contribution ledger events, signed outcome receipts, trusted receipt signer allowlists, dedupe clusters, sanitized atom candidates, registry-computed quorum from trusted receipts, cluster-derived promotion with explicit supporting receipt IDs and trusted candidate atom id, and unified scored retrieval. Those are mechanism GO, not product-impact GO.
+It is **strong, safety-first infrastructure** for remote signed propagation, and the follow-up max-value loop work now adds **internal outcome-grounded primitives**: contribution ledger events, signed outcome receipts, trusted receipt signer allowlists, intervention `source_refs` binding for atom-bound receipts, dedupe clusters, sanitized atom candidates, registry-computed quorum from trusted receipts, cluster-derived promotion with explicit supporting receipt IDs and trusted candidate atom id, and unified scored retrieval. Those are mechanism GO, not product-impact GO.
 
 Current machine verdict from `eval/federated_learning_optimality_audit.json`:
 
@@ -67,17 +67,18 @@ Current machine verdict from `eval/federated_learning_optimality_audit.json`:
 
 ### Resolved internally — outcome grounding and contribution ledger primitives
 
-`docs/20260526-2230_MAX_VALUE_COLLECTIVE_INTELLIGENCE_LOOP.md` and `eval/run_collective_intelligence_loop_gate.py` now prove the internal path:
+`docs/20260526-2230_MAX_VALUE_COLLECTIVE_INTELLIGENCE_LOOP.md`, `eval/run_collective_intelligence_loop_gate.py`, and the focused security/MCP/retrieval regressions now prove the internal path:
 
 - Borg rescue/error-lookup guidance gets an `intervention_id`;
 - contribution events record interventions, outcome receipts, atom candidates, and registry promotions without raw tenants or private paths;
 - `borg_record_outcome` records worked/failed, helpful, verified, redacted verification command, time/tokens/dead-end fields;
+- atom-bound outcome receipts must match the recorded intervention `source_refs`; unshown atoms and no-source interventions cannot mint exact atom-bound quorum receipts;
 - exported outcome receipts are signed `borg_outcome_receipt` envelopes;
 - unsigned/tampered receipt files and self-signed receipts from untrusted signer keys do not count toward registry quorum.
 
 ### Resolved internally — quorum is registry-computed from signed receipts
 
-Current gates prevent trusting `independent_tenant_count` from the atom payload, normal registry ingestion ignores direct caller-supplied `verified_tenant_count`, and org/local payload tenant-count hints are not relabeled as verified in clean-client retrieval. Global candidate promotion now uses signed exported outcome receipts only when their signer key IDs come from the trusted local/export boundary. The remaining production caveat is Sybil-resistant external identity, which belongs to first-10/hosted-registry operations, not this internal mechanism proof.
+Current gates prevent trusting `independent_tenant_count` from the atom payload, normal registry ingestion ignores direct caller-supplied `verified_tenant_count`, direct public ingestion rejects source-atom and cluster-only receipt piggybacking, atom-bound receipts cannot be minted for atoms outside the intervention `source_refs`, and org/local payload tenant-count hints are not relabeled as verified in clean-client retrieval. Global candidate promotion now uses signed exported outcome receipts only when their signer key IDs come from the trusted local/export boundary and the local promotion path supplies explicit receipt lineage plus a trusted candidate atom id. The remaining production caveat is Sybil-resistant external identity, which belongs to first-10/hosted-registry operations, not this internal mechanism proof.
 
 ### Resolved internally — duplicate wording and trace-like repeats collapse into clusters
 

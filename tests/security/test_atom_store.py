@@ -120,6 +120,25 @@ def test_store_accepts_global_candidate_with_verified_tenant_quorum(tmp_path):
 
     assert stored is not None
     assert stored["scope"] == "global_candidate"
+    assert stored["trust"]["independent_tenant_count"] == 99
+    assert stored["trust"]["verified_tenant_count"] == 3
+
+
+def test_store_get_does_not_label_org_payload_tenant_count_as_verified(tmp_path):
+    store = AtomStore(str(tmp_path / "atoms.db"))
+    atom = _atom()
+    atom["scope"] = "org"
+    atom["trust"]["tenant_pseudonym"] = tenant_pseudonym("tenant-a", b"test-secret")
+    atom["trust"]["independent_tenant_count"] = 99
+    atom["atom_id"] = compute_atom_id(atom)
+    envelope = sign_learning_atom(atom, generate_signing_key())
+
+    atom_id = store.add_atom(envelope)
+    stored = store.get_atom(atom_id)
+
+    assert stored is not None
+    assert stored["trust"]["independent_tenant_count"] == 99
+    assert stored["trust"]["verified_tenant_count"] == 0
 
 
 def test_store_search_exposes_verified_tenant_count_not_payload_hint(tmp_path):

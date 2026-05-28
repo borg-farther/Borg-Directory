@@ -688,18 +688,31 @@ class CollectiveLearningStore:
             raise ValueError("verification_command is required when verified=True")
         with _connect(self.db_path) as conn:
             intervention = conn.execute(
-                "SELECT cluster_id, tenant_pseudonym, agent_id FROM interventions WHERE intervention_id = ?",
+                "SELECT cluster_id, tenant_pseudonym, agent_id, source_refs_json FROM interventions WHERE intervention_id = ?",
                 (intervention_id,),
             ).fetchone()
             if intervention is None:
                 raise ValueError("intervention_id not found")
-            resolved_cluster = cluster_id or str(intervention["cluster_id"])
+            intervention_cluster = str(intervention["cluster_id"])
+            requested_cluster = str(cluster_id or "")
+            if requested_cluster and requested_cluster != intervention_cluster:
+                raise ValueError("outcome cluster must match intervention cluster")
+            resolved_cluster = intervention_cluster
             intervention_tenant = str(intervention["tenant_pseudonym"])
             requested_tenant = _normalize_tenant_pseudonym(tenant_pseudonym or intervention_tenant)
             if requested_tenant != intervention_tenant:
                 raise ValueError("outcome tenant must match intervention tenant")
             resolved_tenant = intervention_tenant
             resolved_agent = _safe_text(agent_id or intervention["agent_id"], max_chars=160)
+            resolved_atom_id = _safe_text(atom_id, max_chars=160) if atom_id else ""
+            if resolved_atom_id:
+                try:
+                    source_refs_raw = json.loads(str(intervention["source_refs_json"] or "[]"))
+                except (TypeError, json.JSONDecodeError):
+                    source_refs_raw = []
+                allowed_atom_ids = {str(ref) for ref in source_refs_raw if str(ref).strip()}
+                if resolved_atom_id not in allowed_atom_ids:
+                    raise ValueError("outcome atom_id must match intervention source_refs")
             created_at = _utc_now()
             receipt_nonce = secrets.token_hex(16)
             row = {
@@ -713,7 +726,7 @@ class CollectiveLearningStore:
                 "verification_command_redacted": verification_redacted,
                 "tenant_pseudonym": resolved_tenant,
                 "agent_id": resolved_agent,
-                "atom_id": atom_id,
+                "atom_id": resolved_atom_id or None,
                 "cluster_id": resolved_cluster,
                 "time_saved_minutes": float(time_saved_minutes or 0.0),
                 "tokens_saved": int(tokens_saved or 0),
@@ -1161,15 +1174,19 @@ def compute_verified_tenant_count_from_outcomes(
         if supporting_ids is not None and receipt_id not in supporting_ids:
             continue
         receipt_atom_id = str(receipt.get("atom_id") or "")
-        # Cluster-derived atoms are often minted after the verifying outcome was
-        # recorded, so older signed receipts may carry only cluster_id. Count
-        # them for this cluster. Receipts tied to a different atom are excluded
-        # unless the trusted cluster-promotion path supplied their exact signed
-        # receipt IDs as lineage evidence.
-        if atom_id and receipt_atom_id and receipt_atom_id != atom_id and not (
-            allow_supported_receipt_rebind and supporting_ids is not None and receipt_id in supporting_ids
-        ):
-            continue
+        # Direct candidate promotion is strict: receipts must target the exact
+        # candidate atom. Cluster-level or source-atom receipts can support a new
+        # distilled atom only when the trusted local promotion path supplies their
+        # explicit signed receipt IDs as lineage evidence.
+        if atom_id:
+            exact_atom_receipt = receipt_atom_id == atom_id
+            supported_rebind = bool(
+                allow_supported_receipt_rebind
+                and supporting_ids is not None
+                and receipt_id in supporting_ids
+            )
+            if not exact_atom_receipt and not supported_rebind:
+                continue
         if cluster_id and receipt.get("cluster_id") != cluster_id:
             continue
         if not _as_bool(receipt.get("verified")):
@@ -1255,17 +1272,24 @@ def unified_collective_retrieve(
             task.get("error_class", ""),
             task.get("error_pattern", ""),
         )
+        text = _text_score(query, atom)
+        verified_tenant_count = _verified_tenant_count_from_trust(trust)
         stats = outcome_store.atom_outcome_stats(atom_id) if atom_id else {
             "helpfulness_score": 0.5,
             "helpful_outcomes": 0,
             "unhelpful_outcomes": 0,
         }
         if int(stats.get("helpful_outcomes", 0) or 0) == 0 and int(stats.get("unhelpful_outcomes", 0) or 0) == 0:
-            cluster_stats = outcome_store.cluster_stats(cluster_id)
-            if int(cluster_stats.get("interventions", 0) or 0) > 0:
-                stats = cluster_stats
-        text = _text_score(query, atom)
-        verified_tenant_count = _verified_tenant_count_from_trust(trust)
+            evidence = atom.get("evidence") or {}
+            can_use_cluster_evidence = (
+                verified_tenant_count > 0
+                and evidence.get("type") == "outcome_receipt"
+                and str(evidence.get("cluster_id") or "") == cluster_id
+            )
+            if can_use_cluster_evidence:
+                cluster_stats = outcome_store.cluster_stats(cluster_id)
+                if int(cluster_stats.get("interventions", 0) or 0) > 0:
+                    stats = cluster_stats
         quorum = min(float(verified_tenant_count), 5.0) / 5.0
         helpfulness = float(stats.get("helpfulness_score", 0.5))
         score = (0.45 * text) + (0.30 * helpfulness) + (0.20 * quorum) + (0.05 if atom_id else 0.0)

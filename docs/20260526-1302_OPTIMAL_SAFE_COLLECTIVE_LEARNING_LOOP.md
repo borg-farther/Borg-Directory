@@ -1,6 +1,6 @@
 # Optimal safe collective learning loop
 
-**File rev:** 20260527-2225 rev E
+**File rev:** 20260528-0534 rev G
 **Repo:** `/root/hermes-workspace/borg`
 **Status:** executable architecture contract + current GO/NO-GO. Local primitives and local filesystem staging are GO; remote/global/federated protocol is GO; internal outcome-grounded max-value loop primitives are GO. Broad public self-serve launch, Google/God-tier product optimality, and real external-user lift remain separate NO-GO claims until first-10 evidence rows pass.
 
@@ -240,7 +240,8 @@ Status: **GO for internal max-value loop primitives; NO-GO for Google/God-tier o
 - Local-scope atoms are rejected from sharing.
 - Self-declared global quorum is quarantined; verified quorum is accepted only when registry code supplies `verified_tenant_count`.
 - Registry-computed quorum normally requires receipts to target the candidate `atom_id`.
-- Cluster-derived promotion has a narrow source-receipt rebind: same `cluster_id`, explicit supporting receipt IDs in candidate evidence, trusted receipt signer key IDs from the local/export trust boundary, an explicit trusted candidate atom id, and signed receipt verification. Direct ingestion keeps this disabled.
+- Cluster-derived promotion has a narrow source/cluster-level receipt rebind: same `cluster_id`, explicit supporting receipt IDs in candidate evidence, trusted receipt signer key IDs from the local/export trust boundary, an explicit trusted candidate atom id, and signed receipt verification. Direct ingestion keeps this disabled, including for cluster-only receipts.
+- Atom-bound receipts can only be minted for atom ids recorded in the original intervention `source_refs`; no-source interventions are cluster-level evidence only.
 - `write_signed_registry_manifest()` signs hosted registry metadata with Ed25519 and records file hashes/sizes, expiry, sequence, and channel.
 - `sync_signed_registry_to_store()` verifies the trusted registry key, expiry, replay state, per-file hashes, and tombstones-before-atoms ordering across HTTP or filesystem registries.
 - `sync_registry_to_store()` imports tombstones before atoms so revocation wins in local staging too.

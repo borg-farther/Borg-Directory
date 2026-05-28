@@ -56,7 +56,7 @@ def test_collective_learning_loop_required_docs_exist_and_link_current_contract(
         assert (ROOT / relative_path).exists(), relative_path
 
     doc = DOC_PATH.read_text(encoding="utf-8")
-    assert "**File rev:** 20260527-2225 rev E" in doc
+    assert "**File rev:** 20260528-0534 rev G" in doc
     assert "remote/global/federated protocol is GO" in doc
     assert "docs/20260526-2046_REMOTE_FEDERATED_LEARNING_GO_PROOF.md" in doc
     assert "docs/20260526-2115_FEDERATED_LEARNING_OPTIMALITY_AUDIT.md" in doc

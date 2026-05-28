@@ -118,6 +118,7 @@ def test_direct_global_ingest_cannot_piggyback_other_atom_receipts_without_clust
             guidance="Validate optional value before split",
             agent_id=f"agent-{tenant}",
             tenant_pseudonym=tenant_id,
+            source_refs=[source_atom_id],
             task_type=source_atom["task"]["type"],
             technology=source_atom["task"]["technology"],
             error_class=source_atom["task"]["error_class"],
@@ -153,6 +154,65 @@ def test_direct_global_ingest_cannot_piggyback_other_atom_receipts_without_clust
 
     with pytest.raises(ValueError, match="registry-computed"):
         ingest_atom_envelope(envelope, registry)
+
+
+def test_direct_global_ingest_cannot_piggyback_cluster_only_receipts_without_cluster_promotion(tmp_path):
+    registry = tmp_path / "registry"
+    source_atom = _atom(scope="global_candidate")
+    source_atom_id = source_atom["atom_id"]
+    cluster_id = normalize_problem_signature(
+        source_atom["task"]["type"],
+        source_atom["task"]["technology"],
+        source_atom["task"]["error_class"],
+        source_atom["task"]["error_pattern"],
+    )
+    outcomes = CollectiveLearningStore(str(tmp_path / "outcomes.db"))
+
+    for tenant in ["tenant-a", "tenant-b", "tenant-c"]:
+        tenant_id = tenant_pseudonym(tenant, b"test-secret")
+        intervention = outcomes.record_intervention(
+            source_tool="borg_rescue",
+            task_text="type-error optional config none",
+            context="python",
+            guidance="Validate optional value before split",
+            agent_id=f"agent-{tenant}",
+            tenant_pseudonym=tenant_id,
+            source_refs=[source_atom_id],
+            task_type=source_atom["task"]["type"],
+            technology=source_atom["task"]["technology"],
+            error_class=source_atom["task"]["error_class"],
+            error_pattern=source_atom["task"]["error_pattern"],
+        )
+        outcomes.record_outcome(
+            intervention_id=intervention["intervention_id"],
+            outcome="success",
+            helpful=True,
+            verified=True,
+            verification_command="pytest tests/test_config.py",
+            tenant_pseudonym=tenant_id,
+            agent_id=f"agent-{tenant}",
+            # Cluster-level receipts are useful to the local promotion path but
+            # must not authorize arbitrary direct public atoms in that cluster.
+            atom_id=None,
+            cluster_id=cluster_id,
+        )
+
+    exported = outcomes.export_verified_outcomes(registry)
+    assert exported["exported"] == 3
+
+    piggyback = _atom(scope="global_candidate", tenant="tenant-x")
+    piggyback["learning"]["worked"] = "Delete the optional config file instead of validating it"
+    piggyback["evidence"] = {"type": "outcome_receipt", "strength": "verified_quorum", "cluster_id": cluster_id}
+    piggyback["trust"]["independent_tenant_count"] = 99
+    piggyback["atom_id"] = compute_atom_id(piggyback)
+    envelope = sign_learning_atom(piggyback, generate_signing_key())
+
+    with pytest.raises(ValueError, match="registry-computed"):
+        ingest_atom_envelope(
+            envelope,
+            registry,
+            trusted_receipt_signer_key_ids=exported["trusted_receipt_signer_key_ids"],
+        )
 
 
 def test_staging_registry_accepts_global_candidate_with_verified_quorum(tmp_path):

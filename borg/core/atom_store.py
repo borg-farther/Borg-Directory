@@ -150,8 +150,18 @@ class AtomStore:
         if self.is_revoked(atom_id):
             return None
         with _connect(self.db_path) as conn:
-            row = conn.execute("SELECT payload_json FROM atoms WHERE atom_id = ? AND revoked_at IS NULL", (atom_id,)).fetchone()
-        return json.loads(row[0]) if row else None
+            row = conn.execute(
+                "SELECT payload_json, independent_tenant_count FROM atoms WHERE atom_id = ? AND revoked_at IS NULL",
+                (atom_id,),
+            ).fetchone()
+        if not row:
+            return None
+        atom = json.loads(row["payload_json"])
+        trust = atom.setdefault("trust", {})
+        # Return the same store/registry-computed quorum contract as search:
+        # payload tenant hints remain advisory, including for direct get-by-id.
+        trust["verified_tenant_count"] = int(row["independent_tenant_count"])
+        return atom
 
     def is_revoked(self, atom_id: str | None) -> bool:
         if not atom_id:
