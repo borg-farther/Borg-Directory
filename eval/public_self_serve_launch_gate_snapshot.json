@@ -173,14 +173,14 @@
     },
     "self_service_ops_readiness": {
       "blockers": [],
-      "generated_at_utc": "2026-05-28T21:03:08.122151+00:00",
+      "generated_at_utc": "2026-05-28T21:27:07.924368+00:00",
       "passed": true,
       "report": "docs/SELF_SERVICE_OPS_READINESS_REPORT.md",
       "rollout_policy": "Controlled first-10 may proceed only when ops readiness passes; broad public self-serve still requires row-derived first-10 external evidence.",
       "snapshot": "eval/self_service_ops_gate_snapshot.json"
     }
   },
-  "generated_at_utc": "2026-05-28T21:03:08.168690+00:00",
+  "generated_at_utc": "2026-05-28T21:27:07.968009+00:00",
   "max_recommended_real_users_now": 10,
   "ready_for_controlled_first_10_beta": true,
   "ready_for_public_self_serve_launch": false,

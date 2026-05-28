@@ -62,10 +62,10 @@
   "schema_version": 1,
   "self_service_ops_gate": "PASS",
   "source": "docs/public/status.json",
-  "source_revision": "ce5aa385a6297b8cdb4981f8111bd68f2ac2b375+dirty",
+  "source_revision": "dadf73f2aa8c1103b882addad57aacb262c5f14a+dirty",
   "source_version_consistency": "pyproject=3.3.15 runtime=3.3.15",
   "state": "NO-GO public self-serve; controlled first-10 beta GO",
   "status": "NO-GO",
-  "updated_at": "2026-05-28T21:03:08Z",
+  "updated_at": "2026-05-28T21:27:08Z",
   "verified_external_users": 0
 }
