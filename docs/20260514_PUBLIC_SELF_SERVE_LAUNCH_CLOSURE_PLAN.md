@@ -4,18 +4,18 @@ Generated: 2026-05-14 18:39 UTC
 
 ## Current state
 
-Borg's controlled first-10 package path is **conditional GO for evidence capture** on `agent-borg==3.3.14` only while PyPI latest, fresh-install, stdio MCP, cold-start trust, self-service ops, and watchdog gates remain green.
+Borg's controlled first-10 package path is **NO-GO for evidence capture** on `agent-borg==3.3.15` until GitHub main, PyPI latest, fresh-install, stdio MCP, generated-rules/OpenClaw, cold-start trust, self-service ops, watchdog, docs guard, proof dashboards, and GitHub CI/security evidence are green for the same version.
 
 Public self-serve launch remains **NO-GO** until row-derived first-10 external-user evidence passes. Served remote MCP remains a separate runtime cutover/canary channel, not proven by the PyPI stdio release.
 
-Hard evidence already completed:
+Hard evidence already completed or pending:
 
-- Branch/source hardening for 3.3.14: merged to main and published to PyPI
-- Fresh PyPI install/MCP canary for `agent-borg==3.3.14`: PASS
-- self-service ops/watchdog gates: PASS when `eval/self_service_ops_gate.py` and `eval/ops_readiness_watchdog.py` are green
-- security baseline: PASS
-- privacy/prompt-injection/atom/firewall tests: PASS
-- source canaries: PASS
+- Branch/source hardening for 3.3.15: pending merge to main and PyPI publish
+- Local source first-user release gate for `agent-borg==3.3.15`: PASS
+- Fresh PyPI install/MCP/generate/OpenClaw canary for `agent-borg==3.3.15`: PENDING until publish
+- self-service ops/watchdog gates: must be rerun after release proof artifacts are regenerated
+- security baseline: PASS in local gates
+- privacy/prompt-injection/atom/firewall tests: PASS in local gates
 - first-10 invite packet exists
 - first-10 scoreboard exists and truthfully reports `verified_external_users=0`
 
@@ -65,7 +65,7 @@ Prior 3.3.10 proof lives in:
 - `docs/20260522_BORG_3310_RELEASE_PREFLIGHT_PUBLISHED.md` (historical)
 - `eval/pypi_fresh_install_snapshot.json` (current exact-version package canary)
 
-Current package path status: `agent-borg==3.3.14` is published and PyPI latest, fresh-install, and stdio MCP canaries are green. Controlled first-10 may proceed only while self-service ops/watchdog gates remain green. This still does not authorize public self-serve launch without first-10 row-derived external evidence.
+Current package path status: `agent-borg==3.3.15` is not yet published/canaried as the current PyPI package. Controlled first-10 must stay paused until the 3.3.15 package/proof chain is green; broad public self-serve remains NO-GO until row-derived first-10 evidence passes.
 
 ### Phase C — first-10 user sprint
 
@@ -76,8 +76,8 @@ For each user:
 1. Send invite and privacy warning.
 2. Record consent.
 3. User runs one of:
-   - `pipx install agent-borg==3.3.14`
-   - fallback venv install from PyPI: `/tmp/borg-beta-venv/bin/python -m pip install agent-borg==3.3.14`
+   - `pipx install agent-borg==3.3.15`
+   - fallback venv install from PyPI: `/tmp/borg-beta-venv/bin/python -m pip install agent-borg==3.3.15`
    - source-branch install only for maintainer-approved pre-release testing, never the default first-10 path.
 4. User runs:
    - `borg --version`

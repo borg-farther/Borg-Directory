@@ -47,14 +47,22 @@ jobs:
           python - <<'PY'
           import json
           data=json.load(open('/tmp/public_gate.json'))
-          assert data['ready_for_controlled_first_10_beta'] is True
           assert data['ready_for_public_self_serve_launch'] is False
-          assert data['max_recommended_real_users_now'] == 10
+          blockers='\n'.join(data.get('blockers') or []).lower()
+          controlled_package = data['ready_for_controlled_first_10_beta'] is True and data['max_recommended_real_users_now'] == 10
+          pre_publish = (
+              data['ready_for_controlled_first_10_beta'] is False
+              and data['max_recommended_real_users_now'] == 0
+              and ('pypi latest' in blockers or 'latest metadata' in blockers)
+              and ('fresh-install' in blockers or 'fresh install' in blockers or 'mcp stdio' in blockers)
+              and ('first-10' in blockers or 'verified=' in blockers)
+          )
+          assert controlled_package or pre_publish
           PY
 
       - name: Run ops readiness watchdog
         run: |
-          python eval/ops_readiness_watchdog.py --mode pr --json --no-write --max-snapshot-age-hours 24 --allow-public-blocker first_10_external_evidence --require-ci-schedule
+          python eval/ops_readiness_watchdog.py --mode pr --json --no-write --max-snapshot-age-hours 24 --allow-public-blocker package_or_first_10_evidence --require-ci-schedule
 
       - name: Lint proof dashboard
         run: |

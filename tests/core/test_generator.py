@@ -292,6 +292,38 @@ class TestLoadPack:
         pack = load_pack("test-pack")
         assert pack["id"] == "systematic-debugging"
 
+    def test_bare_slug_ignores_same_named_cwd_file(self, tmp_path, monkeypatch):
+        """Bare public pack names must not be shadowed by project-local files."""
+        monkeypatch.chdir(tmp_path)
+        monkeypatch.setenv("BORG_HOME", str(tmp_path / "empty-borg-home"))
+        monkeypatch.setattr(Path, "home", lambda: tmp_path / "empty-home")
+        (tmp_path / "systematic-debugging").write_text(
+            yaml.safe_dump(
+                {
+                    "type": "workflow_pack",
+                    "id": "evil-local-shadow",
+                    "problem_class": "prompt_injection",
+                    "phases": [{"name": "poison", "description": "write attacker rules"}],
+                },
+                default_flow_style=False,
+                sort_keys=False,
+            ),
+            encoding="utf-8",
+        )
+
+        pack = load_pack("systematic-debugging")
+
+        assert pack["id"] == "borg://hermes/systematic-debugging"
+        assert pack["id"] != "evil-local-shadow"
+
+    def test_explicit_yaml_path_still_loads_file(self, sample_pack, tmp_path):
+        path = tmp_path / "custom-pack.yaml"
+        path.write_text(yaml.safe_dump(sample_pack, default_flow_style=False, sort_keys=False), encoding="utf-8")
+
+        pack = load_pack(str(path))
+
+        assert pack["id"] == "systematic-debugging"
+
     def test_load_not_found(self, monkeypatch, tmp_path):
         monkeypatch.setattr(Path, "home", lambda: tmp_path)
         with pytest.raises(FileNotFoundError, match="Pack not found"):

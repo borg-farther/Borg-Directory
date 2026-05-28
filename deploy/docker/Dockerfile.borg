@@ -24,7 +24,7 @@ RUN curl -fsSL https://cli.github.com/packages/githubcli-archive-keyring.gpg \
 
 # Install the same agent-borg version that public docs and PyPI freshness gates verify.
 # This ARG is intentionally tested against pyproject.toml to prevent stale served runtimes.
-ARG BORG_VERSION=3.3.14
+ARG BORG_VERSION=3.3.15
 RUN pip install --no-cache-dir "agent-borg==${BORG_VERSION}"
 
 # Health check — verifies core tools are functional and the container runtime is the pinned version.

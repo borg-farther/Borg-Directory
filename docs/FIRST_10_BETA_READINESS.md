@@ -1,6 +1,6 @@
 # Borg First-10 Beta Readiness Contract
 
-**Status:** controlled first-10 public-package beta is conditional GO for `agent-borg==3.3.14` only while PyPI latest, fresh-install, stdio MCP, cold-start trust, self-service ops, and watchdog gates remain green. Invite at most 10 controlled testers with consented evidence capture. Public self-serve launch is still gated by row-derived real external-user evidence.
+**Status:** controlled first-10 public-package beta is blocked for `agent-borg==3.3.15` until GitHub main, PyPI latest, fresh-install, stdio MCP, generated-rules/OpenClaw, cold-start trust, self-service ops, watchdog, and proof dashboards are green for the same version. After those gates pass, invite at most 10 controlled testers with consented evidence capture. Public self-serve launch is still gated by row-derived real external-user evidence.
 
 **Success metric:** At least 6 of the first 10 users get one relevant ACTION/STOP/VERIFY moment without maintainer handholding, and every miss is recorded as NO_CONFIDENT_MATCH or explicit negative feedback instead of being hidden.
 
@@ -20,7 +20,7 @@ Before attempting technical fixes for errors, bugs, installs, configs, deploymen
 
 ## Clean-user smoke path
 
-Run this before handing Borg to a tester:
+Run this before handing Borg to a tester, after the current release version is published and proof dashboards are green:
 
 Install package `agent-borg`; it provides `borg`, `borg-mcp`, and `borg-doctor`. Do **not** use `pip install borg`, `brew install borgbackup`, `apt install borgbackup`, `apt-get install borgbackup`, `dnf install borgbackup`, or `pacman -S borg`; those are unrelated.
 

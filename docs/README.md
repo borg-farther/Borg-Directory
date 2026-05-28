@@ -11,6 +11,7 @@ belong under [`archive/`](archive/) and are not current product claims.
 - [`INSTALL.md`](INSTALL.md) — OS-specific install guide and wrong-package troubleshooting
 - [`QUICKSTART.md`](QUICKSTART.md) — shortest copy-paste path
 - [`TRYING_BORG.md`](TRYING_BORG.md) — detailed first-user setup
+- [`CHANNELS_AND_INSTALL_METHODS.md`](CHANNELS_AND_INSTALL_METHODS.md) — exact channel/install-method matrix and NO-GO boundaries
 - [`MCP_SETUP.md`](MCP_SETUP.md) — Claude Code, Hermes Agent, OpenClaw, and generic MCP setup
 - [`ONBOARDING.md`](ONBOARDING.md) — deterministic Claude onboarding gates
 - [`20260514_FIRST_10_USER_INVITE_PACKET.md`](20260514_FIRST_10_USER_INVITE_PACKET.md) — controlled first-10 tester invite and evidence-capture script
@@ -56,7 +57,7 @@ They are retained for provenance, but they are not current product claims or fir
 
 ## Current truth
 
-- Controlled first-10 public-package beta infrastructure: CONDITIONAL GO for `agent-borg==3.3.14` while PyPI latest, fresh-install, stdio MCP, cold-start trust, self-service ops, watchdog, source/local first-user, and GitHub CI/security gates remain green.
+- Controlled first-10 public-package beta infrastructure: NO-GO for `agent-borg==3.3.15` until GitHub main, PyPI latest, fresh-install, stdio MCP, generated-rules/OpenClaw, cold-start trust, self-service ops, watchdog, source/local first-user, proof dashboard, and GitHub CI/security gates are green for the same version.
 - Public self-serve launch: not yet; requires real external-user evidence.
 - Agent-level success lift at statistical confidence: not yet proven.
 - Internal max-value collective intelligence loop primitives: GO; external lift still requires first-10 rows.

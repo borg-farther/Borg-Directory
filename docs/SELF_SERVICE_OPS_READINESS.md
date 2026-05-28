@@ -1,10 +1,10 @@
 # Borg self-service operations readiness
 
-Borg's package path is ready for controlled first-10 beta only when technical gates and operations gates are both green. This document defines the self-service ops layer: bad-answer intake, install/MCP support, first-10 evidence intake, support/SLA boundaries, rollback/comms drill, and watchdog automation.
+Borg's package path may enter the first external-user evidence cohort only after the current release technical gates and operations gates pass for the same version. This document defines the self-service ops layer: bad-answer intake, install/MCP support, first-10 evidence intake, support/SLA boundaries, rollback/comms drill, and watchdog automation.
 
 ## Current boundary
 
-- Controlled first-10 public-package beta: conditional GO when `eval/public_self_serve_launch_gate.py` says `ready_for_controlled_first_10_beta=true`.
+- Controlled first-10 public-package beta: blocked until `eval/public_self_serve_launch_gate.py` says `ready_for_controlled_first_10_beta=true` for the current release version.
 - Broad public self-serve: NO-GO until row-derived first-10 external-user evidence passes.
 - Served remote MCP/runtime: separate NO-GO until operator-supervised runtime fingerprint and canary prove the served process is current.
 

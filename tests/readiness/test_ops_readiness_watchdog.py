@@ -15,6 +15,20 @@ def _public_snapshot() -> dict[str, object]:
     }
 
 
+def _pre_package_public_snapshot() -> dict[str, object]:
+    return {
+        "source_version": "9.9.9",
+        "ready_for_controlled_first_10_beta": False,
+        "ready_for_public_self_serve_launch": False,
+        "max_recommended_real_users_now": 0,
+        "blockers": [
+            "PyPI latest metadata does not match source version or required project URLs",
+            "PyPI fresh-install + MCP stdio canary snapshot is missing or failing",
+            "first-10 external-user evidence has not passed: verified=0/10",
+        ],
+    }
+
+
 def _measured_savings() -> dict[str, object]:
     return {
         "rows_with_measured_value": 0,
@@ -45,6 +59,22 @@ def _dashboard(now: str, rev: str) -> dict[str, object]:
     }
 
 
+def _pre_package_dashboard(now: str, rev: str) -> dict[str, object]:
+    return {
+        "generated_at_utc": now,
+        "source_revision": rev,
+        "top_verdict": {
+            "controlled_first_10_beta": {"verdict": "NO-GO"},
+            "broad_public_launch": {"verdict": "NO-GO"},
+        },
+        "metrics": {
+            "max_recommended_real_users_now": {"value": 0},
+            "verified_external_users": {"value": 0},
+            "measured_savings": {"value": _measured_savings()},
+        },
+    }
+
+
 def _public_json_files(now: str, rev: str) -> dict[str, dict[str, object]]:
     return {
         "docs/public/status.json": {
@@ -67,10 +97,41 @@ def _public_json_files(now: str, rev: str) -> dict[str, dict[str, object]]:
     }
 
 
+def _pre_package_public_json_files(now: str, rev: str) -> dict[str, dict[str, object]]:
+    return {
+        "docs/public/status.json": {
+            "updated_at": now,
+            "state": "NO-GO public self-serve; source/local release-candidate only",
+            "controlled_first_10_beta": {"verdict": "NO-GO"},
+            "broad_public_launch": {"verdict": "NO-GO"},
+            "max_recommended_real_users_now": 0,
+            "verified_external_users": 0,
+            "source_revision": rev,
+        },
+        "docs/public/value.json": {
+            "updated_at": now,
+            "measured_savings": _measured_savings(),
+        },
+        "docs/public/impact/impact.json": {
+            "updated_at": now,
+            "measured_savings": _measured_savings(),
+        },
+    }
+
+
 def test_watchdog_allows_only_first_10_external_evidence_as_public_blocker() -> None:
     assert watchdog._public_blockers_are_allowed(["first-10 external-user evidence has not passed"], "first_10_external_evidence") is True
     assert watchdog._public_blockers_are_allowed(["verified=0/10"], "first_10_external_evidence") is True
     assert watchdog._public_blockers_are_allowed(["self-service ops readiness gate is missing"], "first_10_external_evidence") is False
+    assert watchdog._public_blockers_are_allowed(
+        [
+            "PyPI latest metadata does not match source version",
+            "PyPI fresh-install + MCP stdio canary snapshot is missing",
+            "first-10 external-user evidence has not passed",
+        ],
+        "package_or_first_10_evidence",
+    ) is True
+    assert watchdog._public_blockers_are_allowed(["self-service ops readiness gate is missing"], "package_or_first_10_evidence") is False
 
 
 def test_source_revision_honesty_accepts_dirty_ancestor_in_clean_pr_checkout(monkeypatch) -> None:
@@ -128,6 +189,49 @@ def test_ops_watchdog_compiles_consistent_green_ops_snapshot(monkeypatch) -> Non
     assert snapshot["checks"]["snapshot_freshness"]["items"]["public_impact_json"]["passed"] is True
     assert snapshot["checks"]["public_json_dashboard_consistency"]["passed"] is True
     assert snapshot["blockers"] == []
+
+
+def test_ops_watchdog_accepts_pre_package_release_no_go_stage(monkeypatch) -> None:
+    monkeypatch.setattr(watchdog.public_gate, "source_version", lambda: "9.9.9")
+    monkeypatch.setattr(watchdog.public_gate, "compile_gate", lambda fetch_network=True: _pre_package_public_snapshot())
+    monkeypatch.setattr(watchdog.real_user_rollout_gate, "compile_rollout_gate", lambda: {
+        "ready_for_10_controlled_beta": False,
+        "infrastructure_ready_for_100": False,
+        "ready_for_100_real_users": False,
+        "max_recommended_real_users_now": 0,
+        "blockers": [
+            "PyPI latest/fresh-install package evidence is not green: latest metadata does not match source version",
+            "PyPI latest/fresh-install package evidence is not green: fresh install + MCP stdio canary is not green",
+            "first-10 external-user evidence has not passed: verified=0/10",
+        ],
+    })
+    monkeypatch.setattr(watchdog.self_service_ops_gate, "compile_gate", lambda: {"passed": True, "blockers": []})
+    monkeypatch.setattr(watchdog, "_workflow_has_schedule", lambda: {"passed": True, "exists": True, "missing": []})
+    monkeypatch.setattr(watchdog, "_git_head", lambda: "a" * 40)
+    monkeypatch.setattr(watchdog, "_git_clean", lambda: True)
+
+    now = "2026-05-25T00:00:00+00:00"
+    rev = "a" * 40
+    files = {
+        "eval/public_self_serve_launch_gate_snapshot.json": _pre_package_public_snapshot() | {"generated_at_utc": now},
+        "eval/borg_proof_dashboard.json": _pre_package_dashboard(now, rev),
+        "eval/pypi_fresh_install_snapshot.json": {"success": True, "version": "9.9.8", "generated_at_utc": now, "mcp_stdio_canary": {"passed": True}},
+        "eval/cold_start_trust_gate_snapshot.json": {"passed": True, "generated_at_utc": now},
+        "eval/self_service_ops_gate_snapshot.json": {"passed": True, "generated_at_utc": now},
+        "eval/rollback_comms_drill_snapshot.json": {"passed": True, "dry_run_only": True, "generated_at_utc": now},
+    } | _pre_package_public_json_files(now, rev)
+
+    monkeypatch.setattr(watchdog, "_read_json", lambda path: files.get(str(path.relative_to(watchdog.ROOT)), {}))
+    monkeypatch.setattr(watchdog, "_age_hours", lambda value: 1.0)
+
+    snapshot = watchdog.compile_watchdog(max_snapshot_age_hours=24, allow_public_blocker="package_or_first_10_evidence")
+
+    assert snapshot["passed"] is True
+    assert snapshot["ready_for_controlled_first_10_beta"] is False
+    assert snapshot["max_recommended_real_users_now"] == 0
+    assert snapshot["checks"]["pypi_fresh_current"]["pre_package_release_stage"] is True
+    assert snapshot["checks"]["real_user_rollout_consistency"]["pre_package_release_stage"] is True
+    assert snapshot["checks"]["public_status_consistency"]["pre_package_status_ok"] is True
 
 
 def test_ops_watchdog_blocks_stale_public_json_even_when_snapshots_are_fresh(monkeypatch) -> None:

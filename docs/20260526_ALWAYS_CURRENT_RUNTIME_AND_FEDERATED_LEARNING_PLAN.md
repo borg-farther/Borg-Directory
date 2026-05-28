@@ -2,7 +2,7 @@
 
 Date: 2026-05-26
 Source repo: `https://github.com/borg-farther/Borg-Directory`
-Current source/package target: `agent-borg==3.3.14`
+Current source/package target: `agent-borg==3.3.15`
 
 ## Executive verdict
 
@@ -52,7 +52,7 @@ Create a signed manifest for each promoted release:
 {
   "schema_version": 1,
   "package": "agent-borg",
-  "approved_version": "3.3.14",
+  "approved_version": "3.3.15",
   "git_commit": "50e943eff7efebf0ed1b84f7bee52b9d275970fd",
   "pypi_wheel_sha256": "...",
   "mcp_tool_schema_sha256": "...",
@@ -88,7 +88,7 @@ The gate returns:
 {
   "allowed_to_serve": false,
   "current_version": "3.3.7",
-  "approved_version": "3.3.14",
+  "approved_version": "3.3.15",
   "reason": "stale served MCP process",
   "safe_tools": ["borg_runtime_fingerprint", "borg_upgrade_instructions"],
   "blocked_tools": "all guidance, learning, publish, pull, feedback, and write tools"
@@ -110,7 +110,7 @@ If stale or unknown:
   "success": false,
   "error": "Borg MCP runtime is stale",
   "current_version": "3.3.7",
-  "approved_version": "3.3.14",
+  "approved_version": "3.3.15",
   "action": [
     "Stop using this MCP session for Borg guidance",
     "Upgrade/restart the Borg MCP runtime under operator supervision"
@@ -143,8 +143,8 @@ If this fails, the host marks Borg unhealthy and exposes only upgrade instructio
 
 For production served Borg, avoid mutable workspace paths:
 
-- good: `/opt/borg/releases/3.3.14/bin/borg-mcp`
-- good: container digest with `agent-borg==3.3.14`
+- good: `/opt/borg/releases/3.3.15/bin/borg-mcp`
+- good: container digest with `agent-borg==3.3.15`
 - bad: `python -m borg.integrations.mcp_server` from an arbitrary mutable checkout
 - bad: long-lived Hermes MCP process with no cutover canary
 
@@ -167,7 +167,7 @@ Required executable gates:
 - `tests/mcp/test_served_runtime_freshness_gate.py`
   - stale `3.3.7` fixture must fail
   - disk-current/process-stale fixture must fail
-  - current `3.3.14` fixture must pass
+  - current `3.3.15` fixture must pass
 - deployment-config guard
   - Docker/Smithery/hosted configs must not pin stale `agent-borg` or stale MCP tool counts
   - configs must prefer `borg-mcp` console script over unpinned `python -m borg...`

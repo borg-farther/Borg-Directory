@@ -220,6 +220,50 @@ def test_try_accepts_readme_and_legacy_uri_forms(uri, monkeypatch):
     assert err == ""
 
 
+
+
+def test_generate_readme_pack_from_bundled_seed_with_empty_borg_home(tmp_path, monkeypatch):
+    """README's `borg generate systematic-debugging` must work after a clean install."""
+    fake_home = tmp_path / "home"
+    fake_home.mkdir()
+    monkeypatch.setenv("HOME", str(fake_home))
+    monkeypatch.setenv("BORG_HOME", str(tmp_path / "empty-borg-home"))
+    output_dir = tmp_path / "rules"
+
+    code, out, err = capture_main([
+        "generate",
+        "systematic-debugging",
+        "--format",
+        "all",
+        "--output",
+        str(output_dir),
+    ])
+
+    assert code == 0
+    assert err == ""
+    assert (output_dir / ".cursorrules").exists()
+    assert (output_dir / ".clinerules").exists()
+    assert (output_dir / "CLAUDE.md").exists()
+    assert (output_dir / ".windsurfrules").exists()
+    assert "systematic" in (output_dir / ".cursorrules").read_text(encoding="utf-8").lower()
+
+
+def test_generator_load_pack_uses_bundled_wheel_data_not_maintainer_registry(tmp_path, monkeypatch):
+    """Rules export must not depend on /root/hermes-workspace or pre-pulled packs."""
+    fake_home = tmp_path / "home"
+    fake_home.mkdir()
+    monkeypatch.setenv("HOME", str(fake_home))
+    monkeypatch.setenv("BORG_HOME", str(tmp_path / "empty-borg-home"))
+
+    from borg.core.generator import load_pack as load_generator_pack
+
+    pack = load_generator_pack("systematic-debugging")
+
+    assert pack["type"] == "workflow_pack"
+    assert pack["id"].endswith("systematic-debugging")
+    assert pack.get("phases")
+
+
 def test_try_does_not_emit_quality_weighted_aggregator_db_path_warning(monkeypatch, caplog):
     """Recording try outcomes must not log the old missing `_db_path` warning."""
     def fake_borg_try(got_uri: str) -> str:

@@ -77,27 +77,25 @@ def test_runtime_distribution_drafts_do_not_pin_stale_borg_versions() -> None:
     assert "13 built-in tools" not in smithery
 
 
-def test_current_docs_do_not_contradict_3310_published_state() -> None:
+def test_current_docs_preserve_3315_release_candidate_truth() -> None:
     watched = {
         "README.md": read("README.md"),
         "CHANGELOG.md": read("CHANGELOG.md"),
+        "llms.txt": read("llms.txt"),
+        "SUPPORT.md": read("SUPPORT.md"),
         "docs/README.md": read("docs/README.md"),
         "docs/READINESS.md": read("docs/READINESS.md"),
         "docs/ROADMAP.md": read("docs/ROADMAP.md"),
+        "docs/FIRST_10_BETA_READINESS.md": read("docs/FIRST_10_BETA_READINESS.md"),
         "docs/PUBLIC_SELF_SERVE_LAUNCH_GO_NO_GO.md": read("docs/PUBLIC_SELF_SERVE_LAUNCH_GO_NO_GO.md"),
         "docs/BORG_PROOF_DASHBOARD.md": read("docs/BORG_PROOF_DASHBOARD.md"),
         "docs/VALUE_COMMUNICATION_DASHBOARD.md": read("docs/VALUE_COMMUNICATION_DASHBOARD.md"),
         "docs/VALUE_COMMUNICATION_DASHBOARD.html": read("docs/VALUE_COMMUNICATION_DASHBOARD.html"),
         "docs/20260514_PUBLIC_SELF_SERVE_LAUNCH_CLOSURE_PLAN.md": read("docs/20260514_PUBLIC_SELF_SERVE_LAUNCH_CLOSURE_PLAN.md"),
     }
-    stale = [
+    stale_or_unsupported = [
         "PyPI latest remains 3.3.7",
         "upload aborted on release-provenance gates",
-        "NO-GO until PyPI latest/fresh-install/MCP canary passes",
-        "NO-GO for this source revision",
-        "controlled first-10 beta invites may not start",
-        "PyPI latest/fresh-install/stdio MCP package evidence is not green yet",
-        "no controlled first-10 beta invites until package evidence is green",
         "blocked until `agent-borg==3.3.8` is published",
         "BORG_338_RELEASE_PREFLIGHT",
         "BORG_339_RELEASE_PREFLIGHT",
@@ -106,11 +104,20 @@ def test_current_docs_do_not_contradict_3310_published_state() -> None:
         "guild-packs 2.1.1",
         "guildpacks CLI",
         "guild_observe",
+        "conditional GO for controlled first-10 beta",
+        "CONDITIONAL GO for `agent-borg==3.3.15`",
+        "PyPI latest, fresh-install, and stdio MCP canaries are green for this version",
+        "PyPI latest metadata and fresh PyPI install + stdio MCP canary are green for `agent-borg==3.3.15`",
+        "Current package path status: `agent-borg==3.3.15` is published",
+        "controlled first-10 beta invites may start",
     ]
 
     for path, text in watched.items():
-        for phrase in stale:
-            assert phrase not in text, f"{path} still contains stale phrase: {phrase}"
+        for phrase in stale_or_unsupported:
+            assert phrase not in text, f"{path} still contains stale/unsupported phrase: {phrase}"
+
+    assert "source/local release candidate" in watched["README.md"]
+    assert "NO-GO for this 3.3.15 source branch" in watched["docs/READINESS.md"]
 
 
 def test_public_examples_and_benchmark_readmes_do_not_overclaim_external_lift() -> None:
@@ -146,19 +153,60 @@ def test_public_examples_and_benchmark_readmes_do_not_overclaim_external_lift() 
     ]
 
 
+def test_channel_matrix_documents_all_first_user_mix_paths() -> None:
+    project = tomllib.loads(read("pyproject.toml"))["project"]
+    current_version = project["version"]
+    matrix = read("docs/CHANNELS_AND_INSTALL_METHODS.md")
+    root_readme = read("README.md")
+    docs_index = read("docs/README.md")
+
+    assert f"agent-borg=={current_version}" in matrix
+    for phrase in [
+        "pipx install agent-borg==",
+        "python -m pip install git+https://github.com/borg-farther/Borg-Directory.git@main",
+        "borg generate systematic-debugging --format all --output",
+        "borg convert . --format openclaw --all --output",
+        "import borg, json",
+        "MCP config command `borg-mcp`",
+        "served/remote MCP",
+        "broad public self-serve",
+        "measured external lift",
+    ]:
+        assert phrase in matrix
+    assert "CHANNELS_AND_INSTALL_METHODS.md" in root_readme
+    assert "CHANNELS_AND_INSTALL_METHODS.md" in docs_index
+
+
+def test_release_gates_cover_export_openclaw_api_and_mcp_mix_paths() -> None:
+    first_user_gate = read("eval/run_first_user_release_gate.py")
+    pypi_canary = read("eval/run_pypi_fresh_install_canary.py")
+
+    for text in [first_user_gate, pypi_canary]:
+        assert "borg_generate" in text
+        assert "systematic-debugging" in text
+        assert "--format" in text and "all" in text
+        assert "borg_convert_openclaw" in text
+        assert "openclaw" in text.lower()
+        assert "python_api_check" in text or "public_import_api_check" in text
+    assert "borg_runtime_fingerprint" in pypi_canary
+
+
 def test_final_production_ready_todo_preserves_hard_gate_boundaries() -> None:
     todo = read("docs/20260528_BORG_PRODUCTION_READY_FINAL_TODO.md")
     required = [
-        "controlled first-10 beta ready",
-        "not yet broad-public-production ready",
+        "not yet production ready",
+        "not yet controlled first-10 beta ready on the new 3.3.15 channel-completeness branch",
+        "Published PyPI latest observed:** `agent-borg==3.3.14`",
+        "Ship 3.3.15 to GitHub main and PyPI",
+        "Generated rules / OpenClaw path",
         "Served/remote MCP production channel",
         "NO-GO until the actual served process is fingerprinted",
-        "verified external users are `0/10`",
-        "Merge PR #39",
+        "Current verified external users are `0/10`",
         "Run the first-10 external beta",
+        "public self-serve and 100-user rollout blocked",
         "external lift",
-        "no-write semantics",
-        "Smithery draft metadata",
+        "no-write",
+        "Smithery draft",
     ]
     for phrase in required:
         assert phrase in todo
@@ -203,6 +251,7 @@ def test_non_current_public_docs_are_bannered_or_operator_scoped() -> None:
         "QUICKSTART.md",
         "TRYING_BORG.md",
         "MCP_SETUP.md",
+        "CHANNELS_AND_INSTALL_METHODS.md",
         "ONBOARDING.md",
         "20260514_FIRST_10_USER_INVITE_PACKET.md",
         "FIRST_10_BETA_READINESS.md",
