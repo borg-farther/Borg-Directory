@@ -124,6 +124,9 @@ class TestToolsList:
             "borg_convert",
             "borg_context",
             "borg_recall",
+            "borg_record_outcome",
+            "borg_collective_retrieve",
+            "borg_collective_status",
             "borg_reputation",
             "borg_analytics",
             "borg_dojo",
@@ -140,6 +143,15 @@ class TestToolsList:
         assert "inputSchema" in search_tool
         assert search_tool["inputSchema"]["type"] == "object"
         assert "query" in search_tool["inputSchema"]["properties"]
+        record_tool = next((t for t in tools if t["name"] == "borg_record_outcome"), None)
+        assert record_tool is not None
+        assert {"outcome", "helpful", "verified"}.issubset(set(record_tool["inputSchema"]["required"]))
+        retrieve_tool = next((t for t in tools if t["name"] == "borg_collective_retrieve"), None)
+        assert retrieve_tool is not None
+        assert retrieve_tool["inputSchema"]["required"] == ["query"]
+        status_tool = next((t for t in tools if t["name"] == "borg_collective_status"), None)
+        assert status_tool is not None
+        assert status_tool["inputSchema"]["required"] == ["action"]
 
     def test_tools_list_correct_count(self):
         # Pre-existing tool-count drift. Test originally expected 21; at HEAD
@@ -150,7 +162,7 @@ class TestToolsList:
         resp = mcp_module.handle_request(req)
         # Range assertion: tolerates slice (b) WIP add and any further additions
         # before S5 lands, while still catching mass tool-list regression.
-        assert 22 <= len(resp["result"]["tools"]) <= 25
+        assert 22 <= len(resp["result"]["tools"]) <= 27
 
 
 # ============================================================================
@@ -334,6 +346,55 @@ class TestCallTool:
         # Should return JSON (either empty {} or suggestion)
         parsed = json.loads(result)
         assert isinstance(parsed, dict)
+
+    def test_call_tool_borg_collective_status_summary(self, tmp_path, monkeypatch):
+        monkeypatch.setenv("BORG_HOME", str(tmp_path / "borg-home"))
+        result = mcp_module.call_tool("borg_collective_status", {"action": "summary"})
+        parsed = json.loads(result)
+
+        assert parsed["success"] is True
+        assert parsed["action"] == "summary"
+        assert parsed["summary"]["external_lift_status"] == "NO-GO_REAL_FIRST_10_ROWS_REQUIRED"
+        assert parsed["summary"]["total_events"] == 0
+
+    def test_call_tool_borg_collective_status_candidate_reports_promotable_cluster(self, tmp_path, monkeypatch):
+        from borg.core.collective_learning import CollectiveLearningStore
+
+        monkeypatch.setenv("BORG_HOME", str(tmp_path / "borg-home"))
+        store = CollectiveLearningStore()
+        source_atom_id = "sha256:" + "d" * 64
+        cluster_id = ""
+        for idx, tenant in enumerate(["tenant-a", "tenant-b", "tenant-c"], start=1):
+            intervention = store.record_intervention(
+                source_tool="borg_rescue",
+                task_text="ModuleNotFoundError: No module named flask",
+                context="python",
+                guidance="Install Flask in the active virtual environment",
+                agent_id=f"agent-{idx}",
+                tenant_pseudonym=tenant,
+                source_refs=[source_atom_id],
+            )
+            cluster_id = cluster_id or intervention["cluster_id"]
+            store.record_outcome(
+                intervention_id=intervention["intervention_id"],
+                outcome="success",
+                helpful=True,
+                verified=True,
+                verification_command="python -c 'import flask'",
+                tenant_pseudonym=intervention["tenant_pseudonym"],
+                agent_id=f"agent-{idx}",
+                atom_id=source_atom_id,
+                cluster_id=cluster_id,
+            )
+
+        result = mcp_module.call_tool("borg_collective_status", {"action": "candidate", "cluster_id": cluster_id})
+        parsed = json.loads(result)
+
+        assert parsed["success"] is True
+        assert parsed["promotable"] is True
+        assert parsed["helpful_verified_tenants"] == 3
+        assert parsed["atom"]["trust"]["tenant_pseudonym"].startswith("hmac-sha256:")
+        assert "/root/" not in json.dumps(parsed, sort_keys=True)
 
     def test_call_tool_borg_convert_with_explicit_format(self, tmp_path):
         # Create a minimal SKILL.md file

@@ -72,6 +72,8 @@ def test_atom_help_lists_subcommands():
     assert "no raw traces" in out
     assert "search" in out
     assert "revoke" in out
+    assert "sign-manifest" in out
+    assert "sync-remote" in out
 
 
 def test_atom_publish_help_frames_fail_closed_no_raw_traces():
@@ -81,3 +83,12 @@ def test_atom_publish_help_frames_fail_closed_no_raw_traces():
     assert "signed, sanitized learning atom" in out
     assert "fail-closed policy gates" in out
     assert "Raw traces are never published" in out
+
+
+def test_atom_sync_remote_help_frames_signed_manifest_boundary():
+    code, out, err = capture_main(["atom", "sync-remote", "--help"])
+
+    assert code == 0
+    assert "signed hosted registry manifest" in out
+    assert "--registry-key-id" in out
+    assert "--state" in out

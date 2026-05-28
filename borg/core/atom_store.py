@@ -11,6 +11,7 @@ from typing import Any, Dict, List
 
 from borg.core.atom_policy import AtomDecision, classify_atom_policy
 from borg.core.dirs import get_atom_db_path
+from borg.core.learning_atoms import verify_signed_atom
 
 ATOM_DB_PATH = str(get_atom_db_path())
 
@@ -82,12 +83,24 @@ class AtomStore:
     def __init__(self, db_path: str | None = None):
         self.db_path = db_path or ATOM_DB_PATH
 
-    def add_atom(self, envelope: Dict[str, Any]) -> str:
+    def add_atom(self, envelope: Dict[str, Any], verified_tenant_count: int | None = None) -> str:
         payload = envelope.get("payload", envelope)
         atom_id = payload.get("atom_id")
         if self.is_revoked(atom_id):
             raise ValueError("atom is tombstoned")
-        decision = classify_atom_policy(payload, has_valid_signature=bool(envelope.get("signature")))
+        signature_check = None
+        if envelope.get("signature"):
+            signature_check = verify_signed_atom(envelope)
+            if not signature_check.valid:
+                raise ValueError(f"atom rejected by signature verification: {signature_check.error}")
+        has_valid_signature = bool(signature_check and signature_check.valid)
+        if payload.get("scope") != "local" and not has_valid_signature:
+            raise ValueError("shared atom must have a valid signed atom envelope")
+        decision = classify_atom_policy(
+            payload,
+            has_valid_signature=has_valid_signature,
+            verified_tenant_count=verified_tenant_count,
+        )
         if decision.decision not in {AtomDecision.LOCAL_SAFE, AtomDecision.ORG_SAFE, AtomDecision.GLOBAL_CANDIDATE}:
             raise ValueError(f"atom rejected by policy: {decision.decision.value}")
 
@@ -98,6 +111,7 @@ class AtomStore:
         evidence = payload.get("evidence") or {}
         trust = payload.get("trust") or {}
         lifecycle = payload.get("lifecycle") or {}
+        indexed_tenant_count = int(verified_tenant_count) if verified_tenant_count is not None else 0
         with _connect(self.db_path) as conn:
             conn.execute(
                 """
@@ -124,7 +138,7 @@ class AtomStore:
                     float(privacy.get("risk_score", 0)),
                     float(safety.get("prompt_injection_score", 0)),
                     int(evidence.get("support_count", 1)),
-                    int(trust.get("independent_tenant_count", 1)),
+                    indexed_tenant_count,
                     lifecycle.get("created_at_day", time.strftime("%Y-%m-%d")),
                     lifecycle.get("expires_at_day"),
                 ),
@@ -136,8 +150,18 @@ class AtomStore:
         if self.is_revoked(atom_id):
             return None
         with _connect(self.db_path) as conn:
-            row = conn.execute("SELECT payload_json FROM atoms WHERE atom_id = ? AND revoked_at IS NULL", (atom_id,)).fetchone()
-        return json.loads(row[0]) if row else None
+            row = conn.execute(
+                "SELECT payload_json, independent_tenant_count FROM atoms WHERE atom_id = ? AND revoked_at IS NULL",
+                (atom_id,),
+            ).fetchone()
+        if not row:
+            return None
+        atom = json.loads(row["payload_json"])
+        trust = atom.setdefault("trust", {})
+        # Return the same store/registry-computed quorum contract as search:
+        # payload tenant hints remain advisory, including for direct get-by-id.
+        trust["verified_tenant_count"] = int(row["independent_tenant_count"])
+        return atom
 
     def is_revoked(self, atom_id: str | None) -> bool:
         if not atom_id:
@@ -158,7 +182,7 @@ class AtomStore:
         with _connect(self.db_path) as conn:
             rows = conn.execute(
                 """
-                SELECT payload_json FROM atoms
+                SELECT payload_json, independent_tenant_count FROM atoms
                 WHERE revoked_at IS NULL
                   AND atom_id NOT IN (SELECT atom_id FROM atom_tombstones)
                   AND (LOWER(error_class) LIKE ? OR LOWER(error_pattern) LIKE ? OR LOWER(worked) LIKE ?)
@@ -167,4 +191,12 @@ class AtomStore:
                 """,
                 (q, q, q, limit),
             ).fetchall()
-        return [json.loads(row[0]) for row in rows]
+        atoms = []
+        for row in rows:
+            atom = json.loads(row["payload_json"])
+            trust = atom.setdefault("trust", {})
+            # Retrieval must display the registry/store verified quorum, never a
+            # submitter's self-declared tenant count from the signed payload.
+            trust["verified_tenant_count"] = int(row["independent_tenant_count"])
+            atoms.append(atom)
+        return atoms

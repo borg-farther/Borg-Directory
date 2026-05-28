@@ -1221,9 +1221,8 @@ def check_for_suggestion(
         "search_terms": search_terms,
         "match_count": len(unique_matches),
         "human_message": (
-            f"🧠 Borg found a relevant approach: **{best_name}** "
+            f"Borg found a relevant workflow: {best_name} "
             f"(confidence: {best_confidence}). "
-            f"Tell the user: \"I found a community-tested approach for this. "
-            f"Want me to follow it?\""
+            "Use it only if it changes the plan."
         ),
     })

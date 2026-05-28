@@ -45,8 +45,10 @@ def test_first_10_packet_contains_install_mcp_feedback_and_priming():
     assert "borg rescue" in commands
     assert "borg setup-claude --scope user --verify --fix" in commands
     assert "borg first-10 --json" in commands
+    assert "borg collective summary --json" in commands
     assert "borg_rescue" in packet["priming_paragraph"]
     assert "borg_observe" in packet["priming_paragraph"]
+    assert "borg_record_outcome" in packet["priming_paragraph"]
     assert "borg_feedback" in packet["priming_paragraph"]
     assert "borg_record_failure" in packet["priming_paragraph"]
     assert "borg_rate" not in packet["priming_paragraph"]
@@ -59,6 +61,9 @@ def test_first_10_packet_contains_install_mcp_feedback_and_priming():
     assert "net_tokens_saved" in packet["feedback_fields"]
     assert "savings_counterfactual_basis" in packet["feedback_fields"]
     assert "user_confirmed_value" in packet["feedback_fields"]
+    assert "intervention_id" in packet["feedback_fields"]
+    assert "outcome_receipt_id" in packet["feedback_fields"]
+    assert "contribution_event_id" in packet["feedback_fields"]
     assert any("value_receipt" in item for gate in packet["gates"] for item in gate["pass_criteria"])
     mixes = "\n".join(packet["supported_mixes"])
     assert "Hermes" in mixes

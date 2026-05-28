@@ -52,6 +52,13 @@ def test_policy_global_requires_independent_tenant_count():
 
 
 def test_policy_allows_global_candidate_with_quorum_and_signature():
-    result = classify_atom_policy(_atom(scope="global_candidate", signed=True, tenant_count=3))
+    result = classify_atom_policy(_atom(scope="global_candidate", signed=True, tenant_count=3), verified_tenant_count=3)
 
     assert result.decision == AtomDecision.GLOBAL_CANDIDATE
+
+
+def test_policy_quarantines_self_declared_global_quorum_without_registry_verification():
+    result = classify_atom_policy(_atom(scope="global_candidate", signed=True, tenant_count=99))
+
+    assert result.decision == AtomDecision.QUARANTINE
+    assert any("registry-computed" in reason for reason in result.reasons)

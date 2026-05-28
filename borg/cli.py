@@ -535,14 +535,11 @@ def _cmd_rescue(args: argparse.Namespace) -> int:
 def _cmd_start(args: argparse.Namespace) -> int:
     """Interactive onboarding — get value from borg in 30 seconds."""
     print()
-    print("  ╔══════════════════════════════════════════════════╗")
-    print("  ║          Welcome to the Borg Collective          ║")
-    print("  ╚══════════════════════════════════════════════════╝")
+    print("  Borg is a cache layer for agent reasoning.")
+    print("  It watches for failure loops, fires only when it can change the path,")
+    print("  and stays quiet when it has no useful memory.")
     print()
-    print("  Your agent forgets everything between sessions.")
-    print("  Borg remembers.")
-    print()
-    print("  ── Try it now ─────────────────────────────────────")
+    print("  Try it now")
     print()
     print("  Paste any error message you're dealing with:")
     print()
@@ -552,7 +549,7 @@ def _cmd_start(args: argparse.Namespace) -> int:
     if not error:
         print()
         print("  No error entered. Try:")
-        print("    borg debug 'your error message here'")
+        print("    borg rescue 'your error message here'")
         print()
         return 0
 
@@ -579,16 +576,15 @@ def _cmd_start(args: argparse.Namespace) -> int:
 
     # Next steps
     print()
-    print("  ── What's next ───────────────────────────────────")
+    print("  Next steps")
     print()
-    print("  • Run again anytime:   borg debug 'your error'")
-    print("  • Browse workflows:    borg search debugging")
-    print("  • Export for Cursor:   borg generate systematic-debugging --format cursorrules")
-    print("  • Export for Claude:   borg setup-claude")
-    print("  • Record what worked:  borg feedback-v3 --pack systematic-debugging --success yes")
+    print("  - Run again anytime:   borg rescue 'your error'")
+    print("  - Browse workflows:    borg search debugging")
+    print("  - Export for Cursor:   borg generate systematic-debugging --format cursorrules")
+    print("  - Export for Claude:   borg setup-claude")
+    print("  - Record what worked:  borg feedback-v3 --pack systematic-debugging --success yes")
     print()
-    print("  The more you use borg, the smarter it gets.")
-    print("  Resistance is futile.")
+    print("  Your fixes stay yours; Borg shares what prevents repeat failures.")
     print()
     return 0
 
@@ -884,8 +880,136 @@ def _cmd_atom(args: argparse.Namespace) -> int:
         except Exception:
             return 1
 
+    if args.atom_action == "sign-manifest":
+        from borg.core.atom_registry import write_signed_registry_manifest
+        from borg.core.crypto import load_signing_key
+        key = load_signing_key(args.sign_agent)
+        if key is None:
+            print(f"Error: signing key not found for {args.sign_agent}", file=sys.stderr)
+            return 1
+        signed = write_signed_registry_manifest(
+            args.registry_dir,
+            key,
+            sequence=args.sequence,
+            channel=args.channel,
+            expires_in_seconds=args.expires_in,
+            previous_manifest_hash=args.previous_manifest_hash or None,
+        )
+        print(json.dumps({"success": True, "manifest": signed, "path": str(Path(args.registry_dir) / "manifest.signed.json")}, indent=2))
+        return 0
+
+    if args.atom_action == "sync-remote":
+        from borg.core.atom_registry import sync_signed_registry_to_store
+        from borg.core.atom_store import AtomStore
+        store = AtomStore(getattr(args, "db", None))
+        result = sync_signed_registry_to_store(
+            args.registry_url,
+            store,
+            trusted_registry_key_id=args.registry_key_id,
+            channel=args.channel,
+            state_path=args.state,
+            max_revocation_convergence_seconds=args.revocation_slo_seconds,
+        )
+        print(json.dumps({"success": True, **result}, indent=2))
+        return 0
+
     print("Error: unknown atom action", file=sys.stderr)
     return 1
+
+
+def _cmd_collective(args: argparse.Namespace) -> int:
+    """Outcome-grounded collective-learning ledger and atom promotion utilities."""
+    from borg.core.collective_learning import CollectiveLearningStore
+
+    store = CollectiveLearningStore(getattr(args, "db", None))
+    action = getattr(args, "collective_action", "summary")
+    try:
+        if action == "summary":
+            data = {
+                "success": True,
+                "summary": store.contribution_summary(),
+                "value_summary": store.recent_value_summary(),
+            }
+            if args.json:
+                print(json.dumps(data, indent=2, ensure_ascii=False))
+            else:
+                summary = data["summary"]
+                value = data["value_summary"]
+                print("Borg collective learning summary")
+                print("=" * 40)
+                print(f"  contribution_events:       {summary['total_events']}")
+                print(f"  interventions:             {value.get('interventions', 0)}")
+                print(f"  verified_outcomes:         {value.get('verified_outcomes', 0)}")
+                print(f"  helpful_outcomes:          {value.get('helpful_outcomes', 0)}")
+                print(f"  helpful_tenants:           {value.get('helpful_tenants', 0)}")
+                print(f"  promotion_ready_clusters:  {len(summary['promotion_ready_clusters'])}")
+                print(f"  external_lift_status:      {summary['external_lift_status']}")
+            return 0
+
+        if action == "events":
+            events = store.recent_contribution_events(limit=getattr(args, "limit", 50))
+            data = {"success": True, "events": events, "total": len(events)}
+            if args.json:
+                print(json.dumps(data, indent=2, ensure_ascii=False))
+            else:
+                if not events:
+                    print("No contribution events recorded.")
+                for event in events:
+                    print(f"{event['created_at']} {event['event_type']} {event['collective_stage']} {event['status']} {event.get('cluster_id','')}")
+            return 0
+
+        if action == "candidate":
+            candidate = store.build_learning_atom_candidate(
+                args.cluster_id,
+                scope=getattr(args, "scope", "global_candidate"),
+                min_helpful_tenants=getattr(args, "min_helpful_tenants", 3),
+            )
+            if args.json:
+                print(json.dumps(candidate, indent=2, ensure_ascii=False))
+            else:
+                print(f"atom_id: {candidate['atom_id']}")
+                print(f"promotable: {candidate['promotable']}")
+                print(f"helpful_verified_tenants: {candidate['helpful_verified_tenants']}")
+                if candidate["blockers"]:
+                    print("blockers:")
+                    for blocker in candidate["blockers"]:
+                        print(f"  - {blocker}")
+                print(f"external_lift_status: {candidate['external_lift_status']}")
+            return 0
+
+        if action == "promote":
+            from borg.core.crypto import load_signing_key
+
+            signing_key = load_signing_key(args.sign_agent)
+            if signing_key is None:
+                print(f"Error: signing key not found for {args.sign_agent}", file=sys.stderr)
+                return 1
+            result = store.promote_cluster_to_registry(
+                args.cluster_id,
+                args.registry_dir,
+                signing_key,
+                scope=getattr(args, "scope", "global_candidate"),
+                min_helpful_tenants=getattr(args, "min_helpful_tenants", 3),
+            )
+            if args.json:
+                print(json.dumps(result, indent=2, ensure_ascii=False))
+            else:
+                receipt = result["registry_receipt"]
+                print(f"promoted_atom_id: {receipt['atom_id']}")
+                print(f"decision: {receipt['decision']}")
+                print(f"verified_tenant_count: {receipt['verified_tenant_count']}")
+                print(f"registry_receipt_id: {receipt['receipt_id']}")
+                print(f"external_lift_status: {result['external_lift_status']}")
+            return 0
+
+        print("Error: unknown collective action", file=sys.stderr)
+        return 1
+    except (ValueError, KeyError, OSError, json.JSONDecodeError) as e:
+        if getattr(args, "json", False):
+            print(json.dumps({"success": False, "error": str(e), "type": type(e).__name__}, indent=2), file=sys.stdout)
+        else:
+            print(f"Error: {e}", file=sys.stderr)
+        return 1
 
 
 def _cmd_version(args: argparse.Namespace) -> int:
@@ -1643,6 +1767,7 @@ def main() -> int:
   borg setup-claude              Configure borg MCP for Claude Code
   borg setup-cursor              Configure borg MCP for Cursor
   borg first-10 --json           Print first-user beta gates and smoke path
+  borg collective summary --json Show outcome-grounded contribution ledger status
   borg autopilot                 Guided Hermes setup""",
     )
     parser.add_argument("--version", "-V", action="version", version=f"borg {__version__}")
@@ -1911,6 +2036,8 @@ Examples:
   borg atom distill --trace-id abc123 --scope org --tenant acme
   borg atom validate ./atom.yaml
   borg atom publish ./signed-atom.yaml
+  borg atom sign-manifest --registry-dir ./registry --sign-agent registry --sequence 1
+  borg atom sync-remote https://registry.example --registry-key-id ed25519:abc --state ./sync.json
   borg atom search 'TypeError optional config'
   borg atom revoke sha256:abc --reason 'privacy request'""")
     atom_sub = p.add_subparsers(dest="atom_action", required=True)
@@ -1946,6 +2073,65 @@ Examples:
     ap.add_argument("--reason", required=True, help="Revocation reason")
     ap.add_argument("--db", default=None, help="Optional atom DB path")
     ap.set_defaults(func=_cmd_atom)
+
+    ap = atom_sub.add_parser("sign-manifest", help="Sign a hosted registry manifest")
+    ap.add_argument("--registry-dir", required=True, help="Filesystem registry directory containing atoms/tombstones/receipts")
+    ap.add_argument("--sign-agent", required=True, help="Agent id whose stored Ed25519 key signs manifest.signed.json")
+    ap.add_argument("--sequence", type=int, required=True, help="Monotonic manifest sequence number")
+    ap.add_argument("--channel", default="global", help="Registry channel/scope (default: global)")
+    ap.add_argument("--expires-in", type=int, default=300, help="Manifest expiry window in seconds (default: 300)")
+    ap.add_argument("--previous-manifest-hash", default="", help="Optional previous signed manifest hash")
+    ap.set_defaults(func=_cmd_atom)
+
+    ap = atom_sub.add_parser(
+        "sync-remote",
+        help="Sync from a signed hosted registry manifest",
+        description="Sync learning atoms from a signed hosted registry manifest. Refuses unsigned/replayed/tampered manifests and applies tombstones before atoms.",
+    )
+    ap.add_argument("registry_url", help="Base URL or directory containing manifest.signed.json")
+    ap.add_argument("--registry-key-id", required=True, help="Trusted registry Ed25519 key id")
+    ap.add_argument("--channel", default="global", help="Expected manifest channel/scope (default: global)")
+    ap.add_argument("--db", default=None, help="Optional atom DB path")
+    ap.add_argument("--state", default=None, help="Sync state JSON path for replay protection")
+    ap.add_argument("--revocation-slo-seconds", type=float, default=None, help="Optional max revocation convergence seconds")
+    ap.set_defaults(func=_cmd_atom)
+
+    # borg collective — outcome-grounded contribution ledger utilities
+    p = sub.add_parser(
+        "collective",
+        help="Inspect/promote the outcome-grounded collective learning ledger",
+        description="Inspect privacy-safe contribution events and promote verified outcome clusters into signed learning atoms.",
+    )
+    collective_sub = p.add_subparsers(dest="collective_action", required=True)
+
+    cp = collective_sub.add_parser("summary", help="Show contribution ledger and verified outcome summary")
+    cp.add_argument("--db", default=None, help="Optional collective learning DB path")
+    cp.add_argument("--json", action="store_true")
+    cp.set_defaults(func=_cmd_collective)
+
+    cp = collective_sub.add_parser("events", help="List recent privacy-redacted contribution events")
+    cp.add_argument("--db", default=None, help="Optional collective learning DB path")
+    cp.add_argument("--limit", type=int, default=50)
+    cp.add_argument("--json", action="store_true")
+    cp.set_defaults(func=_cmd_collective)
+
+    cp = collective_sub.add_parser("candidate", help="Build a sanitized learning atom candidate from a verified cluster")
+    cp.add_argument("cluster_id", help="Problem cluster/signature ID")
+    cp.add_argument("--db", default=None, help="Optional collective learning DB path")
+    cp.add_argument("--scope", choices=["org", "global_candidate", "global"], default="global_candidate")
+    cp.add_argument("--min-helpful-tenants", type=int, default=3)
+    cp.add_argument("--json", action="store_true")
+    cp.set_defaults(func=_cmd_collective)
+
+    cp = collective_sub.add_parser("promote", help="Sign and stage a promotable cluster atom into a registry")
+    cp.add_argument("cluster_id", help="Problem cluster/signature ID")
+    cp.add_argument("--registry-dir", required=True, help="Filesystem registry directory")
+    cp.add_argument("--sign-agent", required=True, help="Agent id whose stored Ed25519 key signs the atom")
+    cp.add_argument("--db", default=None, help="Optional collective learning DB path")
+    cp.add_argument("--scope", choices=["org", "global_candidate", "global"], default="global_candidate")
+    cp.add_argument("--min-helpful-tenants", type=int, default=3)
+    cp.add_argument("--json", action="store_true")
+    cp.set_defaults(func=_cmd_collective)
 
     # guild reputation <agent_id>
     p = sub.add_parser("reputation", help="Show agent reputation profile",

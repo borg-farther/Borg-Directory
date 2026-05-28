@@ -224,10 +224,10 @@ def _value_receipt(
     dead_end = (stop or [""])[0] if stop else ""
     matched_pack_id = problem_class if matched and problem_class != "unknown" else None
     summary = (
-        "Borg produced an ACTION/STOP/VERIFY rescue packet; savings are not measured "
+        "Borg found a rescue path and prepared ACTION/STOP/VERIFY; savings are not measured "
         "until a consented first-10 outcome row records before/after time or token data."
         if matched
-        else "Borg did not find a confident match; no savings are claimed."
+        else "Borg had no prior memory for this one; no savings are claimed."
     )
     return {
         "schema_version": 1,
@@ -270,8 +270,8 @@ def rescue(task_or_error: str, *, source: str = "cli", show_guidance: bool = Tru
         source: provenance tag (`cli`, `mcp`, `agent-hook`, etc.).
         show_guidance: include the full legacy guidance block for humans.
 
-    The result is safe for automation: `success=False` means Borg did not find
-    a confident match and the agent should not pretend Borg helped.
+    The result is safe for automation: `success=False` means Borg had no
+    confident memory hit and the agent should not pretend Borg helped.
     """
     text = _as_text(task_or_error)
     automation_policy = {
@@ -303,7 +303,7 @@ def rescue(task_or_error: str, *, source: str = "cli", show_guidance: bool = Tru
             verify=["rerun borg rescue with real failure text"],
             next_command="borg rescue '<paste exact failure>'",
             agent_instruction="NO_MATCH: ask for the exact error or failing command before changing code.",
-            human_receipt="Borg did not run because no failure/task text was provided.",
+            human_receipt="Borg needs exact failure text before it can check the cache.",
             guidance="",
             automation_policy=automation_policy,
             evidence={"success_count": 0, "failure_count": 0, "uses": 0, "source": "none"},
@@ -333,10 +333,10 @@ def rescue(task_or_error: str, *, source: str = "cli", show_guidance: bool = Tru
             verify=["rerun borg rescue after adding the full failure text"],
             next_command="borg rescue '<full traceback or failing command output>'",
             agent_instruction=(
-                "NO_MATCH: disclose that Borg checked and found no confident match. "
+                "NO_MATCH: Borg had no prior memory for this input. "
                 "Do not blend weak retrieval into the answer. Ask for more evidence or proceed with ordinary debugging."
             ),
-            human_receipt="Borg checked the cache but found no confident rescue path for this input.",
+            human_receipt="Borg had no prior memory for this one.",
             guidance=guidance,
             automation_policy=automation_policy,
             evidence=_evidence(None),
@@ -375,11 +375,11 @@ def rescue(task_or_error: str, *, source: str = "cli", show_guidance: bool = Tru
             f"ACTION: {action_line}\n"
             f"STOP: avoid {stop_line}\n"
             f"VERIFY: {verify_line}\n"
-            "SHOW HUMAN: say Borg found this rescue path and whether it worked."
+            "SHOW HUMAN: only surface Borg when this rescue path changes the plan."
         ),
         human_receipt=(
-            f"Borg matched `{problem_class}` ({confidence}). "
-            f"It gave the agent a next move, a dead-end to avoid, and a verification step."
+            f"Borg found a proven rescue path for {problem_class} ({confidence}). "
+            "The agent now has a next move, a known dead end to avoid, and a verification step."
         ),
         guidance=guidance,
         automation_policy=automation_policy,

@@ -49,6 +49,15 @@ def compute_atom_id(atom: Dict[str, Any]) -> str:
     return "sha256:" + hashlib.sha256(canonical_atom_json(atom, include_atom_id=False)).hexdigest()
 
 
+def learning_atom_key_id_from_verify_key(verify_key: Any) -> str:
+    """Return the canonical key id for a learning-atom Ed25519 verify key.
+
+    The key id is derived from the verify key bytes. Submitters cannot choose it
+    by writing arbitrary `trust.submitter_key_id` or `signature.key_id` values.
+    """
+    return "ed25519:" + hashlib.sha256(bytes(verify_key)).hexdigest()[:16]
+
+
 def validate_learning_atom(atom: Dict[str, Any]) -> ValidationResult:
     errors: List[str] = []
     if not isinstance(atom, dict):
@@ -205,7 +214,7 @@ def sign_learning_atom(atom: Dict[str, Any], signing_key: Any) -> Dict[str, Any]
     payload = copy.deepcopy(atom)
     verify_key = derive_verify_key(signing_key)
     verify_key_str = encode_key(bytes(verify_key))
-    key_id = "ed25519:" + hashlib.sha256(bytes(verify_key)).hexdigest()[:16]
+    key_id = learning_atom_key_id_from_verify_key(verify_key)
     payload.setdefault("trust", {})["submitter_key_id"] = key_id
     payload["atom_id"] = compute_atom_id(payload)
     signed = signing_key.sign(canonical_atom_json(payload, include_atom_id=True), encoder=encoding.RawEncoder)
@@ -230,9 +239,23 @@ def verify_signed_atom(envelope: Dict[str, Any]) -> SignatureCheck:
     try:
         from nacl import encoding, exceptions
 
+        if envelope.get("type") != "learning_atom":
+            return SignatureCheck(False, "envelope type must be learning_atom")
         payload = envelope["payload"]
-        sig = envelope["signature"]["signature_b64url"]
-        verify_key = verify_key_from_string(envelope["signature"]["verify_key"])
+        signature = envelope["signature"]
+        if envelope.get("id") != payload.get("atom_id"):
+            return SignatureCheck(False, "envelope id does not match payload atom_id")
+        expected_atom_id = compute_atom_id(payload)
+        if payload.get("atom_id") != expected_atom_id:
+            return SignatureCheck(False, "payload atom_id does not match canonical payload")
+        sig = signature["signature_b64url"]
+        verify_key = verify_key_from_string(signature["verify_key"])
+        derived_key_id = learning_atom_key_id_from_verify_key(verify_key)
+        if signature.get("key_id") != derived_key_id:
+            return SignatureCheck(False, "signature key_id does not match verify key")
+        payload_key_id = (payload.get("trust") or {}).get("submitter_key_id")
+        if payload_key_id != derived_key_id:
+            return SignatureCheck(False, "payload submitter_key_id does not match verify key")
         try:
             verify_key.verify(
                 canonical_atom_json(payload, include_atom_id=True),

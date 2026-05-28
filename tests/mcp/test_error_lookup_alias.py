@@ -22,9 +22,13 @@ def _reset_mcp_rate_limit_state():
     """Keep these public dispatch checks from polluting rate-limit tests."""
     with mcp_server._rate_limit_lock:
         mcp_server._rate_requests.clear()
+    with mcp_server._human_session_lock:
+        mcp_server._human_session_state.clear()
     yield
     with mcp_server._rate_limit_lock:
         mcp_server._rate_requests.clear()
+    with mcp_server._human_session_lock:
+        mcp_server._human_session_state.clear()
 
 
 def test_tools_list_exposes_plain_english_error_lookup_alias():
@@ -112,6 +116,69 @@ def test_error_lookup_json_rpc_call_returns_text_content_packet():
     assert payload["success"] is True
     assert payload["problem_class"] == "type_mismatch"
     assert payload["agent_instruction"].startswith("ACTION:")
+    assert "structuredContent" in resp["result"]
+    assert resp["result"]["user_message"].startswith("Borg found a proven rescue path")
+    assert "matches" not in resp["result"]["user_message"]
+    assert resp["result"]["structuredContent"]["borg_human"]["first_hit"] is True
+
+
+def _assert_renderer_safe(line: str):
+    assert line == " ".join(line.split())
+    assert line.encode("ascii").decode("ascii") == line
+    assert not any("\u2500" <= ch <= "\u257f" for ch in line)
+
+
+def test_error_lookup_human_badge_fires_once_per_session():
+    args = {
+        "input": "ModuleNotFoundError: No module named flask",
+        "source": "test-human-comms",
+        "show_guidance": False,
+        "_meta": {"hermes_session_id": "human-session-1"},
+    }
+
+    first = json.loads(mcp_server.call_tool("error_lookup", args))
+    second = json.loads(mcp_server.call_tool("error_lookup", args))
+
+    assert first["user_message"] == "Borg found a proven rescue path. Avoiding 3 known dead ends."
+    assert "matches" not in first["user_message"]
+    assert first["borg_human"]["first_hit"] is True
+    assert "user_message" not in second
+    assert second["borg_human"]["first_hit"] is False
+    assert second["session_message"] == "Borg helped 2 times, avoided 6 dead ends, learned 0 new fixes."
+    for line in [first["user_message"], first["session_message"], second["session_message"]]:
+        _assert_renderer_safe(line)
+
+
+def test_error_lookup_no_match_still_carries_session_line():
+    result = json.loads(mcp_server.call_tool("error_lookup", {
+        "input": "zzzz totally unrelated no technical thing",
+        "source": "test-human-comms",
+        "show_guidance": False,
+        "_meta": {"hermes_session_id": "human-session-miss"},
+    }))
+
+    assert result["success"] is False
+    assert "user_message" not in result
+    assert result["session_message"] == "Borg had no prior memory for this one."
+    assert result["borg_human"]["matched"] is False
+    _assert_renderer_safe(result["session_message"])
+
+
+def test_error_lookup_low_confidence_warning_does_not_consume_first_hit():
+    payload = {
+        "success": True,
+        "status": "matched",
+        "confidence": "low",
+        "evidence": {"uses": 3},
+        "stop": ["do not retry the same command"],
+    }
+
+    enriched = mcp_server._attach_human_comms(payload, session_id="weak-session")
+
+    assert enriched["user_message"] == "Borg found a weak hint. Treating it cautiously."
+    assert enriched["borg_human"]["first_hit"] is False
+    with mcp_server._human_session_lock:
+        assert mcp_server._human_session_state["weak-session"]["first_hit_shown"] is False
 
 
 def test_first_user_docs_and_readiness_contract_name_error_lookup():

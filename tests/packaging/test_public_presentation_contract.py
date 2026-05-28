@@ -2,7 +2,13 @@ from __future__ import annotations
 
 from pathlib import Path
 import json
+import re
 import subprocess
+
+try:
+    import tomllib
+except ModuleNotFoundError:  # Python 3.10 CI
+    import tomli as tomllib
 
 ROOT = Path(__file__).resolve().parents[2]
 
@@ -42,6 +48,33 @@ def test_readme_leads_with_concrete_value_before_install_matrix() -> None:
     assert "BORG RESCUE" in top and "status: matched" in top
     assert "Canonical/no-loss policy" not in top
     assert top.index("## Try Borg in 60 seconds") < text.index("## 1. Install `agent-borg`")
+
+
+def test_runtime_distribution_drafts_do_not_pin_stale_borg_versions() -> None:
+    project = tomllib.loads(read("pyproject.toml"))["project"]
+    current_version = project["version"]
+
+    dockerfile = read("deploy/docker/Dockerfile.borg")
+    assert f"ARG BORG_VERSION={current_version}" in dockerfile
+    assert f"agent-borg=={current_version}" not in dockerfile, "Docker build should use the tested BORG_VERSION ARG"
+    stale_pins = [pin for pin in re.findall(r"agent-borg==([0-9]+\.[0-9]+\.[0-9]+)", dockerfile) if pin != current_version]
+    assert stale_pins == []
+    assert 'borg --version | grep -q "${BORG_VERSION}"' in dockerfile
+
+    smithery = read("deploy/smithery/smithery.yaml")
+    assert 'serverCommand: "borg-mcp"' in smithery
+    assert '"version": "' + current_version + '"' in smithery
+    assert '"mcpTools": 24' in smithery
+    assert 'authorName: "Borg contributors"' in smithery
+    assert "punkrocker" not in smithery
+    assert 'remote: false' in smithery
+    assert "Remote/HTTP listing remains NO-GO until served runtime cutover proof passes" in smithery
+    assert "Reduce token waste" not in smithery
+    assert "measured savings until first-10 evidence exists" in smithery
+    assert 'borg_runtime_fingerprint' in smithery
+    assert "python -m borg.integrations.mcp_server" not in smithery
+    assert '"version": "1.0.0"' not in smithery
+    assert "13 built-in tools" not in smithery
 
 
 def test_current_docs_do_not_contradict_3310_published_state() -> None:
@@ -113,6 +146,24 @@ def test_public_examples_and_benchmark_readmes_do_not_overclaim_external_lift() 
     ]
 
 
+def test_final_production_ready_todo_preserves_hard_gate_boundaries() -> None:
+    todo = read("docs/20260528_BORG_PRODUCTION_READY_FINAL_TODO.md")
+    required = [
+        "controlled first-10 beta ready",
+        "not yet broad-public-production ready",
+        "Served/remote MCP production channel",
+        "NO-GO until the actual served process is fingerprinted",
+        "verified external users are `0/10`",
+        "Merge PR #39",
+        "Run the first-10 external beta",
+        "external lift",
+        "no-write semantics",
+        "Smithery draft metadata",
+    ]
+    for phrase in required:
+        assert phrase in todo
+
+
 def test_value_communication_dashboard_exposes_row_derived_savings_contract() -> None:
     md = read("docs/VALUE_COMMUNICATION_DASHBOARD.md")
     html = read("docs/VALUE_COMMUNICATION_DASHBOARD.html")
@@ -158,6 +209,7 @@ def test_non_current_public_docs_are_bannered_or_operator_scoped() -> None:
         "READINESS.md",
         "ROADMAP.md",
         "20260522_BORG_PRODUCTION_DAY_ONE_HARDENING_PLAN.md",
+        "20260526-1302_OPTIMAL_SAFE_COLLECTIVE_LEARNING_LOOP.md",
         "20260514_PUBLIC_SELF_SERVE_LAUNCH_CLOSURE_PLAN.md",
         "20260517_BORG_100_REAL_USER_READINESS.md",
         "PUBLIC_SELF_SERVE_LAUNCH_GO_NO_GO.md",
@@ -177,6 +229,11 @@ def test_non_current_public_docs_are_bannered_or_operator_scoped() -> None:
         "CANONICAL_REPO.md",
         "LIVE_MCP_SELF_SERVE_CANARY.md",
         "20260526_7_USER_CONTROLLED_LAUNCH_AND_100_USER_STAGE_GATES.md",
+        "20260526_ALWAYS_CURRENT_RUNTIME_AND_FEDERATED_LEARNING_PLAN.md",
+        "20260526-2046_REMOTE_FEDERATED_LEARNING_GO_PROOF.md",
+        "20260526-2115_FEDERATED_LEARNING_OPTIMALITY_AUDIT.md",
+        "20260526-2230_MAX_VALUE_COLLECTIVE_INTELLIGENCE_LOOP.md",
+        "20260528_BORG_PRODUCTION_READY_FINAL_TODO.md",
     }
     docs = ROOT / "docs"
     gitlink_roots = _gitlink_doc_roots()

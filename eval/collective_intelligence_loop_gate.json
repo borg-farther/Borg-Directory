@@ -1,0 +1,229 @@
+{
+  "atom_candidate": {
+    "atom_id": "sha256:5a7c5ed9c3adc0b832dcbfbd1b914272c5ac56c4ca973331e0fd9d28694e806d",
+    "blockers": [],
+    "helpful_verified_tenants": 3,
+    "promotable": true
+  },
+  "checks": {
+    "atom_candidate_distilled_from_receipts": true,
+    "cluster_promotion_signed_and_staged": true,
+    "contribution_ledger_complete": true,
+    "dedupe_cluster_stable": true,
+    "first10_not_faked": true,
+    "interventions_recorded": true,
+    "negative_evidence_retained": true,
+    "outcome_receipts_exported": true,
+    "payload_quorum_ignored": true,
+    "registry_computed_quorum": true,
+    "retrieval_explains_value": true,
+    "unified_retrieval_ranked": true
+  },
+  "cluster_stats": {
+    "cluster_id": "cluster-sha256:66eaf67b15c71fd62b29487f",
+    "dead_ends_avoided": 3,
+    "dedupe_key": "cluster-sha256:66eaf67b15c71fd62b29487f",
+    "distinct_tenants": 4,
+    "helpful_outcomes": 3,
+    "helpfulness_score": 0.666667,
+    "interventions": 4,
+    "outcomes": 4,
+    "total_minutes_saved": 9.0,
+    "total_tokens_saved": 1800,
+    "unhelpful_outcomes": 1,
+    "verified_outcomes": 4
+  },
+  "contribution_summary": {
+    "by_stage": {
+      "observed": 4,
+      "registry_staged": 1,
+      "sanitized_candidate": 2,
+      "verified_outcome": 4
+    },
+    "by_type": {
+      "intervention": 4,
+      "learning_atom_candidate": 2,
+      "outcome_receipt": 4,
+      "registry_promotion": 1
+    },
+    "external_lift_status": "NO-GO_REAL_FIRST_10_ROWS_REQUIRED",
+    "promotion_ready_clusters": [
+      {
+        "cluster_id": "cluster-sha256:66eaf67b15c71fd62b29487f",
+        "helpful_verified_tenants": 3
+      }
+    ],
+    "schema_version": 1,
+    "total_events": 11
+  },
+  "first10_counts": {
+    "critical_privacy_security_failures": 0,
+    "install_successes": 0,
+    "real_users": 0,
+    "repeat_use_within_7_days": 0,
+    "useful_rescue_moments": 0
+  },
+  "first10_value_counts": {
+    "counterfactual_basis_counts": {},
+    "dead_ends_avoided_confirmed": 0,
+    "negative_minutes_cost": 0.0,
+    "negative_tokens_cost": 0,
+    "net_minutes_saved": 0.0,
+    "net_tokens_saved": 0,
+    "positive_minutes_saved": 0.0,
+    "positive_tokens_saved": 0,
+    "rows_with_measured_value": 0
+  },
+  "generated_at_utc": "2026-05-27T22:49:33Z",
+  "git": {
+    "branch": "fix/runtime-freshness-federated-learning-plan",
+    "commit": "643f6671e8563b65c579189a449cb29b90b8edb6",
+    "dirty": true,
+    "dirty_files": [
+      "M README.md",
+      " M borg/cli.py",
+      " M borg/core/atom_registry.py",
+      " M borg/core/atom_store.py",
+      " M borg/core/first_user_readiness.py",
+      " M borg/core/prompt_injection.py",
+      " M borg/integrations/mcp_server.py",
+      " M docs/20260526-1302_OPTIMAL_SAFE_COLLECTIVE_LEARNING_LOOP.md",
+      " M docs/20260526-2115_FEDERATED_LEARNING_OPTIMALITY_AUDIT.md",
+      " M docs/FIRST_10_BETA_READINESS.md",
+      " M docs/INTEGRATION_GUIDE.md",
+      " M docs/MCP_SETUP.md",
+      " M docs/ONBOARDING.md",
+      " M docs/QUICKSTART.md",
+      " M docs/README.md",
+      " M docs/TRYING_BORG.md",
+      " M docs/landing-page/install-snippets.md",
+      " M eval/collective_learning_loop_controls.json",
+      " M eval/federated_learning_gate_snapshot.json",
+      " M eval/federated_learning_optimality_audit.json",
+      " M eval/rollback_comms_drill_snapshot.json",
+      " M eval/run_federated_learning_gate.py",
+      " M eval/run_federated_learning_optimality_audit.py",
+      " M eval/tests/test_federated_learning_optimality_audit.py",
+      " M tests/cli/test_cli.py",
+      " M tests/mcp/test_mcp_server.py",
+      " M tests/packaging/test_public_presentation_contract.py",
+      " M tests/readiness/test_first_10_readiness.py",
+      " M tests/security/test_atom_registry.py",
+      " M tests/security/test_atom_store.py",
+      " M tests/security/test_collective_learning_loop_controls.py",
+      " M tests/security/test_federated_atom_registry.py",
+      "?? borg/core/collective_learning.py",
+      "?? docs/20260526-2230_MAX_VALUE_COLLECTIVE_INTELLIGENCE_LOOP.md",
+      "?? eval/collective_intelligence_loop_gate.json",
+      "?? eval/run_collective_intelligence_loop_gate.py",
+      "?? eval/tests/test_collective_intelligence_loop_gate.py",
+      "?? tests/learning/test_collective_intelligence_loop.py",
+      "?? tests/mcp/test_collective_outcome_receipts.py"
+    ]
+  },
+  "public_external_lift": "NO-GO_REAL_FIRST_10_ROWS_REQUIRED",
+  "registry_promotion": {
+    "atom_id": "sha256:b67105bacc678c08f21a934b3ce070b944873f6ea44624651b456e01d9b98e54",
+    "decision": "global_candidate",
+    "path": "/tmp/borg-collective-loop-6doi8u4y/registry/receipts/receipt-sha256_707c317a20afa99a6e7bac21edc08e144e6d0ab72a3c60305ece7daec3cee669.json",
+    "reason": "accepted",
+    "receipt_id": "receipt-sha256:707c317a20afa99a6e7bac21edc08e144e6d0ab72a3c60305ece7daec3cee669",
+    "verified_tenant_count": 3
+  },
+  "registry_quorum": {
+    "computed_from_outcome_receipts": 3,
+    "payload_hint": 99,
+    "receipt_verified_tenant_count": 3
+  },
+  "retrieval_top": {
+    "atom": {
+      "atom_id": "sha256:b67105bacc678c08f21a934b3ce070b944873f6ea44624651b456e01d9b98e54",
+      "evidence": {
+        "cluster_id": "cluster-sha256:66eaf67b15c71fd62b29487f",
+        "negative_count": 1,
+        "strength": "verified_quorum",
+        "support_count": 3,
+        "supporting_receipt_ids": [
+          "outcome-sha256:a8f20c2fe34647492c926585f71bec545644f6acd94b20783775098e80359546",
+          "outcome-sha256:119b36ad6fc2678da87c6a44af3485e4c62f96b776659e2c6030d44ccffda71b",
+          "outcome-sha256:594613df4b4825f80be256abff12a2dd3aceac35bbb0235fe2ad9c85006c5f83"
+        ],
+        "type": "outcome_receipt"
+      },
+      "learning": {
+        "avoid": [
+          "Reinstall Python"
+        ],
+        "root_cause_class": "ModuleNotFoundError",
+        "why": "Derived from 3 verified helpful outcome receipt(s) across 3 tenant pseudonym(s); 1 verified negative receipt(s) retained for scoring.",
+        "worked": "{\"action\":[\"Install Flask in the active virtual environment\"],\"verify\":[\"python -c 'import flask'\"]}"
+      },
+      "lifecycle": {
+        "created_at_day": "2026-05-27",
+        "expires_at_day": null,
+        "revocation_reason": null,
+        "revoked_at": null,
+        "status": "global_candidate"
+      },
+      "privacy": {
+        "finding_classes": [],
+        "raw_trace_retained": false,
+        "redaction_count": 0,
+        "risk_score": 0,
+        "scanner_version": "privacy-v1"
+      },
+      "safety": {
+        "imperative_text_removed": true,
+        "injection_classes": [],
+        "prompt_injection_score": 0.0,
+        "retrieval_treatment": "untrusted_advisory"
+      },
+      "schema_version": "1.0",
+      "scope": "global_candidate",
+      "task": {
+        "difficulty": "unknown",
+        "error_class": "ModuleNotFoundError",
+        "error_pattern": ": No module named flask",
+        "technology": [
+          "python"
+        ],
+        "type": "debug"
+      },
+      "trust": {
+        "agent_reputation_at_submit": 0,
+        "independent_tenant_count": 3,
+        "promotion_score": 1.0,
+        "submitter_key_id": "ed25519:0176a2f2c836f0f3",
+        "tenant_pseudonym": "hmac-sha256:3d235c3c3651cd47c4867d896968e94fc663792b04d23ae68e82213be7b9b906",
+        "verified_tenant_count": 3
+      }
+    },
+    "atom_id": "sha256:b67105bacc678c08f21a934b3ce070b944873f6ea44624651b456e01d9b98e54",
+    "cluster_id": "cluster-sha256:66eaf67b15c71fd62b29487f",
+    "helpful_outcomes": 3,
+    "helpfulness_score": 0.666667,
+    "score": 0.73,
+    "score_reasons": [
+      "text_match",
+      "verified_quorum",
+      "helpful_outcomes",
+      "negative_evidence_present"
+    ],
+    "source": "learning_atom",
+    "unhelpful_outcomes": 1,
+    "verified_tenant_count": 3
+  },
+  "schema_version": 1,
+  "scope": "max_value_collective_intelligence_loop_primitives",
+  "success": true,
+  "value_summary": {
+    "helpful_outcomes": 3,
+    "helpful_tenants": 3,
+    "interventions": 4,
+    "minutes_saved": 9.0,
+    "outcomes": 4,
+    "tokens_saved": 1800,
+    "verified_outcomes": 4
+  },
+  "verdict": "GO"
+}

@@ -14,6 +14,8 @@ from __future__ import annotations
 
 import hashlib
 import os
+import time
+from contextlib import contextmanager
 from datetime import datetime, timezone
 from pathlib import Path
 from typing import Any, Dict, Optional
@@ -168,55 +170,84 @@ class FailureMemory:
 
         yaml_path = pack_dir / f"{eh}.yaml"
 
-        # Load existing data or start fresh
-        if yaml_path.exists():
-            try:
-                data = yaml.safe_load(yaml_path.read_text(encoding="utf-8"))
-                if not isinstance(data, dict):
+        with self._exclusive_record_lock(yaml_path):
+            # Load existing data or start fresh while holding the per-record lock.
+            # Without this lock, concurrent agents can overwrite each other's
+            # read-modify-write increments or collide on temporary filenames.
+            if yaml_path.exists():
+                try:
+                    data = yaml.safe_load(yaml_path.read_text(encoding="utf-8"))
+                    if not isinstance(data, dict):
+                        data = self._empty_record(normalized_pattern, pack_id, phase, effective_agent_id)
+                except (yaml.YAMLError, OSError):
                     data = self._empty_record(normalized_pattern, pack_id, phase, effective_agent_id)
-            except (yaml.YAMLError, OSError):
+            else:
                 data = self._empty_record(normalized_pattern, pack_id, phase, effective_agent_id)
-        else:
-            data = self._empty_record(normalized_pattern, pack_id, phase, effective_agent_id)
 
-        # Ensure we have the right error_pattern normalized
-        data["error_pattern"] = normalized_pattern
-        data["pack_id"] = pack_id
-        data["agent_id"] = effective_agent_id
-        data["last_updated"] = datetime.now(timezone.utc).isoformat()
+            # Ensure we have the right error_pattern normalized
+            data["error_pattern"] = normalized_pattern
+            data["pack_id"] = pack_id
+            data["agent_id"] = effective_agent_id
+            data["last_updated"] = datetime.now(timezone.utc).isoformat()
 
-        # Update wrong_approaches or correct_approaches
-        if outcome == "failure":
-            found = False
-            for entry in data.get("wrong_approaches", []):
-                if entry["approach"] == approach:
-                    entry["failure_count"] += 1
-                    found = True
-                    break
-            if not found:
-                data.setdefault("wrong_approaches", []).append({
-                    "approach": approach,
-                    "failure_count": 1,
-                    "why_fails": "",
-                })
-        else:  # success
-            found = False
-            for entry in data.get("correct_approaches", []):
-                if entry["approach"] == approach:
-                    entry["success_count"] += 1
-                    found = True
-                    break
-            if not found:
-                data.setdefault("correct_approaches", []).append({
-                    "approach": approach,
-                    "success_count": 1,
-                })
+            # Update wrong_approaches or correct_approaches
+            if outcome == "failure":
+                found = False
+                for entry in data.get("wrong_approaches", []):
+                    if entry["approach"] == approach:
+                        entry["failure_count"] += 1
+                        found = True
+                        break
+                if not found:
+                    data.setdefault("wrong_approaches", []).append({
+                        "approach": approach,
+                        "failure_count": 1,
+                        "why_fails": "",
+                    })
+            else:  # success
+                found = False
+                for entry in data.get("correct_approaches", []):
+                    if entry["approach"] == approach:
+                        entry["success_count"] += 1
+                        found = True
+                        break
+                if not found:
+                    data.setdefault("correct_approaches", []).append({
+                        "approach": approach,
+                        "success_count": 1,
+                    })
 
-        # Increment total_sessions
-        data["total_sessions"] = data.get("total_sessions", 0) + 1
+            # Increment total_sessions
+            data["total_sessions"] = data.get("total_sessions", 0) + 1
 
-        # TASK 2 — Atomic write: write to tmp, then rename
-        self._atomic_write(yaml_path, data)
+            # TASK 2 — Atomic write: write to tmp, then rename
+            self._atomic_write(yaml_path, data)
+
+    @staticmethod
+    @contextmanager
+    def _exclusive_record_lock(yaml_path: Path):
+        """Cross-process per-record lock for failure-memory read/modify/write.
+
+        A lock directory avoids platform-specific fcntl dependencies and prevents
+        multiple Python processes from updating the same YAML record at once.
+        """
+        lock_path = yaml_path.with_suffix(yaml_path.suffix + ".lock")
+        start = time.monotonic()
+        while True:
+            try:
+                os.mkdir(lock_path)
+                break
+            except FileExistsError:
+                if time.monotonic() - start > 10:
+                    raise TimeoutError(f"timed out waiting for failure-memory lock: {lock_path}")
+                time.sleep(0.01)
+        try:
+            yield
+        finally:
+            try:
+                os.rmdir(lock_path)
+            except FileNotFoundError:
+                pass
 
     @staticmethod
     def _atomic_write(yaml_path: Path, data: Dict[str, Any]) -> None:
@@ -229,7 +260,7 @@ class FailureMemory:
 
         The tmp file is created with mode 0o644.
         """
-        tmp = yaml_path.with_suffix(".tmp")
+        tmp = yaml_path.with_name(f".{yaml_path.name}.{os.getpid()}.{time.time_ns()}.tmp")
         content = yaml.safe_dump(data, default_flow_style=False, sort_keys=False)
 
         # Write content to tmp file using os.open with O_NOFOLLOW to block symlinks

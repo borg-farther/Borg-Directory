@@ -121,6 +121,215 @@ class _ThreadTimeout:
 
 _MAINTENANCE_INTERVAL: int = 10  # Run maintenance every N feedback calls
 
+# Human-facing Borg value lines.  These are intentionally separate from the
+# agent-facing ACTION/STOP payload so any renderer (terminal, Telegram, web,
+# logs) can surface the same short ASCII line without parsing prose.
+_human_session_lock = threading.Lock()
+_human_session_state: Dict[str, Dict[str, Any]] = {}
+_collective_intervention_lock = threading.Lock()
+_last_collective_intervention_by_session: Dict[str, str] = {}
+
+
+_CONFIDENCE_RANK = {
+    "none": 0,
+    "unknown": 0,
+    "guessed": 0,
+    "low": 1,
+    "inferred": 1,
+    "weak": 1,
+    "observed": 2,
+    "medium": 2,
+    "med": 2,
+    "tested": 3,
+    "validated": 3,
+    "high": 3,
+}
+
+
+def _single_line_ascii(text: str) -> str:
+    """Collapse to one renderer-safe ASCII line."""
+    line = " ".join(str(text or "").split())
+    return line.encode("ascii", "ignore").decode("ascii")
+
+
+def _human_session_key(arguments: Optional[Dict[str, Any]] = None, explicit: str = "") -> str:
+    """Return the best available session key for human-message gating."""
+    if explicit:
+        return str(explicit)
+    args = arguments or {}
+    meta = args.get("_meta") if isinstance(args, dict) else None
+    if isinstance(meta, dict):
+        for key in ("hermes_session_id", "session_id"):
+            if meta.get(key):
+                return str(meta[key])
+    if isinstance(args, dict):
+        for key in ("_hermes_session_id", "session_id"):
+            if args.get(key):
+                return str(args[key])
+    return _current_session_id.get() or "__process__"
+
+
+def _record_collective_intervention(
+    *,
+    source_tool: str,
+    task_text: str,
+    context: str = "",
+    guidance: Any = "",
+    session_id: str = "",
+    agent_id: str = "mcp",
+    source_refs: Optional[List[str]] = None,
+) -> Optional[Dict[str, Any]]:
+    """Record a Borg intervention without letting telemetry break guidance."""
+    try:
+        from borg.core.collective_learning import CollectiveLearningStore
+
+        sid = session_id or _human_session_key()
+        intervention = CollectiveLearningStore().record_intervention(
+            source_tool=source_tool,
+            task_text=task_text,
+            context=context,
+            guidance=guidance,
+            agent_id=agent_id or _current_agent_id.get() or "mcp",
+            tenant_pseudonym=(os.environ.get("BORG_TENANT_PSEUDONYM") or "local"),
+            session_id=sid,
+            source_refs=source_refs or [],
+        )
+        with _collective_intervention_lock:
+            _last_collective_intervention_by_session[sid] = intervention["intervention_id"]
+        return intervention
+    except Exception as exc:
+        logger.debug("borg: collective intervention recording skipped: %s", exc)
+        return None
+
+
+def _last_collective_intervention(session_id: str = "") -> str:
+    sid = session_id or _human_session_key()
+    with _collective_intervention_lock:
+        return _last_collective_intervention_by_session.get(sid, "")
+
+
+def _confidence_is_med_or_better(confidence: str) -> bool:
+    return _CONFIDENCE_RANK.get(str(confidence or "").lower(), 0) >= 2
+
+
+def _match_count_from_evidence(evidence: Dict[str, Any]) -> int:
+    if not isinstance(evidence, dict):
+        return 0
+    for key in ("uses", "match_count", "matched_sessions"):
+        try:
+            value = int(evidence.get(key, 0) or 0)
+        except (TypeError, ValueError):
+            value = 0
+        if value > 0:
+            return value
+    try:
+        return int(evidence.get("success_count", 0) or 0) + int(evidence.get("failure_count", 0) or 0)
+    except (TypeError, ValueError):
+        return 0
+
+
+def _dead_end_count(result: Dict[str, Any]) -> int:
+    stop = result.get("stop") if isinstance(result, dict) else None
+    if isinstance(stop, list):
+        return len([item for item in stop if str(item or "").strip()])
+    return 0
+
+
+def _plural(count: int, singular: str, plural: Optional[str] = None) -> str:
+    return singular if int(count) == 1 else (plural or f"{singular}s")
+
+
+def _session_line(state: Dict[str, Any]) -> str:
+    traces = int(state.get("traces_contributed", 0) or 0)
+    dead_ends = int(state.get("dead_ends_avoided", 0) or 0)
+    helped = int(state.get("matched_lookups", 0) or 0)
+    if helped > 0:
+        return _single_line_ascii(
+            f"Borg helped {helped} {_plural(helped, 'time')}, "
+            f"avoided {dead_ends} {_plural(dead_ends, 'dead end')}, "
+            f"learned {traces} new {_plural(traces, 'fix', 'fixes')}."
+        )
+    if traces > 0:
+        return _single_line_ascii(
+            f"Borg had no prior memory for this one. Learned {traces} new {_plural(traces, 'fix', 'fixes')}."
+        )
+    return _single_line_ascii("Borg had no prior memory for this one.")
+
+
+def _attach_human_comms(result: Dict[str, Any], *, session_id: str) -> Dict[str, Any]:
+    """Attach additive human-facing comms fields to a rescue/error lookup result."""
+    if not isinstance(result, dict):
+        return result
+
+    matched = bool(result.get("success") is True and result.get("status") == "matched")
+    confidence = str(result.get("confidence") or "unknown")
+    evidence_obj = result.get("evidence")
+    evidence: Dict[str, Any] = evidence_obj if isinstance(evidence_obj, dict) else {}
+    match_count = _match_count_from_evidence(evidence)
+    dead_ends = _dead_end_count(result)
+    med_or_better = matched and _confidence_is_med_or_better(confidence)
+
+    with _human_session_lock:
+        state = _human_session_state.setdefault(session_id, {
+            "first_hit_shown": False,
+            "dead_ends_avoided": 0,
+            "traces_contributed": 0,
+            "matched_lookups": 0,
+            "lookup_count": 0,
+        })
+        state["lookup_count"] = int(state.get("lookup_count", 0) or 0) + 1
+
+        user_message = ""
+        if med_or_better:
+            state["matched_lookups"] = int(state.get("matched_lookups", 0) or 0) + 1
+            state["dead_ends_avoided"] = int(state.get("dead_ends_avoided", 0) or 0) + dead_ends
+            if not state.get("first_hit_shown"):
+                if dead_ends > 0:
+                    user_message = _single_line_ascii(
+                        f"Borg found a proven rescue path. Avoiding {dead_ends} known {_plural(dead_ends, 'dead end')}."
+                    )
+                else:
+                    user_message = "Borg found a proven rescue path."
+                state["first_hit_shown"] = True
+        elif matched:
+            # Weak match: visible caution, but do not consume the first-hit badge.
+            user_message = "Borg found a weak hint. Treating it cautiously."
+
+        session_message = _session_line(state)
+        snapshot = dict(state)
+
+    human = {
+        "schema_version": 1,
+        "session_id": session_id,
+        "first_hit": bool(user_message and med_or_better),
+        "matched": matched,
+        "confidence": confidence,
+        "match_count": match_count,
+        "dead_ends_surfaced": dead_ends,
+        "display_policy": "fire_user_message_only; keep_session_message_for_summaries",
+        "user_message": user_message or None,
+        "session_message": session_message,
+        "state": snapshot,
+    }
+    result["borg_human"] = human
+    if user_message:
+        result["user_message"] = user_message
+    result["session_message"] = session_message
+    return result
+
+
+def _record_human_trace_contributed(session_id: str) -> None:
+    key = session_id or "__process__"
+    with _human_session_lock:
+        state = _human_session_state.setdefault(key, {
+            "first_hit_shown": False,
+            "dead_ends_avoided": 0,
+            "traces_contributed": 0,
+            "matched_lookups": 0,
+            "lookup_count": 0,
+        })
+        state["traces_contributed"] = int(state.get("traces_contributed", 0) or 0) + 1
+
 
 def init_trace_capture(session_id: str, task: str = "", agent_id: str = ""):
     """Initialize trace capture for a session."""
@@ -134,12 +343,13 @@ def _trace_has_meaningful_root_cause(trace: Dict[str, Any]) -> bool:
     return len(str(trace.get("root_cause") or "").strip()) >= 10
 
 
-def _save_trace_if_meaningful(trace: Dict[str, Any]) -> bool:
+def _save_trace_if_meaningful(trace: Dict[str, Any], *, session_id: str = "") -> bool:
     """Persist trace only when it is not a hollow auto-capture."""
     if not _trace_has_meaningful_root_cause(trace):
         logger.warning("borg: skipped hollow trace")
         return False
     save_trace(trace)
+    _record_human_trace_contributed(session_id or _current_session_id.get() or "__process__")
     return True
 
 
@@ -160,7 +370,7 @@ def _feed_trace_capture(tool_name: str, args: Dict[str, Any], result: str):
             if capture.task:  # Only save if we have a task
                 trace = capture.extract_trace(outcome="auto_truncated")
                 if trace["tool_calls"] > 5:
-                    _save_trace_if_meaningful(trace)
+                    _save_trace_if_meaningful(trace, session_id=session_id)
             del _trace_captures[session_id]
 
 # ---------------------------------------------------------------------------
@@ -713,6 +923,64 @@ TOOLS: List[Dict[str, Any]] = [
                 },
             },
             "required": ["error_pattern", "pack_id", "phase", "approach", "outcome"],
+        },
+    },
+    {
+        "name": "borg_record_outcome",
+        "description": (
+            "Record a verified outcome receipt for a Borg intervention. Use this after rerunning the verification command "
+            "to tie helpfulness, success/failure, time/tokens saved, and dead ends avoided back to the exact intervention_id."
+        ),
+        "inputSchema": {
+            "type": "object",
+            "properties": {
+                "intervention_id": {"type": "string", "description": "The intervention_id returned by borg_rescue/error_lookup. Defaults to last intervention in this session when available."},
+                "outcome": {"type": "string", "enum": ["success", "failure", "partial", "unknown"]},
+                "helpful": {"type": "boolean", "description": "Whether the Borg guidance helped."},
+                "verified": {"type": "boolean", "description": "Whether the outcome was verified by command/test/user evidence."},
+                "verification_command": {"type": "string", "description": "Command or evidence used to verify, redacted before storage."},
+                "tenant_pseudonym": {"type": "string", "description": "Optional raw tenant name or hmac-sha256 pseudonym. Defaults to BORG_TENANT_PSEUDONYM, then local; must match the intervention tenant after normalization."},
+                "agent_id": {"type": "string", "default": "default"},
+                "atom_id": {"type": "string", "description": "Optional learning atom this outcome supports. Must match an atom id recorded in the intervention source_refs; omit for cluster-level evidence."},
+                "time_saved_minutes": {"type": "number", "default": 0},
+                "tokens_saved": {"type": "integer", "default": 0},
+                "dead_ends_avoided": {"type": "integer", "default": 0},
+                "notes": {"type": "string"},
+                "session_id": {"type": "string", "description": "Session key used to resolve the last Borg intervention when intervention_id is omitted."},
+            },
+            "required": ["outcome", "helpful", "verified"],
+        },
+    },
+    {
+        "name": "borg_collective_retrieve",
+        "description": (
+            "Unified scored retrieval over outcome-grounded Borg collective memory. Returns learning atoms ranked by text match, "
+            "verified tenant quorum, helpful outcome receipts, and negative evidence."
+        ),
+        "inputSchema": {
+            "type": "object",
+            "properties": {
+                "query": {"type": "string", "description": "Task, error, or failing command output to retrieve collective memory for."},
+                "limit": {"type": "integer", "default": 5},
+            },
+            "required": ["query"],
+        },
+    },
+    {
+        "name": "borg_collective_status",
+        "description": (
+            "Inspect the privacy-safe contribution ledger and atom-promotion readiness. "
+            "Use action='summary' for totals, 'events' for recent ledger events, or 'candidate' to build a sanitized atom candidate for a cluster."
+        ),
+        "inputSchema": {
+            "type": "object",
+            "properties": {
+                "action": {"type": "string", "enum": ["summary", "events", "candidate"], "default": "summary"},
+                "cluster_id": {"type": "string", "description": "Required for action='candidate'."},
+                "limit": {"type": "integer", "default": 50},
+                "min_helpful_tenants": {"type": "integer", "default": 3},
+            },
+            "required": ["action"],
         },
     },
     {
@@ -1440,7 +1708,7 @@ def borg_feedback(
                         root_cause=what_changed[:200] if what_changed else "",
                         approach_summary=where_to_reuse[:200] if where_to_reuse else ""
                     )
-                    _save_trace_if_meaningful(trace)
+                    _save_trace_if_meaningful(trace, session_id=session_id_from_ctx)
                     del _trace_captures[session_id_from_ctx]
 
                     # Do not recursively call borg_feedback here: this block already runs
@@ -1791,25 +2059,47 @@ def _guidance_is_safe_to_inject(guidance: str, task: str, context: str = "") -> 
     return _confidence_gate.guidance_is_safe_to_inject(guidance, task, context)
 
 
-def borg_rescue(input: str = "", source: str = "mcp", show_guidance: bool = True) -> str:
+def borg_rescue(input: str = "", source: str = "mcp", show_guidance: bool = True, session_id: str = "") -> str:
     """Return an agent-ready day-one rescue packet as JSON."""
     try:
         from borg.core.rescue import rescue
 
         result = rescue(input, source=source or "mcp", show_guidance=bool(show_guidance))
-        return json.dumps(result.to_dict(), ensure_ascii=False)
+        payload = result.to_dict()
+        sid = _human_session_key(explicit=session_id)
+        intervention = _record_collective_intervention(
+            source_tool="error_lookup" if (source or "").startswith("error_lookup") else "borg_rescue",
+            task_text=input,
+            context=str(source or "mcp"),
+            guidance={
+                "action": payload.get("action"),
+                "stop": payload.get("stop"),
+                "verify": payload.get("verify"),
+                "confidence": payload.get("confidence"),
+                "status": payload.get("status"),
+                "evidence": payload.get("evidence"),
+            },
+            session_id=sid,
+            agent_id=_current_agent_id.get() or "mcp",
+        )
+        if intervention:
+            payload["intervention_id"] = intervention["intervention_id"]
+            payload.setdefault("value_receipt", {})["intervention_id"] = intervention["intervention_id"]
+            payload.setdefault("value_receipt", {})["outcome_receipt_next_step"] = "After verification, call borg_record_outcome with this intervention_id."
+        _attach_human_comms(payload, session_id=sid)
+        return json.dumps(payload, ensure_ascii=False)
     except Exception as e:
         return json.dumps({"success": False, "error": str(e), "type": type(e).__name__})
 
 
-def error_lookup(input: str = "", source: str = "mcp", show_guidance: bool = True) -> str:
+def error_lookup(input: str = "", source: str = "mcp", show_guidance: bool = True, session_id: str = "") -> str:
     """Plain-English MCP alias for :func:`borg_rescue`.
 
     First users search for an "error lookup" tool before they know Borg's
     internal naming.  Keep the alias behaviorally identical to borg_rescue so
     docs, MCP discovery, and agent priming all point to one rescue contract.
     """
-    return borg_rescue(input=input, source=source or "mcp", show_guidance=show_guidance)
+    return borg_rescue(input=input, source=source or "mcp", show_guidance=show_guidance, session_id=session_id)
 
 
 def borg_first_10() -> str:
@@ -2407,6 +2697,94 @@ def borg_record_failure(
     except ValueError as e:
         return json.dumps({"success": False, "error": str(e), "type": "ValueError"})
     except (KeyError, OSError, json.JSONDecodeError) as e:
+        return json.dumps({"success": False, "error": str(e), "type": type(e).__name__})
+
+
+def borg_record_outcome(
+    intervention_id: str = "",
+    outcome: str = "",
+    helpful: bool = False,
+    verified: bool = False,
+    verification_command: str = "",
+    tenant_pseudonym: str = "",
+    agent_id: str = "default",
+    atom_id: str = "",
+    time_saved_minutes: float = 0.0,
+    tokens_saved: int = 0,
+    dead_ends_avoided: int = 0,
+    notes: str = "",
+    session_id: str = "",
+) -> str:
+    """Record an outcome receipt for a Borg intervention."""
+    try:
+        from borg.core.collective_learning import CollectiveLearningStore
+
+        resolved_session = session_id
+        if not intervention_id and not resolved_session:
+            return json.dumps({"success": False, "error": "session_id is required when intervention_id is omitted"})
+        resolved_intervention = intervention_id or _last_collective_intervention(resolved_session)
+        if not resolved_intervention:
+            return json.dumps({"success": False, "error": "intervention_id is required"})
+        receipt = CollectiveLearningStore().record_outcome(
+            intervention_id=resolved_intervention,
+            outcome=outcome,
+            helpful=helpful,
+            verified=verified,
+            verification_command=verification_command,
+            tenant_pseudonym=tenant_pseudonym or (os.environ.get("BORG_TENANT_PSEUDONYM") or "local"),
+            agent_id=agent_id,
+            atom_id=atom_id or None,
+            time_saved_minutes=time_saved_minutes,
+            tokens_saved=tokens_saved,
+            dead_ends_avoided=dead_ends_avoided,
+            notes=notes,
+        )
+        return json.dumps({"success": True, "recorded": True, "receipt": receipt}, ensure_ascii=False)
+    except (KeyboardInterrupt, SystemExit):
+        raise
+    except (ValueError, KeyError, OSError, json.JSONDecodeError) as e:
+        return json.dumps({"success": False, "error": str(e), "type": type(e).__name__})
+
+
+def borg_collective_retrieve(query: str = "", limit: int = 5) -> str:
+    """Return unified scored collective memory for a task/error query."""
+    try:
+        from borg.core.collective_learning import unified_collective_retrieve
+        if not query:
+            return json.dumps({"success": False, "error": "query is required"})
+        results = unified_collective_retrieve(query, limit=limit)
+        return json.dumps({"success": True, "query": query, "matches": results, "total": len(results)}, ensure_ascii=False)
+    except (KeyboardInterrupt, SystemExit):
+        raise
+    except (ValueError, KeyError, OSError, json.JSONDecodeError) as e:
+        return json.dumps({"success": False, "error": str(e), "type": type(e).__name__})
+
+
+def borg_collective_status(action: str = "summary", cluster_id: str = "", limit: int = 50, min_helpful_tenants: int = 3) -> str:
+    """Inspect privacy-safe contribution events and atom-candidate readiness."""
+    try:
+        from borg.core.collective_learning import CollectiveLearningStore
+
+        store = CollectiveLearningStore()
+        if action == "summary":
+            return json.dumps({
+                "success": True,
+                "action": "summary",
+                "summary": store.contribution_summary(),
+                "value_summary": store.recent_value_summary(),
+            }, ensure_ascii=False)
+        if action == "events":
+            events = store.recent_contribution_events(limit=limit)
+            return json.dumps({"success": True, "action": "events", "events": events, "total": len(events)}, ensure_ascii=False)
+        if action == "candidate":
+            if not cluster_id:
+                return json.dumps({"success": False, "error": "cluster_id is required for action='candidate'"})
+            candidate = store.build_learning_atom_candidate(cluster_id, min_helpful_tenants=min_helpful_tenants)
+            return json.dumps(candidate, ensure_ascii=False)
+        return json.dumps({"success": False, "error": "action must be summary, events, or candidate"})
+    except (KeyboardInterrupt, SystemExit):
+        raise
+    except (ValueError, KeyError, OSError, json.JSONDecodeError) as e:
         return json.dumps({"success": False, "error": str(e), "type": type(e).__name__})
 
 
@@ -3078,6 +3456,7 @@ def _call_tool_impl(name: str, arguments: Dict[str, Any]) -> str:
             input=arguments.get("input", ""),
             source=arguments.get("source", "mcp"),
             show_guidance=arguments.get("show_guidance", True),
+            session_id=_human_session_key(arguments),
         )
 
     elif name == "borg_first_10":
@@ -3119,6 +3498,44 @@ def _call_tool_impl(name: str, arguments: Dict[str, Any]) -> str:
             approach=arguments.get("approach", ""),
             outcome=arguments.get("outcome", ""),
             agent_id=arguments.get("agent_id", "default"),
+        )
+
+    elif name == "borg_record_outcome":
+        meta = arguments.get("_meta") if isinstance(arguments, dict) else None
+        explicit_session_id = (
+            arguments.get("session_id", "")
+            or arguments.get("_hermes_session_id", "")
+            or ((meta or {}).get("hermes_session_id", "") if isinstance(meta, dict) else "")
+            or ((meta or {}).get("session_id", "") if isinstance(meta, dict) else "")
+        )
+        return borg_record_outcome(
+            intervention_id=arguments.get("intervention_id", ""),
+            outcome=arguments.get("outcome", ""),
+            helpful=arguments.get("helpful", False),
+            verified=arguments.get("verified", False),
+            verification_command=arguments.get("verification_command", ""),
+            tenant_pseudonym=arguments.get("tenant_pseudonym", ""),
+            agent_id=arguments.get("agent_id", "default"),
+            atom_id=arguments.get("atom_id", ""),
+            time_saved_minutes=arguments.get("time_saved_minutes", 0.0),
+            tokens_saved=arguments.get("tokens_saved", 0),
+            dead_ends_avoided=arguments.get("dead_ends_avoided", 0),
+            notes=arguments.get("notes", ""),
+            session_id=explicit_session_id,
+        )
+
+    elif name == "borg_collective_retrieve":
+        return borg_collective_retrieve(
+            query=arguments.get("query", ""),
+            limit=arguments.get("limit", 5),
+        )
+
+    elif name == "borg_collective_status":
+        return borg_collective_status(
+            action=arguments.get("action", "summary"),
+            cluster_id=arguments.get("cluster_id", ""),
+            limit=arguments.get("limit", 50),
+            min_helpful_tenants=arguments.get("min_helpful_tenants", 3),
         )
 
     elif name == "borg_delete_failure":
@@ -3193,6 +3610,38 @@ def make_response(id: Any, result: Dict[str, Any]) -> Dict[str, Any]:
 def make_error(id: Any, code: int, message: str) -> Dict[str, Any]:
     """Build a JSON-RPC 2.0 error response."""
     return {"jsonrpc": "2.0", "id": id, "error": {"code": code, "message": message}}
+
+
+def _mcp_call_result(result_text: str, *, is_error: bool, parsed: Any = None) -> Dict[str, Any]:
+    """Build a CallToolResult, preserving Borg human-facing metadata if present."""
+    result: Dict[str, Any] = {
+        "content": [{"type": "text", "text": result_text}],
+        "isError": is_error,
+    }
+    if not isinstance(parsed, dict):
+        return result
+
+    human = parsed.get("borg_human") if isinstance(parsed.get("borg_human"), dict) else None
+    user_message = parsed.get("user_message")
+    session_message = parsed.get("session_message")
+    if not (human or user_message or session_message):
+        return result
+
+    structured: Dict[str, Any] = {"schema_version": 1}
+    if human:
+        structured["borg_human"] = human
+    if user_message:
+        structured["user_message"] = user_message
+    if session_message:
+        structured["session_message"] = session_message
+    result["structuredContent"] = structured
+    if user_message:
+        result["user_message"] = user_message
+    if session_message:
+        result["session_message"] = session_message
+    if human:
+        result["borg_human"] = human
+    return result
 
 
 # ---------------------------------------------------------------------------
@@ -3316,17 +3765,15 @@ def handle_request(request: Dict[str, Any]) -> Optional[Dict[str, Any]]:
         arguments = params.get("arguments", {})
         result_text = call_tool(tool_name, arguments)
 
-        # Parse result to determine isError
+        # Parse result to determine isError and preserve structured human metadata.
+        parsed = None
         try:
             parsed = json.loads(result_text)
-            is_error = parsed.get("success") is False or "error" in parsed
+            is_error = parsed.get("success") is False or "error" in parsed if isinstance(parsed, dict) else False
         except (json.JSONDecodeError, TypeError):
             is_error = False
 
-        return make_response(req_id, {
-            "content": [{"type": "text", "text": result_text}],
-            "isError": is_error,
-        })
+        return make_response(req_id, _mcp_call_result(result_text, is_error=is_error, parsed=parsed))
 
     elif method == "ping":
         return make_response(req_id, {})

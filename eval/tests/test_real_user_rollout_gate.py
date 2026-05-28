@@ -21,7 +21,7 @@ def test_real_user_rollout_gate_blocks_100_when_first_10_scoreboard_empty(tmp_pa
     monkeypatch.setattr(rollout_gate, "REPORT", tmp_path / "20260517_BORG_100_REAL_USER_READINESS.md")
 
     monkeypatch.setattr(rollout_gate, "_ops_ready", lambda: {"passed": True, "blockers": [], "rollout_policy": "test"})
-    assert rollout_gate.main() == 1
+    assert rollout_gate.main([]) == 1
     payload = json.loads(capsys.readouterr().out)
     assert payload["ready_for_100_real_users"] is False
     assert payload["max_recommended_real_users_now"] in {0, 10}
@@ -36,6 +36,23 @@ def test_real_user_rollout_gate_blocks_100_when_first_10_scoreboard_empty(tmp_pa
         assert payload["ready_for_10_controlled_beta"] is True
         assert payload["infrastructure_ready_for_100"] is True
         assert payload["max_recommended_real_users_now"] == 10
+
+
+def test_real_user_rollout_gate_no_write_does_not_touch_artifacts(tmp_path, monkeypatch, capsys) -> None:
+    snapshot_path = tmp_path / "real_user_rollout_gate_snapshot.json"
+    report_path = tmp_path / "20260517_BORG_100_REAL_USER_READINESS.md"
+    snapshot_path.write_text('{"sentinel":"snapshot"}', encoding="utf-8")
+    report_path.write_text("sentinel-report", encoding="utf-8")
+    monkeypatch.setattr(rollout_gate, "SNAPSHOT", snapshot_path)
+    monkeypatch.setattr(rollout_gate, "REPORT", report_path)
+    monkeypatch.setattr(rollout_gate, "_ops_ready", lambda: {"passed": True, "blockers": [], "rollout_policy": "test"})
+
+    assert rollout_gate.main(["--no-write"]) == 1
+    payload = json.loads(capsys.readouterr().out)
+
+    assert payload["wrote_artifacts"] is False
+    assert snapshot_path.read_text(encoding="utf-8") == '{"sentinel":"snapshot"}'
+    assert report_path.read_text(encoding="utf-8") == "sentinel-report"
 
 
 def test_real_user_rollout_gate_snapshot_is_machine_readable() -> None:

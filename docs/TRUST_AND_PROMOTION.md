@@ -1,6 +1,6 @@
 # Borg Trust and Promotion
 
-**Rev:** 20260503-0846
+**Rev:** 20260526-1302
 
 ## Principle
 
@@ -36,8 +36,10 @@ Agent count does not equal tenant independence.
 Global candidates require independent tenant support. Default M0/M2 target:
 
 ```text
-independent_tenant_count >= 3
+verified_tenant_count >= 3
 ```
+
+The atom payload may carry `trust.independent_tenant_count` as a hint for local display or compatibility, but it is **not trusted for promotion or retrieval evidence**. Policy must receive registry-computed `verified_tenant_count`; otherwise the atom is quarantined. Retrieval should display registry/store verified counts when present. Same tenant, same machine, same signing key, same billing/org proof, or same operator cannot count twice.
 
 Future M2 tenant independence can be proven by verified org key, admin-issued tenant signing key, billing-domain proof, or registry membership.
 
@@ -54,5 +56,5 @@ Future M2 tenant independence can be proven by verified org key, admin-issued te
 ## Verification
 
 ```bash
-python -m pytest -q borg/tests/test_learning_atoms.py borg/tests/test_atom_policy.py
+python -m pytest -q tests/security/test_learning_atoms.py tests/security/test_atom_policy.py tests/security/test_atom_store.py
 ```

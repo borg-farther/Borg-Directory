@@ -85,6 +85,8 @@ def test_try_dispatches_to_borg_try(mock_try):
 def test_init_scaffolds_new_pack(tmp_path, monkeypatch):
     """init now scaffolds inline (no longer dispatches to borg_init)."""
     guild_dir = tmp_path / ".borg" / "guild"
+    monkeypatch.delenv("BORG_HOME", raising=False)
+    monkeypatch.delenv("BORG_DIR", raising=False)
     monkeypatch.setattr("pathlib.Path.home", lambda: tmp_path)
     code, out, err = capture_main(["init", "my-skill"])
     assert code == 0
@@ -198,7 +200,7 @@ def test_rescue_interactive_fallback_reads_one_stdin_line(monkeypatch):
 def test_help_text_shows_all_commands():
     code, out, err = capture_main(["--help"])
     assert code == 0
-    for cmd in ["search", "pull", "try", "init", "apply", "publish", "feedback", "debug", "rescue", "convert", "list", "autopilot", "version"]:
+    for cmd in ["search", "pull", "try", "init", "apply", "publish", "feedback", "debug", "rescue", "convert", "list", "autopilot", "collective", "version"]:
         assert cmd in out, f"'{cmd}' not found in help output"
 
 
@@ -774,6 +776,133 @@ def test_reputation_shows_all_profile_fields(mock_engine_cls, mock_store_cls):
     assert "3" in out
     assert "7" in out
     assert "2025-06-15" in out
+
+
+# ---------------------------------------------------------------------------
+# collective command tests
+# ---------------------------------------------------------------------------
+
+def test_collective_summary_json_reports_contribution_ledger(tmp_path):
+    from borg.core.collective_learning import CollectiveLearningStore
+
+    db = tmp_path / "collective.db"
+    store = CollectiveLearningStore(str(db))
+    intervention = store.record_intervention(
+        source_tool="borg_rescue",
+        task_text="ModuleNotFoundError: flask",
+        context="python",
+        guidance="Install Flask",
+        tenant_pseudonym="tenant-a",
+    )
+    store.record_outcome(
+        intervention_id=intervention["intervention_id"],
+        outcome="success",
+        helpful=True,
+        verified=True,
+        verification_command="python -c 'import flask'",
+        tenant_pseudonym=intervention["tenant_pseudonym"],
+    )
+
+    code, out, err = capture_main(["collective", "summary", "--db", str(db), "--json"])
+    data = json.loads(out)
+
+    assert code == 0
+    assert data["success"] is True
+    assert data["summary"]["by_type"]["intervention"] == 1
+    assert data["summary"]["by_type"]["outcome_receipt"] == 1
+    assert data["summary"]["external_lift_status"] == "NO-GO_REAL_FIRST_10_ROWS_REQUIRED"
+
+
+def test_collective_candidate_json_blocks_without_quorum(tmp_path):
+    from borg.core.collective_learning import CollectiveLearningStore
+
+    db = tmp_path / "collective.db"
+    store = CollectiveLearningStore(str(db))
+    intervention = store.record_intervention(
+        source_tool="borg_rescue",
+        task_text="ModuleNotFoundError: flask",
+        context="python",
+        guidance="Install Flask",
+        tenant_pseudonym="tenant-a",
+    )
+    store.record_outcome(
+        intervention_id=intervention["intervention_id"],
+        outcome="success",
+        helpful=True,
+        verified=True,
+        verification_command="python -c 'import flask'",
+        tenant_pseudonym=intervention["tenant_pseudonym"],
+    )
+
+    code, out, err = capture_main(["collective", "candidate", intervention["cluster_id"], "--db", str(db), "--json"])
+    data = json.loads(out)
+
+    assert code == 0
+    assert data["success"] is True
+    assert data["promotable"] is False
+    assert data["blockers"] == ["verified helpful tenant quorum 1/3"]
+
+
+def test_collective_promote_json_accepts_cluster_derived_source_atom_receipts(tmp_path, monkeypatch):
+    from borg.core.collective_learning import CollectiveLearningStore
+    from borg.core.crypto import generate_signing_key, store_signing_key
+    import borg.core.crypto as crypto_module
+
+    db = tmp_path / "collective.db"
+    registry = tmp_path / "registry"
+    keys_dir = tmp_path / "keys"
+    agent_id = "agent://cluster-promoter"
+    monkeypatch.setattr(crypto_module, "DEFAULT_KEYS_DIR", keys_dir)
+    store_signing_key(generate_signing_key(), agent_id, keys_dir=keys_dir)
+
+    store = CollectiveLearningStore(str(db))
+    source_atom_id = "sha256:" + "c" * 64
+    cluster_id = ""
+    for idx, tenant in enumerate(["tenant-a", "tenant-b", "tenant-c"], start=1):
+        intervention = store.record_intervention(
+            source_tool="borg_rescue",
+            task_text="ModuleNotFoundError: No module named flask",
+            context="python",
+            guidance="Install Flask in the active virtual environment",
+            agent_id=f"agent-{idx}",
+            tenant_pseudonym=tenant,
+            source_refs=[source_atom_id],
+        )
+        cluster_id = cluster_id or intervention["cluster_id"]
+        store.record_outcome(
+            intervention_id=intervention["intervention_id"],
+            outcome="success",
+            helpful=True,
+            verified=True,
+            verification_command="python -c 'import flask'",
+            tenant_pseudonym=intervention["tenant_pseudonym"],
+            agent_id=f"agent-{idx}",
+            atom_id=source_atom_id,
+            cluster_id=cluster_id,
+        )
+
+    code, out, err = capture_main([
+        "collective",
+        "promote",
+        cluster_id,
+        "--db",
+        str(db),
+        "--registry-dir",
+        str(registry),
+        "--sign-agent",
+        agent_id,
+        "--json",
+    ])
+    data = json.loads(out)
+
+    assert code == 0, err + out
+    assert data["success"] is True
+    assert data["registry_receipt"]["decision"] == "global_candidate"
+    assert data["registry_receipt"]["reason"] == "accepted"
+    assert data["registry_receipt"]["verified_tenant_count"] == 3
+    assert data["external_lift_status"] == "NO-GO_REAL_FIRST_10_ROWS_REQUIRED"
+    assert (registry / "atoms").exists()
+    assert (registry / "outcomes").exists()
 
 
 # ---------------------------------------------------------------------------
