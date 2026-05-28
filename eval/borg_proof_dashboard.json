@@ -116,9 +116,9 @@
     {
       "claim_derived": "PyPI fresh-install canary success=True; version=3.3.14",
       "exists": true,
-      "freshness_timestamp": "2026-05-28T08:16:51Z",
+      "freshness_timestamp": "2026-05-28T09:11:35Z",
       "path": "eval/pypi_fresh_install_snapshot.json",
-      "sha256": "0088c350c1f302c10305b96891e08a07380ae0ddd1c3073a0e14e8cdc77e6d58"
+      "sha256": "a4291a3acf05ca3286eb4aea1531a8d09d0f8ed69b357bfe4e6513b817964d2d"
     },
     {
       "claim_derived": "logical load 10: passed=True; total_requests=55571; success_rate=1.0; p95_ms=0.692504458129406; model=asyncio_logical_users",
@@ -358,7 +358,7 @@
       }
     ]
   },
-  "generated_at_utc": "2026-05-28T08:16:51Z",
+  "generated_at_utc": "2026-05-28T09:11:35Z",
   "metrics": {
     "active_contributors_consumers": {
       "honesty_label": "MISSING_BORG_ANALYTICS_ARTIFACT",
@@ -510,7 +510,7 @@
     "Before any public claim, replace logical-user load evidence with real external-user evidence or clearly label the distinction."
   ],
   "repo": "https://github.com/borg-farther/Borg-Directory",
-  "source_revision": "81e959c5cd35e5851846ebd6431e554141c8d1ca+dirty",
+  "source_revision": "5f170da5df21f2d036d141eebf7920743a695593+dirty",
   "top_verdict": {
     "broad_public_launch": {
       "verdict": "NO-GO",

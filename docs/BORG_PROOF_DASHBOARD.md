@@ -1,8 +1,8 @@
 # Borg Proof Dashboard
 
-Generated: `2026-05-28T08:16:51Z`
+Generated: `2026-05-28T09:11:35Z`
 Repo: `https://github.com/borg-farther/Borg-Directory`
-Source snapshot: `81e959c5cd35e5851846ebd6431e554141c8d1ca+dirty`
+Source snapshot: `5f170da5df21f2d036d141eebf7920743a695593+dirty`
 
 ## Big top verdict
 
@@ -53,7 +53,7 @@ Source snapshot: `81e959c5cd35e5851846ebd6431e554141c8d1ca+dirty`
 | eval/self_service_ops_gate_snapshot.json | True | 12b46e82979c724d14cf883e94d874c3070fe120d0793ee9d6595efd4e8e1323 | 2026-05-28T08:04:34.595763+00:00 | self-service ops gate=True; blockers=[] |
 | eval/ops_readiness_watchdog_snapshot.json | True | ac9f46157dcf07d7fbd4387b2c7300ab4ac86aa7a37416e274fdb71547c1bb25 | 2026-05-26T06:22:04.958363+00:00 | ops readiness watchdog=True; blocker details live in eval/ops_readiness_watchdog_snapshot.json |
 | eval/rollback_comms_drill_snapshot.json | True | 8f4b0d8a09689b2379aeecaa970b51970e6fdc30e0eb31bac5602b85cbc57ff6 | 2026-05-27T20:55:01.908873+00:00 | rollback/comms drill=True; dry_run_only=True |
-| eval/pypi_fresh_install_snapshot.json | True | 0088c350c1f302c10305b96891e08a07380ae0ddd1c3073a0e14e8cdc77e6d58 | 2026-05-28T08:16:51Z | PyPI fresh-install canary success=True; version=3.3.14 |
+| eval/pypi_fresh_install_snapshot.json | True | a4291a3acf05ca3286eb4aea1531a8d09d0f8ed69b357bfe4e6513b817964d2d | 2026-05-28T09:11:35Z | PyPI fresh-install canary success=True; version=3.3.14 |
 | eval/load_10_snapshot.json | True | c701c046aacf047771171220ade45c2ea585e226fd0cc893de9fce7d96b0a4e0 | 2026-05-28T08:03:10.671717+00:00 | logical load 10: passed=True; total_requests=55571; success_rate=1.0; p95_ms=0.692504458129406; model=asyncio_logical_users |
 | eval/load_100_snapshot.json | True | 7fe6342c5388dd80fd41354d1c4e4d694b5b7d97e210d52b072980bf17e7c5ea | 2026-05-28T08:03:40.794857+00:00 | logical load 100: passed=True; total_requests=55624; success_rate=1.0; p95_ms=0.6818614318035543; model=asyncio_logical_users |
 | eval/load_1000_snapshot.json | True | 0f2f9453b6f9d6bb10ca0a7172b46610056d8a857a1d1b5daed5915aa7ccd884 | 2026-05-28T08:04:10.957423+00:00 | logical load 1000: passed=True; total_requests=51863; success_rate=1.0; p95_ms=0.7186339935287833; model=asyncio_logical_users |
