@@ -1,5 +1,7 @@
 {
   "blockers": [
+    "PyPI latest/fresh-install package evidence is not green: latest metadata does not match source version",
+    "PyPI latest/fresh-install package evidence is not green: fresh install + MCP stdio canary is not green",
     "first-10 external-user evidence has not passed: verified=0/10, real_users=0/10, installs=0/8, useful=0/6, critical_incidents=0/0"
   ],
   "first_10_external_evidence": {
@@ -33,14 +35,14 @@
     "exists": true,
     "failed_count": 0,
     "failures": [],
-    "generated_at_utc": "2026-05-28T08:02:09Z",
+    "generated_at_utc": "2026-05-28T17:22:08Z",
     "passed": true,
-    "passed_count": 26
+    "passed_count": 28
   },
   "gate_type": "real_user_rollout",
-  "generated_at_utc": "2026-05-28T08:04:19.113008+00:00",
+  "generated_at_utc": "2026-05-28T17:22:09.342905+00:00",
   "important_distinction": "load/readiness snapshots are synthetic/logical users; this gate controls real external-user rollout",
-  "infrastructure_ready_for_100": true,
+  "infrastructure_ready_for_100": false,
   "load_gates": {
     "10": {
       "duration_seconds": 30.0,
@@ -72,30 +74,33 @@
     }
   },
   "local_infrastructure_ready_for_10": true,
-  "max_recommended_real_users_now": 10,
+  "max_recommended_real_users_now": 0,
   "no_fake_user_policy": "Do not mark first-10 complete or 100-real-user ready without consented external evidence rows.",
   "public_package_gate": {
-    "blockers": [],
-    "passed": true,
+    "blockers": [
+      "PyPI latest/fresh-install package evidence is not green: latest metadata does not match source version",
+      "PyPI latest/fresh-install package evidence is not green: fresh install + MCP stdio canary is not green"
+    ],
+    "passed": false,
     "pypi_fresh_install_and_mcp_stdio": {
       "exists": true,
-      "expected_version": "3.3.14",
+      "expected_version": "3.3.15",
       "failed_count": 0,
       "failures": [],
-      "generated_at_utc": "2026-05-25T17:04:55Z",
+      "generated_at_utc": "2026-05-28T09:11:35Z",
       "mcp_server_info": {
         "name": "borg-mcp-server",
         "version": "3.3.14"
       },
       "mcp_stdio_canary_passed": true,
-      "passed": true,
+      "passed": false,
       "path": "eval/pypi_fresh_install_snapshot.json",
       "version": "3.3.14"
     },
     "pypi_latest": {
       "banned_keywords_present": [],
       "expected_summary": "Failure memory CLI and MCP server for AI coding agents",
-      "expected_version": "3.3.14",
+      "expected_version": "3.3.15",
       "keyword_missing": false,
       "keywords": [
         "agent-tools",
@@ -106,7 +111,7 @@
       ],
       "latest_version": "3.3.14",
       "package": "agent-borg",
-      "passed": true,
+      "passed": false,
       "project_urls": {
         "Documentation": "https://github.com/borg-farther/Borg-Directory#readme",
         "Homepage": "https://github.com/borg-farther/Borg-Directory",
@@ -142,7 +147,7 @@
     }
   },
   "ready_for_100_real_users": false,
-  "ready_for_10_controlled_beta": true,
+  "ready_for_10_controlled_beta": false,
   "schema_version": 1,
   "security": {
     "missing": [],
@@ -158,13 +163,13 @@
   },
   "self_service_ops_gate": {
     "blockers": [],
-    "generated_at_utc": "2026-05-28T08:04:19.112783+00:00",
+    "generated_at_utc": "2026-05-28T17:22:09.342674+00:00",
     "passed": true,
     "rollout_policy": "Controlled first-10 may proceed only when ops readiness passes; broad public self-serve still requires row-derived first-10 external evidence."
   },
   "version": {
     "passed": true,
-    "project_version": "3.3.14",
-    "runtime_version": "3.3.14"
+    "project_version": "3.3.15",
+    "runtime_version": "3.3.15"
   }
 }

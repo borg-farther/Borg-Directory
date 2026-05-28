@@ -1,10 +1,10 @@
 # Borg support policy
 
-Borg is currently open for a controlled first-10 public-package beta, not broad public self-serve. Support expectations are intentionally narrow so tester outcomes remain measurable and do not become hidden maintainer handholding.
+Borg is **not currently open** for a controlled first-10 public-package beta from this branch. The branch targets `agent-borg==3.3.15`, but controlled invites stay paused until GitHub `main`, PyPI latest, fresh-install, stdio MCP, generated-rules/OpenClaw, ops, watchdog, and proof dashboards are green for that exact version. Support expectations are intentionally narrow so tester outcomes remain measurable and do not become hidden maintainer handholding.
 
 ## Supported path
 
-- Install: `pipx install agent-borg==3.3.14` or `pip install agent-borg==3.3.14` in a clean environment.
+- Target install after release: `pipx install agent-borg==3.3.15` or `pip install agent-borg==3.3.15` in a clean environment. Until 3.3.15 is published and canaried, use this as a release-candidate target, not an invitation link.
 - First command: `borg rescue "<redacted real error>" --short`.
 - MCP path: `borg-mcp` over stdio from a local client.
 - Evidence intake: `.github/ISSUE_TEMPLATE/first-10-evidence.yml`.
@@ -48,4 +48,4 @@ A first-10 row counts as self-service only when the tester can complete install,
 
 ## Current boundary
 
-Controlled first-10 beta can run only while package, trust, ops, and watchdog gates are green. Broad public self-serve remains NO-GO until row-derived first-10 external-user evidence passes: 10 verified external users, at least 8 installs, at least 6 useful rescues, and 0 critical privacy/security incidents.
+Controlled first-10 beta can run only after the current release package, trust, ops, and watchdog gates are green for the same version. Broad public self-serve remains NO-GO until row-derived first-10 external-user evidence passes: 10 verified external users, at least 8 installs, at least 6 useful rescues, and 0 critical privacy/security incidents.

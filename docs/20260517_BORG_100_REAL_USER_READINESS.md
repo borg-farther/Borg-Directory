@@ -1,9 +1,9 @@
 # Borg 100 real-user readiness
 
-Generated: 2026-05-28T08:04:19.113008+00:00
+Generated: 2026-05-28T17:22:09.342905+00:00
 
 100 real-user verdict: **NO-GO**
-Max recommended real users now: **10**
+Max recommended real users now: **0**
 
 ## Distinction
 
@@ -12,9 +12,9 @@ Real-user rollout requires first-10 external evidence before expanding to 100.
 
 ## Current gates
 
-- ready_for_10_controlled_beta: `True`
+- ready_for_10_controlled_beta: `False`
 - self_service_ops_ready: `True`
-- infrastructure_ready_for_100: `True`
+- infrastructure_ready_for_100: `False`
 - ready_for_100_real_users: `False`
 
 ## First-10 evidence
@@ -29,6 +29,8 @@ Real-user rollout requires first-10 external evidence before expanding to 100.
 
 ## Blockers
 
+- PyPI latest/fresh-install package evidence is not green: latest metadata does not match source version
+- PyPI latest/fresh-install package evidence is not green: fresh install + MCP stdio canary is not green
 - first-10 external-user evidence has not passed: verified=0/10, real_users=0/10, installs=0/8, useful=0/6, critical_incidents=0/0
 
 ## Required action to unlock 100 real users

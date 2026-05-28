@@ -219,23 +219,51 @@ def run_canary(version: str) -> dict[str, Any]:
                 timeout=300,
             ))
         install_ok = bool(results and results[-1].name == "pip_install_agent_borg" and results[-1].passed)
+        generated_rules_dir = venv_dir / "generated-rules"
+        openclaw_dir = venv_dir / "openclaw"
         commands = [
             ("pip_show_agent_borg", [str(py), "-m", "pip", "show", "agent-borg"], [f"Version: {version}", f"Summary: {EXPECTED_SUMMARY}"]),
             ("borg_version", [str(borg), "--version"], [version]),
             ("borg_help", [str(borg), "--help"], ["failure memory for AI coding agents", "borg rescue", "borg start"]),
             ("borg_rescue_json", [str(borg), "rescue", "ModuleNotFoundError: No module named flask", "--json"], ["agent_instruction", "human_receipt", "ACTION", "STOP", "VERIFY"]),
             ("borg_doctor_json", [str(doctor), "--json"], ["runtime", "checks"]),
+            (
+                "borg_generate_systematic_debugging_rules",
+                [str(borg), "generate", "systematic-debugging", "--format", "all", "--output", str(generated_rules_dir)],
+                [".cursorrules", ".clinerules", "CLAUDE.md", ".windsurfrules"],
+            ),
+            (
+                "borg_convert_openclaw_registry",
+                [str(borg), "convert", ".", "--format", "openclaw", "--all", "--output", str(openclaw_dir)],
+                ["Converted", "OpenClaw", "systematic-debugging"],
+            ),
+            (
+                "python_api_check",
+                [str(py), "-c", "import borg, json; r=borg.check('ModuleNotFoundError: No module named flask', top_k=1); print(json.dumps({'version': borg.__version__, 'result_type': type(r).__name__, 'count': len(r), 'file': borg.__file__}))"],
+                [version, '"result_type": "list"'],
+            ),
         ]
         if install_ok:
             for name, cmd, needles in commands:
                 result = run_cmd(name, cmd, env=env, timeout=180)
                 combined = result.stdout + result.stderr
                 stale_copy = [snippet for snippet in BANNED_PUBLIC_COPY if snippet in combined]
-                if result.passed and all(needle in combined for needle in needles) and not stale_copy:
+                files_ok = True
+                if name == "borg_generate_systematic_debugging_rules":
+                    files_ok = all(
+                        (generated_rules_dir / filename).exists()
+                        for filename in [".cursorrules", ".clinerules", "CLAUDE.md", ".windsurfrules"]
+                    )
+                elif name == "borg_convert_openclaw_registry":
+                    files_ok = all(
+                        (openclaw_dir / filename).exists()
+                        for filename in ["SKILL.md", "references/pack-index.md", "references/packs/systematic-debugging.md"]
+                    )
+                if result.passed and all(needle in combined for needle in needles) and not stale_copy and files_ok:
                     result.detail = "expected value signal present"
                 else:
                     result.passed = False
-                    result.detail = "missing expected output tokens, stale public copy present, or command failed"
+                    result.detail = "missing expected output tokens, stale public copy present, expected files missing, or command failed"
                 results.append(result)
 
             if borg_mcp.exists():

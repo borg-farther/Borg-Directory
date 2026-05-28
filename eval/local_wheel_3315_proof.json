@@ -1,0 +1,195 @@
+{
+  "schema_version": 1,
+  "generated_at_utc": "2026-05-28T17:23:05Z",
+  "source_revision": "0097aec9a1069786b533cdfe79e2fba006ea9066",
+  "source_status_short": " M AGENTS.md\n M CHANGELOG.md\n M README.md\n M SUPPORT.md\n M borg/__init__.py\n M borg/core/generator.py\n M deploy/docker/Dockerfile.borg\n M deploy/smithery/smithery.yaml\n M docs/20260514_FIRST_10_USER_INVITE_PACKET.md\n M docs/20260514_PUBLIC_SELF_SERVE_LAUNCH_CLOSURE_PLAN.md\n M docs/20260517_BORG_100_REAL_USER_READINESS.md\n M docs/20260526_7_USER_CONTROLLED_LAUNCH_AND_100_USER_STAGE_GATES.md\n M docs/20260526_ALWAYS_CURRENT_RUNTIME_AND_FEDERATED_LEARNING_PLAN.md\n M docs/20260528_BORG_PRODUCTION_READY_FINAL_TODO.md\n M docs/BORG_PROOF_DASHBOARD.html\n M docs/BORG_PROOF_DASHBOARD.md\n M docs/FIRST_10_BETA_READINESS.md\n M docs/FIRST_10_EVIDENCE_INTAKE.md\n M docs/LIVE_MCP_SELF_SERVE_CANARY.md\n M docs/PUBLIC_SELF_SERVE_LAUNCH_GO_NO_GO.md\n M docs/READINESS.md\n M docs/README.md\n M docs/ROADMAP.md\n M docs/SELF_SERVICE_OPS_READINESS.md\n M docs/TRYING_BORG.md\n M docs/VALUE_COMMUNICATION_DASHBOARD.html\n M docs/VALUE_COMMUNICATION_DASHBOARD.md\n M docs/public/impact/impact.json\n M docs/public/proof-dashboard/index.html\n M docs/public/status.json\n M docs/public/value.json\n M eval/borg_proof_dashboard.json\n M eval/first_user_release_gate_snapshot.json\n M eval/public_self_serve_launch_gate_snapshot.json\n M eval/real_user_rollout_gate_snapshot.json\n M eval/run_first_user_release_gate.py\n M eval/run_pypi_fresh_install_canary.py\n M llms.txt\n M pyproject.toml\n M tests/cli/test_first_user_cli_contract.py\n M tests/core/test_generator.py\n M tests/packaging/test_public_presentation_contract.py\n?? docs/20260528_LOCAL_WHEEL_3315_PROOF.md\n?? docs/CHANNELS_AND_INSTALL_METHODS.md\n?? eval/local_wheel_3315_proof.json\n?? scripts/run_3315_local_wheel_proof.py\n",
+  "expected_version": "3.3.15",
+  "temp_root": "/tmp/borg-3315-wheel-proof-w54lsh_n",
+  "artifact_checks": {
+    "wheel_exists": true,
+    "sdist_exists": true,
+    "artifacts": [
+      {
+        "name": "agent_borg-3.3.15-py3-none-any.whl",
+        "size": 499381,
+        "sha256": "77d2f141709e00e9225973c259fa4e368c73cd2473ff1c87b7de2378c57e0fc6"
+      },
+      {
+        "name": "agent_borg-3.3.15.tar.gz",
+        "size": 441425,
+        "sha256": "16667cb5c8c09e0f1a3410bab3ede7d506a3fc767877b9236dd5fd874f14a783"
+      }
+    ],
+    "wheel_has_seed_pack": true,
+    "wheel_has_seed_md": true,
+    "wheel_has_mcp": true,
+    "sdist_has_seed_pack": true,
+    "sdist_has_seed_md": true
+  },
+  "rules_checks": {
+    ".cursorrules": true,
+    ".clinerules": true,
+    "CLAUDE.md": true,
+    ".windsurfrules": true
+  },
+  "openclaw_checks": {
+    "skill_md": true,
+    "pack_index": true,
+    "systematic_pack": true
+  },
+  "mcp_checks": {
+    "returncode_zero": true,
+    "initialize_version": "3.3.15",
+    "tools_list_count": 27,
+    "rescue_response_has_action": true,
+    "stderr_tail": "borg-mcp-server v3.3.15 ready (stdio transport)\n"
+  },
+  "steps": [
+    {
+      "cmd": [
+        "/root/.hermes/hermes-agent/venv/bin/python",
+        "-m",
+        "build",
+        "--outdir",
+        "/tmp/borg-3315-wheel-proof-w54lsh_n/dist"
+      ],
+      "cwd": "/root/hermes-workspace/borg",
+      "returncode": 0,
+      "duration_seconds": 4.039,
+      "stdout": "ux-x86_64/wheel/./borg/core\nrunning install_egg_info\nCopying agent_borg.egg-info to build/bdist.linux-x86_64/wheel/./agent_borg-3.3.15-py3.11.egg-info\nrunning install_scripts\ncreating build/bdist.linux-x86_64/wheel/agent_borg-3.3.15.dist-info/WHEEL\ncreating '/tmp/borg-3315-wheel-proof-w54lsh_n/dist/.tmp-jo8zxgmx/agent_borg-3.3.15-py3-none-any.whl' and adding 'build/bdist.linux-x86_64/wheel' to it\nadding 'agent_borg-3.3.15.dist-info/licenses/LICENSE'\nadding 'borg/__init__.py'\nadding 'borg/cli.py'\nadding 'borg/benchmark/skills/test_skills.py'\nadding 'borg/benchmarks/__init__.py'\nadding 'borg/benchmarks/report.py'\nadding 'borg/benchmarks/runner.py'\nadding 'borg/benchmarks/scorer.py'\nadding 'borg/benchmarks/tasks.py'\nadding 'borg/benchmarks/tests/__init__.py'\nadding 'borg/benchmarks/tests/test_benchmarks.py'\nadding 'borg/cli/__init__.py'\nadding 'borg/cli/__main__.py'\nadding 'borg/cli/doctor.py'\nadding 'borg/cli/install.py'\nadding 'borg/core/__init__.py'\nadding 'borg/core/agentskills_converter.py'\nadding 'borg/core/aggregator.py'\nadding 'borg/core/apply.py'\nadding 'borg/core/atom_policy.py'\nadding 'borg/core/atom_registry.py'\nadding 'borg/core/atom_retrieval.py'\nadding 'borg/core/atom_store.py'\nadding 'borg/core/atom_tenant.py'\nadding 'borg/core/bm25_index.py'\nadding 'borg/core/causal.py'\nadding 'borg/core/changes.py'\nadding 'borg/core/clustering.py'\nadding 'borg/core/cold_start.py'\nadding 'borg/core/collective_learning.py'\nadding 'borg/core/conditions.py'\nadding 'borg/core/confidence_gate.py'\nadding 'borg/core/contextual_selector.py'\nadding 'borg/core/convert.py'\nadding 'borg/core/crypto.py'\nadding 'borg/core/dirs.py'\nadding 'borg/core/embeddings.py'\nadding 'borg/core/failure_memory.py'\nadding 'borg/core/feedback_loop.py'\nadding 'borg/core/first_user_readiness.py'\nadding 'borg/core/generate.py'\nadding 'borg/core/generator.py'\nadding 'borg/core/learning_atoms.py'\nadding 'borg/core/mutation_engine.py'\nadding 'borg/core/negative_traces.py'\nadding 'borg/core/openclaw_converter.py'\nadding 'borg/core/pack_taxonomy.py'\nadding 'borg/core/privacy.py'\nadding 'borg/core/prompt_injection.py'\nadding 'borg/core/proof_gates.py'\nadding 'borg/core/publish.py'\nadding 'borg/core/rescue.py'\nadding 'borg/core/runtime_fingerprint.py'\nadding 'borg/core/safety.py'\nadding 'borg/core/schema.py'\nadding 'borg/core/search.py'\nadding 'borg/core/seed_loader.py'\nadding 'borg/core/seeds.py'\nadding 'borg/core/semantic_search.py'\nadding 'borg/core/session.py'\nadding 'borg/core/signals.py'\nadding 'borg/core/stack.py'\nadding 'borg/core/synthesis.py'\nadding 'borg/core/telemetry.py'\nadding 'borg/core/temporal.py'\nadding 'borg/core/trace_matcher.py'\nadding 'borg/core/traces.py'\nadding 'borg/core/uri.py'\nadding 'borg/core/v3_integration.py'\nadding 'borg/db/__init__.py'\nadding 'borg/db/analytics.py'\nadding 'borg/db/embeddings.py'\nadding 'borg/db/migrations.py'\nadding 'borg/db/reputation.py'\nadding 'borg/db/store.py'\nadding 'borg/dojo/__init__.py'\nadding 'borg/dojo/auto_fixer.py'\nadding 'borg/dojo/cron_runner.py'\nadding 'borg/dojo/data_models.py'\nadding 'borg/dojo/failure_classifier.py'\nadding 'borg/dojo/learning_curve.py'\nadding 'borg/dojo/pipeline.py'\nadding 'borg/dojo/report_generator.py'\nadding 'borg/dojo/session_reader.py'\nadding 'borg/dojo/skill_gap_detector.py'\nadding 'borg/dojo/tests/__init__.py'\nadding 'borg/dojo/tests/test_auto_fixer.py'\nadding 'borg/dojo/tests/test_failure_classifier.py'\nadding 'borg/dojo/tests/test_learning_curve.py'\nadding 'borg/dojo/tests/test_pipeline.py'\nadding 'borg/dojo/tests/test_report_generator.py'\nadding 'borg/dojo/tests/test_session_reader.py'\nadding 'borg/dojo/tests/test_skill_gap_detector.py'\nadding 'borg/eval/__init__.py'\nadding 'borg/eval/ab_test.py'\nadding 'borg/eval/e1a_seed_pack_validation.py'\nadding 'borg/eval/production_smoke_test.py'\nadding 'borg/fleet/syncer.py'\nadding 'borg/integrations/__init__.py'\nadding 'borg/integrations/agent_hook.py'\nadding 'borg/integrations/http_server.py'\nadding 'borg/integrations/mcp_server.py'\nadding 'borg/integrations/nudge.py'\nadding 'borg/seeds_data/circular-dependency-migration.md'\nadding 'borg/seeds_data/code-review.md'\nadding 'borg/seeds_data/collective_seed.json'\nadding 'borg/seeds_data/configuration-error.md'\nadding 'borg/seeds_data/defi-risk-check.md'\nadding 'borg/seeds_data/defi-yield-strategy.md'\nadding 'borg/seeds_data/extended_seeds.yaml'\nadding 'borg/seeds_data/import-cycle.md'\nadding 'borg/seeds_data/migration-state-desync.md'\nadding 'borg/seeds_data/missing-dependency.md'\nadding 'borg/seeds_data/missing-foreign-key.md'\nadding 'borg/seeds_data/null-pointer-chain.md'\nadding 'borg/seeds_data/permission-denied.md'\nadding 'borg/seeds_data/race-condition.md'\nadding 'borg/seeds_data/schema-drift.md'\nadding 'borg/seeds_data/systematic-debugging.md'\nadding 'borg/seeds_data/test-driven-development.md'\nadding 'borg/seeds_data/timeout-hang.md'\nadding 'borg/seeds_data/type-mismatch.md'\nadding 'borg/seeds_data/borg/SKILL.md'\nadding 'borg/seeds_data/borg-autopilot/SKILL.md'\nadding 'borg/seeds_data/packs/bash-permission-denied.yaml'\nadding 'borg/seeds_data/packs/django-circular-dependency.yaml'\nadding 'borg/seeds_data/packs/django-migration-state.yaml'\nadding 'borg/seeds_data/packs/django-null-pointer.yaml'\nadding 'borg/seeds_data/packs/django-schema-drift.yaml'\nadding 'borg/seeds_data/packs/docker-no-space.yaml'\nadding 'borg/seeds_data/packs/git-merge-conflict.yaml'\nadding 'borg/seeds_data/packs/pytest-flaky-test.yaml'\nadding 'borg/seeds_data/packs/python-import-cycle.yaml'\nadding 'borg/seeds_data/packs/python-missing-dependency.yaml'\nadding 'borg/seeds_data/packs/systematic-debugging.workflow.yaml'\nadding 'agent_borg-3.3.15.dist-info/METADATA'\nadding 'agent_borg-3.3.15.dist-info/WHEEL'\nadding 'agent_borg-3.3.15.dist-info/entry_points.txt'\nadding 'agent_borg-3.3.15.dist-info/top_level.txt'\nadding 'agent_borg-3.3.15.dist-info/RECORD'\nremoving build/bdist.linux-x86_64/wheel\nSuccessfully built agent_borg-3.3.15.tar.gz and agent_borg-3.3.15-py3-none-any.whl\n",
+      "stderr": "* Creating isolated environment: venv+pip...\n* Installing packages in isolated environment:\n  - setuptools>=68\n  - wheel\n* Getting build dependencies for sdist...\n* Building sdist...\n* Building wheel from sdist\n* Creating isolated environment: venv+pip...\n* Installing packages in isolated environment:\n  - setuptools>=68\n  - wheel\n* Getting build dependencies for wheel...\n* Building wheel...\nwarning: build_py: byte-compiling is disabled, skipping.\n\nwarning: install_lib: byte-compiling is disabled, skipping.\n\n"
+    },
+    {
+      "cmd": [
+        "/root/.hermes/hermes-agent/venv/bin/python",
+        "-m",
+        "twine",
+        "check",
+        "/tmp/borg-3315-wheel-proof-w54lsh_n/dist/agent_borg-3.3.15-py3-none-any.whl",
+        "/tmp/borg-3315-wheel-proof-w54lsh_n/dist/agent_borg-3.3.15.tar.gz"
+      ],
+      "cwd": "/root/hermes-workspace/borg",
+      "returncode": 0,
+      "duration_seconds": 0.33,
+      "stdout": "Checking \n/tmp/borg-3315-wheel-proof-w54lsh_n/dist/agent_borg-3.3.15-py3-none-any.whl: \u001b[32mPASSED\u001b[0m\nChecking /tmp/borg-3315-wheel-proof-w54lsh_n/dist/agent_borg-3.3.15.tar.gz: \u001b[32mPASSED\u001b[0m\n",
+      "stderr": ""
+    },
+    {
+      "cmd": [
+        "/root/.hermes/hermes-agent/venv/bin/python",
+        "-m",
+        "venv",
+        "/tmp/borg-3315-wheel-proof-w54lsh_n/venv"
+      ],
+      "cwd": "/root/hermes-workspace/borg",
+      "returncode": 0,
+      "duration_seconds": 3.946,
+      "stdout": "",
+      "stderr": ""
+    },
+    {
+      "cmd": [
+        "/tmp/borg-3315-wheel-proof-w54lsh_n/venv/bin/pip",
+        "install",
+        "--no-cache-dir",
+        "/tmp/borg-3315-wheel-proof-w54lsh_n/dist/agent_borg-3.3.15-py3-none-any.whl"
+      ],
+      "cwd": "/tmp/borg-3315-wheel-proof-w54lsh_n/nonrepo-cwd",
+      "returncode": 0,
+      "duration_seconds": 1.332,
+      "stdout": "Processing /tmp/borg-3315-wheel-proof-w54lsh_n/dist/agent_borg-3.3.15-py3-none-any.whl\nCollecting pyyaml>=6.0 (from agent-borg==3.3.15)\n  Downloading pyyaml-6.0.3-cp311-cp311-manylinux2014_x86_64.manylinux_2_17_x86_64.manylinux_2_28_x86_64.whl.metadata (2.4 kB)\nDownloading pyyaml-6.0.3-cp311-cp311-manylinux2014_x86_64.manylinux_2_17_x86_64.manylinux_2_28_x86_64.whl (806 kB)\n   \u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501 806.6/806.6 kB 29.5 MB/s eta 0:00:00\nInstalling collected packages: pyyaml, agent-borg\nSuccessfully installed agent-borg-3.3.15 pyyaml-6.0.3\n",
+      "stderr": "\n[notice] A new release of pip is available: 24.0 -> 26.1.1\n[notice] To update, run: python3.11 -m pip install --upgrade pip\n"
+    },
+    {
+      "cmd": [
+        "/tmp/borg-3315-wheel-proof-w54lsh_n/venv/bin/borg",
+        "--version"
+      ],
+      "cwd": "/tmp/borg-3315-wheel-proof-w54lsh_n/nonrepo-cwd",
+      "returncode": 0,
+      "duration_seconds": 0.116,
+      "stdout": "borg 3.3.15\n",
+      "stderr": ""
+    },
+    {
+      "cmd": [
+        "/tmp/borg-3315-wheel-proof-w54lsh_n/venv/bin/borg-doctor",
+        "--json"
+      ],
+      "cwd": "/tmp/borg-3315-wheel-proof-w54lsh_n/nonrepo-cwd",
+      "returncode": 0,
+      "duration_seconds": 0.488,
+      "stdout": "{\n  \"checks\": [\n    {\n      \"detail\": \"314 traces at /tmp/borg-3315-wheel-proof-w54lsh_n/home/.borg/traces.db\",\n      \"name\": \"trace_db\",\n      \"passed\": true\n    },\n    {\n      \"detail\": \"ACTION: proceed with normal debugging for docker; Borg has no proven cache hit. | CONFIDENCE: BORG [NO CONFIDENT MATCH] -- no relevant traces, synthetic hits, or pack matches.\",\n      \"name\": \"borg_observe\",\n      \"passed\": true\n    },\n    {\n      \"detail\": \"BORG: Feedback recorded  guidance worked. Score updated for trace 6b53ee82.\",\n      \"name\": \"borg_rate\",\n      \"passed\": true\n    },\n    {\n      \"detail\": \"responds to initialize\",\n      \"name\": \"mcp_stdio\",\n      \"passed\": true\n    }\n  ],\n  \"runtime\": {\n    \"atom_count\": null,\n    \"atom_db_path\": \"/tmp/borg-3315-wheel-proof-w54lsh_n/home/.borg/atoms.db\",\n    \"borg_home\": \"/tmp/borg-3315-wheel-proof-w54lsh_n/home/.borg\",\n    \"module_hash\": \"2a40b7e278285891\",\n    \"module_path\": \"/tmp/borg-3315-wheel-proof-w54lsh_n/venv/lib/python3.11/site-packages/borg/__init__.py\",\n    \"package_version\": \"3.3.15\",\n    \"pid\": 764368,\n    \"python\": \"/tmp/borg-3315-wheel-proof-w54lsh_n/venv/bin/python3.11\",\n    \"trace_count\": 314,\n    \"trace_db_path\": \"/tmp/borg-3315-wheel-proof-w54lsh_n/home/.borg/traces.db\"\n  },\n  \"success\": true\n}\n",
+      "stderr": ""
+    },
+    {
+      "cmd": [
+        "/tmp/borg-3315-wheel-proof-w54lsh_n/venv/bin/borg",
+        "rescue",
+        "ModuleNotFoundError: No module named flask",
+        "--json"
+      ],
+      "cwd": "/tmp/borg-3315-wheel-proof-w54lsh_n/nonrepo-cwd",
+      "returncode": 0,
+      "duration_seconds": 0.175,
+      "stdout": "{\n  \"success\": true,\n  \"status\": \"matched\",\n  \"problem_class\": \"missing_dependency\",\n  \"confidence\": \"tested\",\n  \"action\": [\n    \"install the distribution for import `flask` \u2014 run/check: pip install flask\",\n    \"pip_install \u2014 run/check: pip install flask\",\n    \"install_in_venv \u2014 run/check: source venv/bin/activate && pip install flask\"\n  ],\n  \"stop\": [\n    \"pip install without a virtualenv \u2014 fails because Pollutes the global Python and causes version conflicts\",\n    \"Manually copying module files to site-packages \u2014 fails because Version conflicts and no automatic updates\",\n    \"Ignoring which virtualenv is activated \u2014 fails because The module is installed but in a different environment\"\n  ],\n  \"verify\": [\n    \"rerun the exact failing command\",\n    \"add or run the smallest regression test\",\n    \"only then continue broader changes\"\n  ],\n  \"next_command\": \"borg feedback-v3 --pack missing_dependency --success yes\",\n  \"agent_instruction\": \"ACTION: install the distribution for import `flask` \u2014 run/check: pip install flask\\nSTOP: avoid pip install without a virtualenv \u2014 fails because Pollutes the global Python and causes version conflicts\\nVERIFY: rerun the exact failing command\\nSHOW HUMAN: only surface Borg when this rescue path changes the plan.\",\n  \"human_receipt\": \"Borg found a proven rescue path for missing_dependency (tested). The agent now has a next move, a known dead end to avoid, and a verification step.\",\n  \"guidance\": \"============================================================\\nERROR: ModuleNotFoundError: No module named flask\\n============================================================\\n[missing_dependency] (python)\\nProblem: Python cannot find a module or package\\n\\nROOT CAUSE:\\n  Category: missing_dependency\\n  Python cannot find the module because it is not installed in the current environment, not in the Python path, or the wrong Python environment is active.\\n\\nINVESTIGATION TRAIL:\\n  1. [first] requirements.txt\\n     \u2192 Check requirements.txt for missing packages \u2014 particularly recently removed packages\\n  2. [second] pyproject.toml\\n     \u2192 Check pyproject.toml dependencies for version conflicts or missing packages\\n     grep: dependencies|requirements\\n\\nRESOLUTION SEQUENCE:\\n  1. pip_install\\n     Command: pip install package-name\\n     Why: Installs the package in the current Python environment\\n  2. install_in_venv\\n     Command: source venv/bin/activate && pip install package-name\\n     Why: Ensures the package is installed in the correct virtual environment\\n  3. install_editable\\n     Command: pip install -e .\\n     Why: Installs the local package in editable mode for development\\n  4. check_python_path\\n     Command: import sys; print(sys.path)\\n     Why: Verify Python is looking in the right directories\\n\\nANTI-PATTERNS (don't do these):\\n  \u2717 pip install without a virtualenv\\n    Fails because: Pollutes the global Python and causes version conflicts\\n  \u2717 Manually copying module files to site-packages\\n    Fails because: Version conflicts and no automatic updates\\n  \u2717 Ignoring which virtualenv is activated\\n    Fails because: The module is installed but in a different environment\\n\\nEVIDENCE: 42/45 successes (93%) over 45 uses\\n         Avg resolve time: 1.2 min\\n\\n============================================================\",\n  \"automation_policy\": {\n    \"default\": \"automatic_for_agents\",\n    \"call_when\": [\n      \"technical task starts\",\n      \"tool/command error appears\",\n      \"same failure repeats\",\n      \"agent says it is stuck or loops\"\n    ],\n    \"do_not_call_when\": [\n      \"creative writing only\",\n      \"pure preference question\",\n      \"no technical action needed\"\n    ],\n    \"fail_closed\": true,\n    \"human_visibility_required\": true,\n    \"source\": \"cli\"\n  },\n  \"evidence\": {\n    \"success_count\": 42,\n    \"failure_count\": 3,\n    \"uses\": 45,\n    \"success_rate\": 0.93,\n    \"source\": \"seed_pack\"\n  },\n  \"value_receipt\": {\n    \"schema_version\": 1,\n    \"measurement_status\": \"ready_to_measure\",\n    \"matched_pack_id\": \"missing_dependency\",\n    \"matched_pattern\": \"missing_dependency\",\n    \"confidence\": \"tested\",\n    \"evidence_source\": \"seed_pack\",\n    \"savings_claim_type\": \"none\",\n    \"measured_minutes_saved\": null,\n    \"measured_tokens_saved\": null,\n    \"estimated_minutes_saved\": null,\n    \"estimated_tokens_saved\": null,\n    \"dead_end_avoidance_status\": \"suggested_not_confirmed\",\n    \"dead_end_avoided_candidate\": \"pip install without a virtualenv \u2014 fails because Pollutes the global Python and causes version conflicts\",\n    \"human_visible_summary\": \"Borg found a rescue path and prepared ACTION/STOP/VERIFY; savings are not measured until a consented first-10 outcome row records before/after time or token data.\",\n    \"first_10_row_fields_required_for_measured_savings\": [\n      \"user_id_pseudonym\",\n      \"external_user_evidence_uri\",\n      \"consent_confirmed\",\n      \"baseline_minutes_without_borg\",\n      \"actual_minutes_with_borg\",\n      \"net_minutes_saved\",\n      \"baseline_tokens_without_borg\",\n      \"actual_tokens_with_borg\",\n      \"net_tokens_saved\",\n      \"savings_counterfactual_basis\",\n      \"dead_end_avoided_confirmed\",\n      \"user_confirmed_value\",\n      \"outcome_recorded\"\n    ]\n  }\n}\n",
+      "stderr": ""
+    },
+    {
+      "cmd": [
+        "/tmp/borg-3315-wheel-proof-w54lsh_n/venv/bin/borg",
+        "generate",
+        "systematic-debugging",
+        "--format",
+        "all",
+        "--output",
+        "/tmp/borg-3315-wheel-proof-w54lsh_n/nonrepo-cwd/rules"
+      ],
+      "cwd": "/tmp/borg-3315-wheel-proof-w54lsh_n/nonrepo-cwd",
+      "returncode": 0,
+      "duration_seconds": 0.129,
+      "stdout": "  .cursorrules -> /tmp/borg-3315-wheel-proof-w54lsh_n/nonrepo-cwd/rules/.cursorrules\n  .clinerules -> /tmp/borg-3315-wheel-proof-w54lsh_n/nonrepo-cwd/rules/.clinerules\n  CLAUDE.md -> /tmp/borg-3315-wheel-proof-w54lsh_n/nonrepo-cwd/rules/CLAUDE.md\n  .windsurfrules -> /tmp/borg-3315-wheel-proof-w54lsh_n/nonrepo-cwd/rules/.windsurfrules\n",
+      "stderr": ""
+    },
+    {
+      "cmd": [
+        "/tmp/borg-3315-wheel-proof-w54lsh_n/venv/bin/borg",
+        "convert",
+        ".",
+        "--format",
+        "openclaw",
+        "--all",
+        "--output",
+        "/tmp/borg-3315-wheel-proof-w54lsh_n/nonrepo-cwd/openclaw"
+      ],
+      "cwd": "/tmp/borg-3315-wheel-proof-w54lsh_n/nonrepo-cwd",
+      "returncode": 0,
+      "duration_seconds": 0.316,
+      "stdout": "Converted 21 packs to OpenClaw skill format\nOutput directory: /tmp/borg-3315-wheel-proof-w54lsh_n/nonrepo-cwd/openclaw\nFiles written: 22\nSKILL.md lines: 95\n\nPack slugs: code-review, plan, github-repo-management, plan-rubric, quick-debug, github-issues, systematic-debugging, code-review-rubric, jupyter-live-kernel, ascii-art, test-driven-development, codebase-inspection, requesting-code-review, systematic-debugging-rubric, subagent-driven-development, github-auth, github-pr-workflow, writing-plans, github-code-review, excalidraw\n",
+      "stderr": ""
+    },
+    {
+      "cmd": [
+        "/tmp/borg-3315-wheel-proof-w54lsh_n/venv/bin/python",
+        "-c",
+        "import borg, json; print(borg.__version__); print(borg.__file__); r=borg.check('ModuleNotFoundError: No module named flask', top_k=1); print(type(r).__name__, len(r))"
+      ],
+      "cwd": "/tmp/borg-3315-wheel-proof-w54lsh_n/nonrepo-cwd",
+      "returncode": 0,
+      "duration_seconds": 0.205,
+      "stdout": "3.3.15\n/tmp/borg-3315-wheel-proof-w54lsh_n/venv/lib/python3.11/site-packages/borg/__init__.py\nlist 1\n",
+      "stderr": ""
+    },
+    {
+      "cmd": [
+        "/tmp/borg-3315-wheel-proof-w54lsh_n/venv/bin/borg-mcp"
+      ],
+      "cwd": "/tmp/borg-3315-wheel-proof-w54lsh_n/nonrepo-cwd",
+      "returncode": 0,
+      "duration_seconds": 0.21,
+      "stdout": "mber of clusters for 'discover' (default: 8).\",\"default\":8},\"min_trace_count\":{\"type\":\"integer\",\"description\":\"Minimum traces per cluster for 'discover' (default: 3).\",\"default\":3}},\"required\":[\"action\"]}}]}}\n{\"jsonrpc\":\"2.0\",\"id\":3,\"result\":{\"content\":[{\"type\":\"text\",\"text\":\"{\\\"success\\\": true, \\\"status\\\": \\\"matched\\\", \\\"problem_class\\\": \\\"missing_dependency\\\", \\\"confidence\\\": \\\"tested\\\", \\\"action\\\": [\\\"install the distribution for import `flask` \\u2014 run/check: pip install flask\\\", \\\"pip_install \\u2014 run/check: pip install flask\\\", \\\"install_in_venv \\u2014 run/check: source venv/bin/activate && pip install flask\\\"], \\\"stop\\\": [\\\"pip install without a virtualenv \\u2014 fails because Pollutes the global Python and causes version conflicts\\\", \\\"Manually copying module files to site-packages \\u2014 fails because Version conflicts and no automatic updates\\\", \\\"Ignoring which virtualenv is activated \\u2014 fails because The module is installed but in a different environment\\\"], \\\"verify\\\": [\\\"rerun the exact failing command\\\", \\\"add or run the smallest regression test\\\", \\\"only then continue broader changes\\\"], \\\"next_command\\\": \\\"borg feedback-v3 --pack missing_dependency --success yes\\\", \\\"agent_instruction\\\": \\\"ACTION: install the distribution for import `flask` \\u2014 run/check: pip install flask\\\\nSTOP: avoid pip install without a virtualenv \\u2014 fails because Pollutes the global Python and causes version conflicts\\\\nVERIFY: rerun the exact failing command\\\\nSHOW HUMAN: only surface Borg when this rescue path changes the plan.\\\", \\\"human_receipt\\\": \\\"Borg found a proven rescue path for missing_dependency (tested). The agent now has a next move, a known dead end to avoid, and a verification step.\\\", \\\"guidance\\\": \\\"\\\", \\\"automation_policy\\\": {\\\"default\\\": \\\"automatic_for_agents\\\", \\\"call_when\\\": [\\\"technical task starts\\\", \\\"tool/command error appears\\\", \\\"same failure repeats\\\", \\\"agent says it is stuck or loops\\\"], \\\"do_not_call_when\\\": [\\\"creative writing only\\\", \\\"pure preference question\\\", \\\"no technical action needed\\\"], \\\"fail_closed\\\": true, \\\"human_visibility_required\\\": true, \\\"source\\\": \\\"mcp\\\"}, \\\"evidence\\\": {\\\"success_count\\\": 42, \\\"failure_count\\\": 3, \\\"uses\\\": 45, \\\"success_rate\\\": 0.93, \\\"source\\\": \\\"seed_pack\\\"}, \\\"value_receipt\\\": {\\\"schema_version\\\": 1, \\\"measurement_status\\\": \\\"ready_to_measure\\\", \\\"matched_pack_id\\\": \\\"missing_dependency\\\", \\\"matched_pattern\\\": \\\"missing_dependency\\\", \\\"confidence\\\": \\\"tested\\\", \\\"evidence_source\\\": \\\"seed_pack\\\", \\\"savings_claim_type\\\": \\\"none\\\", \\\"measured_minutes_saved\\\": null, \\\"measured_tokens_saved\\\": null, \\\"estimated_minutes_saved\\\": null, \\\"estimated_tokens_saved\\\": null, \\\"dead_end_avoidance_status\\\": \\\"suggested_not_confirmed\\\", \\\"dead_end_avoided_candidate\\\": \\\"pip install without a virtualenv \\u2014 fails because Pollutes the global Python and causes version conflicts\\\", \\\"human_visible_summary\\\": \\\"Borg found a rescue path and prepared ACTION/STOP/VERIFY; savings are not measured until a consented first-10 outcome row records before/after time or token data.\\\", \\\"first_10_row_fields_required_for_measured_savings\\\": [\\\"user_id_pseudonym\\\", \\\"external_user_evidence_uri\\\", \\\"consent_confirmed\\\", \\\"baseline_minutes_without_borg\\\", \\\"actual_minutes_with_borg\\\", \\\"net_minutes_saved\\\", \\\"baseline_tokens_without_borg\\\", \\\"actual_tokens_with_borg\\\", \\\"net_tokens_saved\\\", \\\"savings_counterfactual_basis\\\", \\\"dead_end_avoided_confirmed\\\", \\\"user_confirmed_value\\\", \\\"outcome_recorded\\\"], \\\"intervention_id\\\": \\\"intervention-sha256:3ab9ce29ad39f3d87f8265c131ce96530961f4d43dd4a274d465188699a9fbfb\\\", \\\"outcome_receipt_next_step\\\": \\\"After verification, call borg_record_outcome with this intervention_id.\\\"}, \\\"intervention_id\\\": \\\"intervention-sha256:3ab9ce29ad39f3d87f8265c131ce96530961f4d43dd4a274d465188699a9fbfb\\\", \\\"borg_human\\\": {\\\"schema_version\\\": 1, \\\"session_id\\\": \\\"__process__\\\", \\\"first_hit\\\": true, \\\"matched\\\": true, \\\"confidence\\\": \\\"tested\\\", \\\"match_count\\\": 45, \\\"dead_ends_surfaced\\\": 3, \\\"display_policy\\\": \\\"fire_user_message_only; keep_session_message_for_summaries\\\", \\\"user_message\\\": \\\"Borg found a proven rescue path. Avoiding 3 known dead ends.\\\", \\\"session_message\\\": \\\"Borg helped 1 time, avoided 3 dead ends, learned 0 new fixes.\\\", \\\"state\\\": {\\\"first_hit_shown\\\": true, \\\"dead_ends_avoided\\\": 3, \\\"traces_contributed\\\": 0, \\\"matched_lookups\\\": 1, \\\"lookup_count\\\": 1}}, \\\"user_message\\\": \\\"Borg found a proven rescue path. Avoiding 3 known dead ends.\\\", \\\"session_message\\\": \\\"Borg helped 1 time, avoided 3 dead ends, learned 0 new fixes.\\\"}\"}],\"isError\":false,\"structuredContent\":{\"schema_version\":1,\"borg_human\":{\"schema_version\":1,\"session_id\":\"__process__\",\"first_hit\":true,\"matched\":true,\"confidence\":\"tested\",\"match_count\":45,\"dead_ends_surfaced\":3,\"display_policy\":\"fire_user_message_only; keep_session_message_for_summaries\",\"user_message\":\"Borg found a proven rescue path. Avoiding 3 known dead ends.\",\"session_message\":\"Borg helped 1 time, avoided 3 dead ends, learned 0 new fixes.\",\"state\":{\"first_hit_shown\":true,\"dead_ends_avoided\":3,\"traces_contributed\":0,\"matched_lookups\":1,\"lookup_count\":1}},\"user_message\":\"Borg found a proven rescue path. Avoiding 3 known dead ends.\",\"session_message\":\"Borg helped 1 time, avoided 3 dead ends, learned 0 new fixes.\"},\"user_message\":\"Borg found a proven rescue path. Avoiding 3 known dead ends.\",\"session_message\":\"Borg helped 1 time, avoided 3 dead ends, learned 0 new fixes.\",\"borg_human\":{\"schema_version\":1,\"session_id\":\"__process__\",\"first_hit\":true,\"matched\":true,\"confidence\":\"tested\",\"match_count\":45,\"dead_ends_surfaced\":3,\"display_policy\":\"fire_user_message_only; keep_session_message_for_summaries\",\"user_message\":\"Borg found a proven rescue path. Avoiding 3 known dead ends.\",\"session_message\":\"Borg helped 1 time, avoided 3 dead ends, learned 0 new fixes.\",\"state\":{\"first_hit_shown\":true,\"dead_ends_avoided\":3,\"traces_contributed\":0,\"matched_lookups\":1,\"lookup_count\":1}}}}\n",
+      "stderr": "borg-mcp-server v3.3.15 ready (stdio transport)\n"
+    }
+  ],
+  "passed": true
+}

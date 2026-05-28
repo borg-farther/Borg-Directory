@@ -428,12 +428,19 @@ def generate_to_files(
 
 
 def load_pack(pack_name: str) -> dict:
-    """Load a pack from the local registry by name.
+    """Load a pack from a file, local Borg registry, or bundled seed packs.
 
-    Searches ~/.hermes/guild/<name>/pack.yaml and local registry.
+    First users commonly copy the README command
+    ``borg generate systematic-debugging --format cursorrules`` immediately after
+    installing ``agent-borg``. That must work from a clean PyPI/GitHub install
+    with an empty ``BORG_HOME``; it cannot depend on maintainer-only checkout
+    paths or a pre-populated local registry.
 
     Args:
-        pack_name: Pack name/slug.
+        pack_name: Pack slug/URI slug or an explicit .yaml/.yml file path.
+            Bare slugs intentionally do not load same-named files from the
+            current working directory; generated agent-rule files must not be
+            poisoned by a project-local file shadowing a bundled trusted seed.
 
     Returns:
         Parsed pack dict.
@@ -441,6 +448,22 @@ def load_pack(pack_name: str) -> dict:
     Raises:
         FileNotFoundError: If pack not found.
     """
+    def _load_yaml_file(path: Path) -> dict | None:
+        try:
+            if not path.exists() or not path.is_file():
+                return None
+            data = yaml.safe_load(path.read_text(encoding="utf-8"))
+        except OSError:
+            return None
+        return data if isinstance(data, dict) else None
+
+    direct_path = Path(pack_name)
+    is_explicit_yaml_path = direct_path.suffix.lower() in {".yaml", ".yml"}
+    if is_explicit_yaml_path:
+        direct = _load_yaml_file(direct_path)
+        if direct is not None:
+            return direct
+
     # Check BORG_HOME/guild/<name>/pack.yaml first, then the legacy
     # ~/.hermes/guild location for users/tests migrating from pre-3.3 Borg.
     from borg.core.dirs import get_borg_dir
@@ -451,26 +474,41 @@ def load_pack(pack_name: str) -> dict:
         guild_dirs.append(legacy_guild_dir)
 
     for candidate_guild_dir in guild_dirs:
-        pack_path = candidate_guild_dir / pack_name / "pack.yaml"
-        if pack_path.exists():
-            return yaml.safe_load(pack_path.read_text(encoding="utf-8"))
-
-    # Check seeds directory
-    seeds_dir = Path(__file__).parent.parent / "seeds"
-    for seed_file in seeds_dir.glob("*.yaml"):
-        data = yaml.safe_load(seed_file.read_text(encoding="utf-8"))
-        if data and _slug(data.get("id", "")) == pack_name:
+        data = _load_yaml_file(candidate_guild_dir / pack_name / "pack.yaml")
+        if data is not None:
             return data
 
-    # Check all guild subdirectories
+    # Check bundled wheel data. ``borg.core.generate`` and the CLI used to look
+    # only under ``borg/seeds`` while the shipped workflow packs live under
+    # ``borg/seeds_data/packs``. Keep the legacy directory, but prefer the
+    # package-data path proven by fresh installs.
+    package_root = Path(__file__).resolve().parents[1]
+    seed_roots = [package_root / "seeds_data" / "packs", package_root / "seeds"]
+    for seed_root in seed_roots:
+        for suffix in (".yaml", ".workflow.yaml", ".rubric.yaml"):
+            data = _load_yaml_file(seed_root / f"{pack_name}{suffix}")
+            if data is not None:
+                return data
+        try:
+            seed_files = list(seed_root.glob("*.yaml"))
+        except OSError:
+            seed_files = []
+        for seed_file in seed_files:
+            data = _load_yaml_file(seed_file)
+            if data and _slug(data.get("id", "")) == pack_name:
+                return data
+
+    # Check all guild subdirectories by ID/slug as a final local-registry scan.
     for candidate_guild_dir in guild_dirs:
-        if candidate_guild_dir.exists():
-            for subdir in candidate_guild_dir.iterdir():
-                if subdir.is_dir():
-                    candidate = subdir / "pack.yaml"
-                    if candidate.exists():
-                        data = yaml.safe_load(candidate.read_text(encoding="utf-8"))
-                        if data and _slug(data.get("id", "")) == pack_name:
-                            return data
+        try:
+            subdirs = list(candidate_guild_dir.iterdir()) if candidate_guild_dir.exists() else []
+        except OSError:
+            subdirs = []
+        for subdir in subdirs:
+            if not subdir.is_dir():
+                continue
+            data = _load_yaml_file(subdir / "pack.yaml")
+            if data and _slug(data.get("id", "")) == pack_name:
+                return data
 
     raise FileNotFoundError(f"Pack not found: {pack_name}")

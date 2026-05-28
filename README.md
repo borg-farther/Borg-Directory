@@ -13,7 +13,7 @@ Give Borg an error, traceback, failed test, install problem, config failure, or 
 - **MCP server command:** `borg-mcp`
 - **Canonical repo:** https://github.com/borg-farther/Borg-Directory
 
-**Status:** `agent-borg==3.3.14` is ready for a controlled first-10 public-package beta through the local CLI / stdio MCP install path, capped at 10 consented external users. Broad public self-serve launch, 100-user rollout, served remote MCP, and measured external lift are **not claimed** until row-derived external-user evidence passes and any served runtime is fingerprinted to the current package/source version.
+**Status:** this source branch targets `agent-borg==3.3.15`, but production PyPI/latest and public proof dashboards are not current for that version yet. Treat this as a source/local release candidate until `3.3.15` is merged to `main`, published to PyPI, fresh-install/MCP/generate/OpenClaw canaries pass, and proof artifacts are regenerated. Broad public self-serve launch, 100-user rollout, served remote MCP, and measured external lift are **not claimed** until row-derived external-user evidence passes and any served runtime is fingerprinted to the current package/source version.
 
 ## Try Borg in 60 seconds
 
@@ -324,16 +324,17 @@ Why: agents often do not discover optional tools unless explicitly primed.
 
 ## 5. What is ready now
 
-Published package infrastructure is **conditional GO for controlled first-10 beta** on `agent-borg==3.3.14` while PyPI latest, fresh-install, stdio MCP, cold-start trust, self-service ops, watchdog, GitHub CI/security, and source/local first-user gates remain green:
+Source/local 3.3.15 release-candidate infrastructure is **partially green**, but public-package controlled beta is **NO-GO until the exact 3.3.15 release is on GitHub `main` and PyPI with fresh-install, stdio MCP, generate, OpenClaw, cold-start trust, self-service ops, watchdog, GitHub CI/security, and regenerated proof dashboards green**:
 
 - Install, CLI, Python API, and MCP entrypoints are present in source/local gates.
 - First-user rescue path returns ACTION / STOP / VERIFY or `NO_CONFIDENT_MATCH`.
 - Security/privacy/prompt-injection surface: PASS in local gates.
-- PyPI latest metadata and fresh PyPI install + stdio MCP canary are green for `agent-borg==3.3.14`.
+- Source-local gate now covers generated rules and OpenClaw export.
+- PyPI latest is not yet proven current for `agent-borg==3.3.15`; do not invite controlled beta users until the PyPI canary and proof dashboards agree.
 - Self-service ops guardrails are present: bad-answer intake, install/MCP support intake, first-10 evidence intake, support/SLA, rollback/comms dry-run, and watchdog workflow.
 - First-10 beta contract is published: [`docs/FIRST_10_BETA_READINESS.md`](https://github.com/borg-farther/Borg-Directory/blob/main/docs/FIRST_10_BETA_READINESS.md).
 
-Invite at most 10 controlled testers with consented evidence capture. `python eval/public_self_serve_launch_gate.py` must still keep broad public self-serve blocked until real first-10 evidence passes.
+Do **not** invite controlled testers yet from this branch. After the 3.3.15 PyPI canary and regenerated proof artifacts are green, invite at most 10 controlled testers with consented evidence capture. `python eval/public_self_serve_launch_gate.py` must still keep broad public self-serve blocked until real first-10 evidence passes.
 
 Not yet claimed:
 
@@ -391,6 +392,7 @@ A good first evaluation is whether Borg reduces redundant investigation, not whe
 - [`docs/INSTALL.md`](https://github.com/borg-farther/Borg-Directory/blob/main/docs/INSTALL.md) — OS-specific install guide and wrong-package troubleshooting
 - [`docs/QUICKSTART.md`](https://github.com/borg-farther/Borg-Directory/blob/main/docs/QUICKSTART.md) — short copy-paste path
 - [`docs/TRYING_BORG.md`](https://github.com/borg-farther/Borg-Directory/blob/main/docs/TRYING_BORG.md) — detailed first-user setup
+- [`docs/CHANNELS_AND_INSTALL_METHODS.md`](https://github.com/borg-farther/Borg-Directory/blob/main/docs/CHANNELS_AND_INSTALL_METHODS.md) — exact channel/install-method matrix: PyPI, GitHub, local, stdio MCP, generated rules, OpenClaw, Docker/Smithery, and NO-GO boundaries
 - [`docs/MCP_SETUP.md`](https://github.com/borg-farther/Borg-Directory/blob/main/docs/MCP_SETUP.md) — MCP setup details
 - [`docs/READINESS.md`](https://github.com/borg-farther/Borg-Directory/blob/main/docs/READINESS.md) — current readiness status
 - [`docs/PUBLIC_SELF_SERVE_LAUNCH_GO_NO_GO.md`](https://github.com/borg-farther/Borg-Directory/blob/main/docs/PUBLIC_SELF_SERVE_LAUNCH_GO_NO_GO.md) — canonical public launch gate output

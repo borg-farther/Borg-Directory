@@ -2,8 +2,8 @@
 
 ## Current verdict
 
-- Controlled first-10 beta: **CONDITIONAL GO for `agent-borg==3.3.14`** while PyPI latest, fresh-install, stdio MCP, cold-start trust, self-service ops, watchdog, source/local first-user, and GitHub CI/security gates remain green.
-- Public waitlist / narrow beta: **CONDITIONAL GO for controlled first-10 only**; keep the rollout capped at 10 consented users until row-derived evidence passes.
+- Controlled first-10 beta: **NO-GO for this 3.3.15 source branch until GitHub `main`, PyPI latest, fresh-install, stdio MCP, generated-rules, OpenClaw, cold-start trust, self-service ops, watchdog, source/local first-user, and GitHub CI/security gates are green for the same version.**
+- Public waitlist / narrow beta: **blocked until the 3.3.15 package/proof chain is current**; after that, up to 10 consented controlled testers may proceed under the first-10 evidence contract.
 - Public self-serve launch: **NO-GO until real external-user evidence exists**.
 
 ## What passed for source/local package infrastructure
@@ -13,8 +13,8 @@
 - First value path exists: `borg rescue "<error>"` returns ACTION / STOP / VERIFY or `NO_CONFIDENT_MATCH`.
 - First-10 contract exists: [`FIRST_10_BETA_READINESS.md`](FIRST_10_BETA_READINESS.md).
 - Security/privacy/prompt-injection surface has a baseline and CI gates.
-- Current default-branch GitHub CI and security gates are green.
-- PyPI latest/fresh-install/stdio MCP canary is green for `agent-borg==3.3.14`; controlled beta remains capped by ops/watchdog and first-10 evidence gates.
+- Current default-branch GitHub CI and security gates were green before this 3.3.15 branch; this branch still needs PR/main CI proof.
+- Local first-user gate is green for source `agent-borg==3.3.15`, including generated rules and OpenClaw export. PyPI latest/fresh-install/stdio MCP canary is **not yet green for 3.3.15** because production PyPI still has the prior release until the publish step completes.
 
 ## What is not proven
 

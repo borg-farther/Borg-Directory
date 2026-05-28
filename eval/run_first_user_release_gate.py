@@ -245,6 +245,8 @@ def run_gate(args: argparse.Namespace) -> int:
         env["HOME"] = str(isolated_user_home)
         env["PYTHONNOUSERSITE"] = "1"
 
+        generated_rules_dir = venv_dir / "generated-rules"
+        openclaw_dir = venv_dir / "openclaw"
         commands = [
             ("borg_version", [str(borg), "--version"], None, ["borg"]),
             ("borg_help", [str(borg), "--help"], None, ["borg rescue", "borg start"]),
@@ -254,6 +256,18 @@ def run_gate(args: argparse.Namespace) -> int:
             ("borg_try_bare", [str(borg), "try", "systematic-debugging"], None, ["Pack:"]),
             ("borg_try_borg_uri", [str(borg), "try", "borg://hermes/systematic-debugging"], None, ["Pack:"]),
             ("borg_try_guild_uri", [str(borg), "try", "guild://hermes/systematic-debugging"], None, ["Pack:"]),
+            (
+                "borg_generate_rules",
+                [str(borg), "generate", "systematic-debugging", "--format", "all", "--output", str(generated_rules_dir)],
+                None,
+                [".cursorrules", ".clinerules", "CLAUDE.md", ".windsurfrules"],
+            ),
+            (
+                "borg_convert_openclaw",
+                [str(borg), "convert", ".", "--format", "openclaw", "--all", "--output", str(openclaw_dir)],
+                None,
+                ["Converted", "OpenClaw", "systematic-debugging"],
+            ),
             ("borg_setup_claude_flags", [str(borg), "setup-claude", "--scope", "user", "--verify", "--fix"], None, ["setup-claude"]),
         ]
         for name, cmd, stdin, needles in commands:
@@ -265,6 +279,18 @@ def run_gate(args: argparse.Namespace) -> int:
             elif not _contains_all(text, needles):
                 res.passed = False
                 res.detail = f"missing expected output tokens: {needles}"
+            elif name == "borg_generate_rules" and not all(
+                (generated_rules_dir / filename).exists()
+                for filename in [".cursorrules", ".clinerules", "CLAUDE.md", ".windsurfrules"]
+            ):
+                res.passed = False
+                res.detail = "rules export command returned success but did not write all expected files"
+            elif name == "borg_convert_openclaw" and not all(
+                (openclaw_dir / filename).exists()
+                for filename in ["SKILL.md", "references/pack-index.md", "references/packs/systematic-debugging.md"]
+            ):
+                res.passed = False
+                res.detail = "OpenClaw conversion returned success but did not write expected bridge files"
             else:
                 res.detail = "public command returned expected value signal"
             results.append(res)

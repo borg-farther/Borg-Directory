@@ -1,5 +1,11 @@
 # Changelog
 
+## 3.3.15 — 2026-05-28
+
+- First-user channel completeness release: `borg generate systematic-debugging --format all --output ...` now works from a clean wheel/PyPI install with empty `BORG_HOME`, using bundled seed packs instead of maintainer-only registry paths.
+- Release gates now exercise the previously missing export/mix paths: platform rules generation, OpenClaw conversion, Python API import, CLI rescue/search/try, stdio MCP tools/value response, and setup commands.
+- Documentation now has an explicit channel/install-method matrix so GitHub visitors can distinguish verified local CLI/stdio MCP paths from NO-GO served/remote channels.
+
 ## 3.3.11 — 2026-05-23
 
 - Production hardening release: publishes the failure-memory package summary/keywords so PyPI no longer presents Borg as vague collective memory.
