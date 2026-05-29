@@ -208,6 +208,38 @@ def _last_collective_intervention(session_id: str = "") -> str:
         return _last_collective_intervention_by_session.get(sid, "")
 
 
+def _outcome_capture_scaffold(intervention_id: str = "", *, status: str = "") -> Dict[str, Any]:
+    """Return the structured close-the-loop instruction agents should follow after VERIFY.
+
+    This is a template, not a success recommendation.  Agents must fill it only
+    after rerunning VERIFY; no-match starts as unhelpful/unverified until a human
+    or command outcome proves otherwise.
+    """
+    template_payload = {
+        "intervention_id": intervention_id,
+        "outcome": "unknown",
+        "helpful": False,
+        "verified": False,
+        "verification_command": "",
+        "verification_exit_code": None,
+        "verification_output_sha256": "",
+        "dead_ends_avoided": 0,
+    }
+    return {
+        "tool": "borg_record_outcome",
+        "when": "after VERIFY is rerun",
+        "required_fields": ["intervention_id", "outcome", "helpful", "verified"],
+        "template_payload": template_payload,
+        "status_aware_defaults": {
+            "status": str(status or ""),
+            "default_outcome": "unknown",
+            "default_helpful": False,
+            "default_verified": False,
+        },
+        "fail_closed": "If VERIFY was not rerun, set verified=false and do not claim Borg helped.",
+    }
+
+
 def _confidence_is_med_or_better(confidence: str) -> bool:
     return _CONFIDENCE_RANK.get(str(confidence or "").lower(), 0) >= 2
 
@@ -2095,8 +2127,10 @@ def borg_rescue(input: str = "", source: str = "mcp", show_guidance: bool = True
         )
         if intervention:
             payload["intervention_id"] = intervention["intervention_id"]
+            payload["outcome_capture"] = _outcome_capture_scaffold(intervention["intervention_id"], status=str(payload.get("status") or ""))
             payload.setdefault("value_receipt", {})["intervention_id"] = intervention["intervention_id"]
             payload.setdefault("value_receipt", {})["outcome_receipt_next_step"] = "After verification, call borg_record_outcome with this intervention_id."
+            payload["agent_instruction"] = str(payload.get("agent_instruction") or "").rstrip() + "\nAFTER VERIFY: call borg_record_outcome with this intervention_id; if VERIFY was not rerun, set verified=false."
         _attach_human_comms(payload, session_id=sid)
         return json.dumps(payload, ensure_ascii=False)
     except Exception as e:

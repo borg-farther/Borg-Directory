@@ -8,7 +8,7 @@
       "exists": true,
       "failed_count": 0,
       "failures": [],
-      "generated_at_utc": "2026-05-28T08:04:53.760111+00:00",
+      "generated_at_utc": "2026-05-29T18:49:28.707750+00:00",
       "has_bad_answer_feedback_path": true,
       "missing_required_checks": [],
       "observed_check_count": 7,
@@ -113,7 +113,7 @@
       "expected_version": "3.3.15",
       "failed_count": 0,
       "failures": [],
-      "generated_at_utc": "2026-05-28T17:53:08Z",
+      "generated_at_utc": "2026-05-29T18:49:08Z",
       "mcp_server_info": {
         "name": "borg-mcp-server",
         "version": "3.3.15"
@@ -173,14 +173,14 @@
     },
     "self_service_ops_readiness": {
       "blockers": [],
-      "generated_at_utc": "2026-05-28T21:27:07.924368+00:00",
+      "generated_at_utc": "2026-05-29T21:35:11.131882+00:00",
       "passed": true,
       "report": "docs/SELF_SERVICE_OPS_READINESS_REPORT.md",
       "rollout_policy": "Controlled first-10 may proceed only when ops readiness passes; broad public self-serve still requires row-derived first-10 external evidence.",
       "snapshot": "eval/self_service_ops_gate_snapshot.json"
     }
   },
-  "generated_at_utc": "2026-05-28T21:27:07.968009+00:00",
+  "generated_at_utc": "2026-05-29T21:35:11.179847+00:00",
   "max_recommended_real_users_now": 10,
   "ready_for_controlled_first_10_beta": true,
   "ready_for_public_self_serve_launch": false,

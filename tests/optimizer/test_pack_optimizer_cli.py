@@ -345,3 +345,60 @@ def test_optimize_pack_cli_accepts_top_level_examples_list(tmp_path):
     assert code == 0
     assert data["success"] is True
     assert err == ""
+
+
+def test_optimize_pack_cli_review_packet_json(tmp_path):
+    pack_path = tmp_path / "pack.yaml"
+    taskset = tmp_path / "taskset.json"
+    examples_file = tmp_path / "examples.json"
+    output_root = tmp_path / "pack_optimizer"
+    _write_pack(pack_path)
+    _write_taskset(taskset)
+    _write_examples_file(examples_file)
+
+    code, out, err = capture_main([
+        "optimize-pack",
+        "systematic-debugging",
+        "--taskset",
+        str(taskset),
+        "--pack-file",
+        str(pack_path),
+        "--examples-file",
+        str(examples_file),
+        "--output-dir",
+        str(output_root),
+        "--json",
+    ])
+    assert code == 0
+    candidate_id = json.loads(out)["candidate_id"]
+
+    code, out, err = capture_main(["optimize-pack", "review", candidate_id, "--output-dir", str(output_root), "--json"])
+    artifact_only = json.loads(out)
+    assert code == 1
+    assert artifact_only["candidate_id"] == candidate_id
+    assert artifact_only["decision"] == "source_verification_required"
+    assert artifact_only["manual_review_eligibility"] == "source_verification_required"
+    assert artifact_only["source_verified"] is False
+
+    code, out, err = capture_main([
+        "optimize-pack",
+        "review",
+        candidate_id,
+        "--pack-file",
+        str(pack_path),
+        "--taskset",
+        str(taskset),
+        "--examples-file",
+        str(examples_file),
+        "--output-dir",
+        str(output_root),
+        "--json",
+    ])
+    packet = json.loads(out)
+    assert code == 0
+    assert packet["candidate_id"] == candidate_id
+    assert packet["decision"] == "awaiting_maintainer_review"
+    assert packet["manual_review_eligibility"] == "eligible_for_manual_review"
+    assert packet["source_verified"] is True
+    assert "reviewer_checklist" in packet
+    assert err == ""

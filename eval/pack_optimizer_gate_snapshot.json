@@ -1,11 +1,11 @@
 {
-  "candidate_id": "packopt-sha256:6ec87758c3ad82b4604b3837346675285b1e41b6a164684b11b2b6b9f35929db",
+  "candidate_id": "packopt-sha256:77864c7111f22de9eaba081139f3ca148b13e65a23ea6a8ee21b0f1cb7ca7d57",
   "first_10_claim": false,
   "gate": "pack_optimizer",
   "gate_failures": [],
   "global_promotion_allowed": false,
   "hard_failures": [],
-  "output_dir": "eval/pack_optimizer/packopt-sha256_6ec87758c3ad82b4604b3837346675285b1e41b6a164684b11b2b6b9f35929db",
+  "output_dir": "eval/pack_optimizer/packopt-sha256_77864c7111f22de9eaba081139f3ca148b13e65a23ea6a8ee21b0f1cb7ca7d57",
   "recommendation": "eligible_for_manual_review",
   "score_delta": 0.29,
   "success": true

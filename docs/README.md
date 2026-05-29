@@ -56,6 +56,7 @@ They are retained for provenance, but they are not current product claims or fir
 - [`CANONICAL_REPO.md`](CANONICAL_REPO.md) — canonical repo and no-loss preservation policy for operators; not a first-user product guide
 - [`20260529_SKILLOPT_BORG_PACK_OPTIMIZER_PRD.md`](20260529_SKILLOPT_BORG_PACK_OPTIMIZER_PRD.md) — internal implementation-ready PRD for the local-only SkillOpt-inspired pack optimizer; not a public lift claim
 - [`20260529_SKILLOPT_BORG_PACK_OPTIMIZER_IMPLEMENTATION.md`](20260529_SKILLOPT_BORG_PACK_OPTIMIZER_IMPLEMENTATION.md) — internal implementation report and verification contract; first-10/public lift claims remain false
+- [`20260529_SKILLOPT_BORG_RESCUE_INTERACTION_LOOP.md`](20260529_SKILLOPT_BORG_RESCUE_INTERACTION_LOOP.md) — internal implementation report for rescue-packet eval, rejected-edit memory, agent priming, outcome capture, and review packets; not a public lift claim
 
 ## Current truth
 

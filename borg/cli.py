@@ -533,6 +533,46 @@ def _cmd_rescue(args: argparse.Namespace) -> int:
     return 0 if result.success else 1
 
 
+def _cmd_rescue_eval(args: argparse.Namespace) -> int:
+    """Execute a rescue-packet eval taskset."""
+    from borg.core.rescue_packet_eval import evaluate_rescue_cases, load_rescue_eval_taskset
+
+    try:
+        taskset = load_rescue_eval_taskset(args.taskset)
+        result = evaluate_rescue_cases(taskset.cases, taskset_id=taskset.taskset_id)
+        if args.json:
+            print(json.dumps(result, indent=2, sort_keys=True, ensure_ascii=False))
+        else:
+            print(f"taskset_id: {result['taskset_id']}")
+            print(f"success: {result['success']}")
+            print(f"recommendation: {result['recommendation']}")
+            print(f"selection_cases: {result['selection']['case_count']}")
+            print(f"hidden_cases: {result['hidden']['case_count']}")
+            if result.get("hard_failures"):
+                print("hard_failures:")
+                for failure in result["hard_failures"]:
+                    print(f"  - {failure}")
+        return 0 if result.get("success") else 1
+    except (ValueError, OSError, json.JSONDecodeError) as e:
+        if getattr(args, "json", False):
+            print(json.dumps({"success": False, "error": str(e), "type": type(e).__name__}, indent=2), file=sys.stdout)
+        else:
+            print(f"Error: {e}", file=sys.stderr)
+        return 1
+
+
+def _cmd_agent_priming(args: argparse.Namespace) -> int:
+    """Render a host-specific Borg agent-priming candidate."""
+    from borg.core.agent_priming import build_agent_priming_candidate
+
+    candidate = build_agent_priming_candidate(getattr(args, "host", "generic"))
+    if getattr(args, "json", False):
+        print(json.dumps(candidate, indent=2, sort_keys=True, ensure_ascii=False))
+    else:
+        print(candidate["prompt"])
+    return 0 if candidate.get("recommendation") == "eligible_for_host_rules_review" else 1
+
+
 def _cmd_start(args: argparse.Namespace) -> int:
     """Interactive onboarding — get value from borg in 30 seconds."""
     print()
@@ -1015,6 +1055,7 @@ def _cmd_collective(args: argparse.Namespace) -> int:
 
 def _cmd_optimize_pack(args: argparse.Namespace) -> int:
     """Local-only SkillOpt-inspired pack optimizer entrypoint."""
+    from borg.core.optimizer_review_queue import build_review_packet
     from borg.core.pack_optimizer import PackOptimizer, load_examples_file, run_pack_optimizer
 
     target = getattr(args, "target", "")
@@ -1055,6 +1096,46 @@ def _cmd_optimize_pack(args: argparse.Namespace) -> int:
                     for failure in score["hard_failures"]:
                         print(f"  - {failure}")
             return 0
+
+        if target == "review":
+            if not getattr(args, "candidate_id", None):
+                raise ValueError("review requires candidate_id")
+            verified_inspection = None
+            source_args_present = bool(getattr(args, "pack_file", None) or getattr(args, "taskset", None) or getattr(args, "examples_file", None))
+            if source_args_present:
+                if not getattr(args, "pack_file", None):
+                    raise ValueError("source-verified review requires --pack-file")
+                if not getattr(args, "taskset", None):
+                    raise ValueError("source-verified review requires --taskset")
+                if not getattr(args, "examples_file", None):
+                    raise ValueError("source-verified review requires --examples-file")
+                examples = load_examples_file(args.examples_file)
+                verified_inspection = optimizer.verify_candidate_against_sources(
+                    args.candidate_id,
+                    pack_path=args.pack_file,
+                    taskset_path=args.taskset,
+                    examples=examples,
+                    scope="local",
+                )
+            candidate_dir = optimizer._candidate_dir(args.candidate_id)
+            data = build_review_packet(
+                candidate_dir,
+                source_verified=bool(verified_inspection and verified_inspection.get("source_verified")),
+                verified_inspection=verified_inspection,
+            )
+            if args.json:
+                print(json.dumps(data, indent=2, sort_keys=True, ensure_ascii=False))
+            else:
+                print(f"candidate_id: {data['candidate_id']}")
+                print(f"decision: {data['decision']}")
+                print(f"manual_review_eligibility: {data['manual_review_eligibility']}")
+                print(f"score_delta: {data['score']['score_delta']}")
+                print(f"accepted_edits: {data['edits']['accepted_count']}")
+                print(f"rejected_edits: {data['edits']['rejected_count']}")
+                print("reviewer_checklist:")
+                for item in data.get("reviewer_checklist", []):
+                    print(f"  - {item}")
+            return 0 if data.get("manual_review_eligibility") == "eligible_for_manual_review" else 1
 
         if target == "apply":
             if not getattr(args, "candidate_id", None):
@@ -2044,6 +2125,25 @@ def main() -> int:
     p.add_argument("--short", action="store_true", help="Omit full legacy guidance block")
     p.set_defaults(func=_cmd_rescue)
 
+    # borg rescue-eval <taskset.json>
+    p = sub.add_parser("rescue-eval", help="Execute a rescue-packet eval taskset",
+        formatter_class=argparse.RawDescriptionHelpFormatter,
+        epilog="""Examples:
+  borg rescue-eval eval/tasksets/rescue_packet_smoke.json --json""")
+    p.add_argument("taskset", help="JSON taskset with train/selection/hidden rescue cases")
+    p.add_argument("--json", action="store_true", help="Output machine-readable metrics")
+    p.set_defaults(func=_cmd_rescue_eval)
+
+    # borg agent-priming <host>
+    p = sub.add_parser("agent-priming", help="Render host-specific Borg call/verify/outcome priming",
+        formatter_class=argparse.RawDescriptionHelpFormatter,
+        epilog="""Examples:
+  borg agent-priming claude-code
+  borg agent-priming codex --json""")
+    p.add_argument("host", nargs="?", default="generic", choices=["generic", "hermes", "claude-code", "codex", "cursor"], help="Agent host to target")
+    p.add_argument("--json", action="store_true", help="Output machine-readable priming artifact")
+    p.set_defaults(func=_cmd_agent_priming)
+
     # borg first-10 — print first-user beta readiness contract
     p = sub.add_parser("first-10", help="Print first-user beta readiness gates and smoke path",
         formatter_class=argparse.RawDescriptionHelpFormatter,
@@ -2251,10 +2351,11 @@ Examples:
   borg optimize-pack inspect packopt-sha256:0000000000000000000000000000000000000000000000000000000000000000 --json
       # artifact-only inventory; reports source_verification_required
   borg optimize-pack inspect packopt-sha256:0000000000000000000000000000000000000000000000000000000000000000 --pack-file ./pack.yaml --taskset eval/tasksets/systematic_debugging_selection.json --examples-file eval/tasksets/systematic_debugging_examples.json --json
+  borg optimize-pack review packopt-sha256:0000000000000000000000000000000000000000000000000000000000000000 --pack-file ./pack.yaml --taskset eval/tasksets/systematic_debugging_selection.json --examples-file eval/tasksets/systematic_debugging_examples.json --json
   borg optimize-pack apply packopt-sha256:0000000000000000000000000000000000000000000000000000000000000000 --scope local --pack-file ./pack.yaml --taskset eval/tasksets/systematic_debugging_selection.json --examples-file eval/tasksets/systematic_debugging_examples.json""",
     )
-    p.add_argument("target", help="Pack id, or action: inspect/apply")
-    p.add_argument("candidate_id", nargs="?", help="Candidate id for inspect/apply")
+    p.add_argument("target", help="Pack id, or action: inspect/review/apply")
+    p.add_argument("candidate_id", nargs="?", help="Candidate id for inspect/review/apply")
     p.add_argument("--taskset", default=None, help="Selection taskset JSON path for dry-run candidate generation")
     p.add_argument("--pack-file", default=None, help="Optional pack file path; required for apply and source-verified inspect")
     p.add_argument("--examples-file", default=None, help="Optional sanitized examples JSON file; required for apply and source-verified inspect")
