@@ -1,0 +1,31 @@
+{
+  "schema_version": "1.0",
+  "taskset_id": "systematic-debugging-selection-v1",
+  "description": "Tiny deterministic selection fixture for the local-only Borg pack optimizer. It proves gate wiring only; it is not first-10 or public lift evidence.",
+  "baseline_metrics": {
+    "verified_success": 0.50,
+    "action_stop_verify_relevance": 0.50,
+    "dead_ends_avoided": 0.10,
+    "no_confident_match_precision": 0.60,
+    "verification_quality": 0.60,
+    "token_or_tool_efficiency": 0.30
+  },
+  "candidate_metrics": {
+    "verified_success": 0.80,
+    "action_stop_verify_relevance": 0.80,
+    "dead_ends_avoided": 0.40,
+    "no_confident_match_precision": 0.90,
+    "verification_quality": 0.90,
+    "token_or_tool_efficiency": 0.50
+  },
+  "controls": {
+    "unrelated_task_regression": false,
+    "no_confident_match_regression": false,
+    "unsafe_command_regression": false
+  },
+  "claim_boundary": {
+    "first_10_claim": false,
+    "public_lift_claim": false,
+    "global_promotion_allowed": false
+  }
+}

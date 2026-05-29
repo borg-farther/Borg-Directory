@@ -1,4 +1,5 @@
 import json
+import sqlite3
 
 from borg.core import collective_learning as collective_module
 from borg.integrations import mcp_server
@@ -38,6 +39,30 @@ def test_borg_rescue_records_intervention_and_outcome_receipt(tmp_path, monkeypa
     assert receipt["intervention_id"] == payload["intervention_id"]
     assert receipt["helpful"] is True
     assert receipt["verified"] is True
+
+
+def test_borg_rescue_binds_source_refs_for_systematic_debugging_optimizer(tmp_path, monkeypatch):
+    monkeypatch.setenv("BORG_HOME", str(tmp_path / "borg-home"))
+    monkeypatch.delenv("BORG_TENANT_PSEUDONYM", raising=False)
+
+    payload = json.loads(mcp_server.borg_rescue(
+        input="ModuleNotFoundError: No module named flask",
+        source="test",
+        show_guidance=False,
+        session_id="session-source-refs",
+    ))
+
+    assert payload["success"] is True
+    store = collective_module.CollectiveLearningStore()
+    with sqlite3.connect(store.db_path) as conn:
+        refs_json = conn.execute(
+            "SELECT source_refs_json FROM interventions WHERE intervention_id = ?",
+            (payload["intervention_id"],),
+        ).fetchone()[0]
+    refs = set(json.loads(refs_json))
+    assert "pack:systematic-debugging" not in refs
+    assert "pack_uri:borg://hermes/systematic-debugging" not in refs
+    assert "problem_class:missing_dependency" in refs
 
 
 def test_borg_record_outcome_can_use_last_session_intervention(tmp_path, monkeypatch):

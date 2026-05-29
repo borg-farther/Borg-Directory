@@ -26,6 +26,7 @@ import json
 import os
 import select
 import shutil
+import sqlite3
 import subprocess
 import sys
 import time
@@ -1012,6 +1013,111 @@ def _cmd_collective(args: argparse.Namespace) -> int:
         return 1
 
 
+def _cmd_optimize_pack(args: argparse.Namespace) -> int:
+    """Local-only SkillOpt-inspired pack optimizer entrypoint."""
+    from borg.core.pack_optimizer import PackOptimizer, load_examples_file, run_pack_optimizer
+
+    target = getattr(args, "target", "")
+    output_root = getattr(args, "output_dir", None)
+    optimizer = PackOptimizer(collective_db_path=getattr(args, "collective_db", None), output_root=output_root)
+    try:
+        if target == "inspect":
+            if not getattr(args, "candidate_id", None):
+                raise ValueError("inspect requires candidate_id")
+            if getattr(args, "pack_file", None) or getattr(args, "taskset", None) or getattr(args, "examples_file", None):
+                if not getattr(args, "pack_file", None):
+                    raise ValueError("source-verified inspect requires --pack-file")
+                if not getattr(args, "taskset", None):
+                    raise ValueError("source-verified inspect requires --taskset")
+                if not getattr(args, "examples_file", None):
+                    raise ValueError("source-verified inspect requires --examples-file")
+                examples = load_examples_file(args.examples_file)
+                data = optimizer.verify_candidate_against_sources(
+                    args.candidate_id,
+                    pack_path=args.pack_file,
+                    taskset_path=args.taskset,
+                    examples=examples,
+                    scope="local",
+                )
+            else:
+                data = optimizer.inspect_candidate(args.candidate_id)
+            if args.json:
+                print(json.dumps(data, indent=2, sort_keys=True, ensure_ascii=False))
+            else:
+                score = data["selection_score"]
+                print(f"candidate_id: {data['candidate_id']}")
+                print(f"artifact_recommendation: {score['recommendation']}")
+                print(f"source_verified: {data.get('source_verified', False)}")
+                print(f"manual_review_eligibility: {data.get('manual_review_eligibility', 'source_verification_required')}")
+                print(f"score_delta: {score['score_delta']}")
+                if score.get("hard_failures"):
+                    print("hard_failures:")
+                    for failure in score["hard_failures"]:
+                        print(f"  - {failure}")
+            return 0
+
+        if target == "apply":
+            if not getattr(args, "candidate_id", None):
+                raise ValueError("apply requires candidate_id")
+            if getattr(args, "scope", "local") != "local":
+                raise ValueError("pack optimizer is local-only; global apply/promotion is blocked")
+            if not getattr(args, "pack_file", None):
+                raise ValueError("apply requires --pack-file")
+            if not getattr(args, "taskset", None):
+                raise ValueError("apply requires --taskset")
+            if not getattr(args, "examples_file", None):
+                raise ValueError("apply requires --examples-file")
+            examples = load_examples_file(args.examples_file)
+            data = optimizer.apply_candidate(
+                args.candidate_id,
+                pack_path=args.pack_file,
+                taskset_path=args.taskset,
+                examples=examples,
+                scope=getattr(args, "scope", "local"),
+            )
+            if args.json:
+                print(json.dumps(data, indent=2, sort_keys=True, ensure_ascii=False))
+            else:
+                print(f"applied_candidate: {data['candidate_id']}")
+                print(f"scope: {data['scope']}")
+                print(f"pack_path: {data['pack_path']}")
+            return 0
+
+        if not getattr(args, "taskset", None):
+            raise ValueError("optimize-pack dry-run requires --taskset")
+        examples = load_examples_file(args.examples_file) if getattr(args, "examples_file", None) else None
+        result = run_pack_optimizer(
+            pack_id=target,
+            taskset_path=args.taskset,
+            pack_path=getattr(args, "pack_file", None),
+            output_root=output_root,
+            examples=examples,
+            collective_db_path=getattr(args, "collective_db", None),
+            local_only=True,
+            max_edits=getattr(args, "max_edits", 4),
+        )
+        data = result.to_artifact()
+        if args.json:
+            print(json.dumps(data, indent=2, sort_keys=True, ensure_ascii=False))
+        else:
+            print(f"candidate_id: {result.candidate_id}")
+            print(f"success: {result.success}")
+            print(f"recommendation: {result.recommendation}")
+            print(f"score_delta: {result.score_delta}")
+            print(f"output_dir: {result.output_dir}")
+            if result.hard_failures:
+                print("hard_failures:")
+                for failure in result.hard_failures:
+                    print(f"  - {failure}")
+        return 0 if result.success else 1
+    except (ValueError, OSError, json.JSONDecodeError, sqlite3.Error) as e:
+        if getattr(args, "json", False):
+            print(json.dumps({"success": False, "error": str(e), "type": type(e).__name__}, indent=2, sort_keys=True), file=sys.stdout)
+        else:
+            print(f"Error: {e}", file=sys.stderr)
+        return 1
+
+
 def _cmd_version(args: argparse.Namespace) -> int:
     """Show version."""
     print(f"borg {__version__}")
@@ -1768,6 +1874,8 @@ def main() -> int:
   borg setup-cursor              Configure borg MCP for Cursor
   borg first-10 --json           Print first-user beta gates and smoke path
   borg collective summary --json Show outcome-grounded contribution ledger status
+  borg optimize-pack systematic-debugging --taskset eval/tasksets/systematic_debugging_selection.json --local-only
+                                  Propose a local-only pack optimization candidate
   borg autopilot                 Guided Hermes setup""",
     )
     parser.add_argument("--version", "-V", action="version", version=f"borg {__version__}")
@@ -2132,6 +2240,31 @@ Examples:
     cp.add_argument("--min-helpful-tenants", type=int, default=3)
     cp.add_argument("--json", action="store_true")
     cp.set_defaults(func=_cmd_collective)
+
+    # borg optimize-pack — local-only bounded candidate pack optimization
+    p = sub.add_parser(
+        "optimize-pack",
+        help="Propose/inspect/apply local-only pack optimization candidates",
+        formatter_class=argparse.RawDescriptionHelpFormatter,
+        epilog="""Examples:
+  borg optimize-pack systematic-debugging --taskset eval/tasksets/systematic_debugging_selection.json --local-only
+  borg optimize-pack inspect packopt-sha256:0000000000000000000000000000000000000000000000000000000000000000 --json
+      # artifact-only inventory; reports source_verification_required
+  borg optimize-pack inspect packopt-sha256:0000000000000000000000000000000000000000000000000000000000000000 --pack-file ./pack.yaml --taskset eval/tasksets/systematic_debugging_selection.json --examples-file eval/tasksets/systematic_debugging_examples.json --json
+  borg optimize-pack apply packopt-sha256:0000000000000000000000000000000000000000000000000000000000000000 --scope local --pack-file ./pack.yaml --taskset eval/tasksets/systematic_debugging_selection.json --examples-file eval/tasksets/systematic_debugging_examples.json""",
+    )
+    p.add_argument("target", help="Pack id, or action: inspect/apply")
+    p.add_argument("candidate_id", nargs="?", help="Candidate id for inspect/apply")
+    p.add_argument("--taskset", default=None, help="Selection taskset JSON path for dry-run candidate generation")
+    p.add_argument("--pack-file", default=None, help="Optional pack file path; required for apply and source-verified inspect")
+    p.add_argument("--examples-file", default=None, help="Optional sanitized examples JSON file; required for apply and source-verified inspect")
+    p.add_argument("--collective-db", default=None, help="Optional collective learning DB path")
+    p.add_argument("--output-dir", default="eval/pack_optimizer", help="Candidate artifact root directory")
+    p.add_argument("--max-edits", type=int, default=4, help="Maximum bounded edits to propose")
+    p.add_argument("--local-only", action="store_true", default=True, help="Force local-only dry-run behavior (default)")
+    p.add_argument("--scope", choices=["local", "global", "global_candidate", "org"], default="local", help="Apply scope; only local is allowed")
+    p.add_argument("--json", action="store_true", help="Output machine-readable JSON")
+    p.set_defaults(func=_cmd_optimize_pack)
 
     # guild reputation <agent_id>
     p = sub.add_parser("reputation", help="Show agent reputation profile",
