@@ -2070,6 +2070,13 @@ def borg_rescue(input: str = "", source: str = "mcp", show_guidance: bool = True
         result = rescue(input, source=source or "mcp", show_guidance=bool(show_guidance))
         payload = result.to_dict()
         sid = _human_session_key(explicit=session_id)
+        source_refs = []
+        problem_class = str(payload.get("problem_class") or "")
+        if payload.get("success") and problem_class and problem_class != "unknown":
+            # Problem-class matches are useful context, but they are not explicit
+            # pack provenance. Do not synthesize pack:* refs here; optimizer
+            # examples must come from receipts that were explicitly pack-bound.
+            source_refs = [f"problem_class:{problem_class}"]
         intervention = _record_collective_intervention(
             source_tool="error_lookup" if (source or "").startswith("error_lookup") else "borg_rescue",
             task_text=input,
@@ -2084,6 +2091,7 @@ def borg_rescue(input: str = "", source: str = "mcp", show_guidance: bool = True
             },
             session_id=sid,
             agent_id=_current_agent_id.get() or "mcp",
+            source_refs=source_refs,
         )
         if intervention:
             payload["intervention_id"] = intervention["intervention_id"]

@@ -1,0 +1,12 @@
+{
+  "candidate_id": "packopt-sha256:6ec87758c3ad82b4604b3837346675285b1e41b6a164684b11b2b6b9f35929db",
+  "first_10_claim": false,
+  "gate": "pack_optimizer",
+  "gate_failures": [],
+  "global_promotion_allowed": false,
+  "hard_failures": [],
+  "output_dir": "eval/pack_optimizer/packopt-sha256_6ec87758c3ad82b4604b3837346675285b1e41b6a164684b11b2b6b9f35929db",
+  "recommendation": "eligible_for_manual_review",
+  "score_delta": 0.29,
+  "success": true
+}

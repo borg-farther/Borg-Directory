@@ -1,0 +1,25 @@
+type: workflow_pack
+version: "1.0"
+id: systematic-debugging
+problem_class: debugging
+mental_model: Reproduce the exact failure, isolate the smallest cause, apply a bounded fix, and verify before broadening scope.
+required_inputs:
+  - name: error_message
+    type: string
+    description: Exact error, failing command, or traceback to debug.
+phases:
+  - name: observe
+    description: Return ACTION STOP VERIFY when a concrete failure exists.
+    checkpoint: Failure evidence is concrete enough for a targeted next action.
+  - name: confidence
+    description: Return NO_CONFIDENT_MATCH when evidence is weak.
+    checkpoint: Weak or unrelated guidance is rejected instead of forced.
+escalation_rules:
+  - condition: The failure cannot be reproduced or depends on unavailable credentials.
+    action: Stop and report the exact missing evidence or external blocker.
+provenance:
+  confidence: tested
+  evidence: Schema-valid deterministic fixture for the local pack optimizer gate.
+  failure_cases:
+    - Missing exact failure text.
+    - External credentials are required to reproduce the issue.

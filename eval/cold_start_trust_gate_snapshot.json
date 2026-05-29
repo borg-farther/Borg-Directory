@@ -30,18 +30,18 @@
       "blockers": [],
       "name": "stdio_meta_trust_prompt_fails_closed",
       "passed": true,
-      "stderr_tail": "borg-mcp-server v3.3.14 ready (stdio transport)\n",
+      "stderr_tail": "borg-mcp-server v3.3.15 ready (stdio transport)\n",
       "text_excerpt": "ACTION: proceed with normal debugging for this task; Borg has no proven cache hit.\n\nSTOP: do not force a weak or unrelated pack onto this task.\n\nVERIFY: collect the exact failing command/output and rerun borg_observe or borg_rescue only if new evidence appears.\n\nCONFIDENCE: BORG [NO CONFIDENT MATCH] -- no relevant traces, synthetic hits, or pack matches.\n\nNO_CONFIDENT_MATCH: No confident Borg match for this task.\nBorg found no relevant real traces, synthetic hits, or exact pack class match.\nProceed with normal reasoning; do not treat Borg as evidence for this task.\nAfter resolving: record concrete bad/good paths with borg_record_failure(...) or borg feedback-v3 when useful."
     },
     {
       "name": "stdio_concrete_permission_prompt_gets_specific_guidance",
       "passed": true,
-      "stderr_tail": "borg-mcp-server v3.3.14 ready (stdio transport)\n",
+      "stderr_tail": "borg-mcp-server v3.3.15 ready (stdio transport)\n",
       "text_excerpt": "ACTION: from matched seed pack, 1. Check file permissions: ls -la <file>\n\nVERIFY: execute the pack's first checkpoint, then rerun the exact failing command\n\nSTOP: do not use chmod 777 or blanket sudo; identify the exact file, owner, and minimum required permission.\n\nCONFIDENCE: Real traces: 0 | Synthetic: 0 | BORG [SYNTHETIC ONLY]\n\n------------------------------------------------------------\nWHAT FAILED (7 prior sessions)\n   Skip these approaches:\n   \u2022 1 agent tried: Ran sudo pip install to fix permission error on system packages\n     Why it failed: DEAD END: sudo pip breaks system Python and future pip installs\n   \u2022 1 agent tried: Ran sudo npm install -g to fix permission denied error on global package\n     Why it failed: DEAD END: sudo npm creates root-owned files in /usr/lib/node_modules breaking all future npm operati\n   \u2022 1 agent tried: Added sudo to the failing command in the workflow step\n     Why it failed: DEAD END: github-actions runner already runs as appropriate user, sudo causes authentication failure\nPACK GUIDANCE (bash-permission-denied)\n1. Check file permissions: ls -la <file>\n2. Add execute permission: chmod +x <script.sh>\n3. For directories: chmod +x <directory>\n4"
     }
   ],
   "gate_type": "cold_start_trust_hardening",
-  "generated_at_utc": "2026-05-28T08:04:53.760111+00:00",
+  "generated_at_utc": "2026-05-29T18:49:28.707750+00:00",
   "passed": true,
   "schema_version": 1,
   "trust_policy": "Borg must fail closed with NO_CONFIDENT_MATCH for meta/product/readiness prompts, must not inject unrelated framework guidance, and must preserve concrete error guidance for exact failures."

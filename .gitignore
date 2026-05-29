@@ -42,3 +42,6 @@ PROJECT_STATUS.md
 GO_NO_GO_DECISION.md
 UAT_RESULTS.md
 LOAD_TEST_REPORT_*.md
+
+# Generated pack optimizer candidate artifacts; gate snapshots/tasksets stay tracked.
+eval/pack_optimizer/

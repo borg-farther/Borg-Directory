@@ -1,0 +1,82 @@
+{
+  "schema_version": "1.0",
+  "description": "Sanitized local optimizer examples for gate smoke tests only. No raw trajectory, raw chat, raw tool output, file contents, or raw tenant identity.",
+  "examples": [
+    {
+      "example_id": "gate-success-modulenotfounderror",
+      "pack_id": "systematic-debugging",
+      "task_class": "python:modulenotfounderror",
+      "intervention_id": "intervention-sha256:1111111111111111111111111111111111111111111111111111111111111111",
+      "guidance": {
+        "ACTION": "Install the missing dependency in the active environment.",
+        "STOP": "Do not reinstall Python or use sudo pip as the first move.",
+        "VERIFY": "python -c 'import flask'"
+      },
+      "outcome": "success",
+      "helpful": true,
+      "verified": true,
+      "verification_exit_code": 0,
+      "verification_output_sha256": "sha256:aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa",
+      "trusted_tenant_id": "tenant-identity-sha256:bbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbb",
+      "receipt_id": "outcome-sha256:cccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccc",
+      "dead_ends_avoided": 2
+    },
+    {
+      "example_id": "gate-failure-no-confident-match",
+      "pack_id": "systematic-debugging",
+      "task_class": "unknown:no-confident-match",
+      "intervention_id": "intervention-sha256:2222222222222222222222222222222222222222222222222222222222222222",
+      "guidance": {
+        "ACTION": "No confident match should have been returned.",
+        "STOP": "Do not force weak or unrelated debugging guidance.",
+        "VERIFY": "Collect exact failing command output before retrying observe/rescue."
+      },
+      "outcome": "failure",
+      "helpful": false,
+      "verified": true,
+      "verification_exit_code": 1,
+      "verification_output_sha256": "sha256:dddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddd",
+      "trusted_tenant_id": "tenant-identity-sha256:eeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeee",
+      "receipt_id": "outcome-sha256:ffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffff",
+      "dead_ends_avoided": 0
+    },
+    {
+      "example_id": "gate-success-importerror",
+      "pack_id": "systematic-debugging",
+      "task_class": "python:importerror",
+      "intervention_id": "intervention-sha256:3333333333333333333333333333333333333333333333333333333333333333",
+      "guidance": {
+        "ACTION": "Install the missing distribution in the active environment.",
+        "STOP": "Do not reinstall the interpreter.",
+        "VERIFY": "pytest"
+      },
+      "outcome": "success",
+      "helpful": true,
+      "verified": true,
+      "verification_exit_code": 0,
+      "verification_output_sha256": "sha256:3333333333333333333333333333333333333333333333333333333333333333",
+      "trusted_tenant_id": "tenant-identity-sha256:4444444444444444444444444444444444444444444444444444444444444444",
+      "receipt_id": "outcome-sha256:5555555555555555555555555555555555555555555555555555555555555555",
+      "dead_ends_avoided": 1
+    },
+    {
+      "example_id": "gate-failure-weak-guidance",
+      "pack_id": "systematic-debugging",
+      "task_class": "unknown:no-confident-match",
+      "intervention_id": "intervention-sha256:6666666666666666666666666666666666666666666666666666666666666666",
+      "guidance": {
+        "ACTION": "No confident match.",
+        "STOP": "Do not force weak guidance.",
+        "VERIFY": "pytest"
+      },
+      "outcome": "failure",
+      "helpful": false,
+      "verified": true,
+      "verification_exit_code": 1,
+      "verification_output_sha256": "sha256:6666666666666666666666666666666666666666666666666666666666666666",
+      "trusted_tenant_id": "tenant-identity-sha256:7777777777777777777777777777777777777777777777777777777777777777",
+      "receipt_id": "outcome-sha256:8888888888888888888888888888888888888888888888888888888888888888",
+      "dead_ends_avoided": 0
+    }
+  ]
+}
