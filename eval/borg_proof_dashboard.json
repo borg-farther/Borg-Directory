@@ -358,7 +358,7 @@
       }
     ]
   },
-  "generated_at_utc": "2026-05-29T19:01:35Z",
+  "generated_at_utc": "2026-05-29T19:10:29Z",
   "metrics": {
     "active_contributors_consumers": {
       "honesty_label": "MISSING_BORG_ANALYTICS_ARTIFACT",
@@ -510,7 +510,7 @@
     "Before any public claim, replace logical-user load evidence with real external-user evidence or clearly label the distinction."
   ],
   "repo": "https://github.com/borg-farther/Borg-Directory",
-  "source_revision": "e7406085acf0944bf24325403f05ef68a1a41ebf+dirty",
+  "source_revision": "76d32a1abf612eb7679c6aa9757be64a5b86abc2+dirty",
   "top_verdict": {
     "broad_public_launch": {
       "verdict": "NO-GO",
