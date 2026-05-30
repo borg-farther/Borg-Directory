@@ -6,6 +6,7 @@ import argparse
 import hashlib
 import io
 import json
+import sqlite3
 import sys
 from pathlib import Path
 from unittest.mock import patch, MagicMock
@@ -941,25 +942,31 @@ def test_status_shows_borg_dir_and_db(mock_get_borg_dir, mock_load_sessions, moc
     assert "guild.db" in out
 
 
-@patch("borg.cli.AgentStore")
 @patch("borg.cli.load_persisted_sessions")
 @patch("borg.cli.get_borg_dir")
 @patch("borg.cli._active_sessions", {})
-def test_status_shows_pack_and_agent_counts(mock_get_borg_dir, mock_load_sessions, mock_store_cls):
-    """status command shows number of packs and agents."""
-    mock_get_borg_dir.return_value.__str__ = MagicMock(return_value="/fake/guild")
-    mock_get_borg_dir.return_value.__truediv__ = lambda self, x: f"/fake/guild/{x}"
+def test_status_shows_pack_and_agent_counts(mock_get_borg_dir, mock_load_sessions, tmp_path):
+    """status command shows number of packs and agents without mutating via AgentStore."""
+    guild_dir = tmp_path / "guild"
+    guild_dir.mkdir()
+    db_path = guild_dir / "guild.db"
+    conn = sqlite3.connect(db_path)
+    try:
+        conn.execute("CREATE TABLE packs (id TEXT PRIMARY KEY)")
+        conn.execute("CREATE TABLE agents (agent_id TEXT PRIMARY KEY)")
+        conn.executemany("INSERT INTO packs(id) VALUES (?)", [("p1",), ("p2",), ("p3",)])
+        conn.executemany("INSERT INTO agents(agent_id) VALUES (?)", [("a1",), ("a2",)])
+        conn.commit()
+    finally:
+        conn.close()
+    mock_get_borg_dir.return_value = guild_dir
     mock_load_sessions.return_value = []
-    mock_store = MagicMock()
-    mock_store.list_packs.return_value = [{"id": "p1"}, {"id": "p2"}, {"id": "p3"}]
-    mock_store.list_agents.return_value = [{"agent_id": "a1"}, {"agent_id": "a2"}]
-    mock_store_cls.return_value = mock_store
 
     code, out, err = capture_main(["status"])
 
     assert code == 0
-    assert "3" in out  # pack count
-    assert "2" in out  # agent count
+    assert "Packs in Store:       3" in out
+    assert "Agent Count:          2" in out
 
 
 @patch("borg.cli.AgentStore")

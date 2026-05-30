@@ -19,9 +19,26 @@ def test_agent_priming_candidate_is_host_specific_and_closes_outcome_loop():
     assert "NO_CONFIDENT_MATCH" in prompt
     assert "borg_record_outcome" in prompt
     assert "after VERIFY" in prompt
+    for code in (
+        "OUTCOME_NOT_RECORDED",
+        "LOCAL_SEED_NOT_COLLECTIVE_PROOF",
+        "NO_CONFIDENT_MATCH",
+        "SEMANTIC_SEARCH_LEXICAL_FALLBACK",
+        "MCP_UNAVAILABLE_USE_CLI",
+    ):
+        assert code in prompt
     assert candidate["call_rules"]["concrete_error"] == "error_lookup"
     assert candidate["call_rules"]["task_start_debug_test_review"] == "borg_observe"
     assert candidate["call_rules"]["after_verify"] == "borg_record_outcome"
+    fallback_contract = candidate["visible_fallback_contract"]
+    for code in (
+        "OUTCOME_NOT_RECORDED",
+        "LOCAL_SEED_NOT_COLLECTIVE_PROOF",
+        "NO_CONFIDENT_MATCH",
+        "SEMANTIC_SEARCH_LEXICAL_FALLBACK",
+        "MCP_UNAVAILABLE_USE_CLI",
+    ):
+        assert code in fallback_contract
     assert score_agent_priming(prompt)["score"] == 1.0
 
 
@@ -70,6 +87,7 @@ def test_mcp_rescue_returns_structured_outcome_capture_scaffold(tmp_path, monkey
     assert outcome_capture["template_payload"]["verified"] is False
     assert outcome_capture["template_payload"]["helpful"] is False
     assert "call borg_record_outcome" in payload["agent_instruction"]
+    assert "--success " + "yes" not in json.dumps(payload)
 
 
 def test_mcp_no_confident_match_outcome_capture_defaults_to_unverified_unknown(tmp_path, monkeypatch):

@@ -114,12 +114,11 @@ borg pull borg://hermes/systematic-debugging
 borg apply systematic-debugging --task "Fix login bug where users get 401"
 ```
 
-After a real outcome, record feedback:
+After a real outcome, record feedback only after rerunning VERIFY. Prefer the intervention-bound `borg_record_outcome` path when Borg returned an `intervention_id`; for legacy pack-only CLI feedback, set the outcome truthfully:
 
 ```bash
-borg feedback-v3 --pack systematic-debugging --success yes
-# or
 borg feedback-v3 --pack systematic-debugging --success no
+# set --success to yes only after the verification command/check proves the fix worked
 ```
 
 This records outcome data. Shared learning depends on explicit publishing/aggregation and is still being validated.

@@ -117,7 +117,8 @@ def test_error_lookup_json_rpc_call_returns_text_content_packet():
     assert payload["problem_class"] == "type_mismatch"
     assert payload["agent_instruction"].startswith("ACTION:")
     assert "structuredContent" in resp["result"]
-    assert resp["result"]["user_message"].startswith("Borg found a proven rescue path")
+    assert resp["result"]["user_message"].startswith("Borg surfaced local seed guidance")
+    assert "proven" not in resp["result"]["user_message"].lower()
     assert "matches" not in resp["result"]["user_message"]
     assert resp["result"]["structuredContent"]["borg_human"]["first_hit"] is True
 
@@ -139,12 +140,17 @@ def test_error_lookup_human_badge_fires_once_per_session():
     first = json.loads(mcp_server.call_tool("error_lookup", args))
     second = json.loads(mcp_server.call_tool("error_lookup", args))
 
-    assert first["user_message"] == "Borg found a proven rescue path. Avoiding 3 known dead ends."
+    assert first["user_message"] == "Borg surfaced local seed guidance with 3 STOP items; no collective proof or measured value is claimed until VERIFY/outcome receipt."
+    assert "proven" not in first["user_message"].lower()
     assert "matches" not in first["user_message"]
     assert first["borg_human"]["first_hit"] is True
+    assert "dead_ends_avoided" not in first["borg_human"]["state"]
+    assert first["borg_human"]["state"]["stop_items_surfaced"] == 3
     assert "user_message" not in second
     assert second["borg_human"]["first_hit"] is False
-    assert second["session_message"] == "Borg helped 2 times, avoided 6 dead ends, learned 0 new fixes."
+    assert "dead_ends_avoided" not in second["borg_human"]["state"]
+    assert second["borg_human"]["state"]["stop_items_surfaced"] == 6
+    assert second["session_message"] == "Borg surfaced 2 matched hints, showed 6 STOP items, learned 0 new fixes; value remains unmeasured until VERIFY/outcome receipt."
     for line in [first["user_message"], first["session_message"], second["session_message"]]:
         _assert_renderer_safe(line)
 

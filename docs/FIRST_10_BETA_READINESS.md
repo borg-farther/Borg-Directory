@@ -193,11 +193,10 @@ Send each tester this:
        verification_command="<command or check that proves the outcome>"
      )
      ```
-   - If this was a pack-session/CLI-only run with no intervention id, use legacy pack feedback:
+   - If this was a pack-session/CLI-only run with no intervention id, use legacy pack feedback only after VERIFY, and set the outcome truthfully:
      ```bash
-     borg feedback-v3 --pack <pack-or-problem-class> --success yes
-     # or
      borg feedback-v3 --pack <pack-or-problem-class> --success no
+     # set --success to yes only after the verification command/check proves the fix worked
      ```
 
 ## GO / NO-GO after 10 users

@@ -273,13 +273,13 @@ def _plural(count: int, singular: str, plural: Optional[str] = None) -> str:
 
 def _session_line(state: Dict[str, Any]) -> str:
     traces = int(state.get("traces_contributed", 0) or 0)
-    dead_ends = int(state.get("dead_ends_avoided", 0) or 0)
-    helped = int(state.get("matched_lookups", 0) or 0)
-    if helped > 0:
+    stop_items = int(state.get("stop_items_surfaced", state.get("dead_ends_avoided", 0)) or 0)
+    matched = int(state.get("matched_lookups", 0) or 0)
+    if matched > 0:
         return _single_line_ascii(
-            f"Borg helped {helped} {_plural(helped, 'time')}, "
-            f"avoided {dead_ends} {_plural(dead_ends, 'dead end')}, "
-            f"learned {traces} new {_plural(traces, 'fix', 'fixes')}."
+            f"Borg surfaced {matched} matched {_plural(matched, 'hint')}, "
+            f"showed {stop_items} STOP {_plural(stop_items, 'item')}, "
+            f"learned {traces} new {_plural(traces, 'fix', 'fixes')}; value remains unmeasured until VERIFY/outcome receipt."
         )
     if traces > 0:
         return _single_line_ascii(
@@ -299,12 +299,13 @@ def _attach_human_comms(result: Dict[str, Any], *, session_id: str) -> Dict[str,
     evidence: Dict[str, Any] = evidence_obj if isinstance(evidence_obj, dict) else {}
     match_count = _match_count_from_evidence(evidence)
     dead_ends = _dead_end_count(result)
+    evidence_source = str(evidence.get("source") or "unknown")
     med_or_better = matched and _confidence_is_med_or_better(confidence)
 
     with _human_session_lock:
         state = _human_session_state.setdefault(session_id, {
             "first_hit_shown": False,
-            "dead_ends_avoided": 0,
+            "stop_items_surfaced": 0,
             "traces_contributed": 0,
             "matched_lookups": 0,
             "lookup_count": 0,
@@ -314,14 +315,18 @@ def _attach_human_comms(result: Dict[str, Any], *, session_id: str) -> Dict[str,
         user_message = ""
         if med_or_better:
             state["matched_lookups"] = int(state.get("matched_lookups", 0) or 0) + 1
-            state["dead_ends_avoided"] = int(state.get("dead_ends_avoided", 0) or 0) + dead_ends
+            state["stop_items_surfaced"] = int(state.get("stop_items_surfaced", 0) or 0) + dead_ends
             if not state.get("first_hit_shown"):
-                if dead_ends > 0:
+                if evidence_source == "seed_pack":
                     user_message = _single_line_ascii(
-                        f"Borg found a proven rescue path. Avoiding {dead_ends} known {_plural(dead_ends, 'dead end')}."
+                        f"Borg surfaced local seed guidance with {dead_ends} STOP {_plural(dead_ends, 'item')}; no collective proof or measured value is claimed until VERIFY/outcome receipt."
+                    )
+                elif dead_ends > 0:
+                    user_message = _single_line_ascii(
+                        f"Borg surfaced a rescue path with {dead_ends} STOP {_plural(dead_ends, 'item')}; verify before claiming value."
                     )
                 else:
-                    user_message = "Borg found a proven rescue path."
+                    user_message = "Borg surfaced a rescue path; verify before claiming value."
                 state["first_hit_shown"] = True
         elif matched:
             # Weak match: visible caution, but do not consume the first-hit badge.
@@ -355,7 +360,7 @@ def _record_human_trace_contributed(session_id: str) -> None:
     with _human_session_lock:
         state = _human_session_state.setdefault(key, {
             "first_hit_shown": False,
-            "dead_ends_avoided": 0,
+            "stop_items_surfaced": 0,
             "traces_contributed": 0,
             "matched_lookups": 0,
             "lookup_count": 0,
@@ -415,6 +420,7 @@ TOOLS: List[Dict[str, Any]] = [
         "description": (
             "Search for borg workflow packs by keyword or semantic similarity. Searches local packs and the remote index. "
             "Returns matching packs with their metadata (name, problem class, tier, confidence). "
+            "Also reports requested_mode/effective_mode plus fallback_states such as SEMANTIC_SEARCH_LEXICAL_FALLBACK and LOCAL_SEED_NOT_COLLECTIVE_PROOF. "
             "Use mode='semantic' or mode='hybrid' for semantic search when embeddings are available. "
             "When task_context is provided, uses the V3 contextual search path."
         ),
@@ -694,7 +700,8 @@ TOOLS: List[Dict[str, Any]] = [
         "name": "borg_rescue",
         "description": (
             "Agent-ready day-one rescue packet. Given an error, failing command output, or agent transcript, "
-            "returns ACTION, STOP, VERIFY, human receipt, automation policy, and optional full guidance. "
+            "returns ACTION, STOP, VERIFY, confidence, fallback_states, human receipt, outcome_capture, automation policy, and optional full guidance. "
+            "Matched packets still start with OUTCOME_NOT_RECORDED; run VERIFY before recording outcome. "
             "Use this when the agent is about to debug or has hit a technical failure."
         ),
         "inputSchema": {
@@ -722,7 +729,8 @@ TOOLS: List[Dict[str, Any]] = [
         "name": "error_lookup",
         "description": (
             "Plain-English alias for borg_rescue. Given an error, failing command output, or agent transcript, "
-            "returns the same ACTION, STOP, VERIFY, confidence, human receipt, and automation policy as borg_rescue. "
+            "returns the same ACTION, STOP, VERIFY, confidence, fallback_states, outcome_capture, human receipt, and automation policy as borg_rescue. "
+            "Matched packets still start with OUTCOME_NOT_RECORDED; run VERIFY before recording outcome. "
             "Use this as the first-user MCP tool name for concrete failures."
         ),
         "inputSchema": {

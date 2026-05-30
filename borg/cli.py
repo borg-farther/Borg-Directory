@@ -31,6 +31,7 @@ import subprocess
 import sys
 import time
 from pathlib import Path
+from urllib.parse import quote
 
 from borg import __version__
 from borg.core.dirs import get_borg_dir
@@ -122,6 +123,13 @@ def _cmd_search(args: argparse.Namespace) -> int:
                if not any(m.get("name", "").startswith(p) or m.get("id", "").startswith(p) for p in _test_filter)]
     if not matches:
         print("No packs found.")
+        fallback_states = data.get("fallback_states") or []
+        if fallback_states:
+            print("\nFallback / provenance notices:")
+            for state in fallback_states:
+                print(f"  - {state.get('code')}: {state.get('message')}")
+                if state.get("next"):
+                    print(f"    next: {state.get('next')}")
         return 0
     print(f"{'Name':<35} {'Confidence':<12} {'Tier':<8} {'Problem Class'}")
     print("-" * 90)
@@ -132,6 +140,13 @@ def _cmd_search(args: argparse.Namespace) -> int:
         problem_class = (p.get("problem_class") or "")[:60]
         print(f"{name:<35} {conf:<12} {tier:<8} {problem_class}")
     print(f"\nTotal: {len(matches)} pack(s)")
+    fallback_states = data.get("fallback_states") or []
+    if fallback_states:
+        print("\nFallback / provenance notices:")
+        for state in fallback_states:
+            print(f"  - {state.get('code')}: {state.get('message')}")
+            if state.get("next"):
+                print(f"    next: {state.get('next')}")
     return 0
 
 
@@ -562,15 +577,55 @@ def _cmd_rescue_eval(args: argparse.Namespace) -> int:
 
 
 def _cmd_agent_priming(args: argparse.Namespace) -> int:
-    """Render a host-specific Borg agent-priming candidate."""
-    from borg.core.agent_priming import build_agent_priming_candidate
+    """Render or safely install/uninstall a host-specific Borg priming block."""
+    from borg.core.agent_priming import (
+        build_agent_priming_candidate,
+        install_agent_priming,
+        uninstall_agent_priming,
+    )
 
-    candidate = build_agent_priming_candidate(getattr(args, "host", "generic"))
-    if getattr(args, "json", False):
-        print(json.dumps(candidate, indent=2, sort_keys=True, ensure_ascii=False))
-    else:
-        print(candidate["prompt"])
-    return 0 if candidate.get("recommendation") == "eligible_for_host_rules_review" else 1
+    host = getattr(args, "host", "generic")
+    try:
+        if getattr(args, "install", False):
+            result = install_agent_priming(
+                host,
+                target_file=getattr(args, "target_file", None),
+                manifest_path=getattr(args, "manifest", None),
+                dry_run=bool(getattr(args, "dry_run", False)),
+            )
+        elif getattr(args, "uninstall", False) or getattr(args, "unpull", False):
+            result = uninstall_agent_priming(
+                host,
+                manifest_path=getattr(args, "manifest", None),
+                target_file=getattr(args, "target_file", None),
+                dry_run=bool(getattr(args, "dry_run", False)),
+            )
+        else:
+            result = build_agent_priming_candidate(host)
+
+        if getattr(args, "json", False):
+            print(json.dumps(result, indent=2, sort_keys=True, ensure_ascii=False))
+        else:
+            if result.get("operation") in {"install", "uninstall"}:
+                print(f"borg agent-priming {result['operation']}: {result['status']}")
+                print(f"target:   {result.get('target_file')}")
+                print(f"manifest: {result.get('manifest_path')}")
+                if result.get("dry_run"):
+                    print("dry-run:  no files were changed")
+                for state in result.get("fallback_states", []):
+                    print(f"fallback: {state.get('code')}: {state.get('message')}")
+            else:
+                print(result["prompt"])
+        if result.get("operation") in {"install", "uninstall"}:
+            return 0 if result.get("success") else 1
+        return 0 if result.get("recommendation") == "eligible_for_host_rules_review" else 1
+    except Exception as e:
+        error = {"success": False, "operation": "agent-priming", "error": str(e), "type": type(e).__name__}
+        if getattr(args, "json", False):
+            print(json.dumps(error, indent=2, sort_keys=True, ensure_ascii=False))
+        else:
+            print(f"Error: {e}", file=sys.stderr)
+        return 1
 
 
 def _cmd_start(args: argparse.Namespace) -> int:
@@ -600,20 +655,8 @@ def _cmd_start(args: argparse.Namespace) -> int:
     result = rescue(error, source="start", show_guidance=True)
     print(render_rescue_text(result))
 
-    # Auto-record feedback
-    try:
-        from borg.core.pack_taxonomy import classify_error
-        pc = classify_error(error)
-        if pc:
-            _record_v3_outcome_safe(
-                pack_id=pc,
-                task_context={"task_category": pc, "source": "borg_start"},
-                success=True,
-                tokens_used=0,
-                time_taken=0.0,
-            )
-    except Exception:
-        pass
+    # Do not auto-record success here: this command has only shown guidance.
+    # Outcome receipts are created after the user/agent reruns VERIFY.
 
     # Next steps
     print()
@@ -623,7 +666,7 @@ def _cmd_start(args: argparse.Namespace) -> int:
     print("  - Browse workflows:    borg search debugging")
     print("  - Export for Cursor:   borg generate systematic-debugging --format cursorrules")
     print("  - Export for Claude:   borg setup-claude")
-    print("  - Record what worked:  borg feedback-v3 --pack systematic-debugging --success yes")
+    print("  - After VERIFY:        call borg_record_outcome with outcome/helpful/verified evidence")
     print()
     print("  Your fixes stay yours; Borg shares what prevents repeat failures.")
     print()
@@ -1888,13 +1931,82 @@ def _cmd_first_10(args: argparse.Namespace) -> int:
     return 0
 
 
+def _status_data_notice() -> dict:
+    return {
+        "schema_version": "1.0",
+        "storage_default": "local",
+        "raw_trace_export_default": "off",
+        "shared_learning_default": "opt_in_sanitized_signed_atoms_only",
+        "stores": [
+            "local packs and workflow state under BORG_DIR",
+            "local rescue/trace/outcome state under BORG_HOME",
+            "agent priming manifests under BORG_HOME/agent-priming",
+        ],
+        "claim_boundary": "Status output is diagnostics, not proof of first-10/public lift.",
+        "first_10_claim": False,
+        "global_promotion_allowed": False,
+        "public_lift_claim": False,
+    }
+
+
+def _status_fallback_states() -> list[dict]:
+    return [
+        {
+            "code": "MCP_UNAVAILABLE_USE_CLI",
+            "severity": "info",
+            "message": "If Borg MCP is unavailable in an agent host, use the CLI fallback.",
+            "next": "Run: borg rescue '<exact failure>' or borg agent-priming <host> --json",
+        },
+        {
+            "code": "SEMANTIC_SEARCH_LEXICAL_FALLBACK",
+            "severity": "info",
+            "message": "Semantic search is optional; Borg reports lexical fallback explicitly when embeddings are unavailable or empty.",
+            "next": "Treat text/seed hits as routing hints until VERIFY and outcome receipt close the loop.",
+        },
+        {
+            "code": "LOCAL_SEED_NOT_COLLECTIVE_PROOF",
+            "severity": "info",
+            "message": "Bundled seed guidance is cold-start knowledge, not verified collective proof.",
+            "next": "Run VERIFY and record outcomes before claiming measured value.",
+        },
+        {
+            "code": "OUTCOME_NOT_RECORDED",
+            "severity": "info",
+            "message": "A rescue packet starts without a verified outcome receipt.",
+            "next": "After VERIFY, call borg_record_outcome with outcome/helpful/verified evidence.",
+        },
+    ]
+
+
 # ---------------------------------------------------------------------------
 # status: show borg system status
 # ---------------------------------------------------------------------------
 
+def _read_only_table_count(db_path: Path, table: str) -> int:
+    queries = {
+        "packs": "SELECT COUNT(*) FROM packs",
+        "agents": "SELECT COUNT(*) FROM agents",
+    }
+    query = queries.get(table)
+    if query is None:
+        return 0
+    if not db_path.exists():
+        return 0
+    try:
+        db_uri = f"file:{quote(str(db_path), safe='/')}?mode=ro"
+        conn = sqlite3.connect(db_uri, uri=True)
+        try:
+            row = conn.execute(query).fetchone()
+            return int(row[0] if row else 0)
+        finally:
+            conn.close()
+    except sqlite3.Error:
+        return 0
+
+
 def _cmd_status(args: argparse.Namespace) -> int:
     """Show borg system status."""
-    borg_dir = get_borg_dir()
+    borg_dir = Path(str(get_borg_dir()))
     db_path = borg_dir / "guild.db"
 
     # Load persisted sessions to get accurate count
@@ -1905,22 +2017,47 @@ def _cmd_status(args: argparse.Namespace) -> int:
     active_from_memory = [s for s in _active_sessions.values() if s.get("status") == "running"]
     all_running = {s["session_id"]: s for s in active_sessions + active_from_memory}.values()
 
-    # Count packs in store
-    store = AgentStore()
-    packs = store.list_packs(limit=10000)
-    pack_count = len(packs)
+    # Count packs/agents using read-only SQL so `borg status` never migrates or
+    # creates a database just to display diagnostics.
+    pack_count = _read_only_table_count(db_path, "packs")
+    agent_count = _read_only_table_count(db_path, "agents")
 
-    # Count agents
-    agents = store.list_agents(limit=10000)
-    agent_count = len(agents)
+    payload = {
+        "success": True,
+        "borg_dir": str(borg_dir),
+        "database": str(db_path),
+        "pack_count": pack_count,
+        "active_sessions": len(list(all_running)),
+        "agent_count": agent_count,
+        "data_notice": _status_data_notice(),
+        "fallback_states": _status_fallback_states(),
+        "first_10_claim": False,
+        "global_promotion_allowed": False,
+        "public_lift_claim": False,
+    }
+
+    if getattr(args, "json", False):
+        print(json.dumps(payload, indent=2, sort_keys=True, ensure_ascii=False))
+        return 0
 
     print(f"Borg System Status")
     print("=" * 50)
     print(f"  BORG_DIR:             {borg_dir}")
     print(f"  Database:             {db_path}")
     print(f"  Packs in Store:       {pack_count}")
-    print(f"  Active Sessions:      {len(list(all_running))}")
+    print(f"  Active Sessions:      {payload['active_sessions']}")
     print(f"  Agent Count:          {agent_count}")
+    print()
+    print("  Data Notice:")
+    print(f"    storage default:     {payload['data_notice']['storage_default']}")
+    print(f"    raw trace export:    {payload['data_notice']['raw_trace_export_default']}")
+    print(f"    shared learning:     {payload['data_notice']['shared_learning_default']}")
+    print()
+    print("  Visible Fallback States:")
+    for state in payload["fallback_states"]:
+        print(f"    • {state['code']}: {state['message']}")
+        if state.get("next"):
+            print(f"      next: {state['next']}")
 
     running = list(all_running)
     if running:
@@ -2056,13 +2193,13 @@ def main() -> int:
     p.add_argument("session_id", help="Session ID")
     p.set_defaults(func=_cmd_feedback)
 
-    # guild feedback-v3 --problem-class <class> --success yes --time 120
-    p = sub.add_parser("feedback-v3", help="Record debug guidance outcome to V3 feedback loop",
+    # guild feedback-v3 --problem-class <class> --success no --time 120
+    p = sub.add_parser("feedback-v3", help="Record a verified debug guidance outcome to V3 feedback loop",
         formatter_class=argparse.RawDescriptionHelpFormatter,
         epilog="""Examples:
-  borg feedback-v3 --pack systematic-debugging --success yes
+  # Prefer borg_record_outcome after VERIFY when an MCP agent/tool call is available.
   borg feedback-v3 --problem-class debugging --success no --time 30
-  borg feedback-v3 --pack systematic-debugging --success yes --tokens 5000""")
+  borg feedback-v3 --pack systematic-debugging --success no --tokens 5000""")
     p.add_argument(
         "--pack",
         default=None,
@@ -2077,7 +2214,7 @@ def main() -> int:
     p.add_argument(
         "--success",
         required=True,
-        help="Did the guidance help? (yes/no)",
+        help="Verified outcome after rerunning VERIFY? (yes/no). Do not set yes before verification.",
     )
     p.add_argument(
         "--time",
@@ -2135,13 +2272,23 @@ def main() -> int:
     p.set_defaults(func=_cmd_rescue_eval)
 
     # borg agent-priming <host>
-    p = sub.add_parser("agent-priming", help="Render host-specific Borg call/verify/outcome priming",
+    p = sub.add_parser("agent-priming", help="Render/install/uninstall host-specific Borg call/verify/outcome priming",
         formatter_class=argparse.RawDescriptionHelpFormatter,
         epilog="""Examples:
   borg agent-priming claude-code
-  borg agent-priming codex --json""")
+  borg agent-priming codex --json
+  borg agent-priming claude-code --install --dry-run --target-file ./CLAUDE.md --json
+  borg agent-priming claude-code --install --target-file ./CLAUDE.md
+  borg agent-priming claude-code --uninstall --json""")
     p.add_argument("host", nargs="?", default="generic", choices=["generic", "hermes", "claude-code", "codex", "cursor"], help="Agent host to target")
-    p.add_argument("--json", action="store_true", help="Output machine-readable priming artifact")
+    action_group = p.add_mutually_exclusive_group()
+    action_group.add_argument("--install", action="store_true", help="Install/update a manifest-backed managed priming block")
+    action_group.add_argument("--uninstall", action="store_true", help="Remove the managed priming block recorded in the manifest")
+    action_group.add_argument("--unpull", action="store_true", help="Alias for --uninstall")
+    p.add_argument("--dry-run", action="store_true", help="Plan install/uninstall without writing files")
+    p.add_argument("--target-file", default=None, help="Rules file to update; default is BORG_HOME/agent-priming/<host>/BORG_AGENT_PRIMING.md")
+    p.add_argument("--manifest", default=None, help="Install manifest path; default is BORG_HOME/agent-priming/<host>/manifest.json")
+    p.add_argument("--json", action="store_true", help="Output machine-readable priming artifact or install result")
     p.set_defaults(func=_cmd_agent_priming)
 
     # borg first-10 — print first-user beta readiness contract
@@ -2379,7 +2526,9 @@ Examples:
     p = sub.add_parser("status", help="Show local Borg runtime status",
         formatter_class=argparse.RawDescriptionHelpFormatter,
         epilog="""Examples:
-  borg status""")
+  borg status
+  borg status --json""")
+    p.add_argument("--json", action="store_true", help="Output machine-readable status, data notice, and fallback states")
     p.set_defaults(func=_cmd_status)
 
     # guild version

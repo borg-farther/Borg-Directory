@@ -17,6 +17,7 @@ import json
 import logging
 import os
 import re
+import warnings
 from datetime import datetime, timezone
 from pathlib import Path
 from typing import Any, Dict, List, Optional
@@ -40,16 +41,17 @@ try:
 except ImportError:
     SemanticSearchEngine = None
 
-# Optional: EmbeddingEngine for auto-embedding in store
-try:
-    from borg.db.embeddings import EmbeddingEngine
-except ImportError:
-    EmbeddingEngine = None
-
 try:
     from borg.db.store import AgentStore
 except ImportError:
     AgentStore = None
+
+# Compatibility sentinel for callers/tests that patch optional embeddings. Avoid
+# constructing it here; semantic fallback remains explicit via effective_mode.
+try:
+    from borg.db.embeddings import EmbeddingEngine
+except ImportError:
+    EmbeddingEngine = None
 
 try:
     from borg.db.reputation import ReputationEngine, AccessTier
@@ -75,6 +77,58 @@ logger = logging.getLogger(__name__)
 # ---------------------------------------------------------------------------
 
 MAX_DOWNLOAD_SIZE = 5 * 1024 * 1024  # 5 MB
+
+
+def _visible_fallback_state(code: str, message: str, *, severity: str = "info", next_step: str = "") -> Dict[str, Any]:
+    state: Dict[str, Any] = {"code": code, "severity": severity, "message": message}
+    if next_step:
+        state["next"] = next_step
+    return state
+
+
+def _source_mix(matches: List[Dict[str, Any]]) -> Dict[str, int]:
+    mix: Dict[str, int] = {}
+    for item in matches or []:
+        source = str(item.get("source") or "unknown")
+        mix[source] = mix.get(source, 0) + 1
+    return mix
+
+
+def _provenance_notice(matches: List[Dict[str, Any]]) -> Dict[str, Any]:
+    mix = _source_mix(matches)
+    return {
+        "source_mix": mix,
+        "claim_boundary": "Search hits are routing hints, not proof of measured Borg lift.",
+        "global_promotion_allowed": False,
+        "public_lift_claim": False,
+    }
+
+
+def _search_fallback_states(*, requested_mode: str, effective_mode: str, matches: List[Dict[str, Any]], semantic_reason: str = "") -> List[Dict[str, Any]]:
+    states: List[Dict[str, Any]] = []
+    if requested_mode in ("semantic", "hybrid") and effective_mode == "text":
+        states.append(_visible_fallback_state(
+            "SEMANTIC_SEARCH_LEXICAL_FALLBACK",
+            semantic_reason or "Semantic retrieval was unavailable or returned no semantic hits; Borg used lexical/text search.",
+            next_step="Treat results as routing hints; do not claim semantic collective proof.",
+        ))
+    mix = _source_mix(matches)
+    # Seed-only means every hit explicitly declares source="seed". Legacy index
+    # entries without a source are "unknown", not seed proof; do not let unknown
+    # remote packs trigger a local-seed-only provenance claim.
+    if matches and mix.get("seed", 0) == len(matches):
+        states.append(_visible_fallback_state(
+            "LOCAL_SEED_NOT_COLLECTIVE_PROOF",
+            "Search results came from bundled local seed knowledge only.",
+            next_step="Run VERIFY and record an outcome receipt before treating this as measured Borg value.",
+        ))
+    if not matches:
+        states.append(_visible_fallback_state(
+            "NO_CONFIDENT_MATCH",
+            "Borg search found no matching pack, trace, or seed result.",
+            next_step="Proceed with normal reasoning or retry with exact error text.",
+        ))
+    return states
 
 
 # ---------------------------------------------------------------------------
@@ -255,23 +309,40 @@ def borg_search(query: str, mode: str = "text", requesting_agent_id: str = None,
 
         query_lower = query.lower().strip()
         mode_lower = mode.lower() if mode else "text"
+        semantic_fallback_reason = ""
 
         if not query_lower:
             _track_search(query, len(all_packs))
+            effective_mode = "text" if mode_lower in ("semantic", "hybrid") else mode_lower
             return json.dumps({
                 "success": True,
                 "matches": all_packs,
                 "query": query,
                 "total": len(all_packs),
                 "mode": mode_lower,
+                "requested_mode": mode_lower,
+                "effective_mode": effective_mode,
+                "source_mix": _source_mix(all_packs),
+                "provenance_notice": _provenance_notice(all_packs),
+                "fallback_states": _search_fallback_states(
+                    requested_mode=mode_lower,
+                    effective_mode=effective_mode,
+                    matches=all_packs,
+                    semantic_reason="Empty query uses catalog listing/text mode, not semantic retrieval.",
+                ),
             })
 
         # Try semantic search if requested and SemanticSearchEngine is available
         if mode_lower in ("semantic", "hybrid") and SemanticSearchEngine is not None:
             try:
-                store = AgentStore()
+                if AgentStore is None:
+                    raise ImportError("AgentStore unavailable")
+                store_cls = AgentStore
+                store = store_cls()
                 search_engine = SemanticSearchEngine(store)
-                semantic_matches = search_engine.search(query, top_k=50, mode=mode_lower)
+                with warnings.catch_warnings():
+                    warnings.simplefilter("ignore", UserWarning)
+                    semantic_matches = search_engine.search(query, top_k=50, mode=mode_lower)
                 if semantic_matches:
                     # Convert SemanticSearchEngine results to guild_search format
                     matches = []
@@ -286,8 +357,15 @@ def borg_search(query: str, mode: str = "text", requesting_agent_id: str = None,
                             "last_validated": pack.get("last_validated"),
                             "relevance_score": pack.get("relevance_score", 0.0),
                             "match_type": pack.get("match_type", mode_lower),
+                            "source": pack.get("source", "local"),
                         }
                         matches.append(match_entry)
+                    match_types = {str(item.get("match_type") or "") for item in matches}
+                    effective_mode = mode_lower
+                    reason = semantic_fallback_reason
+                    if not any(item in {"semantic", "hybrid"} for item in match_types):
+                        effective_mode = "text"
+                        reason = "Semantic engine returned text-only matches."
                     _track_search(query, len(matches))
                     return json.dumps({
                         "success": True,
@@ -295,10 +373,23 @@ def borg_search(query: str, mode: str = "text", requesting_agent_id: str = None,
                         "query": query,
                         "total": len(matches),
                         "mode": mode_lower,
+                        "requested_mode": mode_lower,
+                        "effective_mode": effective_mode,
+                        "source_mix": _source_mix(matches),
+                        "provenance_notice": _provenance_notice(matches),
+                        "fallback_states": _search_fallback_states(
+                            requested_mode=mode_lower,
+                            effective_mode=effective_mode,
+                            matches=matches,
+                            semantic_reason=reason,
+                        ),
                     })
-            except Exception:
+                semantic_fallback_reason = "Semantic search returned no semantic matches."
+            except Exception as e:
                 # Fall back to text search on any semantic search error
-                pass
+                semantic_fallback_reason = f"Semantic search failed: {type(e).__name__}."
+        elif mode_lower in ("semantic", "hybrid"):
+            semantic_fallback_reason = "Semantic search engine is unavailable."
 
         # Text search (default)
         # For seed packs (source="seed"), use OR matching: any query term hits.
@@ -328,7 +419,7 @@ def borg_search(query: str, mode: str = "text", requesting_agent_id: str = None,
                 matches.append(pack)
 
         # Try semantic first (traces from embeddings cache)
-        search_mode_used = mode_lower
+        search_mode_used = "text" if mode_lower in ("semantic", "hybrid") and semantic_fallback_reason else mode_lower
         semantic_trace_matches: List[Dict] = []
         if mode_lower in ("auto", "semantic"):
             try:
@@ -467,7 +558,17 @@ def borg_search(query: str, mode: str = "text", requesting_agent_id: str = None,
             "matches": matches,
             "query": query,
             "total": len(matches),
-            "mode": search_mode_used,
+            "mode": mode_lower,
+            "requested_mode": mode_lower,
+            "effective_mode": search_mode_used,
+            "source_mix": _source_mix(matches),
+            "provenance_notice": _provenance_notice(matches),
+            "fallback_states": _search_fallback_states(
+                requested_mode=mode_lower,
+                effective_mode=search_mode_used,
+                matches=matches,
+                semantic_reason=semantic_fallback_reason,
+            ),
         })
 
     except Exception as e:
