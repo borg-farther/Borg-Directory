@@ -46,30 +46,30 @@
     {
       "claim_derived": "first-user release gate all_pass=True",
       "exists": true,
-      "freshness_timestamp": "2026-05-28T17:22:08Z",
+      "freshness_timestamp": "2026-05-30T08:45:40Z",
       "path": "eval/first_user_release_gate_snapshot.json",
-      "sha256": "5865d736587836f25dc06340cc1314b43148a99b1311747b85593476a0f2f82d"
+      "sha256": "000acf18f9ea8b2380468f4627d6b8d20fbf640cc23dd58a1a32fdef2ee4201a"
     },
     {
       "claim_derived": "UAT synthetic_load_all_pass=True; real_user_100_all_pass=False; ready_for_10_logical_load=True; ready_for_1000_logical_load=True; not_real_user_or_public_beta_evidence=True",
       "exists": true,
-      "freshness_timestamp": "2026-05-28T08:04:11.821427+00:00",
+      "freshness_timestamp": "2026-05-30T08:47:40.087586+00:00",
       "path": "eval/uat_scoreboard_snapshot.json",
-      "sha256": "5bf3463de69dcf869e0844a66940cf512e88ee6a797f12092e6024ff27568572"
+      "sha256": "659e72af7f94e14a00043e3ffebe067444c3b2ee0fdfa23df85eb7f98aa73688"
     },
     {
       "claim_derived": "gate run synthetic_load_all_pass=True; overall_100_real_user_pass=False; ready_for_10_logical_load=True; ready_for_1000_logical_load=True; not_real_user_or_public_beta_evidence=True",
       "exists": true,
-      "freshness_timestamp": "2026-05-28T08:04:11.774469+00:00",
+      "freshness_timestamp": "2026-05-30T08:47:40.037782+00:00",
       "path": "eval/gate_run_snapshot.json",
-      "sha256": "3d0fa6cb6f32dae032fbcc0f9b5467a6299fbcaacca4110c8c204df48963ad17"
+      "sha256": "6408a6cc97c2ab9b516cc3e6cded7956c93e742ee6dcafa688cda343aea0830b"
     },
     {
       "claim_derived": "100-real-user gate=False; max_recommended_real_users=10; blockers=['first-10 external-user evidence has not passed: verified=0/10, real_users=0/10, installs=0/8, useful=0/6, critical_incidents=0/0']",
       "exists": true,
-      "freshness_timestamp": "2026-05-28T20:53:18.571698+00:00",
+      "freshness_timestamp": "2026-05-30T08:47:40.237083+00:00",
       "path": "eval/real_user_rollout_gate_snapshot.json",
-      "sha256": "aa9f8f3f7fd76ebd6d93b981d80ee52249a7887853ef69b11f929d92aa1b121d"
+      "sha256": "8c0ecca2ae9677e7a48d203a02afd23505f48229b3057a9a77726f4166ffbdbf"
     },
     {
       "claim_derived": "first-10 row evidence users=0; measured_savings={'rows_with_measured_value': 0, 'dead_ends_avoided_confirmed': 0, 'net_minutes_saved': 0.0, 'positive_minutes_saved': 0.0, 'negative_minutes_cost': 0.0, 'net_tokens_saved': 0, 'positive_tokens_saved': 0, 'negative_tokens_cost': 0, 'counterfactual_basis_counts': {}}; gate=BLOCKED",
@@ -88,9 +88,9 @@
     {
       "claim_derived": "cold-start trust gate=True; blockers=[]",
       "exists": true,
-      "freshness_timestamp": "2026-05-29T18:49:28.707750+00:00",
+      "freshness_timestamp": "2026-05-30T08:46:07.173727+00:00",
       "path": "eval/cold_start_trust_gate_snapshot.json",
-      "sha256": "5d85519ebbfb2c73467ed9a369c8af9bae6450e1b12a619e0601552f1d066604"
+      "sha256": "3928c16ec974e45bd2dc55ce0fd3fdb2ed238cb4d531920c118911966847e11b"
     },
     {
       "claim_derived": "self-service ops gate=True; blockers=[]",
@@ -121,25 +121,25 @@
       "sha256": "2524bc8ebea5076e05558262376db42bd2fe01c69aeb71d574195e92c188f70e"
     },
     {
-      "claim_derived": "logical load 10: passed=True; total_requests=55571; success_rate=1.0; p95_ms=0.692504458129406; model=asyncio_logical_users",
+      "claim_derived": "logical load 10: passed=True; total_requests=53746; success_rate=1.0; p95_ms=0.7079632487148046; model=asyncio_logical_users",
       "exists": true,
-      "freshness_timestamp": "2026-05-28T08:03:10.671717+00:00",
+      "freshness_timestamp": "2026-05-30T08:46:38.839059+00:00",
       "path": "eval/load_10_snapshot.json",
-      "sha256": "c701c046aacf047771171220ade45c2ea585e226fd0cc893de9fce7d96b0a4e0"
+      "sha256": "10f4c7db498875fc2c7b95f113ad10ebb4799d5646168af4f9dca83d4ebc5bb5"
     },
     {
-      "claim_derived": "logical load 100: passed=True; total_requests=55624; success_rate=1.0; p95_ms=0.6818614318035543; model=asyncio_logical_users",
+      "claim_derived": "logical load 100: passed=True; total_requests=52723; success_rate=1.0; p95_ms=0.7103089941665529; model=asyncio_logical_users",
       "exists": true,
-      "freshness_timestamp": "2026-05-28T08:03:40.794857+00:00",
+      "freshness_timestamp": "2026-05-30T08:47:08.965547+00:00",
       "path": "eval/load_100_snapshot.json",
-      "sha256": "7fe6342c5388dd80fd41354d1c4e4d694b5b7d97e210d52b072980bf17e7c5ea"
+      "sha256": "31970b2ac72af667bc837c5b99899901908b80fdff0e02785da907790c900896"
     },
     {
-      "claim_derived": "logical load 1000: passed=True; total_requests=51863; success_rate=1.0; p95_ms=0.7186339935287833; model=asyncio_logical_users",
+      "claim_derived": "logical load 1000: passed=True; total_requests=53412; success_rate=1.0; p95_ms=0.6992750684730709; model=asyncio_logical_users",
       "exists": true,
-      "freshness_timestamp": "2026-05-28T08:04:10.957423+00:00",
+      "freshness_timestamp": "2026-05-30T08:47:39.133939+00:00",
       "path": "eval/load_1000_snapshot.json",
-      "sha256": "0f2f9453b6f9d6bb10ca0a7172b46610056d8a857a1d1b5daed5915aa7ccd884"
+      "sha256": "9e89310bc09e1b4528fd8bfda5f9b4900398f9d0c62358d07abd887bfed26e74"
     },
     {
       "claim_derived": "package version=3.3.15; scripts declared in project metadata",
@@ -358,7 +358,7 @@
       }
     ]
   },
-  "generated_at_utc": "2026-05-29T21:35:11Z",
+  "generated_at_utc": "2026-05-30T09:02:49Z",
   "metrics": {
     "active_contributors_consumers": {
       "honesty_label": "MISSING_BORG_ANALYTICS_ARTIFACT",
@@ -397,34 +397,34 @@
         "10": {
           "concurrency_model": "asyncio_logical_users",
           "exists": true,
-          "p95_ms": 0.692504458129406,
-          "p99_ms": 0.745874014683068,
+          "p95_ms": 0.7079632487148046,
+          "p99_ms": 0.768122938461602,
           "passed": true,
           "success_rate": 1.0,
-          "timestamp": "2026-05-28T08:03:10.671717+00:00",
-          "total_requests": 55571,
+          "timestamp": "2026-05-30T08:46:38.839059+00:00",
+          "total_requests": 53746,
           "users_label": 10
         },
         "100": {
           "concurrency_model": "asyncio_logical_users",
           "exists": true,
-          "p95_ms": 0.6818614318035543,
-          "p99_ms": 0.7167507149279118,
+          "p95_ms": 0.7103089941665529,
+          "p99_ms": 0.809921477921307,
           "passed": true,
           "success_rate": 1.0,
-          "timestamp": "2026-05-28T08:03:40.794857+00:00",
-          "total_requests": 55624,
+          "timestamp": "2026-05-30T08:47:08.965547+00:00",
+          "total_requests": 52723,
           "users_label": 100
         },
         "1000": {
           "concurrency_model": "asyncio_logical_users",
           "exists": true,
-          "p95_ms": 0.7186339935287833,
-          "p99_ms": 0.8631944004446266,
+          "p95_ms": 0.6992750684730709,
+          "p99_ms": 0.7264311169274151,
           "passed": true,
           "success_rate": 1.0,
-          "timestamp": "2026-05-28T08:04:10.957423+00:00",
-          "total_requests": 51863,
+          "timestamp": "2026-05-30T08:47:39.133939+00:00",
+          "total_requests": 53412,
           "users_label": 1000
         }
       }
@@ -510,7 +510,7 @@
     "Before any public claim, replace logical-user load evidence with real external-user evidence or clearly label the distinction."
   ],
   "repo": "https://github.com/borg-farther/Borg-Directory",
-  "source_revision": "a44eb2ce129f5e9fe3d06208dc063fc1dc25ba7b+dirty",
+  "source_revision": "2b81f3cc745367594ecc111ca8a35da9530e0a26",
   "top_verdict": {
     "broad_public_launch": {
       "verdict": "NO-GO",
