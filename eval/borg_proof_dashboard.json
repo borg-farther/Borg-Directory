@@ -46,9 +46,9 @@
     {
       "claim_derived": "first-user release gate all_pass=True",
       "exists": true,
-      "freshness_timestamp": "2026-05-30T18:59:44Z",
+      "freshness_timestamp": "2026-05-30T19:28:30Z",
       "path": "eval/first_user_release_gate_snapshot.json",
-      "sha256": "a423138438e925d909f30f516d58783696e3e426c4a53798b6c027155a84d373"
+      "sha256": "cb383c14193f1c5b8947e8cf0f51a96e69b363b2fe412e81a335799374594ed9"
     },
     {
       "claim_derived": "UAT synthetic_load_all_pass=True; real_user_100_all_pass=False; ready_for_10_logical_load=True; ready_for_1000_logical_load=True; not_real_user_or_public_beta_evidence=True",
@@ -67,9 +67,9 @@
     {
       "claim_derived": "100-real-user gate=False; max_recommended_real_users=10; blockers=['first-10 external-user evidence has not passed: verified=0/10, real_users=0/10, installs=0/8, useful=0/6, critical_incidents=0/0']",
       "exists": true,
-      "freshness_timestamp": "2026-05-30T18:59:47.035463+00:00",
+      "freshness_timestamp": "2026-05-30T19:28:32.155499+00:00",
       "path": "eval/real_user_rollout_gate_snapshot.json",
-      "sha256": "2f3a3ebb270ad4ac0117cb5e9f974d93314e7e03612bcbc6fff87bb11ef20336"
+      "sha256": "1ce9954b5a7e7c0e156111d0f15345a7902a9e161ea89d1579a6f56715cfb158"
     },
     {
       "claim_derived": "first-10 row evidence users=0; measured_savings={'rows_with_measured_value': 0, 'dead_ends_avoided_confirmed': 0, 'net_minutes_saved': 0.0, 'positive_minutes_saved': 0.0, 'negative_minutes_cost': 0.0, 'net_tokens_saved': 0, 'positive_tokens_saved': 0, 'negative_tokens_cost': 0, 'counterfactual_basis_counts': {}}; gate=BLOCKED",
@@ -81,9 +81,9 @@
     {
       "claim_derived": "public self-serve gate=False; max_recommended_real_users=10; blockers=['first-10 external-user evidence has not passed: verified=0/10, real_users=0/10, installs=0/8, useful=0/6, critical_incidents=0/0']",
       "exists": true,
-      "freshness_timestamp": "2026-05-30T18:59:46.464309+00:00",
+      "freshness_timestamp": "2026-05-30T19:28:31.602841+00:00",
       "path": "eval/public_self_serve_launch_gate_snapshot.json",
-      "sha256": "63a02f5efe882d8b51054c0aa4d8c7d780d7e32717c51b0527a665b22fbf8852"
+      "sha256": "9d465736650ae396a7d8741cfabbebb3bc43d5136a3d2da39a271a4907a097fd"
     },
     {
       "claim_derived": "cold-start trust gate=True; blockers=[]",
@@ -102,9 +102,9 @@
     {
       "claim_derived": "ops readiness watchdog=True; blocker details live in eval/ops_readiness_watchdog_snapshot.json",
       "exists": true,
-      "freshness_timestamp": "2026-05-30T18:59:45.694210+00:00",
+      "freshness_timestamp": "2026-05-30T19:28:31.050665+00:00",
       "path": "eval/ops_readiness_watchdog_snapshot.json",
-      "sha256": "112549aea314e871d7e197edbc5470a2ce0942c376d71072b4d74544da7bfe4a"
+      "sha256": "7dd302a575918df5b12ff85cd361c9e0b30826de362a5b605d34f270aa93947f"
     },
     {
       "claim_derived": "rollback/comms drill=True; dry_run_only=True",
@@ -116,9 +116,9 @@
     {
       "claim_derived": "PyPI fresh-install canary success=True; version=3.3.15",
       "exists": true,
-      "freshness_timestamp": "2026-05-30T18:59:09Z",
+      "freshness_timestamp": "2026-05-30T19:28:17Z",
       "path": "eval/pypi_fresh_install_snapshot.json",
-      "sha256": "ba7149137b70e6eb73b6355d9405cd636ce3a0fe14bc63fb551ffa5bc15be44f"
+      "sha256": "c5fdc73b52b8fe2c55a164425417cc4ddb34b46e4b30043987cee9f55f7736eb"
     },
     {
       "claim_derived": "logical load 10: passed=True; total_requests=53746; success_rate=1.0; p95_ms=0.7079632487148046; model=asyncio_logical_users",
@@ -358,7 +358,7 @@
       }
     ]
   },
-  "generated_at_utc": "2026-05-30T18:59:47Z",
+  "generated_at_utc": "2026-05-30T19:28:32Z",
   "metrics": {
     "active_contributors_consumers": {
       "honesty_label": "MISSING_BORG_ANALYTICS_ARTIFACT",
@@ -510,7 +510,7 @@
     "Before any public claim, replace logical-user load evidence with real external-user evidence or clearly label the distinction."
   ],
   "repo": "https://github.com/borg-farther/Borg-Directory",
-  "source_revision": "02f04bad18cebbad2010dfd86721f4851ae19d8e+dirty",
+  "source_revision": "71875bbc6e8b574d28549ac4e1d3ced50612ec85+dirty",
   "top_verdict": {
     "broad_public_launch": {
       "verdict": "NO-GO",

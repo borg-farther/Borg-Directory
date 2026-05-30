@@ -98,14 +98,14 @@
       "exists": true,
       "failed_count": 0,
       "failures": [],
-      "generated_at_utc": "2026-05-30T18:59:44Z",
+      "generated_at_utc": "2026-05-30T19:28:30Z",
       "passed": true,
       "passed_count": 28,
       "path": "eval/first_user_release_gate_snapshot.json"
     },
     "ops_readiness_watchdog": {
       "blockers": [],
-      "generated_at_utc": "2026-05-30T18:59:45.694210+00:00",
+      "generated_at_utc": "2026-05-30T19:28:31.050665+00:00",
       "passed": true,
       "snapshot": "eval/ops_readiness_watchdog_snapshot.json",
       "truth_policy": "Watchdog passing means controlled first-10 ops proof is fresh and internally consistent. Broad public self-serve still requires row-derived first-10 external-user evidence."
@@ -120,7 +120,7 @@
       "expected_version": "3.3.15",
       "failed_count": 0,
       "failures": [],
-      "generated_at_utc": "2026-05-30T18:59:09Z",
+      "generated_at_utc": "2026-05-30T19:28:17Z",
       "mcp_server_info": {
         "name": "borg-mcp-server",
         "version": "3.3.15"
@@ -180,14 +180,14 @@
     },
     "self_service_ops_readiness": {
       "blockers": [],
-      "generated_at_utc": "2026-05-30T18:59:46.365277+00:00",
+      "generated_at_utc": "2026-05-30T19:28:31.498426+00:00",
       "passed": true,
       "report": "docs/SELF_SERVICE_OPS_READINESS_REPORT.md",
       "rollout_policy": "Controlled first-10 may proceed only when ops readiness passes; broad public self-serve still requires row-derived first-10 external evidence.",
       "snapshot": "eval/self_service_ops_gate_snapshot.json"
     }
   },
-  "generated_at_utc": "2026-05-30T18:59:46.464309+00:00",
+  "generated_at_utc": "2026-05-30T19:28:31.602841+00:00",
   "max_recommended_real_users_now": 10,
   "ready_for_controlled_first_10_beta": true,
   "ready_for_public_self_serve_launch": false,
