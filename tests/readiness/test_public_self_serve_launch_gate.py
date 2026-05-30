@@ -5,6 +5,7 @@ from pathlib import Path
 
 from eval import first_10_evidence as evidence
 from eval import public_self_serve_launch_gate as gate
+from eval import real_user_rollout_gate as rollout
 from eval import run_pypi_fresh_install_canary as canary
 
 
@@ -99,6 +100,18 @@ def _write_cold_start_trust_snapshot(root: Path, *, passed: bool = True) -> None
                 "cli_durable_path": "borg feedback-v3 --task-context ...",
                 "human_path": ".github/ISSUE_TEMPLATE/bad-answer.yml",
             },
+        }),
+        encoding="utf-8",
+    )
+
+
+def _write_ops_watchdog_snapshot(root: Path, *, passed: bool = True) -> None:
+    (root / "eval" / "ops_readiness_watchdog_snapshot.json").write_text(
+        json.dumps({
+            "passed": passed,
+            "blockers": [] if passed else ["ops readiness watchdog failed"],
+            "generated_at_utc": "2026-05-30T00:00:00+00:00",
+            "truth_policy": "Watchdog passing means controlled first-10 ops proof is fresh and internally consistent.",
         }),
         encoding="utf-8",
     )
@@ -281,6 +294,38 @@ def test_docs_claim_guard_blocks_markdown_stale_package_no_go_after_canary(tmp_p
     assert any(v["kind"] == "stale package NO-GO after PyPI canary" for v in result["violations"])
 
 
+def test_docs_claim_guard_blocks_broader_stale_package_blockers_after_canary(tmp_path: Path, monkeypatch) -> None:
+    monkeypatch.setattr(gate, "ROOT", tmp_path)
+    doc = tmp_path / "docs" / "README.md"
+    doc.parent.mkdir()
+    doc.write_text(
+        "Controlled first-10 public-package beta infrastructure: NO-GO for `agent-borg==9.9.9` "
+        "until GitHub main, PyPI latest, fresh-install, stdio MCP, and proof dashboards are green.\n"
+        "controlled first-10 PyPI beta infrastructure: NO-GO for `agent-borg==9.9.9` until the package/proof chain is green.\n"
+        "Current package path status: `agent-borg==9.9.9` is not yet published/canaried as the current PyPI package.\n"
+        "production PyPI/latest, fresh-install, and stdio MCP canaries are not current for this version.\n"
+        "decision: controlled first-10 beta invites may not start until PyPI latest and fresh-install are green.\n"
+        "source/local release-candidate only\n",
+        encoding="utf-8",
+    )
+
+    result = gate.docs_claim_guard(
+        [Path("docs/README.md")],
+        "9.9.9",
+        public_evidence_ready=False,
+        package_evidence_ready=True,
+    )
+
+    assert result["passed"] is False
+    kinds = {violation["kind"] for violation in result["violations"]}
+    assert "stale controlled-beta package blocker after PyPI canary" in kinds
+    assert "stale package-proof-chain blocker after PyPI canary" in kinds
+    assert "stale unpublished package-path status after PyPI canary" in kinds
+    assert "stale PyPI/fresh-install blocker after PyPI canary" in kinds
+    assert "stale invite-start blocker after PyPI canary" in kinds
+    assert "stale source/local-only wording after PyPI canary" in kinds
+
+
 def test_docs_claim_guard_blocks_known_package_beta_contradictions(tmp_path: Path, monkeypatch) -> None:
     monkeypatch.setattr(gate, "ROOT", tmp_path)
     doc = tmp_path / "README.md"
@@ -381,6 +426,7 @@ def test_public_gate_pauses_controlled_first_10_when_privacy_security_incident_r
     (tmp_path / "eval" / "first_10_user_scoreboard.json").write_text(json.dumps(_scoreboard([_row(1, incident=True)])), encoding="utf-8")
     (tmp_path / "eval" / "first_user_release_gate_snapshot.json").write_text(json.dumps({"success": True, "results": [{"name": "ok", "passed": True}]}), encoding="utf-8")
     _write_cold_start_trust_snapshot(tmp_path)
+    _write_ops_watchdog_snapshot(tmp_path)
     monkeypatch.setattr(gate, "self_service_ops_check", lambda: {"passed": True, "blockers": [], "rollout_policy": "test"})
     (tmp_path / "eval" / "pypi_fresh_install_snapshot.json").write_text(
         json.dumps({
@@ -409,6 +455,7 @@ def test_public_self_serve_gate_passes_only_when_all_artifacts_and_real_rows_pas
     (tmp_path / "eval" / "first_10_user_scoreboard.json").write_text(json.dumps(_scoreboard([_row(i) for i in range(1, 11)])), encoding="utf-8")
     (tmp_path / "eval" / "first_user_release_gate_snapshot.json").write_text(json.dumps({"success": True, "results": [{"name": "ok", "passed": True}]}), encoding="utf-8")
     _write_cold_start_trust_snapshot(tmp_path)
+    _write_ops_watchdog_snapshot(tmp_path)
     monkeypatch.setattr(gate, "self_service_ops_check", lambda: {"passed": True, "blockers": [], "rollout_policy": "test"})
     (tmp_path / "eval" / "pypi_fresh_install_snapshot.json").write_text(
         json.dumps({
@@ -438,6 +485,7 @@ def test_public_self_serve_gate_blocks_empty_evidence_even_when_infra_passes(tmp
     (tmp_path / "eval" / "first_10_user_scoreboard.json").write_text(json.dumps(_scoreboard([])), encoding="utf-8")
     (tmp_path / "eval" / "first_user_release_gate_snapshot.json").write_text(json.dumps({"success": True, "results": [{"name": "ok", "passed": True}]}), encoding="utf-8")
     _write_cold_start_trust_snapshot(tmp_path)
+    _write_ops_watchdog_snapshot(tmp_path)
     monkeypatch.setattr(gate, "self_service_ops_check", lambda: {"passed": True, "blockers": [], "rollout_policy": "test"})
     (tmp_path / "eval" / "pypi_fresh_install_snapshot.json").write_text(
         json.dumps({
@@ -469,6 +517,7 @@ def test_public_self_serve_gate_blocks_when_cold_start_trust_snapshot_fails(tmp_
     (tmp_path / "eval" / "first_10_user_scoreboard.json").write_text(json.dumps(_scoreboard([_row(i) for i in range(1, 11)])), encoding="utf-8")
     (tmp_path / "eval" / "first_user_release_gate_snapshot.json").write_text(json.dumps({"success": True, "results": [{"name": "ok", "passed": True}]}), encoding="utf-8")
     _write_cold_start_trust_snapshot(tmp_path, passed=False)
+    _write_ops_watchdog_snapshot(tmp_path)
     monkeypatch.setattr(gate, "self_service_ops_check", lambda: {"passed": True, "blockers": [], "rollout_policy": "test"})
     (tmp_path / "eval" / "pypi_fresh_install_snapshot.json").write_text(
         json.dumps({
@@ -514,6 +563,102 @@ def test_public_self_serve_gate_blocks_when_self_service_ops_fails(tmp_path: Pat
     assert snapshot["ready_for_public_self_serve_launch"] is False
     assert snapshot["gates"]["self_service_ops_readiness"]["passed"] is False
     assert "bad-answer intake missing" in snapshot["blockers"]
+
+
+def test_public_self_serve_gate_blocks_when_ops_watchdog_fails(tmp_path: Path, monkeypatch) -> None:
+    monkeypatch.setattr(gate, "ROOT", tmp_path)
+    monkeypatch.setattr(gate, "CURRENT_CLAIM_DOCS", [Path("README.md")])
+    (tmp_path / "eval").mkdir()
+    (tmp_path / "docs").mkdir()
+    (tmp_path / "pyproject.toml").write_text('[project]\nname = "agent-borg"\nversion = "9.9.9"\n', encoding="utf-8")
+    (tmp_path / "README.md").write_text("pipx install agent-borg==9.9.9\nPublic self-serve launch: NO-GO until evidence.\n", encoding="utf-8")
+    (tmp_path / "eval" / "first_10_user_scoreboard.json").write_text(json.dumps(_scoreboard([_row(i) for i in range(1, 11)])), encoding="utf-8")
+    (tmp_path / "eval" / "first_user_release_gate_snapshot.json").write_text(json.dumps({"success": True, "results": [{"name": "ok", "passed": True}]}), encoding="utf-8")
+    _write_cold_start_trust_snapshot(tmp_path)
+    _write_ops_watchdog_snapshot(tmp_path, passed=False)
+    monkeypatch.setattr(gate, "self_service_ops_check", lambda: {"passed": True, "blockers": [], "rollout_policy": "test"})
+    (tmp_path / "eval" / "pypi_fresh_install_snapshot.json").write_text(
+        json.dumps({
+            "success": True,
+            "version": "9.9.9",
+            "results": [{"name": "install", "passed": True}],
+            "mcp_stdio_canary": {"passed": True, "server_info": {"name": "borg-mcp-server", "version": "9.9.9"}},
+        }),
+        encoding="utf-8",
+    )
+
+    snapshot = gate.compile_gate(fetch_network=False, pypi_data=_pypi_fixture())
+
+    assert snapshot["ready_for_controlled_first_10_beta"] is False
+    assert snapshot["ready_for_public_self_serve_launch"] is False
+    assert snapshot["max_recommended_real_users_now"] == 0
+    assert snapshot["gates"]["ops_readiness_watchdog"]["passed"] is False
+    assert any("ops readiness watchdog failed" in blocker for blocker in snapshot["blockers"])
+
+
+def _write_rollout_fixture(root: Path, *, watchdog_passed: bool) -> None:
+    (root / "eval").mkdir(exist_ok=True)
+    (root / "docs").mkdir(exist_ok=True)
+    (root / "borg").mkdir(exist_ok=True)
+    (root / "pyproject.toml").write_text('[project]\nname = "agent-borg"\nversion = "9.9.9"\n', encoding="utf-8")
+    (root / "borg" / "__init__.py").write_text('__version__ = "9.9.9"\n', encoding="utf-8")
+    for rel in [
+        "eval/security_hardening_baseline.json",
+        "docs/SECURITY_HARDENING_BASELINE.md",
+        "docs/PRIVACY_MODEL.md",
+        "docs/PROMPT_INJECTION_THREAT_MODEL.md",
+        "scripts/security_gate_check.py",
+        ".github/workflows/security-gates.yml",
+    ]:
+        path = root / rel
+        path.parent.mkdir(parents=True, exist_ok=True)
+        path.write_text("{}\n" if path.suffix == ".json" else "ok\n", encoding="utf-8")
+    (root / "eval" / "first_user_release_gate_snapshot.json").write_text(json.dumps({"success": True, "results": [{"name": "ok", "passed": True}]}), encoding="utf-8")
+    for users in [10, 100]:
+        (root / "eval" / f"load_{users}_snapshot.json").write_text(json.dumps({"passed": True, "users": users}), encoding="utf-8")
+    (root / "eval" / "pypi_fresh_install_snapshot.json").write_text(
+        json.dumps({
+            "success": True,
+            "version": "9.9.9",
+            "results": [{"name": "install", "passed": True}],
+            "mcp_stdio_canary": {"passed": True},
+        }),
+        encoding="utf-8",
+    )
+    (root / "eval" / "first_10_user_scoreboard.json").write_text(json.dumps(_scoreboard([])), encoding="utf-8")
+    _write_ops_watchdog_snapshot(root, passed=watchdog_passed)
+
+
+def test_real_user_rollout_gate_blocks_controlled_beta_when_ops_watchdog_fails(tmp_path: Path, monkeypatch) -> None:
+    monkeypatch.setattr(rollout, "ROOT", tmp_path)
+    monkeypatch.setattr(rollout.public_gate, "source_version", lambda: "9.9.9")
+    monkeypatch.setattr(rollout.public_gate, "pypi_latest_check", lambda expected, fetch_network=True: {"passed": True, "version": expected})
+    monkeypatch.setattr(rollout.self_service_ops_gate, "compile_gate", lambda: {"passed": True, "blockers": [], "rollout_policy": "test"})
+    _write_rollout_fixture(tmp_path, watchdog_passed=False)
+
+    snapshot = rollout.compile_rollout_gate()
+
+    assert snapshot["ready_for_10_controlled_beta"] is False
+    assert snapshot["max_recommended_real_users_now"] == 0
+    assert snapshot["self_service_ops_gate"]["passed"] is False
+    assert snapshot["self_service_ops_gate"]["ops_readiness_watchdog"]["passed"] is False
+    assert any("ops readiness watchdog failed" in blocker for blocker in snapshot["blockers"])
+
+
+def test_real_user_rollout_gate_allows_controlled_beta_only_when_ops_watchdog_passes(tmp_path: Path, monkeypatch) -> None:
+    monkeypatch.setattr(rollout, "ROOT", tmp_path)
+    monkeypatch.setattr(rollout.public_gate, "source_version", lambda: "9.9.9")
+    monkeypatch.setattr(rollout.public_gate, "pypi_latest_check", lambda expected, fetch_network=True: {"passed": True, "version": expected})
+    monkeypatch.setattr(rollout.self_service_ops_gate, "compile_gate", lambda: {"passed": True, "blockers": [], "rollout_policy": "test"})
+    _write_rollout_fixture(tmp_path, watchdog_passed=True)
+
+    snapshot = rollout.compile_rollout_gate()
+
+    assert snapshot["ready_for_10_controlled_beta"] is True
+    assert snapshot["ready_for_100_real_users"] is False
+    assert snapshot["max_recommended_real_users_now"] == 10
+    assert snapshot["self_service_ops_gate"]["ops_readiness_watchdog"]["passed"] is True
+    assert any("first-10 external-user evidence" in blocker for blocker in snapshot["blockers"])
 
 def test_pypi_fresh_install_canary_fails_closed_when_release_not_on_pypi(monkeypatch) -> None:
     calls: list[str] = []

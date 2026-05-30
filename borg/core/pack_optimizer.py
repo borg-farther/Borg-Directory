@@ -20,6 +20,7 @@ from pathlib import Path
 from typing import Any, Sequence
 
 from borg.core.collective_learning import _connect, get_collective_learning_db_path
+from borg.core.pack_optimizer_rejections import RejectedEditMemory
 from borg.core.pack_optimizer_schemas import CandidateEdit, OptimizerExample, OptimizerRunResult, SelectionScore, SplitManifest
 from borg.core.pack_optimizer_scoring import WEIGHTS, compare_baseline_candidate
 from borg.core.privacy import privacy_scan_structured
@@ -300,6 +301,7 @@ def _candidate_id_material(
     edits: Sequence[CandidateEdit],
     max_edits: int,
     selection_evidence: dict[str, Any],
+    rejected_memory_skipped_edits: Sequence[dict[str, Any]] = (),
 ) -> dict[str, Any]:
     selection_evidence_sha256 = _sha256_ref(_canonical_json(selection_evidence))
     return {
@@ -317,6 +319,7 @@ def _candidate_id_material(
         "selection_evidence_sha256": selection_evidence_sha256,
         "edit_ops": [edit.op for edit in edits],
         "edit_artifacts_sha256": _edit_artifacts_sha256(edits),
+        "rejected_memory_skipped_edits": [dict(item) for item in rejected_memory_skipped_edits],
         "max_edits": max_edits,
     }
 
@@ -527,6 +530,8 @@ _OPTIMIZER_RUN_KEYS = {
     "baseline_pack_sha256",
     "candidate_pack_sha256",
     "stored_preview_sha256",
+    "rejected_memory_consulted",
+    "rejected_memory_skipped_edits",
 }
 _SELECTION_SCORE_KEYS = {"schema_version", "candidate_id", "baseline_score", "candidate_score", "score_delta", "primary_metric", "hard_failures", "recommendation"}
 _TRAINING_MANIFEST_KEYS = {"schema_version", "pack_id", "created_at", "source", "split_method", "seed_hash", "train_example_ids", "selection_example_ids", "hidden_example_ids", "privacy_policy", "first_10_claim"}
@@ -742,9 +747,12 @@ class PackOptimizer:
         *,
         collective_db_path: str | Path | None = None,
         output_root: str | Path | None = None,
+        rejected_memory_path: str | Path | None = None,
     ) -> None:
         self.collective_db_path = Path(collective_db_path) if collective_db_path else get_collective_learning_db_path()
         self.output_root = Path(output_root or "eval/pack_optimizer")
+        self.rejected_memory = RejectedEditMemory(rejected_memory_path or (self.output_root / "rejected_edits_memory.jsonl"))
+        self._last_rejected_memory_skips: list[dict[str, Any]] = []
 
     def load_pack_text(self, pack_id: str, pack_path: str | Path | None = None) -> tuple[str, Path | None]:
         pack_id = _safe_pack_id(pack_id)
@@ -885,32 +893,65 @@ class PackOptimizer:
         pack_text: str,
         examples: Sequence[OptimizerExample],
         max_edits: int = 4,
+        rejected_memory_skips: Sequence[dict[str, Any]] | None = None,
     ) -> tuple[str, list[CandidateEdit]]:
         if max_edits < 1 or max_edits > 12:
             raise ValueError("max_edits must be between 1 and 12")
         before_hash = _sha256_ref(pack_text)
         helpful = [ex for ex in examples if ex.helpful and ex.verified]
         negative = [ex for ex in examples if (not ex.helpful) or ex.outcome == "failure"]
-        notes: list[str] = []
+        notes_by_key: dict[tuple[str, str], str] = {}
         edit_specs: list[tuple[str, str, str, tuple[str, ...], dict[str, float]]] = []
         if negative:
             receipts = tuple(ex.receipt_id for ex in negative if ex.receipt_id)[:5]
-            notes.append("Tighten NO_CONFIDENT_MATCH: return no confident match instead of forcing weak or unrelated guidance.")
+            note = "Tighten NO_CONFIDENT_MATCH: return no confident match instead of forcing weak or unrelated guidance."
+            notes_by_key[("tighten_no_confident_match_rule", "NO_CONFIDENT_MATCH")] = note
             edit_specs.append(("tighten_no_confident_match_rule", "NO_CONFIDENT_MATCH", "reduce weak unrelated guidance", receipts, {"no_confident_match_precision": 0.15}))
         if helpful:
             receipts = tuple(ex.receipt_id for ex in helpful if ex.receipt_id)[:5]
-            notes.append("Prefer ACTION / STOP / VERIFY guidance backed by verified command evidence and output hashes.")
+            note = "Prefer ACTION / STOP / VERIFY guidance backed by verified command evidence and output hashes."
+            notes_by_key[("add_verification_step", "VERIFY")] = note
             edit_specs.append(("add_verification_step", "VERIFY", "raise verification evidence quality", receipts, {"verification_quality": 0.10, "verified_success": 0.10}))
         if any(ex.dead_ends_avoided > 0 for ex in helpful):
             receipts = tuple(ex.receipt_id for ex in helpful if ex.dead_ends_avoided > 0 and ex.receipt_id)[:5]
-            notes.append("Preserve STOP guidance that avoids repeated dead ends when outcome receipts verify it helped.")
+            note = "Preserve STOP guidance that avoids repeated dead ends when outcome receipts verify it helped."
+            notes_by_key[("tighten_stop_rule", "STOP")] = note
             edit_specs.append(("tighten_stop_rule", "STOP", "preserve verified dead-end avoidance", receipts, {"dead_ends_avoided": 0.15}))
-        if not notes:
-            notes.append("Keep local optimizer candidate empty until verified examples support a bounded edit.")
+        if not edit_specs:
+            note = "Keep local optimizer candidate empty until verified examples support a bounded edit."
+            notes_by_key[("add_antipattern", "LOCAL_ONLY")] = note
             edit_specs.append(("add_antipattern", "LOCAL_ONLY", "insufficient verified evidence placeholder", tuple(), {}))
 
-        selected_specs = edit_specs[:max_edits]
-        note_lines = "\n".join(f"  - \"{_safe_text(note, 220)}\"" for note in notes[:max_edits])
+        explicit_skip_keys = {
+            (str(item.get("op", "")), str(item.get("anchor", ""))): dict(item)
+            for item in (rejected_memory_skips or [])
+            if isinstance(item, dict)
+        }
+        selected_specs: list[tuple[str, str, str, tuple[str, ...], dict[str, float]]] = []
+        skipped: list[dict[str, Any]] = []
+        for spec in edit_specs:
+            op, anchor, _, _, _ = spec
+            skip_record = explicit_skip_keys.get((op, anchor))
+            if skip_record is None and rejected_memory_skips is None:
+                skip_record = self.rejected_memory.skipped_artifact(pack_id=pack_id, op=op, anchor=anchor)
+            if skip_record:
+                skipped.append({
+                    "op": _safe_text(skip_record.get("op") or op, 140),
+                    "anchor": _safe_text(skip_record.get("anchor") or anchor, 140),
+                    "reason": _safe_text(skip_record.get("reason") or "previously_rejected", 300),
+                    "prevent_repeat_key": _safe_text(skip_record.get("prevent_repeat_key"), 120),
+                    "last_rejected_candidate_id": _safe_text(skip_record.get("last_rejected_candidate_id"), 120),
+                })
+                continue
+            selected_specs.append(spec)
+            if len(selected_specs) >= max_edits:
+                break
+        self._last_rejected_memory_skips = skipped
+
+        selected_notes = [notes_by_key[(op, anchor)] for op, anchor, _, _, _ in selected_specs if (op, anchor) in notes_by_key]
+        if not selected_specs:
+            return pack_text, []
+        note_lines = "\n".join(f"  - \"{_safe_text(note, 220)}\"" for note in selected_notes[:max_edits])
         candidate_block = (
             "\n# Borg local pack optimizer candidate — local-only, not global promotion.\n"
             "# Generated from privacy-safe verified outcome summaries; first-10 claims remain false.\n"
@@ -1043,6 +1084,7 @@ class PackOptimizer:
         score: SelectionScore,
         selection_evidence: dict[str, Any],
         local_only: bool,
+        rejected_memory_skipped_edits: Sequence[dict[str, Any]] = (),
     ) -> OptimizerRunResult:
         candidate_dir = self._candidate_dir(candidate_id)
         candidate_dir.mkdir(parents=True, exist_ok=True)
@@ -1069,6 +1111,19 @@ class PackOptimizer:
         ]
         accepted_artifact = {"schema_version": "1.0", "candidate_id": candidate_id, "pack_id": pack_id, "edits": accepted}
         rejected_artifact = {"schema_version": "1.0", "candidate_id": candidate_id, "pack_id": pack_id, "rejections": rejected}
+        if rejected:
+            for rejection in rejected:
+                reason = str(rejection.get("reason") or "selection_score_not_strictly_better")
+                if "hidden" in reason.lower():
+                    continue
+                self.rejected_memory.record_rejection(
+                    pack_id=pack_id,
+                    op=str(rejection.get("op") or "add_antipattern"),
+                    anchor=str(rejection.get("anchor") or "LOCAL_ONLY"),
+                    reason=reason,
+                    candidate_id=candidate_id,
+                    supporting_receipt_ids=list(rejection.get("supporting_receipt_ids") or []),
+                )
         manifest_artifact = manifest.to_artifact()
         score_artifact = score.to_artifact()
         privacy_artifact = _privacy_artifact_from_scan(candidate_id, scan)
@@ -1119,6 +1174,8 @@ class PackOptimizer:
             "baseline_pack_sha256": _sha256_ref(pack_text),
             "candidate_pack_sha256": _sha256_ref(candidate_text),
             "stored_preview_sha256": _sha256_ref(preview),
+            "rejected_memory_consulted": True,
+            "rejected_memory_skipped_edits": [dict(item) for item in rejected_memory_skipped_edits],
         }
         artifacts = {
             "candidate_pack.patch": patch,
@@ -1166,6 +1223,7 @@ class PackOptimizer:
         hidden_examples = [examples_by_id[example_id] for example_id in manifest.hidden_example_ids]
         pack_text, _ = self.load_pack_text(pack_id, pack_path)
         candidate_text, edits = self.propose_candidate(pack_id=pack_id, pack_text=pack_text, examples=train_examples, max_edits=max_edits)
+        rejected_memory_skipped_edits = list(self._last_rejected_memory_skips)
         _validate_pack_text(candidate_text, expected_pack_id=pack_id, label="candidate preview")
         scan = scan_candidate_text(candidate_text)
         selection_evidence = self.build_selection_evidence(taskset_path=taskset_path, scan=scan, candidate_text=candidate_text, edits=edits, selection_examples=selection_examples)
@@ -1178,9 +1236,20 @@ class PackOptimizer:
             edits=edits,
             max_edits=max_edits,
             selection_evidence=selection_evidence,
+            rejected_memory_skipped_edits=rejected_memory_skipped_edits,
         )
         candidate_id = _candidate_id_from_material(candidate_material)
         score = self.evaluate_candidate(candidate_id=candidate_id, selection_evidence=selection_evidence)
+        if not edits:
+            score = SelectionScore(
+                candidate_id=score.candidate_id,
+                baseline_score=score.baseline_score,
+                candidate_score=score.candidate_score,
+                score_delta=score.score_delta,
+                primary_metric=score.primary_metric,
+                hard_failures=tuple(sorted(set(score.hard_failures + ("all_candidate_edits_previously_rejected",)))),
+                recommendation="reject",
+            )
         return self.write_artifacts(
             pack_id=pack_id,
             pack_text=pack_text,
@@ -1194,6 +1263,7 @@ class PackOptimizer:
             score=score,
             selection_evidence=selection_evidence,
             local_only=local_only,
+            rejected_memory_skipped_edits=rejected_memory_skipped_edits,
         )
 
     def _load_candidate_bundle(self, candidate_id: str) -> dict[str, Any]:
@@ -1490,6 +1560,7 @@ class PackOptimizer:
             pack_text=current_text,
             examples=train_examples,
             max_edits=int(material.get("max_edits") or 4),
+            rejected_memory_skips=list(material.get("rejected_memory_skipped_edits", [])),
         )
         if preview != expected_preview:
             raise ValueError("candidate preview is not deterministic optimizer output for source baseline")
@@ -1517,6 +1588,7 @@ class PackOptimizer:
             edits=expected_edits,
             max_edits=int(material.get("max_edits") or 4),
             selection_evidence=selection_evidence,
+            rejected_memory_skipped_edits=list(material.get("rejected_memory_skipped_edits", [])),
         )
         if _candidate_id_from_material(expected_material) != candidate_id:
             raise ValueError("candidate identity is not reproducible from source baseline and bound examples")
@@ -1560,10 +1632,11 @@ def run_pack_optimizer(
     output_root: str | Path | None = None,
     examples: Sequence[OptimizerExample | dict[str, Any]] | None = None,
     collective_db_path: str | Path | None = None,
+    rejected_memory_path: str | Path | None = None,
     local_only: bool = True,
     max_edits: int = 4,
 ) -> OptimizerRunResult:
-    optimizer = PackOptimizer(collective_db_path=collective_db_path, output_root=output_root)
+    optimizer = PackOptimizer(collective_db_path=collective_db_path, output_root=output_root, rejected_memory_path=rejected_memory_path)
     return optimizer.run(
         pack_id=pack_id,
         taskset_path=taskset_path,

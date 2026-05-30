@@ -43,6 +43,7 @@ class RescueResult:
     automation_policy: Dict[str, Any]
     evidence: Dict[str, Any]
     value_receipt: Dict[str, Any]
+    fallback_states: List[Dict[str, Any]]
 
     def to_dict(self) -> Dict[str, Any]:
         return asdict(self)
@@ -207,6 +208,46 @@ def _confidence_from_evidence(pack: Optional[Dict[str, Any]]) -> str:
     return "inferred"
 
 
+def _fallback_state(code: str, message: str, *, severity: str = "info", next_step: str = "") -> Dict[str, Any]:
+    state: Dict[str, Any] = {"code": code, "severity": severity, "message": message}
+    if next_step:
+        state["next"] = next_step
+    return state
+
+
+def _visible_fallback_states(*, status: str, matched: bool, evidence: Dict[str, Any]) -> List[Dict[str, Any]]:
+    """Human/agent-visible degraded-mode and provenance states.
+
+    These are deliberately explicit so agents do not hide weak/no-match states
+    behind confident prose.
+    """
+    states: List[Dict[str, Any]] = []
+    if status == "no_confident_match":
+        states.append(_fallback_state(
+            "NO_CONFIDENT_MATCH",
+            "Borg had no confident memory hit for this input.",
+            next_step="Proceed with ordinary debugging or rerun Borg with fuller failure text; do not attribute the fix to Borg.",
+        ))
+    if evidence.get("source") == "seed_pack":
+        states.append(_fallback_state(
+            "LOCAL_SEED_NOT_COLLECTIVE_PROOF",
+            "This rescue came from bundled local seed knowledge, not verified collective proof.",
+            next_step="Run VERIFY, then record an outcome receipt before treating this as measured Borg value.",
+        ))
+    states.append(_fallback_state(
+        "OUTCOME_NOT_RECORDED",
+        "No verified outcome receipt has been recorded for this intervention yet.",
+        next_step="After VERIFY, call borg_record_outcome with outcome/helpful/verified evidence.",
+    ))
+    if not matched and status != "no_confident_match":
+        states.append(_fallback_state(
+            "NO_BORG_VALUE_CLAIM",
+            "Borg is not claiming measured help for this response.",
+            next_step="Provide exact failure evidence before asking Borg to retrieve a rescue path.",
+        ))
+    return states
+
+
 def _value_receipt(
     *,
     matched: bool,
@@ -313,6 +354,11 @@ def rescue(task_or_error: str, *, source: str = "cli", show_guidance: bool = Tru
                 confidence="unknown",
                 evidence={"source": "none"},
             ),
+            fallback_states=_visible_fallback_states(
+                status="empty_input",
+                matched=False,
+                evidence={"source": "none"},
+            ),
         )
 
     problem_class = classify_error(text) or "unknown"
@@ -346,6 +392,11 @@ def rescue(task_or_error: str, *, source: str = "cli", show_guidance: bool = Tru
                 confidence="unknown",
                 evidence=_evidence(None),
             ),
+            fallback_states=_visible_fallback_states(
+                status="no_confident_match",
+                matched=False,
+                evidence=_evidence(None),
+            ),
         )
 
     actions = _extract_actions(pack)
@@ -360,7 +411,20 @@ def rescue(task_or_error: str, *, source: str = "cli", show_guidance: bool = Tru
     action_line = actions[0]
     stop_line = stops[0]
     verify_line = verify[0]
-    next_command = "borg feedback-v3 --pack {} --success yes".format(problem_class)
+    next_command = (
+        f"After VERIFY, call borg_record_outcome for {problem_class} with "
+        "outcome=<success|failure|partial>, helpful=<true|false>, verified=<true|false>, and verification evidence."
+    )
+    if ev.get("source") == "seed_pack":
+        human_receipt = (
+            f"Borg matched local seed guidance for {problem_class} ({confidence}). "
+            "The agent now has a next move, STOP items to check, and a verification step; no collective proof is claimed until VERIFY/outcome receipt closes the loop."
+        )
+    else:
+        human_receipt = (
+            f"Borg found a rescue path for {problem_class} ({confidence}). "
+            "The agent now has a next move, STOP items to check, and a verification step."
+        )
 
     return RescueResult(
         success=True,
@@ -377,10 +441,7 @@ def rescue(task_or_error: str, *, source: str = "cli", show_guidance: bool = Tru
             f"VERIFY: {verify_line}\n"
             "SHOW HUMAN: only surface Borg when this rescue path changes the plan."
         ),
-        human_receipt=(
-            f"Borg found a proven rescue path for {problem_class} ({confidence}). "
-            "The agent now has a next move, a known dead end to avoid, and a verification step."
-        ),
+        human_receipt=human_receipt,
         guidance=guidance,
         automation_policy=automation_policy,
         evidence=ev,
@@ -390,6 +451,11 @@ def rescue(task_or_error: str, *, source: str = "cli", show_guidance: bool = Tru
             confidence=confidence,
             evidence=ev,
             stop=stops,
+        ),
+        fallback_states=_visible_fallback_states(
+            status="matched",
+            matched=True,
+            evidence=ev,
         ),
     )
 
@@ -425,6 +491,16 @@ def render_rescue_text(result: RescueResult) -> str:
     lines.append(f"measurement status: {result.value_receipt.get('measurement_status', 'unknown')}")
     if result.value_receipt.get("dead_end_avoided_candidate"):
         lines.append(f"dead-end candidate: {result.value_receipt['dead_end_avoided_candidate']}")
+    if result.fallback_states:
+        lines.append("")
+        lines.append("FALLBACK STATES")
+        for state in result.fallback_states:
+            code = state.get("code", "UNKNOWN")
+            message = state.get("message", "")
+            next_step = state.get("next")
+            lines.append(f"  - {code}: {message}")
+            if next_step:
+                lines.append(f"    next: {next_step}")
     if result.guidance:
         lines.append("")
         lines.append("FULL GUIDANCE")

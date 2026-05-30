@@ -69,3 +69,7 @@ def test_first_user_release_gate_script_exists() -> None:
     assert "borg-doctor" in text
     assert "guild://hermes/systematic-debugging" in text
     assert "first_user_release_gate_snapshot.json" in text
+    assert "PYTHONPATH" in text
+    assert 'env.pop(name, None)' in text
+    assert "cwd=isolated_user_home" in text
+    assert "checkout import leakage" in text

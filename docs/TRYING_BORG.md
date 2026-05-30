@@ -114,12 +114,11 @@ borg pull borg://hermes/systematic-debugging
 borg apply systematic-debugging --task "Fix login bug where users get 401"
 ```
 
-After a real outcome, record feedback:
+After a real outcome, record feedback only after rerunning VERIFY. Prefer the intervention-bound `borg_record_outcome` path when Borg returned an `intervention_id`; for legacy pack-only CLI feedback, set the outcome truthfully:
 
 ```bash
-borg feedback-v3 --pack systematic-debugging --success yes
-# or
 borg feedback-v3 --pack systematic-debugging --success no
+# set --success to yes only after the verification command/check proves the fix worked
 ```
 
 This records outcome data. Shared learning depends on explicit publishing/aggregation and is still being validated.
@@ -200,4 +199,4 @@ Before attempting technical fixes for errors, bugs, installs, configs, deploymen
 
 ## 7. Readiness boundary
 
-Borg's controlled first-10 public-package beta is conditional GO for `agent-borg==3.3.15` only while PyPI latest, fresh-install, stdio MCP, cold-start trust, self-service ops, and watchdog gates remain green. Borg is not yet claiming public self-serve launch readiness or agent-level success lift at statistical confidence. See [`READINESS.md`](READINESS.md).
+Borg's controlled first-10 public-package beta is conditional GO for `agent-borg==3.3.15` while PyPI latest, fresh-install, stdio MCP, cold-start trust, self-service ops, and watchdog gates remain green. Public self-serve launch readiness and agent-level success lift at statistical confidence remain NO-GO. See [`READINESS.md`](READINESS.md).

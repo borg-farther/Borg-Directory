@@ -106,13 +106,28 @@ def _public_package_ready() -> dict[str, Any]:
     }
 
 
-def _ops_ready() -> dict[str, Any]:
+def _ops_ready(*, require_ops_watchdog: bool = True) -> dict[str, Any]:
     data = self_service_ops_gate.compile_gate()
+    watchdog = (
+        public_gate.ops_readiness_watchdog_check(ROOT / "eval" / "ops_readiness_watchdog_snapshot.json")
+        if require_ops_watchdog
+        else {
+            "passed": True,
+            "skipped": True,
+            "snapshot": "eval/ops_readiness_watchdog_snapshot.json",
+            "reason": "ops watchdog is evaluating this rollout gate and applies its own freshness/consistency checks",
+        }
+    )
+    blockers = list(data.get("blockers") or [])
+    if not watchdog["passed"]:
+        blockers.extend(watchdog.get("blockers") or ["ops readiness watchdog snapshot is missing or failing"])
     return {
-        "passed": bool(data.get("passed")),
+        "passed": bool(data.get("passed") and watchdog["passed"]),
         "generated_at_utc": data.get("generated_at_utc"),
-        "blockers": data.get("blockers") or [],
+        "blockers": blockers,
         "rollout_policy": data.get("rollout_policy"),
+        "self_service_ops_passed": bool(data.get("passed")),
+        "ops_readiness_watchdog": watchdog,
     }
 
 
@@ -169,12 +184,12 @@ def _first_10_evidence() -> dict[str, Any]:
     }
 
 
-def compile_rollout_gate() -> dict[str, Any]:
+def compile_rollout_gate(*, require_ops_watchdog: bool = True) -> dict[str, Any]:
     version = _version_consistent()
     security = _security_ready()
     first_user = _first_user_release_ready()
     package = _public_package_ready()
-    ops = _ops_ready()
+    ops = _ops_ready(require_ops_watchdog=require_ops_watchdog)
     load_10 = _load_ready(10)
     load_100 = _load_ready(100)
     first_10 = _first_10_evidence()
@@ -273,7 +288,8 @@ def write_report(snapshot: dict[str, Any]) -> None:
         "## Current gates",
         "",
         f"- ready_for_10_controlled_beta: `{snapshot['ready_for_10_controlled_beta']}`",
-        f"- self_service_ops_ready: `{snapshot['self_service_ops_gate'].get('passed')}`",
+        f"- self_service_ops_ready: `{snapshot['self_service_ops_gate'].get('self_service_ops_passed', snapshot['self_service_ops_gate'].get('passed'))}`",
+        f"- ops_readiness_watchdog_ready: `{snapshot['self_service_ops_gate'].get('ops_readiness_watchdog', {}).get('passed')}`",
         f"- infrastructure_ready_for_100: `{snapshot['infrastructure_ready_for_100']}`",
         f"- ready_for_100_real_users: `{snapshot['ready_for_100_real_users']}`",
         "",

@@ -56,10 +56,11 @@ They are retained for provenance, but they are not current product claims or fir
 - [`CANONICAL_REPO.md`](CANONICAL_REPO.md) — canonical repo and no-loss preservation policy for operators; not a first-user product guide
 - [`20260529_SKILLOPT_BORG_PACK_OPTIMIZER_PRD.md`](20260529_SKILLOPT_BORG_PACK_OPTIMIZER_PRD.md) — internal implementation-ready PRD for the local-only SkillOpt-inspired pack optimizer; not a public lift claim
 - [`20260529_SKILLOPT_BORG_PACK_OPTIMIZER_IMPLEMENTATION.md`](20260529_SKILLOPT_BORG_PACK_OPTIMIZER_IMPLEMENTATION.md) — internal implementation report and verification contract; first-10/public lift claims remain false
+- [`20260529_SKILLOPT_BORG_RESCUE_INTERACTION_LOOP.md`](20260529_SKILLOPT_BORG_RESCUE_INTERACTION_LOOP.md) — internal implementation report for rescue-packet eval, rejected-edit memory, agent priming, outcome capture, and review packets; not a public lift claim
 
 ## Current truth
 
-- Controlled first-10 public-package beta infrastructure: NO-GO for `agent-borg==3.3.15` until GitHub main, PyPI latest, fresh-install, stdio MCP, generated-rules/OpenClaw, cold-start trust, self-service ops, watchdog, source/local first-user, proof dashboard, and GitHub CI/security gates are green for the same version.
+- Controlled first-10 public-package beta infrastructure: CONDITIONAL GO while gates remain green for `agent-borg==3.3.15` while package/fresh-install/stdio MCP/generated-rules/OpenClaw/cold-start trust/self-service ops/watchdog/source-local first-user/proof-dashboard/GitHub CI-security gates remain green; cap is 10 consented testers.
 - Public self-serve launch: not yet; requires real external-user evidence.
 - Agent-level success lift at statistical confidence: not yet proven.
 - Internal max-value collective intelligence loop primitives: GO; external lift still requires first-10 rows.

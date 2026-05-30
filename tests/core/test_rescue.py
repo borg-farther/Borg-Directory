@@ -22,13 +22,18 @@ def test_rescue_returns_agent_contract_for_known_error():
     assert "VERIFY:" in result.agent_instruction
     assert result.automation_policy["default"] == "automatic_for_agents"
     assert result.automation_policy["fail_closed"] is True
-    assert "Borg found a proven rescue path" in result.human_receipt
+    assert "Borg matched local seed guidance" in result.human_receipt
+    assert "no collective proof is claimed" in result.human_receipt
     assert result.value_receipt["schema_version"] == 1
     assert result.value_receipt["matched_pack_id"] == "missing_dependency"
     assert result.value_receipt["savings_claim_type"] == "none"
     assert result.value_receipt["measured_minutes_saved"] is None
     assert result.value_receipt["measurement_status"] == "ready_to_measure"
     assert "not measured" in result.value_receipt["human_visible_summary"].lower()
+    assert "--success " + "yes" not in result.next_command
+    assert "After VERIFY" in result.next_command
+    assert "STOP item" in result.human_receipt
+    assert "known dead end" not in result.human_receipt
 
 
 def test_missing_dependency_rescue_maps_common_import_to_distribution_name():

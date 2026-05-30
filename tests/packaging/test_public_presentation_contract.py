@@ -77,7 +77,7 @@ def test_runtime_distribution_drafts_do_not_pin_stale_borg_versions() -> None:
     assert "13 built-in tools" not in smithery
 
 
-def test_current_docs_preserve_3315_release_candidate_truth() -> None:
+def test_current_docs_preserve_3315_controlled_package_truth() -> None:
     watched = {
         "README.md": read("README.md"),
         "CHANGELOG.md": read("CHANGELOG.md"),
@@ -108,16 +108,19 @@ def test_current_docs_preserve_3315_release_candidate_truth() -> None:
         "CONDITIONAL GO for `agent-borg==3.3.15`",
         "PyPI latest, fresh-install, and stdio MCP canaries are green for this version",
         "PyPI latest metadata and fresh PyPI install + stdio MCP canary are green for `agent-borg==3.3.15`",
-        "Current package path status: `agent-borg==3.3.15` is published",
         "controlled first-10 beta invites may start",
+        "Controlled first-10 beta infrastructure: **GO**",
     ]
 
     for path, text in watched.items():
         for phrase in stale_or_unsupported:
             assert phrase not in text, f"{path} still contains stale/unsupported phrase: {phrase}"
 
-    assert "source/local release candidate" in watched["README.md"]
-    assert "NO-GO for this 3.3.15 source branch" in watched["docs/READINESS.md"]
+    assert "agent-borg==3.3.15` is published on PyPI" in watched["README.md"]
+    assert "Broad public self-serve launch, 100-user rollout, served/remote MCP, and measured external lift are **not claimed**" in watched["README.md"]
+    assert "Controlled first-10 beta: **CONDITIONAL GO while gates remain green" in watched["docs/READINESS.md"]
+    assert "Public self-serve launch: **NO-GO until first-10 external-user evidence passes**" in watched["docs/READINESS.md"]
+    assert "Controlled first-10 beta infrastructure: **CONDITIONAL GO while gates remain green**" in watched["docs/PUBLIC_SELF_SERVE_LAUNCH_GO_NO_GO.md"]
 
 
 def test_public_examples_and_benchmark_readmes_do_not_overclaim_external_lift() -> None:
@@ -194,10 +197,11 @@ def test_release_gates_cover_export_openclaw_api_and_mcp_mix_paths() -> None:
 def test_final_production_ready_todo_preserves_hard_gate_boundaries() -> None:
     todo = read("docs/20260528_BORG_PRODUCTION_READY_FINAL_TODO.md")
     required = [
-        "not yet production ready",
-        "not yet controlled first-10 beta ready on the new 3.3.15 channel-completeness branch",
-        "Published PyPI latest observed:** `agent-borg==3.3.14`",
-        "Ship 3.3.15 to GitHub main and PyPI",
+        "controlled first-10 beta CONDITIONAL GO while gates remain green",
+        "broad public self-serve remains **NO-GO**",
+        "100-real-user rollout remains **NO-GO**",
+        "Published PyPI latest observed:** `agent-borg==3.3.15`",
+        "Keep `agent-borg==3.3.15` channel-completeness release proof green",
         "Generated rules / OpenClaw path",
         "Served/remote MCP production channel",
         "NO-GO until the actual served process is fingerprinted",
@@ -315,7 +319,7 @@ def test_public_live_dashboard_json_endpoints_exist_and_no_go_is_badge_red() -> 
     assert status["repo"] == "https://github.com/borg-farther/Borg-Directory"
     assert status["state"].startswith("NO-GO public self-serve")
     if status["controlled_first_10_beta"]["verdict"] == "CONDITIONAL":
-        assert "controlled first-10 beta GO" in status["state"]
+        assert "controlled first-10 beta CONDITIONAL GO while gates remain green" in status["state"]
         assert "source/local release-candidate only" not in status["state"]
     else:
         assert "source/local release-candidate only" in status["state"]

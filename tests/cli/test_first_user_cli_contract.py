@@ -111,7 +111,9 @@ def test_rescue_human_receipt_uses_product_language():
 
     assert code == 0
     assert "HUMAN RECEIPT" in out
-    assert "Borg found a proven rescue path for missing_dependency" in out
+    assert "Borg matched local seed guidance for missing_dependency" in out
+    assert "no collective proof is claimed" in out
+    assert "proven rescue path" not in out
     assert "Borg matched `" not in out
     assert "matches" not in out
     assert err == ""
@@ -120,15 +122,30 @@ def test_rescue_human_receipt_uses_product_language():
 def test_start_onboarding_uses_cache_layer_language(monkeypatch):
     """`borg start` should teach the fire/watch model without noisy Borg cosplay."""
     monkeypatch.setattr(sys, "stdin", io.StringIO("ModuleNotFoundError: No module named flask\n"))
+    monkeypatch.setattr(cli_module, "_record_v3_outcome_safe", lambda **_kwargs: pytest.fail("borg start must not auto-record success before VERIFY"))
 
     code, out, err = capture_main(["start"])
 
     assert code == 0
     assert "Borg is a cache layer for agent reasoning." in out
     assert "It watches for failure loops, fires only when it can change the path" in out
+    assert "After VERIFY" in out
+    assert "borg_record_outcome" in out
+    assert "--success " + "yes" not in out
     assert "Welcome to the Borg Collective" not in out
     assert "Resistance is futile" not in out
     assert "╔" not in out
+    assert err == ""
+
+
+def test_feedback_v3_help_is_verification_caveated():
+    code, out, err = capture_main(["feedback-v3", "--help"])
+
+    assert code == 0
+    assert "verified" in out.lower()
+    assert "after VERIFY" in out
+    assert "borg_record_outcome" in out
+    assert "--success " + "yes" not in out
     assert err == ""
 
 

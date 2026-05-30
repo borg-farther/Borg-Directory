@@ -79,7 +79,7 @@ def _public_json_files(now: str, rev: str) -> dict[str, dict[str, object]]:
     return {
         "docs/public/status.json": {
             "updated_at": now,
-            "state": "NO-GO public self-serve; controlled first-10 beta GO",
+            "state": "NO-GO public self-serve; controlled first-10 beta CONDITIONAL GO while gates remain green",
             "controlled_first_10_beta": {"verdict": "CONDITIONAL"},
             "broad_public_launch": {"verdict": "NO-GO"},
             "max_recommended_real_users_now": 10,
@@ -147,8 +147,8 @@ def test_source_revision_honesty_accepts_dirty_ancestor_in_clean_pr_checkout(mon
 
 def test_ops_watchdog_compiles_consistent_green_ops_snapshot(monkeypatch) -> None:
     monkeypatch.setattr(watchdog.public_gate, "source_version", lambda: "9.9.9")
-    monkeypatch.setattr(watchdog.public_gate, "compile_gate", lambda fetch_network=True: _public_snapshot())
-    monkeypatch.setattr(watchdog.real_user_rollout_gate, "compile_rollout_gate", lambda: {
+    monkeypatch.setattr(watchdog.public_gate, "compile_gate", lambda fetch_network=True, require_ops_watchdog=True: _public_snapshot())
+    monkeypatch.setattr(watchdog.real_user_rollout_gate, "compile_rollout_gate", lambda require_ops_watchdog=True: {
         "ready_for_10_controlled_beta": True,
         "infrastructure_ready_for_100": True,
         "ready_for_100_real_users": False,
@@ -193,8 +193,8 @@ def test_ops_watchdog_compiles_consistent_green_ops_snapshot(monkeypatch) -> Non
 
 def test_ops_watchdog_accepts_pre_package_release_no_go_stage(monkeypatch) -> None:
     monkeypatch.setattr(watchdog.public_gate, "source_version", lambda: "9.9.9")
-    monkeypatch.setattr(watchdog.public_gate, "compile_gate", lambda fetch_network=True: _pre_package_public_snapshot())
-    monkeypatch.setattr(watchdog.real_user_rollout_gate, "compile_rollout_gate", lambda: {
+    monkeypatch.setattr(watchdog.public_gate, "compile_gate", lambda fetch_network=True, require_ops_watchdog=True: _pre_package_public_snapshot())
+    monkeypatch.setattr(watchdog.real_user_rollout_gate, "compile_rollout_gate", lambda require_ops_watchdog=True: {
         "ready_for_10_controlled_beta": False,
         "infrastructure_ready_for_100": False,
         "ready_for_100_real_users": False,
@@ -236,8 +236,8 @@ def test_ops_watchdog_accepts_pre_package_release_no_go_stage(monkeypatch) -> No
 
 def test_ops_watchdog_blocks_stale_public_json_even_when_snapshots_are_fresh(monkeypatch) -> None:
     monkeypatch.setattr(watchdog.public_gate, "source_version", lambda: "9.9.9")
-    monkeypatch.setattr(watchdog.public_gate, "compile_gate", lambda fetch_network=True: _public_snapshot())
-    monkeypatch.setattr(watchdog.real_user_rollout_gate, "compile_rollout_gate", lambda: {
+    monkeypatch.setattr(watchdog.public_gate, "compile_gate", lambda fetch_network=True, require_ops_watchdog=True: _public_snapshot())
+    monkeypatch.setattr(watchdog.real_user_rollout_gate, "compile_rollout_gate", lambda require_ops_watchdog=True: {
         "ready_for_10_controlled_beta": True,
         "ready_for_100_real_users": False,
         "max_recommended_real_users_now": 10,
@@ -272,8 +272,8 @@ def test_ops_watchdog_blocks_stale_public_json_even_when_snapshots_are_fresh(mon
 def test_ops_watchdog_blocks_stale_or_non_evidence_public_blockers(monkeypatch) -> None:
     bad_public = _public_snapshot() | {"blockers": ["self-service ops readiness gate is missing"]}
     monkeypatch.setattr(watchdog.public_gate, "source_version", lambda: "9.9.9")
-    monkeypatch.setattr(watchdog.public_gate, "compile_gate", lambda fetch_network=True: bad_public)
-    monkeypatch.setattr(watchdog.real_user_rollout_gate, "compile_rollout_gate", lambda: {
+    monkeypatch.setattr(watchdog.public_gate, "compile_gate", lambda fetch_network=True, require_ops_watchdog=True: bad_public)
+    monkeypatch.setattr(watchdog.real_user_rollout_gate, "compile_rollout_gate", lambda require_ops_watchdog=True: {
         "ready_for_10_controlled_beta": True,
         "ready_for_100_real_users": False,
         "max_recommended_real_users_now": 10,

@@ -31,6 +31,7 @@ import subprocess
 import sys
 import time
 from pathlib import Path
+from urllib.parse import quote
 
 from borg import __version__
 from borg.core.dirs import get_borg_dir
@@ -122,6 +123,13 @@ def _cmd_search(args: argparse.Namespace) -> int:
                if not any(m.get("name", "").startswith(p) or m.get("id", "").startswith(p) for p in _test_filter)]
     if not matches:
         print("No packs found.")
+        fallback_states = data.get("fallback_states") or []
+        if fallback_states:
+            print("\nFallback / provenance notices:")
+            for state in fallback_states:
+                print(f"  - {state.get('code')}: {state.get('message')}")
+                if state.get("next"):
+                    print(f"    next: {state.get('next')}")
         return 0
     print(f"{'Name':<35} {'Confidence':<12} {'Tier':<8} {'Problem Class'}")
     print("-" * 90)
@@ -132,6 +140,13 @@ def _cmd_search(args: argparse.Namespace) -> int:
         problem_class = (p.get("problem_class") or "")[:60]
         print(f"{name:<35} {conf:<12} {tier:<8} {problem_class}")
     print(f"\nTotal: {len(matches)} pack(s)")
+    fallback_states = data.get("fallback_states") or []
+    if fallback_states:
+        print("\nFallback / provenance notices:")
+        for state in fallback_states:
+            print(f"  - {state.get('code')}: {state.get('message')}")
+            if state.get("next"):
+                print(f"    next: {state.get('next')}")
     return 0
 
 
@@ -533,6 +548,86 @@ def _cmd_rescue(args: argparse.Namespace) -> int:
     return 0 if result.success else 1
 
 
+def _cmd_rescue_eval(args: argparse.Namespace) -> int:
+    """Execute a rescue-packet eval taskset."""
+    from borg.core.rescue_packet_eval import evaluate_rescue_cases, load_rescue_eval_taskset
+
+    try:
+        taskset = load_rescue_eval_taskset(args.taskset)
+        result = evaluate_rescue_cases(taskset.cases, taskset_id=taskset.taskset_id)
+        if args.json:
+            print(json.dumps(result, indent=2, sort_keys=True, ensure_ascii=False))
+        else:
+            print(f"taskset_id: {result['taskset_id']}")
+            print(f"success: {result['success']}")
+            print(f"recommendation: {result['recommendation']}")
+            print(f"selection_cases: {result['selection']['case_count']}")
+            print(f"hidden_cases: {result['hidden']['case_count']}")
+            if result.get("hard_failures"):
+                print("hard_failures:")
+                for failure in result["hard_failures"]:
+                    print(f"  - {failure}")
+        return 0 if result.get("success") else 1
+    except (ValueError, OSError, json.JSONDecodeError) as e:
+        if getattr(args, "json", False):
+            print(json.dumps({"success": False, "error": str(e), "type": type(e).__name__}, indent=2), file=sys.stdout)
+        else:
+            print(f"Error: {e}", file=sys.stderr)
+        return 1
+
+
+def _cmd_agent_priming(args: argparse.Namespace) -> int:
+    """Render or safely install/uninstall a host-specific Borg priming block."""
+    from borg.core.agent_priming import (
+        build_agent_priming_candidate,
+        install_agent_priming,
+        uninstall_agent_priming,
+    )
+
+    host = getattr(args, "host", "generic")
+    try:
+        if getattr(args, "install", False):
+            result = install_agent_priming(
+                host,
+                target_file=getattr(args, "target_file", None),
+                manifest_path=getattr(args, "manifest", None),
+                dry_run=bool(getattr(args, "dry_run", False)),
+            )
+        elif getattr(args, "uninstall", False) or getattr(args, "unpull", False):
+            result = uninstall_agent_priming(
+                host,
+                manifest_path=getattr(args, "manifest", None),
+                target_file=getattr(args, "target_file", None),
+                dry_run=bool(getattr(args, "dry_run", False)),
+            )
+        else:
+            result = build_agent_priming_candidate(host)
+
+        if getattr(args, "json", False):
+            print(json.dumps(result, indent=2, sort_keys=True, ensure_ascii=False))
+        else:
+            if result.get("operation") in {"install", "uninstall"}:
+                print(f"borg agent-priming {result['operation']}: {result['status']}")
+                print(f"target:   {result.get('target_file')}")
+                print(f"manifest: {result.get('manifest_path')}")
+                if result.get("dry_run"):
+                    print("dry-run:  no files were changed")
+                for state in result.get("fallback_states", []):
+                    print(f"fallback: {state.get('code')}: {state.get('message')}")
+            else:
+                print(result["prompt"])
+        if result.get("operation") in {"install", "uninstall"}:
+            return 0 if result.get("success") else 1
+        return 0 if result.get("recommendation") == "eligible_for_host_rules_review" else 1
+    except Exception as e:
+        error = {"success": False, "operation": "agent-priming", "error": str(e), "type": type(e).__name__}
+        if getattr(args, "json", False):
+            print(json.dumps(error, indent=2, sort_keys=True, ensure_ascii=False))
+        else:
+            print(f"Error: {e}", file=sys.stderr)
+        return 1
+
+
 def _cmd_start(args: argparse.Namespace) -> int:
     """Interactive onboarding — get value from borg in 30 seconds."""
     print()
@@ -560,20 +655,8 @@ def _cmd_start(args: argparse.Namespace) -> int:
     result = rescue(error, source="start", show_guidance=True)
     print(render_rescue_text(result))
 
-    # Auto-record feedback
-    try:
-        from borg.core.pack_taxonomy import classify_error
-        pc = classify_error(error)
-        if pc:
-            _record_v3_outcome_safe(
-                pack_id=pc,
-                task_context={"task_category": pc, "source": "borg_start"},
-                success=True,
-                tokens_used=0,
-                time_taken=0.0,
-            )
-    except Exception:
-        pass
+    # Do not auto-record success here: this command has only shown guidance.
+    # Outcome receipts are created after the user/agent reruns VERIFY.
 
     # Next steps
     print()
@@ -583,7 +666,7 @@ def _cmd_start(args: argparse.Namespace) -> int:
     print("  - Browse workflows:    borg search debugging")
     print("  - Export for Cursor:   borg generate systematic-debugging --format cursorrules")
     print("  - Export for Claude:   borg setup-claude")
-    print("  - Record what worked:  borg feedback-v3 --pack systematic-debugging --success yes")
+    print("  - After VERIFY:        call borg_record_outcome with outcome/helpful/verified evidence")
     print()
     print("  Your fixes stay yours; Borg shares what prevents repeat failures.")
     print()
@@ -1015,6 +1098,7 @@ def _cmd_collective(args: argparse.Namespace) -> int:
 
 def _cmd_optimize_pack(args: argparse.Namespace) -> int:
     """Local-only SkillOpt-inspired pack optimizer entrypoint."""
+    from borg.core.optimizer_review_queue import build_review_packet
     from borg.core.pack_optimizer import PackOptimizer, load_examples_file, run_pack_optimizer
 
     target = getattr(args, "target", "")
@@ -1055,6 +1139,46 @@ def _cmd_optimize_pack(args: argparse.Namespace) -> int:
                     for failure in score["hard_failures"]:
                         print(f"  - {failure}")
             return 0
+
+        if target == "review":
+            if not getattr(args, "candidate_id", None):
+                raise ValueError("review requires candidate_id")
+            verified_inspection = None
+            source_args_present = bool(getattr(args, "pack_file", None) or getattr(args, "taskset", None) or getattr(args, "examples_file", None))
+            if source_args_present:
+                if not getattr(args, "pack_file", None):
+                    raise ValueError("source-verified review requires --pack-file")
+                if not getattr(args, "taskset", None):
+                    raise ValueError("source-verified review requires --taskset")
+                if not getattr(args, "examples_file", None):
+                    raise ValueError("source-verified review requires --examples-file")
+                examples = load_examples_file(args.examples_file)
+                verified_inspection = optimizer.verify_candidate_against_sources(
+                    args.candidate_id,
+                    pack_path=args.pack_file,
+                    taskset_path=args.taskset,
+                    examples=examples,
+                    scope="local",
+                )
+            candidate_dir = optimizer._candidate_dir(args.candidate_id)
+            data = build_review_packet(
+                candidate_dir,
+                source_verified=bool(verified_inspection and verified_inspection.get("source_verified")),
+                verified_inspection=verified_inspection,
+            )
+            if args.json:
+                print(json.dumps(data, indent=2, sort_keys=True, ensure_ascii=False))
+            else:
+                print(f"candidate_id: {data['candidate_id']}")
+                print(f"decision: {data['decision']}")
+                print(f"manual_review_eligibility: {data['manual_review_eligibility']}")
+                print(f"score_delta: {data['score']['score_delta']}")
+                print(f"accepted_edits: {data['edits']['accepted_count']}")
+                print(f"rejected_edits: {data['edits']['rejected_count']}")
+                print("reviewer_checklist:")
+                for item in data.get("reviewer_checklist", []):
+                    print(f"  - {item}")
+            return 0 if data.get("manual_review_eligibility") == "eligible_for_manual_review" else 1
 
         if target == "apply":
             if not getattr(args, "candidate_id", None):
@@ -1807,13 +1931,82 @@ def _cmd_first_10(args: argparse.Namespace) -> int:
     return 0
 
 
+def _status_data_notice() -> dict:
+    return {
+        "schema_version": "1.0",
+        "storage_default": "local",
+        "raw_trace_export_default": "off",
+        "shared_learning_default": "opt_in_sanitized_signed_atoms_only",
+        "stores": [
+            "local packs and workflow state under BORG_DIR",
+            "local rescue/trace/outcome state under BORG_HOME",
+            "agent priming manifests under BORG_HOME/agent-priming",
+        ],
+        "claim_boundary": "Status output is diagnostics, not proof of first-10/public lift.",
+        "first_10_claim": False,
+        "global_promotion_allowed": False,
+        "public_lift_claim": False,
+    }
+
+
+def _status_fallback_states() -> list[dict]:
+    return [
+        {
+            "code": "MCP_UNAVAILABLE_USE_CLI",
+            "severity": "info",
+            "message": "If Borg MCP is unavailable in an agent host, use the CLI fallback.",
+            "next": "Run: borg rescue '<exact failure>' or borg agent-priming <host> --json",
+        },
+        {
+            "code": "SEMANTIC_SEARCH_LEXICAL_FALLBACK",
+            "severity": "info",
+            "message": "Semantic search is optional; Borg reports lexical fallback explicitly when embeddings are unavailable or empty.",
+            "next": "Treat text/seed hits as routing hints until VERIFY and outcome receipt close the loop.",
+        },
+        {
+            "code": "LOCAL_SEED_NOT_COLLECTIVE_PROOF",
+            "severity": "info",
+            "message": "Bundled seed guidance is cold-start knowledge, not verified collective proof.",
+            "next": "Run VERIFY and record outcomes before claiming measured value.",
+        },
+        {
+            "code": "OUTCOME_NOT_RECORDED",
+            "severity": "info",
+            "message": "A rescue packet starts without a verified outcome receipt.",
+            "next": "After VERIFY, call borg_record_outcome with outcome/helpful/verified evidence.",
+        },
+    ]
+
+
 # ---------------------------------------------------------------------------
 # status: show borg system status
 # ---------------------------------------------------------------------------
 
+def _read_only_table_count(db_path: Path, table: str) -> int:
+    queries = {
+        "packs": "SELECT COUNT(*) FROM packs",
+        "agents": "SELECT COUNT(*) FROM agents",
+    }
+    query = queries.get(table)
+    if query is None:
+        return 0
+    if not db_path.exists():
+        return 0
+    try:
+        db_uri = f"file:{quote(str(db_path), safe='/')}?mode=ro"
+        conn = sqlite3.connect(db_uri, uri=True)
+        try:
+            row = conn.execute(query).fetchone()
+            return int(row[0] if row else 0)
+        finally:
+            conn.close()
+    except sqlite3.Error:
+        return 0
+
+
 def _cmd_status(args: argparse.Namespace) -> int:
     """Show borg system status."""
-    borg_dir = get_borg_dir()
+    borg_dir = Path(str(get_borg_dir()))
     db_path = borg_dir / "guild.db"
 
     # Load persisted sessions to get accurate count
@@ -1824,22 +2017,47 @@ def _cmd_status(args: argparse.Namespace) -> int:
     active_from_memory = [s for s in _active_sessions.values() if s.get("status") == "running"]
     all_running = {s["session_id"]: s for s in active_sessions + active_from_memory}.values()
 
-    # Count packs in store
-    store = AgentStore()
-    packs = store.list_packs(limit=10000)
-    pack_count = len(packs)
+    # Count packs/agents using read-only SQL so `borg status` never migrates or
+    # creates a database just to display diagnostics.
+    pack_count = _read_only_table_count(db_path, "packs")
+    agent_count = _read_only_table_count(db_path, "agents")
 
-    # Count agents
-    agents = store.list_agents(limit=10000)
-    agent_count = len(agents)
+    payload = {
+        "success": True,
+        "borg_dir": str(borg_dir),
+        "database": str(db_path),
+        "pack_count": pack_count,
+        "active_sessions": len(list(all_running)),
+        "agent_count": agent_count,
+        "data_notice": _status_data_notice(),
+        "fallback_states": _status_fallback_states(),
+        "first_10_claim": False,
+        "global_promotion_allowed": False,
+        "public_lift_claim": False,
+    }
+
+    if getattr(args, "json", False):
+        print(json.dumps(payload, indent=2, sort_keys=True, ensure_ascii=False))
+        return 0
 
     print(f"Borg System Status")
     print("=" * 50)
     print(f"  BORG_DIR:             {borg_dir}")
     print(f"  Database:             {db_path}")
     print(f"  Packs in Store:       {pack_count}")
-    print(f"  Active Sessions:      {len(list(all_running))}")
+    print(f"  Active Sessions:      {payload['active_sessions']}")
     print(f"  Agent Count:          {agent_count}")
+    print()
+    print("  Data Notice:")
+    print(f"    storage default:     {payload['data_notice']['storage_default']}")
+    print(f"    raw trace export:    {payload['data_notice']['raw_trace_export_default']}")
+    print(f"    shared learning:     {payload['data_notice']['shared_learning_default']}")
+    print()
+    print("  Visible Fallback States:")
+    for state in payload["fallback_states"]:
+        print(f"    • {state['code']}: {state['message']}")
+        if state.get("next"):
+            print(f"      next: {state['next']}")
 
     running = list(all_running)
     if running:
@@ -1975,13 +2193,13 @@ def main() -> int:
     p.add_argument("session_id", help="Session ID")
     p.set_defaults(func=_cmd_feedback)
 
-    # guild feedback-v3 --problem-class <class> --success yes --time 120
-    p = sub.add_parser("feedback-v3", help="Record debug guidance outcome to V3 feedback loop",
+    # guild feedback-v3 --problem-class <class> --success no --time 120
+    p = sub.add_parser("feedback-v3", help="Record a verified debug guidance outcome to V3 feedback loop",
         formatter_class=argparse.RawDescriptionHelpFormatter,
         epilog="""Examples:
-  borg feedback-v3 --pack systematic-debugging --success yes
+  # Prefer borg_record_outcome after VERIFY when an MCP agent/tool call is available.
   borg feedback-v3 --problem-class debugging --success no --time 30
-  borg feedback-v3 --pack systematic-debugging --success yes --tokens 5000""")
+  borg feedback-v3 --pack systematic-debugging --success no --tokens 5000""")
     p.add_argument(
         "--pack",
         default=None,
@@ -1996,7 +2214,7 @@ def main() -> int:
     p.add_argument(
         "--success",
         required=True,
-        help="Did the guidance help? (yes/no)",
+        help="Verified outcome after rerunning VERIFY? (yes/no). Do not set yes before verification.",
     )
     p.add_argument(
         "--time",
@@ -2043,6 +2261,35 @@ def main() -> int:
     p.add_argument("--json", action="store_true", help="Output machine-readable rescue packet")
     p.add_argument("--short", action="store_true", help="Omit full legacy guidance block")
     p.set_defaults(func=_cmd_rescue)
+
+    # borg rescue-eval <taskset.json>
+    p = sub.add_parser("rescue-eval", help="Execute a rescue-packet eval taskset",
+        formatter_class=argparse.RawDescriptionHelpFormatter,
+        epilog="""Examples:
+  borg rescue-eval eval/tasksets/rescue_packet_smoke.json --json""")
+    p.add_argument("taskset", help="JSON taskset with train/selection/hidden rescue cases")
+    p.add_argument("--json", action="store_true", help="Output machine-readable metrics")
+    p.set_defaults(func=_cmd_rescue_eval)
+
+    # borg agent-priming <host>
+    p = sub.add_parser("agent-priming", help="Render/install/uninstall host-specific Borg call/verify/outcome priming",
+        formatter_class=argparse.RawDescriptionHelpFormatter,
+        epilog="""Examples:
+  borg agent-priming claude-code
+  borg agent-priming codex --json
+  borg agent-priming claude-code --install --dry-run --target-file ./CLAUDE.md --json
+  borg agent-priming claude-code --install --target-file ./CLAUDE.md
+  borg agent-priming claude-code --uninstall --json""")
+    p.add_argument("host", nargs="?", default="generic", choices=["generic", "hermes", "claude-code", "codex", "cursor"], help="Agent host to target")
+    action_group = p.add_mutually_exclusive_group()
+    action_group.add_argument("--install", action="store_true", help="Install/update a manifest-backed managed priming block")
+    action_group.add_argument("--uninstall", action="store_true", help="Remove the managed priming block recorded in the manifest")
+    action_group.add_argument("--unpull", action="store_true", help="Alias for --uninstall")
+    p.add_argument("--dry-run", action="store_true", help="Plan install/uninstall without writing files")
+    p.add_argument("--target-file", default=None, help="Rules file to update; default is BORG_HOME/agent-priming/<host>/BORG_AGENT_PRIMING.md")
+    p.add_argument("--manifest", default=None, help="Install manifest path; default is BORG_HOME/agent-priming/<host>/manifest.json")
+    p.add_argument("--json", action="store_true", help="Output machine-readable priming artifact or install result")
+    p.set_defaults(func=_cmd_agent_priming)
 
     # borg first-10 — print first-user beta readiness contract
     p = sub.add_parser("first-10", help="Print first-user beta readiness gates and smoke path",
@@ -2251,10 +2498,11 @@ Examples:
   borg optimize-pack inspect packopt-sha256:0000000000000000000000000000000000000000000000000000000000000000 --json
       # artifact-only inventory; reports source_verification_required
   borg optimize-pack inspect packopt-sha256:0000000000000000000000000000000000000000000000000000000000000000 --pack-file ./pack.yaml --taskset eval/tasksets/systematic_debugging_selection.json --examples-file eval/tasksets/systematic_debugging_examples.json --json
+  borg optimize-pack review packopt-sha256:0000000000000000000000000000000000000000000000000000000000000000 --pack-file ./pack.yaml --taskset eval/tasksets/systematic_debugging_selection.json --examples-file eval/tasksets/systematic_debugging_examples.json --json
   borg optimize-pack apply packopt-sha256:0000000000000000000000000000000000000000000000000000000000000000 --scope local --pack-file ./pack.yaml --taskset eval/tasksets/systematic_debugging_selection.json --examples-file eval/tasksets/systematic_debugging_examples.json""",
     )
-    p.add_argument("target", help="Pack id, or action: inspect/apply")
-    p.add_argument("candidate_id", nargs="?", help="Candidate id for inspect/apply")
+    p.add_argument("target", help="Pack id, or action: inspect/review/apply")
+    p.add_argument("candidate_id", nargs="?", help="Candidate id for inspect/review/apply")
     p.add_argument("--taskset", default=None, help="Selection taskset JSON path for dry-run candidate generation")
     p.add_argument("--pack-file", default=None, help="Optional pack file path; required for apply and source-verified inspect")
     p.add_argument("--examples-file", default=None, help="Optional sanitized examples JSON file; required for apply and source-verified inspect")
@@ -2278,7 +2526,9 @@ Examples:
     p = sub.add_parser("status", help="Show local Borg runtime status",
         formatter_class=argparse.RawDescriptionHelpFormatter,
         epilog="""Examples:
-  borg status""")
+  borg status
+  borg status --json""")
+    p.add_argument("--json", action="store_true", help="Output machine-readable status, data notice, and fallback states")
     p.set_defaults(func=_cmd_status)
 
     # guild version

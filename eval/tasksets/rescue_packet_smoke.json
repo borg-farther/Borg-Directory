@@ -1,0 +1,34 @@
+{
+  "schema_version": "1.0",
+  "taskset_id": "rescue-packet-smoke-v1",
+  "description": "Executable Borg rescue-packet contract smoke set. Selection cases gate ACTION/STOP/VERIFY and NO_CONFIDENT_MATCH behavior; hidden cases are reported as holdout only.",
+  "cases": [
+    {
+      "case_id": "selection-missing-python-dependency",
+      "split": "selection",
+      "input": "ModuleNotFoundError: No module named flask",
+      "expected_status": "matched",
+      "expected_problem_class": "missing_dependency",
+      "expected_action_contains": ["pip install flask"],
+      "expected_stop_contains": ["virtualenv"],
+      "expected_verify_contains": ["rerun"]
+    },
+    {
+      "case_id": "selection-weak-rust-match",
+      "split": "selection",
+      "input": "error[E0382]: borrow of moved value: value",
+      "expected_status": "no_confident_match",
+      "expected_problem_class": "unknown",
+      "expected_stop_contains": ["do not force"]
+    },
+    {
+      "case_id": "hidden-python-type-mismatch",
+      "split": "hidden",
+      "input": "TypeError: unsupported operand type(s) for +: 'int' and 'str'",
+      "expected_status": "matched",
+      "expected_problem_class": "type_mismatch",
+      "expected_action_contains": ["type"],
+      "expected_verify_contains": ["rerun"]
+    }
+  ]
+}

@@ -2,9 +2,9 @@
 
 ## Current verdict
 
-- Controlled first-10 beta: **NO-GO for this 3.3.15 source branch until GitHub `main`, PyPI latest, fresh-install, stdio MCP, generated-rules, OpenClaw, cold-start trust, self-service ops, watchdog, source/local first-user, and GitHub CI/security gates are green for the same version.**
-- Public waitlist / narrow beta: **blocked until the 3.3.15 package/proof chain is current**; after that, up to 10 consented controlled testers may proceed under the first-10 evidence contract.
-- Public self-serve launch: **NO-GO until real external-user evidence exists**.
+- Controlled first-10 beta: **CONDITIONAL GO while gates remain green for `agent-borg==3.3.15` package users**. PyPI latest, fresh-install, local stdio MCP, generated-rules, OpenClaw, cold-start trust, self-service ops, watchdog, source/local first-user, and GitHub CI/security gates are green for this version.
+- Public waitlist / narrow beta: **up to 10 consented controlled testers may proceed** under the first-10 evidence contract; every tester outcome must be captured.
+- Public self-serve launch: **NO-GO until first-10 external-user evidence passes** (10 verified external users, >=8 installs, >=6 useful rescues, 0 critical incidents).
 
 ## What passed for source/local package infrastructure
 
@@ -13,8 +13,8 @@
 - First value path exists: `borg rescue "<error>"` returns ACTION / STOP / VERIFY or `NO_CONFIDENT_MATCH`.
 - First-10 contract exists: [`FIRST_10_BETA_READINESS.md`](FIRST_10_BETA_READINESS.md).
 - Security/privacy/prompt-injection surface has a baseline and CI gates.
-- Current default-branch GitHub CI and security gates were green before this 3.3.15 branch; this branch still needs PR/main CI proof.
-- Local first-user gate is green for source `agent-borg==3.3.15`, including generated rules and OpenClaw export. PyPI latest/fresh-install/stdio MCP canary is **not yet green for 3.3.15** because production PyPI still has the prior release until the publish step completes.
+- GitHub CI/security gates are part of the release proof chain. PR branches still need their own green checks and post-merge `main` proof refresh before branch-specific source changes are claimed on `main`.
+- Local first-user gate is green for source `agent-borg==3.3.15`, including generated rules and OpenClaw export. PyPI latest/fresh-install/stdio MCP canary is green for `3.3.15`.
 
 ## What is not proven
 
