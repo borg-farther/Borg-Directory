@@ -165,8 +165,8 @@ def compile_watchdog(*, max_snapshot_age_hours: float = 24.0, allow_public_block
     pypi = _read_json(ROOT / "eval" / "pypi_fresh_install_snapshot.json")
     cold = _read_json(ROOT / "eval" / "cold_start_trust_gate_snapshot.json")
 
-    live_public = public_gate.compile_gate(fetch_network=True)
-    live_real = real_user_rollout_gate.compile_rollout_gate()
+    live_public = public_gate.compile_gate(fetch_network=True, require_ops_watchdog=False)
+    live_real = real_user_rollout_gate.compile_rollout_gate(require_ops_watchdog=False)
     ops = self_service_ops_gate.compile_gate()
     workflow = _workflow_has_schedule()
 
@@ -240,7 +240,7 @@ def compile_watchdog(*, max_snapshot_age_hours: float = 24.0, allow_public_block
         "blockers": live_public.get("blockers") or [],
     }
     controlled_status_ok = bool(
-            status.get("state") == "NO-GO public self-serve; controlled first-10 beta GO"
+            status.get("state") == "NO-GO public self-serve; controlled first-10 beta CONDITIONAL GO while gates remain green"
             and (status.get("controlled_first_10_beta") or {}).get("verdict") == "CONDITIONAL"
             and status.get("max_recommended_real_users_now") == 10
             and status.get("verified_external_users") == 0

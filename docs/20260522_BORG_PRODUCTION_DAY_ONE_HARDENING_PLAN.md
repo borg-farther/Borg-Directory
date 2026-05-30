@@ -14,8 +14,8 @@ That nucleus is the day-one value path. Everything else is gated by evidence.
 
 ## Release-state split
 
-- Controlled supervised first-user path: **NO-GO until package fresh-install gates pass for the current release candidate**.
-- Controlled first-10 beta: **NO-GO until PyPI latest, fresh-install, and stdio MCP canaries are green; then GO only with truthful evidence capture and consented users**.
+- Controlled supervised first-user path: **CONDITIONAL GO while package fresh-install gates remain green for the current release**.
+- Controlled first-10 beta: **CONDITIONAL GO while gates remain green for PyPI latest, fresh-install, and stdio MCP canaries; keep truthful evidence capture and consented users**.
 - Public self-serve launch: **NO-GO until first-10 external-user scoreboard passes**.
 - Served remote MCP: **NO-GO until live served runtime path and behavior match audited source**.
 - 100 real users: **NO-GO until first-10 evidence passes the 8/6/0 threshold**.

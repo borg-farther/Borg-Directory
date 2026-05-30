@@ -310,6 +310,7 @@ def borg_search(query: str, mode: str = "text", requesting_agent_id: str = None,
         query_lower = query.lower().strip()
         mode_lower = mode.lower() if mode else "text"
         semantic_fallback_reason = ""
+        semantic_text_fallback_matches: List[Dict[str, Any]] = []
 
         if not query_lower:
             _track_search(query, len(all_packs))
@@ -361,30 +362,35 @@ def borg_search(query: str, mode: str = "text", requesting_agent_id: str = None,
                         }
                         matches.append(match_entry)
                     match_types = {str(item.get("match_type") or "") for item in matches}
-                    effective_mode = mode_lower
-                    reason = semantic_fallback_reason
-                    if not any(item in {"semantic", "hybrid"} for item in match_types):
-                        effective_mode = "text"
-                        reason = "Semantic engine returned text-only matches."
-                    _track_search(query, len(matches))
-                    return json.dumps({
-                        "success": True,
-                        "matches": matches,
-                        "query": query,
-                        "total": len(matches),
-                        "mode": mode_lower,
-                        "requested_mode": mode_lower,
-                        "effective_mode": effective_mode,
-                        "source_mix": _source_mix(matches),
-                        "provenance_notice": _provenance_notice(matches),
-                        "fallback_states": _search_fallback_states(
-                            requested_mode=mode_lower,
-                            effective_mode=effective_mode,
-                            matches=matches,
-                            semantic_reason=reason,
-                        ),
-                    })
-                semantic_fallback_reason = "Semantic search returned no semantic matches."
+                    if any(item in {"semantic", "hybrid"} for item in match_types):
+                        _track_search(query, len(matches))
+                        return json.dumps({
+                            "success": True,
+                            "matches": matches,
+                            "query": query,
+                            "total": len(matches),
+                            "mode": mode_lower,
+                            "requested_mode": mode_lower,
+                            "effective_mode": mode_lower,
+                            "source_mix": _source_mix(matches),
+                            "provenance_notice": _provenance_notice(matches),
+                            "fallback_states": _search_fallback_states(
+                                requested_mode=mode_lower,
+                                effective_mode=mode_lower,
+                                matches=matches,
+                                semantic_reason=semantic_fallback_reason,
+                            ),
+                        })
+                    # A semantic-only request can degrade inside SemanticSearchEngine
+                    # to AgentStore text/FTS hits.  Do not return from that side
+                    # path: it skips the canonical text fallback below, including
+                    # bundled seed provenance and trace lookup.  Preserve any
+                    # text-only AgentStore hits as routing hints, but keep
+                    # effective_mode="text" and visible fallback semantics.
+                    semantic_text_fallback_matches = matches
+                    semantic_fallback_reason = "Semantic engine returned text-only matches."
+                if not semantic_text_fallback_matches:
+                    semantic_fallback_reason = "Semantic search returned no semantic matches."
             except Exception as e:
                 # Fall back to text search on any semantic search error
                 semantic_fallback_reason = f"Semantic search failed: {type(e).__name__}."
@@ -418,6 +424,20 @@ def borg_search(query: str, mode: str = "text", requesting_agent_id: str = None,
             if matched:
                 matches.append(pack)
 
+        if semantic_text_fallback_matches:
+            seen_keys = {
+                str(item.get("id") or item.get("name") or "")
+                for item in matches
+                if item.get("id") or item.get("name")
+            }
+            for item in semantic_text_fallback_matches:
+                key = str(item.get("id") or item.get("name") or "")
+                if key and key in seen_keys:
+                    continue
+                matches.append(item)
+                if key:
+                    seen_keys.add(key)
+
         # Try semantic first (traces from embeddings cache)
         search_mode_used = "text" if mode_lower in ("semantic", "hybrid") and semantic_fallback_reason else mode_lower
         semantic_trace_matches: List[Dict] = []
@@ -430,7 +450,8 @@ def borg_search(query: str, mode: str = "text", requesting_agent_id: str = None,
                 )
                 if semantic_results:
                     semantic_trace_matches = semantic_results
-                    search_mode_used = "semantic"
+                    if not semantic_fallback_reason:
+                        search_mode_used = "semantic"
             except Exception as e:
                 logger.debug(f"semantic search failed, falling back: {e}")
 
@@ -528,8 +549,10 @@ def borg_search(query: str, mode: str = "text", requesting_agent_id: str = None,
 
         _track_search(query, len(matches))
 
-        # Inject semantic trace matches into results if semantic search succeeded
-        if search_mode_used == "semantic" and semantic_trace_matches:
+        # Inject semantic trace matches into results if semantic trace search succeeded.
+        # Keep effective_mode="text" when primary semantic pack retrieval fell
+        # back, but do not hide useful trace routing hints.
+        if semantic_trace_matches:
             try:
                 for trace in semantic_trace_matches:
                     trace_id = str(trace.get("id", ""))

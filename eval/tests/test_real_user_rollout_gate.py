@@ -20,7 +20,7 @@ def test_real_user_rollout_gate_blocks_100_when_first_10_scoreboard_empty(tmp_pa
     monkeypatch.setattr(rollout_gate, "SNAPSHOT", tmp_path / "real_user_rollout_gate_snapshot.json")
     monkeypatch.setattr(rollout_gate, "REPORT", tmp_path / "20260517_BORG_100_REAL_USER_READINESS.md")
 
-    monkeypatch.setattr(rollout_gate, "_ops_ready", lambda: {"passed": True, "blockers": [], "rollout_policy": "test"})
+    monkeypatch.setattr(rollout_gate, "_ops_ready", lambda **_: {"passed": True, "blockers": [], "rollout_policy": "test"})
     assert rollout_gate.main([]) == 1
     payload = json.loads(capsys.readouterr().out)
     assert payload["ready_for_100_real_users"] is False
@@ -45,7 +45,7 @@ def test_real_user_rollout_gate_no_write_does_not_touch_artifacts(tmp_path, monk
     report_path.write_text("sentinel-report", encoding="utf-8")
     monkeypatch.setattr(rollout_gate, "SNAPSHOT", snapshot_path)
     monkeypatch.setattr(rollout_gate, "REPORT", report_path)
-    monkeypatch.setattr(rollout_gate, "_ops_ready", lambda: {"passed": True, "blockers": [], "rollout_policy": "test"})
+    monkeypatch.setattr(rollout_gate, "_ops_ready", lambda **_: {"passed": True, "blockers": [], "rollout_policy": "test"})
 
     assert rollout_gate.main(["--no-write"]) == 1
     payload = json.loads(capsys.readouterr().out)
@@ -87,7 +87,7 @@ def test_real_user_rollout_gate_blocks_controlled_beta_when_public_package_path_
         "passed": False,
         "blockers": ["PyPI latest/fresh-install package evidence is not green"],
     })
-    monkeypatch.setattr(rollout_gate, "_ops_ready", lambda: {"passed": True, "blockers": [], "rollout_policy": "test"})
+    monkeypatch.setattr(rollout_gate, "_ops_ready", lambda **_: {"passed": True, "blockers": [], "rollout_policy": "test"})
 
     snapshot = rollout_gate.compile_rollout_gate()
 
@@ -104,7 +104,7 @@ def test_real_user_rollout_gate_blocks_controlled_beta_when_ops_readiness_fails(
     monkeypatch.setattr(rollout_gate, "_first_user_release_ready", lambda: {"passed": True})
     monkeypatch.setattr(rollout_gate, "_load_ready", lambda users: {"passed": True, "users": users})
     monkeypatch.setattr(rollout_gate, "_public_package_ready", lambda: {"passed": True, "blockers": []})
-    monkeypatch.setattr(rollout_gate, "_ops_ready", lambda: {"passed": False, "blockers": ["support SLA missing"], "rollout_policy": "test"})
+    monkeypatch.setattr(rollout_gate, "_ops_ready", lambda **_: {"passed": False, "blockers": ["support SLA missing"], "rollout_policy": "test"})
     monkeypatch.setattr(rollout_gate, "_first_10_evidence", lambda: {
         "passed": False,
         "verified_external_users": 0,
@@ -133,7 +133,7 @@ def test_real_user_rollout_gate_pauses_controlled_beta_when_first_10_privacy_inc
     monkeypatch.setattr(rollout_gate, "_first_user_release_ready", lambda: {"passed": True})
     monkeypatch.setattr(rollout_gate, "_load_ready", lambda users: {"passed": True, "users": users})
     monkeypatch.setattr(rollout_gate, "_public_package_ready", lambda: {"passed": True, "blockers": []})
-    monkeypatch.setattr(rollout_gate, "_ops_ready", lambda: {"passed": True, "blockers": [], "rollout_policy": "test"})
+    monkeypatch.setattr(rollout_gate, "_ops_ready", lambda **_: {"passed": True, "blockers": [], "rollout_policy": "test"})
     monkeypatch.setattr(rollout_gate, "_first_10_evidence", lambda: {
         "passed": False,
         "verified_external_users": 1,

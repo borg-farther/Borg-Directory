@@ -51,12 +51,22 @@ class CheckResult:
     duration_s: float | None = None
 
 
+def _clean_python_env(**overrides: str) -> dict[str, str]:
+    """Return an environment for first-user subprocesses without repo import leaks."""
+    env = os.environ.copy()
+    for name in ("PYTHONPATH", "PYTHONHOME", "PYTHONUSERBASE"):
+        env.pop(name, None)
+    env["PYTHONNOUSERSITE"] = "1"
+    env.update(overrides)
+    return env
+
+
 def _run(cmd: list[str], *, cwd: Path = ROOT, env: dict[str, str] | None = None, timeout: int = 120, input_text: str | None = None) -> CheckResult:
     started = time.monotonic()
     proc = subprocess.run(
         cmd,
         cwd=str(cwd),
-        env=env,
+        env=env if env is not None else _clean_python_env(),
         input=input_text,
         capture_output=True,
         text=True,
@@ -236,14 +246,13 @@ def run_gate(args: argparse.Namespace) -> int:
         install_res.name = "fresh_install_agent_borg"
         results.append(install_res)
 
-        env = os.environ.copy()
+        env = _clean_python_env()
         isolated_home = venv_dir / "borg-home"
         isolated_user_home = venv_dir / "home"
         isolated_user_home.mkdir(parents=True, exist_ok=True)
         env["BORG_HOME"] = str(isolated_home)
         env["BORG_DIR"] = str(isolated_home)
         env["HOME"] = str(isolated_user_home)
-        env["PYTHONNOUSERSITE"] = "1"
 
         generated_rules_dir = venv_dir / "generated-rules"
         openclaw_dir = venv_dir / "openclaw"
@@ -296,11 +305,24 @@ def run_gate(args: argparse.Namespace) -> int:
             results.append(res)
 
         # Import API surface: catches wheel packaging omissions masked by editable installs.
-        api_code = "import borg, json; r=borg.check('ModuleNotFoundError: No module named flask', top_k=1); print(json.dumps({'version': borg.__version__, 'result_type': type(r).__name__, 'count': len(r)}))"
-        res = _run([str(py), "-c", api_code], env=env, timeout=120)
+        api_code = (
+            "import borg, json; "
+            "r=borg.check('ModuleNotFoundError: No module named flask', top_k=1); "
+            "print(json.dumps({'version': borg.__version__, 'borg_file': borg.__file__, 'result_type': type(r).__name__, 'count': len(r)}))"
+        )
+        res = _run([str(py), "-c", api_code], cwd=isolated_user_home, env=env, timeout=120)
         res.name = "public_import_api_check"
-        if res.passed and '"result_type": "list"' in res.stdout:
-            res.detail = "borg.check returned list without crashing"
+        if res.passed:
+            try:
+                payload = json.loads(res.stdout.strip().splitlines()[-1])
+            except Exception:
+                payload = {}
+            borg_file = str(payload.get("borg_file") or "")
+            if payload.get("result_type") == "list" and borg_file and not Path(borg_file).resolve().is_relative_to(ROOT):
+                res.detail = "borg.check returned list from installed wheel without checkout import leakage"
+            else:
+                res.passed = False
+                res.detail = "borg.check failed, did not return list, or imported from checkout instead of installed wheel"
         else:
             res.passed = False
             res.detail = "borg.check failed or did not return list"

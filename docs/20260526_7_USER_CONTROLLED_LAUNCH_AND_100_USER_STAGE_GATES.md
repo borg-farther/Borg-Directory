@@ -118,7 +118,7 @@ Every invite must include:
 
 Re-evaluated from scratch:
 
-- If the question is only "can 7 users try Borg at once?" the answer is still blocked for this 3.3.15 branch until the package/proof chain is green; after that, 7 users is inside the controlled first-10 cap.
+- If the question is only "can 7 users try Borg at once?" the answer is yes with constraints for `agent-borg==3.3.15`: 7 users is inside the controlled first-10 cap while package/proof gates remain green and every user is consented, external, and evidence-recorded.
 - If the question is "is Borg ready for 100 concurrent public self-service users?" the answer is no, because 100 real-user readiness is evidence-gated and first-10 evidence is still zero.
 - If the question is "are local source and package enough?" the answer is no for served channels; runtime fingerprinting is a separate gate.
 - If the question is "should we build new features now?" the answer is no; the immediate work is proof, docs consistency, feedback capture, and fail-closed gates.

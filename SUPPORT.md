@@ -1,10 +1,10 @@
 # Borg support policy
 
-Borg is **not currently open** for a controlled first-10 public-package beta from this branch. The branch targets `agent-borg==3.3.15`, but controlled invites stay paused until GitHub `main`, PyPI latest, fresh-install, stdio MCP, generated-rules/OpenClaw, ops, watchdog, and proof dashboards are green for that exact version. Support expectations are intentionally narrow so tester outcomes remain measurable and do not become hidden maintainer handholding.
+Borg is open for a constrained controlled first-10 public-package beta on `agent-borg==3.3.15` while package/fresh-install/stdio MCP/generated-rules/OpenClaw/ops/watchdog/proof-dashboard gates remain green. The beta stays capped at 10 consented testers; broad public self-serve, 100-user rollout, served remote MCP, and measured external lift remain unclaimed until row-derived external-user evidence passes. Support expectations are intentionally narrow so tester outcomes remain measurable and do not become hidden maintainer handholding.
 
 ## Supported path
 
-- Target install after release: `pipx install agent-borg==3.3.15` or `pip install agent-borg==3.3.15` in a clean environment. Until 3.3.15 is published and canaried, use this as a release-candidate target, not an invitation link.
+- Target install for controlled testers while gates remain green: `pipx install agent-borg==3.3.15` or `pip install agent-borg==3.3.15` in a clean environment.
 - First command: `borg rescue "<redacted real error>" --short`.
 - MCP path: `borg-mcp` over stdio from a local client.
 - Evidence intake: `.github/ISSUE_TEMPLATE/first-10-evidence.yml`.

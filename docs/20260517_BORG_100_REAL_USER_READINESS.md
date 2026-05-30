@@ -1,6 +1,6 @@
 # Borg 100 real-user readiness
 
-Generated: 2026-05-30T08:47:40.237083+00:00
+Generated: 2026-05-30T18:59:47.035463+00:00
 
 100 real-user verdict: **NO-GO**
 Max recommended real users now: **10**
@@ -14,6 +14,7 @@ Real-user rollout requires first-10 external evidence before expanding to 100.
 
 - ready_for_10_controlled_beta: `True`
 - self_service_ops_ready: `True`
+- ops_readiness_watchdog_ready: `True`
 - infrastructure_ready_for_100: `True`
 - ready_for_100_real_users: `False`
 

@@ -60,7 +60,7 @@ They are retained for provenance, but they are not current product claims or fir
 
 ## Current truth
 
-- Controlled first-10 public-package beta infrastructure: NO-GO for `agent-borg==3.3.15` until GitHub main, PyPI latest, fresh-install, stdio MCP, generated-rules/OpenClaw, cold-start trust, self-service ops, watchdog, source/local first-user, proof dashboard, and GitHub CI/security gates are green for the same version.
+- Controlled first-10 public-package beta infrastructure: CONDITIONAL GO while gates remain green for `agent-borg==3.3.15` while package/fresh-install/stdio MCP/generated-rules/OpenClaw/cold-start trust/self-service ops/watchdog/source-local first-user/proof-dashboard/GitHub CI-security gates remain green; cap is 10 consented testers.
 - Public self-serve launch: not yet; requires real external-user evidence.
 - Agent-level success lift at statistical confidence: not yet proven.
 - Internal max-value collective intelligence loop primitives: GO; external lift still requires first-10 rows.

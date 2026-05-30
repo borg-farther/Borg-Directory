@@ -65,7 +65,7 @@ Prior 3.3.10 proof lives in:
 - `docs/20260522_BORG_3310_RELEASE_PREFLIGHT_PUBLISHED.md` (historical)
 - `eval/pypi_fresh_install_snapshot.json` (current exact-version package canary)
 
-Current package path status: `agent-borg==3.3.15` is not yet published/canaried as the current PyPI package. Controlled first-10 must stay paused until the 3.3.15 package/proof chain is green; broad public self-serve remains NO-GO until row-derived first-10 evidence passes.
+Current package path status: `agent-borg==3.3.15` is published and canaried for controlled first-10 package beta. Controlled first-10 may run under the 10-tester cap while package/proof gates remain green; broad public self-serve remains NO-GO until row-derived first-10 evidence passes.
 
 ### Phase C — first-10 user sprint
 

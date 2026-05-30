@@ -349,12 +349,17 @@ def docs_claim_guard(
             stale_package_blockers_after_release = [
                 (r"(?i)NO-GO for this source revision\W{0,40}until .*PyPI", "stale package NO-GO after PyPI canary"),
                 (r"(?i)blocked for `?agent-borg==" + re.escape(expected_version) + r"`? until PyPI", "stale package-blocked wording after PyPI canary"),
+                (r"(?i)(controlled first-10|controlled beta|public-package beta|package path|PyPI CLI|PyPI in active Python env).{0,180}(NO-GO|BLOCKED|blocked|not yet|until).{0,220}(PyPI|published|fresh[- ]install|canary|latest)", "stale controlled-beta package blocker after PyPI canary"),
+                (r"(?i)(controlled first-10|controlled beta|public-package beta|PyPI beta|7 users).{0,180}(NO-GO|BLOCKED|blocked|not yet|until).{0,220}(package/proof chain|package proof|proof chain)", "stale package-proof-chain blocker after PyPI canary"),
+                (r"(?i)(PyPI latest|production PyPI|fresh install|fresh-install|MCP stdio).{0,160}(not yet|not green|not current|does not match|prior release|stale|blocked)", "stale PyPI/fresh-install blocker after PyPI canary"),
+                (r"(?i)Current package path status:.*not yet published/canaried", "stale unpublished package-path status after PyPI canary"),
+                (r"(?i)controlled first-10 beta invites may not start.*until", "stale invite-start blocker after PyPI canary"),
+                (r"(?i)source/local release[- ]candidate|source/local only|release[- ]candidate contract", "stale source/local-only wording after PyPI canary"),
                 (r"(?i)until `?agent-borg==" + re.escape(expected_version) + r"`? is published", "stale unpublished-version wording after PyPI canary"),
                 (r"(?i)PENDING until publish", "stale pending-publish wording after PyPI canary"),
                 (r"(?i)before controlled beta resumes", "stale beta-resume blocker after PyPI canary"),
                 (r"(?i)latest metadata does not match source version", "stale PyPI-latest mismatch blocker after PyPI canary"),
                 (r"(?i)fresh install \+ MCP stdio canary is not green", "stale fresh-install blocker after PyPI canary"),
-                (r"(?i)source/local release-candidate only", "stale source/local-only wording after PyPI canary"),
             ]
             for pattern, label in stale_package_blockers_after_release:
                 match = re.search(pattern, text)
@@ -438,7 +443,25 @@ def self_service_ops_check() -> dict[str, Any]:
     }
 
 
-def compile_gate(*, fetch_network: bool = True, pypi_data: dict[str, Any] | None = None) -> dict[str, Any]:
+def ops_readiness_watchdog_check(path: Path) -> dict[str, Any]:
+    data = _read_json(path)
+    blockers = data.get("blockers") or []
+    passed = bool(data.get("passed") is True and not blockers)
+    return {
+        "passed": passed,
+        "generated_at_utc": data.get("generated_at_utc"),
+        "blockers": blockers,
+        "snapshot": "eval/ops_readiness_watchdog_snapshot.json",
+        "truth_policy": data.get("truth_policy"),
+    }
+
+
+def compile_gate(
+    *,
+    fetch_network: bool = True,
+    pypi_data: dict[str, Any] | None = None,
+    require_ops_watchdog: bool = True,
+) -> dict[str, Any]:
     version = source_version()
     first_10 = first_10_evidence_check(ROOT / "eval" / "first_10_user_scoreboard.json")
     first_user = first_user_release_check(ROOT / "eval" / "first_user_release_gate_snapshot.json")
@@ -446,6 +469,16 @@ def compile_gate(*, fetch_network: bool = True, pypi_data: dict[str, Any] | None
     pypi_fresh = pypi_fresh_install_check(ROOT / "eval" / "pypi_fresh_install_snapshot.json", version)
     cold_start_trust = cold_start_trust_check(ROOT / "eval" / "cold_start_trust_gate_snapshot.json")
     self_service_ops = self_service_ops_check()
+    ops_watchdog = (
+        ops_readiness_watchdog_check(ROOT / "eval" / "ops_readiness_watchdog_snapshot.json")
+        if require_ops_watchdog
+        else {
+            "passed": True,
+            "skipped": True,
+            "snapshot": "eval/ops_readiness_watchdog_snapshot.json",
+            "reason": "ops watchdog is evaluating this gate and applies its own freshness/consistency checks",
+        }
+    )
     package_evidence_ready = bool(pypi_latest["passed"] and pypi_fresh["passed"])
     reported_privacy_security_incidents = int((first_10.get("derived_counts") or {}).get("critical_privacy_security_failures") or 0)
     privacy_security_pause_clear = reported_privacy_security_incidents == 0
@@ -461,6 +494,7 @@ def compile_gate(*, fetch_network: bool = True, pypi_data: dict[str, Any] | None
         and package_evidence_ready
         and cold_start_trust["passed"]
         and self_service_ops["passed"]
+        and ops_watchdog["passed"]
         and docs["passed"]
         and privacy_security_pause_clear
     )
@@ -476,6 +510,8 @@ def compile_gate(*, fetch_network: bool = True, pypi_data: dict[str, Any] | None
         blockers.append("cold-start trust hardening gate snapshot is missing or failing")
     if not self_service_ops["passed"]:
         blockers.extend(self_service_ops.get("blockers") or ["self-service ops readiness gate is missing or failing"])
+    if not ops_watchdog["passed"]:
+        blockers.extend(ops_watchdog.get("blockers") or ["ops readiness watchdog snapshot is missing or failing"])
     if not docs["passed"]:
         blockers.append("public docs/claim guard found stale install pins or unsupported launch/value claims")
     if not privacy_security_pause_clear:
@@ -500,6 +536,7 @@ def compile_gate(*, fetch_network: bool = True, pypi_data: dict[str, Any] | None
             "pypi_fresh_install_and_mcp_stdio": pypi_fresh,
             "cold_start_trust_hardening": cold_start_trust,
             "self_service_ops_readiness": self_service_ops,
+            "ops_readiness_watchdog": ops_watchdog,
             "docs_claim_guard": docs,
             "privacy_security_incident_pause": {
                 "passed": privacy_security_pause_clear,
@@ -509,7 +546,7 @@ def compile_gate(*, fetch_network: bool = True, pypi_data: dict[str, Any] | None
             "first_10_external_evidence": first_10,
         },
         "blockers": blockers,
-        "truth_policy": "Public self-serve is GO only after PyPI/fresh-install/MCP/docs/cold-start-trust/self-service-ops gates pass AND row-derived first-10 external-user evidence passes. Synthetic users and aggregate-only edits never count.",
+        "truth_policy": "Public self-serve is GO only after PyPI/fresh-install/MCP/docs/cold-start-trust/self-service-ops/watchdog gates pass AND row-derived first-10 external-user evidence passes. Synthetic users and aggregate-only edits never count.",
     }
 
 
@@ -522,7 +559,7 @@ def write_report(snapshot: dict[str, Any]) -> None:
         f"Source version: `{snapshot['source_version']}`",
         "",
         f"Public self-serve launch: **{verdict}**",
-        f"Controlled first-10 beta infrastructure: **{'GO' if snapshot['ready_for_controlled_first_10_beta'] else 'NO-GO'}**",
+        f"Controlled first-10 beta infrastructure: **{'CONDITIONAL GO while gates remain green' if snapshot['ready_for_controlled_first_10_beta'] else 'NO-GO'}**",
         f"Max recommended real users now: **{snapshot['max_recommended_real_users_now']}**",
         "",
         "## Hard rule",

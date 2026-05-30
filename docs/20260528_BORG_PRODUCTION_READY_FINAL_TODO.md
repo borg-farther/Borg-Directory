@@ -1,29 +1,29 @@
 # Borg production-readiness final todo
 
-**Generated:** 2026-05-28 10:08 UTC
+**Generated:** 2026-05-28 10:08 UTC; updated 2026-05-30 for current package/readiness truth
 **Repo:** `https://github.com/borg-farther/Borg-Directory`
-**Current branch under review:** `fix/complete-first-user-channels`
-**Current reviewed head:** `0097aec9a1069786b533cdfe79e2fba006ea9066` with uncommitted 3.3.15 channel-completeness changes
-**Remote `origin/main`:** `0097aec9a1069786b533cdfe79e2fba006ea9066`
+**Current branch under review:** `feat/borg-rescue-skillopt-priorities`
+**Current reviewed head:** PR #43 follow-up branch with additional local hardening under proof
+**Remote `origin/main`:** not asserted by this branch-local todo
 **Source target version:** `agent-borg==3.3.15`
-**Published PyPI latest observed:** `agent-borg==3.3.14`
-**Current public-package verdict:** source/local release candidate only; PyPI and proof dashboards are not yet current for 3.3.15.
+**Published PyPI latest observed:** `agent-borg==3.3.15`
+**Current public-package verdict:** package/fresh-install/canary/proof-chain infrastructure is green for controlled first-10 beta use while gates remain green; broad public self-serve remains NO-GO until row-derived first-10 external-user evidence passes.
 
 ## Executive verdict
 
-Borg is **not yet production ready** and is **not yet controlled first-10 beta ready on the new 3.3.15 channel-completeness branch**.
+Borg is **controlled first-10 beta CONDITIONAL GO while gates remain green for `agent-borg==3.3.15` package users**, but broad public self-serve remains **NO-GO** and the 100-real-user rollout remains **NO-GO**.
 
-The prior PR #39 trust-boundary hardening was merged and post-merge `main` was verified. The new work uncovered a real first-user channel bug in published `agent-borg==3.3.14`: clean users could search bundled packs, but the documented export path `borg generate systematic-debugging --format all --output ...` failed because the generator looked in maintainer/local registry paths before bundled wheel seed data.
+Earlier channel-completeness bugs were fixed and shipped in `agent-borg==3.3.15`. The current PR #43 follow-up work is about keeping that proof chain honest while hardening rescue truth-boundaries, local priming install safety, and public/readiness documentation.
 
-That bug is fixed in source for `3.3.15`, and the local first-user release gate passed. But GitHub `main`, PyPI, public proof dashboards, and some machine snapshots are still not synchronized to 3.3.15. Until they are, the honest state is:
+The honest current state is:
 
-- **Source/local 3.3.15 release candidate:** PARTIAL GO — local gate passed, but branch is dirty/unmerged and full proof is pending.
-- **GitHub `main`:** NO-GO for the new channel-completeness fix — `main` is still `0097aec...` without the uncommitted branch changes.
-- **Published PyPI:** NO-GO for all documented channels — latest is still `3.3.14`, which has a proven first-user export bug.
-- **Local stdio MCP from the current source:** GO only after fresh 3.3.15 wheel/venv proof is rerun and captured.
-- **Generated rules / OpenClaw path:** fixed in source; not shipped to PyPI yet.
+- **Source/local 3.3.15 release candidate:** CONDITIONAL GO — local gate and regression proof must remain green for the final PR head.
+- **GitHub `main`:** not claimed by this branch-local todo until merge/post-merge proof refresh runs.
+- **Published PyPI:** CONDITIONAL GO — controlled first-10 beta only; `agent-borg==3.3.15` is published/canaried; broad self-serve is still blocked by first-10 external-user evidence.
+- **Local stdio MCP from current package/source:** CONDITIONAL GO while fresh-install/MCP/proof dashboards remain green for the exact version.
+- **Generated rules / OpenClaw path:** shipped in `3.3.15`; keep covered by first-user gates.
 - **Served/remote MCP production channel:** NO-GO until the actual served process is fingerprinted after operator-approved cutover.
-- **Controlled first-10 beta:** NO-GO until 3.3.15 is on GitHub main + PyPI and fresh-install/MCP/proof dashboards are green for that exact version.
+- **Controlled first-10 beta:** CONDITIONAL GO while package/fresh-install/stdio MCP/generated-rules/OpenClaw/cold-start trust/self-service ops/watchdog/proof-dashboard gates remain green and tester count stays capped at 10.
 - **Broad public self-serve:** NO-GO until first-10 row-derived external evidence passes.
 - **100 real users:** NO-GO until first-10 evidence passes and the staged rollout gate raises the cap.
 - **Measured external lift / “Google-tier” product impact:** NO-GO until real external outcomes and counterfactual evaluation exist.
@@ -35,19 +35,19 @@ This todo is based on four independent evidence paths:
 1. **Session-history archaeology**
    - Prior chats and closeout reports consistently split readiness into source/package, PyPI, stdio MCP, served runtime, first-10 evidence, public self-serve, 100-user, and measured-lift lanes.
    - Stable conclusion across sessions: public production remains blocked by row-derived external-user evidence; served/remote MCP remains blocked by runtime fingerprint/cutover proof.
-   - New conclusion from the channel-completeness session: PyPI `3.3.14` is stale and broken for a documented secondary first-user channel (`borg generate systematic-debugging --format all --output ...`).
+   - New conclusion from the channel-completeness session: the pre-3.3.15 package was stale and broken for a documented secondary first-user channel (`borg generate systematic-debugging --format all --output ...`).
 
 2. **Current repo / package truth inspection**
-   - Branch: `fix/complete-first-user-channels`.
-   - Local HEAD and remote main: `0097aec9a1069786b533cdfe79e2fba006ea9066`.
-   - Working tree has uncommitted changes for 3.3.15 channel completion.
+   - Branch: `feat/borg-rescue-skillopt-priorities`.
+   - Branch-local PR proof is pending until final commit/push/CI for PR #43.
+   - Working tree may contain follow-up hardening changes until this PR is committed.
    - `pyproject.toml` version: `3.3.15`.
    - `borg.__version__`: `3.3.15`.
-   - PyPI latest: `3.3.14`.
+   - PyPI latest: `3.3.15`.
 
 3. **Current machine artifacts / reports**
-   - `eval/first_user_release_gate_snapshot.json`: 3.3.15 local release gate passed, generated `2026-05-28T09:55:06Z`, 28 checks passed / 0 failed.
-   - Important stale 3.3.14 artifacts still exist and must not be treated as current proof:
+   - `eval/first_user_release_gate_snapshot.json`: 3.3.15 local release gate passed; latest snapshot must be regenerated from the final PR head before claiming PR-ready.
+   - Important historical/stale proof artifacts must not be treated as current proof unless regenerated for the final PR head:
      - `eval/pypi_fresh_install_snapshot.json`
      - `eval/real_user_rollout_gate_snapshot.json`
      - `eval/ops_readiness_watchdog_snapshot.json`
@@ -59,7 +59,7 @@ This todo is based on four independent evidence paths:
      - `eval/gate_run_snapshot.json`
      - `eval/cold_start_trust_gate_snapshot.json`
      - `eval/federated_learning_gate_snapshot.json`
-   - Current public status JSON still says `NO-GO public self-serve; controlled first-10 beta GO` for stale `3.3.14` proof data. That wording is not valid for the new 3.3.15 branch until the release/canary/proof chain is rerun.
+   - Current public status JSON should say `NO-GO public self-serve; controlled first-10 beta CONDITIONAL GO while gates remain green` when controlled-beta infrastructure is green; stale clean-source or stale-package revisions must fail the watchdog.
 
 4. **Adversarial challenge review**
    - A green source gate can hide PyPI drift.
@@ -70,14 +70,14 @@ This todo is based on four independent evidence paths:
 
 ## Final production-readiness todo list
 
-### P0. Finish and ship `agent-borg==3.3.15` channel-completeness release
+### P0. Keep `agent-borg==3.3.15` channel-completeness release proof green
 
-**Why:** Published `3.3.14` has a proven first-user export bug. The source fix is not useful to GitHub/PyPI users until it is merged, released, and verified from clean installs.
+**Why:** The pre-3.3.15 package had a documented first-user export bug. The permanent fix is only useful if the current GitHub/PyPI/proof chain stays synchronized and fresh-install verified.
 
 **Do:**
 
-1. Resolve all current/stale 3.3.14 references in current public surfaces and machine snapshots.
-   - Regenerate snapshots after release where the value must come from real PyPI.
+1. Resolve all current/stale pre-3.3.15 references in current public surfaces and machine snapshots.
+   - Regenerate snapshots after every proof-affecting change where the value must come from real PyPI or a fresh local wheel.
    - Preserve historical references only inside clearly historical/internal docs.
 2. Inspect the full diff for accidental bulk replacement damage.
 3. Run focused tests for the changed surfaces:
@@ -158,21 +158,21 @@ git status --short
 
 ---
 
-### P0. Keep controlled first-10 beta blocked until 3.3.15 package proof is green
+### P0. Keep controlled first-10 beta tied to current package proof
 
-**Why:** The previous proof dashboard said controlled first-10 beta GO for stale 3.3.14 package evidence. The new 3.3.15 branch must earn that verdict again from actual PyPI and fresh-install proof.
+**Why:** Earlier proof dashboards used stale package evidence. The 3.3.15 package path has earned the package-path verdict from PyPI and fresh-install proof, but that verdict must remain conditional on current proof.
 
 **Do:**
 
-1. Keep current public/user-facing status at source/local release-candidate while PyPI is 3.3.14.
-2. After 3.3.15 publish, rerun:
+1. Keep current public/user-facing status at controlled first-10 package beta GO-with-constraints while PyPI/latest, fresh-install, stdio MCP, generated-rules/OpenClaw, cold-start trust, self-service ops, watchdog, and public presentation tests remain green.
+2. After any package/docs/proof change, rerun:
    - PyPI fresh-install canary;
    - stdio MCP canary;
    - cold-start trust gate;
    - self-service ops gate;
    - ops readiness watchdog;
    - public presentation/doc claim tests.
-3. Only then flip controlled first-10 beta to conditional GO.
+3. Only then keep controlled first-10 beta at conditional GO.
 
 **Hard gate:**
 
@@ -181,7 +181,7 @@ git status --short
 - `borg generate systematic-debugging --format all` works from that install.
 - OpenClaw conversion writes `SKILL.md`, `references/pack-index.md`, and `references/packs/systematic-debugging.md`.
 - Stdio MCP serverInfo version is `3.3.15`.
-- No stale 3.3.14 current-proof artifacts remain.
+- No stale pre-3.3.15 current-proof artifacts remain.
 
 **Stop if:** controlled-beta language is reintroduced before package proof is current.
 
@@ -222,7 +222,7 @@ git status --short
 
 **Do:**
 
-1. Keep public docs/status saying controlled first-10 beta only after package proof is green; before that, say source/local release-candidate only.
+1. Keep public docs/status saying controlled first-10 package beta only while package proof stays green; never imply broad public self-serve until row-derived first-10 evidence passes.
 2. Run public self-serve gate after every evidence update.
 3. Let the gate, not vibes, decide when broad public self-serve is allowed.
 4. Regenerate proof dashboard/status/value/impact JSON only after gate snapshots are current.
@@ -440,10 +440,10 @@ python scripts/security_gate_check.py
 
 ## Current final blocker hierarchy
 
-1. **Ship 3.3.15 to GitHub main and PyPI.** This includes merge, CI, irreversible PyPI preflight, publish approval, fresh PyPI install canary, and regenerated proof artifacts.
-2. **Remove stale proof split-brain.** Current dashboards/status/snapshots still contain 3.3.14 and stale source revisions; they must be regenerated after publish.
+1. **Keep PR #43 and the 3.3.15 proof chain green on the exact final head.** This includes CI, first-user release gate, fresh-install/canary proof, and regenerated proof artifacts.
+2. **Remove stale proof split-brain.** Current dashboards/status/snapshots must represent the final PR head or clearly identify themselves as historical/internal artifacts.
 3. **Fingerprint every actual served MCP/runtime channel.** Local stdio proof is not served-runtime proof.
-4. **Only after package proof is green, run controlled first-10 external beta.** Current verified external users are `0/10`.
+4. **Run controlled first-10 external beta only while package/ops/watchdog gates remain green.** Current verified external users are `0/10`.
 5. **Keep public self-serve and 100-user rollout blocked until row-derived evidence passes.**
 6. **Only then expand to public listing/marketplaces/remote MCP/100 users/measured-lift claims.**
 
@@ -451,12 +451,12 @@ python scripts/security_gate_check.py
 
 I tried to disprove each likely conclusion:
 
-- **Could we say Borg is production ready because PR #39 was merged?** No. PR #39 solved the prior hardening task. The current branch has unmerged 3.3.15 changes and PyPI is still 3.3.14.
-- **Could we say controlled first-10 beta is GO because old dashboards say GO?** No. Those dashboards embed stale 3.3.14 state and stale source revisions. The new branch must regenerate package/proof artifacts after 3.3.15 is published.
-- **Could we avoid a PyPI release by documenting a workaround?** No. The failure is in a documented first-user channel. The permanent fix is a 3.3.15 release with wheel data lookup and fresh-install proof.
+- **Could we say Borg is broad-production ready because package and PR gates are green?** No. Package/source gates support only constrained first-10 beta; broad public self-serve still requires row-derived external-user evidence.
+- **Could we say controlled first-10 beta is unconditional GO because dashboards say GO?** No. The correct state is conditional GO while package/ops/watchdog gates remain green and the cap stays at 10 consented testers.
+- **Could we avoid fresh package proof by documenting a workaround?** No. First-user channels need clean wheel/PyPI-style testing and generated proof artifacts on the final head.
 - **Could local source tests prove PyPI users are safe?** No. The exact bug was invisible until clean wheel/PyPI-style channel testing.
 - **Could fresh stdio MCP prove served runtime?** No. Long-lived served processes can be stale in memory; they need runtime fingerprint and operator-approved cutover proof.
 - **Could generated proof dashboards be trusted if they are stale?** No. Stale proof artifacts are blockers, not evidence.
 - **Could external lift be claimed from internal or synthetic gates?** No. Lift requires consented external rows and a counterfactual evaluation.
 
-Bottom line: Borg now has a clear final path. The next real milestone is not broad production; it is a clean 3.3.15 GitHub/PyPI release with channel-complete first-user proof. After that, controlled first-10 beta can begin collecting real evidence. Broad public production remains blocked until those rows and served-runtime proof exist.
+Bottom line: Borg now has a clear final path. The next real milestone is PR #43 green on the exact final head plus constrained first-10 beta evidence collection. Broad public production remains blocked until those rows and served-runtime proof exist.

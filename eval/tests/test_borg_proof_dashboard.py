@@ -41,7 +41,7 @@ def test_borg_proof_dashboard_artifacts_exist_and_are_honest(tmp_path, monkeypat
     assert re.fullmatch(r"[0-9a-f]{40}(?:\+dirty)?", data["source_revision"])
     if data["metrics"]["pypi_fresh_install_canary"]["value"] == "PASS":
         assert data["metrics"]["pypi_fresh_install_canary"]["honesty_label"] == "PYPI_FRESH_INSTALL_CURRENT_VERSION"
-        assert data["controlled_first_10_beta"]["answer"] == "GO"
+        assert data["controlled_first_10_beta"]["answer"] == "CONDITIONAL GO"
         assert data["top_verdict"]["controlled_first_10_beta"]["verdict"] == "CONDITIONAL"
         assert "infrastructure and ops guardrails are green" in data["top_verdict"]["controlled_first_10_beta"]["why"]
     else:
@@ -79,7 +79,7 @@ def test_borg_proof_dashboard_artifacts_exist_and_are_honest(tmp_path, monkeypat
     assert "eval/self_service_ops_gate_snapshot.json" in status["evidence"]
     assert status["controlled_first_10_beta"]["verdict"] in {"NO-GO", "CONDITIONAL"}
     if status["controlled_first_10_beta"]["verdict"] == "CONDITIONAL":
-        assert "controlled first-10 beta GO" in status["state"]
+        assert "controlled first-10 beta CONDITIONAL GO while gates remain green" in status["state"]
         assert "source/local release-candidate only" not in status["state"]
         assert "infrastructure and ops guardrails are green" in value["detail"]
     else:

@@ -1,15 +1,15 @@
 # Borg public self-serve launch go/no-go
 
-Generated: 2026-05-29T21:35:11.179847+00:00
+Generated: 2026-05-30T18:59:46.464309+00:00
 Source version: `3.3.15`
 
 Public self-serve launch: **NO-GO**
-Controlled first-10 beta infrastructure: **GO**
+Controlled first-10 beta infrastructure: **CONDITIONAL GO while gates remain green**
 Max recommended real users now: **10**
 
 ## Hard rule
 
-Public self-serve is GO only after PyPI/fresh-install/MCP/docs/cold-start-trust/self-service-ops gates pass AND row-derived first-10 external-user evidence passes. Synthetic users and aggregate-only edits never count.
+Public self-serve is GO only after PyPI/fresh-install/MCP/docs/cold-start-trust/self-service-ops/watchdog gates pass AND row-derived first-10 external-user evidence passes. Synthetic users and aggregate-only edits never count.
 
 ## Gate results
 
@@ -18,6 +18,7 @@ Public self-serve is GO only after PyPI/fresh-install/MCP/docs/cold-start-trust/
 - `pypi_fresh_install_and_mcp_stdio`: `PASS`
 - `cold_start_trust_hardening`: `PASS`
 - `self_service_ops_readiness`: `PASS`
+- `ops_readiness_watchdog`: `PASS`
 - `docs_claim_guard`: `PASS`
 - `privacy_security_incident_pause`: `PASS`
 - `first_10_external_evidence`: `FAIL`

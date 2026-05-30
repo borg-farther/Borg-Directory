@@ -7,7 +7,7 @@
 
 Borg remains **CONTROLLED GO for supervised first-user beta only**.
 
-Borg is still **NO-GO for unattended Git onboarding** and **NO-GO for broad public launch** until real external-user evidence exists.
+Borg is still **NO-GO for unattended Git onboarding** and **NO-GO for broad public launch** until first-10 external-user evidence passes.
 
 The immediate blocker found in this pass was not a missing feature. It was a trust bug: live Borg guidance could inject confident-looking weak/synthetic pack advice (`bash-permission-denied`, later `git-merge-conflict`) into unrelated readiness/beta prompts. That violates the first-10 beta contract: weak matches must fail closed as `NO_CONFIDENT_MATCH`.
 
@@ -233,7 +233,7 @@ Those require executable runtime evidence after reload / fresh process invocatio
 
 1. Borg must never inject weak synthetic pack guidance into unrelated prompts.
 2. If Borg cannot prove relevance, output or treat as `NO_CONFIDENT_MATCH`.
-3. Readiness docs remain controlled-go only until real external-user evidence exists.
+3. Readiness docs remain controlled-go only until first-10 external-user evidence passes.
 4. Multiple runtime copies are a release risk; future fixes must patch/verify the actually loaded path, not only the canonical repo.
 5. The plugin must fail closed because it is the final prompt-injection boundary.
 

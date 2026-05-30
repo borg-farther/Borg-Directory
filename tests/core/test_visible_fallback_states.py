@@ -39,8 +39,10 @@ def test_rescue_matched_seed_result_exposes_local_seed_and_outcome_receipt_state
 
 def test_search_semantic_mode_reports_visible_lexical_fallback_and_seed_provenance(tmp_path, monkeypatch):
     monkeypatch.setenv("BORG_DIR", str(tmp_path / "guild"))
+    monkeypatch.setenv("BORG_HOME", str(tmp_path / "borg-home"))
     (tmp_path / "guild").mkdir(parents=True)
     monkeypatch.setattr(search, "_fetch_index", lambda: {"packs": []})
+    monkeypatch.setattr(search, "SemanticSearchEngine", None)
 
     payload = json.loads(search.borg_search("missing dependency", mode="semantic", include_seeds=True))
 
@@ -51,6 +53,79 @@ def test_search_semantic_mode_reports_visible_lexical_fallback_and_seed_provenan
     assert "SEMANTIC_SEARCH_LEXICAL_FALLBACK" in codes
     assert "LOCAL_SEED_NOT_COLLECTIVE_PROOF" in codes
     assert payload["provenance_notice"]["claim_boundary"] == "Search hits are routing hints, not proof of measured Borg lift."
+
+
+def test_search_semantic_text_only_side_path_still_merges_seed_provenance(tmp_path, monkeypatch):
+    monkeypatch.setenv("BORG_DIR", str(tmp_path / "guild"))
+    monkeypatch.setenv("BORG_HOME", str(tmp_path / "borg-home"))
+    (tmp_path / "guild").mkdir(parents=True)
+    monkeypatch.setattr(search, "_fetch_index", lambda: {"packs": []})
+
+    class DummyStore:
+        pass
+
+    class TextOnlySemanticEngine:
+        def __init__(self, store):
+            self.store = store
+
+        def search(self, query, top_k=50, mode="semantic"):
+            return [
+                {
+                    "id": "local-text-missing-dependency",
+                    "problem_class": "missing dependency",
+                    "tier": "local",
+                    "confidence": "unknown",
+                    "match_type": "text",
+                    "source": "local",
+                }
+            ]
+
+    monkeypatch.setattr(search, "AgentStore", DummyStore)
+    monkeypatch.setattr(search, "SemanticSearchEngine", TextOnlySemanticEngine)
+
+    payload = json.loads(search.borg_search("missing dependency", mode="semantic", include_seeds=True))
+
+    codes = _codes_from_payload(payload)
+    assert payload["effective_mode"] == "text"
+    assert "SEMANTIC_SEARCH_LEXICAL_FALLBACK" in codes
+    assert payload["source_mix"].get("local", 0) == 1
+    assert payload["source_mix"].get("seed", 0) >= 1
+    assert "LOCAL_SEED_NOT_COLLECTIVE_PROOF" not in codes
+    assert payload["provenance_notice"]["claim_boundary"] == "Search hits are routing hints, not proof of measured Borg lift."
+
+
+
+def test_search_semantic_trace_hit_does_not_hide_primary_lexical_fallback(tmp_path, monkeypatch):
+    monkeypatch.setenv("BORG_DIR", str(tmp_path / "guild"))
+    monkeypatch.setenv("BORG_HOME", str(tmp_path / "borg-home"))
+    (tmp_path / "guild").mkdir(parents=True)
+    monkeypatch.setattr(search, "_fetch_index", lambda: {"packs": []})
+    monkeypatch.setattr(search, "SemanticSearchEngine", None)
+
+    from borg.core import embeddings
+
+    def fake_semantic_trace(**kwargs):
+        return [
+            {
+                "id": "trace-sem-1",
+                "task_description": "missing dependency trace",
+                "outcome": "success",
+                "technology": "python",
+                "similarity": 0.9,
+            }
+        ]
+
+    monkeypatch.setattr(embeddings, "semantic_search", fake_semantic_trace)
+
+    payload = json.loads(search.borg_search("missing dependency", mode="semantic", include_seeds=True))
+
+    codes = _codes_from_payload(payload)
+    assert payload["effective_mode"] == "text"
+    assert "SEMANTIC_SEARCH_LEXICAL_FALLBACK" in codes
+    assert payload["source_mix"].get("trace", 0) == 1
+    assert payload["source_mix"].get("seed", 0) >= 1
+    assert "LOCAL_SEED_NOT_COLLECTIVE_PROOF" not in codes
+
 
 
 def test_search_legacy_remote_unknown_source_does_not_claim_seed_only(monkeypatch, tmp_path):

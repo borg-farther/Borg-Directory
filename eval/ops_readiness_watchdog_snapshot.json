@@ -2,7 +2,7 @@
   "blockers": [],
   "checks": {
     "cold_start_trust_current": {
-      "generated_at_utc": "2026-05-29T18:49:28.707750+00:00",
+      "generated_at_utc": "2026-05-30T08:46:07.173727+00:00",
       "passed": true
     },
     "public_blockers_allowed": {
@@ -28,11 +28,11 @@
       }
     },
     "public_json_dashboard_consistency": {
-      "dashboard_generated_at_utc": "2026-05-29T21:19:29Z",
-      "dashboard_source_revision": "a44eb2ce129f5e9fe3d06208dc063fc1dc25ba7b+dirty",
+      "dashboard_generated_at_utc": "2026-05-30T18:47:23Z",
+      "dashboard_source_revision": "02f04bad18cebbad2010dfd86721f4851ae19d8e+dirty",
       "passed": true,
-      "status_source_revision": "a44eb2ce129f5e9fe3d06208dc063fc1dc25ba7b+dirty",
-      "status_updated_at": "2026-05-29T21:19:29Z"
+      "status_source_revision": "02f04bad18cebbad2010dfd86721f4851ae19d8e+dirty",
+      "status_updated_at": "2026-05-30T18:47:23Z"
     },
     "public_status_consistency": {
       "controlled_status_ok": true,
@@ -40,12 +40,12 @@
       "max_recommended_real_users_now": 10,
       "passed": true,
       "pre_package_status_ok": false,
-      "status_state": "NO-GO public self-serve; controlled first-10 beta GO",
+      "status_state": "NO-GO public self-serve; controlled first-10 beta CONDITIONAL GO while gates remain green",
       "verified_external_users": 0
     },
     "pypi_fresh_current": {
       "expected_version": "3.3.15",
-      "generated_at_utc": "2026-05-29T18:49:08Z",
+      "generated_at_utc": "2026-05-30T18:59:09Z",
       "passed": true,
       "pre_package_release_stage": false,
       "pypi_current": true,
@@ -72,39 +72,39 @@
     "snapshot_freshness": {
       "items": {
         "borg_proof_dashboard": {
-          "age_hours": 0.26182203388888886,
+          "age_hours": 0.20628718638888888,
           "passed": true
         },
         "cold_start_trust_gate_snapshot": {
-          "age_hours": 2.761903213888889,
+          "age_hours": 10.227350039444445,
           "passed": true
         },
         "public_impact_json": {
-          "age_hours": 0.26182203555555555,
+          "age_hours": 0.20628718777777777,
           "passed": true
         },
         "public_self_serve_launch_gate_snapshot": {
-          "age_hours": 0.00010540694444444444,
+          "age_hours": 0.20677091583333335,
           "passed": true
         },
         "public_status_json": {
-          "age_hours": 0.2618220344444444,
+          "age_hours": 0.20628718694444445,
           "passed": true
         },
         "public_value_json": {
-          "age_hours": 0.261822035,
+          "age_hours": 0.2062871875,
           "passed": true
         },
         "pypi_fresh_install_snapshot": {
-          "age_hours": 2.767655366111111,
+          "age_hours": 0.010176074444444445,
           "passed": true
         },
         "rollback_comms_drill_snapshot": {
-          "age_hours": 0.0037948894444444444,
+          "age_hours": 21.413260041944447,
           "passed": true
         },
         "self_service_ops_gate_snapshot": {
-          "age_hours": 7.879777777777777e-05,
+          "age_hours": 21.40954395,
           "passed": true
         }
       },
@@ -112,10 +112,10 @@
     },
     "source_revision_honesty": {
       "git_clean": false,
-      "head": "a44eb2ce129f5e9fe3d06208dc063fc1dc25ba7b",
+      "head": "02f04bad18cebbad2010dfd86721f4851ae19d8e",
       "passed": true,
       "policy": "Committed dashboards may be generated from a dirty tree and must mark +dirty; clean-tree status endpoints should match HEAD or a dirty ancestor used to generate committed proof artifacts.",
-      "source_revision": "a44eb2ce129f5e9fe3d06208dc063fc1dc25ba7b+dirty"
+      "source_revision": "02f04bad18cebbad2010dfd86721f4851ae19d8e+dirty"
     },
     "watchdog_workflow": {
       "exists": true,
@@ -125,7 +125,7 @@
     }
   },
   "gate_type": "ops_readiness_watchdog",
-  "generated_at_utc": "2026-05-29T21:35:11.626867+00:00",
+  "generated_at_utc": "2026-05-30T18:59:45.694210+00:00",
   "max_recommended_real_users_now": 10,
   "passed": true,
   "ready_for_controlled_first_10_beta": true,

@@ -8,7 +8,9 @@ never clobbers user-authored rule files.
 
 from __future__ import annotations
 
+from contextlib import contextmanager
 from datetime import datetime, timezone
+import errno
 import hashlib
 import hmac
 import json
@@ -16,8 +18,15 @@ import os
 from pathlib import Path
 import re
 import secrets
+import shutil
 import tempfile
+import time
 from typing import Any
+
+try:
+    import fcntl
+except ImportError:  # pragma: no cover - Windows fallback covered by directory lock branch
+    fcntl = None
 
 _HOST_LABELS = {
     "claude-code": "Claude Code",
@@ -131,43 +140,198 @@ def _atomic_write(path: Path, content: str) -> None:
                 pass
 
 
+def _read_hmac_key_file(key_path: Path) -> bytes:
+    value = key_path.read_text(encoding="utf-8").strip()
+    if not re.fullmatch(r"[a-f0-9]{64}", value):
+        raise ValueError("manifest hmac key is invalid")
+    return bytes.fromhex(value)
+
+
+@contextmanager
+def _exclusive_file_lock(lock_path: Path, label: str, *, timeout: float = 30.0):
+    _reject_existing_symlinks(lock_path, label)
+    lock_path.parent.mkdir(parents=True, exist_ok=True)
+    _reject_existing_symlinks(lock_path.parent, f"{label} parent")
+    if fcntl is not None:
+        flags = os.O_RDWR | os.O_CREAT
+        if hasattr(os, "O_NOFOLLOW"):
+            flags |= os.O_NOFOLLOW
+        try:
+            fd = os.open(os.fspath(lock_path), flags, 0o600)
+        except OSError as exc:
+            if exc.errno == errno.ELOOP:
+                raise ValueError(f"refusing {label} symlink path: {lock_path}") from exc
+            raise
+        handle = os.fdopen(fd, "r+", encoding="utf-8")
+        acquired = False
+        deadline = time.monotonic() + timeout
+        try:
+            while True:
+                try:
+                    fcntl.flock(handle.fileno(), fcntl.LOCK_EX | fcntl.LOCK_NB)
+                    acquired = True
+                    break
+                except BlockingIOError:
+                    if time.monotonic() > deadline:
+                        raise TimeoutError(f"timed out waiting for {label}: {lock_path}")
+                    time.sleep(0.05)
+            _reject_existing_symlinks(lock_path, label)
+            handle.seek(0)
+            handle.truncate()
+            handle.write(f"pid={os.getpid()} acquired_at={_utc_now()}\n")
+            handle.flush()
+            os.fsync(handle.fileno())
+            yield
+        finally:
+            try:
+                if acquired:
+                    fcntl.flock(handle.fileno(), fcntl.LOCK_UN)
+            finally:
+                handle.close()
+        return
+
+    # Best-effort cross-platform fallback when fcntl is unavailable. Directory
+    # creation is atomic; stale owner metadata prevents permanent lock bricking
+    # after a crashed process on fcntl-less platforms.
+    lock_dir = lock_path.with_name(f"{lock_path.name}.lockdir")
+    owner_file = lock_dir / "owner.json"
+    deadline = time.monotonic() + timeout
+    stale_after = max(timeout * 2, 60.0)
+    while True:
+        try:
+            lock_dir.mkdir()
+            owner_file.write_text(json.dumps({"pid": os.getpid(), "acquired_at": _utc_now()}, sort_keys=True) + "\n", encoding="utf-8")
+            break
+        except FileExistsError:
+            _reject_existing_symlinks(lock_dir, label)
+            stale = False
+            try:
+                age = time.time() - lock_dir.stat().st_mtime
+                if age > stale_after:
+                    pid = None
+                    try:
+                        owner = json.loads(owner_file.read_text(encoding="utf-8"))
+                        pid = int(owner.get("pid")) if owner.get("pid") is not None else None
+                    except Exception:
+                        pid = None
+                    if pid is None:
+                        stale = True
+                    else:
+                        try:
+                            os.kill(pid, 0)
+                        except OSError:
+                            stale = True
+            except OSError:
+                stale = False
+            if stale:
+                try:
+                    shutil.rmtree(lock_dir)
+                    continue
+                except OSError:
+                    pass
+            if time.monotonic() > deadline:
+                raise TimeoutError(f"timed out waiting for {label}: {lock_dir}")
+            time.sleep(0.05)
+    try:
+        yield
+    finally:
+        try:
+            shutil.rmtree(lock_dir)
+        except OSError:
+            pass
+
+
+@contextmanager
+def _manifest_write_lock(manifest: Path, *, enabled: bool = True):
+    """Serialize writes for a host manifest so concurrent installs cannot orphan blocks."""
+    if not enabled:
+        yield
+        return
+    lock_path = manifest.with_name(f".{manifest.name}.lock")
+    with _exclusive_file_lock(lock_path, "agent priming manifest lock"):
+        yield
+
+
+@contextmanager
+def _target_operation_lock(target: Path, *, enabled: bool = True):
+    """Serialize writes to a target file across Borg homes/profiles on this host."""
+    if not enabled:
+        yield
+        return
+    target_key = hashlib.sha256(os.path.abspath(os.fspath(target)).encode("utf-8", "ignore")).hexdigest()
+    uid = str(os.getuid()) if hasattr(os, "getuid") else "nouid"
+    lock_root = Path(tempfile.gettempdir()) / f"borg-agent-priming-target-locks-{uid}"
+    _reject_existing_symlinks(lock_root, "agent priming target lock root")
+    lock_root.mkdir(mode=0o700, parents=True, exist_ok=True)
+    try:
+        os.chmod(lock_root, 0o700)
+    except OSError:
+        pass
+    _reject_existing_symlinks(lock_root, "agent priming target lock root")
+    lock_path = lock_root / f"{target_key}.lock"
+    with _exclusive_file_lock(lock_path, "agent priming target lock"):
+        yield
+
+
+@contextmanager
+def _agent_priming_operation_lock(target: Path | None = None, *, enabled: bool = True):
+    """Serialize install/uninstall mutations across manifests, homes, and shared targets."""
+    if not enabled:
+        yield
+        return
+    from borg.core.dirs import get_borg_home
+
+    home_lock_path = get_borg_home() / "agent-priming" / ".locks" / "operation.lock"
+    if target is None:
+        with _exclusive_file_lock(home_lock_path, "agent priming operation lock"):
+            yield
+        return
+    # Target lock is independent of BORG_HOME so two profiles cannot overwrite a
+    # shared rules file while each holds a different home-scoped operation lock.
+    with _target_operation_lock(target, enabled=True):
+        with _exclusive_file_lock(home_lock_path, "agent priming operation lock"):
+            yield
+
+
 def _load_hmac_key(*, create: bool) -> bytes:
     key_path = _hmac_key_path()
     _reject_existing_symlinks(key_path, "manifest hmac key")
     if key_path.exists():
-        value = key_path.read_text(encoding="utf-8").strip()
-        if not re.fullmatch(r"[a-f0-9]{64}", value):
-            raise ValueError("manifest hmac key is invalid")
-        return bytes.fromhex(value)
+        return _read_hmac_key_file(key_path)
     if not create:
         raise ValueError("manifest hmac key missing")
-    key_path.parent.mkdir(parents=True, exist_ok=True)
-    _reject_existing_symlinks(key_path.parent, "manifest hmac key parent")
-    key = secrets.token_bytes(32)
-    fd = None
-    tmp_name = ""
-    try:
-        fd, tmp_name = tempfile.mkstemp(prefix=f".{key_path.name}.", suffix=".tmp", dir=str(key_path.parent))
-        os.chmod(tmp_name, 0o600)
-        with os.fdopen(fd, "w", encoding="utf-8") as handle:
-            fd = None
-            handle.write(key.hex() + "\n")
-            handle.flush()
-            os.fsync(handle.fileno())
-        os.replace(tmp_name, key_path)
-    finally:
-        if fd is not None:
-            os.close(fd)
-        if tmp_name:
-            try:
-                Path(tmp_name).unlink(missing_ok=True)
-            except OSError:
-                pass
-    try:
-        os.chmod(key_path, 0o600)
-    except OSError:
-        pass
-    return key
+    lock_path = key_path.with_name(f"{key_path.name}.lock")
+    with _exclusive_file_lock(lock_path, "manifest hmac key lock"):
+        _reject_existing_symlinks(key_path, "manifest hmac key")
+        if key_path.exists():
+            return _read_hmac_key_file(key_path)
+        key_path.parent.mkdir(parents=True, exist_ok=True)
+        _reject_existing_symlinks(key_path.parent, "manifest hmac key parent")
+        key = secrets.token_bytes(32)
+        fd = None
+        tmp_name = ""
+        try:
+            fd, tmp_name = tempfile.mkstemp(prefix=f".{key_path.name}.", suffix=".tmp", dir=str(key_path.parent))
+            os.chmod(tmp_name, 0o600)
+            with os.fdopen(fd, "w", encoding="utf-8") as handle:
+                fd = None
+                handle.write(key.hex() + "\n")
+                handle.flush()
+                os.fsync(handle.fileno())
+            os.replace(tmp_name, key_path)
+        finally:
+            if fd is not None:
+                os.close(fd)
+            if tmp_name:
+                try:
+                    Path(tmp_name).unlink(missing_ok=True)
+                except OSError:
+                    pass
+        try:
+            os.chmod(key_path, 0o600)
+        except OSError:
+            pass
+        return key
 
 
 def _canonical_manifest_payload(payload: dict[str, Any]) -> str:
@@ -239,9 +403,16 @@ def _validate_existing_manifest_for_install(
     *,
     host: str,
     target_file: Path,
-    install_id: str,
-    block: str,
-) -> None:
+    existing_text: str,
+) -> dict[str, Any]:
+    """Validate the *currently installed* manifest/block before reinstalling.
+
+    Reinstall can be an idempotent no-op or a legitimate managed-block update
+    after Borg's priming text changes.  Therefore the existing manifest must be
+    checked against the block currently in the target file, not against the new
+    candidate block that may replace it.  This keeps stale/tampered manifests
+    fail-closed while still allowing verified same-target updates.
+    """
     data = json.loads(manifest.read_text(encoding="utf-8"))
     if data.get("schema_version") != "1.0" or data.get("kind") != "borg_agent_priming_install_manifest":
         raise ValueError("invalid agent priming manifest")
@@ -252,10 +423,16 @@ def _validate_existing_manifest_for_install(
         raise ValueError("manifest path mismatch")
     if _as_path(data.get("target_file"), default=target_file) != target_file:
         raise ValueError("manifest target mismatch")
-    if data.get("install_id") != install_id:
-        raise ValueError("manifest install_id mismatch")
-    if data.get("managed_block_sha256") != _sha256_ref(block):
+
+    current_match = _find_host_block(existing_text, host)
+    if current_match is None:
+        raise ValueError("managed block not found; refusing to replace manifest for a possibly tampered target")
+    current_block = current_match.group(0)
+    if current_match.group("install_id") != data.get("install_id"):
+        raise ValueError("managed block install_id mismatch; refusing to replace a tampered block")
+    if data.get("managed_block_sha256") != _sha256_ref(current_block):
         raise ValueError("manifest managed block hash mismatch")
+    return data
 
 
 def _merge_managed_block(existing: str, host: str, block: str) -> tuple[str, bool, str]:
@@ -403,99 +580,120 @@ def install_agent_priming(
     prompt = candidate["prompt"]
     install_id = _install_id(normalized, target, prompt)
     block = _render_managed_block(normalized, prompt, install_id=install_id)
-    previous_text = target.read_text(encoding="utf-8") if target.exists() else ""
-    created_file = not target.exists()
-    installed_text, changed, status = _merge_managed_block(previous_text, normalized, block)
-    manifest_payload = _manifest_payload(
-        host=normalized,
-        target_file=target,
-        manifest_path=manifest,
-        prompt=prompt,
-        block=block,
-        install_id=install_id,
-        created_file=created_file,
-        previous_text=previous_text,
-        installed_text=installed_text,
-    )
-    states = [
-        _fallback_state(
-            "LOCAL_ONLY_INSTALL",
-            "Agent priming install is local and does not publish, pull, or globally promote Borg rules.",
-            next_step="review the managed block before relying on it in an agent host",
-        )
-    ]
-    if dry_run:
-        states.insert(0, _fallback_state("DRY_RUN_NO_WRITE", "Dry run only; target and manifest were not written."))
-    if previous_text and changed:
-        states.append(_fallback_state("USER_CONTENT_PRESERVED", "Existing user-authored file text is preserved; Borg edits only its managed block."))
 
-    validated_existing_manifest = False
-    key_path = _hmac_key_path()
-    hmac_key_preexisted = key_path.exists()
-    hmac_key_may_have_been_created = False
-    if not dry_run and not changed and manifest.exists():
-        _validate_existing_manifest_for_install(
-            manifest,
+    with _agent_priming_operation_lock(target=target, enabled=not dry_run):
+        # Re-read and recompute target state inside the operation lock. Otherwise
+        # concurrent installs/uninstalls can make changed/status stale and leave
+        # manifests pointing at missing or overwritten blocks.
+        _reject_existing_symlinks(target, "target")
+        _reject_existing_symlinks(manifest, "manifest")
+        previous_text = target.read_text(encoding="utf-8") if target.exists() else ""
+        created_file = not target.exists()
+        existing_host_block = _find_host_block(previous_text, normalized)
+        if existing_host_block is not None and not manifest.exists():
+            raise ValueError(
+                "managed block for host already exists but local manifest is missing; "
+                "refusing cross-profile adoption"
+            )
+        installed_text, changed, status = _merge_managed_block(previous_text, normalized, block)
+        manifest_payload = _manifest_payload(
             host=normalized,
             target_file=target,
-            install_id=install_id,
+            manifest_path=manifest,
+            prompt=prompt,
             block=block,
+            install_id=install_id,
+            created_file=created_file,
+            previous_text=previous_text,
+            installed_text=installed_text,
         )
-        manifest_payload = json.loads(manifest.read_text(encoding="utf-8"))
-        validated_existing_manifest = True
-    elif not dry_run:
-        manifest_payload = _attach_manifest_hmac(manifest_payload)
-        hmac_key_may_have_been_created = not hmac_key_preexisted
+        states = [
+            _fallback_state(
+                "LOCAL_ONLY_INSTALL",
+                "Agent priming install is local and does not publish, pull, or globally promote Borg rules.",
+                next_step="review the managed block before relying on it in an agent host",
+            )
+        ]
+        if dry_run:
+            states.insert(0, _fallback_state("DRY_RUN_NO_WRITE", "Dry run only; target and manifest were not written."))
+        if previous_text and changed:
+            states.append(_fallback_state("USER_CONTENT_PRESERVED", "Existing user-authored file text is preserved; Borg edits only its managed block."))
 
-    result = {
-        "success": True,
-        "schema_version": "1.0",
-        "operation": "install",
-        "status": status,
-        "host": normalized,
-        "dry_run": bool(dry_run),
-        "changed": bool(changed),
-        "created_file": bool(created_file),
-        "target_file": str(target),
-        "manifest_path": str(manifest),
-        "managed_block_sha256": _sha256_ref(block),
-        "prompt_sha256": manifest_payload["prompt_sha256"],
-        "fallback_states": states,
-        "manifest": manifest_payload,
-    }
-    if dry_run:
-        return result
+        with _manifest_write_lock(manifest, enabled=not dry_run):
+            validated_existing_manifest = False
+            key_path = _hmac_key_path()
+            hmac_key_preexisted = key_path.exists()
+            hmac_key_may_have_been_created = False
+            if manifest.exists():
+                # A default host manifest represents exactly one reversible install. Validate
+                # it before any target/HMAC mutation even when the requested target would
+                # otherwise append a new block; silently overwriting the manifest would
+                # orphan the previous target's managed block.
+                existing_manifest_payload = _validate_existing_manifest_for_install(
+                    manifest,
+                    host=normalized,
+                    target_file=target,
+                    existing_text=previous_text,
+                )
+                if not changed:
+                    manifest_payload = existing_manifest_payload
+                    validated_existing_manifest = True
+                elif not dry_run:
+                    manifest_payload = _attach_manifest_hmac(manifest_payload)
+                    hmac_key_may_have_been_created = not hmac_key_preexisted
+            elif not dry_run:
+                manifest_payload = _attach_manifest_hmac(manifest_payload)
+                hmac_key_may_have_been_created = not hmac_key_preexisted
 
-    if validated_existing_manifest:
-        return result
+            result = {
+                "success": True,
+                "schema_version": "1.0",
+                "operation": "install",
+                "status": status,
+                "host": normalized,
+                "dry_run": bool(dry_run),
+                "changed": bool(changed),
+                "created_file": bool(created_file),
+                "target_file": str(target),
+                "manifest_path": str(manifest),
+                "managed_block_sha256": _sha256_ref(block),
+                "prompt_sha256": manifest_payload["prompt_sha256"],
+                "fallback_states": states,
+                "manifest": manifest_payload,
+            }
+            if dry_run:
+                return result
 
-    wrote_target = False
-    try:
-        if changed:
-            _atomic_write(target, installed_text)
-            wrote_target = True
-        if changed or not manifest.exists():
-            _atomic_write(manifest, json.dumps(manifest_payload, indent=2, sort_keys=True, ensure_ascii=False) + "\n")
-    except Exception:
-        if wrote_target:
+            if validated_existing_manifest:
+                return result
+
+            wrote_target = False
             try:
-                if created_file:
-                    target.unlink(missing_ok=True)
-                else:
-                    _atomic_write(target, previous_text)
+                if changed:
+                    _atomic_write(target, installed_text)
+                    wrote_target = True
+                if changed or not manifest.exists():
+                    _atomic_write(manifest, json.dumps(manifest_payload, indent=2, sort_keys=True, ensure_ascii=False) + "\n")
             except Exception:
-                pass
-        if hmac_key_may_have_been_created and not hmac_key_preexisted:
-            try:
-                key_path.unlink(missing_ok=True)
-            except Exception:
-                pass
-            try:
-                key_path.parent.rmdir()
-            except OSError:
-                pass
-        raise
-    return result
+                if wrote_target:
+                    try:
+                        if created_file:
+                            target.unlink(missing_ok=True)
+                        else:
+                            _atomic_write(target, previous_text)
+                    except Exception:
+                        pass
+                if hmac_key_may_have_been_created and not hmac_key_preexisted:
+                    try:
+                        key_path.unlink(missing_ok=True)
+                    except Exception:
+                        pass
+                    try:
+                        key_path.parent.rmdir()
+                    except OSError:
+                        pass
+                raise
+            return result
 
 
 def uninstall_agent_priming(
@@ -508,94 +706,107 @@ def uninstall_agent_priming(
     """Remove only the Borg managed priming block described by the manifest."""
     normalized = _normalize_host(host)
     manifest = _as_path(manifest_path, default=_default_manifest_path(normalized))
-    _reject_existing_symlinks(manifest, "manifest")
-    if not manifest.exists():
-        raise FileNotFoundError(f"agent priming manifest not found: {manifest}")
-    data = json.loads(manifest.read_text(encoding="utf-8"))
-    if data.get("schema_version") != "1.0" or data.get("kind") != "borg_agent_priming_install_manifest":
-        raise ValueError("invalid agent priming manifest")
-    _verify_manifest_hmac(data)
-    if _normalize_host(str(data.get("host") or "")) != normalized:
-        raise ValueError("agent priming manifest host mismatch")
-    if _as_path(data.get("manifest_path"), default=manifest) != manifest:
-        raise ValueError("agent priming manifest path mismatch")
-    target = _as_path(data.get("target_file"), default=_default_target_path(normalized))
-    if target_file is not None:
-        expected_target = _as_path(target_file, default=target)
-        if expected_target != target:
-            raise ValueError("target file mismatch: manifest points at a different file")
-    if target == manifest:
-        raise ValueError("manifest path must differ from target file")
-    _reject_existing_symlinks(target, "target")
-    previous_text = target.read_text(encoding="utf-8") if target.exists() else ""
-    _assert_no_malformed_managed_markers(previous_text)
-    match = _find_host_block(previous_text, normalized)
-    if not match:
-        if target.exists():
-            raise ValueError("managed block not found; refusing to remove manifest for a possibly tampered target")
-        changed = False
-        status = "already_uninstalled"
-        new_text = previous_text
-    else:
-        block = match.group(0)
-        if match.group("install_id") != data.get("install_id"):
-            raise ValueError("managed block install_id mismatch; refusing to remove a tampered block")
-        if _sha256_ref(block) != data.get("managed_block_sha256"):
-            raise ValueError("managed block hash mismatch; refusing to remove a tampered block")
-        new_text = previous_text[: match.start()] + previous_text[match.end() :]
-        changed = True
-        status = "removed_managed_block"
-    remove_target_file = bool(data.get("created_file") and not new_text.strip())
-    states = [
-        _fallback_state(
-            "MANIFEST_BACKED_UNINSTALL",
-            "Uninstall removes only the Borg managed block recorded in the manifest.",
-        )
-    ]
-    if dry_run:
-        states.insert(0, _fallback_state("DRY_RUN_NO_WRITE", "Dry run only; target and manifest were not modified."))
 
-    result = {
-        "success": True,
-        "schema_version": "1.0",
-        "operation": "uninstall",
-        "status": status,
-        "host": normalized,
-        "dry_run": bool(dry_run),
-        "changed": bool(changed),
-        "removed_target_file": bool(remove_target_file),
-        "target_file": str(target),
-        "manifest_path": str(manifest),
-        "fallback_states": states,
-    }
-    if dry_run:
-        return result
+    target_for_lock: Path | None = None
+    if not dry_run:
+        try:
+            _reject_existing_symlinks(manifest, "manifest")
+            if manifest.exists():
+                lock_data = json.loads(manifest.read_text(encoding="utf-8"))
+                if isinstance(lock_data, dict) and lock_data.get("target_file"):
+                    target_for_lock = _as_path(lock_data.get("target_file"), default=_default_target_path(normalized))
+        except Exception:
+            target_for_lock = None
 
-    target_existed_before = target.exists()
-    target_mutated = False
-    try:
-        if changed:
-            if remove_target_file:
-                target.unlink(missing_ok=True)
-            else:
-                _atomic_write(target, new_text)
-            target_mutated = True
-        manifest.unlink(missing_ok=True)
-    except Exception:
-        if target_mutated:
-            try:
-                if target_existed_before:
-                    _atomic_write(target, previous_text)
-                else:
+    with _agent_priming_operation_lock(target=target_for_lock, enabled=not dry_run):
+        _reject_existing_symlinks(manifest, "manifest")
+        if not manifest.exists():
+            raise FileNotFoundError(f"agent priming manifest not found: {manifest}")
+        data = json.loads(manifest.read_text(encoding="utf-8"))
+        if data.get("schema_version") != "1.0" or data.get("kind") != "borg_agent_priming_install_manifest":
+            raise ValueError("invalid agent priming manifest")
+        _verify_manifest_hmac(data)
+        if _normalize_host(str(data.get("host") or "")) != normalized:
+            raise ValueError("agent priming manifest host mismatch")
+        if _as_path(data.get("manifest_path"), default=manifest) != manifest:
+            raise ValueError("agent priming manifest path mismatch")
+        target = _as_path(data.get("target_file"), default=_default_target_path(normalized))
+        if target_file is not None:
+            expected_target = _as_path(target_file, default=target)
+            if expected_target != target:
+                raise ValueError("target file mismatch: manifest points at a different file")
+        if target == manifest:
+            raise ValueError("manifest path must differ from target file")
+        _reject_existing_symlinks(target, "target")
+        previous_text = target.read_text(encoding="utf-8") if target.exists() else ""
+        _assert_no_malformed_managed_markers(previous_text)
+        match = _find_host_block(previous_text, normalized)
+        if not match:
+            if target.exists():
+                raise ValueError("managed block not found; refusing to remove manifest for a possibly tampered target")
+            changed = False
+            status = "already_uninstalled"
+            new_text = previous_text
+        else:
+            block = match.group(0)
+            if match.group("install_id") != data.get("install_id"):
+                raise ValueError("managed block install_id mismatch; refusing to remove a tampered block")
+            if _sha256_ref(block) != data.get("managed_block_sha256"):
+                raise ValueError("managed block hash mismatch; refusing to remove a tampered block")
+            new_text = previous_text[: match.start()] + previous_text[match.end() :]
+            changed = True
+            status = "removed_managed_block"
+        remove_target_file = bool(data.get("created_file") and not new_text.strip())
+        states = [
+            _fallback_state(
+                "MANIFEST_BACKED_UNINSTALL",
+                "Uninstall removes only the Borg managed block recorded in the manifest.",
+            )
+        ]
+        if dry_run:
+            states.insert(0, _fallback_state("DRY_RUN_NO_WRITE", "Dry run only; target and manifest were not modified."))
+
+        result = {
+            "success": True,
+            "schema_version": "1.0",
+            "operation": "uninstall",
+            "status": status,
+            "host": normalized,
+            "dry_run": bool(dry_run),
+            "changed": bool(changed),
+            "removed_target_file": bool(remove_target_file),
+            "target_file": str(target),
+            "manifest_path": str(manifest),
+            "fallback_states": states,
+        }
+        if dry_run:
+            return result
+
+        target_existed_before = target.exists()
+        target_mutated = False
+        try:
+            if changed:
+                if remove_target_file:
                     target.unlink(missing_ok=True)
-            except Exception:
-                pass
-        raise
-    try:
-        manifest.parent.rmdir()
-    except OSError:
-        pass
-    return result
+                else:
+                    _atomic_write(target, new_text)
+                target_mutated = True
+            manifest.unlink(missing_ok=True)
+        except Exception:
+            if target_mutated:
+                try:
+                    if target_existed_before:
+                        _atomic_write(target, previous_text)
+                    else:
+                        target.unlink(missing_ok=True)
+                except Exception:
+                    pass
+            raise
+        try:
+            manifest.parent.rmdir()
+        except OSError:
+            pass
+        return result
 
 
 def render_agent_priming(host: str = "generic") -> str:

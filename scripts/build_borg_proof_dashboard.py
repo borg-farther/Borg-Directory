@@ -231,14 +231,15 @@ def build_model() -> dict:
         pypi_fresh_current
         and cold_start_trust_pass is True
         and self_service_ops_pass is True
+        and ops_watchdog_pass is True
         and local_release_candidate_ready
         and first10_privacy_security_incidents == 0
     )
     max_recommended_real_users = 100 if public_self_serve_pass is True else 10 if controlled_beta_ready else 0
     controlled_beta_why = (
-        "Controlled first-10 beta infrastructure and ops guardrails are green; keep broad launch blocked until row-derived external-user evidence passes."
+        "The 10-tester infrastructure and ops guardrails are green; broad launch remains NO-GO pending row-derived external-user evidence."
         if controlled_beta_ready
-        else "Controlled first-10 beta is blocked until the public package path and ops layer are green, and any first-10 privacy/security incidents are triaged: PyPI latest metadata, fresh-install canary, stdio MCP canary, cold-start trust gate, self-service ops gate, and docs guard must all pass."
+        else "Controlled first-10 beta is blocked until the public package path and ops layer are green, and any first-10 privacy/security incidents are triaged: PyPI latest metadata, fresh-install canary, stdio MCP canary, cold-start trust gate, self-service ops gate, ops watchdog, and docs guard must all pass."
     )
     verdicts = {
         "controlled_first_10_beta": {
@@ -247,7 +248,7 @@ def build_model() -> dict:
         },
         "local_release_candidate": {
             "verdict": "CONDITIONAL" if local_release_candidate_ready else "NO-GO",
-            "why": "Local source/wheel gates pass, but this does not authorize public beta without PyPI/latest/fresh-install proof." if local_release_candidate_ready else "Required local first-user/readiness gates are not all passing or are missing.",
+            "why": "Local source/wheel gates pass; PyPI package proof is green, but public self-serve still requires row-derived external-user evidence." if local_release_candidate_ready else "Required local first-user/readiness gates are not all passing or are missing.",
         },
         "unattended_git_onboarding": {
             "verdict": "NO-GO",
@@ -256,9 +257,13 @@ def build_model() -> dict:
         "broad_public_launch": {
             "verdict": "NO-GO" if public_self_serve_pass is not True else "GO",
             "why": (
-                "Public self-serve gate is blocked only by row-derived first-10 external-user evidence; PyPI/latest/fresh-install/MCP/docs/cold-start-trust/self-service-ops gates are green."
-                if pypi_fresh_current and cold_start_trust_pass is True and self_service_ops_pass is True and public_self_serve_pass is not True
-                else "Public self-serve gate is blocked until PyPI latest/fresh-install/MCP/docs/cold-start-trust/self-service-ops gates pass and first-10 external evidence exists."
+                "Public self-serve gate is blocked only by row-derived first-10 external-user evidence; PyPI/latest/fresh-install/MCP/docs/cold-start-trust/self-service-ops/ops-watchdog gates are green."
+                if pypi_fresh_current
+                and cold_start_trust_pass is True
+                and self_service_ops_pass is True
+                and ops_watchdog_pass is True
+                and public_self_serve_pass is not True
+                else "Public self-serve gate is blocked until PyPI latest/fresh-install/MCP/docs/cold-start-trust/self-service-ops/ops-watchdog gates pass and first-10 external evidence exists."
             ) if public_self_serve_pass is not True else "Public self-serve gate has passed with row-derived external evidence.",
         },
     }
@@ -406,9 +411,9 @@ def build_model() -> dict:
         "source_revision": commit,
         "top_verdict": verdicts,
         "controlled_first_10_beta": {
-            "answer": "GO" if controlled_beta_ready else "NO-GO",
+            "answer": "CONDITIONAL GO" if controlled_beta_ready else "NO-GO",
             "conditions": [
-                "Controlled testers only." if controlled_beta_ready else "Do not invite controlled beta users until PyPI latest, fresh-install, stdio MCP, cold-start trust, self-service ops, and watchdog gates are green.",
+                "Controlled testers only while gates remain green." if controlled_beta_ready else "Do not invite controlled beta users until PyPI latest, fresh-install, stdio MCP, cold-start trust, self-service ops, and watchdog gates are green.",
                 "Do not present as unattended public launch ready.",
                 "Capture real first-user outcome evidence immediately." if controlled_beta_ready else "Keep first-10 evidence capture prepared, but blocked until package/ops evidence is green.",
             ],
@@ -529,7 +534,7 @@ def build_public_payloads(model: dict) -> tuple[dict, dict, dict]:
         public_state = "GO public self-serve"
         value_detail = "Public self-serve launch gate is green with row-derived external-user evidence."
     elif controlled_is_green:
-        public_state = "NO-GO public self-serve; controlled first-10 beta GO"
+        public_state = "NO-GO public self-serve; controlled first-10 beta CONDITIONAL GO while gates remain green"
         value_detail = "Controlled first-10 public-package beta infrastructure and ops guardrails are green; public self-serve remains blocked until row-derived first-10 external-user evidence passes."
     else:
         public_state = "NO-GO public self-serve; source/local release-candidate only"
