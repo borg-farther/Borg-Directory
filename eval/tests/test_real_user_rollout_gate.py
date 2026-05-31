@@ -99,6 +99,28 @@ def test_real_user_rollout_gate_blocks_controlled_beta_when_public_package_path_
     assert "PyPI latest/fresh-install package evidence is not green" in snapshot["blockers"]
 
 
+def test_real_user_rollout_package_gate_names_same_version_pypi_drift(monkeypatch) -> None:
+    monkeypatch.setattr(rollout_gate, "_version_consistent", lambda: {"project_version": "9.9.9"})
+    monkeypatch.setattr(
+        rollout_gate.public_gate,
+        "pypi_latest_check",
+        lambda version, fetch_network=True: {
+            "passed": False,
+            "source_upload_alignment": {"failure_kind": "same_version_pypi_upload_predates_source_revision"},
+        },
+    )
+    monkeypatch.setattr(
+        rollout_gate.public_gate,
+        "pypi_fresh_install_check",
+        lambda path, version: {"passed": True},
+    )
+
+    result = rollout_gate._public_package_ready()
+
+    assert result["passed"] is False
+    assert "PyPI latest/fresh-install package evidence is not green: same-version PyPI upload predates current source revision" in result["blockers"]
+
+
 def test_real_user_rollout_gate_blocks_controlled_beta_when_release_controls_fail(monkeypatch) -> None:
     monkeypatch.setattr(rollout_gate, "_version_consistent", lambda: {"passed": True})
     monkeypatch.setattr(rollout_gate, "_security_ready", lambda: {"passed": True, "missing": []})

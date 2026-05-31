@@ -324,13 +324,13 @@ Why: agents often do not discover optional tools unless explicitly primed.
 
 ## 5. What is ready now
 
-`agent-borg==3.3.15` is **published and canaried** for package/local stdio use, but it is **not currently cleared for controlled first-10 beta**. The package path is green; release controls are not: the served runtime fingerprint is stale and GitHub `main` is not protected in the captured governance snapshot. PR branches still need their own green checks and post-merge `main` proof refresh before branch-specific changes are claimed on `main`.
+`agent-borg==3.3.15` is published, and the older package/local stdio canary exists, but it is **not current for this source revision**. The latest PyPI release upload predates the current source hardening revision, so package proof is red until a new immutable version is published and freshly canaried. Release controls are also red: the served runtime fingerprint is stale and GitHub `main` is not protected in the captured governance snapshot. PR branches still need their own green checks and post-merge `main` proof refresh before branch-specific changes are claimed on `main`.
 
-- Install, CLI, Python API, and MCP entrypoints are present and canaried for the package path.
+- Install, CLI, Python API, and MCP entrypoints are present, but the currently published package is stale relative to source.
 - First-user rescue path returns ACTION / STOP / VERIFY or `NO_CONFIDENT_MATCH`.
 - Security/privacy/prompt-injection surface: PASS in CI/local gates.
 - Generated rules and OpenClaw export are covered by first-user/package gates.
-- PyPI latest is proven current for `agent-borg==3.3.15`; controlled first-10 testers must **not** be invited until served-runtime freshness, release governance, ops/watchdog, and proof dashboards are all green. Current cap: 0.
+- PyPI latest is **not proven current** for the current source revision; controlled first-10 testers must **not** be invited until a new immutable package version, served-runtime freshness, release governance, ops/watchdog, and proof dashboards are all green. Current cap: 0.
 - Self-service ops guardrails are present: bad-answer intake, install/MCP support intake, first-10 evidence intake, support/SLA, rollback/comms dry-run, and watchdog workflow.
 - First-10 beta contract is published: [`docs/FIRST_10_BETA_READINESS.md`](https://github.com/borg-farther/Borg-Directory/blob/main/docs/FIRST_10_BETA_READINESS.md).
 

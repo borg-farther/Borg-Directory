@@ -420,6 +420,29 @@ def test_docs_claim_guard_blocks_known_package_beta_contradictions(tmp_path: Pat
     assert "controlled beta invites-may-start before PyPI canary" in kinds
 
 
+def test_docs_claim_guard_allows_explicit_same_version_drift_blocker_before_canary(tmp_path: Path, monkeypatch) -> None:
+    monkeypatch.setattr(gate, "ROOT", tmp_path)
+    doc = tmp_path / "docs" / "READINESS.md"
+    doc.parent.mkdir()
+    doc.write_text(
+        "Local first-user gate is green for source `agent-borg==9.9.9`. "
+        "PyPI latest/fresh-install/stdio MCP proof is not current for this source revision.\n"
+        "decision: package proof is not current for `agent-borg==9.9.9`; "
+        "controlled first-10 beta must wait for a new immutable package version.\n",
+        encoding="utf-8",
+    )
+
+    result = gate.docs_claim_guard(
+        [Path("docs/READINESS.md")],
+        "9.9.9",
+        public_evidence_ready=False,
+        package_evidence_ready=False,
+    )
+
+    assert result["passed"] is True
+    assert result["violations"] == []
+
+
 def test_pypi_latest_check_requires_source_version_and_urls() -> None:
     result = gate.pypi_latest_check(
         "9.9.9",
@@ -447,6 +470,33 @@ def test_pypi_latest_check_requires_source_version_and_urls() -> None:
         pypi_data={"package": "agent-borg", "version": "9.9.8", "project_urls": {}},
     )
     assert stale["passed"] is False
+
+
+def test_pypi_latest_check_fails_when_same_version_upload_predates_source_revision(monkeypatch) -> None:
+    monkeypatch.setattr(
+        gate,
+        "source_revision_state",
+        lambda: {
+            "revision": "abcdef1234567890abcdef1234567890abcdef12",
+            "commit_time_utc": "2026-05-31T10:27:07+00:00",
+        },
+    )
+
+    result = gate.pypi_latest_check(
+        "9.9.9",
+        fetch_network=False,
+        pypi_data=_pypi_fixture() | {
+            "release_files": [
+                {"filename": "agent_borg-9.9.9-py3-none-any.whl", "upload_time_iso_8601": "2026-05-28T17:50:29.231332+00:00"},
+                {"filename": "agent_borg-9.9.9.tar.gz", "upload_time_iso_8601": "2026-05-28T17:50:31.032755+00:00"},
+            ],
+        },
+    )
+
+    assert result["passed"] is False
+    assert result["source_upload_alignment"]["passed"] is False
+    assert result["source_upload_alignment"]["failure_kind"] == "same_version_pypi_upload_predates_source_revision"
+    assert "PyPI release upload predates current source revision" in result["source_upload_alignment"]["detail"]
 
 
 def test_first_10_issue_form_not_measured_basis_does_not_invalidate_unmeasured_rows() -> None:

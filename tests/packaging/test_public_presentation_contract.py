@@ -77,7 +77,7 @@ def test_runtime_distribution_drafts_do_not_pin_stale_borg_versions() -> None:
     assert "13 built-in tools" not in smithery
 
 
-def test_current_docs_preserve_3315_controlled_package_truth() -> None:
+def test_current_docs_preserve_same_version_artifact_drift_truth() -> None:
     watched = {
         "README.md": read("README.md"),
         "CHANGELOG.md": read("CHANGELOG.md"),
@@ -100,7 +100,6 @@ def test_current_docs_preserve_3315_controlled_package_truth() -> None:
         "BORG_338_RELEASE_PREFLIGHT",
         "BORG_339_RELEASE_PREFLIGHT",
         "release_preflight_3_3_8",
-        "fresh-install/stdout MCP",
         "guild-packs 2.1.1",
         "guildpacks CLI",
         "guild_observe",
@@ -118,9 +117,11 @@ def test_current_docs_preserve_3315_controlled_package_truth() -> None:
         for phrase in stale_or_unsupported:
             assert phrase not in text, f"{path} still contains stale/unsupported phrase: {phrase}"
 
-    assert "agent-borg==3.3.15` is published on PyPI" in watched["README.md"]
+    assert "The latest PyPI release upload predates the current source hardening revision" in watched["README.md"]
+    assert "package proof is red until a new immutable version is published" in watched["README.md"]
     assert "Broad public self-serve launch, 100-user rollout, served/remote MCP, and measured external lift are **not claimed**" in watched["README.md"]
     assert "Controlled first-10 beta: **NO-GO right now**" in watched["docs/READINESS.md"]
+    assert "package proof is stale until a new immutable version" in watched["docs/READINESS.md"]
     assert "served runtime fingerprint is stale" in watched["docs/READINESS.md"]
     assert "GitHub `main` is unprotected" in watched["docs/READINESS.md"]
     assert "Public self-serve launch: **NO-GO until first-10 external-user evidence passes**" in watched["docs/READINESS.md"]

@@ -4,7 +4,7 @@ Generated: 2026-05-14 18:39 UTC
 
 ## Current state
 
-Borg's controlled first-10 package path is **GO for package-level evidence capture** on `agent-borg==3.3.15` after GitHub main, PyPI latest, fresh-install, stdio MCP, generated-rules/OpenClaw, cold-start trust, self-service ops, watchdog, docs guard, proof dashboards, and GitHub CI/security evidence went green for that release. New hardening PRs must still pass their own CI before merge.
+Borg's controlled first-10 package path is **NO-GO for the current source revision**. `agent-borg==3.3.15` previously had package-level evidence, but the PyPI upload now predates the latest source hardening merge; a new immutable version plus fresh package canaries is required before package-level evidence capture resumes. New hardening PRs must still pass their own CI before merge.
 
 Public self-serve launch remains **NO-GO** until row-derived first-10 external-user evidence passes. Served remote MCP remains a separate runtime cutover/canary channel, not proven by the PyPI stdio release.
 
@@ -65,7 +65,7 @@ Prior 3.3.10 proof lives in:
 - `docs/20260522_BORG_3310_RELEASE_PREFLIGHT_PUBLISHED.md` (historical)
 - `eval/pypi_fresh_install_snapshot.json` (current exact-version package canary)
 
-Current package path status: `agent-borg==3.3.15` is published and canaried for controlled first-10 package beta. Controlled first-10 may run under the 10-tester cap while package/proof gates remain green; broad public self-serve remains NO-GO until row-derived first-10 evidence passes.
+Current package path status: `agent-borg==3.3.15` is published but stale for the current source revision because the upload predates the latest hardening merge. Controlled first-10 is capped at 0 until a new immutable package version is published, freshly canaried, and release controls pass; broad public self-serve remains NO-GO until row-derived first-10 evidence passes.
 
 ### Phase C — first-10 user sprint
 

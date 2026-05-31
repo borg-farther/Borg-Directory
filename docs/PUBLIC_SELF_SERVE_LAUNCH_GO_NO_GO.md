@@ -1,6 +1,6 @@
 # Borg public self-serve launch go/no-go
 
-Generated: 2026-05-31T10:10:59.009036+00:00
+Generated: 2026-05-31T14:16:32.398818+00:00
 Source version: `3.3.15`
 
 Public self-serve launch: **NO-GO**
@@ -14,7 +14,7 @@ Public self-serve is GO only after PyPI/fresh-install/MCP/docs/cold-start-trust/
 ## Gate results
 
 - `first_user_release`: `PASS`
-- `pypi_latest`: `PASS`
+- `pypi_latest`: `FAIL`
 - `pypi_fresh_install_and_mcp_stdio`: `PASS`
 - `cold_start_trust_hardening`: `PASS`
 - `served_runtime_freshness`: `FAIL`
@@ -27,6 +27,7 @@ Public self-serve is GO only after PyPI/fresh-install/MCP/docs/cold-start-trust/
 
 ## Blockers
 
+- PyPI latest metadata is stale: same-version release upload predates current source revision
 - served runtime borg_version '3.3.14' != source version '3.3.15'
 - served runtime version_matches_source is not true
 - served runtime reload_status is not loaded_code_matches_source_behavior

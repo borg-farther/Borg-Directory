@@ -2,12 +2,14 @@
   "board_name": "borg_production_inventory_board",
   "components": [
     {
-      "assumption_challenge": "A clean PyPI canary proves installed package behavior, not this dirty hardening branch or a long-lived served process.",
+      "assumption_challenge": "A clean PyPI canary proves installed package behavior, not source revisions that landed after the wheel upload or a long-lived served process.",
       "blockers": [
+        "PyPI same-version release upload predates current source revision",
         "working tree is dirty/unshipped; current hardening branch is not committed/pushed/CI-proven"
       ],
       "done": [
         "source versions match: True (3.3.15)",
+        "PyPI latest metadata/current-source gate green: False",
         "PyPI fresh-install/stdout MCP canary green: True",
         "first-user release gate green: True"
       ],
@@ -19,6 +21,7 @@
       "id": "source_package_cli_stdio",
       "name": "source, PyPI package, CLI, generated rules, and local stdio MCP",
       "outstanding": [
+        "publish a new immutable version when source is ahead of PyPI",
         "rerun full proof on the final branch head",
         "commit/push and watch CI before claiming shipped"
       ],
@@ -351,6 +354,7 @@
     "overall_optimality_ceiling": 2.0,
     "pack_optimizer_manual_go": true,
     "pypi_fresh_install_passed": true,
+    "pypi_latest_metadata_current_source_passed": false,
     "release_governance_passed": false,
     "rollback_drill_passed": true,
     "self_service_ops_passed": true,
@@ -364,7 +368,7 @@
     "Could synthetic load tests stand in for users? No: first-10 row-derived evidence is 0/10 and explicitly blocks public/100-user claims.",
     "Could a dashboard hide these blockers? It must not; stale generated artifacts are themselves blockers until rebuilt from current gates."
   ],
-  "generated_at_utc": "2026-05-31T10:10:59Z",
+  "generated_at_utc": "2026-05-31T14:17:54Z",
   "outstanding": [
     {
       "acceptance": [
@@ -483,34 +487,21 @@
   "schema_version": 1,
   "source": {
     "git": {
-      "branch": "hardening/god-tier-safety-release",
-      "commit": "b7d9aa6029225867e5109a747349e97c6036dd1f",
+      "branch": "main",
+      "commit": "ffccdd04b53ef85cf46903764e426cbda2d90752",
       "dirty": true,
       "dirty_files": [
-        "M .github/workflows/self-service-watchdog.yml",
-        " M AGENTS.md",
+        "M AGENTS.md",
         " M README.md",
-        " M SUPPORT.md",
-        " M borg/core/embeddings.py",
-        " M borg/core/generator.py",
-        " M borg/core/safety.py",
-        " M borg/core/search.py",
-        " M borg/integrations/http_server.py",
-        " M borg/integrations/mcp_server.py",
+        " M docs/20260514_PUBLIC_SELF_SERVE_LAUNCH_CLOSURE_PLAN.md",
         " M docs/20260517_BORG_100_REAL_USER_READINESS.md",
-        " M docs/20260522_BORG_PRODUCTION_DAY_ONE_HARDENING_PLAN.md",
+        " M docs/20260526_7_USER_CONTROLLED_LAUNCH_AND_100_USER_STAGE_GATES.md",
         " M docs/20260528_BORG_PRODUCTION_READY_FINAL_TODO.md",
+        " M docs/20260531_BORG_PRODUCTION_INVENTORY_BOARD.md",
         " M docs/BORG_PROOF_DASHBOARD.html",
         " M docs/BORG_PROOF_DASHBOARD.md",
-        " M docs/CHANNELS_AND_INSTALL_METHODS.md",
-        " M docs/COLD_START_TRUST_HARDENING.md",
-        " M docs/FIRST_10_BETA_READINESS.md",
         " M docs/PUBLIC_SELF_SERVE_LAUNCH_GO_NO_GO.md",
         " M docs/READINESS.md",
-        " M docs/README.md",
-        " M docs/ROADMAP.md",
-        " M docs/SELF_SERVICE_OPS_READINESS_REPORT.md",
-        " M docs/TRYING_BORG.md",
         " M docs/VALUE_COMMUNICATION_DASHBOARD.html",
         " M docs/VALUE_COMMUNICATION_DASHBOARD.md",
         " M docs/public/impact/impact.json",
@@ -518,46 +509,22 @@
         " M docs/public/status.json",
         " M docs/public/value.json",
         " M eval/borg_proof_dashboard.json",
-        " M eval/cold_start_trust_gate_snapshot.json",
-        " M eval/collective_intelligence_loop_gate.json",
-        " M eval/federated_learning_gate_snapshot.json",
-        " M eval/federated_learning_optimality_audit.json",
-        " M eval/gate_run_snapshot.json",
-        " M eval/load_1000_snapshot.json",
-        " M eval/load_100_snapshot.json",
-        " M eval/load_10_snapshot.json",
         " M eval/ops_readiness_watchdog.py",
         " M eval/ops_readiness_watchdog_snapshot.json",
+        " M eval/production_inventory_board.py",
+        " M eval/production_inventory_board_snapshot.json",
         " M eval/public_self_serve_launch_gate.py",
         " M eval/public_self_serve_launch_gate_snapshot.json",
         " M eval/real_user_rollout_gate.py",
         " M eval/real_user_rollout_gate_snapshot.json",
-        " M eval/rollback_comms_drill_snapshot.json",
-        " M eval/run_pypi_fresh_install_canary.py",
-        " M eval/self_service_ops_gate_snapshot.json",
         " M eval/tests/test_borg_proof_dashboard.py",
+        " M eval/tests/test_production_inventory_board.py",
         " M eval/tests/test_real_user_rollout_gate.py",
-        " M eval/uat_scoreboard_snapshot.json",
+        " M llms.txt",
         " M scripts/build_borg_proof_dashboard.py",
-        " M tests/core/test_generator.py",
-        " M tests/core/test_search.py",
-        " M tests/mcp/test_http_server_security.py",
-        " M tests/mcp/test_mcp_server_extended.py",
-        " M tests/packaging/test_embeddings_schema_compat.py",
         " M tests/packaging/test_public_presentation_contract.py",
         " M tests/readiness/test_ops_readiness_watchdog.py",
-        " M tests/readiness/test_public_self_serve_launch_gate.py",
-        " M tests/security/test_safety.py",
-        "?? docs/20260531_BORG_PRODUCTION_INVENTORY_BOARD.md",
-        "?? eval/production_inventory_board.py",
-        "?? eval/production_inventory_board_snapshot.json",
-        "?? eval/release_governance_gate.py",
-        "?? eval/release_governance_snapshot.json",
-        "?? eval/served_runtime_fingerprint_snapshot.json",
-        "?? eval/served_runtime_gate.py",
-        "?? eval/tests/test_production_inventory_board.py",
-        "?? eval/tests/test_release_governance_gate.py",
-        "?? eval/tests/test_served_runtime_gate.py"
+        " M tests/readiness/test_public_self_serve_launch_gate.py"
       ],
       "remote": [
         "origin\thttps://github.com/borg-farther/Borg-Directory.git (fetch)",
@@ -593,12 +560,12 @@
     "google_tier_external_lift": "NO_GO",
     "hundred_real_users": "NO_GO",
     "public_self_serve": "NO_GO",
-    "published_package_local_stdio": "CONDITIONAL_GO",
+    "published_package_local_stdio": "NO_GO",
     "recursive_collective_learning_mechanism": "GO_INTERNAL_ONLY",
     "recursive_pack_optimizer": "GO_INTERNAL_MANUAL_ONLY",
     "remote_mcp_distribution": "NO_GO",
     "served_remote_mcp": "NO_GO",
     "served_runtime_freshness": "NO_GO",
-    "source_package_local_stdio": "IN_PROGRESS"
+    "source_package_local_stdio": "NO_GO"
   }
 }

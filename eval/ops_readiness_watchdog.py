@@ -174,8 +174,8 @@ def _is_pre_package_release_stage(live_public: dict[str, Any], live_real: dict[s
         and _has_package_release_gap(real_blockers)
         and _has_first_10_gap(public_blockers)
         and _has_first_10_gap(real_blockers)
-        and _public_blockers_are_allowed(public_blockers, "package_or_first_10_evidence")
-        and _public_blockers_are_allowed(real_blockers, "package_or_first_10_evidence")
+        and _public_blockers_are_allowed(public_blockers, "release_controls_or_first_10_evidence")
+        and _public_blockers_are_allowed(real_blockers, "release_controls_or_first_10_evidence")
     )
 
 
@@ -214,10 +214,12 @@ def compile_watchdog(*, max_snapshot_age_hours: float = 24.0, allow_public_block
     ops = self_service_ops_gate.compile_gate()
     workflow = _workflow_has_schedule()
 
+    live_pypi_latest = ((live_public.get("gates") or {}).get("pypi_latest") or {})
     pypi_current = bool(
         pypi.get("success") is True
         and pypi.get("version") == version
         and bool((pypi.get("mcp_stdio_canary") or {}).get("passed"))
+        and live_pypi_latest.get("passed") is True
     )
     pre_package_release_stage = _is_pre_package_release_stage(live_public, live_real, pypi_current)
     release_control_blocked_stage = _is_release_control_blocked_stage(live_public, live_real, pypi_current)
