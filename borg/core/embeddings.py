@@ -8,7 +8,6 @@ from __future__ import annotations
 import json
 import logging
 import os
-import pickle
 import sqlite3
 import threading
 import time
@@ -26,8 +25,13 @@ except ImportError:
 
 logger = logging.getLogger(__name__)
 
-EMBEDDING_CACHE_PATH = str(get_embedding_cache_path())
+_DEFAULT_EMBEDDING_CACHE_PATH = str(get_embedding_cache_path())
+EMBEDDING_CACHE_PATH = _DEFAULT_EMBEDDING_CACHE_PATH
 EMBEDDING_DIM = 384
+EMBEDDING_CACHE_SCHEMA_VERSION = 1
+MAX_EMBEDDING_CACHE_BYTES = 50 * 1024 * 1024
+MAX_EMBEDDING_CACHE_ENTRIES = 100_000
+MAX_EMBEDDING_CACHE_KEY_BYTES = 512
 
 _model = None
 _model_loaded = False
@@ -99,21 +103,106 @@ def _trace_to_text(trace: dict) -> Optional[str]:
     return '\n'.join(parts)
 
 
-def load_embedding_cache() -> dict:
+def _embedding_cache_path() -> Path:
+    """Return the current cache path, preserving test monkeypatch compatibility."""
+    if EMBEDDING_CACHE_PATH != _DEFAULT_EMBEDDING_CACHE_PATH:
+        return Path(EMBEDDING_CACHE_PATH)
+    return get_embedding_cache_path()
+
+
+def _coerce_embedding_vector(value: Any) -> Optional[Any]:
+    if not _NUMPY_AVAILABLE or np is None:
+        return None
     try:
-        if os.path.exists(EMBEDDING_CACHE_PATH):
-            with open(EMBEDDING_CACHE_PATH, 'rb') as f:
-                return pickle.load(f)
+        arr = np.asarray(value, dtype=np.float32)
+    except (TypeError, ValueError):
+        return None
+    if arr.shape != (EMBEDDING_DIM,):
+        return None
+    try:
+        if not bool(np.isfinite(arr).all()):
+            return None
+    except Exception:
+        return None
+    return arr
+
+
+def _serialize_embedding_vector(value: Any) -> Optional[List[float]]:
+    arr = _coerce_embedding_vector(value)
+    if arr is None:
+        return None
+    return [float(x) for x in arr.tolist()]
+
+
+def _valid_cache_key(key: Any) -> bool:
+    return isinstance(key, str) and 0 < len(key.encode("utf-8")) <= MAX_EMBEDDING_CACHE_KEY_BYTES
+
+
+def load_embedding_cache() -> dict:
+    path = _embedding_cache_path()
+    try:
+        if not path.exists():
+            return {}
+        if path.stat().st_size > MAX_EMBEDDING_CACHE_BYTES:
+            logger.warning("embeddings: cache load skipped; file exceeds safe size bound")
+            return {}
+        with path.open("r", encoding="utf-8") as f:
+            payload = json.load(f)
+    except (UnicodeDecodeError, json.JSONDecodeError) as e:
+        logger.warning(f"embeddings: cache is not safe JSON; ignoring legacy/corrupt cache: {e}")
+        return {}
     except Exception as e:
         logger.warning(f"embeddings: cache load failed: {e}")
-    return {}
+        return {}
+
+    if isinstance(payload, dict) and "embeddings" in payload:
+        raw_embeddings = payload.get("embeddings", {})
+        if payload.get("schema_version") != EMBEDDING_CACHE_SCHEMA_VERSION:
+            logger.warning("embeddings: cache schema version mismatch; ignoring cache")
+            return {}
+    elif isinstance(payload, dict):
+        # Backward-compatible safe JSON mapping, never pickle.
+        raw_embeddings = payload
+    else:
+        return {}
+
+    if not isinstance(raw_embeddings, dict) or len(raw_embeddings) > MAX_EMBEDDING_CACHE_ENTRIES:
+        return {}
+
+    cache = {}
+    for trace_id, vector in raw_embeddings.items():
+        if not _valid_cache_key(trace_id):
+            continue
+        arr = _coerce_embedding_vector(vector)
+        if arr is not None:
+            cache[trace_id] = arr
+    return cache
 
 
 def save_embedding_cache(cache: dict):
     try:
-        Path(EMBEDDING_CACHE_PATH).parent.mkdir(parents=True, exist_ok=True)
-        with open(EMBEDDING_CACHE_PATH, 'wb') as f:
-            pickle.dump(cache, f)
+        path = _embedding_cache_path()
+        path.parent.mkdir(parents=True, exist_ok=True)
+        embeddings = {}
+        for trace_id, vector in list(cache.items())[:MAX_EMBEDDING_CACHE_ENTRIES]:
+            if not _valid_cache_key(trace_id):
+                continue
+            serialized = _serialize_embedding_vector(vector)
+            if serialized is not None:
+                embeddings[trace_id] = serialized
+        payload = {
+            "schema_version": EMBEDDING_CACHE_SCHEMA_VERSION,
+            "embedding_dim": EMBEDDING_DIM,
+            "embeddings": embeddings,
+        }
+        tmp = path.with_name(f".{path.name}.tmp.{os.getpid()}")
+        with tmp.open("w", encoding="utf-8") as f:
+            json.dump(payload, f, separators=(",", ":"))
+        try:
+            os.chmod(tmp, 0o600)
+        except OSError:
+            pass
+        os.replace(tmp, path)
     except Exception as e:
         logger.warning(f"embeddings: cache save failed: {e}")
 

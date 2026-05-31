@@ -199,4 +199,4 @@ Before attempting technical fixes for errors, bugs, installs, configs, deploymen
 
 ## 7. Readiness boundary
 
-Borg's controlled first-10 public-package beta is conditional GO for `agent-borg==3.3.15` while PyPI latest, fresh-install, stdio MCP, cold-start trust, self-service ops, and watchdog gates remain green. Public self-serve launch readiness and agent-level success lift at statistical confidence remain NO-GO. See [`READINESS.md`](READINESS.md).
+Borg's `agent-borg==3.3.15` package/local stdio path is canaried, but controlled first-10 beta is currently NO-GO because served-runtime freshness and release-governance gates are red. Public self-serve launch readiness and agent-level success lift at statistical confidence remain NO-GO. See [`READINESS.md`](READINESS.md).

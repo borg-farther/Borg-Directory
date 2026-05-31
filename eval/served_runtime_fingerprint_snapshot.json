@@ -1,0 +1,117 @@
+{
+  "borg_dir": "/root/.borg/guild",
+  "borg_home": "/root/.borg",
+  "borg_version": "3.3.14",
+  "confidence_gate_canary": {
+    "passed": true,
+    "real_permission_positive_control_safe": true,
+    "stale_guidance_stripped": true,
+    "stale_permission_match": false,
+    "stale_permission_safe": false,
+    "synthetic_pack_safe": false
+  },
+  "cwd": "/root/.hermes/hermes-agent",
+  "executable": "/root/.hermes/hermes-agent/venv/bin/python3",
+  "loaded_function_hashes": {
+    "borg.core.confidence_gate.trace_match_is_confident": {
+      "argcount": 2,
+      "exists": true,
+      "firstlineno": 200,
+      "function": "trace_match_is_confident",
+      "module": "borg.core.confidence_gate",
+      "sha256": "1be4413b51e246e489cb06856d5b585958baef0f746acc339b74f70d291ccd85"
+    },
+    "borg.integrations.mcp_server._detect_technology": {
+      "argcount": 2,
+      "exists": true,
+      "firstlineno": 2479,
+      "function": "_detect_technology",
+      "module": "borg.integrations.mcp_server",
+      "sha256": "65682f6c199fba4081a2883f7db922fe21865d579156434821807c48b073b5cb"
+    },
+    "borg.integrations.mcp_server.borg_observe": {
+      "argcount": 5,
+      "exists": true,
+      "firstlineno": 3818,
+      "function": "borg_observe",
+      "module": "borg.integrations.mcp_server",
+      "sha256": "4e894045db9a0ee073cc12453e96f247b602d6969ed60ee5f303572c2c7bce7e"
+    }
+  },
+  "modules": {
+    "borg": {
+      "exists": true,
+      "mtime": 1779990226.1803412,
+      "mtime_iso_utc": "2026-05-28T17:43:46Z",
+      "path": "/root/hermes-workspace/borg/borg/__init__.py",
+      "sha256": "2a40b7e278285891a085a945b3a58251ab65ccf2df9de1a4099578df9012a911",
+      "size": 2796
+    },
+    "borg.core.confidence_gate": {
+      "exists": true,
+      "mtime": 1779788441.6747067,
+      "mtime_iso_utc": "2026-05-26T09:40:41Z",
+      "path": "/root/hermes-workspace/borg/borg/core/confidence_gate.py",
+      "sha256": "d49af128af42f25ce52f92c7ac6705eaf69be243bb1184fba452fe6cafc029cf",
+      "size": 12529
+    },
+    "borg.core.runtime_fingerprint": {
+      "exists": true,
+      "mtime": 1779728060.239144,
+      "mtime_iso_utc": "2026-05-25T16:54:20Z",
+      "path": "/root/hermes-workspace/borg/borg/core/runtime_fingerprint.py",
+      "sha256": "085714818e306dc34be78a1aaa31ef298388501217a31b34686d60eeaac8b32a",
+      "size": 11572
+    },
+    "borg.integrations.mcp_server": {
+      "exists": true,
+      "mtime": 1780182525.9173684,
+      "mtime_iso_utc": "2026-05-30T23:08:45Z",
+      "path": "/root/hermes-workspace/borg/borg/integrations/mcp_server.py",
+      "sha256": "e3f38bd1fa9b2c2df796b871ea1a5386e5628e2d61fdfeea2c907d925887cb2a",
+      "size": 168487
+    }
+  },
+  "observe_behavior_canary": {
+    "blockers": [],
+    "meta_detected_technology": "",
+    "meta_excerpt": "NO_CONFIDENT_MATCH (side-effect-safe helper canary; full stdio canary lives in eval/cold_start_trust_gate.py)",
+    "meta_prior_answer_permission_guidance_safe": false,
+    "meta_prompt_failed_closed": true,
+    "passed": true,
+    "permission_excerpt": "ACTION: concrete Permission denied prompt is eligible for permission-specific guidance.",
+    "permission_prompt_specific": true,
+    "side_effect_safe": true,
+    "synthetic_meta_guidance_safe": false
+  },
+  "paths": {
+    "atom_db_path": "/root/.borg/atoms.db",
+    "borg_dir": "/root/.borg/guild",
+    "borg_home": "/root/.borg",
+    "embedding_cache_path": "/root/.borg/embeddings.pkl",
+    "embedding_index_path": "/root/.borg/embeddings_index.pkl",
+    "failure_memory_dir": "/root/.borg/failures",
+    "guild_db_path": "/root/.borg/guild/guild.db",
+    "tenant_secret_path": "/root/.borg/tenant_secret",
+    "trace_db_path": "/root/.borg/traces.db",
+    "v3_db_path": "/root/.borg/borg_v3.db"
+  },
+  "pid": 697109,
+  "python": "3.11.15",
+  "reload_status": "reload_or_patch_required",
+  "schema_version": 1,
+  "source_version": "3.3.15",
+  "success": true,
+  "sys_path_head": [
+    "/root/.hermes/hermes-agent",
+    "/root/hermes-workspace/borg",
+    "/root/.local/share/uv/python/cpython-3.11.15-linux-x86_64-gnu/lib/python311.zip",
+    "/root/.local/share/uv/python/cpython-3.11.15-linux-x86_64-gnu/lib/python3.11",
+    "/root/.local/share/uv/python/cpython-3.11-linux-x86_64-gnu/lib/python3.11/lib-dynload",
+    "/root/.hermes/hermes-agent/venv/lib/python3.11/site-packages",
+    "__editable__.hermes_agent-0.14.0.finder.__path_hook__",
+    "/root/.hermes/hermes-agent/mini-swe-agent/src"
+  ],
+  "tool": "borg_runtime_fingerprint",
+  "version_matches_source": false
+}

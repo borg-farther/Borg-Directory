@@ -7,11 +7,11 @@
 **Remote `origin/main`:** not asserted by this branch-local todo
 **Source target version:** `agent-borg==3.3.15`
 **Published PyPI latest observed:** `agent-borg==3.3.15`
-**Current public-package verdict:** package/fresh-install/canary/proof-chain infrastructure is green for controlled first-10 beta use while gates remain green; broad public self-serve remains NO-GO until row-derived first-10 external-user evidence passes.
+**Current public-package verdict:** package/fresh-install/canary proof is green for `agent-borg==3.3.15`, but controlled first-10 beta is NO-GO until served-runtime freshness, release governance, ops/watchdog, and proof-dashboard gates are all green; broad public self-serve remains NO-GO until row-derived first-10 external-user evidence passes.
 
 ## Executive verdict
 
-Borg is **controlled first-10 beta CONDITIONAL GO while gates remain green for `agent-borg==3.3.15` package users**, but broad public self-serve remains **NO-GO** and the 100-real-user rollout remains **NO-GO**.
+Borg has **`agent-borg==3.3.15` package/local stdio proof green**, but controlled first-10 beta is currently **NO-GO** because release controls are red: the served runtime is stale and GitHub `main` is unprotected in the captured governance snapshot. Broad public self-serve remains **NO-GO** and the 100-real-user rollout remains **NO-GO**.
 
 Earlier channel-completeness bugs were fixed and shipped in `agent-borg==3.3.15`. The current PR #43 follow-up work is about keeping that proof chain honest while hardening rescue truth-boundaries, local priming install safety, and public/readiness documentation.
 
@@ -19,11 +19,11 @@ The honest current state is:
 
 - **Source/local 3.3.15 release candidate:** CONDITIONAL GO — local gate and regression proof must remain green for the final PR head.
 - **GitHub `main`:** not claimed by this branch-local todo until merge/post-merge proof refresh runs.
-- **Published PyPI:** CONDITIONAL GO — controlled first-10 beta only; `agent-borg==3.3.15` is published/canaried; broad self-serve is still blocked by first-10 external-user evidence.
+- **Published PyPI:** package/local stdio proof green for `agent-borg==3.3.15`; controlled first-10 beta is blocked until served-runtime freshness, release governance, ops/watchdog, and proof dashboards are all green.
 - **Local stdio MCP from current package/source:** CONDITIONAL GO while fresh-install/MCP/proof dashboards remain green for the exact version.
 - **Generated rules / OpenClaw path:** shipped in `3.3.15`; keep covered by first-user gates.
 - **Served/remote MCP production channel:** NO-GO until the actual served process is fingerprinted after operator-approved cutover.
-- **Controlled first-10 beta:** CONDITIONAL GO while package/fresh-install/stdio MCP/generated-rules/OpenClaw/cold-start trust/self-service ops/watchdog/proof-dashboard gates remain green and tester count stays capped at 10.
+- **Controlled first-10 beta:** NO-GO right now; tester cap is 0 until package/fresh-install/stdio MCP/generated-rules/OpenClaw/cold-start trust/self-service ops/watchdog/proof-dashboard, served-runtime freshness, and release-governance gates are all green.
 - **Broad public self-serve:** NO-GO until first-10 row-derived external evidence passes.
 - **100 real users:** NO-GO until first-10 evidence passes and the staged rollout gate raises the cap.
 - **Measured external lift / “Google-tier” product impact:** NO-GO until real external outcomes and counterfactual evaluation exist.
@@ -59,7 +59,7 @@ This todo is based on four independent evidence paths:
      - `eval/gate_run_snapshot.json`
      - `eval/cold_start_trust_gate_snapshot.json`
      - `eval/federated_learning_gate_snapshot.json`
-   - Current public status JSON should say `NO-GO public self-serve; controlled first-10 beta CONDITIONAL GO while gates remain green` when controlled-beta infrastructure is green; stale clean-source or stale-package revisions must fail the watchdog.
+   - Current public status JSON should say `NO-GO public self-serve; public package proof green, release controls blocked` while PyPI/package proof is green but served-runtime freshness or release governance is red. It should only say `controlled first-10 beta CONDITIONAL GO while gates remain green` after release controls and ops gates are green; stale clean-source or stale-package revisions must fail the watchdog.
 
 4. **Adversarial challenge review**
    - A green source gate can hide PyPI drift.

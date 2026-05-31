@@ -1,0 +1,99 @@
+{
+  "_links": {
+    "html": "https://github.com/borg-farther/Borg-Directory/tree/main",
+    "self": "https://api.github.com/repos/borg-farther/Borg-Directory/branches/main"
+  },
+  "commit": {
+    "author": {
+      "avatar_url": "https://avatars.githubusercontent.com/u/277816484?v=4",
+      "events_url": "https://api.github.com/users/borg-farther/events{/privacy}",
+      "followers_url": "https://api.github.com/users/borg-farther/followers",
+      "following_url": "https://api.github.com/users/borg-farther/following{/other_user}",
+      "gists_url": "https://api.github.com/users/borg-farther/gists{/gist_id}",
+      "gravatar_id": "",
+      "html_url": "https://github.com/borg-farther",
+      "id": 277816484,
+      "login": "borg-farther",
+      "node_id": "U_kgDOEI8kpA",
+      "organizations_url": "https://api.github.com/users/borg-farther/orgs",
+      "received_events_url": "https://api.github.com/users/borg-farther/received_events",
+      "repos_url": "https://api.github.com/users/borg-farther/repos",
+      "site_admin": false,
+      "starred_url": "https://api.github.com/users/borg-farther/starred{/owner}{/repo}",
+      "subscriptions_url": "https://api.github.com/users/borg-farther/subscriptions",
+      "type": "User",
+      "url": "https://api.github.com/users/borg-farther",
+      "user_view_type": "public"
+    },
+    "comments_url": "https://api.github.com/repos/borg-farther/Borg-Directory/commits/b7d9aa6029225867e5109a747349e97c6036dd1f/comments",
+    "commit": {
+      "author": {
+        "date": "2026-05-30T19:29:14Z",
+        "email": "admin@borg.directory",
+        "name": "borg-farther"
+      },
+      "comment_count": 0,
+      "committer": {
+        "date": "2026-05-30T19:29:14Z",
+        "email": "admin@borg.directory",
+        "name": "borg-farther"
+      },
+      "message": "chore: refresh proof dashboard after PR43 merge\n\n- refresh PyPI, first-user, public/rollout, watchdog, and dashboard snapshots on main\n\n- preserve source_revision as PR43 merge SHA + dirty for CI ancestry honesty\n\n- verified: post-merge full pytest 2470 passed; exact watchdog command passed",
+      "tree": {
+        "sha": "36e4fd56205f496a119b1217e608845302b826be",
+        "url": "https://api.github.com/repos/borg-farther/Borg-Directory/git/trees/36e4fd56205f496a119b1217e608845302b826be"
+      },
+      "url": "https://api.github.com/repos/borg-farther/Borg-Directory/git/commits/b7d9aa6029225867e5109a747349e97c6036dd1f",
+      "verification": {
+        "payload": null,
+        "reason": "unsigned",
+        "signature": null,
+        "verified": false,
+        "verified_at": null
+      }
+    },
+    "committer": {
+      "avatar_url": "https://avatars.githubusercontent.com/u/277816484?v=4",
+      "events_url": "https://api.github.com/users/borg-farther/events{/privacy}",
+      "followers_url": "https://api.github.com/users/borg-farther/followers",
+      "following_url": "https://api.github.com/users/borg-farther/following{/other_user}",
+      "gists_url": "https://api.github.com/users/borg-farther/gists{/gist_id}",
+      "gravatar_id": "",
+      "html_url": "https://github.com/borg-farther",
+      "id": 277816484,
+      "login": "borg-farther",
+      "node_id": "U_kgDOEI8kpA",
+      "organizations_url": "https://api.github.com/users/borg-farther/orgs",
+      "received_events_url": "https://api.github.com/users/borg-farther/received_events",
+      "repos_url": "https://api.github.com/users/borg-farther/repos",
+      "site_admin": false,
+      "starred_url": "https://api.github.com/users/borg-farther/starred{/owner}{/repo}",
+      "subscriptions_url": "https://api.github.com/users/borg-farther/subscriptions",
+      "type": "User",
+      "url": "https://api.github.com/users/borg-farther",
+      "user_view_type": "public"
+    },
+    "html_url": "https://github.com/borg-farther/Borg-Directory/commit/b7d9aa6029225867e5109a747349e97c6036dd1f",
+    "node_id": "C_kwDOSH0c2toAKGI3ZDlhYTYwMjkyMjU4NjdlNTEwOWE3NDczNDllOTdjNjAzNmRkMWY",
+    "parents": [
+      {
+        "html_url": "https://github.com/borg-farther/Borg-Directory/commit/71875bbc6e8b574d28549ac4e1d3ced50612ec85",
+        "sha": "71875bbc6e8b574d28549ac4e1d3ced50612ec85",
+        "url": "https://api.github.com/repos/borg-farther/Borg-Directory/commits/71875bbc6e8b574d28549ac4e1d3ced50612ec85"
+      }
+    ],
+    "sha": "b7d9aa6029225867e5109a747349e97c6036dd1f",
+    "url": "https://api.github.com/repos/borg-farther/Borg-Directory/commits/b7d9aa6029225867e5109a747349e97c6036dd1f"
+  },
+  "name": "main",
+  "protected": false,
+  "protection": {
+    "enabled": false,
+    "required_status_checks": {
+      "checks": [],
+      "contexts": [],
+      "enforcement_level": "off"
+    }
+  },
+  "protection_url": "https://api.github.com/repos/borg-farther/Borg-Directory/branches/main/protection"
+}

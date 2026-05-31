@@ -339,6 +339,35 @@ class TestBorgPull:
 
         assert result["success"] is False
 
+    def test_pull_validation_errors_block_save(self, tmp_path, monkeypatch):
+        """Proof-gate failures must be fetchable but never persisted as trusted local packs."""
+        fake_guild = tmp_path / "guild"
+        fake_guild.mkdir()
+        import borg.core.search as search_module
+        monkeypatch.setattr(search_module, "BORG_DIR", fake_guild)
+        monkeypatch.setattr(search_module, "get_borg_dir", lambda: fake_guild)
+
+        bad_yaml = """
+type: workflow_pack
+version: '1.0.0'
+id: borg://test/bad-pack
+problem_class: Bad pack
+mental_model: Missing gates
+phases: []
+provenance:
+  confidence: guessed
+  evidence: ''
+  failure_cases: []
+"""
+        with patch("borg.core.search.resolve_guild_uri", return_value="https://x.com/bad.yaml"):
+            with patch("borg.core.search.fetch_with_retry", return_value=(bad_yaml, "")):
+                result = json.loads(borg_pull("borg://test/bad-pack"))
+
+        assert result["success"] is False
+        assert "Proof gate validation failed" in result["error"]
+        assert result["validation_errors"]
+        assert not (fake_guild / "bad-pack" / "pack.yaml").exists()
+
 
 # ---------------------------------------------------------------------------
 # borg_try tests
@@ -1075,6 +1104,7 @@ class TestBorgPullDecayWarning:
         fake_guild.mkdir()
         import borg.core.search as search_module
         monkeypatch.setattr(search_module, "BORG_DIR", fake_guild)
+        monkeypatch.setattr(search_module, "get_borg_dir", lambda: fake_guild)
 
         # YAML for a pack that is old enough to trigger decay
         # 'guessed' decays to 'expired' after 30 days — use a date well in the past
@@ -1084,19 +1114,21 @@ version: '1.0.0'
 id: guild://test/old-pack
 problem_class: Old debugging
 mental_model: None
-required_inputs: []
+required_inputs:
+  - error text
 phases:
   - name: reproduce
     description: Do it
     checkpoint: Done
     prompts: []
     anti_patterns: []
-escalation_rules: []
+escalation_rules:
+  - escalate if reproduction is impossible
 provenance:
   author: Test Author
   created: '2020-01-01T00:00:00Z'
   confidence: guessed
-  evidence: ''
+  evidence: Minimal test evidence for decay warning
   failure_cases:
     - Case 1
 """
@@ -1121,6 +1153,7 @@ provenance:
         fake_guild.mkdir()
         import borg.core.search as search_module
         monkeypatch.setattr(search_module, "BORG_DIR", fake_guild)
+        monkeypatch.setattr(search_module, "get_borg_dir", lambda: fake_guild)
 
         # Recently created pack with 'guessed' — well within 30-day TTL
         fresh_pack_yaml = """
@@ -1129,19 +1162,21 @@ version: '1.0.0'
 id: guild://test/fresh-pack
 problem_class: Fresh
 mental_model: None
-required_inputs: []
+required_inputs:
+  - task context
 phases:
   - name: step1
     description: Desc
     checkpoint: Done
     prompts: []
     anti_patterns: []
-escalation_rules: []
+escalation_rules:
+  - escalate if required context is missing
 provenance:
   author: Author
   created: '{fresh_date}'
   confidence: guessed
-  evidence: ''
+  evidence: Minimal test evidence for decay warning
   failure_cases:
     - Case 1
 """

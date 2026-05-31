@@ -3,9 +3,10 @@
     "evidence_gaps": [
       "No Borg analytics export proving active contributors or consumers was found.",
       "No first-10-user scoreboard with real outcomes exists yet.",
-      "Ops readiness/watchdog must stay green; any P0/P1 bad-answer, privacy, support, or stale-proof failure pauses controlled beta invites.",
-      "100-real-user gate remains blocked: ['first-10 external-user evidence has not passed: verified=0/10, real_users=0/10, installs=0/8, useful=0/6, critical_incidents=0/0']",
-      "Served/runtime split-brain was not evaluated by this dashboard build; source/fresh-process green is not live cutover proof."
+      "Ops readiness/watchdog plus served-runtime and release-governance gates must stay green; any P0/P1 bad-answer, privacy, support, stale-proof, stale-runtime, or branch-protection failure pauses controlled beta invites.",
+      "100-real-user gate remains blocked: [\"served runtime borg_version '3.3.14' != source version '3.3.15'\", 'served runtime version_matches_source is not true', 'served runtime reload_status is not loaded_code_matches_source_behavior', 'main branch is not protected', 'first-10 external-user evidence has not passed: verified=0/10, real_users=0/10, installs=0/8, useful=0/6, critical_incidents=0/0']",
+      "Served/runtime freshness must be proven from eval/served_runtime_fingerprint_snapshot.json; source/fresh-process green is not live cutover proof.",
+      "Release governance must be proven from eval/release_governance_snapshot.json; missing/unprotected branch details block release readiness."
     ],
     "investor_affecting": [
       "Verified external users: 0 based on available hard evidence.",
@@ -23,6 +24,8 @@
       "No real external first-user install/rescue outcome has been recorded yet.",
       "PyPI fresh-install canary is green for the current source version.",
       "Cold-start trust gate is green: meta/readiness prompts fail closed before random framework guidance reaches first users.",
+      "Served runtime freshness gate is not green yet.",
+      "Release governance gate is not green yet.",
       "Self-service ops gate is green: bad-answer intake, first-10 evidence intake, support/SLA, rollback/comms, and watchdog workflow exist.",
       "Ops watchdog is green: proof snapshots and public status are internally consistent.",
       "Unattended Git-only onboarding remains unproven until external user can install, configure MCP, and receive a useful rescue without maintainer intervention."
@@ -30,42 +33,47 @@
   },
   "broad_public_launch": {
     "verdict": "NO-GO",
-    "why": "Public self-serve gate is blocked only by row-derived first-10 external-user evidence; PyPI/latest/fresh-install/MCP/docs/cold-start-trust/self-service-ops/ops-watchdog gates are green."
+    "why": "Public self-serve gate is blocked until PyPI latest/fresh-install/MCP/docs/cold-start-trust/served-runtime/release-governance/self-service-ops/ops-watchdog gates pass and first-10 external evidence exists."
   },
   "cold_start_trust_hardening_gate": "PASS",
   "controlled_first_10_beta": {
-    "verdict": "CONDITIONAL",
-    "why": "The 10-tester infrastructure and ops guardrails are green; broad launch remains NO-GO pending row-derived external-user evidence."
+    "verdict": "NO-GO",
+    "why": "Controlled first-10 beta is blocked until these failed gates are green: served-runtime freshness; release governance / main branch protection"
   },
   "decision": "NO-GO",
-  "distribution_gate": "CONDITIONAL",
+  "distribution_gate": "NO-GO",
   "evidence": [
     "eval/first_user_release_gate_snapshot.json",
     "eval/public_self_serve_launch_gate_snapshot.json",
     "eval/cold_start_trust_gate_snapshot.json",
+    "eval/served_runtime_fingerprint_snapshot.json",
+    "eval/release_governance_snapshot.json",
     "eval/self_service_ops_gate_snapshot.json",
     "eval/ops_readiness_watchdog_snapshot.json",
     "eval/rollback_comms_drill_snapshot.json",
     "eval/pypi_fresh_install_snapshot.json",
     "eval/real_user_rollout_gate_snapshot.json"
   ],
-  "go_no_go": "Public self-serve gate is blocked only by row-derived first-10 external-user evidence; PyPI/latest/fresh-install/MCP/docs/cold-start-trust/self-service-ops/ops-watchdog gates are green.",
+  "go_no_go": "Public self-serve gate is blocked until PyPI latest/fresh-install/MCP/docs/cold-start-trust/served-runtime/release-governance/self-service-ops/ops-watchdog gates pass and first-10 external evidence exists.",
   "local_release_candidate": {
     "verdict": "CONDITIONAL",
     "why": "Local source/wheel gates pass; PyPI package proof is green, but public self-serve still requires row-derived external-user evidence."
   },
-  "max_recommended_real_users_now": 10,
+  "max_recommended_real_users_now": 0,
   "ops_readiness_watchdog": "PASS",
   "readiness": "NO-GO",
+  "release_controls_gate": "FAIL",
+  "release_governance_gate": "FAIL",
   "repo": "https://github.com/borg-farther/Borg-Directory",
   "rollback_comms_drill": "PASS",
   "schema_version": 1,
   "self_service_ops_gate": "PASS",
+  "served_runtime_freshness_gate": "FAIL",
   "source": "docs/public/status.json",
-  "source_revision": "71875bbc6e8b574d28549ac4e1d3ced50612ec85+dirty",
+  "source_revision": "b7d9aa6029225867e5109a747349e97c6036dd1f+dirty",
   "source_version_consistency": "pyproject=3.3.15 runtime=3.3.15",
-  "state": "NO-GO public self-serve; controlled first-10 beta CONDITIONAL GO while gates remain green",
+  "state": "NO-GO public self-serve; public package proof green, release controls blocked",
   "status": "NO-GO",
-  "updated_at": "2026-05-30T19:28:32Z",
+  "updated_at": "2026-05-31T10:10:59Z",
   "verified_external_users": 0
 }

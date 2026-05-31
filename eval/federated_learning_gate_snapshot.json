@@ -22,7 +22,7 @@
     "before_matches": 0,
     "first_sync": {
       "imported": 1,
-      "manifest_hash": "1ae152e946af7fbdc2f48f0e7802d1f65f83141b2d18d8c0a8cf793f81cfaf5f",
+      "manifest_hash": "ccc4dedef435caba7127d06ff9811228180c6e7dde50f846d39d978f8016bf3f",
       "manifest_sequence": 1,
       "remote": true,
       "revocation_convergence_seconds": 0.0,
@@ -34,26 +34,38 @@
   },
   "external_user_lift_claimed": false,
   "external_user_lift_note": "This gate proves clean-client protocol lift, not row-derived real external-user usefulness.",
-  "generated_at_utc": "2026-05-28T08:04:55Z",
+  "generated_at_utc": "2026-05-31T07:16:40Z",
   "proof_provenance": {
     "command": "python eval/run_federated_learning_gate.py --output eval/federated_learning_gate_snapshot.json",
     "git": {
-      "branch": "fix/runtime-freshness-federated-learning-plan",
-      "commit": "f4e9dff4971f21f9e69e6c4dfed65208ebff8b74",
+      "branch": "hardening/god-tier-safety-release",
+      "commit": "b7d9aa6029225867e5109a747349e97c6036dd1f",
       "dirty": true,
       "dirty_files": [
-        "M docs/20260517_BORG_100_REAL_USER_READINESS.md",
-        " M docs/COLD_START_TRUST_HARDENING.md",
-        " M docs/SELF_SERVICE_OPS_READINESS_REPORT.md",
-        " M eval/cold_start_trust_gate_snapshot.json",
-        " M eval/first_user_release_gate_snapshot.json",
-        " M eval/gate_run_snapshot.json",
-        " M eval/load_1000_snapshot.json",
-        " M eval/load_100_snapshot.json",
-        " M eval/load_10_snapshot.json",
-        " M eval/real_user_rollout_gate_snapshot.json",
-        " M eval/self_service_ops_gate_snapshot.json",
-        " M eval/uat_scoreboard_snapshot.json"
+        "M borg/core/embeddings.py",
+        " M borg/core/generator.py",
+        " M borg/core/safety.py",
+        " M borg/core/search.py",
+        " M borg/integrations/http_server.py",
+        " M borg/integrations/mcp_server.py",
+        " M eval/collective_intelligence_loop_gate.json",
+        " M eval/public_self_serve_launch_gate.py",
+        " M eval/real_user_rollout_gate.py",
+        " M eval/run_pypi_fresh_install_canary.py",
+        " M scripts/build_borg_proof_dashboard.py",
+        " M tests/core/test_generator.py",
+        " M tests/core/test_search.py",
+        " M tests/mcp/test_http_server_security.py",
+        " M tests/mcp/test_mcp_server_extended.py",
+        " M tests/packaging/test_embeddings_schema_compat.py",
+        " M tests/readiness/test_public_self_serve_launch_gate.py",
+        " M tests/security/test_safety.py",
+        "?? eval/release_governance_gate.py",
+        "?? eval/release_governance_snapshot.json",
+        "?? eval/served_runtime_fingerprint_snapshot.json",
+        "?? eval/served_runtime_gate.py",
+        "?? eval/tests/test_release_governance_gate.py",
+        "?? eval/tests/test_served_runtime_gate.py"
       ]
     },
     "max_revocation_convergence_seconds": 2.0
@@ -65,20 +77,20 @@
   ],
   "remote_http_signed_manifest": {
     "atom_count": 1,
-    "atom_envelope_hash": "b848302546f4c88732fd2d1c608649254610947ead77555879e2feb8d77e3cab",
-    "atom_id": "sha256:f03ace24a0ed2390e406f0c304e90a85e62e418b44c1fd7f1c6ef3d1b1ce88dd",
+    "atom_envelope_hash": "af044104017f97db83f5c1b814d45fb47a4e4a1036b3714f18ad3c720a3ef0c4",
+    "atom_id": "sha256:04566311166bf1de50717461a151315498fa4a9f0e451970166e596cdd6d0116",
     "channel": "global",
-    "expires_at": "2026-05-28T08:07:01Z",
-    "manifest_hash": "1ae152e946af7fbdc2f48f0e7802d1f65f83141b2d18d8c0a8cf793f81cfaf5f",
-    "manifest_signature_key_id": "ed25519:f0d574e0fa771b17",
+    "expires_at": "2026-05-31T07:18:46Z",
+    "manifest_hash": "ccc4dedef435caba7127d06ff9811228180c6e7dde50f846d39d978f8016bf3f",
+    "manifest_signature_key_id": "ed25519:6621a4942c986b7e",
     "passed": true,
     "receipt_decision": "global_candidate",
-    "receipt_hash": "42f7a7a1cb9efd0d90bee615f4b51fa69c30ecef60c2a93b160d33126ba1617f",
-    "receipt_id": "receipt-sha256:cf965afe3ab9c71d6f0db4d4957101efc50e8b7db52c0f1ed9117c925a406479",
-    "registry_key_id": "ed25519:f0d574e0fa771b17",
+    "receipt_hash": "6c3d54c16b8fa76bc1782912651f272f030d0033a4d698f4dd44015bdcebeec2",
+    "receipt_id": "receipt-sha256:3301a5585b744ecec8f78f41c2b9e35ad41a05d424e78c95bbdc89d0c7fdba67",
+    "registry_key_id": "ed25519:6621a4942c986b7e",
     "sequence": 1,
     "tombstone_count_after_revoke": 1,
-    "tombstone_hash": "d051f68c5b3859a42081bace1ca186d522a272b91cb19152fc5ec46871956f12"
+    "tombstone_hash": "bb34ffd5e51d2d6ff0b1ec62aabc103ba81ea125a883da32277615901123d3de"
   },
   "replay_protection": {
     "error": "registry manifest replay detected",
@@ -86,28 +98,28 @@
   },
   "revocation_convergence": {
     "after_revocation_matches": 0,
-    "observed_seconds": 0.18581461906433105,
+    "observed_seconds": 0.11942005157470703,
     "passed": true,
     "post_revocation_get_atom_is_none": true,
     "reimport_suppressed": true,
     "second_sync": {
       "imported": 0,
-      "manifest_hash": "3692e1f3b00d9932ee5731e165f5ac69acdde4cb6df21c00c838e0cf83dfffe5",
+      "manifest_hash": "08faad27493ef2bc5d848af4080d5603fdbfb6e24d553f6b99e49b02b10af14d",
       "manifest_sequence": 2,
       "remote": true,
-      "revocation_convergence_seconds": 0.18581461906433105,
+      "revocation_convergence_seconds": 0.11942005157470703,
       "revoked": 1,
       "skipped": 1
     },
     "slo_seconds": 2.0
   },
   "runtime_freshness": {
-    "borg_version": "3.3.14",
+    "borg_version": "3.3.15",
     "confidence_gate_canary": true,
     "fingerprint": {
       "borg_dir": "/root/.borg/guild",
       "borg_home": "/root/.borg",
-      "borg_version": "3.3.14",
+      "borg_version": "3.3.15",
       "confidence_gate_canary": {
         "passed": true,
         "real_permission_positive_control_safe": true,
@@ -130,27 +142,27 @@
         "borg.integrations.mcp_server._detect_technology": {
           "argcount": 2,
           "exists": true,
-          "firstlineno": 2479,
+          "firstlineno": 2553,
           "function": "_detect_technology",
           "module": "borg.integrations.mcp_server",
-          "sha256": "cc73c659d83088b24445050d7df03aceb1d5c4f4537c1982bfb86daccbbf1339"
+          "sha256": "f6cf98f37910953992c998d7c6d93fec7c92b8d46d4957070872f2c5f1c25334"
         },
         "borg.integrations.mcp_server.borg_observe": {
           "argcount": 5,
           "exists": true,
-          "firstlineno": 3818,
+          "firstlineno": 3934,
           "function": "borg_observe",
           "module": "borg.integrations.mcp_server",
-          "sha256": "4e894045db9a0ee073cc12453e96f247b602d6969ed60ee5f303572c2c7bce7e"
+          "sha256": "fd0a36e77116a48e6f6d2c49999c376e9d9d9c27b1e631496b5814d2bb0ff26f"
         }
       },
       "modules": {
         "borg": {
           "exists": true,
-          "mtime": 1779728060.2381442,
-          "mtime_iso_utc": "2026-05-25T16:54:20Z",
+          "mtime": 1779990226.1803412,
+          "mtime_iso_utc": "2026-05-28T17:43:46Z",
           "path": "/root/hermes-workspace/borg/borg/__init__.py",
-          "sha256": "20fd27330f31ba0829ebd6ab9fbe42834584418ac761947113c22e871438a5c9",
+          "sha256": "2a40b7e278285891a085a945b3a58251ab65ccf2df9de1a4099578df9012a911",
           "size": 2796
         },
         "borg.core.confidence_gate": {
@@ -171,11 +183,11 @@
         },
         "borg.integrations.mcp_server": {
           "exists": true,
-          "mtime": 1779948089.6942778,
-          "mtime_iso_utc": "2026-05-28T06:01:29Z",
+          "mtime": 1780182525.9173684,
+          "mtime_iso_utc": "2026-05-30T23:08:45Z",
           "path": "/root/hermes-workspace/borg/borg/integrations/mcp_server.py",
-          "sha256": "ed85db93c8733f095688b5bf7becf07fb767fc9fc83c6631cd53f7b162235144",
-          "size": 161601
+          "sha256": "e3f38bd1fa9b2c2df796b871ea1a5386e5628e2d61fdfeea2c907d925887cb2a",
+          "size": 168487
         }
       },
       "observe_behavior_canary": {
@@ -202,11 +214,11 @@
         "trace_db_path": "/root/.borg/traces.db",
         "v3_db_path": "/root/.borg/borg_v3.db"
       },
-      "pid": 742874,
+      "pid": 954759,
       "python": "3.11.15",
       "reload_status": "loaded_code_matches_source_behavior",
       "schema_version": 1,
-      "source_version": "3.3.14",
+      "source_version": "3.3.15",
       "success": true,
       "sys_path_head": [
         "/root/hermes-workspace/borg",
@@ -223,7 +235,7 @@
     },
     "observe_behavior_canary": true,
     "passed": true,
-    "source_version": "3.3.14",
+    "source_version": "3.3.15",
     "version_matches_source": true
   },
   "schema_version": 1,

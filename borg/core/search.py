@@ -672,6 +672,12 @@ def borg_pull(uri: str) -> str:
         pack = parse_workflow_pack(content)
 
         validation_errors = validate_pack(pack)
+        if validation_errors:
+            return json.dumps({
+                "success": False,
+                "error": f"Proof gate validation failed: {'; '.join(validation_errors)}",
+                "validation_errors": validation_errors,
+            })
 
         threats = scan_pack_safety(pack)
         if threats:
@@ -789,28 +795,30 @@ def borg_try(uri: str, task_id: Optional[str] = None) -> str:
         errors = validate_pack(pack)
         threats = scan_pack_safety(pack)
         decay_status = check_confidence_decay(pack)
+        blocked = bool(errors or threats)
+        phases = [] if threats else [
+            {
+                "name": p.get("name", ""),
+                "description": (p.get("description", "") or "")[:200],
+                "checkpoint": p.get("checkpoint", ""),
+            }
+            for p in pack.get("phases", [])
+        ]
 
         result = {
             "success": True,
-            "id": pack.get("id", "unknown"),
-            "problem_class": pack.get("problem_class", ""),
-            "mental_model": pack.get("mental_model", ""),
-            "required_inputs": pack.get("required_inputs", []) or [],
-            "phases": [
-                {
-                    "name": p.get("name", ""),
-                    "description": (p.get("description", "") or "")[:200],
-                    "checkpoint": p.get("checkpoint", ""),
-                }
-                for p in pack.get("phases", [])
-            ],
+            "id": pack.get("id", "unknown") if not threats else "[blocked-unsafe-pack]",
+            "problem_class": pack.get("problem_class", "") if not threats else "[redacted: unsafe pack]",
+            "mental_model": pack.get("mental_model", "") if not threats else "[redacted: unsafe pack]",
+            "required_inputs": (pack.get("required_inputs", []) or []) if not threats else [],
+            "phases": phases,
             "confidence": pack.get("provenance", {}).get("confidence", "unknown"),
-            "evidence": pack.get("provenance", {}).get("evidence", ""),
-            "failure_cases": pack.get("provenance", {}).get("failure_cases", []),
+            "evidence": pack.get("provenance", {}).get("evidence", "") if not threats else "[redacted: unsafe pack]",
+            "failure_cases": pack.get("provenance", {}).get("failure_cases", []) if not threats else [],
             "tier": compute_pack_tier(pack),
             "validation_errors": errors,
             "safety_threats": threats,
-            "verdict": "safe" if not errors and not threats else "blocked",
+            "verdict": "safe" if not blocked else "blocked",
             "confidence_status": decay_status,
         }
         if decay_status.get("decayed"):

@@ -120,6 +120,36 @@ def collect_text_fields(obj: Any) -> List[str]:
     return strings
 
 
+def _iter_pack_phases(pack: dict) -> List[dict]:
+    """Return V1 and V2 phases that can influence generated agent behavior."""
+    phases = pack.get("phases")
+    if isinstance(phases, list) and phases:
+        return [phase for phase in phases if isinstance(phase, dict)]
+    structure = pack.get("structure")
+    if isinstance(structure, dict):
+        phases = structure.get("phases", [])
+    else:
+        phases = structure if isinstance(structure, list) else []
+    return [phase for phase in phases if isinstance(phase, dict)]
+
+
+def _append_behavior_texts(value: Any, sink: List[str]) -> None:
+    """Append nested strings from behavior-influencing fields to a sink."""
+    sink.extend(collect_text_fields(value))
+
+
+def _phase_count(pack: dict) -> int:
+    if _is_v2_pack(pack):
+        structure = pack.get("structure", [])
+        if isinstance(structure, dict):
+            phases = structure.get("phases", [])
+        else:
+            phases = structure
+        return len(phases) if isinstance(phases, list) else 0
+    phases = pack.get("phases", [])
+    return len(phases) if isinstance(phases, list) else 0
+
+
 def scan_pack_safety(pack: dict, mode: Literal["normal", "strict"] = "normal") -> List[str]:
     """Scan pack for prompt injection, credential access, and file exfiltration.
 
@@ -141,30 +171,39 @@ def scan_pack_safety(pack: dict, mode: Literal["normal", "strict"] = "normal") -
         command_texts: List[str] = []  # prompts, anti_patterns, required_inputs, escalation_rules — higher risk
         instruction_texts: List[str] = []  # descriptions, mental_model — lower risk
 
-        # Collect prompts and anti_patterns (higher risk — agent executes these)
-        for phase in pack.get("phases", []):
-            if isinstance(phase, dict):
-                for prompt in phase.get("prompts", []) or []:
-                    command_texts.append(str(prompt))
-                for ap in phase.get("anti_patterns", []) or []:
-                    command_texts.append(str(ap))
-                # Descriptions are instructional — lower risk
-                if phase.get("description"):
-                    instruction_texts.append(str(phase["description"]))
+        # Collect all fields that are rendered into generated rules or influence
+        # agent behaviour. V1 packs use phases[]; V2 packs use structure.phases[].
+        # Treat executable/adaptive prompt surfaces as command context; headings
+        # and descriptions remain instructional but still block prompt-injection,
+        # credential, file-access and path-traversal patterns.
+        for field in ("id", "name", "problem_class", "mental_model"):
+            _append_behavior_texts(pack.get(field), instruction_texts)
 
-        # mental_model is instructional
-        if pack.get("mental_model"):
-            instruction_texts.append(str(pack["mental_model"]))
+        for phase in _iter_pack_phases(pack):
+            for field in ("name", "title", "description"):
+                _append_behavior_texts(phase.get(field), instruction_texts)
+            _append_behavior_texts(phase.get("checkpoint"), command_texts)
+            for field in (
+                "prompts",
+                "anti_patterns",
+                "context_prompts",
+                "inject_if",
+                "skip_if",
+                "start_signals",
+            ):
+                _append_behavior_texts(phase.get(field), command_texts)
 
-        # required_inputs and escalation_rules are agent-authored content — scan as commands
-        for inp in pack.get("required_inputs", []) or []:
-            command_texts.append(str(inp))
-        for rule in pack.get("escalation_rules", []) or []:
-            command_texts.append(str(rule))
-
-        # Also scan top-level "prompt" field if present (edge case for simple artifacts)
-        if pack.get("prompt") and isinstance(pack.get("prompt"), str):
-            command_texts.append(str(pack["prompt"]))
+        for field in (
+            "required_inputs",
+            "escalation_rules",
+            "prompt",
+            "context_prompts",
+            "start_signals",
+            "inject_if",
+            "skip_if",
+            "anti_patterns",
+        ):
+            _append_behavior_texts(pack.get(field), command_texts)
 
         command_combined = "\n".join(command_texts)
         instruction_combined = "\n".join(instruction_texts)
@@ -310,11 +349,8 @@ def check_pack_size_limits(pack: dict, pack_file: Path) -> List[str]:
     except OSError:
         pass
 
-    # Phase count — V2 uses structure[], V1 uses phases[]
-    if _is_v2_pack(pack):
-        phase_count = len(pack.get("structure", []))
-    else:
-        phase_count = len(pack.get("phases", []))
+    # Phase count — V2 uses structure.phases or legacy structure[], V1 uses phases[]
+    phase_count = _phase_count(pack)
     if phase_count > MAX_PHASES:
         violations.append(
             f"Pack has {phase_count} phases, exceeds limit of {MAX_PHASES}"

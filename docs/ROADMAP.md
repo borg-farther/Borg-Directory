@@ -12,7 +12,7 @@ Borg is failure memory for AI coding agents: a local CLI/MCP server that turns a
 - CLI command: `borg`.
 - MCP server command: `borg-mcp`.
 - GitHub default branch: `main` at `borg-farther/Borg-Directory`.
-- Controlled first-10 beta infrastructure: CONDITIONAL GO while gates remain green for `agent-borg==3.3.15` while package/fresh-install/stdio MCP/generated rules/OpenClaw/cold-start trust/self-service ops/watchdog/proof-dashboard/GitHub CI-security gates remain green.
+- Controlled first-10 beta: NO-GO right now. `agent-borg==3.3.15` package/local stdio proof is green, but served-runtime freshness and release-governance gates are red; cap is 0 until release controls and ops/watchdog proof are green.
 - Public self-serve launch: NO-GO until row-derived first-10 external evidence passes.
 - Served remote MCP: separate NO-GO channel until live runtime fingerprint/canary passes.
 

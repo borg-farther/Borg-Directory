@@ -26,7 +26,7 @@ if str(ROOT) not in sys.path:
     sys.path.insert(0, str(ROOT))
 
 from eval.first_10_evidence import evaluate_scoreboard
-from eval import self_service_ops_gate
+from eval import release_governance_gate, self_service_ops_gate, served_runtime_gate
 
 SNAPSHOT = ROOT / "eval" / "public_self_serve_launch_gate_snapshot.json"
 REPORT = ROOT / "docs" / "PUBLIC_SELF_SERVE_LAUNCH_GO_NO_GO.md"
@@ -230,6 +230,31 @@ def pypi_fresh_install_check(path: Path, expected_version: str) -> dict[str, Any
     }
 
 
+def _line_names_post_package_blocker(line_text: str) -> bool:
+    """True when docs block beta on non-package release controls.
+
+    After PyPI/fresh-install canaries are green, stale docs that still say beta
+    is blocked by package proof should fail. Honest docs that say package proof
+    is green but beta is blocked by served-runtime freshness, release
+    governance, or branch protection should pass.
+    """
+    lower = line_text.lower()
+    release_control_terms = [
+        "served-runtime",
+        "served runtime",
+        "runtime fingerprint",
+        "release-governance",
+        "release governance",
+        "release control",
+        "branch protection",
+        "main is unprotected",
+        "main` is unprotected",
+        "main branch is not protected",
+        "github `main` is unprotected",
+    ]
+    return any(term in lower for term in release_control_terms)
+
+
 def docs_claim_guard(
     paths: list[Path],
     expected_version: str,
@@ -365,11 +390,14 @@ def docs_claim_guard(
                 match = re.search(pattern, text)
                 if match:
                     line = text[: match.start()].count("\n") + 1
+                    line_text = text.splitlines()[line - 1] if line - 1 < len(text.splitlines()) else match.group(0)
+                    if _line_names_post_package_blocker(line_text):
+                        continue
                     violations.append({
                         "path": str(rel),
                         "line": line,
                         "kind": label,
-                        "detail": text.splitlines()[line - 1][:180] if line - 1 < len(text.splitlines()) else match.group(0)[:180],
+                        "detail": line_text[:180],
                     })
 
     return {"passed": not violations, "checked": checked, "violations": violations}
@@ -456,6 +484,53 @@ def ops_readiness_watchdog_check(path: Path) -> dict[str, Any]:
     }
 
 
+def served_runtime_freshness_check(path: Path, expected_version: str) -> dict[str, Any]:
+    payload, read_error = served_runtime_gate._read_payload(path)
+    result = served_runtime_gate.evaluate_snapshot(payload, expected_version=expected_version)
+    if read_error:
+        result["blockers"].insert(0, read_error)
+        result["passed"] = False
+    result["snapshot"] = str(path.relative_to(ROOT)) if path.is_relative_to(ROOT) else str(path)
+    return result
+
+
+def release_governance_check(*, fetch_network: bool = True) -> dict[str, Any]:
+    snapshot_path = ROOT / "eval" / "release_governance_snapshot.json"
+    blockers: list[str] = []
+    payload: dict[str, Any] | None = None
+    source = "snapshot"
+    if snapshot_path.exists():
+        try:
+            payload = json.loads(snapshot_path.read_text(encoding="utf-8"))
+        except (OSError, json.JSONDecodeError) as exc:
+            blockers.append(f"release governance snapshot unreadable: {exc}")
+    elif fetch_network:
+        source = "github_api"
+        try:
+            payload = release_governance_gate.fetch_branch_payload("borg-farther/Borg-Directory", "main")
+        except Exception as exc:  # pragma: no cover - live GitHub/API failures vary by environment
+            blockers.append(f"release governance live check failed: {exc}")
+    else:
+        blockers.append("release governance snapshot missing and network disabled")
+
+    if payload is None:
+        return {
+            "schema_version": 1,
+            "passed": False,
+            "blockers": blockers or ["release governance evidence missing"],
+            "snapshot": "eval/release_governance_snapshot.json",
+            "source": source,
+        }
+
+    result = release_governance_gate.evaluate_branch_payload(payload)
+    if blockers:
+        result["blockers"] = blockers + list(result.get("blockers") or [])
+        result["passed"] = False
+    result["snapshot"] = "eval/release_governance_snapshot.json"
+    result["source"] = source
+    return result
+
+
 def compile_gate(
     *,
     fetch_network: bool = True,
@@ -468,6 +543,8 @@ def compile_gate(
     pypi_latest = pypi_latest_check(version, fetch_network=fetch_network, pypi_data=pypi_data)
     pypi_fresh = pypi_fresh_install_check(ROOT / "eval" / "pypi_fresh_install_snapshot.json", version)
     cold_start_trust = cold_start_trust_check(ROOT / "eval" / "cold_start_trust_gate_snapshot.json")
+    served_runtime = served_runtime_freshness_check(ROOT / "eval" / "served_runtime_fingerprint_snapshot.json", version)
+    release_governance = release_governance_check(fetch_network=fetch_network)
     self_service_ops = self_service_ops_check()
     ops_watchdog = (
         ops_readiness_watchdog_check(ROOT / "eval" / "ops_readiness_watchdog_snapshot.json")
@@ -493,6 +570,8 @@ def compile_gate(
         first_user["passed"]
         and package_evidence_ready
         and cold_start_trust["passed"]
+        and served_runtime["passed"]
+        and release_governance["passed"]
         and self_service_ops["passed"]
         and ops_watchdog["passed"]
         and docs["passed"]
@@ -508,6 +587,10 @@ def compile_gate(
         blockers.append("PyPI fresh-install + MCP stdio canary snapshot is missing or failing")
     if not cold_start_trust["passed"]:
         blockers.append("cold-start trust hardening gate snapshot is missing or failing")
+    if not served_runtime["passed"]:
+        blockers.extend(served_runtime.get("blockers") or ["served runtime freshness gate is missing or failing"])
+    if not release_governance["passed"]:
+        blockers.extend(release_governance.get("blockers") or ["release governance gate is missing or failing"])
     if not self_service_ops["passed"]:
         blockers.extend(self_service_ops.get("blockers") or ["self-service ops readiness gate is missing or failing"])
     if not ops_watchdog["passed"]:
@@ -535,6 +618,8 @@ def compile_gate(
             "pypi_latest": pypi_latest,
             "pypi_fresh_install_and_mcp_stdio": pypi_fresh,
             "cold_start_trust_hardening": cold_start_trust,
+            "served_runtime_freshness": served_runtime,
+            "release_governance": release_governance,
             "self_service_ops_readiness": self_service_ops,
             "ops_readiness_watchdog": ops_watchdog,
             "docs_claim_guard": docs,
@@ -546,7 +631,7 @@ def compile_gate(
             "first_10_external_evidence": first_10,
         },
         "blockers": blockers,
-        "truth_policy": "Public self-serve is GO only after PyPI/fresh-install/MCP/docs/cold-start-trust/self-service-ops/watchdog gates pass AND row-derived first-10 external-user evidence passes. Synthetic users and aggregate-only edits never count.",
+        "truth_policy": "Public self-serve is GO only after PyPI/fresh-install/MCP/docs/cold-start-trust/served-runtime/release-governance/self-service-ops/watchdog gates pass AND row-derived first-10 external-user evidence passes. Synthetic users and aggregate-only edits never count.",
     }
 
 
@@ -585,6 +670,8 @@ def write_report(snapshot: dict[str, Any]) -> None:
         "- `eval/pypi_fresh_install_snapshot.json`",
         "- `eval/first_user_release_gate_snapshot.json`",
         "- `eval/cold_start_trust_gate_snapshot.json`",
+        "- `eval/served_runtime_fingerprint_snapshot.json`",
+        "- `eval/release_governance_snapshot.json`",
         "- `eval/self_service_ops_gate_snapshot.json`",
         "- `eval/ops_readiness_watchdog_snapshot.json`",
         "",

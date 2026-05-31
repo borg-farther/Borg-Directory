@@ -1,6 +1,6 @@
 # Borg First-10 Beta Readiness Contract
 
-**Status:** controlled first-10 public-package beta is CONDITIONAL GO while gates remain green for `agent-borg==3.3.15` while package/fresh-install/stdio MCP/generated-rules/OpenClaw/cold-start trust/self-service ops/watchdog/proof-dashboard gates remain green. Invite at most 10 controlled testers with consented evidence capture. Public self-serve launch is still gated by row-derived real external-user evidence.
+**Status:** controlled first-10 public-package beta is **NO-GO right now**. `agent-borg==3.3.15` package/fresh-install/stdio MCP/generated-rules/OpenClaw proof exists, but the release-control gates are red: the served runtime fingerprint is stale and GitHub `main` is unprotected in the captured governance snapshot. Invite **0** controlled testers until package, cold-start trust, self-service ops/watchdog/proof-dashboard, served-runtime freshness, and release-governance gates are all green. Public self-serve launch is still gated by row-derived real external-user evidence.
 
 **Success metric:** At least 6 of the first 10 users get one relevant ACTION/STOP/VERIFY moment without maintainer handholding, and every miss is recorded as NO_CONFIDENT_MATCH or explicit negative feedback instead of being hidden.
 

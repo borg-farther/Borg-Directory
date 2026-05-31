@@ -57,12 +57,29 @@ jobs:
               and ('fresh-install' in blockers or 'fresh install' in blockers or 'mcp stdio' in blockers)
               and ('first-10' in blockers or 'verified=' in blockers)
           )
-          assert controlled_package or pre_publish
+          release_controls_blocked = (
+              data['ready_for_controlled_first_10_beta'] is False
+              and data['max_recommended_real_users_now'] == 0
+              and ('served runtime' in blockers or 'version_matches_source' in blockers or 'reload_status' in blockers)
+              and ('release governance' in blockers or 'branch protection' in blockers or 'main branch is not protected' in blockers)
+              and ('first-10' in blockers or 'verified=' in blockers)
+          )
+          def _is_first_10(blocker):
+              b=blocker.lower()
+              return 'first-10' in b or 'verified=' in b or 'external-user evidence' in b
+          def _is_package(blocker):
+              b=blocker.lower()
+              return 'pypi latest' in b or 'latest metadata' in b or 'fresh-install' in b or 'fresh install' in b or 'mcp stdio' in b
+          def _is_release_control(blocker):
+              b=blocker.lower()
+              return 'served runtime' in b or 'version_matches_source' in b or 'reload_status' in b or 'release governance' in b or 'branch protection' in b or 'main branch is not protected' in b
+          allowed_public_blockers = all(_is_first_10(b) or _is_package(b) or _is_release_control(b) for b in (data.get('blockers') or []))
+          assert (controlled_package or pre_publish or release_controls_blocked) and allowed_public_blockers
           PY
 
       - name: Run ops readiness watchdog
         run: |
-          python eval/ops_readiness_watchdog.py --mode pr --json --no-write --max-snapshot-age-hours 24 --allow-public-blocker package_or_first_10_evidence --require-ci-schedule
+          python eval/ops_readiness_watchdog.py --mode pr --json --no-write --max-snapshot-age-hours 24 --allow-public-blocker release_controls_or_first_10_evidence --require-ci-schedule
 
       - name: Lint proof dashboard
         run: |

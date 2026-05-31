@@ -60,7 +60,7 @@ They are retained for provenance, but they are not current product claims or fir
 
 ## Current truth
 
-- Controlled first-10 public-package beta infrastructure: CONDITIONAL GO while gates remain green for `agent-borg==3.3.15` while package/fresh-install/stdio MCP/generated-rules/OpenClaw/cold-start trust/self-service ops/watchdog/source-local first-user/proof-dashboard/GitHub CI-security gates remain green; cap is 10 consented testers.
+- Controlled first-10 public-package beta: NO-GO right now. `agent-borg==3.3.15` package/local stdio proof is green, but served-runtime freshness and release-governance gates are red; cap is 0 until release controls, ops/watchdog, and proof dashboards are all green.
 - Public self-serve launch: not yet; requires real external-user evidence.
 - Agent-level success lift at statistical confidence: not yet proven.
 - Internal max-value collective intelligence loop primitives: GO; external lift still requires first-10 rows.
