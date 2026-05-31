@@ -2,8 +2,8 @@
 
 ## Current verdict
 
-- Controlled first-10 beta: **CONDITIONAL GO while gates remain green for `agent-borg==3.3.15` package users**. PyPI latest, fresh-install, local stdio MCP, generated-rules, OpenClaw, cold-start trust, self-service ops, watchdog, source/local first-user, and GitHub CI/security gates are green for this version.
-- Public waitlist / narrow beta: **up to 10 consented controlled testers may proceed** under the first-10 evidence contract; every tester outcome must be captured.
+- Controlled first-10 beta: **NO-GO right now**. `agent-borg==3.3.15` package/fresh-install/local stdio MCP/generated-rules/OpenClaw proof is green, but release controls are red: the served runtime fingerprint is stale and GitHub `main` is unprotected in the captured governance snapshot.
+- Public waitlist / narrow beta: **0 testers may proceed** until served-runtime freshness, release-governance, ops/watchdog, proof-dashboard, cold-start trust, and source/local first-user gates are all green; then the first-10 evidence contract caps the cohort at 10.
 - Public self-serve launch: **NO-GO until first-10 external-user evidence passes** (10 verified external users, >=8 installs, >=6 useful rescues, 0 critical incidents).
 
 ## What passed for source/local package infrastructure
@@ -36,6 +36,9 @@
 - [`PROMPT_INJECTION_THREAT_MODEL.md`](PROMPT_INJECTION_THREAT_MODEL.md)
 - [`../eval/first_user_release_gate_snapshot.json`](../eval/first_user_release_gate_snapshot.json)
 - [`../eval/pypi_fresh_install_snapshot.json`](../eval/pypi_fresh_install_snapshot.json)
+- [`../eval/served_runtime_fingerprint_snapshot.json`](../eval/served_runtime_fingerprint_snapshot.json)
+- [`../eval/release_governance_snapshot.json`](../eval/release_governance_snapshot.json)
+- [`../eval/ops_readiness_watchdog_snapshot.json`](../eval/ops_readiness_watchdog_snapshot.json)
 - [`../eval/public_self_serve_launch_gate_snapshot.json`](../eval/public_self_serve_launch_gate_snapshot.json)
 - [`../eval/first_10_user_scoreboard.json`](../eval/first_10_user_scoreboard.json)
 - [`../eval/security_hardening_baseline.json`](../eval/security_hardening_baseline.json)

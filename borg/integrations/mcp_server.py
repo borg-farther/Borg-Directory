@@ -1341,8 +1341,14 @@ def borg_pull(uri: str = "") -> str:
         except ValueError as ve:
             return json.dumps({"success": False, "error": f"Invalid pack YAML: {ve}"})
 
-        # Safety scan
+        # Safety scan. Untrusted packs must fail closed before any local write.
         safety_issues = safety_module.scan_pack_safety(pack)
+        if safety_issues:
+            return json.dumps({
+                "success": False,
+                "error": f"Safety threats detected: {'; '.join(safety_issues)}",
+                "safety_issues": safety_issues,
+            })
 
         # Save to local guild dir
         pack_name = pack.get("id", "unknown").replace("/", "-")
@@ -1387,13 +1393,28 @@ def borg_try(uri: str = "") -> str:
         except ValueError as ve:
             return json.dumps({"success": False, "error": f"Invalid pack YAML: {ve}"})
 
-        # Safety scan
+        # Safety scan. Blocked previews return only neutral metadata and threat
+        # summaries; never echo raw malicious prompts into the MCP tool result.
         safety_issues = safety_module.scan_pack_safety(pack)
+        if safety_issues:
+            return json.dumps({
+                "success": True,
+                "preview": True,
+                "verdict": "blocked",
+                "pack_id": "[blocked-unsafe-pack]",
+                "problem_class": "[redacted: unsafe pack]",
+                "mental_model": "[redacted: unsafe pack]",
+                "trust_tier": pack.get("provenance", {}).get("confidence", "unknown"),
+                "phase_count": len(pack.get("phases", [])),
+                "phases": [],
+                "safety_issues": safety_issues,
+            })
 
         provenance = pack.get("provenance", {})
         return json.dumps({
             "success": True,
             "preview": True,
+            "verdict": "safe",
             "pack_id": pack.get("id"),
             "version": pack.get("version"),
             "problem_class": pack.get("problem_class"),

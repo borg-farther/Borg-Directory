@@ -20,6 +20,8 @@ import yaml
 from pathlib import Path
 from typing import Any, Dict, List, Optional, Union
 
+from borg.core.safety import scan_pack_safety
+
 
 # ---------------------------------------------------------------------------
 # Format registry
@@ -372,7 +374,25 @@ GENERATORS = {
 }
 
 
-def generate_rules(pack: dict, format: str = "cursorrules") -> Union[str, Dict[str, str]]:
+def _assert_safe_for_generation(pack: dict) -> None:
+    """Fail closed before exporting pack text into agent-rule files.
+
+    Generated rule files are loaded by AI IDEs as durable instructions. Treat
+    pack content as untrusted input until the safety scanner has checked every
+    rendered field, including V2 ``structure.phases`` and metadata headings.
+    """
+    threats = scan_pack_safety(pack, mode="strict")
+    blocking = [t for t in threats if not t.lower().startswith("file access warning:")]
+    if blocking:
+        raise ValueError("Unsafe pack cannot be exported: " + "; ".join(blocking))
+
+
+def generate_rules(
+    pack: dict,
+    format: str = "cursorrules",
+    *,
+    allow_untrusted: bool = False,
+) -> Union[str, Dict[str, str]]:
     """Generate platform-specific rules from a borg workflow pack.
 
     Args:
@@ -386,11 +406,15 @@ def generate_rules(pack: dict, format: str = "cursorrules") -> Union[str, Dict[s
         ValueError: If format is not recognized.
     """
     if format == "all":
+        if not allow_untrusted:
+            _assert_safe_for_generation(pack)
         return {fmt: gen(pack) for fmt, gen in GENERATORS.items()}
 
     if format not in GENERATORS:
         raise ValueError(f"Unknown format '{format}'. Choose from: {', '.join(FORMATS)}, all")
 
+    if not allow_untrusted:
+        _assert_safe_for_generation(pack)
     return GENERATORS[format](pack)
 
 
@@ -398,6 +422,8 @@ def generate_to_files(
     pack: dict,
     format: str = "all",
     output_dir: Optional[str] = None,
+    *,
+    allow_untrusted: bool = False,
 ) -> Dict[str, str]:
     """Generate rules and write to files.
 
@@ -413,9 +439,9 @@ def generate_to_files(
     out.mkdir(parents=True, exist_ok=True)
 
     if format == "all":
-        results = generate_rules(pack, "all")
+        results = generate_rules(pack, "all", allow_untrusted=allow_untrusted)
     else:
-        results = {format: generate_rules(pack, format)}
+        results = {format: generate_rules(pack, format, allow_untrusted=allow_untrusted)}
 
     written = {}
     for fmt, content in results.items():

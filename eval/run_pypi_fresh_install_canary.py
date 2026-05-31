@@ -138,6 +138,22 @@ def mcp_stdio_canary(borg_mcp: Path, env: dict[str, str], expected_version: str)
     loaded_hashes = fingerprint_payload.get("loaded_function_hashes") or {}
     observe_canary = fingerprint_payload.get("observe_behavior_canary") or {}
     confidence_canary = fingerprint_payload.get("confidence_gate_canary") or {}
+    fingerprint_summary = {
+        "success": fingerprint_payload.get("success"),
+        "borg_version": fingerprint_payload.get("borg_version"),
+        "source_version": fingerprint_payload.get("source_version"),
+        "version_matches_source": fingerprint_payload.get("version_matches_source"),
+        "reload_status": fingerprint_payload.get("reload_status"),
+        "confidence_gate_canary_passed": confidence_canary.get("passed"),
+        "observe_behavior_canary_passed": observe_canary.get("passed"),
+        "loaded_function_hashes_present": sorted(
+            key for key in [
+                "borg.core.confidence_gate.trace_match_is_confident",
+                "borg.integrations.mcp_server.borg_observe",
+            ]
+            if loaded_hashes.get(key)
+        ),
+    }
     fingerprint_signal = (
         fingerprint_payload.get("success") is True
         and fingerprint_payload.get("borg_version") == expected_version
@@ -170,6 +186,7 @@ def mcp_stdio_canary(borg_mcp: Path, env: dict[str, str], expected_version: str)
         "expected_version": expected_version,
         "alias_value_signal": all(token in alias_text for token in ["ACTION", "STOP", "VERIFY"]),
         "fingerprint_signal": fingerprint_signal,
+        "fingerprint_summary": fingerprint_summary,
     }
 
 

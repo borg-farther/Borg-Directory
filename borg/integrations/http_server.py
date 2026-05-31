@@ -11,6 +11,7 @@ only loopback read-only rescue/search tools are exposed.
 from __future__ import annotations
 
 import argparse
+import json
 import logging
 import os
 import secrets
@@ -20,12 +21,11 @@ from typing import Any, Dict, Optional
 logger = logging.getLogger(__name__)
 
 READ_ONLY_UNAUTH_TOOLS = frozenset({
-    "error_lookup",
-    "borg_rescue",
-    "borg_observe",
     "borg_search",
     "borg_first_10",
 })
+
+BORG_HTTP_MAX_BODY_BYTES = int(os.environ.get("BORG_HTTP_MAX_BODY_BYTES", "1048576"))
 
 
 def _is_loopback_host(host: str) -> bool:
@@ -62,11 +62,54 @@ def _readonly_http_response(body: Dict[str, Any]) -> Dict[str, Any] | None:
     return handle_request(body)
 
 
-def create_app(token: Optional[str] = None, allow_unauth_readonly: bool = True):
+def _jsonrpc_error(req_id: Any, code: int, message: str) -> Dict[str, Any]:
+    return {"jsonrpc": "2.0", "id": req_id, "error": {"code": code, "message": message}}
+
+
+def _validate_jsonrpc_request(body: Any) -> Dict[str, Any] | None:
+    """Return a JSON-RPC error for unsupported/malformed shapes, else None."""
+    if not isinstance(body, dict):
+        return _jsonrpc_error(None, -32600, "Invalid Request: top-level JSON value must be an object")
+    req_id = body.get("id")
+    if body.get("jsonrpc") not in (None, "2.0"):
+        return _jsonrpc_error(req_id, -32600, "Invalid Request: jsonrpc must be '2.0'")
+    method = body.get("method")
+    if not isinstance(method, str) or not method:
+        return _jsonrpc_error(req_id, -32600, "Invalid Request: method must be a string")
+    params = body.get("params", {})
+    if params is None:
+        body["params"] = {}
+        params = body["params"]
+    if not isinstance(params, dict):
+        return _jsonrpc_error(req_id, -32602, "Invalid params: params must be an object")
+    if method == "tools/call":
+        name = params.get("name")
+        if not isinstance(name, str) or not name:
+            return _jsonrpc_error(req_id, -32602, "Invalid params: tools/call name must be a string")
+        arguments = params.get("arguments", {})
+        if arguments is None:
+            params["arguments"] = {}
+        elif not isinstance(arguments, dict):
+            return _jsonrpc_error(req_id, -32602, "Invalid params: tools/call arguments must be an object")
+    return None
+
+
+def _content_length_too_large(request: Any, max_body_bytes: int) -> bool:
+    raw_value = request.headers.get("content-length")
+    if not raw_value:
+        return False
+    try:
+        return int(raw_value) > max_body_bytes
+    except ValueError:
+        return False
+
+
+def create_app(token: Optional[str] = None, allow_unauth_readonly: bool = False):
     """Create FastAPI app wrapping Borg MCP."""
     try:
         from fastapi import FastAPI, Request, HTTPException
         from fastapi.responses import JSONResponse
+        from starlette.concurrency import run_in_threadpool
     except ImportError:
         raise RuntimeError("FastAPI required: pip install agent-borg[http]")
     # With ``from __future__ import annotations``, FastAPI resolves endpoint
@@ -101,26 +144,40 @@ def create_app(token: Optional[str] = None, allow_unauth_readonly: bool = True):
     @app.post("/mcp")
     async def mcp_endpoint(request: Request) -> JSONResponse:
         """Handle MCP JSON-RPC requests over HTTP."""
+        # Fail closed before reading/parsing attacker-controlled request bodies.
+        if token:
+            if not _bearer_authorized(request, token):
+                raise HTTPException(status_code=401, detail="Missing or invalid bearer token")
+        elif not allow_unauth_readonly:
+            raise HTTPException(
+                status_code=503,
+                detail="HTTP MCP is disabled until BORG_HTTP_TOKEN is set",
+            )
+
+        if _content_length_too_large(request, BORG_HTTP_MAX_BODY_BYTES):
+            return JSONResponse({"detail": "Request body too large"}, status_code=413)
+
+        raw_body = await request.body()
+        if len(raw_body) > BORG_HTTP_MAX_BODY_BYTES:
+            return JSONResponse({"detail": "Request body too large"}, status_code=413)
         try:
-            body = await request.json()
+            body = json.loads(raw_body.decode("utf-8"))
         except Exception:
             return JSONResponse(
                 {"jsonrpc": "2.0", "id": None, "error": {"code": -32700, "message": "Parse error"}},
                 status_code=400,
             )
 
+        validation_error = _validate_jsonrpc_request(body)
+        if validation_error is not None:
+            status = 400 if validation_error["error"]["code"] in {-32600, -32602} else 200
+            return JSONResponse(validation_error, status_code=status)
+
         if token:
-            if not _bearer_authorized(request, token):
-                raise HTTPException(status_code=401, detail="Missing or invalid bearer token")
             from borg.integrations.mcp_server import handle_request
-            response = handle_request(body)
-        elif allow_unauth_readonly:
-            response = _readonly_http_response(body)
+            response = await run_in_threadpool(handle_request, body)
         else:
-            raise HTTPException(
-                status_code=503,
-                detail="HTTP MCP is disabled until BORG_HTTP_TOKEN is set",
-            )
+            response = await run_in_threadpool(_readonly_http_response, body)
 
         if response is None:
             return JSONResponse({}, status_code=204)

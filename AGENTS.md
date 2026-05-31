@@ -7,7 +7,7 @@ This is the canonical Borg product repo. Borg is failure memory for AI coding ag
 - Package users install: `agent-borg`
 - Commands users run: `borg`, `borg-mcp`, `borg-doctor`
 - Day-one value path: `pipx install agent-borg` then `borg rescue "<real error>" --short`.
-- Current rollout boundary: `agent-borg==3.3.15` is published and canaried for controlled first-10 public-package beta use, capped at 10 consented testers while package/fresh-install/stdio MCP/generated-rules/OpenClaw/cold-start trust/self-service ops/watchdog/proof-dashboard gates remain green. Do not claim public self-serve, 100-user rollout, served remote MCP, or measured external lift until row-derived external-user evidence passes.
+- Current rollout boundary: `agent-borg==3.3.15` is published and canaried for the package/local stdio path, but controlled first-10 beta is currently **NO-GO** because release controls are red (served runtime stale and `main` unprotected). Tester cap is 0 until package/fresh-install/stdio MCP/generated-rules/OpenClaw/cold-start trust/self-service ops/watchdog/proof-dashboard, served-runtime freshness, and release-governance gates are all green. Do not claim public self-serve, 100-user rollout, served remote MCP, or measured external lift until row-derived external-user evidence passes.
 
 ## Before editing
 

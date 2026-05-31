@@ -14,7 +14,7 @@
     "ready_for_10": true,
     "ready_for_100": true,
     "ready_for_1000": true,
-    "timestamp": "2026-05-30T08:47:40.037782+00:00"
+    "timestamp": "2026-05-31T10:10:48.023553+00:00"
   },
   "gates": {
     "first_user_surface": true,
@@ -27,30 +27,30 @@
   "loads": {
     "10": {
       "exists": true,
-      "p95_ms": 0.7079632487148046,
-      "p99_ms": 0.768122938461602,
+      "p95_ms": 0.7141415262594819,
+      "p99_ms": 0.7846186403185129,
       "passed": true,
       "success_rate": 1.0,
-      "timestamp": "2026-05-30T08:46:38.839059+00:00",
-      "total_requests": 53746
+      "timestamp": "2026-05-31T10:09:46.692829+00:00",
+      "total_requests": 50316
     },
     "100": {
       "exists": true,
-      "p95_ms": 0.7103089941665529,
-      "p99_ms": 0.809921477921307,
+      "p95_ms": 0.9827278554439545,
+      "p99_ms": 3.343379381112749,
       "passed": true,
       "success_rate": 1.0,
-      "timestamp": "2026-05-30T08:47:08.965547+00:00",
-      "total_requests": 52723
+      "timestamp": "2026-05-31T10:10:16.830140+00:00",
+      "total_requests": 40066
     },
     "1000": {
       "exists": true,
-      "p95_ms": 0.6992750684730709,
-      "p99_ms": 0.7264311169274151,
+      "p95_ms": 0.7121274247765541,
+      "p99_ms": 0.7705441676080227,
       "passed": true,
       "success_rate": 1.0,
-      "timestamp": "2026-05-30T08:47:39.133939+00:00",
-      "total_requests": 53412
+      "timestamp": "2026-05-31T10:10:47.003248+00:00",
+      "total_requests": 49726
     }
   },
   "ready_for_10": true,
@@ -59,14 +59,18 @@
   "real_user_100_all_pass": false,
   "real_user_rollout": {
     "blockers": [
+      "served runtime borg_version '3.3.14' != source version '3.3.15'",
+      "served runtime version_matches_source is not true",
+      "served runtime reload_status is not loaded_code_matches_source_behavior",
+      "main branch is not protected",
       "first-10 external-user evidence has not passed: verified=0/10, real_users=0/10, installs=0/8, useful=0/6, critical_incidents=0/0"
     ],
     "exists": true,
-    "generated_at_utc": "2026-05-30T08:47:39.967625+00:00",
-    "infrastructure_ready_for_100": true,
-    "max_recommended_real_users_now": 10,
+    "generated_at_utc": "2026-05-31T10:10:47.949738+00:00",
+    "infrastructure_ready_for_100": false,
+    "max_recommended_real_users_now": 0,
     "ready_for_100_real_users": false,
-    "ready_for_10_controlled_beta": true
+    "ready_for_10_controlled_beta": false
   },
   "security_surface": {
     "missing": [],
@@ -90,7 +94,7 @@
   },
   "source": "eval/uat_scoreboard.py",
   "synthetic_load_all_pass": true,
-  "timestamp": "2026-05-30T08:47:40.087586+00:00",
+  "timestamp": "2026-05-31T10:10:48.072287+00:00",
   "version": {
     "passed": true,
     "project_version": "3.3.15",

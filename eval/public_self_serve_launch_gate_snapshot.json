@@ -1,5 +1,9 @@
 {
   "blockers": [
+    "served runtime borg_version '3.3.14' != source version '3.3.15'",
+    "served runtime version_matches_source is not true",
+    "served runtime reload_status is not loaded_code_matches_source_behavior",
+    "main branch is not protected",
     "first-10 external-user evidence has not passed: verified=0/10, real_users=0/10, installs=0/8, useful=0/6, critical_incidents=0/0"
   ],
   "gate_type": "public_self_serve_launch",
@@ -8,7 +12,7 @@
       "exists": true,
       "failed_count": 0,
       "failures": [],
-      "generated_at_utc": "2026-05-30T08:46:07.173727+00:00",
+      "generated_at_utc": "2026-05-31T10:09:14.983665+00:00",
       "has_bad_answer_feedback_path": true,
       "missing_required_checks": [],
       "observed_check_count": 7,
@@ -105,7 +109,7 @@
     },
     "ops_readiness_watchdog": {
       "blockers": [],
-      "generated_at_utc": "2026-05-30T19:28:31.050665+00:00",
+      "generated_at_utc": "2026-05-31T10:01:11.677205+00:00",
       "passed": true,
       "snapshot": "eval/ops_readiness_watchdog_snapshot.json",
       "truth_policy": "Watchdog passing means controlled first-10 ops proof is fresh and internally consistent. Broad public self-serve still requires row-derived first-10 external-user evidence."
@@ -178,20 +182,57 @@
       "url_mismatches": {},
       "url_missing": []
     },
+    "release_governance": {
+      "blockers": [
+        "main branch is not protected"
+      ],
+      "codeowners_review_required": null,
+      "passed": false,
+      "protected": false,
+      "required_checks_expected": [
+        "CI",
+        "Borg Security Gates",
+        "Self-service readiness watchdog",
+        "Account Reference Firewall"
+      ],
+      "required_checks_observed": [],
+      "schema_version": 1,
+      "snapshot": "eval/release_governance_snapshot.json",
+      "source": "snapshot"
+    },
     "self_service_ops_readiness": {
       "blockers": [],
-      "generated_at_utc": "2026-05-30T19:28:31.498426+00:00",
+      "generated_at_utc": "2026-05-31T10:10:58.902231+00:00",
       "passed": true,
       "report": "docs/SELF_SERVICE_OPS_READINESS_REPORT.md",
       "rollout_policy": "Controlled first-10 may proceed only when ops readiness passes; broad public self-serve still requires row-derived first-10 external evidence.",
       "snapshot": "eval/self_service_ops_gate_snapshot.json"
+    },
+    "served_runtime_freshness": {
+      "blockers": [
+        "served runtime borg_version '3.3.14' != source version '3.3.15'",
+        "served runtime version_matches_source is not true",
+        "served runtime reload_status is not loaded_code_matches_source_behavior"
+      ],
+      "expected_version": "3.3.15",
+      "passed": false,
+      "schema_version": 1,
+      "snapshot": "eval/served_runtime_fingerprint_snapshot.json",
+      "summary": {
+        "borg_version": "3.3.14",
+        "confidence_gate_canary_passed": true,
+        "observe_behavior_canary_passed": true,
+        "reload_status": "reload_or_patch_required",
+        "source_version": "3.3.15",
+        "version_matches_source": false
+      }
     }
   },
-  "generated_at_utc": "2026-05-30T19:28:31.602841+00:00",
-  "max_recommended_real_users_now": 10,
-  "ready_for_controlled_first_10_beta": true,
+  "generated_at_utc": "2026-05-31T10:10:59.009036+00:00",
+  "max_recommended_real_users_now": 0,
+  "ready_for_controlled_first_10_beta": false,
   "ready_for_public_self_serve_launch": false,
   "schema_version": 1,
   "source_version": "3.3.15",
-  "truth_policy": "Public self-serve is GO only after PyPI/fresh-install/MCP/docs/cold-start-trust/self-service-ops/watchdog gates pass AND row-derived first-10 external-user evidence passes. Synthetic users and aggregate-only edits never count."
+  "truth_policy": "Public self-serve is GO only after PyPI/fresh-install/MCP/docs/cold-start-trust/served-runtime/release-governance/self-service-ops/watchdog gates pass AND row-derived first-10 external-user evidence passes. Synthetic users and aggregate-only edits never count."
 }

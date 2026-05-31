@@ -4,8 +4,9 @@
 The watchdog catches stale proof snapshots, missing scheduled automation, broken
 ops readiness, and contradiction between live gates and committed public status.
 It intentionally allows public self-serve to remain NO-GO when blockers are the
-expected current release-stage blockers: package/PyPI canary not live yet and/or
-row-derived first-10 external evidence not collected yet.
+expected current release-stage blockers: package/PyPI canary not live yet,
+served-runtime/release-governance controls not cut over yet, and/or row-derived
+first-10 external evidence not collected yet.
 """
 from __future__ import annotations
 
@@ -110,6 +111,11 @@ def _public_blockers_are_allowed(blockers: list[Any], allowed_key: str) -> bool:
             _is_first_10_blocker(str(b)) or _is_package_release_blocker(str(b))
             for b in blockers
         )
+    if allowed_key == "release_controls_or_first_10_evidence":
+        return all(
+            _is_first_10_blocker(str(b)) or _is_package_release_blocker(str(b)) or _is_release_control_blocker(str(b))
+            for b in blockers
+        )
     return allowed_key.lower() in joined
 
 
@@ -129,8 +135,24 @@ def _is_package_release_blocker(blocker: str) -> bool:
     )
 
 
+def _is_release_control_blocker(blocker: str) -> bool:
+    lower = blocker.lower()
+    return (
+        "served runtime" in lower
+        or "version_matches_source" in lower
+        or "reload_status" in lower
+        or "release governance" in lower
+        or "branch protection" in lower
+        or "main branch is not protected" in lower
+    )
+
+
 def _has_package_release_gap(blockers: list[Any]) -> bool:
     return any(_is_package_release_blocker(str(blocker)) for blocker in blockers)
+
+
+def _has_release_control_gap(blockers: list[Any]) -> bool:
+    return any(_is_release_control_blocker(str(blocker)) for blocker in blockers)
 
 
 def _has_first_10_gap(blockers: list[Any]) -> bool:
@@ -152,6 +174,28 @@ def _is_pre_package_release_stage(live_public: dict[str, Any], live_real: dict[s
         and _has_package_release_gap(real_blockers)
         and _has_first_10_gap(public_blockers)
         and _has_first_10_gap(real_blockers)
+        and _public_blockers_are_allowed(public_blockers, "package_or_first_10_evidence")
+        and _public_blockers_are_allowed(real_blockers, "package_or_first_10_evidence")
+    )
+
+
+def _is_release_control_blocked_stage(live_public: dict[str, Any], live_real: dict[str, Any], pypi_current: bool) -> bool:
+    public_blockers = live_public.get("blockers") or []
+    real_blockers = live_real.get("blockers") or []
+    return bool(
+        pypi_current
+        and live_public.get("ready_for_controlled_first_10_beta") is False
+        and live_public.get("ready_for_public_self_serve_launch") is False
+        and live_public.get("max_recommended_real_users_now") == 0
+        and live_real.get("ready_for_10_controlled_beta") is False
+        and live_real.get("ready_for_100_real_users") is False
+        and live_real.get("max_recommended_real_users_now") == 0
+        and _has_release_control_gap(public_blockers)
+        and _has_release_control_gap(real_blockers)
+        and _has_first_10_gap(public_blockers)
+        and _has_first_10_gap(real_blockers)
+        and _public_blockers_are_allowed(public_blockers, "release_controls_or_first_10_evidence")
+        and _public_blockers_are_allowed(real_blockers, "release_controls_or_first_10_evidence")
     )
 
 
@@ -176,6 +220,7 @@ def compile_watchdog(*, max_snapshot_age_hours: float = 24.0, allow_public_block
         and bool((pypi.get("mcp_stdio_canary") or {}).get("passed"))
     )
     pre_package_release_stage = _is_pre_package_release_stage(live_public, live_real, pypi_current)
+    release_control_blocked_stage = _is_release_control_blocked_stage(live_public, live_real, pypi_current)
     controlled_package_stage = bool(
         live_public.get("ready_for_controlled_first_10_beta")
         and live_public.get("max_recommended_real_users_now") == 10
@@ -229,10 +274,11 @@ def compile_watchdog(*, max_snapshot_age_hours: float = 24.0, allow_public_block
         "live": {k: live_public.get(k) for k in ["source_version", "ready_for_controlled_first_10_beta", "ready_for_public_self_serve_launch", "max_recommended_real_users_now"]},
     }
     checks["real_user_rollout_consistency"] = {
-        "passed": controlled_package_stage or pre_package_release_stage,
+        "passed": controlled_package_stage or pre_package_release_stage or release_control_blocked_stage,
         "live": {k: live_real.get(k) for k in ["ready_for_10_controlled_beta", "infrastructure_ready_for_100", "ready_for_100_real_users", "max_recommended_real_users_now", "blockers"]},
         "controlled_package_stage": controlled_package_stage,
         "pre_package_release_stage": pre_package_release_stage,
+        "release_control_blocked_stage": release_control_blocked_stage,
     }
     checks["public_blockers_allowed"] = {
         "passed": _public_blockers_are_allowed(live_public.get("blockers") or [], allow_public_blocker),
@@ -251,14 +297,27 @@ def compile_watchdog(*, max_snapshot_age_hours: float = 24.0, allow_public_block
         and status.get("max_recommended_real_users_now") == 0
         and status.get("verified_external_users") == 0
     )
+    release_control_blocked_status_ok = bool(
+        status.get("state") == "NO-GO public self-serve; public package proof green, release controls blocked"
+        and (status.get("controlled_first_10_beta") or {}).get("verdict") == "NO-GO"
+        and status.get("max_recommended_real_users_now") == 0
+        and status.get("verified_external_users") == 0
+        and status.get("served_runtime_freshness_gate") == "FAIL"
+        and status.get("release_governance_gate") == "FAIL"
+    )
     checks["public_status_consistency"] = {
-        "passed": controlled_status_ok or pre_package_status_ok,
+        "passed": bool(
+            (controlled_status_ok and controlled_package_stage)
+            or (pre_package_status_ok and pre_package_release_stage)
+            or (release_control_blocked_status_ok and release_control_blocked_stage)
+        ),
         "status_state": status.get("state"),
         "controlled_verdict": (status.get("controlled_first_10_beta") or {}).get("verdict"),
         "max_recommended_real_users_now": status.get("max_recommended_real_users_now"),
         "verified_external_users": status.get("verified_external_users"),
         "controlled_status_ok": controlled_status_ok,
         "pre_package_status_ok": pre_package_status_ok,
+        "release_control_blocked_status_ok": release_control_blocked_status_ok,
     }
     metrics = dashboard.get("metrics") or {}
     measured = ((metrics.get("measured_savings") or {}).get("value") or {}) if isinstance(metrics, dict) else {}

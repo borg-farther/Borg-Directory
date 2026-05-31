@@ -16,15 +16,18 @@
 - rescue rule: `borg rescue --json` exposes `value_receipt.measurement_status=ready_to_measure` and `savings_claim_type=none` until a later first-10 row records the outcome
 
 ## readiness status
-- controlled first-10 PyPI beta infrastructure: **CONDITIONAL GO while gates remain green for `agent-borg==3.3.15` package/proof chain** — invite at most 10 consented external users through the local CLI / stdio MCP package path while evidence intake and incident pause gates remain green
+- controlled first-10 PyPI beta: **NO-GO right now** — `agent-borg==3.3.15` package/local stdio proof is green, but served-runtime freshness and release-governance gates are red; invite 0 consented external users until release controls and ops/watchdog proof are green
 - supervised local first-user path: GO in current artifacts
 - public self-serve launch: **NO-GO until first-10 row-derived external evidence passes**
 - 100 real-user rollout: **NO-GO until 10 external users, >=8 installs, >=6 useful rescues, and 0 critical incidents**
-- decision: controlled first-10 beta may run for `agent-borg==3.3.15` under the 10-tester cap while package/proof gates remain green; no broad self-serve, served remote MCP, 100-user, measured-savings, or frontier-better-than claim
+- decision: package proof is green for `agent-borg==3.3.15`, but controlled first-10 beta must wait for served-runtime freshness, release governance, ops/watchdog, and proof-dashboard gates; no broad self-serve, served remote MCP, 100-user, measured-savings, or frontier-better-than claim
 
 ## evidence
 - `eval/public_self_serve_launch_gate_snapshot.json`
 - `eval/real_user_rollout_gate_snapshot.json`
 - `eval/first_10_user_scoreboard.json`
 - `eval/pypi_fresh_install_snapshot.json`
+- `eval/served_runtime_fingerprint_snapshot.json`
+- `eval/release_governance_snapshot.json`
+- `eval/ops_readiness_watchdog_snapshot.json`
 - `eval/first_user_release_gate_snapshot.json`

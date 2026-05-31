@@ -106,6 +106,26 @@ def _public_package_ready() -> dict[str, Any]:
     }
 
 
+def _release_controls_ready() -> dict[str, Any]:
+    version = str(_version_consistent().get("project_version") or public_gate.source_version())
+    served_runtime = public_gate.served_runtime_freshness_check(
+        ROOT / "eval" / "served_runtime_fingerprint_snapshot.json",
+        version,
+    )
+    release_governance = public_gate.release_governance_check(fetch_network=True)
+    blockers: list[str] = []
+    if not served_runtime.get("passed"):
+        blockers.extend(served_runtime.get("blockers") or ["served runtime freshness gate is not green"])
+    if not release_governance.get("passed"):
+        blockers.extend(release_governance.get("blockers") or ["release governance gate is not green"])
+    return {
+        "passed": bool(served_runtime.get("passed") and release_governance.get("passed")),
+        "served_runtime_freshness": served_runtime,
+        "release_governance": release_governance,
+        "blockers": blockers,
+    }
+
+
 def _ops_ready(*, require_ops_watchdog: bool = True) -> dict[str, Any]:
     data = self_service_ops_gate.compile_gate()
     watchdog = (
@@ -189,6 +209,7 @@ def compile_rollout_gate(*, require_ops_watchdog: bool = True) -> dict[str, Any]
     security = _security_ready()
     first_user = _first_user_release_ready()
     package = _public_package_ready()
+    release_controls = _release_controls_ready()
     ops = _ops_ready(require_ops_watchdog=require_ops_watchdog)
     load_10 = _load_ready(10)
     load_100 = _load_ready(100)
@@ -203,6 +224,7 @@ def compile_rollout_gate(*, require_ops_watchdog: bool = True) -> dict[str, Any]
     ready_for_10_controlled_beta = bool(
         local_infra_ready_for_10
         and package["passed"]
+        and release_controls["passed"]
         and ops["passed"]
         and no_first_10_privacy_security_incidents
     )
@@ -227,6 +249,8 @@ def compile_rollout_gate(*, require_ops_watchdog: bool = True) -> dict[str, Any]
         blockers.append("100-user load gate is not green")
     if not package["passed"]:
         blockers.extend(package.get("blockers") or ["public PyPI package/fresh-install evidence is not green"])
+    if not release_controls["passed"]:
+        blockers.extend(release_controls.get("blockers") or ["release controls are not green"])
     if not ops["passed"]:
         blockers.extend(ops.get("blockers") or ["self-service ops readiness gate is not green"])
     if not no_first_10_privacy_security_incidents:
@@ -256,6 +280,7 @@ def compile_rollout_gate(*, require_ops_watchdog: bool = True) -> dict[str, Any]
         "security": security,
         "first_user_release_gate": first_user,
         "public_package_gate": package,
+        "release_controls_gate": release_controls,
         "self_service_ops_gate": ops,
         "load_gates": {"10": load_10, "100": load_100},
         "first_10_external_evidence": first_10,
@@ -288,6 +313,9 @@ def write_report(snapshot: dict[str, Any]) -> None:
         "## Current gates",
         "",
         f"- ready_for_10_controlled_beta: `{snapshot['ready_for_10_controlled_beta']}`",
+        f"- release_controls_ready: `{snapshot['release_controls_gate'].get('passed')}`",
+        f"- served_runtime_fresh: `{snapshot['release_controls_gate'].get('served_runtime_freshness', {}).get('passed')}`",
+        f"- release_governance_ready: `{snapshot['release_controls_gate'].get('release_governance', {}).get('passed')}`",
         f"- self_service_ops_ready: `{snapshot['self_service_ops_gate'].get('self_service_ops_passed', snapshot['self_service_ops_gate'].get('passed'))}`",
         f"- ops_readiness_watchdog_ready: `{snapshot['self_service_ops_gate'].get('ops_readiness_watchdog', {}).get('passed')}`",
         f"- infrastructure_ready_for_100: `{snapshot['infrastructure_ready_for_100']}`",
@@ -319,7 +347,7 @@ def write_report(snapshot: dict[str, Any]) -> None:
         "1. Run 10 consented external users through the published PyPI path.",
         "2. Record evidence rows in `eval/first_10_user_scoreboard.json`.",
         "3. Require at least 8 install successes, 6 useful rescue moments, and 0 critical privacy/security incidents.",
-        "4. Keep self-service ops/watchdog gates green; pause controlled beta if bad-answer/support/privacy intake fails.",
+        "4. Keep served-runtime, release-governance, self-service ops/watchdog gates green; pause controlled beta if runtime freshness, branch protection, bad-answer/support/privacy intake fails.",
         "5. Rerun `python eval/real_user_rollout_gate.py`; only a green gate authorizes 100 real users.",
         "",
         "Machine snapshot: `eval/real_user_rollout_gate_snapshot.json`",
@@ -351,6 +379,7 @@ def main(argv: list[str] | None = None) -> int:
         write_report(snapshot)
     print(json.dumps({
         "ready_for_10_controlled_beta": snapshot["ready_for_10_controlled_beta"],
+        "release_controls_ready": snapshot["release_controls_gate"].get("passed"),
         "self_service_ops_ready": snapshot["self_service_ops_gate"].get("passed"),
         "infrastructure_ready_for_100": snapshot["infrastructure_ready_for_100"],
         "ready_for_100_real_users": snapshot["ready_for_100_real_users"],

@@ -41,6 +41,8 @@ SOURCE_PATHS = [
     "eval/first_10_user_scoreboard.json",
     "eval/public_self_serve_launch_gate_snapshot.json",
     "eval/cold_start_trust_gate_snapshot.json",
+    "eval/served_runtime_fingerprint_snapshot.json",
+    "eval/release_governance_snapshot.json",
     "eval/self_service_ops_gate_snapshot.json",
     "eval/ops_readiness_watchdog_snapshot.json",
     "eval/rollback_comms_drill_snapshot.json",
@@ -90,6 +92,13 @@ def nested(data: dict | None, keys: list[str], default=None):
             return default
         cur = cur[key]
     return cur
+
+
+def first_dict(*values: object) -> dict:
+    for value in values:
+        if isinstance(value, dict):
+            return value
+    return {}
 
 
 def status_bool(value) -> str:
@@ -160,6 +169,8 @@ def build_model() -> dict:
     first10_scoreboard = load_json("eval/first_10_user_scoreboard.json")
     public_gate = load_json("eval/public_self_serve_launch_gate_snapshot.json")
     cold_start_trust = load_json("eval/cold_start_trust_gate_snapshot.json")
+    served_runtime_snapshot = load_json("eval/served_runtime_fingerprint_snapshot.json")
+    release_governance_snapshot = load_json("eval/release_governance_snapshot.json")
     self_service_ops = load_json("eval/self_service_ops_gate_snapshot.json")
     ops_watchdog = load_json("eval/ops_readiness_watchdog_snapshot.json")
     rollback_drill = load_json("eval/rollback_comms_drill_snapshot.json")
@@ -204,11 +215,69 @@ def build_model() -> dict:
     public_self_serve_pass = nested(public_gate, ["ready_for_public_self_serve_launch"])
     cold_start_trust_pass = nested(cold_start_trust, ["passed"])
     self_service_ops_pass = nested(self_service_ops, ["passed"])
+    self_service_ops_blockers = nested(self_service_ops, ["blockers"], []) or []
+    try:
+        from eval import self_service_ops_gate as _self_service_ops_gate
+
+        live_self_service_ops = _self_service_ops_gate.compile_gate()
+        if isinstance(live_self_service_ops, dict):
+            self_service_ops = live_self_service_ops
+            self_service_ops_pass = bool(live_self_service_ops.get("passed"))
+            self_service_ops_blockers = live_self_service_ops.get("blockers") or []
+    except Exception as exc:
+        self_service_ops_pass = False
+        self_service_ops_blockers = [f"self-service ops gate could not be evaluated: {exc}"]
     ops_watchdog_pass = nested(ops_watchdog, ["passed"])
     rollback_drill_pass = nested(rollback_drill, ["passed"])
+    if any("rollback_drill_snapshot" in str(blocker) for blocker in self_service_ops_blockers):
+        rollback_drill_pass = False
     pypi_fresh_pass = nested(pypi_fresh, ["success"])
     pypi_fresh_version = nested(pypi_fresh, ["version"])
     pypi_fresh_current = bool(pypi_fresh_pass is True and pypi_fresh_version == pv)
+
+    served_runtime_gate = first_dict(
+        nested(public_gate, ["gates", "served_runtime_freshness"]),
+        nested(real_user, ["release_controls_gate", "served_runtime_freshness"]),
+    )
+    if not served_runtime_gate and isinstance(served_runtime_snapshot, dict) and "_parse_error" not in served_runtime_snapshot:
+        try:
+            from eval import served_runtime_gate as _served_runtime_gate
+
+            served_runtime_payload = served_runtime_snapshot
+            if isinstance(served_runtime_payload.get("result"), str):
+                try:
+                    parsed_payload = json.loads(served_runtime_payload["result"])
+                    if isinstance(parsed_payload, dict):
+                        served_runtime_payload = parsed_payload
+                except json.JSONDecodeError:
+                    pass
+            served_runtime_gate = _served_runtime_gate.evaluate_snapshot(
+                served_runtime_payload,
+                expected_version=str(pv or "UNKNOWN"),
+            )
+        except Exception as exc:
+            served_runtime_gate = {"passed": False, "blockers": [f"served runtime snapshot could not be evaluated: {exc}"]}
+    served_runtime_pass = nested(served_runtime_gate, ["passed"])
+
+    release_governance_gate = first_dict(
+        nested(public_gate, ["gates", "release_governance"]),
+        nested(real_user, ["release_controls_gate", "release_governance"]),
+    )
+    if not release_governance_gate and isinstance(release_governance_snapshot, dict) and "_parse_error" not in release_governance_snapshot:
+        try:
+            from eval import release_governance_gate as _release_governance_gate
+
+            if "passed" in release_governance_snapshot and "required_checks_observed" in release_governance_snapshot:
+                release_governance_gate = release_governance_snapshot
+            else:
+                release_governance_gate = _release_governance_gate.evaluate_branch_payload(release_governance_snapshot)
+        except Exception as exc:
+            release_governance_gate = {"passed": False, "blockers": [f"release governance snapshot could not be evaluated: {exc}"]}
+    release_governance_pass = nested(release_governance_gate, ["passed"])
+    release_controls_pass = nested(real_user, ["release_controls_gate", "passed"])
+    if release_controls_pass is None:
+        release_controls_pass = bool(served_runtime_pass is True and release_governance_pass is True)
+
     first10_counts = first10_evaluation.get("derived_counts") if isinstance(first10_evaluation, dict) else {}
     first10_privacy_security_incidents = int(first10_counts.get("critical_privacy_security_failures") or 0) if isinstance(first10_counts, dict) else 0
     real_user_blockers = nested(real_user, ["blockers"], nested(uat, ["real_user_rollout", "blockers"], []))
@@ -230,16 +299,38 @@ def build_model() -> dict:
     controlled_beta_ready = bool(
         pypi_fresh_current
         and cold_start_trust_pass is True
+        and served_runtime_pass is True
+        and release_governance_pass is True
         and self_service_ops_pass is True
         and ops_watchdog_pass is True
         and local_release_candidate_ready
         and first10_privacy_security_incidents == 0
     )
+    controlled_beta_missing = []
+    if not pypi_fresh_current:
+        controlled_beta_missing.append("PyPI latest/fresh-install/stdout MCP package path")
+    if cold_start_trust_pass is not True:
+        controlled_beta_missing.append("cold-start trust gate")
+    if served_runtime_pass is not True:
+        controlled_beta_missing.append("served-runtime freshness")
+    if release_governance_pass is not True:
+        controlled_beta_missing.append("release governance / main branch protection")
+    if self_service_ops_pass is not True:
+        controlled_beta_missing.append("self-service ops gate")
+    if rollback_drill_pass is not True:
+        controlled_beta_missing.append("rollback/comms drill freshness")
+    if ops_watchdog_pass is not True:
+        controlled_beta_missing.append("ops watchdog")
+    if not local_release_candidate_ready:
+        controlled_beta_missing.append("local release-candidate gate")
+    if first10_privacy_security_incidents != 0:
+        controlled_beta_missing.append("first-10 privacy/security incident triage")
+
     max_recommended_real_users = 100 if public_self_serve_pass is True else 10 if controlled_beta_ready else 0
     controlled_beta_why = (
-        "The 10-tester infrastructure and ops guardrails are green; broad launch remains NO-GO pending row-derived external-user evidence."
+        "The 10-tester infrastructure, served-runtime freshness, release governance, and ops guardrails are green; broad launch remains NO-GO pending row-derived external-user evidence."
         if controlled_beta_ready
-        else "Controlled first-10 beta is blocked until the public package path and ops layer are green, and any first-10 privacy/security incidents are triaged: PyPI latest metadata, fresh-install canary, stdio MCP canary, cold-start trust gate, self-service ops gate, ops watchdog, and docs guard must all pass."
+        else "Controlled first-10 beta is blocked until these failed gates are green: " + "; ".join(controlled_beta_missing or ["unknown readiness gate"])
     )
     verdicts = {
         "controlled_first_10_beta": {
@@ -257,13 +348,15 @@ def build_model() -> dict:
         "broad_public_launch": {
             "verdict": "NO-GO" if public_self_serve_pass is not True else "GO",
             "why": (
-                "Public self-serve gate is blocked only by row-derived first-10 external-user evidence; PyPI/latest/fresh-install/MCP/docs/cold-start-trust/self-service-ops/ops-watchdog gates are green."
+                "Public self-serve gate is blocked only by row-derived first-10 external-user evidence; PyPI/latest/fresh-install/MCP/docs/cold-start-trust/served-runtime/release-governance/self-service-ops/ops-watchdog gates are green."
                 if pypi_fresh_current
                 and cold_start_trust_pass is True
+                and served_runtime_pass is True
+                and release_governance_pass is True
                 and self_service_ops_pass is True
                 and ops_watchdog_pass is True
                 and public_self_serve_pass is not True
-                else "Public self-serve gate is blocked until PyPI latest/fresh-install/MCP/docs/cold-start-trust/self-service-ops/ops-watchdog gates pass and first-10 external evidence exists."
+                else "Public self-serve gate is blocked until PyPI latest/fresh-install/MCP/docs/cold-start-trust/served-runtime/release-governance/self-service-ops/ops-watchdog gates pass and first-10 external evidence exists."
             ) if public_self_serve_pass is not True else "Public self-serve gate has passed with row-derived external evidence.",
         },
     }
@@ -280,13 +373,16 @@ def build_model() -> dict:
         "max_recommended_real_users_now": {"value": max_recommended_real_users, "honesty_label": "REAL_EXTERNAL_USERS", "provenance": "eval/real_user_rollout_gate_snapshot.json" if real_user else "MISSING"},
         "public_self_serve_launch_gate": {"value": status_bool(public_self_serve_pass), "honesty_label": "PUBLIC_LAUNCH_GATE", "provenance": "eval/public_self_serve_launch_gate_snapshot.json" if public_gate else "MISSING"},
         "cold_start_trust_hardening_gate": {"value": status_bool(cold_start_trust_pass), "honesty_label": "FIRST_ANSWER_TRUST_GATE", "provenance": "eval/cold_start_trust_gate_snapshot.json" if cold_start_trust else "MISSING"},
+        "served_runtime_freshness_gate": {"value": status_bool(served_runtime_pass), "honesty_label": "SERVED_RUNTIME_FINGERPRINT_GATE", "provenance": "eval/served_runtime_fingerprint_snapshot.json" if served_runtime_snapshot else "MISSING"},
+        "release_governance_gate": {"value": status_bool(release_governance_pass), "honesty_label": "RELEASE_GOVERNANCE_BRANCH_PROTECTION_GATE", "provenance": "eval/release_governance_snapshot.json" if release_governance_snapshot else "MISSING"},
+        "release_controls_gate": {"value": status_bool(release_controls_pass), "honesty_label": "SERVED_RUNTIME_PLUS_RELEASE_GOVERNANCE", "provenance": "eval/real_user_rollout_gate_snapshot.json" if real_user else "eval/served_runtime_fingerprint_snapshot.json; eval/release_governance_snapshot.json"},
         "self_service_ops_gate": {"value": status_bool(self_service_ops_pass), "honesty_label": "SELF_SERVICE_OPS_GATE", "provenance": "eval/self_service_ops_gate_snapshot.json" if self_service_ops else "MISSING"},
         "first_10_privacy_security_incidents": {"value": first10_privacy_security_incidents, "honesty_label": "ROW_DERIVED_EXTERNAL_USER_RISK", "provenance": external_user_evidence},
         "ops_readiness_watchdog": {"value": status_bool(ops_watchdog_pass), "honesty_label": "OPS_PROOF_FRESHNESS_GATE", "provenance": "eval/ops_readiness_watchdog_snapshot.json" if ops_watchdog else "MISSING"},
         "rollback_comms_drill": {"value": status_bool(rollback_drill_pass), "honesty_label": "DRY_RUN_ROLLBACK_COMMS_DRILL", "provenance": "eval/rollback_comms_drill_snapshot.json" if rollback_drill else "MISSING"},
         "pypi_fresh_install_canary": {"value": status_bool(pypi_fresh_current), "honesty_label": "PYPI_FRESH_INSTALL_CURRENT_VERSION", "provenance": "eval/pypi_fresh_install_snapshot.json" if pypi_fresh else "MISSING"},
         "source_version_consistency": {"value": f"pyproject={pv or 'MISSING'} runtime={rv or 'MISSING'}", "honesty_label": "REPO_SOURCE", "provenance": "pyproject.toml; borg/__init__.py"},
-        "host_runtime_split_brain": {"value": "NOT_EVALUATED_BY_THIS_BUILD", "honesty_label": "EVIDENCE_GAP", "provenance": "This dashboard build does not restart or fingerprint long-lived served Hermes/MCP runtimes; it is not live cutover proof. Served runtime GO requires borg_runtime_fingerprint with version_matches_source=true and observe_behavior_canary.passed=true."},
+        "host_runtime_split_brain": {"value": status_bool(served_runtime_pass), "honesty_label": "SERVED_RUNTIME_EVIDENCE", "provenance": "Dashboard reads eval/served_runtime_fingerprint_snapshot.json; it does not restart or mutate long-lived Hermes/MCP runtimes. Served runtime GO requires borg_runtime_fingerprint with version_matches_source=true, reload_status=loaded_code_matches_source_behavior, and observe_behavior_canary.passed=true." if served_runtime_snapshot else "MISSING eval/served_runtime_fingerprint_snapshot.json; source/fresh-process green is not live cutover proof."},
         "load_gates": {"value": load_summary, "honesty_label": "LOGICAL_USERS_NOT_REAL_USERS", "provenance": "eval/load_*_snapshot.json and eval/uat_scoreboard_snapshot.json"},
     }
 
@@ -295,6 +391,8 @@ def build_model() -> dict:
             "No real external first-user install/rescue outcome has been recorded yet.",
             "PyPI fresh-install canary is not green for the current source version yet." if not pypi_fresh_current else "PyPI fresh-install canary is green for the current source version.",
             "Cold-start trust gate is not green yet." if cold_start_trust_pass is not True else "Cold-start trust gate is green: meta/readiness prompts fail closed before random framework guidance reaches first users.",
+            "Served runtime freshness gate is not green yet." if served_runtime_pass is not True else "Served runtime freshness gate is green: live MCP fingerprint matches source and behavior canaries.",
+            "Release governance gate is not green yet." if release_governance_pass is not True else "Release governance gate is green: main branch protection, required checks, and CODEOWNERS review are proven.",
             "Self-service ops gate is not green yet." if self_service_ops_pass is not True else "Self-service ops gate is green: bad-answer intake, first-10 evidence intake, support/SLA, rollback/comms, and watchdog workflow exist.",
             "Ops watchdog has not produced a fresh green snapshot yet." if ops_watchdog_pass is not True else "Ops watchdog is green: proof snapshots and public status are internally consistent.",
             "Unattended Git-only onboarding remains unproven until external user can install, configure MCP, and receive a useful rescue without maintainer intervention.",
@@ -314,14 +412,17 @@ def build_model() -> dict:
         "evidence_gaps": [
             "No Borg analytics export proving active contributors or consumers was found.",
             "No first-10-user scoreboard with real outcomes exists yet.",
-            "Ops readiness/watchdog must stay green; any P0/P1 bad-answer, privacy, support, or stale-proof failure pauses controlled beta invites.",
+            "Ops readiness/watchdog plus served-runtime and release-governance gates must stay green; any P0/P1 bad-answer, privacy, support, stale-proof, stale-runtime, or branch-protection failure pauses controlled beta invites.",
             f"100-real-user gate remains blocked: {real_user_blockers or ['no blocker detail found']}",
-            "Served/runtime split-brain was not evaluated by this dashboard build; source/fresh-process green is not live cutover proof.",
+            "Served/runtime freshness must be proven from eval/served_runtime_fingerprint_snapshot.json; source/fresh-process green is not live cutover proof.",
+            "Release governance must be proven from eval/release_governance_snapshot.json; missing/unprotected branch details block release readiness.",
         ],
     }
 
     if controlled_beta_ready and pypi_fresh_current:
         first_tester_action = f"Use `pipx install agent-borg=={pypi_fresh_version or pv or 'CURRENT_VERSION'}` with controlled first-10 beta testers and label it as beta evidence capture, not public launch."
+    elif pypi_fresh_current:
+        first_tester_action = f"Do not invite controlled first-10 testers yet: `agent-borg=={pypi_fresh_version or pv or 'CURRENT_VERSION'}` PyPI/fresh-install proof is green, but {', '.join(controlled_beta_missing or ['release/ops gates'])} must pass first."
     else:
         first_tester_action = f"After `agent-borg=={pv or 'CURRENT_VERSION'}` is published and the PyPI fresh-install + stdio MCP canary passes, use that exact PyPI version with controlled first-10 beta testers."
     next_actions = [
@@ -413,9 +514,9 @@ def build_model() -> dict:
         "controlled_first_10_beta": {
             "answer": "CONDITIONAL GO" if controlled_beta_ready else "NO-GO",
             "conditions": [
-                "Controlled testers only while gates remain green." if controlled_beta_ready else "Do not invite controlled beta users until PyPI latest, fresh-install, stdio MCP, cold-start trust, self-service ops, and watchdog gates are green.",
+                "Controlled testers only while package, served-runtime, release-governance, ops, watchdog, rollback, and docs gates remain green." if controlled_beta_ready else "Do not invite controlled beta users until these failed gates are green: " + "; ".join(controlled_beta_missing or ["unknown readiness gate"]),
                 "Do not present as unattended public launch ready.",
-                "Capture real first-user outcome evidence immediately." if controlled_beta_ready else "Keep first-10 evidence capture prepared, but blocked until package/ops evidence is green.",
+                "Capture real first-user outcome evidence immediately." if controlled_beta_ready else "Keep first-10 evidence capture prepared, but blocked until package/release-control/ops evidence is green.",
             ],
         },
         "metrics": metrics,
@@ -530,15 +631,19 @@ def build_public_payloads(model: dict) -> tuple[dict, dict, dict]:
     generated = model["generated_at_utc"]
     controlled_is_green = controlled.get("verdict") == "CONDITIONAL"
     broad_is_green = broad.get("verdict") == "GO"
+    package_path_green = metrics.get("pypi_fresh_install_canary", {}).get("value") == "PASS"
     if broad_is_green:
         public_state = "GO public self-serve"
         value_detail = "Public self-serve launch gate is green with row-derived external-user evidence."
     elif controlled_is_green:
         public_state = "NO-GO public self-serve; controlled first-10 beta CONDITIONAL GO while gates remain green"
-        value_detail = "Controlled first-10 public-package beta infrastructure and ops guardrails are green; public self-serve remains blocked until row-derived first-10 external-user evidence passes."
+        value_detail = "Controlled first-10 public-package beta package, served-runtime, release-governance, and ops guardrails are green; public self-serve remains blocked until row-derived first-10 external-user evidence passes."
+    elif package_path_green:
+        public_state = "NO-GO public self-serve; public package proof green, release controls blocked"
+        value_detail = "Public-package controlled beta remains blocked until the failing release-control and ops gates pass; PyPI/package proof is green, but served-runtime freshness, release governance, rollback/self-service ops, watchdog, docs guard, and privacy/security gates must all stay green before invites."
     else:
         public_state = "NO-GO public self-serve; source/local release-candidate only"
-        value_detail = "Public-package controlled beta remains blocked until PyPI latest and fresh PyPI install + stdio MCP canaries pass for the current source version."
+        value_detail = "Public-package controlled beta remains blocked until package, release-control, and ops gates pass; PyPI/fresh-install proof is not yet green for the current source version."
 
     status_payload = {
         "schema_version": 1,
@@ -559,6 +664,9 @@ def build_public_payloads(model: dict) -> tuple[dict, dict, dict]:
         "max_recommended_real_users_now": metrics.get("max_recommended_real_users_now", {}).get("value", 0),
         "verified_external_users": metrics.get("verified_external_users", {}).get("value", 0),
         "cold_start_trust_hardening_gate": metrics.get("cold_start_trust_hardening_gate", {}).get("value", "UNKNOWN"),
+        "served_runtime_freshness_gate": metrics.get("served_runtime_freshness_gate", {}).get("value", "UNKNOWN"),
+        "release_governance_gate": metrics.get("release_governance_gate", {}).get("value", "UNKNOWN"),
+        "release_controls_gate": metrics.get("release_controls_gate", {}).get("value", "UNKNOWN"),
         "self_service_ops_gate": metrics.get("self_service_ops_gate", {}).get("value", "UNKNOWN"),
         "ops_readiness_watchdog": metrics.get("ops_readiness_watchdog", {}).get("value", "UNKNOWN"),
         "rollback_comms_drill": metrics.get("rollback_comms_drill", {}).get("value", "UNKNOWN"),
@@ -567,6 +675,8 @@ def build_public_payloads(model: dict) -> tuple[dict, dict, dict]:
             "eval/first_user_release_gate_snapshot.json",
             "eval/public_self_serve_launch_gate_snapshot.json",
             "eval/cold_start_trust_gate_snapshot.json",
+            "eval/served_runtime_fingerprint_snapshot.json",
+            "eval/release_governance_snapshot.json",
             "eval/self_service_ops_gate_snapshot.json",
             "eval/ops_readiness_watchdog_snapshot.json",
             "eval/rollback_comms_drill_snapshot.json",

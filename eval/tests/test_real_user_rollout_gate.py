@@ -28,7 +28,8 @@ def test_real_user_rollout_gate_blocks_100_when_first_10_scoreboard_empty(tmp_pa
     assert any("first-10 external-user evidence" in b for b in payload["blockers"])
 
     package_blocked = any("PyPI latest/fresh-install package evidence" in b for b in payload["blockers"])
-    if package_blocked:
+    release_controls_blocked = any("served runtime" in b or "main branch is not protected" in b for b in payload["blockers"])
+    if package_blocked or release_controls_blocked:
         assert payload["ready_for_10_controlled_beta"] is False
         assert payload["infrastructure_ready_for_100"] is False
         assert payload["max_recommended_real_users_now"] == 0
@@ -96,6 +97,41 @@ def test_real_user_rollout_gate_blocks_controlled_beta_when_public_package_path_
     assert snapshot["ready_for_100_real_users"] is False
     assert snapshot["max_recommended_real_users_now"] == 0
     assert "PyPI latest/fresh-install package evidence is not green" in snapshot["blockers"]
+
+
+def test_real_user_rollout_gate_blocks_controlled_beta_when_release_controls_fail(monkeypatch) -> None:
+    monkeypatch.setattr(rollout_gate, "_version_consistent", lambda: {"passed": True})
+    monkeypatch.setattr(rollout_gate, "_security_ready", lambda: {"passed": True, "missing": []})
+    monkeypatch.setattr(rollout_gate, "_first_user_release_ready", lambda: {"passed": True})
+    monkeypatch.setattr(rollout_gate, "_load_ready", lambda users: {"passed": True, "users": users})
+    monkeypatch.setattr(rollout_gate, "_public_package_ready", lambda: {"passed": True, "blockers": []})
+    monkeypatch.setattr(rollout_gate, "_release_controls_ready", lambda: {
+        "passed": False,
+        "blockers": ["served runtime version_matches_source is not true", "main branch is not protected"],
+    })
+    monkeypatch.setattr(rollout_gate, "_ops_ready", lambda **_: {"passed": True, "blockers": [], "rollout_policy": "test"})
+    monkeypatch.setattr(rollout_gate, "_first_10_evidence", lambda: {
+        "passed": False,
+        "verified_external_users": 0,
+        "real_users": 0,
+        "install_successes": 0,
+        "useful_rescue_moments": 0,
+        "critical_privacy_security_failures": 0,
+        "required_total_real_users": 10,
+        "required_install_successes": 8,
+        "required_useful_rescue_moments": 6,
+        "max_critical_privacy_security_failures": 0,
+        "row_level_blockers": [],
+    })
+
+    snapshot = rollout_gate.compile_rollout_gate()
+
+    assert snapshot["ready_for_10_controlled_beta"] is False
+    assert snapshot["infrastructure_ready_for_100"] is False
+    assert snapshot["ready_for_100_real_users"] is False
+    assert snapshot["max_recommended_real_users_now"] == 0
+    assert "served runtime version_matches_source is not true" in snapshot["blockers"]
+    assert "main branch is not protected" in snapshot["blockers"]
 
 
 def test_real_user_rollout_gate_blocks_controlled_beta_when_ops_readiness_fails(monkeypatch) -> None:

@@ -1,5 +1,9 @@
 {
   "blockers": [
+    "served runtime borg_version '3.3.14' != source version '3.3.15'",
+    "served runtime version_matches_source is not true",
+    "served runtime reload_status is not loaded_code_matches_source_behavior",
+    "main branch is not protected",
     "first-10 external-user evidence has not passed: verified=0/10, real_users=0/10, installs=0/8, useful=0/6, critical_incidents=0/0"
   ],
   "first_10_external_evidence": {
@@ -38,19 +42,19 @@
     "passed_count": 28
   },
   "gate_type": "real_user_rollout",
-  "generated_at_utc": "2026-05-30T19:28:32.155499+00:00",
+  "generated_at_utc": "2026-05-31T10:10:59.170757+00:00",
   "important_distinction": "load/readiness snapshots are synthetic/logical users; this gate controls real external-user rollout",
-  "infrastructure_ready_for_100": true,
+  "infrastructure_ready_for_100": false,
   "load_gates": {
     "10": {
       "duration_seconds": 30.0,
       "exists": true,
       "latency_ms": {
-        "avg": 0.5502523897392194,
-        "max": 6.606195122003555,
-        "p50": 0.5316054448485374,
-        "p95": 0.7079632487148046,
-        "p99": 0.768122938461602
+        "avg": 0.5871485158298658,
+        "max": 4.4167679734528065,
+        "p50": 0.5916894879192114,
+        "p95": 0.7141415262594819,
+        "p99": 0.7846186403185129
       },
       "passed": true,
       "success_rate": 1.0,
@@ -60,11 +64,11 @@
       "duration_seconds": 30.0,
       "exists": true,
       "latency_ms": {
-        "avg": 0.5523500633155126,
-        "max": 15.723291086032987,
-        "p50": 0.5314608570188284,
-        "p95": 0.7103089941665529,
-        "p99": 0.809921477921307
+        "avg": 0.7248919789759264,
+        "max": 57.36087867990136,
+        "p50": 0.6524496711790562,
+        "p95": 0.9827278554439545,
+        "p99": 3.343379381112749
       },
       "passed": true,
       "success_rate": 1.0,
@@ -72,7 +76,7 @@
     }
   },
   "local_infrastructure_ready_for_10": true,
-  "max_recommended_real_users_now": 10,
+  "max_recommended_real_users_now": 0,
   "no_fake_user_policy": "Do not mark first-10 complete or 100-real-user ready without consented external evidence rows.",
   "public_package_gate": {
     "blockers": [],
@@ -142,7 +146,53 @@
     }
   },
   "ready_for_100_real_users": false,
-  "ready_for_10_controlled_beta": true,
+  "ready_for_10_controlled_beta": false,
+  "release_controls_gate": {
+    "blockers": [
+      "served runtime borg_version '3.3.14' != source version '3.3.15'",
+      "served runtime version_matches_source is not true",
+      "served runtime reload_status is not loaded_code_matches_source_behavior",
+      "main branch is not protected"
+    ],
+    "passed": false,
+    "release_governance": {
+      "blockers": [
+        "main branch is not protected"
+      ],
+      "codeowners_review_required": null,
+      "passed": false,
+      "protected": false,
+      "required_checks_expected": [
+        "CI",
+        "Borg Security Gates",
+        "Self-service readiness watchdog",
+        "Account Reference Firewall"
+      ],
+      "required_checks_observed": [],
+      "schema_version": 1,
+      "snapshot": "eval/release_governance_snapshot.json",
+      "source": "snapshot"
+    },
+    "served_runtime_freshness": {
+      "blockers": [
+        "served runtime borg_version '3.3.14' != source version '3.3.15'",
+        "served runtime version_matches_source is not true",
+        "served runtime reload_status is not loaded_code_matches_source_behavior"
+      ],
+      "expected_version": "3.3.15",
+      "passed": false,
+      "schema_version": 1,
+      "snapshot": "eval/served_runtime_fingerprint_snapshot.json",
+      "summary": {
+        "borg_version": "3.3.14",
+        "confidence_gate_canary_passed": true,
+        "observe_behavior_canary_passed": true,
+        "reload_status": "reload_or_patch_required",
+        "source_version": "3.3.15",
+        "version_matches_source": false
+      }
+    }
+  },
   "schema_version": 1,
   "security": {
     "missing": [],
@@ -158,10 +208,10 @@
   },
   "self_service_ops_gate": {
     "blockers": [],
-    "generated_at_utc": "2026-05-30T19:28:32.155126+00:00",
+    "generated_at_utc": "2026-05-31T10:10:59.170485+00:00",
     "ops_readiness_watchdog": {
       "blockers": [],
-      "generated_at_utc": "2026-05-30T19:28:31.050665+00:00",
+      "generated_at_utc": "2026-05-31T10:01:11.677205+00:00",
       "passed": true,
       "snapshot": "eval/ops_readiness_watchdog_snapshot.json",
       "truth_policy": "Watchdog passing means controlled first-10 ops proof is fresh and internally consistent. Broad public self-serve still requires row-derived first-10 external-user evidence."

@@ -110,6 +110,8 @@ def test_current_docs_preserve_3315_controlled_package_truth() -> None:
         "PyPI latest metadata and fresh PyPI install + stdio MCP canary are green for `agent-borg==3.3.15`",
         "controlled first-10 beta invites may start",
         "Controlled first-10 beta infrastructure: **GO**",
+        "up to 10 consented controlled testers may proceed",
+        "controlled first-10 beta may run for `agent-borg==3.3.15`",
     ]
 
     for path, text in watched.items():
@@ -118,9 +120,11 @@ def test_current_docs_preserve_3315_controlled_package_truth() -> None:
 
     assert "agent-borg==3.3.15` is published on PyPI" in watched["README.md"]
     assert "Broad public self-serve launch, 100-user rollout, served/remote MCP, and measured external lift are **not claimed**" in watched["README.md"]
-    assert "Controlled first-10 beta: **CONDITIONAL GO while gates remain green" in watched["docs/READINESS.md"]
+    assert "Controlled first-10 beta: **NO-GO right now**" in watched["docs/READINESS.md"]
+    assert "served runtime fingerprint is stale" in watched["docs/READINESS.md"]
+    assert "GitHub `main` is unprotected" in watched["docs/READINESS.md"]
     assert "Public self-serve launch: **NO-GO until first-10 external-user evidence passes**" in watched["docs/READINESS.md"]
-    assert "Controlled first-10 beta infrastructure: **CONDITIONAL GO while gates remain green**" in watched["docs/PUBLIC_SELF_SERVE_LAUNCH_GO_NO_GO.md"]
+    assert "Controlled first-10 beta infrastructure: **NO-GO**" in watched["docs/PUBLIC_SELF_SERVE_LAUNCH_GO_NO_GO.md"]
 
 
 def test_public_examples_and_benchmark_readmes_do_not_overclaim_external_lift() -> None:
@@ -197,8 +201,10 @@ def test_release_gates_cover_export_openclaw_api_and_mcp_mix_paths() -> None:
 def test_final_production_ready_todo_preserves_hard_gate_boundaries() -> None:
     todo = read("docs/20260528_BORG_PRODUCTION_READY_FINAL_TODO.md")
     required = [
-        "controlled first-10 beta CONDITIONAL GO while gates remain green",
-        "broad public self-serve remains **NO-GO**",
+        "package/local stdio proof green",
+        "controlled first-10 beta is currently **NO-GO**",
+        "release controls are red",
+        "Broad public self-serve remains **NO-GO**",
         "100-real-user rollout remains **NO-GO**",
         "Published PyPI latest observed:** `agent-borg==3.3.15`",
         "Keep `agent-borg==3.3.15` channel-completeness release proof green",
@@ -287,6 +293,7 @@ def test_non_current_public_docs_are_bannered_or_operator_scoped() -> None:
         "20260526-2115_FEDERATED_LEARNING_OPTIMALITY_AUDIT.md",
         "20260526-2230_MAX_VALUE_COLLECTIVE_INTELLIGENCE_LOOP.md",
         "20260528_BORG_PRODUCTION_READY_FINAL_TODO.md",
+        "20260531_BORG_PRODUCTION_INVENTORY_BOARD.md",
     }
     docs = ROOT / "docs"
     gitlink_roots = _gitlink_doc_roots()
@@ -322,7 +329,10 @@ def test_public_live_dashboard_json_endpoints_exist_and_no_go_is_badge_red() -> 
         assert "controlled first-10 beta CONDITIONAL GO while gates remain green" in status["state"]
         assert "source/local release-candidate only" not in status["state"]
     else:
-        assert "source/local release-candidate only" in status["state"]
+        assert (
+            "public package proof green, release controls blocked" in status["state"]
+            or "source/local release-candidate only" in status["state"]
+        )
     assert status["verified_external_users"] == 0
 
     html = read("docs/public/borg-live-dashboard.html")

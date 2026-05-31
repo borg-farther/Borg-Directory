@@ -15,7 +15,7 @@ That nucleus is the day-one value path. Everything else is gated by evidence.
 ## Release-state split
 
 - Controlled supervised first-user path: **CONDITIONAL GO while package fresh-install gates remain green for the current release**.
-- Controlled first-10 beta: **CONDITIONAL GO while gates remain green for PyPI latest, fresh-install, and stdio MCP canaries; keep truthful evidence capture and consented users**.
+- Controlled first-10 beta: **NO-GO right now** while served-runtime freshness and release-governance gates are red; package/fresh-install/stdio MCP canaries are necessary but not sufficient.
 - Public self-serve launch: **NO-GO until first-10 external-user scoreboard passes**.
 - Served remote MCP: **NO-GO until live served runtime path and behavior match audited source**.
 - 100 real users: **NO-GO until first-10 evidence passes the 8/6/0 threshold**.
@@ -73,7 +73,7 @@ That nucleus is the day-one value path. Everything else is gated by evidence.
 6. **Public self-serve launch gate**
    - Failure mode: first-user/local/synthetic gates could be mistaken for broad public launch readiness.
    - Fix: `eval/public_self_serve_launch_gate.py` requires first-user gate, PyPI latest metadata, PyPI fresh-install + MCP stdio canary, docs claim guard, and first-10 external evidence.
-   - Expected current result: controlled first-10 beta infrastructure can be green, but public self-serve remains NO-GO while real evidence rows are zero.
+   - Expected current result: package/fresh-install infrastructure can be green, but controlled first-10 beta remains NO-GO while served-runtime freshness or release governance is red; public self-serve remains NO-GO while real evidence rows are zero.
 
 7. **Truthful docs/proof artifact**
    - This document records the hard-gated plan and non-fakeable blockers.

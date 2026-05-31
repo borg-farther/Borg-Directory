@@ -22,11 +22,11 @@
 </ul>
 <h2>Readiness status</h2>
 <ul>
-<li>Controlled first-10 PyPI beta infrastructure: <strong>CONDITIONAL GO while gates remain green for <code>agent-borg==3.3.15</code> package/proof chain</strong> — invite at most 10 consented external users through the local CLI / stdio MCP package path while evidence intake and incident pause gates remain green.</li>
+<li>Controlled first-10 PyPI beta: <strong>NO-GO right now</strong> — <code>agent-borg==3.3.15</code> package/local stdio proof is green, but served-runtime freshness and release-governance gates are red; invite 0 consented external users until release controls and ops/watchdog proof are green.</li>
 <li>Supervised local first-user path: GO in current artifacts.</li>
 <li>Public self-serve launch: <strong>NO-GO until first-10 row-derived external evidence passes</strong>.</li>
 <li>100 real-user rollout: <strong>NO-GO until 10 external users, &gt;=8 installs, &gt;=6 useful rescues, and 0 critical incidents</strong>.</li>
-<li>Decision: controlled first-10 beta may run for <code>agent-borg==3.3.15</code> under the 10-tester cap while package/proof gates remain green; no broad self-serve, served remote MCP, 100-user, measured-savings, or frontier-better-than claim.</li>
+<li>Decision: package proof is green for <code>agent-borg==3.3.15</code>, but controlled first-10 beta must wait for served-runtime freshness, release governance, ops/watchdog, and proof-dashboard gates; no broad self-serve, served remote MCP, 100-user, measured-savings, or frontier-better-than claim.</li>
 </ul>
 <h2>Evidence</h2>
 <ul>
@@ -34,6 +34,9 @@
 <li><code>eval/real_user_rollout_gate_snapshot.json</code></li>
 <li><code>eval/first_10_user_scoreboard.json</code></li>
 <li><code>eval/pypi_fresh_install_snapshot.json</code></li>
+<li><code>eval/served_runtime_fingerprint_snapshot.json</code></li>
+<li><code>eval/release_governance_snapshot.json</code></li>
+<li><code>eval/ops_readiness_watchdog_snapshot.json</code></li>
 <li><code>eval/first_user_release_gate_snapshot.json</code></li>
 </ul>
 </body>
