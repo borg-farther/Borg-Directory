@@ -95,7 +95,11 @@ def _public_package_ready() -> dict[str, Any]:
     pypi_fresh = public_gate.pypi_fresh_install_check(ROOT / "eval" / "pypi_fresh_install_snapshot.json", str(version))
     blockers: list[str] = []
     if not pypi_latest.get("passed"):
-        blockers.append("PyPI latest/fresh-install package evidence is not green: latest metadata does not match source version")
+        alignment = pypi_latest.get("source_upload_alignment") or {}
+        if alignment.get("failure_kind") == "same_version_pypi_upload_predates_source_revision":
+            blockers.append("PyPI latest/fresh-install package evidence is not green: same-version PyPI upload predates current source revision")
+        else:
+            blockers.append("PyPI latest/fresh-install package evidence is not green: latest metadata does not match source version")
     if not pypi_fresh.get("passed"):
         blockers.append("PyPI latest/fresh-install package evidence is not green: fresh install + MCP stdio canary is not green")
     return {

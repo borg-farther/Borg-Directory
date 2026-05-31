@@ -11,6 +11,7 @@ from __future__ import annotations
 import argparse
 import json
 import re
+import subprocess
 import sys
 try:
     import tomllib
@@ -118,19 +119,96 @@ def source_version() -> str:
     return str(data["project"]["version"])
 
 
+def source_revision_state() -> dict[str, Any]:
+    """Return current source revision and commit time for release-truth gates."""
+    try:
+        revision = subprocess.check_output(["git", "rev-parse", "HEAD"], cwd=ROOT, text=True).strip()
+        commit_time = subprocess.check_output(["git", "show", "-s", "--format=%cI", "HEAD"], cwd=ROOT, text=True).strip()
+        dirty = bool(subprocess.check_output(["git", "status", "--porcelain"], cwd=ROOT, text=True).strip())
+    except Exception:
+        return {"revision": None, "commit_time_utc": None, "dirty": None, "available": False}
+    return {
+        "revision": f"{revision}+dirty" if dirty else revision,
+        "commit_time_utc": commit_time,
+        "dirty": dirty,
+        "available": True,
+    }
+
+
+def _parse_iso_datetime(value: str | None) -> datetime | None:
+    if not value:
+        return None
+    try:
+        return datetime.fromisoformat(str(value).replace("Z", "+00:00")).astimezone(timezone.utc)
+    except ValueError:
+        return None
+
+
+def source_upload_alignment_check(pypi_data: dict[str, Any]) -> dict[str, Any]:
+    """Fail when a same-version PyPI release predates current source.
+
+    Version equality alone can hide a stale wheel: `agent-borg==X.Y.Z` may be
+    installed from PyPI while newer commits with the same version are on `main`.
+    """
+    source = source_revision_state()
+    source_time = _parse_iso_datetime(source.get("commit_time_utc"))
+    release_files = pypi_data.get("release_files") or []
+    upload_times = [
+        parsed
+        for parsed in (
+            _parse_iso_datetime(str(item.get("upload_time_iso_8601") or item.get("upload_time") or ""))
+            for item in release_files
+            if isinstance(item, dict)
+        )
+        if parsed is not None
+    ]
+    latest_upload = max(upload_times) if upload_times else None
+    if source_time is None or latest_upload is None:
+        return {
+            "passed": True,
+            "skipped": True,
+            "reason": "source revision time or PyPI upload timestamp unavailable",
+            "source_revision": source.get("revision"),
+            "source_commit_time_utc": source.get("commit_time_utc"),
+            "latest_release_upload_time_utc": latest_upload.isoformat() if latest_upload else None,
+        }
+    passed = latest_upload >= source_time
+    return {
+        "passed": passed,
+        "failure_kind": None if passed else "same_version_pypi_upload_predates_source_revision",
+        "detail": "PyPI release upload predates current source revision; publish a new version before claiming package proof is current." if not passed else "PyPI release upload is not older than the current source revision.",
+        "source_revision": source.get("revision"),
+        "source_commit_time_utc": source_time.isoformat(),
+        "latest_release_upload_time_utc": latest_upload.isoformat(),
+        "release_file_count": len(release_files),
+    }
+
+
 def fetch_pypi_latest(package: str = "agent-borg", timeout: int = 30) -> dict[str, Any]:
     url = f"https://pypi.org/pypi/{package}/json"
     req = urllib.request.Request(url, headers={"User-Agent": "Borg-public-self-serve-gate/1.0"})
     with urllib.request.urlopen(req, timeout=timeout) as response:
         data = json.loads(response.read().decode("utf-8"))
+    latest = data.get("info", {}).get("version")
+    release_files = data.get("releases", {}).get(str(latest), []) if latest else []
     return {
         "package": package,
         "url": url,
-        "version": data.get("info", {}).get("version"),
+        "version": latest,
         "summary": data.get("info", {}).get("summary") or "",
         "keywords": data.get("info", {}).get("keywords") or "",
         "project_urls": data.get("info", {}).get("project_urls") or {},
         "requires_dist": data.get("info", {}).get("requires_dist") or [],
+        "release_files": [
+            {
+                "filename": item.get("filename"),
+                "upload_time_iso_8601": item.get("upload_time_iso_8601") or item.get("upload_time"),
+                "size": item.get("size"),
+                "sha256": (item.get("digests") or {}).get("sha256"),
+            }
+            for item in release_files
+            if isinstance(item, dict)
+        ],
     }
 
 
@@ -166,6 +244,7 @@ def pypi_latest_check(expected_version: str, *, fetch_network: bool = True, pypi
     stale_copy = [snippet for snippet in BANNED_PYPI_COPY if snippet in summary]
     keyword_missing = REQUIRED_PYPI_KEYWORD not in keywords
     banned_keywords_present = sorted(keywords & BANNED_PYPI_KEYWORDS)
+    source_upload_alignment = source_upload_alignment_check(pypi_data)
     passed = (
         latest == expected_version
         and not url_missing
@@ -174,6 +253,7 @@ def pypi_latest_check(expected_version: str, *, fetch_network: bool = True, pypi
         and not keyword_missing
         and not banned_keywords_present
         and not stale_copy
+        and source_upload_alignment["passed"]
     )
     return {
         "passed": passed,
@@ -190,6 +270,7 @@ def pypi_latest_check(expected_version: str, *, fetch_network: bool = True, pypi
         "url_mismatches": url_mismatches,
         "requires_dist": pypi_data.get("requires_dist") or [],
         "project_urls": project_urls,
+        "source_upload_alignment": source_upload_alignment,
     }
 
 
@@ -328,16 +409,22 @@ def docs_claim_guard(
 
             for line_number, line_text in enumerate(text.splitlines(), start=1):
                 lower = line_text.lower()
+                negates_ready_claim = bool(re.search(
+                    r"(?i)\b(no-go|not current|not proven current|stale|blocked|red|must wait|wait for|until|not green|not yet|not ready|cap is 0|capped at 0)\b",
+                    line_text,
+                ))
                 claims_controlled_go = (
                     "controlled first-10" in lower
-                    and "go" in lower
+                    and re.search(r"(?i)\bgo\b", line_text)
                     and "no-go" not in lower
+                    and not negates_ready_claim
                     and not re.search(r"(?i)\b(after|until|pending|not yet|only after)\b", line_text)
                 )
                 claims_controlled_ready = (
                     "controlled first-10" in lower
                     and re.search(r"(?i)\b(ready|share|sharing)\b", line_text)
                     and "no-go" not in lower
+                    and not negates_ready_claim
                     and not re.search(r"(?i)\b(after|until|pending|not yet|not ready|blocked|only after)\b", line_text)
                 )
                 claims_package_green = (
@@ -346,7 +433,11 @@ def docs_claim_guard(
                     and "stdio mcp" in lower
                     and "green" in lower
                     and "not green" not in lower
+                    and "not current" not in lower
+                    and "stale" not in lower
+                    and "red" not in lower
                     and "not yet" not in lower
+                    and not negates_ready_claim
                     and not re.search(r"(?i)\b(after|until|pending|not yet|only after|before)\b", line_text)
                 )
                 claims_controlled_green = (
@@ -354,12 +445,14 @@ def docs_claim_guard(
                     and "green" in lower
                     and "no-go" not in lower
                     and "not green" not in lower
+                    and not negates_ready_claim
                     and not re.search(r"(?i)\b(after|until|pending|not yet|only after|before|blocked)\b", line_text)
                 )
                 claims_invites_start = (
                     ("invite" in lower or "invites" in lower or "testers" in lower)
                     and ("may start" in lower or "ready to invite" in lower or "invite up to" in lower)
                     and "no-go" not in lower
+                    and not negates_ready_claim
                     and not re.search(r"(?i)\b(after|until|pending|not yet|only after|before|blocked|do not|no invites)\b", line_text)
                 )
                 if claims_controlled_go or claims_controlled_ready or claims_package_green or claims_controlled_green or claims_invites_start:
@@ -582,7 +675,11 @@ def compile_gate(
     if not first_user["passed"]:
         blockers.append("first-user local release gate snapshot is missing or failing")
     if not pypi_latest["passed"]:
-        blockers.append("PyPI latest metadata does not match source version or required project URLs")
+        alignment = pypi_latest.get("source_upload_alignment") or {}
+        if alignment.get("failure_kind") == "same_version_pypi_upload_predates_source_revision":
+            blockers.append("PyPI latest metadata is stale: same-version release upload predates current source revision")
+        else:
+            blockers.append("PyPI latest metadata does not match source version or required project URLs")
     if not pypi_fresh["passed"]:
         blockers.append("PyPI fresh-install + MCP stdio canary snapshot is missing or failing")
     if not cold_start_trust["passed"]:

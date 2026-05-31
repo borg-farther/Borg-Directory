@@ -11,6 +11,7 @@ def _public_snapshot() -> dict[str, object]:
         "ready_for_controlled_first_10_beta": True,
         "ready_for_public_self_serve_launch": False,
         "max_recommended_real_users_now": 10,
+        "gates": {"pypi_latest": {"passed": True}},
         "blockers": ["first-10 external-user evidence has not passed"],
     }
 
@@ -21,6 +22,7 @@ def _pre_package_public_snapshot() -> dict[str, object]:
         "ready_for_controlled_first_10_beta": False,
         "ready_for_public_self_serve_launch": False,
         "max_recommended_real_users_now": 0,
+        "gates": {"pypi_latest": {"passed": False}},
         "blockers": [
             "PyPI latest metadata does not match source version or required project URLs",
             "PyPI fresh-install + MCP stdio canary snapshot is missing or failing",
@@ -255,6 +257,7 @@ def test_ops_watchdog_accepts_release_control_blocked_no_go_stage(monkeypatch) -
         "ready_for_controlled_first_10_beta": False,
         "ready_for_public_self_serve_launch": False,
         "max_recommended_real_users_now": 0,
+        "gates": {"pypi_latest": {"passed": True}},
         "blockers": blockers,
     }
     real_snapshot = {
@@ -324,6 +327,7 @@ def test_ops_watchdog_rejects_release_control_stage_with_stale_pre_package_statu
         "ready_for_controlled_first_10_beta": False,
         "ready_for_public_self_serve_launch": False,
         "max_recommended_real_users_now": 0,
+        "gates": {"pypi_latest": {"passed": True}},
         "blockers": blockers,
     }
     real_snapshot = {
@@ -380,6 +384,7 @@ def test_ops_watchdog_rejects_release_control_stage_with_unrelated_real_rollout_
         "ready_for_controlled_first_10_beta": False,
         "ready_for_public_self_serve_launch": False,
         "max_recommended_real_users_now": 0,
+        "gates": {"pypi_latest": {"passed": True}},
         "blockers": public_blockers,
     }
     real_snapshot = {

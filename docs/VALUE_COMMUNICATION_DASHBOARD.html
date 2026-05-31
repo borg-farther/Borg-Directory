@@ -6,7 +6,7 @@
 <h2>Operator benefits validated internally</h2>
 <ul>
 <li>First visible value path for controlled beta: <code>pipx install agent-borg==3.3.15</code> -&gt; <code>borg rescue "&lt;redacted error&gt;"</code> -&gt; ACTION / STOP / VERIFY.</li>
-<li>Controlled package beta path: PyPI latest, fresh-install, and stdio MCP package gates are green for <code>agent-borg==3.3.15</code>, but this is still not broad public self-serve proof.</li>
+<li>Controlled package beta path: <strong>NO-GO right now</strong> — <code>agent-borg==3.3.15</code> exists on PyPI, but the same-version upload predates the current source hardening revision, so package proof is stale until a new immutable version is published and freshly canaried.</li>
 <li>Local/synthetic gate status: first-user release gate and logical load gates are green in current artifacts; synthetic users are not external-user evidence.</li>
 <li>External-user proof status: <strong>not proven yet</strong>; verified external users remain <code>0</code>.</li>
 <li>Measured savings status: <strong>0 measured rows, 0.0 net minutes saved, 0 net tokens saved</strong>; savings are not claimed until consented external-user rows include before/after measurements.</li>
@@ -22,11 +22,11 @@
 </ul>
 <h2>Readiness status</h2>
 <ul>
-<li>Controlled first-10 PyPI beta: <strong>NO-GO right now</strong> — <code>agent-borg==3.3.15</code> package/local stdio proof is green, but served-runtime freshness and release-governance gates are red; invite 0 consented external users until release controls and ops/watchdog proof are green.</li>
+<li>Controlled first-10 PyPI beta: <strong>NO-GO right now</strong> — <code>agent-borg==3.3.15</code> package/local stdio proof is stale for the current source revision, and served-runtime freshness plus release-governance gates are red; invite 0 consented external users until a new immutable package version, release controls, and ops/watchdog proof are green.</li>
 <li>Supervised local first-user path: GO in current artifacts.</li>
 <li>Public self-serve launch: <strong>NO-GO until first-10 row-derived external evidence passes</strong>.</li>
 <li>100 real-user rollout: <strong>NO-GO until 10 external users, &gt;=8 installs, &gt;=6 useful rescues, and 0 critical incidents</strong>.</li>
-<li>Decision: package proof is green for <code>agent-borg==3.3.15</code>, but controlled first-10 beta must wait for served-runtime freshness, release governance, ops/watchdog, and proof-dashboard gates; no broad self-serve, served remote MCP, 100-user, measured-savings, or frontier-better-than claim.</li>
+<li>Decision: package proof is <strong>not current</strong> for <code>agent-borg==3.3.15</code> because the PyPI upload predates this source revision; controlled first-10 beta must wait for a new immutable package version, served-runtime freshness, release governance, ops/watchdog, and proof-dashboard gates; no broad self-serve, served remote MCP, 100-user, measured-savings, or frontier-better-than claim.</li>
 </ul>
 <h2>Evidence</h2>
 <ul>

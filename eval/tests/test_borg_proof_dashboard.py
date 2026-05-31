@@ -39,8 +39,8 @@ def test_borg_proof_dashboard_artifacts_exist_and_are_honest(tmp_path, monkeypat
     data = json.loads(json_path.read_text(encoding="utf-8"))
     assert data["repo"] == "https://github.com/borg-farther/Borg-Directory"
     assert re.fullmatch(r"[0-9a-f]{40}(?:\+dirty)?", data["source_revision"])
-    if data["metrics"]["pypi_fresh_install_canary"]["value"] == "PASS":
-        assert data["metrics"]["pypi_fresh_install_canary"]["honesty_label"] == "PYPI_FRESH_INSTALL_CURRENT_VERSION"
+    if data["metrics"]["pypi_package_current_gate"]["value"] == "PASS":
+        assert data["metrics"]["pypi_package_current_gate"]["honesty_label"] == "PYPI_METADATA_PLUS_FRESH_INSTALL_CURRENT_SOURCE"
         release_and_ops_green = all(
             data["metrics"][name]["value"] == "PASS"
             for name in [
@@ -109,7 +109,7 @@ def test_borg_proof_dashboard_artifacts_exist_and_are_honest(tmp_path, monkeypat
             "NO-GO public self-serve; source/local release-candidate only",
             "NO-GO public self-serve; public package proof green, release controls blocked",
         }
-        if data["metrics"]["pypi_fresh_install_canary"]["value"] == "PASS":
+        if data["metrics"]["pypi_package_current_gate"]["value"] == "PASS":
             assert "public package proof green" in status["state"]
         else:
             assert "source/local release-candidate only" in status["state"]
@@ -168,3 +168,30 @@ def test_borg_proof_dashboard_markdown_required_sections():
     assert "Supervised source checkout only?" not in md
     assert "Next action queue before supervised first user" not in md
     assert "Repo: `/root/" not in md
+
+
+def test_public_payload_does_not_call_package_green_when_pypi_latest_alignment_fails():
+    model = {
+        "generated_at_utc": "2026-05-31T11:40:00Z",
+        "repo": "https://github.com/borg-farther/Borg-Directory",
+        "source_revision": "abcdef1234567890abcdef1234567890abcdef12",
+        "top_verdict": {
+            "controlled_first_10_beta": {"verdict": "NO-GO", "why": "package gate failed"},
+            "broad_public_launch": {"verdict": "NO-GO", "why": "package gate failed"},
+            "local_release_candidate": {"verdict": "CONDITIONAL", "why": "local source is green"},
+        },
+        "blockers": {},
+        "metrics": {
+            "pypi_fresh_install_canary": {"value": "PASS"},
+            "pypi_package_current_gate": {"value": "FAIL"},
+            "max_recommended_real_users_now": {"value": 0},
+            "verified_external_users": {"value": 0},
+            "measured_savings": {"value": {}},
+        },
+    }
+
+    status, value, _impact = dashboard.build_public_payloads(model)
+
+    assert status["state"] == "NO-GO public self-serve; source/local release-candidate only"
+    assert "public package proof green" not in status["state"]
+    assert "PyPI/fresh-install proof is not yet green for the current source version" in value["detail"]

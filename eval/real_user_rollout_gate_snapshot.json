@@ -1,5 +1,6 @@
 {
   "blockers": [
+    "PyPI latest/fresh-install package evidence is not green: same-version PyPI upload predates current source revision",
     "served runtime borg_version '3.3.14' != source version '3.3.15'",
     "served runtime version_matches_source is not true",
     "served runtime reload_status is not loaded_code_matches_source_behavior",
@@ -42,7 +43,7 @@
     "passed_count": 28
   },
   "gate_type": "real_user_rollout",
-  "generated_at_utc": "2026-05-31T10:10:59.170757+00:00",
+  "generated_at_utc": "2026-05-31T14:16:31.512036+00:00",
   "important_distinction": "load/readiness snapshots are synthetic/logical users; this gate controls real external-user rollout",
   "infrastructure_ready_for_100": false,
   "load_gates": {
@@ -79,8 +80,10 @@
   "max_recommended_real_users_now": 0,
   "no_fake_user_policy": "Do not mark first-10 complete or 100-real-user ready without consented external evidence rows.",
   "public_package_gate": {
-    "blockers": [],
-    "passed": true,
+    "blockers": [
+      "PyPI latest/fresh-install package evidence is not green: same-version PyPI upload predates current source revision"
+    ],
+    "passed": false,
     "pypi_fresh_install_and_mcp_stdio": {
       "exists": true,
       "expected_version": "3.3.15",
@@ -110,7 +113,7 @@
       ],
       "latest_version": "3.3.15",
       "package": "agent-borg",
-      "passed": true,
+      "passed": false,
       "project_urls": {
         "Documentation": "https://github.com/borg-farther/Borg-Directory#readme",
         "Homepage": "https://github.com/borg-farther/Borg-Directory",
@@ -139,6 +142,15 @@
         "fastapi<0.136.3,>=0.110; extra == \"all\"",
         "uvicorn>=0.27; extra == \"all\""
       ],
+      "source_upload_alignment": {
+        "detail": "PyPI release upload predates current source revision; publish a new version before claiming package proof is current.",
+        "failure_kind": "same_version_pypi_upload_predates_source_revision",
+        "latest_release_upload_time_utc": "2026-05-28T17:50:31.032755+00:00",
+        "passed": false,
+        "release_file_count": 2,
+        "source_commit_time_utc": "2026-05-31T10:27:07+00:00",
+        "source_revision": "ffccdd04b53ef85cf46903764e426cbda2d90752+dirty"
+      },
       "stale_copy": [],
       "summary": "Failure memory CLI and MCP server for AI coding agents",
       "url_mismatches": {},
@@ -208,10 +220,10 @@
   },
   "self_service_ops_gate": {
     "blockers": [],
-    "generated_at_utc": "2026-05-31T10:10:59.170485+00:00",
+    "generated_at_utc": "2026-05-31T14:16:31.511374+00:00",
     "ops_readiness_watchdog": {
       "blockers": [],
-      "generated_at_utc": "2026-05-31T10:01:11.677205+00:00",
+      "generated_at_utc": "2026-05-31T14:16:15.514589+00:00",
       "passed": true,
       "snapshot": "eval/ops_readiness_watchdog_snapshot.json",
       "truth_policy": "Watchdog passing means controlled first-10 ops proof is fresh and internally consistent. Broad public self-serve still requires row-derived first-10 external-user evidence."

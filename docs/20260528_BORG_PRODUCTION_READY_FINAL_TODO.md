@@ -59,7 +59,7 @@ This todo is based on four independent evidence paths:
      - `eval/gate_run_snapshot.json`
      - `eval/cold_start_trust_gate_snapshot.json`
      - `eval/federated_learning_gate_snapshot.json`
-   - Current public status JSON should say `NO-GO public self-serve; public package proof green, release controls blocked` while PyPI/package proof is green but served-runtime freshness or release governance is red. It should only say `controlled first-10 beta CONDITIONAL GO while gates remain green` after release controls and ops gates are green; stale clean-source or stale-package revisions must fail the watchdog.
+   - Current public status JSON should say the package path is blocked by same-version PyPI artifact drift when the published upload predates the claimed source revision. It may only say `NO-GO public self-serve; public package proof green, release controls blocked` after a new immutable package release is freshly canaried while served-runtime freshness or release governance is still red. It should only say `controlled first-10 beta CONDITIONAL GO while gates remain green` after package provenance, release controls, and ops gates are green; stale clean-source or stale-package revisions must fail the watchdog.
 
 4. **Adversarial challenge review**
    - A green source gate can hide PyPI drift.
@@ -125,7 +125,7 @@ git diff --check HEAD~1..HEAD
 git status --short
 ```
 
-**Stop if:** PyPI latest is not 3.3.15, generated rules fail from a clean install, OpenClaw files are missing, stdio MCP serverInfo/version is stale, proof dashboards reference a dirty/pre-release SHA, or public status says controlled-beta GO before the 3.3.15 PyPI canary is green.
+**Stop if:** PyPI latest is not a fresh immutable version built after the claimed source revision, generated rules fail from a clean install, OpenClaw files are missing, stdio MCP serverInfo/version is stale, proof dashboards reference a dirty/pre-release SHA, or public status says controlled-beta GO before the current-source PyPI canary is green.
 
 ---
 
@@ -191,7 +191,7 @@ git status --short
 
 **Why:** This is the main blocker to broad production. Current verified external users are `0/10`.
 
-**Do after 3.3.15 package proof is green:**
+**Do after a new immutable package version is published and current-source package proof is green:**
 
 1. Recruit 10 consented external users.
 2. Give each user the same published-package path:

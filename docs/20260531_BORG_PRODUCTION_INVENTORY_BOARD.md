@@ -1,8 +1,8 @@
 # Borg production inventory board
 
-Generated: `2026-05-31T10:10:59Z`
+Generated: `2026-05-31T14:17:54Z`
 Repo: `https://github.com/borg-farther/Borg-Directory`
-Branch/head: `hardening/god-tier-safety-release` / `b7d9aa6029225867e5109a747349e97c6036dd1f`
+Branch/head: `main` / `ffccdd04b53ef85cf46903764e426cbda2d90752`
 Working tree dirty: `True`
 Version: pyproject `3.3.15` / borg `__version__` `3.3.15`
 
@@ -20,7 +20,7 @@ Version: pyproject `3.3.15` / borg `__version__` `3.3.15`
 - broad public self-serve: `NO_GO`
 - 100 real users: `NO_GO`
 - current source/hardening branch: `IN_PROGRESS`
-- published package/local stdio: `CONDITIONAL_GO`
+- published package/local stdio: `NO_GO`
 - served runtime freshness: `NO_GO`
 - remote MCP/marketplace distribution: `NO_GO`
 - global/federated learning protocol: `GO_PROTOCOL_ONLY`
@@ -56,15 +56,18 @@ Evidence:
 - `eval/pypi_fresh_install_snapshot.json`
 Done/proven:
 - source versions match: True (3.3.15)
+- PyPI latest metadata/current-source gate green: False
 - PyPI fresh-install/stdout MCP canary green: True
 - first-user release gate green: True
 Blockers:
+- PyPI same-version release upload predates current source revision
 - working tree is dirty/unshipped; current hardening branch is not committed/pushed/CI-proven
 Outstanding:
+- publish a new immutable version when source is ahead of PyPI
 - rerun full proof on the final branch head
 - commit/push and watch CI before claiming shipped
 Challenge:
-- A clean PyPI canary proves installed package behavior, not this dirty hardening branch or a long-lived served process.
+- A clean PyPI canary proves installed package behavior, not source revisions that landed after the wheel upload or a long-lived served process.
 
 ### security_hardening_current_branch — current hardening branch: pack safety, pickle removal, HTTP/MCP hardening, docs truth gates
 
