@@ -19,6 +19,7 @@ belong under [`archive/`](archive/) and are not current product claims.
 - [`READINESS.md`](READINESS.md) — current readiness status and honest launch boundary
 - [`ROADMAP.md`](ROADMAP.md) — current roadmap and intentionally-not-claimed boundaries
 - [`20260522_BORG_PRODUCTION_DAY_ONE_HARDENING_PLAN.md`](20260522_BORG_PRODUCTION_DAY_ONE_HARDENING_PLAN.md) — hard-gated production/day-one hardening plan and proof checklist
+- [`20260531_BORG_PRODUCTION_READY_PRIORITIZED_TODO.md`](20260531_BORG_PRODUCTION_READY_PRIORITIZED_TODO.md) — current prioritized production-ready todo after PR45, with evidence ledger, approval boundaries, disproof gates, and final reflection
 - [`20260526-1302_OPTIMAL_SAFE_COLLECTIVE_LEARNING_LOOP.md`](20260526-1302_OPTIMAL_SAFE_COLLECTIVE_LEARNING_LOOP.md) — optimal safe collective learning loop, gates, current GO/NO-GO, and verification evidence
 - [`20260526-2046_REMOTE_FEDERATED_LEARNING_GO_PROOF.md`](20260526-2046_REMOTE_FEDERATED_LEARNING_GO_PROOF.md) — remote signed-registry protocol GO proof, explicitly not public launch or utility-lift proof
 - [`20260526-2115_FEDERATED_LEARNING_OPTIMALITY_AUDIT.md`](20260526-2115_FEDERATED_LEARNING_OPTIMALITY_AUDIT.md) — blunt optimality audit: protocol GO, internal loop primitives GO, Google-tier product impact NO-GO
@@ -60,7 +61,7 @@ They are retained for provenance, but they are not current product claims or fir
 
 ## Current truth
 
-- Controlled first-10 public-package beta: NO-GO right now. `agent-borg==3.3.15` package/local stdio proof is green, but served-runtime freshness and release-governance gates are red; cap is 0 until release controls, ops/watchdog, and proof dashboards are all green.
+- Controlled first-10 public-package beta: NO-GO right now. `agent-borg==3.3.15` is published, but package proof is stale until a new immutable version is published and freshly canaried; served-runtime freshness and release-governance gates are also red. Cap is 0 until package provenance, release controls, ops/watchdog, and proof dashboards are all green.
 - Public self-serve launch: not yet; requires real external-user evidence.
 - Agent-level success lift at statistical confidence: not yet proven.
 - Internal max-value collective intelligence loop primitives: GO; external lift still requires first-10 rows.

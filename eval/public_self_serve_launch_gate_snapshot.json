@@ -38,6 +38,7 @@
         "docs/QUICKSTART.md",
         "docs/TRYING_BORG.md",
         "docs/MCP_SETUP.md",
+        "docs/CHANNELS_AND_INSTALL_METHODS.md",
         "docs/ONBOARDING.md",
         "docs/FIRST_10_BETA_READINESS.md",
         "docs/20260514_FIRST_10_USER_INVITE_PACKET.md",
@@ -45,6 +46,7 @@
         "docs/20260517_BORG_100_REAL_USER_READINESS.md",
         "docs/ROADMAP.md",
         "docs/20260522_BORG_PRODUCTION_DAY_ONE_HARDENING_PLAN.md",
+        "docs/20260531_BORG_PRODUCTION_READY_PRIORITIZED_TODO.md",
         "docs/PUBLIC_SELF_SERVE_LAUNCH_GO_NO_GO.md",
         "docs/VALUE_COMMUNICATION_DASHBOARD.md",
         "docs/VALUE_COMMUNICATION_DASHBOARD.html",
@@ -64,6 +66,7 @@
         "docs/TRUST_AND_PROMOTION.md",
         "docs/REVOCATION_AND_DELETION.md",
         "docs/LEARNING_ATOM_SCHEMA.md",
+        "deploy/smithery/smithery.yaml",
         "eval/borg_proof_dashboard.json"
       ],
       "passed": true,
@@ -110,7 +113,7 @@
     },
     "ops_readiness_watchdog": {
       "blockers": [],
-      "generated_at_utc": "2026-05-31T14:16:32.082231+00:00",
+      "generated_at_utc": "2026-05-31T18:41:10.056653+00:00",
       "passed": true,
       "snapshot": "eval/ops_readiness_watchdog_snapshot.json",
       "truth_policy": "Watchdog passing means controlled first-10 ops proof is fresh and internally consistent. Broad public self-serve still requires row-derived first-10 external-user evidence."
@@ -184,8 +187,8 @@
         "latest_release_upload_time_utc": "2026-05-28T17:50:31.032755+00:00",
         "passed": false,
         "release_file_count": 2,
-        "source_commit_time_utc": "2026-05-31T10:27:07+00:00",
-        "source_revision": "ffccdd04b53ef85cf46903764e426cbda2d90752+dirty"
+        "source_commit_time_utc": "2026-05-31T14:32:23+00:00",
+        "source_revision": "bd68c95733f545cc7a3cfd2700fb98734a4d3e91+dirty"
       },
       "stale_copy": [],
       "summary": "Failure memory CLI and MCP server for AI coding agents",
@@ -212,7 +215,7 @@
     },
     "self_service_ops_readiness": {
       "blockers": [],
-      "generated_at_utc": "2026-05-31T14:16:32.319429+00:00",
+      "generated_at_utc": "2026-05-31T19:03:39.904721+00:00",
       "passed": true,
       "report": "docs/SELF_SERVICE_OPS_READINESS_REPORT.md",
       "rollout_policy": "Controlled first-10 may proceed only when ops readiness passes; broad public self-serve still requires row-derived first-10 external evidence.",
@@ -238,7 +241,7 @@
       }
     }
   },
-  "generated_at_utc": "2026-05-31T14:16:32.398818+00:00",
+  "generated_at_utc": "2026-05-31T19:03:39.996739+00:00",
   "max_recommended_real_users_now": 0,
   "ready_for_controlled_first_10_beta": false,
   "ready_for_public_self_serve_launch": false,

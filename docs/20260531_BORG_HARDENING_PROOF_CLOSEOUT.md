@@ -5,9 +5,9 @@ Historical/internal — not current product documentation. This closeout records
 ## Executive verdict
 
 - Source/hardening branch proof stack: **GREEN**.
-- Published package/local stdio proof: **CONDITIONAL GO** for local package/stdio evidence already captured by the public gate.
+- Published package proof: **HISTORICAL ONLY** for the earlier local package/stdio evidence; current public status is red until a new immutable version is published after the current source revision and freshly canaried.
 - Served/Hermes MCP runtime: **NO-GO** until operator-supervised runtime cutover proves loaded code matches source/package.
-- Controlled first-10 beta: **NO-GO** while served runtime freshness and release governance are red.
+- Controlled first-10 beta: **NO-GO** while package provenance, served runtime freshness, release governance, and first-10 evidence are red.
 - Broad public self-serve: **NO-GO** until served runtime, release governance, ops/watchdog, docs, and row-derived first-10 external evidence all pass.
 - 100 real users: **NO-GO** until first-10 evidence passes and rollout gate advances.
 

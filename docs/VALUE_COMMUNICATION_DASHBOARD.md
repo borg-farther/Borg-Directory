@@ -16,7 +16,7 @@
 - rescue rule: `borg rescue --json` exposes `value_receipt.measurement_status=ready_to_measure` and `savings_claim_type=none` until a later first-10 row records the outcome
 
 ## readiness status
-- controlled first-10 PyPI beta: **NO-GO right now** — `agent-borg==3.3.15` package/local stdio proof is stale for the current source revision, and served-runtime freshness plus release-governance gates are red; invite 0 consented external users until a new immutable package version, release controls, and ops/watchdog proof are green
+- controlled first-10 PyPI beta: **NO-GO right now** — `agent-borg==3.3.15` package proof is stale for the current source revision, and served-runtime freshness plus release-governance gates are red; invite 0 consented external users until a new immutable package version, release controls, and ops/watchdog proof are green
 - supervised local first-user path: GO in current artifacts
 - public self-serve launch: **NO-GO until first-10 row-derived external evidence passes**
 - 100 real-user rollout: **NO-GO until 10 external users, >=8 installs, >=6 useful rescues, and 0 critical incidents**

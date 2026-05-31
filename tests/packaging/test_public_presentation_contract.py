@@ -64,7 +64,11 @@ def test_runtime_distribution_drafts_do_not_pin_stale_borg_versions() -> None:
     smithery = read("deploy/smithery/smithery.yaml")
     assert 'serverCommand: "borg-mcp"' in smithery
     assert '"version": "' + current_version + '"' in smithery
-    assert '"mcpTools": 24' in smithery
+    from borg.integrations import mcp_server
+
+    current_tool_count = len(mcp_server.TOOLS)
+    assert f'"mcpTools": {current_tool_count}' in smithery
+    assert f"{current_tool_count} built-in MCP tools" in smithery
     assert 'authorName: "Borg contributors"' in smithery
     assert "punkrocker" not in smithery
     assert 'remote: false' in smithery
@@ -83,6 +87,8 @@ def test_current_docs_preserve_same_version_artifact_drift_truth() -> None:
         "CHANGELOG.md": read("CHANGELOG.md"),
         "llms.txt": read("llms.txt"),
         "SUPPORT.md": read("SUPPORT.md"),
+        "docs/CHANNELS_AND_INSTALL_METHODS.md": read("docs/CHANNELS_AND_INSTALL_METHODS.md"),
+        "docs/20260531_BORG_PRODUCTION_READY_PRIORITIZED_TODO.md": read("docs/20260531_BORG_PRODUCTION_READY_PRIORITIZED_TODO.md"),
         "docs/README.md": read("docs/README.md"),
         "docs/READINESS.md": read("docs/READINESS.md"),
         "docs/ROADMAP.md": read("docs/ROADMAP.md"),
@@ -111,6 +117,10 @@ def test_current_docs_preserve_same_version_artifact_drift_truth() -> None:
         "Controlled first-10 beta infrastructure: **GO**",
         "up to 10 consented controlled testers may proceed",
         "controlled first-10 beta may run for `agent-borg==3.3.15`",
+        "Package path proof green",
+        "package/local stdio proof",
+        "fresh-install/MCP/generate/OpenClaw canaries pass for controlled first-10 beta",
+        "published package metadata, PyPI latest, and proof artifacts agree on `agent-borg==3.3.15`",
     ]
 
     for path, text in watched.items():
@@ -126,6 +136,35 @@ def test_current_docs_preserve_same_version_artifact_drift_truth() -> None:
     assert "GitHub `main` is unprotected" in watched["docs/READINESS.md"]
     assert "Public self-serve launch: **NO-GO until first-10 external-user evidence passes**" in watched["docs/READINESS.md"]
     assert "Controlled first-10 beta infrastructure: **NO-GO**" in watched["docs/PUBLIC_SELF_SERVE_LAUNCH_GO_NO_GO.md"]
+
+
+def test_prioritized_production_ready_todo_locks_current_blockers_and_boundaries() -> None:
+    doc = read("docs/20260531_BORG_PRODUCTION_READY_PRIORITIZED_TODO.md")
+
+    required_phrases = [
+        "**Current rollout verdict:** **NO-GO for controlled first-10, public self-serve, served/remote MCP, 100-user rollout, and measured external lift**",
+        "Current cap:** `0` real users",
+        "PyPI artifact predates the current source commit by `2 days, 20:41:51.967245`",
+        "production PyPI upload requires explicit user/operator approval naming package and version",
+        "agents must not restart, kill, signal, or reload Hermes/gateway processes",
+        "GitHub admin/maintainer approval required for branch-protection mutation",
+        "verified external users >= 10",
+        "install successes >= 8",
+        "useful rescue moments >= 6",
+        "Smithery `mcpTools` differs from `len(borg.integrations.mcp_server.TOOLS)`",
+        "Final reflection from scratch",
+    ]
+    for phrase in required_phrases:
+        assert phrase in doc
+
+    unsupported = [
+        "controlled first-10 beta invites may start",
+        "public self-serve launch: GO",
+        "Package path proof green",
+    ]
+    for phrase in unsupported:
+        assert phrase not in doc
+    assert "do not re-upload the same version" in doc
 
 
 def test_public_examples_and_benchmark_readmes_do_not_overclaim_external_lift() -> None:
@@ -202,13 +241,13 @@ def test_release_gates_cover_export_openclaw_api_and_mcp_mix_paths() -> None:
 def test_final_production_ready_todo_preserves_hard_gate_boundaries() -> None:
     todo = read("docs/20260528_BORG_PRODUCTION_READY_FINAL_TODO.md")
     required = [
-        "package/local stdio proof green",
-        "controlled first-10 beta is currently **NO-GO**",
-        "release controls are red",
+        "same-version artifact is stale relative to the current source revision",
+        "Controlled first-10 beta is currently **NO-GO**",
+        "package provenance and release controls are red",
         "Broad public self-serve remains **NO-GO**",
         "100-real-user rollout remains **NO-GO**",
         "Published PyPI latest observed:** `agent-borg==3.3.15`",
-        "Keep `agent-borg==3.3.15` channel-completeness release proof green",
+        "Publish a new immutable post-hardening package version and keep the proof chain synchronized",
         "Generated rules / OpenClaw path",
         "Served/remote MCP production channel",
         "NO-GO until the actual served process is fingerprinted",
@@ -294,6 +333,7 @@ def test_non_current_public_docs_are_bannered_or_operator_scoped() -> None:
         "20260526-2115_FEDERATED_LEARNING_OPTIMALITY_AUDIT.md",
         "20260526-2230_MAX_VALUE_COLLECTIVE_INTELLIGENCE_LOOP.md",
         "20260528_BORG_PRODUCTION_READY_FINAL_TODO.md",
+        "20260531_BORG_PRODUCTION_READY_PRIORITIZED_TODO.md",
         "20260531_BORG_PRODUCTION_INVENTORY_BOARD.md",
     }
     docs = ROOT / "docs"

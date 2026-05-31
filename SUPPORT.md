@@ -1,10 +1,10 @@
 # Borg support policy
 
-Borg has `agent-borg==3.3.15` package/local stdio proof, but controlled first-10 beta is currently **NO-GO** while release controls are red: the served runtime is stale and `main` is unprotected. The tester cap is 0 until package/fresh-install/stdio MCP/generated-rules/OpenClaw/ops/watchdog/proof-dashboard, served-runtime freshness, and release-governance gates are all green. Broad public self-serve, 100-user rollout, served remote MCP, and measured external lift remain unclaimed until row-derived external-user evidence passes. Support expectations are intentionally narrow so tester outcomes remain measurable and do not create a fake broad-launch signal.
+Borg has `agent-borg==3.3.15` on PyPI, but that artifact is stale relative to current source because the PyPI upload predates the latest hardening merge. Controlled first-10 beta is currently **NO-GO** while package provenance and release controls are red: same-version PyPI drift, served runtime stale, and `main` unprotected. The tester cap is 0 until a new immutable package version, fresh-install/stdio MCP/generated-rules/OpenClaw/cold-start trust/self-service ops/watchdog/proof-dashboard, served-runtime freshness, and release-governance gates are all green. Broad public self-serve, 100-user rollout, served remote MCP, and measured external lift remain unclaimed until row-derived external-user evidence passes. Support expectations are intentionally narrow so tester outcomes remain measurable and do not create a fake broad-launch signal.
 
 ## Supported path
 
-- Target install for controlled testers while gates remain green: `pipx install agent-borg==3.3.15` or `pip install agent-borg==3.3.15` in a clean environment.
+- Target install after gates are green: a new immutable `agent-borg` version published after the current source revision, installed with `pipx install agent-borg==<approved-version>` or `pip install agent-borg==<approved-version>` in a clean environment.
 - First command: `borg rescue "<redacted real error>" --short`.
 - MCP path: `borg-mcp` over stdio from a local client.
 - Evidence intake: `.github/ISSUE_TEMPLATE/first-10-evidence.yml`.
