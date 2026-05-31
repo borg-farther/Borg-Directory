@@ -13,7 +13,7 @@ Give Borg an error, traceback, failed test, install problem, config failure, or 
 - **MCP server command:** `borg-mcp`
 - **Canonical repo:** https://github.com/borg-farther/Borg-Directory
 
-**Status:** `agent-borg==3.3.15` is published on PyPI and the package/fresh-install/local stdio MCP/generate/OpenClaw path is canaried, but controlled first-10 beta is currently **NO-GO** while release controls are red (served runtime stale; `main` unprotected). PR branches such as this one still require green PR checks and a post-merge `main` proof refresh before their source changes are claimed on `main`. Broad public self-serve launch, 100-user rollout, served/remote MCP, and measured external lift are **not claimed** until row-derived first-10 external-user evidence passes.
+**Status:** `agent-borg==3.3.15` is published on PyPI, but that artifact is stale relative to the current source revision because its upload predates the latest hardening merge. Package proof is red until a new immutable version is published and freshly canaried. Controlled first-10 beta is currently **NO-GO** while package provenance, served runtime freshness, release governance, and first-10 evidence are red. Broad public self-serve launch, 100-user rollout, served/remote MCP, and measured external lift are **not claimed** until row-derived external-user evidence passes.
 
 ## Try Borg in 60 seconds
 

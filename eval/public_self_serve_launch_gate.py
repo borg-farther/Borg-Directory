@@ -66,6 +66,7 @@ CURRENT_CLAIM_DOCS = [
     Path("docs/QUICKSTART.md"),
     Path("docs/TRYING_BORG.md"),
     Path("docs/MCP_SETUP.md"),
+    Path("docs/CHANNELS_AND_INSTALL_METHODS.md"),
     Path("docs/ONBOARDING.md"),
     Path("docs/FIRST_10_BETA_READINESS.md"),
     Path("docs/20260514_FIRST_10_USER_INVITE_PACKET.md"),
@@ -73,6 +74,7 @@ CURRENT_CLAIM_DOCS = [
     Path("docs/20260517_BORG_100_REAL_USER_READINESS.md"),
     Path("docs/ROADMAP.md"),
     Path("docs/20260522_BORG_PRODUCTION_DAY_ONE_HARDENING_PLAN.md"),
+    Path("docs/20260531_BORG_PRODUCTION_READY_PRIORITIZED_TODO.md"),
     Path("docs/PUBLIC_SELF_SERVE_LAUNCH_GO_NO_GO.md"),
     Path("docs/VALUE_COMMUNICATION_DASHBOARD.md"),
     Path("docs/VALUE_COMMUNICATION_DASHBOARD.html"),
@@ -92,6 +94,7 @@ CURRENT_CLAIM_DOCS = [
     Path("docs/TRUST_AND_PROMOTION.md"),
     Path("docs/REVOCATION_AND_DELETION.md"),
     Path("docs/LEARNING_ATOM_SCHEMA.md"),
+    Path("deploy/smithery/smithery.yaml"),
     Path("eval/borg_proof_dashboard.json"),
 ]
 
@@ -395,6 +398,10 @@ def docs_claim_guard(
                 (r"(?i)controlled first-10 beta invites may start", "controlled beta invites-may-start before PyPI canary"),
                 (r"(?i)CONDITIONAL GO for controlled first-10", "controlled first-10 conditional GO before PyPI canary"),
                 (r"(?i)PyPI latest metadata, fresh PyPI install, stdio MCP canary, GitHub CI/security gates, and source/local first-user gates passed", "package canaries-passed claim before PyPI canary"),
+                (r"(?i)\bPackage path proof green\b", "package path proof green before current PyPI canary"),
+                (r"(?i)\bpackage/local stdio proof\b", "package/local stdio proof before current PyPI canary"),
+                (r"(?i)fresh-install/MCP/generate/OpenClaw canaries pass for controlled first-10 beta", "package canaries pass before current PyPI canary"),
+                (r"(?i)published package metadata, PyPI latest, and proof artifacts agree on `?agent-borg==", "published package metadata agreement before current PyPI canary"),
             ]
             for pattern, label in blocked_package_claims:
                 match = re.search(pattern, text)

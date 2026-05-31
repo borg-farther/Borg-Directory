@@ -33,11 +33,11 @@
       }
     },
     "public_json_dashboard_consistency": {
-      "dashboard_generated_at_utc": "2026-05-31T14:16:32Z",
-      "dashboard_source_revision": "ffccdd04b53ef85cf46903764e426cbda2d90752+dirty",
+      "dashboard_generated_at_utc": "2026-05-31T18:41:10Z",
+      "dashboard_source_revision": "bd68c95733f545cc7a3cfd2700fb98734a4d3e91+dirty",
       "passed": true,
-      "status_source_revision": "ffccdd04b53ef85cf46903764e426cbda2d90752+dirty",
-      "status_updated_at": "2026-05-31T14:16:32Z"
+      "status_source_revision": "bd68c95733f545cc7a3cfd2700fb98734a4d3e91+dirty",
+      "status_updated_at": "2026-05-31T18:41:10Z"
     },
     "public_status_consistency": {
       "controlled_status_ok": false,
@@ -84,39 +84,39 @@
     "snapshot_freshness": {
       "items": {
         "borg_proof_dashboard": {
-          "age_hours": 0.004203486111111111,
+          "age_hours": 0.37521754583333333,
           "passed": true
         },
         "cold_start_trust_gate_snapshot": {
-          "age_hours": 4.125596911666666,
+          "age_hours": 8.907166526944444,
           "passed": true
         },
         "public_impact_json": {
-          "age_hours": 0.004203488333333333,
+          "age_hours": 0.37521754777777777,
           "passed": true
         },
         "public_self_serve_launch_gate_snapshot": {
-          "age_hours": 0.004092700277777778,
+          "age_hours": 0.00021844861111111112,
           "passed": true
         },
         "public_status_json": {
-          "age_hours": 0.004203486944444445,
+          "age_hours": 0.3752175466666666,
           "passed": true
         },
         "public_value_json": {
-          "age_hours": 0.0042034875,
+          "age_hours": 0.3752175472222222,
           "passed": true
         },
         "pypi_fresh_install_snapshot": {
-          "age_hours": 18.80837015138889,
+          "age_hours": 23.589939766666667,
           "passed": true
         },
         "rollback_comms_drill_snapshot": {
-          "age_hours": 4.259985636944444,
+          "age_hours": 9.041555251666667,
           "passed": true
         },
         "self_service_ops_gate_snapshot": {
-          "age_hours": 4.259962796111111,
+          "age_hours": 9.041532411111112,
           "passed": true
         }
       },
@@ -124,10 +124,10 @@
     },
     "source_revision_honesty": {
       "git_clean": false,
-      "head": "ffccdd04b53ef85cf46903764e426cbda2d90752",
+      "head": "bd68c95733f545cc7a3cfd2700fb98734a4d3e91",
       "passed": true,
       "policy": "Committed dashboards may be generated from a dirty tree and must mark +dirty; clean-tree status endpoints should match HEAD or a dirty ancestor used to generate committed proof artifacts.",
-      "source_revision": "ffccdd04b53ef85cf46903764e426cbda2d90752+dirty"
+      "source_revision": "bd68c95733f545cc7a3cfd2700fb98734a4d3e91+dirty"
     },
     "watchdog_workflow": {
       "exists": true,
@@ -137,7 +137,7 @@
     }
   },
   "gate_type": "ops_readiness_watchdog",
-  "generated_at_utc": "2026-05-31T14:16:47.203189+00:00",
+  "generated_at_utc": "2026-05-31T19:03:40.865996+00:00",
   "max_recommended_real_users_now": 0,
   "passed": true,
   "ready_for_controlled_first_10_beta": false,

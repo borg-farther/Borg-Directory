@@ -43,7 +43,7 @@
     "passed_count": 28
   },
   "gate_type": "real_user_rollout",
-  "generated_at_utc": "2026-05-31T14:16:31.512036+00:00",
+  "generated_at_utc": "2026-05-31T19:03:40.273755+00:00",
   "important_distinction": "load/readiness snapshots are synthetic/logical users; this gate controls real external-user rollout",
   "infrastructure_ready_for_100": false,
   "load_gates": {
@@ -148,8 +148,8 @@
         "latest_release_upload_time_utc": "2026-05-28T17:50:31.032755+00:00",
         "passed": false,
         "release_file_count": 2,
-        "source_commit_time_utc": "2026-05-31T10:27:07+00:00",
-        "source_revision": "ffccdd04b53ef85cf46903764e426cbda2d90752+dirty"
+        "source_commit_time_utc": "2026-05-31T14:32:23+00:00",
+        "source_revision": "bd68c95733f545cc7a3cfd2700fb98734a4d3e91+dirty"
       },
       "stale_copy": [],
       "summary": "Failure memory CLI and MCP server for AI coding agents",
@@ -220,10 +220,10 @@
   },
   "self_service_ops_gate": {
     "blockers": [],
-    "generated_at_utc": "2026-05-31T14:16:31.511374+00:00",
+    "generated_at_utc": "2026-05-31T19:03:40.273363+00:00",
     "ops_readiness_watchdog": {
       "blockers": [],
-      "generated_at_utc": "2026-05-31T14:16:15.514589+00:00",
+      "generated_at_utc": "2026-05-31T18:41:10.056653+00:00",
       "passed": true,
       "snapshot": "eval/ops_readiness_watchdog_snapshot.json",
       "truth_policy": "Watchdog passing means controlled first-10 ops proof is fresh and internally consistent. Broad public self-serve still requires row-derived first-10 external-user evidence."

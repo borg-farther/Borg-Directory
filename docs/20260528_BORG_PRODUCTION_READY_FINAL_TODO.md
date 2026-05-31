@@ -1,29 +1,29 @@
 # Borg production-readiness final todo
 
-**Generated:** 2026-05-28 10:08 UTC; updated 2026-05-30 for current package/readiness truth
+**Generated:** 2026-05-28 10:08 UTC; superseded/updated 2026-05-31 after PR45 same-version PyPI drift hardening
 **Repo:** `https://github.com/borg-farther/Borg-Directory`
-**Current branch under review:** `feat/borg-rescue-skillopt-priorities`
-**Current reviewed head:** PR #43 follow-up branch with additional local hardening under proof
-**Remote `origin/main`:** not asserted by this branch-local todo
+**Current branch under review:** historical note; see `docs/20260531_BORG_PRODUCTION_READY_PRIORITIZED_TODO.md` for current production order
+**Current reviewed head:** superseded by `main` after PR44/PR45 hardening merges
+**Remote `origin/main`:** current proof must be refreshed from live `main`, not this historical branch-local note
 **Source target version:** `agent-borg==3.3.15`
 **Published PyPI latest observed:** `agent-borg==3.3.15`
-**Current public-package verdict:** package/fresh-install/canary proof is green for `agent-borg==3.3.15`, but controlled first-10 beta is NO-GO until served-runtime freshness, release governance, ops/watchdog, and proof-dashboard gates are all green; broad public self-serve remains NO-GO until row-derived first-10 external-user evidence passes.
+**Current public-package verdict:** `agent-borg==3.3.15` is published, but that same-version artifact is stale relative to the current source revision because its PyPI upload predates the latest hardening merge. Package proof is red until a new immutable version is published and freshly canaried; controlled first-10 beta, broad public self-serve, and 100-real-user rollout remain NO-GO.
 
 ## Executive verdict
 
-Borg has **`agent-borg==3.3.15` package/local stdio proof green**, but controlled first-10 beta is currently **NO-GO** because release controls are red: the served runtime is stale and GitHub `main` is unprotected in the captured governance snapshot. Broad public self-serve remains **NO-GO** and the 100-real-user rollout remains **NO-GO**.
+Borg has **`agent-borg==3.3.15` published on PyPI**, but that artifact is stale for current source. Controlled first-10 beta is currently **NO-GO** because package provenance and release controls are red: same-version PyPI drift, stale served runtime, and unprotected GitHub `main`. Broad public self-serve remains **NO-GO** and the 100-real-user rollout remains **NO-GO**.
 
-Earlier channel-completeness bugs were fixed and shipped in `agent-borg==3.3.15`. The current PR #43 follow-up work is about keeping that proof chain honest while hardening rescue truth-boundaries, local priming install safety, and public/readiness documentation.
+Earlier channel-completeness bugs were fixed and shipped in `agent-borg==3.3.15`, but later hardening landed after that upload. The current work is to publish a new immutable version from the hardened source, keep the proof chain honest, and preserve public/readiness documentation truth boundaries.
 
 The honest current state is:
 
 - **Source/local 3.3.15 release candidate:** CONDITIONAL GO — local gate and regression proof must remain green for the final PR head.
-- **GitHub `main`:** not claimed by this branch-local todo until merge/post-merge proof refresh runs.
-- **Published PyPI:** package/local stdio proof green for `agent-borg==3.3.15`; controlled first-10 beta is blocked until served-runtime freshness, release governance, ops/watchdog, and proof dashboards are all green.
-- **Local stdio MCP from current package/source:** CONDITIONAL GO while fresh-install/MCP/proof dashboards remain green for the exact version.
+- **GitHub `main`:** PR44/PR45 hardening merges are on `main`; release-governance enforcement is still red until branch protection/rulesets require checks and CODEOWNERS review.
+- **Published PyPI:** `agent-borg==3.3.15` is stale for current source; a new immutable version must be published and freshly canaried before package proof can go green.
+- **Local stdio MCP from current package/source:** source/local checks may pass, but published package proof is red until the new version canary passes.
 - **Generated rules / OpenClaw path:** shipped in `3.3.15`; keep covered by first-user gates.
 - **Served/remote MCP production channel:** NO-GO until the actual served process is fingerprinted after operator-approved cutover.
-- **Controlled first-10 beta:** NO-GO right now; tester cap is 0 until package/fresh-install/stdio MCP/generated-rules/OpenClaw/cold-start trust/self-service ops/watchdog/proof-dashboard, served-runtime freshness, and release-governance gates are all green.
+- **Controlled first-10 beta:** NO-GO right now; tester cap is 0 until a new immutable package version, fresh-install/stdio MCP/generated-rules/OpenClaw/cold-start trust/self-service ops/watchdog/proof-dashboard, served-runtime freshness, and release-governance gates are all green.
 - **Broad public self-serve:** NO-GO until first-10 row-derived external evidence passes.
 - **100 real users:** NO-GO until first-10 evidence passes and the staged rollout gate raises the cap.
 - **Measured external lift / “Google-tier” product impact:** NO-GO until real external outcomes and counterfactual evaluation exist.
@@ -70,7 +70,7 @@ This todo is based on four independent evidence paths:
 
 ## Final production-readiness todo list
 
-### P0. Keep `agent-borg==3.3.15` channel-completeness release proof green
+### P0. Publish a new immutable post-hardening package version and keep the proof chain synchronized
 
 **Why:** The pre-3.3.15 package had a documented first-user export bug. The permanent fix is only useful if the current GitHub/PyPI/proof chain stays synchronized and fresh-install verified.
 
