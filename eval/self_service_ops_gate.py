@@ -133,6 +133,7 @@ WORKFLOW_REQUIRED_SNIPPETS = [
     "workflow_dispatch:",
     "python eval/run_pypi_fresh_install_canary.py",
     "python eval/cold_start_trust_gate.py",
+    "python eval/release_governance_gate.py --output eval/release_governance_snapshot.json",
     "python eval/rollback_comms_drill.py",
     "python eval/self_service_ops_gate.py",
     "python eval/public_self_serve_launch_gate.py",
@@ -140,6 +141,7 @@ WORKFLOW_REQUIRED_SNIPPETS = [
     "python eval/ops_readiness_watchdog.py",
     "--max-snapshot-age-hours 24",
     "python scripts/build_borg_proof_dashboard.py",
+    "python eval/ops_readiness_watchdog.py --mode pr --json --no-write --output eval/ops_readiness_watchdog_post_dashboard_check.json --max-snapshot-age-hours 24 --allow-public-blocker release_controls_or_first_10_evidence --require-ci-schedule",
     "python scripts/borg_proof_dashboard_lint.py",
 ]
 
@@ -284,6 +286,41 @@ def _bad_answer_feedback_path_check() -> dict[str, Any]:
     }
 
 
+def _codeowners_owner_tokens(text: str) -> list[str]:
+    owners: list[str] = []
+    for raw_line in text.splitlines():
+        line = raw_line.strip()
+        if not line or line.startswith("#"):
+            continue
+        parts = line.split()
+        if len(parts) < 2:
+            continue
+        owners.extend(parts[1:])
+    return owners
+
+
+def _codeowners_file_check(path: Path) -> dict[str, Any]:
+    text = _read(path)
+    banned_owner = "@borg-farther/maintainers"
+    required_owner = "@borg-farther"
+    owners = _codeowners_owner_tokens(text)
+    contains_required_owner = required_owner in owners
+    contains_banned_owner = banned_owner in owners
+    invalid_owner_tokens = sorted({owner for owner in owners if owner.startswith("@borg-farther") and owner != required_owner})
+    return {
+        "path": _rel(path),
+        "exists": path.exists(),
+        "passed": path.exists() and contains_required_owner and not contains_banned_owner and not invalid_owner_tokens,
+        "required_owner": required_owner,
+        "banned_owner": banned_owner,
+        "owners": owners,
+        "invalid_owner_tokens": invalid_owner_tokens,
+        "contains_required_owner": contains_required_owner,
+        "contains_banned_owner": contains_banned_owner,
+        "policy": "Static self-service ops parses non-comment CODEOWNERS owner tokens exactly; live owner validity and enforcement are proven by the release governance gate.",
+    }
+
+
 def compile_gate() -> dict[str, Any]:
     doc_checks = {name: _contains_all(ROOT / rel, SUPPORT_REQUIRED_PHRASES if name == "support_policy" else SECURITY_REQUIRED_PHRASES if name == "security_policy" else []) for name, rel in REQUIRED_DOCS.items()}
     # For docs without phrase-specific checks, require non-placeholder content with current rollout language.
@@ -304,7 +341,7 @@ def compile_gate() -> dict[str, Any]:
     }
 
     static_checks = {
-        "codeowners": {"path": _rel(ROOT / REQUIRED_STATIC_FILES["codeowners"]), "exists": (ROOT / REQUIRED_STATIC_FILES["codeowners"]).exists(), "passed": (ROOT / REQUIRED_STATIC_FILES["codeowners"]).exists()},
+        "codeowners": _codeowners_file_check(ROOT / REQUIRED_STATIC_FILES["codeowners"]),
         "watchdog_workflow": _watchdog_workflow_check(ROOT / REQUIRED_STATIC_FILES["watchdog_workflow"]),
         "rollback_drill_snapshot": _rollback_drill_check(ROOT / REQUIRED_STATIC_FILES["rollback_drill_snapshot"]),
     }

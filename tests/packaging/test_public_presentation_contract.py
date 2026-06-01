@@ -50,6 +50,23 @@ def test_readme_leads_with_concrete_value_before_install_matrix() -> None:
     assert top.index("## Try Borg in 60 seconds") < text.index("## 1. Install `agent-borg`")
 
 
+def test_release_governance_docs_use_exact_check_contexts_and_valid_codeowner() -> None:
+    from eval import release_governance_gate
+
+    docs = "\n".join(
+        [
+            read("docs/20260531_BORG_PRODUCTION_READY_PRIORITIZED_TODO.md"),
+            read("docs/20260601_AGENT_BORG_3_3_16_IMMUTABLE_RELEASE_PACKET.md"),
+        ]
+    )
+    for context in release_governance_gate.DEFAULT_REQUIRED_CHECKS:
+        assert f"`{context}`" in docs
+    codeowners = read(".github/CODEOWNERS")
+    assert "@borg-farther/maintainers" not in codeowners
+    assert "@borg-farther/maintainers" in docs, "docs should explain why the old team owner is invalid"
+    assert "@borg-farther" in codeowners
+
+
 def test_runtime_distribution_drafts_do_not_pin_stale_borg_versions() -> None:
     project = tomllib.loads(read("pyproject.toml"))["project"]
     current_version = project["version"]

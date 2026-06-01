@@ -37,6 +37,13 @@ jobs:
             echo "PyPI canary failed; continuing so public/readiness gates can fail closed with the fresh snapshot."
           fi
           python eval/cold_start_trust_gate.py
+          set +e
+          python eval/release_governance_gate.py --output eval/release_governance_snapshot.json
+          rc_governance=$?
+          set -e
+          if [ "$rc_governance" -ne 0 ]; then
+            echo "Release governance gate failed; continuing so public/readiness gates can fail closed with the fresh snapshot."
+          fi
 
       - name: Regenerate fail-closed readiness snapshots
         run: |
@@ -124,13 +131,13 @@ jobs:
         run: |
           python scripts/build_borg_proof_dashboard.py
 
+      - name: Verify watchdog after dashboard rebuild
+        run: |
+          python eval/ops_readiness_watchdog.py --mode pr --json --no-write --output eval/ops_readiness_watchdog_post_dashboard_check.json --max-snapshot-age-hours 24 --allow-public-blocker release_controls_or_first_10_evidence --require-ci-schedule
+
       - name: Lint proof dashboard
         run: |
           python scripts/borg_proof_dashboard_lint.py
-
-      - name: Verify watchdog after dashboard rebuild
-        run: |
-          python eval/ops_readiness_watchdog.py --mode pr --json --no-write --max-snapshot-age-hours 24 --allow-public-blocker release_controls_or_first_10_evidence --require-ci-schedule
 
       - name: Run watchdog regression tests
         run: |
