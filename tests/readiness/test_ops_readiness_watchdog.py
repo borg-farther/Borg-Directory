@@ -155,6 +155,7 @@ def test_watchdog_allows_only_first_10_external_evidence_as_public_blocker() -> 
         [
             "served runtime borg_version '3.3.14' != source version '3.3.15'",
             "main branch is not protected",
+            "CODEOWNERS validation has errors: 11",
             "first-10 external-user evidence has not passed",
         ],
         "release_controls_or_first_10_evidence",

@@ -291,6 +291,7 @@ def _is_release_control_blocker(blocker: str) -> bool:
         or "version_matches_source" in lower
         or "reload_status" in lower
         or "release governance" in lower
+        or "codeowners" in lower
         or "branch protection" in lower
         or "main branch is not protected" in lower
     )
