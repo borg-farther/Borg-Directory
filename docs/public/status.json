@@ -4,7 +4,7 @@
       "No Borg analytics export proving active contributors or consumers was found.",
       "No first-10-user scoreboard with real outcomes exists yet.",
       "Ops readiness/watchdog plus served-runtime and release-governance gates must stay green; any P0/P1 bad-answer, privacy, support, stale-proof, stale-runtime, or branch-protection failure pauses controlled beta invites.",
-      "100-real-user gate remains blocked: ['PyPI latest/fresh-install package evidence is not green: same-version PyPI upload predates current source revision', \"served runtime borg_version '3.3.14' != source version '3.3.15'\", 'served runtime version_matches_source is not true', 'served runtime reload_status is not loaded_code_matches_source_behavior', 'main branch is not protected', 'CODEOWNERS validation has errors: 11', 'first-10 external-user evidence has not passed: verified=0/10, real_users=0/10, installs=0/8, useful=0/6, critical_incidents=0/0']",
+      "100-real-user gate remains blocked: ['PyPI latest/fresh-install package evidence is not green: same-version PyPI upload predates current source revision', \"served runtime borg_version '3.3.14' != source version '3.3.15'\", 'served runtime version_matches_source is not true', 'served runtime reload_status is not loaded_code_matches_source_behavior', 'release governance live check failed: HTTP Error 403: rate limit exceeded', 'first-10 external-user evidence has not passed: verified=0/10, real_users=0/10, installs=0/8, useful=0/6, critical_incidents=0/0']",
       "Served/runtime freshness must be proven from eval/served_runtime_fingerprint_snapshot.json; source/fresh-process green is not live cutover proof.",
       "Release governance must be proven from eval/release_governance_snapshot.json; missing/unprotected branch details block release readiness."
     ],
@@ -70,10 +70,10 @@
   "self_service_ops_gate": "PASS",
   "served_runtime_freshness_gate": "FAIL",
   "source": "docs/public/status.json",
-  "source_revision": "602e080ba935ba37767f9d0ca6fc9ec9c00cfa25+dirty",
+  "source_revision": "b939de61e2183cb5b3de7b5229c083589b577449+dirty",
   "source_version_consistency": "pyproject=3.3.15 runtime=3.3.15",
   "state": "NO-GO public self-serve; source/local release-candidate only",
   "status": "NO-GO",
-  "updated_at": "2026-06-01T23:28:08Z",
+  "updated_at": "2026-06-01T23:37:16Z",
   "verified_external_users": 0
 }

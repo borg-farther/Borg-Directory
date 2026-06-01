@@ -10,7 +10,7 @@
       "No Borg analytics export proving active contributors or consumers was found.",
       "No first-10-user scoreboard with real outcomes exists yet.",
       "Ops readiness/watchdog plus served-runtime and release-governance gates must stay green; any P0/P1 bad-answer, privacy, support, stale-proof, stale-runtime, or branch-protection failure pauses controlled beta invites.",
-      "100-real-user gate remains blocked: ['PyPI latest/fresh-install package evidence is not green: same-version PyPI upload predates current source revision', \"served runtime borg_version '3.3.14' != source version '3.3.15'\", 'served runtime version_matches_source is not true', 'served runtime reload_status is not loaded_code_matches_source_behavior', 'main branch is not protected', 'CODEOWNERS validation has errors: 11', 'first-10 external-user evidence has not passed: verified=0/10, real_users=0/10, installs=0/8, useful=0/6, critical_incidents=0/0']",
+      "100-real-user gate remains blocked: ['PyPI latest/fresh-install package evidence is not green: same-version PyPI upload predates current source revision', \"served runtime borg_version '3.3.14' != source version '3.3.15'\", 'served runtime version_matches_source is not true', 'served runtime reload_status is not loaded_code_matches_source_behavior', 'release governance live check failed: HTTP Error 403: rate limit exceeded', 'first-10 external-user evidence has not passed: verified=0/10, real_users=0/10, installs=0/8, useful=0/6, critical_incidents=0/0']",
       "Served/runtime freshness must be proven from eval/served_runtime_fingerprint_snapshot.json; source/fresh-process green is not live cutover proof.",
       "Release governance must be proven from eval/release_governance_snapshot.json; missing/unprotected branch details block release readiness."
     ],
@@ -68,11 +68,11 @@
       "sha256": "92860954f0bf4c1b3a21827b29cc837f840e72fe9988b73414a7d87126c49aa6"
     },
     {
-      "claim_derived": "100-real-user gate=False; max_recommended_real_users=0; blockers=['PyPI latest/fresh-install package evidence is not green: same-version PyPI upload predates current source revision', \"served runtime borg_version '3.3.14' != source version '3.3.15'\", 'served runtime version_matches_source is not true', 'served runtime reload_status is not loaded_code_matches_source_behavior', 'main branch is not protected', 'CODEOWNERS validation has errors: 11', 'first-10 external-user evidence has not passed: verified=0/10, real_users=0/10, installs=0/8, useful=0/6, critical_incidents=0/0']",
+      "claim_derived": "100-real-user gate=False; max_recommended_real_users=0; blockers=['PyPI latest/fresh-install package evidence is not green: same-version PyPI upload predates current source revision', \"served runtime borg_version '3.3.14' != source version '3.3.15'\", 'served runtime version_matches_source is not true', 'served runtime reload_status is not loaded_code_matches_source_behavior', 'release governance live check failed: HTTP Error 403: rate limit exceeded', 'first-10 external-user evidence has not passed: verified=0/10, real_users=0/10, installs=0/8, useful=0/6, critical_incidents=0/0']",
       "exists": true,
-      "freshness_timestamp": "2026-06-01T23:28:07.879160+00:00",
+      "freshness_timestamp": "2026-06-01T23:37:16.175891+00:00",
       "path": "eval/real_user_rollout_gate_snapshot.json",
-      "sha256": "224279ad3d7cc68f047e5092185529c97616592a51b5993bea6e19816fc84e14"
+      "sha256": "925a40dd98aa0d316a596c85104228658d428298d65d46d708e80b27f8581d8d"
     },
     {
       "claim_derived": "first-10 row evidence users=0; measured_savings={'rows_with_measured_value': 0, 'dead_ends_avoided_confirmed': 0, 'net_minutes_saved': 0.0, 'positive_minutes_saved': 0.0, 'negative_minutes_cost': 0.0, 'net_tokens_saved': 0, 'positive_tokens_saved': 0, 'negative_tokens_cost': 0, 'counterfactual_basis_counts': {}}; gate=BLOCKED",
@@ -82,46 +82,46 @@
       "sha256": "232585546e34fc07459365e00123aa512098f215f7bcd6307d0bde9bb20813f0"
     },
     {
-      "claim_derived": "public self-serve gate=False; max_recommended_real_users=0; blockers=['PyPI latest metadata is stale: same-version release upload predates current source revision', \"served runtime borg_version '3.3.14' != source version '3.3.15'\", 'served runtime version_matches_source is not true', 'served runtime reload_status is not loaded_code_matches_source_behavior', 'main branch is not protected', 'CODEOWNERS validation has errors: 11', 'first-10 external-user evidence has not passed: verified=0/10, real_users=0/10, installs=0/8, useful=0/6, critical_incidents=0/0']",
+      "claim_derived": "public self-serve gate=False; max_recommended_real_users=0; blockers=['PyPI latest metadata is stale: same-version release upload predates current source revision', \"served runtime borg_version '3.3.14' != source version '3.3.15'\", 'served runtime version_matches_source is not true', 'served runtime reload_status is not loaded_code_matches_source_behavior', 'release governance live check failed: HTTP Error 403: rate limit exceeded', 'first-10 external-user evidence has not passed: verified=0/10, real_users=0/10, installs=0/8, useful=0/6, critical_incidents=0/0']",
       "exists": true,
-      "freshness_timestamp": "2026-06-01T23:28:07.512761+00:00",
+      "freshness_timestamp": "2026-06-01T23:37:15.922172+00:00",
       "path": "eval/public_self_serve_launch_gate_snapshot.json",
-      "sha256": "f3ee855151e618956db7186567c27bf859be2041e54710bc67324fb26bf282da"
+      "sha256": "96e610e97dc50b34bda93b95ff8620ac77525410a6f914a7c81030d14bf9232d"
     },
     {
       "claim_derived": "cold-start trust gate=True; blockers=[]",
       "exists": true,
-      "freshness_timestamp": "2026-06-01T23:28:03.003026+00:00",
+      "freshness_timestamp": "2026-06-01T23:37:12.593321+00:00",
       "path": "eval/cold_start_trust_gate_snapshot.json",
-      "sha256": "8ab7710093541bf456b2ced5794afb2f490a5fbf8802b6eb68354b1c69c6fede"
+      "sha256": "fb5551ae24622c4377977723037d65156b1662d825f34c7992a4e9cc56fc1de5"
     },
     {
       "claim_derived": "self-service ops gate=True; blockers=[]",
       "exists": true,
-      "freshness_timestamp": "2026-06-01T23:28:08.026049+00:00",
+      "freshness_timestamp": "2026-06-01T23:37:16.308485+00:00",
       "path": "eval/self_service_ops_gate_snapshot.json",
-      "sha256": "82badf00c28adeafd5ebcb75311f328e6834b84e62b5fc29a50a71057f0ff0cb"
+      "sha256": "4f19eb24da9cae63e2a25e5e1cccd93c7b29cf9774aa76b7f6d768c036cb6b45"
     },
     {
       "claim_derived": "ops readiness watchdog=True; blocker details live in eval/ops_readiness_watchdog_snapshot.json",
       "exists": true,
-      "freshness_timestamp": "2026-06-01T23:28:07.087391+00:00",
+      "freshness_timestamp": "2026-06-01T23:37:15.598363+00:00",
       "path": "eval/ops_readiness_watchdog_snapshot.json",
-      "sha256": "379a55a3dffe0b8cbc7842f0992a6953668d77739c7ebda8092810d210ddcbbc"
+      "sha256": "7e0a77563dd5cf2b105b4ec43e1908fa83a1da8da6e5d12697fe83d55e2c3dd8"
     },
     {
       "claim_derived": "rollback/comms drill=True; dry_run_only=True",
       "exists": true,
-      "freshness_timestamp": "2026-06-01T23:28:05.351122+00:00",
+      "freshness_timestamp": "2026-06-01T23:37:14.228349+00:00",
       "path": "eval/rollback_comms_drill_snapshot.json",
-      "sha256": "a078f38c402025a505ea787007a121d9ccf75d7e9c90fe0ac32d6c1fff9b4fa4"
+      "sha256": "2449a019087e657c4fb554813e1e5c1fe8db762f439feba887d26a684f02c528"
     },
     {
       "claim_derived": "PyPI fresh-install canary success=True; version=3.3.15",
       "exists": true,
-      "freshness_timestamp": "2026-06-01T23:27:42Z",
+      "freshness_timestamp": "2026-06-01T23:36:52Z",
       "path": "eval/pypi_fresh_install_snapshot.json",
-      "sha256": "287b249352a86ae577127b94bc330178ed5117ebd957aeee96a3aeb6b913fe5d"
+      "sha256": "0ca52da7e252b46ffb467d1b78616be01d1adcdd1d07635f039d28d9e74dc1bd"
     },
     {
       "claim_derived": "logical load 10: passed=True; total_requests=50316; success_rate=1.0; p95_ms=0.7141415262594819; model=asyncio_logical_users",
@@ -361,7 +361,7 @@
       }
     ]
   },
-  "generated_at_utc": "2026-06-01T23:28:08Z",
+  "generated_at_utc": "2026-06-01T23:37:16Z",
   "metrics": {
     "active_contributors_consumers": {
       "honesty_label": "MISSING_BORG_ANALYTICS_ARTIFACT",
@@ -533,7 +533,7 @@
     "Before any public claim, replace logical-user load evidence with real external-user evidence or clearly label the distinction."
   ],
   "repo": "https://github.com/borg-farther/Borg-Directory",
-  "source_revision": "602e080ba935ba37767f9d0ca6fc9ec9c00cfa25+dirty",
+  "source_revision": "b939de61e2183cb5b3de7b5229c083589b577449+dirty",
   "top_verdict": {
     "broad_public_launch": {
       "verdict": "NO-GO",

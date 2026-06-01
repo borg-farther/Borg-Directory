@@ -4,8 +4,7 @@
     "served runtime borg_version '3.3.14' != source version '3.3.15'",
     "served runtime version_matches_source is not true",
     "served runtime reload_status is not loaded_code_matches_source_behavior",
-    "main branch is not protected",
-    "CODEOWNERS validation has errors: 11",
+    "release governance live check failed: HTTP Error 403: rate limit exceeded",
     "first-10 external-user evidence has not passed: verified=0/10, real_users=0/10, installs=0/8, useful=0/6, critical_incidents=0/0"
   ],
   "gate_type": "public_self_serve_launch",
@@ -14,7 +13,7 @@
       "exists": true,
       "failed_count": 0,
       "failures": [],
-      "generated_at_utc": "2026-06-01T23:28:03.003026+00:00",
+      "generated_at_utc": "2026-06-01T23:37:12.593321+00:00",
       "has_bad_answer_feedback_path": true,
       "missing_required_checks": [],
       "observed_check_count": 7,
@@ -117,7 +116,7 @@
     },
     "ops_readiness_watchdog": {
       "blockers": [],
-      "generated_at_utc": "2026-06-01T23:28:07.087391+00:00",
+      "generated_at_utc": "2026-06-01T23:37:15.598363+00:00",
       "passed": true,
       "snapshot": "eval/ops_readiness_watchdog_snapshot.json",
       "truth_policy": "Watchdog passing means controlled first-10 ops proof is fresh and internally consistent. Broad public self-serve still requires row-derived first-10 external-user evidence."
@@ -133,12 +132,12 @@
       "failed_count": 0,
       "failures": [],
       "freshness": {
-        "age_hours": 0.007024762222222222,
+        "age_hours": 0.006604734722222222,
         "failure_kind": null,
         "max_age_hours": 24.0,
         "passed": true
       },
-      "generated_at_utc": "2026-06-01T23:27:42Z",
+      "generated_at_utc": "2026-06-01T23:36:52Z",
       "mcp_server_info": {
         "name": "borg-mcp-server",
         "version": "3.3.15"
@@ -199,8 +198,8 @@
         "oldest_release_upload_time_utc": "2026-05-28T17:50:29.231332+00:00",
         "passed": false,
         "release_file_count": 2,
-        "source_commit_time_utc": "2026-06-01T23:27:11+00:00",
-        "source_revision": "602e080ba935ba37767f9d0ca6fc9ec9c00cfa25+dirty",
+        "source_commit_time_utc": "2026-06-01T23:36:30+00:00",
+        "source_revision": "b939de61e2183cb5b3de7b5229c083589b577449+dirty",
         "stale_release_files": [
           "agent_borg-3.3.15-py3-none-any.whl",
           "agent_borg-3.3.15.tar.gz"
@@ -212,56 +211,17 @@
       "url_missing": []
     },
     "release_governance": {
-      "allow_deletions": null,
-      "allow_force_pushes": null,
       "blockers": [
-        "main branch is not protected",
-        "CODEOWNERS validation has errors: 11"
+        "release governance live check failed: HTTP Error 403: rate limit exceeded"
       ],
-      "bypass_allowances": [],
-      "codeowners_error_count": 11,
-      "codeowners_errors": [
-        ".github/CODEOWNERS:1: Unknown owner: Unknown owner on line 1: make sure the team @borg-farther/maintainers exists, is publicly visible, and has write access to the repository\n\n  * @borg-farther/maintainers\n    ^",
-        ".github/CODEOWNERS:4: Unknown owner: Unknown owner on line 4: make sure the team @borg-farther/maintainers exists, is publicly visible, and has write access to the repository\n\n  README.md @borg-farther/maintainers\n            ^",
-        ".github/CODEOWNERS:5: Unknown owner: Unknown owner on line 5: make sure the team @borg-farther/maintainers exists, is publicly visible, and has write access to the repository\n\n  SUPPORT.md @borg-farther/maintainers\n             ^",
-        ".github/CODEOWNERS:6: Unknown owner: Unknown owner on line 6: make sure the team @borg-farther/maintainers exists, is publicly visible, and has write access to the repository\n\n  SECURITY.md @borg-farther/maintainers\n              ^",
-        ".github/CODEOWNERS:7: Unknown owner: Unknown owner on line 7: make sure the team @borg-farther/maintainers exists, is publicly visible, and has write access to the repository\n\n  .github/ISSUE_TEMPLATE/ @borg-farther/maintainers\n                          ^",
-        ".github/CODEOWNERS:8: Unknown owner: Unknown owner on line 8: make sure the team @borg-farther/maintainers exists, is publicly visible, and has write access to the repository\n\n  .github/workflows/ @borg-farther/maintainers\n                     ^",
-        ".github/CODEOWNERS:9: Unknown owner: Unknown owner on line 9: make sure the team @borg-farther/maintainers exists, is publicly visible, and has write access to the repository\n\n  docs/SELF_SERVICE_OPS_READINESS.md @borg-farther/maintainers\n                                     ^",
-        ".github/CODEOWNERS:10: Unknown owner: Unknown owner on line 10: make sure the team @borg-farther/maintainers exists, is publicly visible, and has write access to the repository\n\n  docs/ROLLBACK_AND_COMMS_RUNBOOK.md @borg-farther/maintainers\n                                     ^",
-        ".github/CODEOWNERS:11: Unknown owner: Unknown owner on line 11: make sure the team @borg-farther/maintainers exists, is publicly visible, and has write access to the repository\n\n  docs/FIRST_10_EVIDENCE_INTAKE.md @borg-farther/maintainers\n                                   ^",
-        ".github/CODEOWNERS:12: Unknown owner: Unknown owner on line 12: make sure the team @borg-farther/maintainers exists, is publicly visible, and has write access to the repository\n\n  eval/*_gate*.py @borg-farther/maintainers\n                  ^",
-        ".github/CODEOWNERS:13: Unknown owner: Unknown owner on line 13: make sure the team @borg-farther/maintainers exists, is publicly visible, and has write access to the repository\n\n  eval/*_snapshot.json @borg-farther/maintainers\n                       ^"
-      ],
-      "codeowners_errors_checked": true,
-      "codeowners_review_required": null,
-      "dismiss_stale_reviews": null,
-      "enforce_admins": null,
       "passed": false,
-      "protected": false,
-      "require_last_push_approval": null,
-      "required_approving_review_count": null,
-      "required_checks_expected": [
-        "test (3.10)",
-        "test (3.11)",
-        "test (3.12)",
-        "dependency-audit",
-        "policy-check",
-        "secret-scan",
-        "static-security",
-        "ops-readiness-watchdog",
-        "old-account-reference"
-      ],
-      "required_checks_observed": [],
-      "required_conversation_resolution": null,
       "schema_version": 1,
       "snapshot": "eval/release_governance_snapshot.json",
-      "source": "github_api",
-      "strict_required_status_checks": null
+      "source": "github_api"
     },
     "self_service_ops_readiness": {
       "blockers": [],
-      "generated_at_utc": "2026-06-01T23:28:07.408971+00:00",
+      "generated_at_utc": "2026-06-01T23:37:15.845457+00:00",
       "passed": true,
       "report": "docs/SELF_SERVICE_OPS_READINESS_REPORT.md",
       "rollout_policy": "Ops readiness is necessary but not sufficient for controlled first-10; package provenance, served-runtime freshness, release governance, ops/watchdog freshness, and first-10 guardrails must also pass. broad public self-serve still requires row-derived first-10 external evidence.",
@@ -287,7 +247,7 @@
       }
     }
   },
-  "generated_at_utc": "2026-06-01T23:28:07.512761+00:00",
+  "generated_at_utc": "2026-06-01T23:37:15.922172+00:00",
   "max_recommended_real_users_now": 0,
   "ready_for_controlled_first_10_beta": false,
   "ready_for_public_self_serve_launch": false,

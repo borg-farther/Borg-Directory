@@ -2,7 +2,7 @@
   "blockers": [],
   "checks": {
     "cold_start_trust_current": {
-      "generated_at_utc": "2026-06-01T23:28:03.003026+00:00",
+      "generated_at_utc": "2026-06-01T23:37:12.593321+00:00",
       "passed": true
     },
     "public_blockers_allowed": {
@@ -12,8 +12,7 @@
         "served runtime borg_version '3.3.14' != source version '3.3.15'",
         "served runtime version_matches_source is not true",
         "served runtime reload_status is not loaded_code_matches_source_behavior",
-        "main branch is not protected",
-        "CODEOWNERS validation has errors: 11",
+        "release governance live check failed: HTTP Error 403: rate limit exceeded",
         "first-10 external-user evidence has not passed: verified=0/10, real_users=0/10, installs=0/8, useful=0/6, critical_incidents=0/0"
       ],
       "passed": true
@@ -25,8 +24,7 @@
           "served runtime borg_version '3.3.14' != source version '3.3.15'",
           "served runtime version_matches_source is not true",
           "served runtime reload_status is not loaded_code_matches_source_behavior",
-          "main branch is not protected",
-          "CODEOWNERS validation has errors: 11",
+          "release governance live check failed: HTTP Error 403: rate limit exceeded",
           "first-10 external-user evidence has not passed: verified=0/10, real_users=0/10, installs=0/8, useful=0/6, critical_incidents=0/0"
         ],
         "max_recommended_real_users_now": 0,
@@ -41,8 +39,7 @@
           "served runtime borg_version '3.3.14' != source version '3.3.15'",
           "served runtime version_matches_source is not true",
           "served runtime reload_status is not loaded_code_matches_source_behavior",
-          "main branch is not protected",
-          "CODEOWNERS validation has errors: 11",
+          "release governance live check failed: HTTP Error 403: rate limit exceeded",
           "first-10 external-user evidence has not passed: verified=0/10, real_users=0/10, installs=0/8, useful=0/6, critical_incidents=0/0"
         ],
         "max_recommended_real_users_now": 0,
@@ -52,11 +49,11 @@
       }
     },
     "public_json_dashboard_consistency": {
-      "dashboard_generated_at_utc": "2026-06-01T23:28:06Z",
-      "dashboard_source_revision": "602e080ba935ba37767f9d0ca6fc9ec9c00cfa25+dirty",
+      "dashboard_generated_at_utc": "2026-06-01T23:37:15Z",
+      "dashboard_source_revision": "b939de61e2183cb5b3de7b5229c083589b577449+dirty",
       "passed": true,
-      "status_source_revision": "602e080ba935ba37767f9d0ca6fc9ec9c00cfa25+dirty",
-      "status_updated_at": "2026-06-01T23:28:06Z"
+      "status_source_revision": "b939de61e2183cb5b3de7b5229c083589b577449+dirty",
+      "status_updated_at": "2026-06-01T23:37:15Z"
     },
     "public_status_consistency": {
       "controlled_status_ok": false,
@@ -70,7 +67,7 @@
     },
     "pypi_fresh_current": {
       "expected_version": "3.3.15",
-      "generated_at_utc": "2026-06-01T23:27:42Z",
+      "generated_at_utc": "2026-06-01T23:36:52Z",
       "passed": true,
       "pre_package_release_stage": true,
       "pypi_current": false,
@@ -84,8 +81,7 @@
           "served runtime borg_version '3.3.14' != source version '3.3.15'",
           "served runtime version_matches_source is not true",
           "served runtime reload_status is not loaded_code_matches_source_behavior",
-          "main branch is not protected",
-          "CODEOWNERS validation has errors: 11",
+          "release governance live check failed: HTTP Error 403: rate limit exceeded",
           "first-10 external-user evidence has not passed: verified=0/10, real_users=0/10, installs=0/8, useful=0/6, critical_incidents=0/0"
         ],
         "infrastructure_ready_for_100": false,
@@ -104,67 +100,67 @@
     "snapshot_freshness": {
       "items": {
         "borg_proof_dashboard": {
-          "age_hours": 0.0002820902777777778,
+          "age_hours": 0.0001503661111111111,
           "allowed_stale_reason": null,
           "passed": true,
           "raw_freshness_passed": true
         },
         "cold_start_trust_gate_snapshot": {
-          "age_hours": 0.0011145825,
+          "age_hours": 0.0008188875000000001,
           "allowed_stale_reason": null,
           "passed": true,
           "raw_freshness_passed": true
         },
         "public_impact_json": {
-          "age_hours": 0.0002820919444444444,
+          "age_hours": 0.00015036777777777778,
           "allowed_stale_reason": null,
           "passed": true,
           "raw_freshness_passed": true
         },
         "public_self_serve_launch_gate_snapshot": {
-          "age_hours": 0.0003182188888888889,
+          "age_hours": 0.00025264444444444447,
           "allowed_stale_reason": null,
           "passed": true,
           "raw_freshness_passed": true
         },
         "public_status_json": {
-          "age_hours": 0.0002820911111111111,
+          "age_hours": 0.00015036694444444445,
           "allowed_stale_reason": null,
           "passed": true,
           "raw_freshness_passed": true
         },
         "public_value_json": {
-          "age_hours": 0.00028209138888888886,
+          "age_hours": 0.0001503675,
           "allowed_stale_reason": null,
           "passed": true,
           "raw_freshness_passed": true
         },
         "pypi_fresh_install_snapshot": {
-          "age_hours": 0.006948755833333333,
+          "age_hours": 0.006539253888888889,
           "allowed_stale_reason": null,
           "passed": true,
           "raw_freshness_passed": true
         },
         "real_user_rollout_gate_snapshot": {
-          "age_hours": 0.0002264027777777778,
+          "age_hours": 0.00018167194444444445,
           "allowed_stale_reason": null,
           "passed": true,
           "raw_freshness_passed": true
         },
         "release_governance_snapshot": {
-          "age_hours": 0.00047907194444444444,
+          "age_hours": 0.0003788188888888889,
           "allowed_stale_reason": null,
           "passed": true,
           "raw_freshness_passed": true
         },
         "rollback_comms_drill_snapshot": {
-          "age_hours": 0.0004623408333333334,
+          "age_hours": 0.00036471944444444447,
           "allowed_stale_reason": null,
           "passed": true,
           "raw_freshness_passed": true
         },
         "self_service_ops_gate_snapshot": {
-          "age_hours": 0.00043711805555555556,
+          "age_hours": 0.00034216694444444445,
           "allowed_stale_reason": null,
           "passed": true,
           "raw_freshness_passed": true
@@ -174,10 +170,10 @@
     },
     "source_revision_honesty": {
       "git_clean": false,
-      "head": "602e080ba935ba37767f9d0ca6fc9ec9c00cfa25",
+      "head": "b939de61e2183cb5b3de7b5229c083589b577449",
       "passed": true,
       "policy": "Committed dashboards may be generated from a dirty tree and must mark +dirty; clean-tree status endpoints should match HEAD or a dirty ancestor used to generate committed proof artifacts.",
-      "source_revision": "602e080ba935ba37767f9d0ca6fc9ec9c00cfa25+dirty"
+      "source_revision": "b939de61e2183cb5b3de7b5229c083589b577449+dirty"
     },
     "watchdog_workflow": {
       "exists": true,
@@ -302,7 +298,7 @@
     }
   },
   "gate_type": "ops_readiness_watchdog",
-  "generated_at_utc": "2026-06-01T23:28:07.087391+00:00",
+  "generated_at_utc": "2026-06-01T23:37:15.598363+00:00",
   "max_recommended_real_users_now": 0,
   "passed": true,
   "ready_for_controlled_first_10_beta": false,

@@ -1,6 +1,6 @@
 # Borg public self-serve launch go/no-go
 
-Generated: 2026-06-01T23:28:07.512761+00:00
+Generated: 2026-06-01T23:37:15.922172+00:00
 Source version: `3.3.15`
 
 Public self-serve launch: **NO-GO**
@@ -31,8 +31,7 @@ Public self-serve is GO only after PyPI/fresh-install/MCP/docs/cold-start-trust/
 - served runtime borg_version '3.3.14' != source version '3.3.15'
 - served runtime version_matches_source is not true
 - served runtime reload_status is not loaded_code_matches_source_behavior
-- main branch is not protected
-- CODEOWNERS validation has errors: 11
+- release governance live check failed: HTTP Error 403: rate limit exceeded
 - first-10 external-user evidence has not passed: verified=0/10, real_users=0/10, installs=0/8, useful=0/6, critical_incidents=0/0
 
 ## Evidence artifacts
