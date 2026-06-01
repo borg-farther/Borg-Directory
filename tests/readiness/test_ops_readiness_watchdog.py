@@ -189,6 +189,9 @@ def test_generated_artifact_change_filter_rejects_source_or_docs_drift(monkeypat
     monkeypatch.setattr(watchdog, "_git_changed_paths", lambda base, head: ["eval/borg_proof_dashboard.json", "docs/PUBLIC_SELF_SERVE_LAUNCH_GO_NO_GO.md"])
     assert watchdog._changes_since_source_are_generated_artifacts("a" * 40, "b" * 40) is True
 
+    monkeypatch.setattr(watchdog, "_git_changed_paths", lambda base, head: [])
+    assert watchdog._changes_since_source_are_generated_artifacts("a" * 40, "b" * 40) is True
+
     monkeypatch.setattr(watchdog, "_git_changed_paths", lambda base, head: ["eval/borg_proof_dashboard.json", "README.md"])
     assert watchdog._changes_since_source_are_generated_artifacts("a" * 40, "b" * 40) is False
 
