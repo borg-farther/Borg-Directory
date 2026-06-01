@@ -51,6 +51,10 @@ def _age_hours(value: str | None) -> float | None:
     return (datetime.now(timezone.utc) - dt.astimezone(timezone.utc)).total_seconds() / 3600
 
 
+def _freshness_passed(age: float | None, max_snapshot_age_hours: float) -> bool:
+    return age is not None and 0 <= age <= max_snapshot_age_hours
+
+
 def _git_head() -> str | None:
     try:
         return subprocess.check_output(["git", "rev-parse", "HEAD"], cwd=ROOT, text=True).strip()
@@ -88,16 +92,47 @@ def _source_revision_is_honest(source_rev: Any, head: str | None, clean: bool) -
         return True
     if source.endswith("+dirty"):
         base = source.removesuffix("+dirty")
-        return (not clean) or _git_is_ancestor(base, head)
+        return base == head or _git_is_ancestor(base, head)
     return False
 
 
 def _workflow_has_schedule() -> dict[str, Any]:
     path = ROOT / ".github" / "workflows" / "self-service-watchdog.yml"
     text = path.read_text(encoding="utf-8") if path.exists() else ""
-    required = ["schedule:", "workflow_dispatch:", "python eval/ops_readiness_watchdog.py", "python eval/self_service_ops_gate.py"]
+    required = [
+        "schedule:",
+        "workflow_dispatch:",
+        "python eval/run_pypi_fresh_install_canary.py",
+        "python eval/rollback_comms_drill.py",
+        "python eval/self_service_ops_gate.py",
+        "python eval/public_self_serve_launch_gate.py",
+        "python eval/real_user_rollout_gate.py",
+        "python eval/ops_readiness_watchdog.py",
+        "python scripts/build_borg_proof_dashboard.py",
+        "python scripts/borg_proof_dashboard_lint.py",
+    ]
     missing = [item for item in required if item not in text]
-    return {"path": str(path.relative_to(ROOT)), "exists": path.exists(), "passed": path.exists() and not missing, "missing": missing}
+    ordered = [
+        "python eval/run_pypi_fresh_install_canary.py",
+        "python eval/public_self_serve_launch_gate.py",
+        "python eval/real_user_rollout_gate.py",
+        "python eval/ops_readiness_watchdog.py",
+        "python scripts/build_borg_proof_dashboard.py",
+        "python scripts/borg_proof_dashboard_lint.py",
+    ]
+    positions = {item: text.find(item) for item in ordered}
+    order_missing = [item for item, position in positions.items() if position < 0]
+    order_ok = not order_missing and all(positions[left] < positions[right] for left, right in zip(ordered, ordered[1:]))
+    return {
+        "path": str(path.relative_to(ROOT)),
+        "exists": path.exists(),
+        "passed": path.exists() and not missing and order_ok,
+        "missing": missing,
+        "required_order": ordered,
+        "order_positions": positions,
+        "order_missing": order_missing,
+        "order_ok": order_ok,
+    }
 
 
 def _public_blockers_are_allowed(blockers: list[Any], allowed_key: str) -> bool:
@@ -259,9 +294,25 @@ def compile_watchdog(*, max_snapshot_age_hours: float = 24.0, allow_public_block
         "self_service_ops_gate_snapshot": _read_json(ROOT / "eval" / "self_service_ops_gate_snapshot.json"),
         "rollback_comms_drill_snapshot": _read_json(ROOT / "eval" / "rollback_comms_drill_snapshot.json"),
     }.items():
-        age = _age_hours(data.get("generated_at_utc") or data.get("updated_at"))
-        ok = age is not None and age <= max_snapshot_age_hours
-        checks["snapshot_freshness"]["items"][name] = {"age_hours": age, "passed": ok}
+        timestamp = data.get("generated_at_utc") or data.get("updated_at")
+        age = _age_hours(timestamp)
+        raw_ok = _freshness_passed(age, max_snapshot_age_hours)
+        allowed_stale_reason = None
+        if name == "pypi_fresh_install_snapshot" and age is not None and age > max_snapshot_age_hours and pre_package_release_stage:
+            # During the explicit pre-package-release NO-GO state, live PyPI metadata
+            # already fails closed (same-version artifact drift / missing immutable
+            # release) and caps real users at 0. An aged fresh-install canary should
+            # not make the scheduled ops watchdog red for the wrong reason. Once
+            # package proof is claimed green, or release controls are the only
+            # blockers, this exemption disappears and stale PyPI canaries fail hard.
+            allowed_stale_reason = "pre_package_release_stage_package_proof_already_red"
+        ok = raw_ok or allowed_stale_reason is not None
+        checks["snapshot_freshness"]["items"][name] = {
+            "age_hours": age,
+            "passed": ok,
+            "raw_freshness_passed": raw_ok,
+            "allowed_stale_reason": allowed_stale_reason,
+        }
         if not ok:
             checks["snapshot_freshness"]["passed"] = False
 
@@ -271,9 +322,10 @@ def compile_watchdog(*, max_snapshot_age_hours: float = 24.0, allow_public_block
             and public_snapshot.get("ready_for_controlled_first_10_beta") == live_public.get("ready_for_controlled_first_10_beta")
             and public_snapshot.get("ready_for_public_self_serve_launch") == live_public.get("ready_for_public_self_serve_launch")
             and public_snapshot.get("max_recommended_real_users_now") == live_public.get("max_recommended_real_users_now")
+            and public_snapshot.get("blockers") == live_public.get("blockers")
         ),
-        "snapshot": {k: public_snapshot.get(k) for k in ["source_version", "ready_for_controlled_first_10_beta", "ready_for_public_self_serve_launch", "max_recommended_real_users_now"]},
-        "live": {k: live_public.get(k) for k in ["source_version", "ready_for_controlled_first_10_beta", "ready_for_public_self_serve_launch", "max_recommended_real_users_now"]},
+        "snapshot": {k: public_snapshot.get(k) for k in ["source_version", "ready_for_controlled_first_10_beta", "ready_for_public_self_serve_launch", "max_recommended_real_users_now", "blockers"]},
+        "live": {k: live_public.get(k) for k in ["source_version", "ready_for_controlled_first_10_beta", "ready_for_public_self_serve_launch", "max_recommended_real_users_now", "blockers"]},
     }
     checks["real_user_rollout_consistency"] = {
         "passed": controlled_package_stage or pre_package_release_stage or release_control_blocked_stage,

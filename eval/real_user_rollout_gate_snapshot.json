@@ -43,7 +43,7 @@
     "passed_count": 28
   },
   "gate_type": "real_user_rollout",
-  "generated_at_utc": "2026-05-31T19:03:40.273755+00:00",
+  "generated_at_utc": "2026-06-01T08:59:33.806606+00:00",
   "important_distinction": "load/readiness snapshots are synthetic/logical users; this gate controls real external-user rollout",
   "infrastructure_ready_for_100": false,
   "load_gates": {
@@ -89,7 +89,13 @@
       "expected_version": "3.3.15",
       "failed_count": 0,
       "failures": [],
-      "generated_at_utc": "2026-05-30T19:28:17Z",
+      "freshness": {
+        "age_hours": 0.00077282,
+        "failure_kind": null,
+        "max_age_hours": 24.0,
+        "passed": true
+      },
+      "generated_at_utc": "2026-06-01T08:59:31Z",
       "mcp_server_info": {
         "name": "borg-mcp-server",
         "version": "3.3.15"
@@ -143,13 +149,19 @@
         "uvicorn>=0.27; extra == \"all\""
       ],
       "source_upload_alignment": {
-        "detail": "PyPI release upload predates current source revision; publish a new version before claiming package proof is current.",
+        "detail": "PyPI release upload predates current source revision for at least one release file; publish a new immutable version before claiming package proof is current.",
+        "dirty_source": true,
         "failure_kind": "same_version_pypi_upload_predates_source_revision",
         "latest_release_upload_time_utc": "2026-05-28T17:50:31.032755+00:00",
+        "oldest_release_upload_time_utc": "2026-05-28T17:50:29.231332+00:00",
         "passed": false,
         "release_file_count": 2,
-        "source_commit_time_utc": "2026-05-31T14:32:23+00:00",
-        "source_revision": "bd68c95733f545cc7a3cfd2700fb98734a4d3e91+dirty"
+        "source_commit_time_utc": "2026-05-31T19:14:30+00:00",
+        "source_revision": "a7f5e769016ac83f249d57fe8e36b34f020dda3b+dirty",
+        "stale_release_files": [
+          "agent_borg-3.3.15-py3-none-any.whl",
+          "agent_borg-3.3.15.tar.gz"
+        ]
       },
       "stale_copy": [],
       "summary": "Failure memory CLI and MCP server for AI coding agents",
@@ -220,16 +232,16 @@
   },
   "self_service_ops_gate": {
     "blockers": [],
-    "generated_at_utc": "2026-05-31T19:03:40.273363+00:00",
+    "generated_at_utc": "2026-06-01T08:59:33.806244+00:00",
     "ops_readiness_watchdog": {
       "blockers": [],
-      "generated_at_utc": "2026-05-31T18:41:10.056653+00:00",
+      "generated_at_utc": "2026-06-01T08:59:33.246561+00:00",
       "passed": true,
       "snapshot": "eval/ops_readiness_watchdog_snapshot.json",
       "truth_policy": "Watchdog passing means controlled first-10 ops proof is fresh and internally consistent. Broad public self-serve still requires row-derived first-10 external-user evidence."
     },
     "passed": true,
-    "rollout_policy": "Controlled first-10 may proceed only when ops readiness passes; broad public self-serve still requires row-derived first-10 external evidence.",
+    "rollout_policy": "Ops readiness is necessary but not sufficient for controlled first-10; package provenance, served-runtime freshness, release governance, ops/watchdog freshness, and first-10 guardrails must also pass. broad public self-serve still requires row-derived first-10 external evidence.",
     "self_service_ops_passed": true
   },
   "version": {

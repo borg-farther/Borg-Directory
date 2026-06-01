@@ -195,3 +195,97 @@ def test_public_payload_does_not_call_package_green_when_pypi_latest_alignment_f
     assert status["state"] == "NO-GO public self-serve; source/local release-candidate only"
     assert "public package proof green" not in status["state"]
     assert "PyPI/fresh-install proof is not yet green for the current source version" in value["detail"]
+
+
+def _minimal_dashboard_files(pypi_snapshot: dict[str, object]) -> dict[str, dict[str, object]]:
+    return {
+        "eval/first_user_release_gate_snapshot.json": {"all_pass": True},
+        "eval/uat_scoreboard_snapshot.json": {"synthetic_load_all_pass": True},
+        "eval/gate_run_snapshot.json": {"synthetic_load_all_pass": True},
+        "eval/real_user_rollout_gate_snapshot.json": {
+            "ready_for_100_real_users": False,
+            "blockers": [],
+            "release_controls_gate": {"passed": False},
+        },
+        "eval/public_self_serve_launch_gate_snapshot.json": {
+            "ready_for_public_self_serve_launch": False,
+            "gates": {"pypi_latest": {"passed": True}},
+        },
+        "eval/cold_start_trust_gate_snapshot.json": {"passed": True},
+        "eval/self_service_ops_gate_snapshot.json": {"passed": True, "blockers": []},
+        "eval/ops_readiness_watchdog_snapshot.json": {"passed": True},
+        "eval/rollback_comms_drill_snapshot.json": {"passed": True},
+        "eval/pypi_fresh_install_snapshot.json": pypi_snapshot,
+    }
+
+
+def test_dashboard_requires_mcp_stdio_canary_for_pypi_package_current(monkeypatch):
+    from eval import self_service_ops_gate
+
+    files = _minimal_dashboard_files({
+        "success": True,
+        "version": "9.9.9",
+        "generated_at_utc": "fresh",
+        "mcp_stdio_canary": {"passed": False},
+    })
+    monkeypatch.setattr(dashboard, "load_json", lambda rel: files.get(rel))
+    monkeypatch.setattr(dashboard, "pyproject_version", lambda: "9.9.9")
+    monkeypatch.setattr(dashboard, "init_version", lambda: "9.9.9")
+    monkeypatch.setattr(dashboard, "current_commit", lambda: "a" * 40)
+    monkeypatch.setattr(dashboard, "pack_count", lambda: 1)
+    monkeypatch.setattr(dashboard, "age_hours", lambda value: 1.0)
+    monkeypatch.setattr(self_service_ops_gate, "compile_gate", lambda: {"passed": True, "blockers": []})
+
+    model = dashboard.build_model()
+
+    assert model["metrics"]["pypi_fresh_install_canary"]["value"] == "FAIL"
+    assert model["metrics"]["pypi_package_current_gate"]["value"] == "FAIL"
+    first_action = model["next_action_queue_before_sharing_git_with_first_user"][0]
+    assert "publish a new immutable `agent-borg` version after `9.9.9`" in first_action
+    assert "After `agent-borg==9.9.9` is published" not in first_action
+
+
+def test_dashboard_rejects_future_pypi_canary_timestamp_for_package_current(monkeypatch):
+    from eval import self_service_ops_gate
+
+    files = _minimal_dashboard_files({
+        "success": True,
+        "version": "9.9.9",
+        "generated_at_utc": "future",
+        "mcp_stdio_canary": {"passed": True},
+    })
+    monkeypatch.setattr(dashboard, "load_json", lambda rel: files.get(rel))
+    monkeypatch.setattr(dashboard, "pyproject_version", lambda: "9.9.9")
+    monkeypatch.setattr(dashboard, "init_version", lambda: "9.9.9")
+    monkeypatch.setattr(dashboard, "current_commit", lambda: "a" * 40)
+    monkeypatch.setattr(dashboard, "pack_count", lambda: 1)
+    monkeypatch.setattr(dashboard, "age_hours", lambda value: -1.0)
+    monkeypatch.setattr(self_service_ops_gate, "compile_gate", lambda: {"passed": True, "blockers": []})
+
+    model = dashboard.build_model()
+
+    assert model["metrics"]["pypi_fresh_install_canary"]["value"] == "FAIL"
+    assert model["metrics"]["pypi_package_current_gate"]["value"] == "FAIL"
+
+
+def test_dashboard_requires_fresh_pypi_canary_for_pypi_package_current(monkeypatch):
+    from eval import self_service_ops_gate
+
+    files = _minimal_dashboard_files({
+        "success": True,
+        "version": "9.9.9",
+        "generated_at_utc": "stale",
+        "mcp_stdio_canary": {"passed": True},
+    })
+    monkeypatch.setattr(dashboard, "load_json", lambda rel: files.get(rel))
+    monkeypatch.setattr(dashboard, "pyproject_version", lambda: "9.9.9")
+    monkeypatch.setattr(dashboard, "init_version", lambda: "9.9.9")
+    monkeypatch.setattr(dashboard, "current_commit", lambda: "a" * 40)
+    monkeypatch.setattr(dashboard, "pack_count", lambda: 1)
+    monkeypatch.setattr(dashboard, "age_hours", lambda value: 48.0)
+    monkeypatch.setattr(self_service_ops_gate, "compile_gate", lambda: {"passed": True, "blockers": []})
+
+    model = dashboard.build_model()
+
+    assert model["metrics"]["pypi_fresh_install_canary"]["value"] == "FAIL"
+    assert model["metrics"]["pypi_package_current_gate"]["value"] == "FAIL"

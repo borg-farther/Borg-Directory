@@ -1,6 +1,7 @@
 from __future__ import annotations
 
 import json
+from datetime import datetime, timezone
 from pathlib import Path
 
 from eval import first_10_evidence as evidence
@@ -77,12 +78,29 @@ def _pypi_fixture(
         "version": version,
         "summary": gate.EXPECTED_PYPI_SUMMARY if summary is None else summary,
         "keywords": gate.REQUIRED_PYPI_KEYWORD if keywords is None else keywords,
+        "release_files": [
+            {"filename": f"agent_borg-{version}-py3-none-any.whl", "upload_time_iso_8601": "2026-05-26T00:00:00+00:00"},
+            {"filename": f"agent_borg-{version}.tar.gz", "upload_time_iso_8601": "2026-05-26T00:00:01+00:00"},
+        ],
         "project_urls": project_urls if project_urls is not None else {
             "Homepage": "https://github.com/borg-farther/Borg-Directory",
             "Repository": "https://github.com/borg-farther/Borg-Directory",
             "Documentation": "https://github.com/borg-farther/Borg-Directory#readme",
             "Issues": "https://github.com/borg-farther/Borg-Directory/issues",
         },
+    }
+
+
+def _fresh_timestamp() -> str:
+    return datetime.now(timezone.utc).isoformat()
+
+
+def _clean_source_revision_state() -> dict[str, object]:
+    return {
+        "revision": "abcdef1234567890abcdef1234567890abcdef12",
+        "commit_time_utc": "2026-05-25T00:00:00+00:00",
+        "dirty": False,
+        "available": True,
     }
 
 
@@ -443,7 +461,17 @@ def test_docs_claim_guard_allows_explicit_same_version_drift_blocker_before_cana
     assert result["violations"] == []
 
 
-def test_pypi_latest_check_requires_source_version_and_urls() -> None:
+def test_pypi_latest_check_requires_source_version_and_urls(monkeypatch) -> None:
+    monkeypatch.setattr(
+        gate,
+        "source_revision_state",
+        lambda: {
+            "revision": "abcdef1234567890abcdef1234567890abcdef12",
+            "commit_time_utc": "2026-05-25T00:00:00+00:00",
+            "dirty": False,
+            "available": True,
+        },
+    )
     result = gate.pypi_latest_check(
         "9.9.9",
         fetch_network=False,
@@ -499,6 +527,117 @@ def test_pypi_latest_check_fails_when_same_version_upload_predates_source_revisi
     assert "PyPI release upload predates current source revision" in result["source_upload_alignment"]["detail"]
 
 
+def test_pypi_latest_check_fails_if_any_release_file_predates_source_revision(monkeypatch) -> None:
+    monkeypatch.setattr(
+        gate,
+        "source_revision_state",
+        lambda: {
+            "revision": "abcdef1234567890abcdef1234567890abcdef12",
+            "commit_time_utc": "2026-05-31T10:27:07+00:00",
+            "dirty": False,
+            "available": True,
+        },
+    )
+
+    result = gate.pypi_latest_check(
+        "9.9.9",
+        fetch_network=False,
+        pypi_data=_pypi_fixture() | {
+            "release_files": [
+                {"filename": "agent_borg-9.9.9-py3-none-any.whl", "upload_time_iso_8601": "2026-05-28T17:50:29+00:00"},
+                {"filename": "agent_borg-9.9.9.tar.gz", "upload_time_iso_8601": "2026-06-01T00:00:00+00:00"},
+            ],
+        },
+    )
+
+    assert result["passed"] is False
+    alignment = result["source_upload_alignment"]
+    assert alignment["passed"] is False
+    assert alignment["failure_kind"] == "same_version_pypi_upload_predates_source_revision"
+    assert alignment["oldest_release_upload_time_utc"] == "2026-05-28T17:50:29+00:00"
+    assert alignment["stale_release_files"] == ["agent_borg-9.9.9-py3-none-any.whl"]
+
+
+def test_pypi_latest_check_fails_closed_without_release_file_timestamps(monkeypatch) -> None:
+    monkeypatch.setattr(
+        gate,
+        "source_revision_state",
+        lambda: {
+            "revision": "abcdef1234567890abcdef1234567890abcdef12",
+            "commit_time_utc": "2026-05-25T00:00:00+00:00",
+            "dirty": False,
+            "available": True,
+        },
+    )
+
+    result = gate.pypi_latest_check(
+        "9.9.9",
+        fetch_network=False,
+        pypi_data=_pypi_fixture() | {"release_files": [{"filename": "agent_borg-9.9.9-py3-none-any.whl"}]},
+    )
+
+    assert result["passed"] is False
+    assert result["source_upload_alignment"]["passed"] is False
+    assert result["source_upload_alignment"]["failure_kind"] == "missing_release_upload_timestamp"
+
+
+def test_pypi_latest_check_fails_when_source_worktree_is_dirty(monkeypatch) -> None:
+    monkeypatch.setattr(
+        gate,
+        "source_revision_state",
+        lambda: {
+            "revision": "abcdef1234567890abcdef1234567890abcdef12+dirty",
+            "commit_time_utc": "2026-05-25T00:00:00+00:00",
+            "dirty": True,
+            "available": True,
+        },
+    )
+
+    result = gate.pypi_latest_check("9.9.9", fetch_network=False, pypi_data=_pypi_fixture())
+
+    assert result["passed"] is False
+    assert result["source_upload_alignment"]["failure_kind"] == "source_worktree_dirty"
+
+
+def test_pypi_fresh_install_check_requires_current_timestamp(tmp_path: Path, monkeypatch) -> None:
+    monkeypatch.setattr(gate, "ROOT", tmp_path)
+    eval_dir = tmp_path / "eval"
+    eval_dir.mkdir()
+    path = eval_dir / "pypi_fresh_install_snapshot.json"
+
+    def write_snapshot(generated_at: str | None) -> dict:
+        payload: dict[str, object] = {
+            "success": True,
+            "version": "9.9.9",
+            "results": [{"name": "install", "passed": True}],
+            "mcp_stdio_canary": {"passed": True},
+        }
+        if generated_at is not None:
+            payload["generated_at_utc"] = generated_at
+        path.write_text(json.dumps(payload), encoding="utf-8")
+        return gate.pypi_fresh_install_check(path, "9.9.9")
+
+    monkeypatch.setattr(gate, "_age_hours", lambda value: None)
+    missing = write_snapshot(None)
+    assert missing["passed"] is False
+    assert missing["freshness"]["failure_kind"] == "missing_timestamp"
+
+    monkeypatch.setattr(gate, "_age_hours", lambda value: 48.0)
+    stale = write_snapshot("stale")
+    assert stale["passed"] is False
+    assert stale["freshness"]["failure_kind"] == "stale_timestamp"
+
+    monkeypatch.setattr(gate, "_age_hours", lambda value: -1.0)
+    future = write_snapshot("future")
+    assert future["passed"] is False
+    assert future["freshness"]["failure_kind"] == "future_timestamp"
+
+    monkeypatch.setattr(gate, "_age_hours", lambda value: 1.0)
+    fresh = write_snapshot("fresh")
+    assert fresh["passed"] is True
+    assert fresh["freshness"]["passed"] is True
+
+
 def test_first_10_issue_form_not_measured_basis_does_not_invalidate_unmeasured_rows() -> None:
     row = _row(1)
     row.update({
@@ -535,6 +674,7 @@ def test_first_10_issue_form_savings_basis_aliases_are_normalized() -> None:
 def test_public_gate_pauses_controlled_first_10_when_privacy_security_incident_reported(tmp_path: Path, monkeypatch) -> None:
     monkeypatch.setattr(gate, "ROOT", tmp_path)
     monkeypatch.setattr(gate, "CURRENT_CLAIM_DOCS", [Path("README.md")])
+    monkeypatch.setattr(gate, "source_revision_state", _clean_source_revision_state)
     (tmp_path / "eval").mkdir()
     (tmp_path / "pyproject.toml").write_text('[project]\nname = "agent-borg"\nversion = "9.9.9"\n', encoding="utf-8")
     (tmp_path / "README.md").write_text("pipx install agent-borg==9.9.9\nPublic self-serve launch: NO-GO until evidence.\n", encoding="utf-8")
@@ -548,6 +688,7 @@ def test_public_gate_pauses_controlled_first_10_when_privacy_security_incident_r
         json.dumps({
             "success": True,
             "version": "9.9.9",
+            "generated_at_utc": _fresh_timestamp(),
             "results": [{"name": "install", "passed": True}],
             "mcp_stdio_canary": {"passed": True},
         }),
@@ -564,6 +705,7 @@ def test_public_gate_pauses_controlled_first_10_when_privacy_security_incident_r
 def test_public_self_serve_gate_passes_only_when_all_artifacts_and_real_rows_pass(tmp_path: Path, monkeypatch) -> None:
     monkeypatch.setattr(gate, "ROOT", tmp_path)
     monkeypatch.setattr(gate, "CURRENT_CLAIM_DOCS", [Path("README.md")])
+    monkeypatch.setattr(gate, "source_revision_state", _clean_source_revision_state)
     (tmp_path / "eval").mkdir()
     (tmp_path / "docs").mkdir()
     (tmp_path / "pyproject.toml").write_text('[project]\nname = "agent-borg"\nversion = "9.9.9"\n', encoding="utf-8")
@@ -578,6 +720,7 @@ def test_public_self_serve_gate_passes_only_when_all_artifacts_and_real_rows_pas
         json.dumps({
             "success": True,
             "version": "9.9.9",
+            "generated_at_utc": _fresh_timestamp(),
             "results": [{"name": "install", "passed": True}],
             "mcp_stdio_canary": {"passed": True, "server_info": {"name": "borg-mcp-server", "version": "9.9.9"}},
         }),
@@ -596,6 +739,7 @@ def test_public_self_serve_gate_passes_only_when_all_artifacts_and_real_rows_pas
 def test_public_self_serve_gate_blocks_empty_evidence_even_when_infra_passes(tmp_path: Path, monkeypatch) -> None:
     monkeypatch.setattr(gate, "ROOT", tmp_path)
     monkeypatch.setattr(gate, "CURRENT_CLAIM_DOCS", [Path("README.md")])
+    monkeypatch.setattr(gate, "source_revision_state", _clean_source_revision_state)
     (tmp_path / "eval").mkdir()
     (tmp_path / "pyproject.toml").write_text('[project]\nname = "agent-borg"\nversion = "9.9.9"\n', encoding="utf-8")
     (tmp_path / "README.md").write_text("pipx install agent-borg==9.9.9\nPublic self-serve launch: NO-GO until evidence.\n", encoding="utf-8")
@@ -609,6 +753,7 @@ def test_public_self_serve_gate_blocks_empty_evidence_even_when_infra_passes(tmp
         json.dumps({
             "success": True,
             "version": "9.9.9",
+            "generated_at_utc": _fresh_timestamp(),
             "results": [{"name": "install", "passed": True}],
             "mcp_stdio_canary": {"passed": True},
         }),
@@ -629,6 +774,7 @@ def test_public_self_serve_gate_blocks_empty_evidence_even_when_infra_passes(tmp
 def test_public_self_serve_gate_blocks_when_cold_start_trust_snapshot_fails(tmp_path: Path, monkeypatch) -> None:
     monkeypatch.setattr(gate, "ROOT", tmp_path)
     monkeypatch.setattr(gate, "CURRENT_CLAIM_DOCS", [Path("README.md")])
+    monkeypatch.setattr(gate, "source_revision_state", _clean_source_revision_state)
     (tmp_path / "eval").mkdir()
     (tmp_path / "pyproject.toml").write_text('[project]\nname = "agent-borg"\nversion = "9.9.9"\n', encoding="utf-8")
     (tmp_path / "README.md").write_text("pipx install agent-borg==9.9.9\nPublic self-serve launch: NO-GO until evidence.\n", encoding="utf-8")
@@ -642,6 +788,7 @@ def test_public_self_serve_gate_blocks_when_cold_start_trust_snapshot_fails(tmp_
         json.dumps({
             "success": True,
             "version": "9.9.9",
+            "generated_at_utc": _fresh_timestamp(),
             "results": [{"name": "install", "passed": True}],
             "mcp_stdio_canary": {"passed": True},
         }),
@@ -659,6 +806,7 @@ def test_public_self_serve_gate_blocks_when_cold_start_trust_snapshot_fails(tmp_
 def test_public_self_serve_gate_blocks_when_self_service_ops_fails(tmp_path: Path, monkeypatch) -> None:
     monkeypatch.setattr(gate, "ROOT", tmp_path)
     monkeypatch.setattr(gate, "CURRENT_CLAIM_DOCS", [Path("README.md")])
+    monkeypatch.setattr(gate, "source_revision_state", _clean_source_revision_state)
     (tmp_path / "eval").mkdir()
     (tmp_path / "pyproject.toml").write_text('[project]\nname = "agent-borg"\nversion = "9.9.9"\n', encoding="utf-8")
     (tmp_path / "README.md").write_text("pipx install agent-borg==9.9.9\nPublic self-serve launch: NO-GO until evidence.\n", encoding="utf-8")
@@ -672,6 +820,7 @@ def test_public_self_serve_gate_blocks_when_self_service_ops_fails(tmp_path: Pat
         json.dumps({
             "success": True,
             "version": "9.9.9",
+            "generated_at_utc": _fresh_timestamp(),
             "results": [{"name": "install", "passed": True}],
             "mcp_stdio_canary": {"passed": True, "server_info": {"name": "borg-mcp-server", "version": "9.9.9"}},
         }),
@@ -689,6 +838,7 @@ def test_public_self_serve_gate_blocks_when_self_service_ops_fails(tmp_path: Pat
 def test_public_self_serve_gate_blocks_when_ops_watchdog_fails(tmp_path: Path, monkeypatch) -> None:
     monkeypatch.setattr(gate, "ROOT", tmp_path)
     monkeypatch.setattr(gate, "CURRENT_CLAIM_DOCS", [Path("README.md")])
+    monkeypatch.setattr(gate, "source_revision_state", _clean_source_revision_state)
     (tmp_path / "eval").mkdir()
     (tmp_path / "docs").mkdir()
     (tmp_path / "pyproject.toml").write_text('[project]\nname = "agent-borg"\nversion = "9.9.9"\n', encoding="utf-8")
@@ -703,6 +853,7 @@ def test_public_self_serve_gate_blocks_when_ops_watchdog_fails(tmp_path: Path, m
         json.dumps({
             "success": True,
             "version": "9.9.9",
+            "generated_at_utc": _fresh_timestamp(),
             "results": [{"name": "install", "passed": True}],
             "mcp_stdio_canary": {"passed": True, "server_info": {"name": "borg-mcp-server", "version": "9.9.9"}},
         }),
@@ -721,6 +872,7 @@ def test_public_self_serve_gate_blocks_when_ops_watchdog_fails(tmp_path: Path, m
 def _write_public_gate_happy_fixture(root: Path, monkeypatch) -> None:  # type: ignore[no-untyped-def]
     monkeypatch.setattr(gate, "ROOT", root)
     monkeypatch.setattr(gate, "CURRENT_CLAIM_DOCS", [Path("README.md")])
+    monkeypatch.setattr(gate, "source_revision_state", _clean_source_revision_state)
     (root / "eval").mkdir()
     (root / "pyproject.toml").write_text('[project]\nname = "agent-borg"\nversion = "9.9.9"\n', encoding="utf-8")
     (root / "README.md").write_text("pipx install agent-borg==9.9.9\nPublic self-serve launch: NO-GO until evidence.\n", encoding="utf-8")
@@ -734,6 +886,7 @@ def _write_public_gate_happy_fixture(root: Path, monkeypatch) -> None:  # type: 
         json.dumps({
             "success": True,
             "version": "9.9.9",
+            "generated_at_utc": _fresh_timestamp(),
             "results": [{"name": "install", "passed": True}],
             "mcp_stdio_canary": {"passed": True, "server_info": {"name": "borg-mcp-server", "version": "9.9.9"}},
         }),
@@ -787,6 +940,7 @@ def _write_rollout_fixture(root: Path, *, watchdog_passed: bool) -> None:
         json.dumps({
             "success": True,
             "version": "9.9.9",
+            "generated_at_utc": _fresh_timestamp(),
             "results": [{"name": "install", "passed": True}],
             "mcp_stdio_canary": {"passed": True},
         }),

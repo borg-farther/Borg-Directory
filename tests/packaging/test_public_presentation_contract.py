@@ -364,6 +364,8 @@ def test_public_live_dashboard_json_endpoints_exist_and_no_go_is_badge_red() -> 
         assert payload["updated_at"]
 
     status = json.loads(read("docs/public/status.json"))
+    dashboard_payload = json.loads(read("eval/borg_proof_dashboard.json"))
+    value = json.loads(read("docs/public/value.json"))
     assert status["repo"] == "https://github.com/borg-farther/Borg-Directory"
     assert status["state"].startswith("NO-GO public self-serve")
     if status["controlled_first_10_beta"]["verdict"] == "CONDITIONAL":
@@ -374,6 +376,9 @@ def test_public_live_dashboard_json_endpoints_exist_and_no_go_is_badge_red() -> 
             "public package proof green, release controls blocked" in status["state"]
             or "source/local release-candidate only" in status["state"]
         )
+        if dashboard_payload["metrics"]["pypi_package_current_gate"]["value"] == "FAIL":
+            assert status["state"] == "NO-GO public self-serve; source/local release-candidate only"
+            assert "package gates" not in value["headline"].lower()
     assert status["verified_external_users"] == 0
 
     html = read("docs/public/borg-live-dashboard.html")

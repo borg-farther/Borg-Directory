@@ -1,6 +1,6 @@
 # Borg self-service operations readiness
 
-Generated: `2026-05-31T10:01:11.266502+00:00`
+Generated: `2026-06-01T08:59:31.865147+00:00`
 Verdict: **PASS**
 
 ## Scope
@@ -9,7 +9,7 @@ This gate verifies the support, bad-answer intake, first-10 evidence intake, rol
 
 ## Policy
 
-Controlled first-10 may proceed only when ops readiness passes; broad public self-serve still requires row-derived first-10 external evidence.
+Ops readiness is necessary but not sufficient for controlled first-10; package provenance, served-runtime freshness, release governance, ops/watchdog freshness, and first-10 guardrails must also pass. broad public self-serve still requires row-derived first-10 external evidence.
 
 ## Blockers
 
