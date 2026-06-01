@@ -16,6 +16,7 @@ PUBLIC_PATH = ROOT / "docs" / "public" / "proof-dashboard" / "index.html"
 PUBLIC_STATUS_PATH = ROOT / "docs" / "public" / "status.json"
 PUBLIC_VALUE_PATH = ROOT / "docs" / "public" / "value.json"
 PUBLIC_IMPACT_PATH = ROOT / "docs" / "public" / "impact" / "impact.json"
+POST_DASHBOARD_CHECK_PATH = ROOT / "eval" / "ops_readiness_watchdog_post_dashboard_check.json"
 
 HYPE_PHRASES = [
     "proven external adoption",
@@ -30,7 +31,7 @@ def fail(msg: str) -> int:
 
 
 def main() -> int:
-    required = [JSON_PATH, MD_PATH, HTML_PATH, PUBLIC_PATH, PUBLIC_STATUS_PATH, PUBLIC_VALUE_PATH, PUBLIC_IMPACT_PATH]
+    required = [JSON_PATH, MD_PATH, HTML_PATH, PUBLIC_PATH, PUBLIC_STATUS_PATH, PUBLIC_VALUE_PATH, PUBLIC_IMPACT_PATH, POST_DASHBOARD_CHECK_PATH]
     missing = [str(p.relative_to(ROOT)) for p in required if not p.exists()]
     if missing:
         return fail("missing required files: " + ", ".join(missing))
@@ -39,6 +40,7 @@ def main() -> int:
         public_status = json.loads(PUBLIC_STATUS_PATH.read_text(encoding="utf-8"))
         public_value = json.loads(PUBLIC_VALUE_PATH.read_text(encoding="utf-8"))
         public_impact = json.loads(PUBLIC_IMPACT_PATH.read_text(encoding="utf-8"))
+        post_dashboard_check = json.loads(POST_DASHBOARD_CHECK_PATH.read_text(encoding="utf-8"))
     except Exception as exc:
         return fail(f"invalid JSON: {exc}")
 
@@ -52,6 +54,19 @@ def main() -> int:
         return fail("docs/public/impact/impact.json updated_at does not match dashboard generated_at_utc")
     if public_status.get("source_revision") != source_revision:
         return fail("docs/public/status.json source_revision does not match dashboard source_revision")
+    post_checks = post_dashboard_check.get("checks") or {}
+    post_dashboard_consistency = post_checks.get("public_json_dashboard_consistency") or {}
+    post_source_honesty = post_checks.get("source_revision_honesty") or {}
+    if post_dashboard_check.get("passed") is not True:
+        return fail("post-dashboard watchdog check did not pass")
+    if post_dashboard_consistency.get("passed") is not True:
+        return fail("post-dashboard watchdog did not validate public JSON/dashboard consistency")
+    if post_dashboard_consistency.get("dashboard_generated_at_utc") != generated_at:
+        return fail("post-dashboard watchdog checked a different dashboard generated_at_utc")
+    if post_dashboard_consistency.get("dashboard_source_revision") != source_revision:
+        return fail("post-dashboard watchdog checked a different dashboard source_revision")
+    if post_source_honesty.get("passed") is not True:
+        return fail("post-dashboard watchdog source_revision_honesty did not pass")
     text = "\n".join(p.read_text(encoding="utf-8", errors="replace") for p in [MD_PATH, HTML_PATH])
     anti = data.get("anti_hype", {})
     if not anti or not anti.get("simulated_users_are_not_real_users") or not anti.get("internal_sessions_are_not_adoption"):

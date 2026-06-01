@@ -150,22 +150,47 @@ def _write_served_runtime_snapshot(root: Path, *, version: str = "9.9.9", passed
     )
 
 
+def _release_governance_payload(*, protected: bool = True) -> dict:
+    checks = [
+        "test (3.10)",
+        "test (3.11)",
+        "test (3.12)",
+        "dependency-audit",
+        "policy-check",
+        "secret-scan",
+        "static-security",
+        "ops-readiness-watchdog",
+        "old-account-reference",
+    ]
+    return {
+        "generated_at_utc": _fresh_timestamp(),
+        "repo": "borg-farther/Borg-Directory",
+        "branch": "main",
+        "protected": protected,
+        "protection": {
+            "required_status_checks": {
+                "strict": protected,
+                "checks": [{"context": context} for context in checks],
+            },
+            "required_pull_request_reviews": {
+                "require_code_owner_reviews": protected,
+                "required_approving_review_count": 1 if protected else 0,
+                "dismiss_stale_reviews": protected,
+                "require_last_push_approval": protected,
+            },
+            "enforce_admins": {"enabled": protected},
+            "required_conversation_resolution": protected,
+            "allow_force_pushes": {"enabled": False},
+            "allow_deletions": {"enabled": False},
+            "codeowners_errors": [],
+        },
+        "codeowners_errors": [],
+    }
+
+
 def _write_release_governance_snapshot(root: Path, *, protected: bool = True) -> None:
     (root / "eval" / "release_governance_snapshot.json").write_text(
-        json.dumps({
-            "protected": protected,
-            "protection": {
-                "required_status_checks": {
-                    "checks": [
-                        {"context": "CI / test (3.11)"},
-                        {"context": "Borg Security Gates"},
-                        {"context": "Self-service readiness watchdog"},
-                        {"context": "Account Reference Firewall"},
-                    ]
-                },
-                "required_pull_request_reviews": {"require_code_owner_reviews": protected},
-            },
-        }),
+        json.dumps(_release_governance_payload(protected=protected)),
         encoding="utf-8",
     )
 
@@ -916,6 +941,78 @@ def test_public_self_serve_gate_blocks_when_release_governance_fails(tmp_path: P
     assert any("main branch is not protected" in blocker for blocker in snapshot["blockers"])
 
 
+def test_release_governance_check_prefers_live_github_over_stale_snapshot(tmp_path: Path, monkeypatch) -> None:
+    monkeypatch.setattr(gate, "ROOT", tmp_path)
+    (tmp_path / "eval").mkdir()
+    _write_release_governance_snapshot(tmp_path, protected=False)
+    monkeypatch.setattr(gate.release_governance_gate, "fetch_live_branch_payload", lambda repo, branch: _release_governance_payload(protected=True))
+    monkeypatch.setattr(gate.release_governance_gate, "fetch_codeowners_errors", lambda repo, ref=None: [])
+
+    live = gate.release_governance_check(fetch_network=True)
+    snapshot = gate.release_governance_check(fetch_network=False)
+
+    assert live["passed"] is True
+    assert live["source"] == "github_api"
+    assert snapshot["passed"] is False
+    assert snapshot["source"] == "snapshot"
+
+
+def test_release_governance_check_accepts_evaluated_snapshot_without_double_evaluating(tmp_path: Path, monkeypatch) -> None:
+    monkeypatch.setattr(gate, "ROOT", tmp_path)
+    (tmp_path / "eval").mkdir()
+    evaluated = {
+        "schema_version": 1,
+        "passed": True,
+        "blockers": [],
+        "protected": True,
+        "required_checks_expected": gate.release_governance_gate.DEFAULT_REQUIRED_CHECKS,
+        "required_checks_observed": gate.release_governance_gate.DEFAULT_REQUIRED_CHECKS,
+        "strict_required_status_checks": True,
+        "codeowners_review_required": True,
+        "required_approving_review_count": 1,
+        "dismiss_stale_reviews": True,
+        "require_last_push_approval": True,
+        "enforce_admins": True,
+        "required_conversation_resolution": True,
+        "allow_force_pushes": False,
+        "allow_deletions": False,
+        "bypass_allowances": [],
+        "codeowners_errors_checked": True,
+        "codeowners_error_count": 0,
+        "codeowners_errors": [],
+        "generated_at_utc": datetime.now(timezone.utc).isoformat(),
+        "repo": "borg-farther/Borg-Directory",
+        "branch": "main",
+        "source": "github_api",
+    }
+    (tmp_path / "eval" / "release_governance_snapshot.json").write_text(json.dumps(evaluated), encoding="utf-8")
+
+    snapshot = gate.release_governance_check(fetch_network=False)
+
+    assert snapshot["passed"] is True
+    assert snapshot["blockers"] == []
+    assert snapshot["source"] == "snapshot"
+
+
+def test_release_governance_check_rejects_incomplete_green_evaluated_snapshot(tmp_path: Path, monkeypatch) -> None:
+    monkeypatch.setattr(gate, "ROOT", tmp_path)
+    (tmp_path / "eval").mkdir()
+    evaluated = {
+        "schema_version": 1,
+        "passed": True,
+        "blockers": [],
+        "protected": True,
+        "required_checks_observed": ["test (3.11)"],
+        "source": "github_api",
+    }
+    (tmp_path / "eval" / "release_governance_snapshot.json").write_text(json.dumps(evaluated), encoding="utf-8")
+
+    snapshot = gate.release_governance_check(fetch_network=False)
+
+    assert snapshot["passed"] is False
+    assert any("required checks" in blocker or "CODEOWNERS" in blocker for blocker in snapshot["blockers"])
+
+
 def _write_rollout_fixture(root: Path, *, watchdog_passed: bool) -> None:
     (root / "eval").mkdir(exist_ok=True)
     (root / "docs").mkdir(exist_ok=True)
@@ -956,6 +1053,8 @@ def test_real_user_rollout_gate_blocks_controlled_beta_when_ops_watchdog_fails(t
     monkeypatch.setattr(rollout.public_gate, "ROOT", tmp_path)
     monkeypatch.setattr(rollout.public_gate, "source_version", lambda: "9.9.9")
     monkeypatch.setattr(rollout.public_gate, "pypi_latest_check", lambda expected, fetch_network=True: {"passed": True, "version": expected})
+    monkeypatch.setattr(rollout.public_gate.release_governance_gate, "fetch_live_branch_payload", lambda repo, branch: _release_governance_payload(protected=True))
+    monkeypatch.setattr(rollout.public_gate.release_governance_gate, "fetch_codeowners_errors", lambda repo, ref=None: [])
     monkeypatch.setattr(rollout.self_service_ops_gate, "compile_gate", lambda: {"passed": True, "blockers": [], "rollout_policy": "test"})
     _write_rollout_fixture(tmp_path, watchdog_passed=False)
 
@@ -973,6 +1072,8 @@ def test_real_user_rollout_gate_allows_controlled_beta_only_when_ops_watchdog_pa
     monkeypatch.setattr(rollout.public_gate, "ROOT", tmp_path)
     monkeypatch.setattr(rollout.public_gate, "source_version", lambda: "9.9.9")
     monkeypatch.setattr(rollout.public_gate, "pypi_latest_check", lambda expected, fetch_network=True: {"passed": True, "version": expected})
+    monkeypatch.setattr(rollout.public_gate.release_governance_gate, "fetch_live_branch_payload", lambda repo, branch: _release_governance_payload(protected=True))
+    monkeypatch.setattr(rollout.public_gate.release_governance_gate, "fetch_codeowners_errors", lambda repo, ref=None: [])
     monkeypatch.setattr(rollout.self_service_ops_gate, "compile_gate", lambda: {"passed": True, "blockers": [], "rollout_policy": "test"})
     _write_rollout_fixture(tmp_path, watchdog_passed=True)
 
@@ -990,6 +1091,8 @@ def test_real_user_rollout_gate_blocks_controlled_beta_when_release_controls_fai
     monkeypatch.setattr(rollout.public_gate, "ROOT", tmp_path)
     monkeypatch.setattr(rollout.public_gate, "source_version", lambda: "9.9.9")
     monkeypatch.setattr(rollout.public_gate, "pypi_latest_check", lambda expected, fetch_network=True: {"passed": True, "version": expected})
+    monkeypatch.setattr(rollout.public_gate.release_governance_gate, "fetch_live_branch_payload", lambda repo, branch: _release_governance_payload(protected=True))
+    monkeypatch.setattr(rollout.public_gate.release_governance_gate, "fetch_codeowners_errors", lambda repo, ref=None: [])
     monkeypatch.setattr(rollout.self_service_ops_gate, "compile_gate", lambda: {"passed": True, "blockers": [], "rollout_policy": "test"})
     _write_rollout_fixture(tmp_path, watchdog_passed=True)
     _write_served_runtime_snapshot(tmp_path, passed=False)

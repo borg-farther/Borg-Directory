@@ -671,22 +671,79 @@ def served_runtime_freshness_check(path: Path, expected_version: str) -> dict[st
     return result
 
 
-def release_governance_check(*, fetch_network: bool = True) -> dict[str, Any]:
+def _evaluated_release_governance_snapshot_blockers(result: dict[str, Any], *, max_snapshot_age_hours: float = 24.0) -> list[str]:
+    blockers: list[str] = []
+    expected = release_governance_gate.DEFAULT_REQUIRED_CHECKS
+    freshness = _freshness_check(result.get("generated_at_utc"), max_snapshot_age_hours)
+    if freshness.get("passed") is not True:
+        blockers.append(f"release governance snapshot is not fresh: {freshness.get('failure_kind')}")
+    if result.get("repo") != "borg-farther/Borg-Directory":
+        blockers.append(f"release governance snapshot repo {result.get('repo')!r} != 'borg-farther/Borg-Directory'")
+    if result.get("branch") != "main":
+        blockers.append(f"release governance snapshot branch {result.get('branch')!r} != 'main'")
+    observed_expected = result.get("required_checks_expected")
+    if observed_expected != expected:
+        blockers.append("release governance snapshot required checks do not match current policy")
+    if result.get("codeowners_errors_checked") is not True:
+        blockers.append("release governance snapshot did not prove CODEOWNERS validation was checked")
+    if result.get("passed") is True:
+        observed = {str(item) for item in (result.get("required_checks_observed") or []) if item}
+        missing = [check for check in expected if check not in observed]
+        unexpected = sorted(observed - set(expected))
+        if missing:
+            blockers.append(f"release governance snapshot passed without observed required checks: {', '.join(missing)}")
+        if unexpected:
+            blockers.append(f"release governance snapshot passed with unexpected required checks: {', '.join(unexpected)}")
+        hardening_expectations = {
+            "protected": True,
+            "strict_required_status_checks": True,
+            "codeowners_review_required": True,
+            "dismiss_stale_reviews": True,
+            "require_last_push_approval": True,
+            "enforce_admins": True,
+            "required_conversation_resolution": True,
+            "allow_force_pushes": False,
+            "allow_deletions": False,
+        }
+        for field, expected_value in hardening_expectations.items():
+            if result.get(field) is not expected_value:
+                blockers.append(f"release governance snapshot passed with {field}={result.get(field)!r}")
+        approving_reviews = result.get("required_approving_review_count")
+        if not (isinstance(approving_reviews, int) and approving_reviews >= 1):
+            blockers.append(f"release governance snapshot passed with required_approving_review_count={approving_reviews!r}")
+        if result.get("bypass_allowances"):
+            blockers.append("release governance snapshot passed despite branch/PR bypass allowances")
+        if int(result.get("codeowners_error_count") or 0) != 0:
+            blockers.append("release governance snapshot passed despite CODEOWNERS validation errors")
+    return blockers
+
+
+def release_governance_check(*, fetch_network: bool = True, max_snapshot_age_hours: float = 24.0) -> dict[str, Any]:
     snapshot_path = ROOT / "eval" / "release_governance_snapshot.json"
     blockers: list[str] = []
     payload: dict[str, Any] | None = None
-    source = "snapshot"
-    if snapshot_path.exists():
+    codeowners_errors: list[Any] | None = None
+    source = "github_api" if fetch_network else "snapshot"
+
+    if fetch_network:
+        # Live GitHub state must win over a committed snapshot. Otherwise a stale
+        # red/green snapshot can mask a real branch-protection change.
         try:
-            payload = json.loads(snapshot_path.read_text(encoding="utf-8"))
-        except (OSError, json.JSONDecodeError) as exc:
-            blockers.append(f"release governance snapshot unreadable: {exc}")
-    elif fetch_network:
-        source = "github_api"
-        try:
-            payload = release_governance_gate.fetch_branch_payload("borg-farther/Borg-Directory", "main")
+            payload = release_governance_gate.fetch_live_branch_payload("borg-farther/Borg-Directory", "main")
+            codeowners_errors = release_governance_gate.fetch_codeowners_errors("borg-farther/Borg-Directory", ref="main")
         except Exception as exc:  # pragma: no cover - live GitHub/API failures vary by environment
             blockers.append(f"release governance live check failed: {exc}")
+    elif snapshot_path.exists():
+        try:
+            loaded = json.loads(snapshot_path.read_text(encoding="utf-8"))
+            if isinstance(loaded, dict):
+                payload = loaded
+                if isinstance(payload.get("codeowners_errors"), list):
+                    codeowners_errors = payload.get("codeowners_errors") or []
+            else:
+                blockers.append("release governance snapshot must be a JSON object")
+        except (OSError, json.JSONDecodeError) as exc:
+            blockers.append(f"release governance snapshot unreadable: {exc}")
     else:
         blockers.append("release governance snapshot missing and network disabled")
 
@@ -699,10 +756,32 @@ def release_governance_check(*, fetch_network: bool = True) -> dict[str, Any]:
             "source": source,
         }
 
-    result = release_governance_gate.evaluate_branch_payload(payload)
-    if blockers:
-        result["blockers"] = blockers + list(result.get("blockers") or [])
-        result["passed"] = False
+    if payload.get("passed") in {True, False} and "required_checks_observed" in payload and "blockers" in payload:
+        result = dict(payload)
+        snapshot_blockers = _evaluated_release_governance_snapshot_blockers(result, max_snapshot_age_hours=max_snapshot_age_hours)
+        if snapshot_blockers:
+            result["blockers"] = snapshot_blockers + list(result.get("blockers") or [])
+            result["passed"] = False
+        if blockers:
+            result["blockers"] = blockers + list(result.get("blockers") or [])
+            result["passed"] = False
+    else:
+        result = release_governance_gate.evaluate_branch_payload(
+            payload,
+            codeowners_errors=codeowners_errors,
+            require_codeowners_validation=True,
+        )
+        for field in ["generated_at_utc", "repo", "branch"]:
+            if field in payload:
+                result[field] = payload[field]
+        if not fetch_network:
+            snapshot_blockers = _evaluated_release_governance_snapshot_blockers(result, max_snapshot_age_hours=max_snapshot_age_hours)
+            if snapshot_blockers:
+                result["blockers"] = snapshot_blockers + list(result.get("blockers") or [])
+                result["passed"] = False
+        if blockers:
+            result["blockers"] = blockers + list(result.get("blockers") or [])
+            result["passed"] = False
     result["snapshot"] = "eval/release_governance_snapshot.json"
     result["source"] = source
     return result

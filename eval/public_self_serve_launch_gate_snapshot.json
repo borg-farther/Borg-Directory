@@ -4,7 +4,7 @@
     "served runtime borg_version '3.3.14' != source version '3.3.15'",
     "served runtime version_matches_source is not true",
     "served runtime reload_status is not loaded_code_matches_source_behavior",
-    "main branch is not protected",
+    "release governance live check failed: HTTP Error 403: rate limit exceeded",
     "first-10 external-user evidence has not passed: verified=0/10, real_users=0/10, installs=0/8, useful=0/6, critical_incidents=0/0"
   ],
   "gate_type": "public_self_serve_launch",
@@ -13,7 +13,7 @@
       "exists": true,
       "failed_count": 0,
       "failures": [],
-      "generated_at_utc": "2026-06-01T13:27:47.690320+00:00",
+      "generated_at_utc": "2026-06-01T23:51:24.520528+00:00",
       "has_bad_answer_feedback_path": true,
       "missing_required_checks": [],
       "observed_check_count": 7,
@@ -116,7 +116,7 @@
     },
     "ops_readiness_watchdog": {
       "blockers": [],
-      "generated_at_utc": "2026-06-01T13:27:50.252583+00:00",
+      "generated_at_utc": "2026-06-01T23:51:27.624055+00:00",
       "passed": true,
       "snapshot": "eval/ops_readiness_watchdog_snapshot.json",
       "truth_policy": "Watchdog passing means controlled first-10 ops proof is fresh and internally consistent. Broad public self-serve still requires row-derived first-10 external-user evidence."
@@ -132,12 +132,12 @@
       "failed_count": 0,
       "failures": [],
       "freshness": {
-        "age_hours": 0.009846811388888889,
+        "age_hours": 0.0066117525,
         "failure_kind": null,
         "max_age_hours": 24.0,
         "passed": true
       },
-      "generated_at_utc": "2026-06-01T13:27:15Z",
+      "generated_at_utc": "2026-06-01T23:51:04Z",
       "mcp_server_info": {
         "name": "borg-mcp-server",
         "version": "3.3.15"
@@ -198,8 +198,8 @@
         "oldest_release_upload_time_utc": "2026-05-28T17:50:29.231332+00:00",
         "passed": false,
         "release_file_count": 2,
-        "source_commit_time_utc": "2026-06-01T13:25:27+00:00",
-        "source_revision": "cea423afff63f264a7d7c451d3e9e64fa5713fc5+dirty",
+        "source_commit_time_utc": "2026-06-01T23:50:42+00:00",
+        "source_revision": "9985506a7af8e74dd85789dc898eb66637ce4c5a+dirty",
         "stale_release_files": [
           "agent_borg-3.3.15-py3-none-any.whl",
           "agent_borg-3.3.15.tar.gz"
@@ -212,25 +212,16 @@
     },
     "release_governance": {
       "blockers": [
-        "main branch is not protected"
+        "release governance live check failed: HTTP Error 403: rate limit exceeded"
       ],
-      "codeowners_review_required": null,
       "passed": false,
-      "protected": false,
-      "required_checks_expected": [
-        "CI",
-        "Borg Security Gates",
-        "Self-service readiness watchdog",
-        "Account Reference Firewall"
-      ],
-      "required_checks_observed": [],
       "schema_version": 1,
       "snapshot": "eval/release_governance_snapshot.json",
-      "source": "snapshot"
+      "source": "github_api"
     },
     "self_service_ops_readiness": {
       "blockers": [],
-      "generated_at_utc": "2026-06-01T13:27:50.468779+00:00",
+      "generated_at_utc": "2026-06-01T23:51:27.865543+00:00",
       "passed": true,
       "report": "docs/SELF_SERVICE_OPS_READINESS_REPORT.md",
       "rollout_policy": "Ops readiness is necessary but not sufficient for controlled first-10; package provenance, served-runtime freshness, release governance, ops/watchdog freshness, and first-10 guardrails must also pass. broad public self-serve still requires row-derived first-10 external evidence.",
@@ -256,7 +247,7 @@
       }
     }
   },
-  "generated_at_utc": "2026-06-01T13:27:50.555938+00:00",
+  "generated_at_utc": "2026-06-01T23:51:27.947928+00:00",
   "max_recommended_real_users_now": 0,
   "ready_for_controlled_first_10_beta": false,
   "ready_for_public_self_serve_launch": false,

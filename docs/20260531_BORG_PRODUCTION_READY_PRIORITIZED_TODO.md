@@ -178,9 +178,18 @@ Required work:
 
 1. Enable branch protection/ruleset for `main`.
 2. Require PRs for protected branches.
-3. Require CI, Borg Security Gates, Self-service readiness watchdog, and Account Reference Firewall.
-4. Require CODEOWNERS review for readiness/security/release surfaces.
-5. Require conversation resolution and no stale approvals where policy supports it.
+3. Require these exact GitHub Actions check-run contexts (not broad workflow display names):
+   - `test (3.10)`
+   - `test (3.11)`
+   - `test (3.12)`
+   - `dependency-audit`
+   - `policy-check`
+   - `secret-scan`
+   - `static-security`
+   - `ops-readiness-watchdog`
+   - `old-account-reference`
+4. Require CODEOWNERS review for readiness/security/release surfaces. In the current user-owned repo, `.github/CODEOWNERS` must use the valid owner `@borg-farther`; `@borg-farther/maintainers` is invalid unless the repo is transferred to an organization with that visible write team.
+5. Require strict status checks, at least one approving review, stale-review dismissal, last-push approval, admin enforcement, conversation resolution, no force pushes, and no branch deletion where GitHub policy supports it.
 6. Define release tag/provenance expectation before PyPI publish.
 
 Approval boundary:

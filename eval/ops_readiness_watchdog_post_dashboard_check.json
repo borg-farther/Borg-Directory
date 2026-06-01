@@ -49,11 +49,11 @@
       }
     },
     "public_json_dashboard_consistency": {
-      "dashboard_generated_at_utc": "2026-06-01T23:51:27Z",
+      "dashboard_generated_at_utc": "2026-06-01T23:51:28Z",
       "dashboard_source_revision": "9985506a7af8e74dd85789dc898eb66637ce4c5a+dirty",
       "passed": true,
       "status_source_revision": "9985506a7af8e74dd85789dc898eb66637ce4c5a+dirty",
-      "status_updated_at": "2026-06-01T23:51:27Z"
+      "status_updated_at": "2026-06-01T23:51:28Z"
     },
     "public_status_consistency": {
       "controlled_status_ok": false,
@@ -100,67 +100,67 @@
     "snapshot_freshness": {
       "items": {
         "borg_proof_dashboard": {
-          "age_hours": 0.00015641916666666667,
+          "age_hours": 0.00023787166666666668,
           "allowed_stale_reason": null,
           "passed": true,
           "raw_freshness_passed": true
         },
         "cold_start_trust_gate_snapshot": {
-          "age_hours": 0.0008451605555555555,
+          "age_hours": 0.0012043908333333334,
           "allowed_stale_reason": null,
           "passed": true,
           "raw_freshness_passed": true
         },
         "public_impact_json": {
-          "age_hours": 0.00015642138888888888,
+          "age_hours": 0.0002378738888888889,
           "allowed_stale_reason": null,
           "passed": true,
           "raw_freshness_passed": true
         },
         "public_self_serve_launch_gate_snapshot": {
-          "age_hours": 0.00024869333333333335,
+          "age_hours": 0.0002523322222222222,
           "allowed_stale_reason": null,
           "passed": true,
           "raw_freshness_passed": true
         },
         "public_status_json": {
-          "age_hours": 0.00015642,
+          "age_hours": 0.00023787277777777779,
           "allowed_stale_reason": null,
           "passed": true,
           "raw_freshness_passed": true
         },
         "public_value_json": {
-          "age_hours": 0.00015642055555555555,
+          "age_hours": 0.00023787333333333334,
           "allowed_stale_reason": null,
           "passed": true,
           "raw_freshness_passed": true
         },
         "pypi_fresh_install_snapshot": {
-          "age_hours": 0.006545306666666666,
+          "age_hours": 0.0069045366666666665,
           "allowed_stale_reason": null,
           "passed": true,
           "raw_freshness_passed": true
         },
         "real_user_rollout_gate_snapshot": {
-          "age_hours": 0.00017980222222222222,
+          "age_hours": 0.00018334416666666669,
           "allowed_stale_reason": null,
           "passed": true,
           "raw_freshness_passed": true
         },
         "release_governance_snapshot": {
-          "age_hours": 0.0003963569444444444,
+          "age_hours": 0.0007555872222222222,
           "allowed_stale_reason": null,
           "passed": true,
           "raw_freshness_passed": true
         },
         "rollback_comms_drill_snapshot": {
-          "age_hours": 0.00038133,
+          "age_hours": 0.0007405602777777778,
           "allowed_stale_reason": null,
           "passed": true,
           "raw_freshness_passed": true
         },
         "self_service_ops_gate_snapshot": {
-          "age_hours": 0.00035559777777777776,
+          "age_hours": 0.0007148277777777777,
           "allowed_stale_reason": null,
           "passed": true,
           "raw_freshness_passed": true
@@ -298,7 +298,7 @@
     }
   },
   "gate_type": "ops_readiness_watchdog",
-  "generated_at_utc": "2026-06-01T23:51:27.624055+00:00",
+  "generated_at_utc": "2026-06-01T23:51:28.918095+00:00",
   "max_recommended_real_users_now": 0,
   "passed": true,
   "ready_for_controlled_first_10_beta": false,

@@ -2,59 +2,93 @@
 
 > Historical/internal — not current product documentation. Operator release-preflight artifact only; do not treat this as a user-facing install/readiness page.
 
-Generated: 2026-06-01T08:51Z  
-Package: `agent-borg`  
-Candidate next immutable version: `3.3.16`  
+Generated: 2026-06-01T19:53Z
+Package: `agent-borg`
+Candidate next immutable version: `3.3.16`
 Production PyPI upload status: **NO-GO / NOT EXECUTED**
 
 ## Executive verdict
 
 Do **not** upload to production PyPI yet.
 
-`agent-borg==3.3.16` is the lowest safe next immutable version because PyPI already contains `3.3.15` and does not contain `3.3.16`, but the release boundary is still blocked by provenance and approval gates.
+`agent-borg==3.3.16` is still the lowest safe next immutable version because PyPI already contains `3.3.15` and does not contain `3.3.16`, but the release boundary remains blocked by approval, version bump, release provenance, served-runtime, governance, and first-10 evidence gates.
 
 ## Current hard facts
 
 - Source checkout: `/root/hermes-workspace/borg`
-- Branch: `main`
-- HEAD: `a7f5e769016ac83f249d57fe8e36b34f020dda3b`
-- `origin/main`: `a7f5e769016ac83f249d57fe8e36b34f020dda3b`
+- Canonical remote: `https://github.com/borg-farther/Borg-Directory`
+- Current base branch: `main`
+- Current base HEAD / `origin/main`: `ea31144b78ba55628e32cb64d08f3fa542509887`
+- Active reversible hardening branch at packet refresh: `fix/release-governance-codeowners-20260601`
 - Source version: `pyproject.toml=3.3.15`, `borg/__init__.py=3.3.15`
 - PyPI latest: `agent-borg==3.3.15`
 - PyPI `3.3.15` upload times:
   - wheel: `2026-05-28T17:50:29.231332Z`
   - sdist: `2026-05-28T17:50:31.032755Z`
-- HEAD commit time: `2026-05-31T20:14:30+01:00`
-- Same-version artifact drift: **FAIL** — the published `3.3.15` artifacts predate the current source commit.
 - PyPI version availability checked: `3.3.16` absent, `3.3.17` absent.
+- Same-version artifact drift: **FAIL** — published `3.3.15` artifacts predate current source changes.
+- Live GitHub `main` protection: **FAIL** — `protected=false`; `/branches/main/protection` returns `404 Branch not protected`.
+- Live CODEOWNERS validation before this hardening PR: **FAIL** — `11` errors because `@borg-farther/maintainers` is invalid in a user-owned repo. Reversible fix in flight: use valid owner `@borg-farther` unless/until the repo moves to an organization with a visible write team.
+- Actual GitHub Actions check-run contexts observed on current `main`: `test (3.10)`, `test (3.11)`, `test (3.12)`, `dependency-audit`, `policy-check`, `secret-scan`, `static-security`, `ops-readiness-watchdog`, `old-account-reference`.
 
 ## Why `3.3.15` cannot be reused
 
-PyPI versions are immutable. The package already has `agent-borg==3.3.15`. Even though source metadata still says `3.3.15`, the current source contains changes after the published artifact timestamp. Re-uploading or pretending the existing `3.3.15` represents current source would be a release-truth violation.
+PyPI versions are immutable. The package already has `agent-borg==3.3.15`. Even though source metadata still says `3.3.15`, current source contains changes after the published artifact timestamp. Re-uploading or pretending the existing `3.3.15` represents current source would be a release-truth violation.
 
 ## Upload blockers
 
 1. **No exact irreversible upload approval.** Production PyPI upload was not explicitly approved for `agent-borg==3.3.16`.
 2. **Source version has not been bumped.** Current source still says `3.3.15`.
-3. **Working tree is dirty.** The watchdog/proof changes and generated artifacts are uncommitted.
-4. **No release commit/tag provenance.** There is no `3.3.16` release commit or tag at the current proof state.
-5. **Main branch protection is red.** Captured release governance says `main` is not protected.
-6. **Served runtime is stale.** Captured served Borg MCP runtime reports `borg_version=3.3.14` while source is `3.3.15`.
-7. **First-10 evidence is zero.** Public self-serve and 100-user gates remain row-derived NO-GO.
-8. **Existing `dist/` artifacts are `3.3.15` only.** They pass `twine check`, but they are not uploadable for this release.
+3. **No release commit/tag provenance.** There is no approved `3.3.16` release commit or tag.
+4. **Same-version PyPI drift remains red.** Published `3.3.15` is stale relative to source; next publish must use a new immutable version.
+5. **Main branch protection is red.** Live `main` is unprotected until GitHub admin settings are changed after the CODEOWNERS fix is merged.
+6. **CODEOWNERS validation was red on current `main`.** The repo owner is a user account, so team owner `@borg-farther/maintainers` is invalid; this packet's hardening branch fixes the file but live validation must be rechecked after merge.
+7. **Served runtime is stale.** Captured served Borg MCP runtime reports `borg_version=3.3.14` while source is `3.3.15`.
+8. **First-10 evidence is zero.** Public self-serve and 100-user gates remain row-derived NO-GO.
+9. **Existing `dist/` artifacts are `3.3.15` only.** They may pass `twine check`, but they are not uploadable for this release.
 
-## Proof already green in this workstream
+## Release-governance hardening now in scope
 
-- Permanent watchdog semantics fixed: stale PyPI fresh-install snapshots are only tolerated when package/PyPI proof is already red; green package claims require a fresh canary.
-- Scheduled workflow now refreshes the PyPI fresh-install canary before fail-closed public/readiness gates.
-- Proof dashboard now requires fresh PyPI canary plus stdio MCP pass before package-current gate can be green.
-- Generated public status is honest: `NO-GO public self-serve; source/local release-candidate only`.
-- Ops watchdog after regeneration: `passed=True`, blockers `[]`.
-- Full local test suite: `2515 passed, 40 skipped, 4 xfailed, 1 xpassed`.
-- Focused readiness/public/dashboard tests: `70 passed`.
-- Security hardening policy gate: `PASS`.
-- Dashboard lint: `PASS`.
-- `git diff --check`: `PASS`.
+The reversible hardening branch upgrades release governance from a loose label check to an exact, fail-closed gate:
+
+- validates exact required check-run contexts, not broad workflow names;
+- rejects substring decoys such as `fake-test (3.11)-bypass`;
+- requires strict status checks;
+- requires CODEOWNERS review, at least one approval, stale-review dismissal, last-push approval, admin enforcement, and conversation resolution;
+- fails if force pushes or branch deletion are allowed;
+- fetches GitHub CODEOWNERS validation errors and fails closed if any owner/path is invalid;
+- makes public/readiness gates prefer live GitHub governance data over stale committed snapshots when network checks are enabled.
+
+## Exact branch-protection settings to apply after CODEOWNERS fix is merged
+
+GitHub admin mutation is approval-bound. Do not apply these settings until the CODEOWNERS fix is on `main` and `gh api repos/borg-farther/Borg-Directory/codeowners/errors --jq '.errors'` returns `[]`.
+
+Required status check contexts:
+
+- `test (3.10)`
+- `test (3.11)`
+- `test (3.12)`
+- `dependency-audit`
+- `policy-check`
+- `secret-scan`
+- `static-security`
+- `ops-readiness-watchdog`
+- `old-account-reference`
+
+Required protections:
+
+- strict required status checks: `true`
+- pull request reviews required: `true`
+- CODEOWNERS review required: `true`
+- required approving reviews: `>=1`
+- dismiss stale approvals: `true`
+- require last-push approval: `true` where available
+- enforce admins: `true`
+- require conversation resolution: `true`
+- allow force pushes: `false`
+- allow deletions: `false`
+
+Single-maintainer caveat: if only `@borg-farther` has write/admin access, CODEOWNERS can be syntactically valid but does not provide independent review separation. Strong governance needs a second trusted write/admin maintainer or an organization/team model.
 
 ## Exact safe release sequence after approval
 
@@ -65,9 +99,15 @@ Only after explicit approval naming **`agent-borg==3.3.16`**:
    - `borg/__init__.py`: `3.3.15` → `3.3.16`
 2. Regenerate proof artifacts in dependency order:
    - PyPI/source gates expected to remain pre-upload NO-GO for `3.3.16`
+   - cold-start trust gate
+   - rollback/self-service ops gates
+   - public and real-user gates
+   - watchdog
+   - public and real-user gates again after watchdog
+   - final watchdog
    - inventory board
    - proof dashboard/status/value/impact
-   - watchdog/lint
+   - dashboard lint
 3. Run proof gates:
    - focused readiness tests
    - full pytest
@@ -94,4 +134,4 @@ Only after explicit approval naming **`agent-borg==3.3.16`**:
 
 ## Final hold line
 
-`agent-borg==3.3.16` is the correct candidate, but production upload is blocked until the operator explicitly approves that exact package/version and the release commit/tag/CI/artifact preflight is green.
+`agent-borg==3.3.16` remains the correct next candidate, but production upload is blocked until the operator explicitly approves that exact package/version and the release commit/tag/CI/artifact preflight is green. Branch protection and served-runtime cutover are also separate approval-bound operations; do not fake them with local/source-only proof.
