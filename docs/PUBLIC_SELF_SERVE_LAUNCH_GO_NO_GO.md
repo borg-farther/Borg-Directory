@@ -1,6 +1,6 @@
 # Borg public self-serve launch go/no-go
 
-Generated: 2026-06-01T13:27:50.555938+00:00
+Generated: 2026-06-01T23:28:07.512761+00:00
 Source version: `3.3.15`
 
 Public self-serve launch: **NO-GO**
@@ -32,6 +32,7 @@ Public self-serve is GO only after PyPI/fresh-install/MCP/docs/cold-start-trust/
 - served runtime version_matches_source is not true
 - served runtime reload_status is not loaded_code_matches_source_behavior
 - main branch is not protected
+- CODEOWNERS validation has errors: 11
 - first-10 external-user evidence has not passed: verified=0/10, real_users=0/10, installs=0/8, useful=0/6, critical_incidents=0/0
 
 ## Evidence artifacts

@@ -5,6 +5,7 @@
     "served runtime version_matches_source is not true",
     "served runtime reload_status is not loaded_code_matches_source_behavior",
     "main branch is not protected",
+    "CODEOWNERS validation has errors: 11",
     "first-10 external-user evidence has not passed: verified=0/10, real_users=0/10, installs=0/8, useful=0/6, critical_incidents=0/0"
   ],
   "first_10_external_evidence": {
@@ -43,7 +44,7 @@
     "passed_count": 28
   },
   "gate_type": "real_user_rollout",
-  "generated_at_utc": "2026-06-01T13:27:50.795038+00:00",
+  "generated_at_utc": "2026-06-01T23:28:07.879160+00:00",
   "important_distinction": "load/readiness snapshots are synthetic/logical users; this gate controls real external-user rollout",
   "infrastructure_ready_for_100": false,
   "load_gates": {
@@ -90,12 +91,12 @@
       "failed_count": 0,
       "failures": [],
       "freshness": {
-        "age_hours": 0.009936472222222222,
+        "age_hours": 0.0071541266666666666,
         "failure_kind": null,
         "max_age_hours": 24.0,
         "passed": true
       },
-      "generated_at_utc": "2026-06-01T13:27:15Z",
+      "generated_at_utc": "2026-06-01T23:27:42Z",
       "mcp_server_info": {
         "name": "borg-mcp-server",
         "version": "3.3.15"
@@ -156,8 +157,8 @@
         "oldest_release_upload_time_utc": "2026-05-28T17:50:29.231332+00:00",
         "passed": false,
         "release_file_count": 2,
-        "source_commit_time_utc": "2026-06-01T13:25:27+00:00",
-        "source_revision": "cea423afff63f264a7d7c451d3e9e64fa5713fc5+dirty",
+        "source_commit_time_utc": "2026-06-01T23:27:11+00:00",
+        "source_revision": "602e080ba935ba37767f9d0ca6fc9ec9c00cfa25+dirty",
         "stale_release_files": [
           "agent_borg-3.3.15-py3-none-any.whl",
           "agent_borg-3.3.15.tar.gz"
@@ -176,26 +177,57 @@
       "served runtime borg_version '3.3.14' != source version '3.3.15'",
       "served runtime version_matches_source is not true",
       "served runtime reload_status is not loaded_code_matches_source_behavior",
-      "main branch is not protected"
+      "main branch is not protected",
+      "CODEOWNERS validation has errors: 11"
     ],
     "passed": false,
     "release_governance": {
+      "allow_deletions": null,
+      "allow_force_pushes": null,
       "blockers": [
-        "main branch is not protected"
+        "main branch is not protected",
+        "CODEOWNERS validation has errors: 11"
       ],
+      "bypass_allowances": [],
+      "codeowners_error_count": 11,
+      "codeowners_errors": [
+        ".github/CODEOWNERS:1: Unknown owner: Unknown owner on line 1: make sure the team @borg-farther/maintainers exists, is publicly visible, and has write access to the repository\n\n  * @borg-farther/maintainers\n    ^",
+        ".github/CODEOWNERS:4: Unknown owner: Unknown owner on line 4: make sure the team @borg-farther/maintainers exists, is publicly visible, and has write access to the repository\n\n  README.md @borg-farther/maintainers\n            ^",
+        ".github/CODEOWNERS:5: Unknown owner: Unknown owner on line 5: make sure the team @borg-farther/maintainers exists, is publicly visible, and has write access to the repository\n\n  SUPPORT.md @borg-farther/maintainers\n             ^",
+        ".github/CODEOWNERS:6: Unknown owner: Unknown owner on line 6: make sure the team @borg-farther/maintainers exists, is publicly visible, and has write access to the repository\n\n  SECURITY.md @borg-farther/maintainers\n              ^",
+        ".github/CODEOWNERS:7: Unknown owner: Unknown owner on line 7: make sure the team @borg-farther/maintainers exists, is publicly visible, and has write access to the repository\n\n  .github/ISSUE_TEMPLATE/ @borg-farther/maintainers\n                          ^",
+        ".github/CODEOWNERS:8: Unknown owner: Unknown owner on line 8: make sure the team @borg-farther/maintainers exists, is publicly visible, and has write access to the repository\n\n  .github/workflows/ @borg-farther/maintainers\n                     ^",
+        ".github/CODEOWNERS:9: Unknown owner: Unknown owner on line 9: make sure the team @borg-farther/maintainers exists, is publicly visible, and has write access to the repository\n\n  docs/SELF_SERVICE_OPS_READINESS.md @borg-farther/maintainers\n                                     ^",
+        ".github/CODEOWNERS:10: Unknown owner: Unknown owner on line 10: make sure the team @borg-farther/maintainers exists, is publicly visible, and has write access to the repository\n\n  docs/ROLLBACK_AND_COMMS_RUNBOOK.md @borg-farther/maintainers\n                                     ^",
+        ".github/CODEOWNERS:11: Unknown owner: Unknown owner on line 11: make sure the team @borg-farther/maintainers exists, is publicly visible, and has write access to the repository\n\n  docs/FIRST_10_EVIDENCE_INTAKE.md @borg-farther/maintainers\n                                   ^",
+        ".github/CODEOWNERS:12: Unknown owner: Unknown owner on line 12: make sure the team @borg-farther/maintainers exists, is publicly visible, and has write access to the repository\n\n  eval/*_gate*.py @borg-farther/maintainers\n                  ^",
+        ".github/CODEOWNERS:13: Unknown owner: Unknown owner on line 13: make sure the team @borg-farther/maintainers exists, is publicly visible, and has write access to the repository\n\n  eval/*_snapshot.json @borg-farther/maintainers\n                       ^"
+      ],
+      "codeowners_errors_checked": true,
       "codeowners_review_required": null,
+      "dismiss_stale_reviews": null,
+      "enforce_admins": null,
       "passed": false,
       "protected": false,
+      "require_last_push_approval": null,
+      "required_approving_review_count": null,
       "required_checks_expected": [
-        "CI",
-        "Borg Security Gates",
-        "Self-service readiness watchdog",
-        "Account Reference Firewall"
+        "test (3.10)",
+        "test (3.11)",
+        "test (3.12)",
+        "dependency-audit",
+        "policy-check",
+        "secret-scan",
+        "static-security",
+        "ops-readiness-watchdog",
+        "old-account-reference"
       ],
       "required_checks_observed": [],
+      "required_conversation_resolution": null,
       "schema_version": 1,
       "snapshot": "eval/release_governance_snapshot.json",
-      "source": "snapshot"
+      "source": "github_api",
+      "strict_required_status_checks": null
     },
     "served_runtime_freshness": {
       "blockers": [
@@ -232,10 +264,10 @@
   },
   "self_service_ops_gate": {
     "blockers": [],
-    "generated_at_utc": "2026-06-01T13:27:50.794708+00:00",
+    "generated_at_utc": "2026-06-01T23:28:07.878691+00:00",
     "ops_readiness_watchdog": {
       "blockers": [],
-      "generated_at_utc": "2026-06-01T13:27:50.252583+00:00",
+      "generated_at_utc": "2026-06-01T23:28:07.087391+00:00",
       "passed": true,
       "snapshot": "eval/ops_readiness_watchdog_snapshot.json",
       "truth_policy": "Watchdog passing means controlled first-10 ops proof is fresh and internally consistent. Broad public self-serve still requires row-derived first-10 external-user evidence."
