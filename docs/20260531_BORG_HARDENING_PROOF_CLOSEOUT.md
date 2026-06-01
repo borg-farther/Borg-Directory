@@ -170,7 +170,7 @@ These are still real and must not be papered over by local/source tests:
 - `release_governance_gate=FAIL`
 - `verified_external_users=0`
 - `max_recommended_real_users_now=0`
-- `docs/public/status.json.state="NO-GO public self-serve; public package proof green, release controls blocked"`
+- `docs/public/status.json.state="NO-GO public self-serve; source/local release-candidate only"`
 
 ## Remaining uncertainties / operator actions
 

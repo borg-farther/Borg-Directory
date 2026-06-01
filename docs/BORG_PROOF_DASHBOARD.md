@@ -1,8 +1,8 @@
 # Borg Proof Dashboard
 
-Generated: `2026-05-31T19:03:41Z`
+Generated: `2026-06-01T13:27:51Z`
 Repo: `https://github.com/borg-farther/Borg-Directory`
-Source snapshot: `bd68c95733f545cc7a3cfd2700fb98734a4d3e91+dirty`
+Source snapshot: `cea423afff63f264a7d7c451d3e9e64fa5713fc5+dirty`
 
 ## Big top verdict
 
@@ -50,14 +50,14 @@ Source snapshot: `bd68c95733f545cc7a3cfd2700fb98734a4d3e91+dirty`
 | eval/first_user_release_gate_snapshot.json | True | cb383c14193f1c5b8947e8cf0f51a96e69b363b2fe412e81a335799374594ed9 | 2026-05-30T19:28:30Z | first-user release gate all_pass=True |
 | eval/uat_scoreboard_snapshot.json | True | 2fd457d8a9b6868ac1481274954fab0ade3afacc1c642c1a5e344d35b54677a1 | 2026-05-31T10:10:48.072287+00:00 | UAT synthetic_load_all_pass=True; real_user_100_all_pass=False; ready_for_10_logical_load=True; ready_for_1000_logical_load=True; not_real_user_or_public_beta_evidence=True |
 | eval/gate_run_snapshot.json | True | 92860954f0bf4c1b3a21827b29cc837f840e72fe9988b73414a7d87126c49aa6 | 2026-05-31T10:10:48.023553+00:00 | gate run synthetic_load_all_pass=True; overall_100_real_user_pass=False; ready_for_10_logical_load=True; ready_for_1000_logical_load=True; not_real_user_or_public_beta_evidence=True |
-| eval/real_user_rollout_gate_snapshot.json | True | 3ab885f50e8ea578a31a8d24699d68d3ccc059a2f47cc8f17b7e7b6450b9fa75 | 2026-05-31T19:03:40.273755+00:00 | 100-real-user gate=False; max_recommended_real_users=0; blockers=['PyPI latest/fresh-install package evidence is not green: same-version PyPI upload predates current source revision', "served runtime borg_version '3.3.14' != source version '3.3.15'", 'served runtime version_matches_source is not true', 'served runtime reload_status is not loaded_code_matches_source_behavior', 'main branch is not protected', 'first-10 external-user evidence has not passed: verified=0/10, real_users=0/10, installs=0/8, useful=0/6, critical_incidents=0/0'] |
+| eval/real_user_rollout_gate_snapshot.json | True | c53c78966d8bb35fcb6a85d1b956f6da0ddd7778372583fb12d82b6992863f0b | 2026-06-01T13:27:50.795038+00:00 | 100-real-user gate=False; max_recommended_real_users=0; blockers=['PyPI latest/fresh-install package evidence is not green: same-version PyPI upload predates current source revision', "served runtime borg_version '3.3.14' != source version '3.3.15'", 'served runtime version_matches_source is not true', 'served runtime reload_status is not loaded_code_matches_source_behavior', 'main branch is not protected', 'first-10 external-user evidence has not passed: verified=0/10, real_users=0/10, installs=0/8, useful=0/6, critical_incidents=0/0'] |
 | eval/first_10_user_scoreboard.json | True | 232585546e34fc07459365e00123aa512098f215f7bcd6307d0bde9bb20813f0 | 2026-05-25T23:32:37Z | first-10 row evidence users=0; measured_savings={'rows_with_measured_value': 0, 'dead_ends_avoided_confirmed': 0, 'net_minutes_saved': 0.0, 'positive_minutes_saved': 0.0, 'negative_minutes_cost': 0.0, 'net_tokens_saved': 0, 'positive_tokens_saved': 0, 'negative_tokens_cost': 0, 'counterfactual_basis_counts': {}}; gate=BLOCKED |
-| eval/public_self_serve_launch_gate_snapshot.json | True | d54888a19c1d0a1c219a60ec8f115f62bdf636f1ea80d1bcd093037752ea75a2 | 2026-05-31T19:03:39.996739+00:00 | public self-serve gate=False; max_recommended_real_users=0; blockers=['PyPI latest metadata is stale: same-version release upload predates current source revision', "served runtime borg_version '3.3.14' != source version '3.3.15'", 'served runtime version_matches_source is not true', 'served runtime reload_status is not loaded_code_matches_source_behavior', 'main branch is not protected', 'first-10 external-user evidence has not passed: verified=0/10, real_users=0/10, installs=0/8, useful=0/6, critical_incidents=0/0'] |
-| eval/cold_start_trust_gate_snapshot.json | True | 39b5b2eba3b18082f2609f81695f6dc1a2ddd3139cafe8b11fc7b078f89fbb0e | 2026-05-31T10:09:14.983665+00:00 | cold-start trust gate=True; blockers=[] |
-| eval/self_service_ops_gate_snapshot.json | True | e14a9b4faeed20c1b62221d601447ab69770c1bc5dbc97ff0f37436607f1b1e5 | 2026-05-31T19:03:41.229312+00:00 | self-service ops gate=True; blockers=[] |
-| eval/ops_readiness_watchdog_snapshot.json | True | 72926b8753aa9bc7b11bb5851b364e6e76d2b7a6295a034a2c6adda243949070 | 2026-05-31T19:03:40.865996+00:00 | ops readiness watchdog=True; blocker details live in eval/ops_readiness_watchdog_snapshot.json |
-| eval/rollback_comms_drill_snapshot.json | True | c9dc21355f938f67708758ea104b3b2cfe66a24d8e9174cd795ee3a338de76e5 | 2026-05-31T10:01:11.184278+00:00 | rollback/comms drill=True; dry_run_only=True |
-| eval/pypi_fresh_install_snapshot.json | True | c5fdc73b52b8fe2c55a164425417cc4ddb34b46e4b30043987cee9f55f7736eb | 2026-05-30T19:28:17Z | PyPI fresh-install canary success=True; version=3.3.15 |
+| eval/public_self_serve_launch_gate_snapshot.json | True | ffd359aee605cc15863296575bd38273ac0e8f17ff87c0ecd28f2902366b2890 | 2026-06-01T13:27:50.555938+00:00 | public self-serve gate=False; max_recommended_real_users=0; blockers=['PyPI latest metadata is stale: same-version release upload predates current source revision', "served runtime borg_version '3.3.14' != source version '3.3.15'", 'served runtime version_matches_source is not true', 'served runtime reload_status is not loaded_code_matches_source_behavior', 'main branch is not protected', 'first-10 external-user evidence has not passed: verified=0/10, real_users=0/10, installs=0/8, useful=0/6, critical_incidents=0/0'] |
+| eval/cold_start_trust_gate_snapshot.json | True | 15841c20a98657dec7ccda2ab0b698e219bd4e8586e1ca569062973c7d1c1156 | 2026-06-01T13:27:47.690320+00:00 | cold-start trust gate=True; blockers=[] |
+| eval/self_service_ops_gate_snapshot.json | True | b24db4ff0f7fe270af6f85a7ad0f2d5498ef4445c4cc95e3034e18a1337fbd62 | 2026-06-01T13:27:51.744234+00:00 | self-service ops gate=True; blockers=[] |
+| eval/ops_readiness_watchdog_snapshot.json | True | 2229ad785d6a5a4775c9052600eb268249e8d71cfc77ef9d787619f6318cf578 | 2026-06-01T13:27:51.357905+00:00 | ops readiness watchdog=True; blocker details live in eval/ops_readiness_watchdog_snapshot.json |
+| eval/rollback_comms_drill_snapshot.json | True | 0d4a911b117c5146b29a9d0bba73a0b754601c6bf66817dd1ac8a7b9025f5579 | 2026-06-01T13:27:49.088351+00:00 | rollback/comms drill=True; dry_run_only=True |
+| eval/pypi_fresh_install_snapshot.json | True | 75b4ea7d46f9a367dcc9a6d5edc59d1143e937cc02c368766cb2c834a4311012 | 2026-06-01T13:27:15Z | PyPI fresh-install canary success=True; version=3.3.15 |
 | eval/load_10_snapshot.json | True | 0d2e68df17bda30f2f2c85063c29c904fa18677f5c6a74757ac3e3e95233a881 | 2026-05-31T10:09:46.692829+00:00 | logical load 10: passed=True; total_requests=50316; success_rate=1.0; p95_ms=0.7141415262594819; model=asyncio_logical_users |
 | eval/load_100_snapshot.json | True | 2b51f0f8e7e6c1444239373695387da9257eb757101fdd12fdcc7481122b9f71 | 2026-05-31T10:10:16.830140+00:00 | logical load 100: passed=True; total_requests=40066; success_rate=1.0; p95_ms=0.9827278554439545; model=asyncio_logical_users |
 | eval/load_1000_snapshot.json | True | ada29dab187cb1f36f9d942af35d1ff85b271f3dec1e7393a794cb759e323ea8 | 2026-05-31T10:10:47.003248+00:00 | logical load 1000: passed=True; total_requests=49726; success_rate=1.0; p95_ms=0.7121274247765541; model=asyncio_logical_users |
@@ -97,7 +97,7 @@ Simulated/logical users are not real users. Internal sessions, tool calls, local
 
 | # | Action |
 | --- | --- |
-| 1 | After `agent-borg==3.3.15` is published and the PyPI fresh-install + stdio MCP canary passes, use that exact PyPI version with controlled first-10 beta testers. |
+| 1 | Do not invite controlled first-10 testers yet: publish a new immutable `agent-borg` version after `3.3.15`, then require PyPI latest metadata, fresh-install, stdio MCP, served-runtime, release-governance, ops, and watchdog gates to pass before using that exact version with testers. |
 | 2 | Create a fresh-PyPI runbook: install package, run borg --version, configure MCP, run one rescue, capture exact timestamps and blockers. |
 | 3 | Keep the self-service ops gate and watchdog green before each tester invite; pause if bad-answer/support/privacy intake fails. |
 | 4 | Record first user in the first-10 scoreboard template using a pseudonym and consented outcome fields. |

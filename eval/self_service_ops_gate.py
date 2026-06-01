@@ -131,10 +131,15 @@ PRESENT_ONLY_ISSUE_FIELDS = {
 WORKFLOW_REQUIRED_SNIPPETS = [
     "schedule:",
     "workflow_dispatch:",
+    "python eval/run_pypi_fresh_install_canary.py",
+    "python eval/cold_start_trust_gate.py",
+    "python eval/rollback_comms_drill.py",
     "python eval/self_service_ops_gate.py",
+    "python eval/public_self_serve_launch_gate.py",
+    "python eval/real_user_rollout_gate.py",
     "python eval/ops_readiness_watchdog.py",
     "--max-snapshot-age-hours 24",
-    "python eval/public_self_serve_launch_gate.py --no-write",
+    "python scripts/build_borg_proof_dashboard.py",
     "python scripts/borg_proof_dashboard_lint.py",
 ]
 
@@ -324,7 +329,7 @@ def compile_gate() -> dict[str, Any]:
         "passed": passed,
         "checks": categories,
         "blockers": blockers,
-        "rollout_policy": "Controlled first-10 may proceed only when ops readiness passes; broad public self-serve still requires row-derived first-10 external evidence.",
+        "rollout_policy": "Ops readiness is necessary but not sufficient for controlled first-10; package provenance, served-runtime freshness, release governance, ops/watchdog freshness, and first-10 guardrails must also pass. broad public self-serve still requires row-derived first-10 external evidence.",
     }
 
 

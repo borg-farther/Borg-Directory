@@ -88,6 +88,9 @@ CURRENT_CLAIM_DOCS = [
     Path("docs/BORG_PROOF_DASHBOARD.md"),
     Path("docs/BORG_PROOF_DASHBOARD.html"),
     Path("docs/public/proof-dashboard/index.html"),
+    Path("docs/public/status.json"),
+    Path("docs/public/value.json"),
+    Path("docs/public/impact/impact.json"),
     Path("docs/SECURITY_HARDENING_BASELINE.md"),
     Path("docs/PRIVACY_MODEL.md"),
     Path("docs/PROMPT_INJECTION_THREAT_MODEL.md"),
@@ -147,42 +150,108 @@ def _parse_iso_datetime(value: str | None) -> datetime | None:
         return None
 
 
+def _age_hours(value: str | None) -> float | None:
+    dt = _parse_iso_datetime(value)
+    if dt is None:
+        return None
+    return (datetime.now(timezone.utc) - dt).total_seconds() / 3600
+
+
+def _freshness_check(value: str | None, max_age_hours: float = 24.0) -> dict[str, Any]:
+    age = _age_hours(value)
+    if age is None:
+        return {"passed": False, "age_hours": None, "failure_kind": "missing_timestamp", "max_age_hours": max_age_hours}
+    if age < 0:
+        return {"passed": False, "age_hours": age, "failure_kind": "future_timestamp", "max_age_hours": max_age_hours}
+    if age > max_age_hours:
+        return {"passed": False, "age_hours": age, "failure_kind": "stale_timestamp", "max_age_hours": max_age_hours}
+    return {"passed": True, "age_hours": age, "failure_kind": None, "max_age_hours": max_age_hours}
+
+
 def source_upload_alignment_check(pypi_data: dict[str, Any]) -> dict[str, Any]:
-    """Fail when a same-version PyPI release predates current source.
+    """Fail when a same-version PyPI release cannot prove current source.
 
     Version equality alone can hide a stale wheel: `agent-borg==X.Y.Z` may be
     installed from PyPI while newer commits with the same version are on `main`.
+    Every published file for the version must have a usable upload timestamp that
+    is not older than the claimed source commit. Dirty source trees cannot be
+    represented by an immutable PyPI artifact and therefore fail closed unless
+    an older upload already fails the more specific same-version drift check.
     """
     source = source_revision_state()
     source_time = _parse_iso_datetime(source.get("commit_time_utc"))
-    release_files = pypi_data.get("release_files") or []
-    upload_times = [
-        parsed
-        for parsed in (
-            _parse_iso_datetime(str(item.get("upload_time_iso_8601") or item.get("upload_time") or ""))
-            for item in release_files
-            if isinstance(item, dict)
-        )
-        if parsed is not None
-    ]
-    latest_upload = max(upload_times) if upload_times else None
-    if source_time is None or latest_upload is None:
+    release_files = [item for item in (pypi_data.get("release_files") or []) if isinstance(item, dict)]
+    dirty_source = source.get("dirty") is True
+
+    if source_time is None:
         return {
-            "passed": True,
-            "skipped": True,
-            "reason": "source revision time or PyPI upload timestamp unavailable",
+            "passed": False,
+            "failure_kind": "source_revision_time_unavailable",
+            "detail": "Current source revision time is unavailable; cannot prove PyPI artifact freshness.",
             "source_revision": source.get("revision"),
             "source_commit_time_utc": source.get("commit_time_utc"),
-            "latest_release_upload_time_utc": latest_upload.isoformat() if latest_upload else None,
+            "dirty_source": dirty_source,
+            "release_file_count": len(release_files),
         }
-    passed = latest_upload >= source_time
+    if not release_files:
+        return {
+            "passed": False,
+            "failure_kind": "missing_release_files",
+            "detail": "PyPI release file metadata is missing; cannot prove all installable artifacts are newer than source.",
+            "source_revision": source.get("revision"),
+            "source_commit_time_utc": source_time.isoformat(),
+            "dirty_source": dirty_source,
+            "release_file_count": 0,
+        }
+
+    parsed_files: list[tuple[str, datetime]] = []
+    missing_timestamp_files: list[str] = []
+    for index, item in enumerate(release_files):
+        filename = str(item.get("filename") or f"release_file_{index}")
+        parsed = _parse_iso_datetime(str(item.get("upload_time_iso_8601") or item.get("upload_time") or ""))
+        if parsed is None:
+            missing_timestamp_files.append(filename)
+        else:
+            parsed_files.append((filename, parsed))
+
+    if missing_timestamp_files:
+        return {
+            "passed": False,
+            "failure_kind": "missing_release_upload_timestamp",
+            "detail": "One or more PyPI release files lacks an upload timestamp; package-current proof must fail closed.",
+            "source_revision": source.get("revision"),
+            "source_commit_time_utc": source_time.isoformat(),
+            "dirty_source": dirty_source,
+            "missing_timestamp_files": missing_timestamp_files,
+            "release_file_count": len(release_files),
+        }
+
+    upload_times = [upload_time for _, upload_time in parsed_files]
+    latest_upload = max(upload_times)
+    oldest_upload = min(upload_times)
+    stale_files = [filename for filename, upload_time in parsed_files if upload_time < source_time]
+    if stale_files:
+        passed = False
+        failure_kind = "same_version_pypi_upload_predates_source_revision"
+        detail = "PyPI release upload predates current source revision for at least one release file; publish a new immutable version before claiming package proof is current."
+    elif dirty_source:
+        passed = False
+        failure_kind = "source_worktree_dirty"
+        detail = "Current source tree is dirty; no immutable PyPI artifact can prove these uncommitted changes."
+    else:
+        passed = True
+        failure_kind = None
+        detail = "Every PyPI release file upload is not older than the current clean source revision."
     return {
         "passed": passed,
-        "failure_kind": None if passed else "same_version_pypi_upload_predates_source_revision",
-        "detail": "PyPI release upload predates current source revision; publish a new version before claiming package proof is current." if not passed else "PyPI release upload is not older than the current source revision.",
+        "failure_kind": failure_kind,
+        "detail": detail,
         "source_revision": source.get("revision"),
         "source_commit_time_utc": source_time.isoformat(),
+        "oldest_release_upload_time_utc": oldest_upload.isoformat(),
         "latest_release_upload_time_utc": latest_upload.isoformat(),
+        "stale_release_files": stale_files,
+        "dirty_source": dirty_source,
         "release_file_count": len(release_files),
     }
 
@@ -292,14 +361,21 @@ def first_user_release_check(path: Path) -> dict[str, Any]:
     }
 
 
-def pypi_fresh_install_check(path: Path, expected_version: str) -> dict[str, Any]:
+def pypi_fresh_install_check(path: Path, expected_version: str, *, max_snapshot_age_hours: float = 24.0) -> dict[str, Any]:
     data = _read_json(path)
     if not data:
         return {"passed": False, "exists": False, "path": str(path.relative_to(ROOT)) if path.is_relative_to(ROOT) else str(path), "error": "missing PyPI fresh-install snapshot"}
     results = data.get("results") or []
     failures = [item.get("name") for item in results if not item.get("passed")]
     mcp = data.get("mcp_stdio_canary") or {}
-    passed = bool(data.get("success")) and data.get("version") == expected_version and not failures and bool(mcp.get("passed"))
+    freshness = _freshness_check(data.get("generated_at_utc"), max_snapshot_age_hours)
+    passed = (
+        bool(data.get("success"))
+        and data.get("version") == expected_version
+        and not failures
+        and bool(mcp.get("passed"))
+        and bool(freshness["passed"])
+    )
     return {
         "passed": passed,
         "exists": True,
@@ -311,6 +387,7 @@ def pypi_fresh_install_check(path: Path, expected_version: str) -> dict[str, Any
         "failures": failures,
         "mcp_stdio_canary_passed": bool(mcp.get("passed")),
         "mcp_server_info": mcp.get("server_info"),
+        "freshness": freshness,
     }
 
 

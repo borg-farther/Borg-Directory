@@ -27,21 +27,36 @@ jobs:
           python -m pip install -e ".[all]"
           python -m pip install pytest
 
-      - name: Run self-service ops gate
+      - name: Refresh mutable readiness evidence
         run: |
-          python eval/rollback_comms_drill.py --no-write
-          python eval/self_service_ops_gate.py --no-write
+          set +e
+          python eval/run_pypi_fresh_install_canary.py
+          rc_pypi=$?
+          set -e
+          if [ "$rc_pypi" -ne 0 ]; then
+            echo "PyPI canary failed; continuing so public/readiness gates can fail closed with the fresh snapshot."
+          fi
+          python eval/cold_start_trust_gate.py
 
-      - name: Run fail-closed public launch gate
+      - name: Regenerate fail-closed readiness snapshots
         run: |
           set -euo pipefail
+          python eval/rollback_comms_drill.py
+          python eval/self_service_ops_gate.py
           set +e
-          python eval/public_self_serve_launch_gate.py --no-write > /tmp/public_gate.json
-          rc=$?
+          python eval/public_self_serve_launch_gate.py > /tmp/public_gate.json
+          rc_public=$?
+          python eval/real_user_rollout_gate.py > /tmp/real_user_gate.json
+          rc_real=$?
           set -e
           cat /tmp/public_gate.json
-          if [ "$rc" -ne 1 ]; then
-            echo "expected public self-serve gate to fail closed with rc=1 until first-10 evidence passes; got rc=$rc"
+          cat /tmp/real_user_gate.json
+          if [ "$rc_public" -ne 1 ]; then
+            echo "expected public self-serve gate to fail closed with rc=1 until first-10 evidence passes; got rc=$rc_public"
+            exit 1
+          fi
+          if [ "$rc_real" -ne 1 ]; then
+            echo "expected real-user rollout gate to fail closed with rc=1 until first-10/100-user evidence passes; got rc=$rc_real"
             exit 1
           fi
           python - <<'PY'
@@ -77,13 +92,45 @@ jobs:
           assert (controlled_package or pre_publish or release_controls_blocked) and allowed_public_blockers
           PY
 
-      - name: Run ops readiness watchdog
+      - name: Regenerate watchdog snapshot for dashboard evidence
         run: |
-          python eval/ops_readiness_watchdog.py --mode pr --json --no-write --max-snapshot-age-hours 24 --allow-public-blocker release_controls_or_first_10_evidence --require-ci-schedule
+          python eval/ops_readiness_watchdog.py --mode pr --json --max-snapshot-age-hours 24 --allow-public-blocker release_controls_or_first_10_evidence --require-ci-schedule
+
+      - name: Refresh public and real-user snapshots after watchdog regeneration
+        run: |
+          set -euo pipefail
+          set +e
+          python eval/public_self_serve_launch_gate.py > /tmp/public_gate_after_watchdog.json
+          rc_public=$?
+          python eval/real_user_rollout_gate.py > /tmp/real_user_gate_after_watchdog.json
+          rc_real=$?
+          set -e
+          cat /tmp/public_gate_after_watchdog.json
+          cat /tmp/real_user_gate_after_watchdog.json
+          if [ "$rc_public" -ne 1 ]; then
+            echo "expected public self-serve gate to fail closed after watchdog regeneration; got rc=$rc_public"
+            exit 1
+          fi
+          if [ "$rc_real" -ne 1 ]; then
+            echo "expected real-user rollout gate to fail closed after watchdog regeneration; got rc=$rc_real"
+            exit 1
+          fi
+
+      - name: Regenerate final watchdog snapshot for dashboard evidence
+        run: |
+          python eval/ops_readiness_watchdog.py --mode pr --json --max-snapshot-age-hours 24 --allow-public-blocker release_controls_or_first_10_evidence --require-ci-schedule
+
+      - name: Rebuild derived proof dashboard
+        run: |
+          python scripts/build_borg_proof_dashboard.py
 
       - name: Lint proof dashboard
         run: |
           python scripts/borg_proof_dashboard_lint.py
+
+      - name: Verify watchdog after dashboard rebuild
+        run: |
+          python eval/ops_readiness_watchdog.py --mode pr --json --no-write --max-snapshot-age-hours 24 --allow-public-blocker release_controls_or_first_10_evidence --require-ci-schedule
 
       - name: Run watchdog regression tests
         run: |

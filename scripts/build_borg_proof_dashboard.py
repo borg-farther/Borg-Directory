@@ -154,6 +154,20 @@ def freshness_value(value) -> str | None:
     return value if isinstance(value, str) else None
 
 
+def age_hours(value: str | None) -> float | None:
+    if not value:
+        return None
+    try:
+        dt = datetime.fromisoformat(value.replace("Z", "+00:00"))
+    except ValueError:
+        return None
+    return (datetime.now(timezone.utc) - dt.astimezone(timezone.utc)).total_seconds() / 3600
+
+
+def freshness_passed(age: float | None, max_age_hours: float = 24.0) -> bool:
+    return age is not None and 0 <= age <= max_age_hours
+
+
 def pack_count() -> int | None:
     packs = ROOT / "borg" / "seeds_data" / "packs"
     if not packs.exists():
@@ -233,7 +247,16 @@ def build_model() -> dict:
         rollback_drill_pass = False
     pypi_fresh_pass = nested(pypi_fresh, ["success"])
     pypi_fresh_version = nested(pypi_fresh, ["version"])
-    pypi_fresh_current = bool(pypi_fresh_pass is True and pypi_fresh_version == pv)
+    pypi_fresh_mcp_pass = nested(pypi_fresh, ["mcp_stdio_canary", "passed"])
+    pypi_fresh_generated_at = nested(pypi_fresh, ["generated_at_utc"])
+    pypi_fresh_age = age_hours(pypi_fresh_generated_at if isinstance(pypi_fresh_generated_at, str) else None)
+    pypi_fresh_age_ok = freshness_passed(pypi_fresh_age, 24.0)
+    pypi_fresh_current = bool(
+        pypi_fresh_pass is True
+        and pypi_fresh_version == pv
+        and pypi_fresh_mcp_pass is True
+        and pypi_fresh_age_ok
+    )
     pypi_latest_gate = nested(public_gate, ["gates", "pypi_latest"], {}) if isinstance(public_gate, dict) else {}
     pypi_latest_current = nested(pypi_latest_gate, ["passed"])
     pypi_package_current = bool(pypi_latest_current is True and pypi_fresh_current)
@@ -428,7 +451,7 @@ def build_model() -> dict:
     elif pypi_package_current:
         first_tester_action = f"Do not invite controlled first-10 testers yet: `agent-borg=={pypi_fresh_version or pv or 'CURRENT_VERSION'}` PyPI/fresh-install proof is green, but {', '.join(controlled_beta_missing or ['release/ops gates'])} must pass first."
     else:
-        first_tester_action = f"After `agent-borg=={pv or 'CURRENT_VERSION'}` is published and the PyPI fresh-install + stdio MCP canary passes, use that exact PyPI version with controlled first-10 beta testers."
+        first_tester_action = f"Do not invite controlled first-10 testers yet: publish a new immutable `agent-borg` version after `{pv or 'CURRENT_VERSION'}`, then require PyPI latest metadata, fresh-install, stdio MCP, served-runtime, release-governance, ops, and watchdog gates to pass before using that exact version with testers."
     next_actions = [
         first_tester_action,
         "Create a fresh-PyPI runbook: install package, run borg --version, configure MCP, run one rescue, capture exact timestamps and blockers.",
@@ -691,7 +714,7 @@ def build_public_payloads(model: dict) -> tuple[dict, dict, dict]:
     value_payload = {
         "schema_version": 1,
         "updated_at": generated,
-        "headline": "ACTION / STOP / VERIFY rescue packets are green in first-user package gates",
+        "headline": "ACTION / STOP / VERIFY rescue packets are green in local/source first-user gates",
         "summary": "Borg gives coding agents a concrete next action, a dead end to avoid, and a verification step for known failure classes.",
         "detail": value_detail,
         "primary_metric": "LOCAL_SOURCE_FIRST_USER_GATE_" + str(metrics.get("first_user_release_gate", {}).get("value", "UNKNOWN")),
