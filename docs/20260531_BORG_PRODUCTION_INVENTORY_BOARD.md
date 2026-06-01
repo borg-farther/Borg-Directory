@@ -1,8 +1,8 @@
 # Borg production inventory board
 
-Generated: `2026-06-01T08:59:32Z`
+Generated: `2026-06-01T13:27:51Z`
 Repo: `https://github.com/borg-farther/Borg-Directory`
-Branch/head: `main` / `a7f5e769016ac83f249d57fe8e36b34f020dda3b`
+Branch/head: `fix/readiness-watchdog-proof-order-20260601` / `cea423afff63f264a7d7c451d3e9e64fa5713fc5`
 Working tree dirty: `True`
 Version: pyproject `3.3.15` / borg `__version__` `3.3.15`
 

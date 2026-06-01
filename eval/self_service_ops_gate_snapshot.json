@@ -98,12 +98,12 @@
         "path": ".github/CODEOWNERS"
       },
       "rollback_drill_snapshot": {
-        "age_hours": 2.29e-05,
+        "age_hours": 2.3403055555555557e-05,
         "dry_run_only": true,
         "exists": true,
         "failed_steps": [],
         "fresh": true,
-        "generated_at_utc": "2026-06-01T08:59:31.782459+00:00",
+        "generated_at_utc": "2026-06-01T13:27:49.088351+00:00",
         "max_age_hours": 24.0,
         "missing_steps": [],
         "passed": true,
@@ -118,7 +118,7 @@
     }
   },
   "gate_type": "self_service_ops_readiness",
-  "generated_at_utc": "2026-06-01T08:59:31.865147+00:00",
+  "generated_at_utc": "2026-06-01T13:27:49.172827+00:00",
   "passed": true,
   "rollout_policy": "Ops readiness is necessary but not sufficient for controlled first-10; package provenance, served-runtime freshness, release governance, ops/watchdog freshness, and first-10 guardrails must also pass. broad public self-serve still requires row-derived first-10 external evidence.",
   "schema_version": 1

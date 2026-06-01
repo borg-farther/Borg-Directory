@@ -368,7 +368,7 @@
     "Could synthetic load tests stand in for users? No: first-10 row-derived evidence is 0/10 and explicitly blocks public/100-user claims.",
     "Could a dashboard hide these blockers? It must not; stale generated artifacts are themselves blockers until rebuilt from current gates."
   ],
-  "generated_at_utc": "2026-06-01T08:59:32Z",
+  "generated_at_utc": "2026-06-01T13:27:51Z",
   "outstanding": [
     {
       "acceptance": [
@@ -487,41 +487,26 @@
   "schema_version": 1,
   "source": {
     "git": {
-      "branch": "main",
-      "commit": "a7f5e769016ac83f249d57fe8e36b34f020dda3b",
+      "branch": "fix/readiness-watchdog-proof-order-20260601",
+      "commit": "cea423afff63f264a7d7c451d3e9e64fa5713fc5",
       "dirty": true,
       "dirty_files": [
         "M .github/workflows/self-service-watchdog.yml",
         " M docs/20260517_BORG_100_REAL_USER_READINESS.md",
-        " M docs/20260531_BORG_HARDENING_PROOF_CLOSEOUT.md",
-        " M docs/20260531_BORG_PRODUCTION_INVENTORY_BOARD.md",
-        " M docs/BORG_PROOF_DASHBOARD.html",
-        " M docs/BORG_PROOF_DASHBOARD.md",
+        " M docs/COLD_START_TRUST_HARDENING.md",
         " M docs/PUBLIC_SELF_SERVE_LAUNCH_GO_NO_GO.md",
         " M docs/SELF_SERVICE_OPS_READINESS_REPORT.md",
-        " M docs/public/impact/impact.json",
-        " M docs/public/proof-dashboard/index.html",
-        " M docs/public/status.json",
-        " M docs/public/value.json",
-        " M eval/borg_proof_dashboard.json",
+        " M eval/cold_start_trust_gate_snapshot.json",
         " M eval/ops_readiness_watchdog.py",
         " M eval/ops_readiness_watchdog_snapshot.json",
-        " M eval/production_inventory_board_snapshot.json",
-        " M eval/public_self_serve_launch_gate.py",
         " M eval/public_self_serve_launch_gate_snapshot.json",
         " M eval/pypi_fresh_install_snapshot.json",
         " M eval/real_user_rollout_gate_snapshot.json",
         " M eval/rollback_comms_drill_snapshot.json",
         " M eval/self_service_ops_gate.py",
         " M eval/self_service_ops_gate_snapshot.json",
-        " M eval/tests/test_borg_proof_dashboard.py",
-        " M scripts/build_borg_proof_dashboard.py",
-        " M tests/packaging/test_public_presentation_contract.py",
         " M tests/readiness/test_ops_readiness_watchdog.py",
-        " M tests/readiness/test_public_self_serve_launch_gate.py",
-        " M tests/readiness/test_self_service_ops_gate.py",
-        "?? docs/20260531_BORG_EVAL_LOOP_OUTSTANDING_WORK.md",
-        "?? docs/20260601_AGENT_BORG_3_3_16_IMMUTABLE_RELEASE_PACKET.md"
+        " M tests/readiness/test_self_service_ops_gate.py"
       ],
       "remote": [
         "origin\thttps://github.com/borg-farther/Borg-Directory.git (fetch)",

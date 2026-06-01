@@ -43,7 +43,7 @@
     "passed_count": 28
   },
   "gate_type": "real_user_rollout",
-  "generated_at_utc": "2026-06-01T08:59:33.806606+00:00",
+  "generated_at_utc": "2026-06-01T13:27:50.795038+00:00",
   "important_distinction": "load/readiness snapshots are synthetic/logical users; this gate controls real external-user rollout",
   "infrastructure_ready_for_100": false,
   "load_gates": {
@@ -90,12 +90,12 @@
       "failed_count": 0,
       "failures": [],
       "freshness": {
-        "age_hours": 0.00077282,
+        "age_hours": 0.009936472222222222,
         "failure_kind": null,
         "max_age_hours": 24.0,
         "passed": true
       },
-      "generated_at_utc": "2026-06-01T08:59:31Z",
+      "generated_at_utc": "2026-06-01T13:27:15Z",
       "mcp_server_info": {
         "name": "borg-mcp-server",
         "version": "3.3.15"
@@ -156,8 +156,8 @@
         "oldest_release_upload_time_utc": "2026-05-28T17:50:29.231332+00:00",
         "passed": false,
         "release_file_count": 2,
-        "source_commit_time_utc": "2026-05-31T19:14:30+00:00",
-        "source_revision": "a7f5e769016ac83f249d57fe8e36b34f020dda3b+dirty",
+        "source_commit_time_utc": "2026-06-01T13:25:27+00:00",
+        "source_revision": "cea423afff63f264a7d7c451d3e9e64fa5713fc5+dirty",
         "stale_release_files": [
           "agent_borg-3.3.15-py3-none-any.whl",
           "agent_borg-3.3.15.tar.gz"
@@ -232,10 +232,10 @@
   },
   "self_service_ops_gate": {
     "blockers": [],
-    "generated_at_utc": "2026-06-01T08:59:33.806244+00:00",
+    "generated_at_utc": "2026-06-01T13:27:50.794708+00:00",
     "ops_readiness_watchdog": {
       "blockers": [],
-      "generated_at_utc": "2026-06-01T08:59:33.246561+00:00",
+      "generated_at_utc": "2026-06-01T13:27:50.252583+00:00",
       "passed": true,
       "snapshot": "eval/ops_readiness_watchdog_snapshot.json",
       "truth_policy": "Watchdog passing means controlled first-10 ops proof is fresh and internally consistent. Broad public self-serve still requires row-derived first-10 external-user evidence."

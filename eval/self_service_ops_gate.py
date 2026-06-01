@@ -132,6 +132,7 @@ WORKFLOW_REQUIRED_SNIPPETS = [
     "schedule:",
     "workflow_dispatch:",
     "python eval/run_pypi_fresh_install_canary.py",
+    "python eval/cold_start_trust_gate.py",
     "python eval/rollback_comms_drill.py",
     "python eval/self_service_ops_gate.py",
     "python eval/public_self_serve_launch_gate.py",

@@ -36,6 +36,7 @@ jobs:
           if [ "$rc_pypi" -ne 0 ]; then
             echo "PyPI canary failed; continuing so public/readiness gates can fail closed with the fresh snapshot."
           fi
+          python eval/cold_start_trust_gate.py
 
       - name: Regenerate fail-closed readiness snapshots
         run: |

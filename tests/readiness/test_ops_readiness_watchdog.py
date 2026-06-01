@@ -628,6 +628,8 @@ def test_workflow_regenerates_mutable_evidence_before_dashboard_lint() -> None:
     assert workflow["order_ok"] is True
     positions = workflow["order_positions"]
     assert positions["python eval/run_pypi_fresh_install_canary.py"] < positions["python eval/public_self_serve_launch_gate.py"]
+    assert positions["python eval/run_pypi_fresh_install_canary.py"] < positions["python eval/cold_start_trust_gate.py"]
+    assert positions["python eval/cold_start_trust_gate.py"] < positions["python eval/public_self_serve_launch_gate.py"]
     assert positions["python eval/public_self_serve_launch_gate.py"] < positions["python eval/real_user_rollout_gate.py"]
     assert positions["python eval/real_user_rollout_gate.py"] < positions["python eval/ops_readiness_watchdog.py"]
     assert positions["python eval/ops_readiness_watchdog.py"] < positions["python scripts/build_borg_proof_dashboard.py"]

@@ -23,9 +23,11 @@ def test_self_service_ops_gate_script_and_artifacts_are_present() -> None:
     assert "--max-snapshot-age-hours 24" in workflow_text
     assert "--max-snapshot-age-hours 168" not in workflow_text
     assert "python eval/run_pypi_fresh_install_canary.py" in workflow_text
+    assert "python eval/cold_start_trust_gate.py" in workflow_text
     assert "python eval/real_user_rollout_gate.py" in workflow_text
     assert "python scripts/build_borg_proof_dashboard.py" in workflow_text
-    assert workflow_text.index("python eval/run_pypi_fresh_install_canary.py") < workflow_text.index("python scripts/build_borg_proof_dashboard.py")
+    assert workflow_text.index("python eval/run_pypi_fresh_install_canary.py") < workflow_text.index("python eval/cold_start_trust_gate.py")
+    assert workflow_text.index("python eval/cold_start_trust_gate.py") < workflow_text.index("python eval/public_self_serve_launch_gate.py")
     assert workflow_text.index("python eval/ops_readiness_watchdog.py") < workflow_text.index("python scripts/build_borg_proof_dashboard.py")
     assert workflow_text.index("python scripts/build_borg_proof_dashboard.py") < workflow_text.index("python scripts/borg_proof_dashboard_lint.py")
     assert snapshot["checks"]["bad_answer_feedback_path"]["feedback_path"]["passed"] is True

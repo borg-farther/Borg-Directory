@@ -103,6 +103,7 @@ def _workflow_has_schedule() -> dict[str, Any]:
         "schedule:",
         "workflow_dispatch:",
         "python eval/run_pypi_fresh_install_canary.py",
+        "python eval/cold_start_trust_gate.py",
         "python eval/rollback_comms_drill.py",
         "python eval/self_service_ops_gate.py",
         "python eval/public_self_serve_launch_gate.py",
@@ -114,6 +115,7 @@ def _workflow_has_schedule() -> dict[str, Any]:
     missing = [item for item in required if item not in text]
     ordered = [
         "python eval/run_pypi_fresh_install_canary.py",
+        "python eval/cold_start_trust_gate.py",
         "python eval/public_self_serve_launch_gate.py",
         "python eval/real_user_rollout_gate.py",
         "python eval/ops_readiness_watchdog.py",
