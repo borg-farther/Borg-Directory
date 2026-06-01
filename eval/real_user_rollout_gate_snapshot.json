@@ -43,7 +43,7 @@
     "passed_count": 28
   },
   "gate_type": "real_user_rollout",
-  "generated_at_utc": "2026-06-01T23:37:16.175891+00:00",
+  "generated_at_utc": "2026-06-01T23:51:28.196319+00:00",
   "important_distinction": "load/readiness snapshots are synthetic/logical users; this gate controls real external-user rollout",
   "infrastructure_ready_for_100": false,
   "load_gates": {
@@ -90,12 +90,12 @@
       "failed_count": 0,
       "failures": [],
       "freshness": {
-        "age_hours": 0.006696774722222222,
+        "age_hours": 0.006703369722222223,
         "failure_kind": null,
         "max_age_hours": 24.0,
         "passed": true
       },
-      "generated_at_utc": "2026-06-01T23:36:52Z",
+      "generated_at_utc": "2026-06-01T23:51:04Z",
       "mcp_server_info": {
         "name": "borg-mcp-server",
         "version": "3.3.15"
@@ -156,8 +156,8 @@
         "oldest_release_upload_time_utc": "2026-05-28T17:50:29.231332+00:00",
         "passed": false,
         "release_file_count": 2,
-        "source_commit_time_utc": "2026-06-01T23:36:30+00:00",
-        "source_revision": "b939de61e2183cb5b3de7b5229c083589b577449+dirty",
+        "source_commit_time_utc": "2026-06-01T23:50:42+00:00",
+        "source_revision": "9985506a7af8e74dd85789dc898eb66637ce4c5a+dirty",
         "stale_release_files": [
           "agent_borg-3.3.15-py3-none-any.whl",
           "agent_borg-3.3.15.tar.gz"
@@ -223,10 +223,10 @@
   },
   "self_service_ops_gate": {
     "blockers": [],
-    "generated_at_utc": "2026-06-01T23:37:16.175514+00:00",
+    "generated_at_utc": "2026-06-01T23:51:28.195971+00:00",
     "ops_readiness_watchdog": {
       "blockers": [],
-      "generated_at_utc": "2026-06-01T23:37:15.598363+00:00",
+      "generated_at_utc": "2026-06-01T23:51:27.624055+00:00",
       "passed": true,
       "snapshot": "eval/ops_readiness_watchdog_snapshot.json",
       "truth_policy": "Watchdog passing means controlled first-10 ops proof is fresh and internally consistent. Broad public self-serve still requires row-derived first-10 external-user evidence."

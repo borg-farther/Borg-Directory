@@ -1,6 +1,6 @@
 # Borg 100 real-user readiness
 
-Generated: 2026-06-01T23:37:16.175891+00:00
+Generated: 2026-06-01T23:51:28.196319+00:00
 
 100 real-user verdict: **NO-GO**
 Max recommended real users now: **0**

@@ -2,7 +2,7 @@
   "blockers": [],
   "checks": {
     "cold_start_trust_current": {
-      "generated_at_utc": "2026-06-01T23:37:12.593321+00:00",
+      "generated_at_utc": "2026-06-01T23:51:24.520528+00:00",
       "passed": true
     },
     "public_blockers_allowed": {
@@ -49,11 +49,11 @@
       }
     },
     "public_json_dashboard_consistency": {
-      "dashboard_generated_at_utc": "2026-06-01T23:37:15Z",
-      "dashboard_source_revision": "b939de61e2183cb5b3de7b5229c083589b577449+dirty",
+      "dashboard_generated_at_utc": "2026-06-01T23:51:27Z",
+      "dashboard_source_revision": "9985506a7af8e74dd85789dc898eb66637ce4c5a+dirty",
       "passed": true,
-      "status_source_revision": "b939de61e2183cb5b3de7b5229c083589b577449+dirty",
-      "status_updated_at": "2026-06-01T23:37:15Z"
+      "status_source_revision": "9985506a7af8e74dd85789dc898eb66637ce4c5a+dirty",
+      "status_updated_at": "2026-06-01T23:51:27Z"
     },
     "public_status_consistency": {
       "controlled_status_ok": false,
@@ -67,7 +67,7 @@
     },
     "pypi_fresh_current": {
       "expected_version": "3.3.15",
-      "generated_at_utc": "2026-06-01T23:36:52Z",
+      "generated_at_utc": "2026-06-01T23:51:04Z",
       "passed": true,
       "pre_package_release_stage": true,
       "pypi_current": false,
@@ -100,67 +100,67 @@
     "snapshot_freshness": {
       "items": {
         "borg_proof_dashboard": {
-          "age_hours": 0.0001503661111111111,
+          "age_hours": 0.00015641916666666667,
           "allowed_stale_reason": null,
           "passed": true,
           "raw_freshness_passed": true
         },
         "cold_start_trust_gate_snapshot": {
-          "age_hours": 0.0008188875000000001,
+          "age_hours": 0.0008451605555555555,
           "allowed_stale_reason": null,
           "passed": true,
           "raw_freshness_passed": true
         },
         "public_impact_json": {
-          "age_hours": 0.00015036777777777778,
+          "age_hours": 0.00015642138888888888,
           "allowed_stale_reason": null,
           "passed": true,
           "raw_freshness_passed": true
         },
         "public_self_serve_launch_gate_snapshot": {
-          "age_hours": 0.00025264444444444447,
+          "age_hours": 0.00024869333333333335,
           "allowed_stale_reason": null,
           "passed": true,
           "raw_freshness_passed": true
         },
         "public_status_json": {
-          "age_hours": 0.00015036694444444445,
+          "age_hours": 0.00015642,
           "allowed_stale_reason": null,
           "passed": true,
           "raw_freshness_passed": true
         },
         "public_value_json": {
-          "age_hours": 0.0001503675,
+          "age_hours": 0.00015642055555555555,
           "allowed_stale_reason": null,
           "passed": true,
           "raw_freshness_passed": true
         },
         "pypi_fresh_install_snapshot": {
-          "age_hours": 0.006539253888888889,
+          "age_hours": 0.006545306666666666,
           "allowed_stale_reason": null,
           "passed": true,
           "raw_freshness_passed": true
         },
         "real_user_rollout_gate_snapshot": {
-          "age_hours": 0.00018167194444444445,
+          "age_hours": 0.00017980222222222222,
           "allowed_stale_reason": null,
           "passed": true,
           "raw_freshness_passed": true
         },
         "release_governance_snapshot": {
-          "age_hours": 0.0003788188888888889,
+          "age_hours": 0.0003963569444444444,
           "allowed_stale_reason": null,
           "passed": true,
           "raw_freshness_passed": true
         },
         "rollback_comms_drill_snapshot": {
-          "age_hours": 0.00036471944444444447,
+          "age_hours": 0.00038133,
           "allowed_stale_reason": null,
           "passed": true,
           "raw_freshness_passed": true
         },
         "self_service_ops_gate_snapshot": {
-          "age_hours": 0.00034216694444444445,
+          "age_hours": 0.00035559777777777776,
           "allowed_stale_reason": null,
           "passed": true,
           "raw_freshness_passed": true
@@ -170,10 +170,10 @@
     },
     "source_revision_honesty": {
       "git_clean": false,
-      "head": "b939de61e2183cb5b3de7b5229c083589b577449",
+      "head": "9985506a7af8e74dd85789dc898eb66637ce4c5a",
       "passed": true,
       "policy": "Committed dashboards may be generated from a dirty tree and must mark +dirty; clean-tree status endpoints should match HEAD or a dirty ancestor used to generate committed proof artifacts.",
-      "source_revision": "b939de61e2183cb5b3de7b5229c083589b577449+dirty"
+      "source_revision": "9985506a7af8e74dd85789dc898eb66637ce4c5a+dirty"
     },
     "watchdog_workflow": {
       "exists": true,
@@ -184,14 +184,14 @@
       "order_ok": true,
       "order_positions": {
         "python eval/cold_start_trust_gate.py": 202,
-        "python eval/ops_readiness_watchdog.py": 2598,
-        "python eval/ops_readiness_watchdog.py --mode pr --json --no-write --output eval/ops_readiness_watchdog_post_dashboard_check.json --max-snapshot-age-hours 24 --allow-public-blocker release_controls_or_first_10_evidence --require-ci-schedule": 3362,
+        "python eval/ops_readiness_watchdog.py": 2647,
+        "python eval/ops_readiness_watchdog.py --mode pr --json --no-write --output eval/ops_readiness_watchdog_post_dashboard_check.json --max-snapshot-age-hours 24 --allow-public-blocker release_controls_or_first_10_evidence --require-ci-schedule": 3411,
         "python eval/public_self_serve_launch_gate.py": 493,
         "python eval/real_user_rollout_gate.py": 575,
         "python eval/release_governance_gate.py --output eval/release_governance_snapshot.json": 246,
         "python eval/run_pypi_fresh_install_canary.py": 106,
-        "python scripts/borg_proof_dashboard_lint.py": 3602,
-        "python scripts/build_borg_proof_dashboard.py": 3317
+        "python scripts/borg_proof_dashboard_lint.py": 3651,
+        "python scripts/build_borg_proof_dashboard.py": 3366
       },
       "passed": true,
       "path": ".github/workflows/self-service-watchdog.yml",
@@ -261,44 +261,44 @@
         },
         {
           "index": 7,
-          "position": 2598,
+          "position": 2647,
           "snippet": "python eval/ops_readiness_watchdog.py --mode pr --json --max-snapshot-age-hours 24 --allow-public-blocker release_controls_or_first_10_evidence --require-ci-schedule"
         },
         {
           "index": 8,
-          "position": 2789,
+          "position": 2838,
           "snippet": "python eval/public_self_serve_launch_gate.py"
         },
         {
           "index": 9,
-          "position": 2886,
+          "position": 2935,
           "snippet": "python eval/real_user_rollout_gate.py"
         },
         {
           "index": 10,
-          "position": 3151,
+          "position": 3200,
           "snippet": "python eval/ops_readiness_watchdog.py --mode pr --json --max-snapshot-age-hours 24 --allow-public-blocker release_controls_or_first_10_evidence --require-ci-schedule"
         },
         {
           "index": 11,
-          "position": 3317,
+          "position": 3366,
           "snippet": "python scripts/build_borg_proof_dashboard.py"
         },
         {
           "index": 12,
-          "position": 3362,
+          "position": 3411,
           "snippet": "python eval/ops_readiness_watchdog.py --mode pr --json --no-write --output eval/ops_readiness_watchdog_post_dashboard_check.json --max-snapshot-age-hours 24 --allow-public-blocker release_controls_or_first_10_evidence --require-ci-schedule"
         },
         {
           "index": 13,
-          "position": 3602,
+          "position": 3651,
           "snippet": "python scripts/borg_proof_dashboard_lint.py"
         }
       ]
     }
   },
   "gate_type": "ops_readiness_watchdog",
-  "generated_at_utc": "2026-06-01T23:37:15.598363+00:00",
+  "generated_at_utc": "2026-06-01T23:51:27.624055+00:00",
   "max_recommended_real_users_now": 0,
   "passed": true,
   "ready_for_controlled_first_10_beta": false,
