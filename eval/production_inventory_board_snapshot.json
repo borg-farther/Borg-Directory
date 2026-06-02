@@ -368,7 +368,7 @@
     "Could synthetic load tests stand in for users? No: first-10 row-derived evidence is 0/10 and explicitly blocks public/100-user claims.",
     "Could a dashboard hide these blockers? It must not; stale generated artifacts are themselves blockers until rebuilt from current gates."
   ],
-  "generated_at_utc": "2026-06-02T10:11:16Z",
+  "generated_at_utc": "2026-06-02T10:34:06Z",
   "outstanding": [
     {
       "acceptance": [
@@ -488,7 +488,7 @@
   "source": {
     "git": {
       "branch": "release/agent-borg-3.3.16-20260602",
-      "commit": "7125ec9e19ea44efb5ec42bd69a1c9672db50983",
+      "commit": "200001f089552b0bb0536e70ecb9e265c5008050",
       "dirty": true,
       "dirty_files": [
         "M docs/20260517_BORG_100_REAL_USER_READINESS.md",
