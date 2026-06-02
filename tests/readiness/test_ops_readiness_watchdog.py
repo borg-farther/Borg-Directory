@@ -186,7 +186,16 @@ def test_source_revision_honesty_rejects_dirty_ancestor_when_non_generated_files
 
 
 def test_generated_artifact_change_filter_rejects_source_or_docs_drift(monkeypatch) -> None:
-    monkeypatch.setattr(watchdog, "_git_changed_paths", lambda base, head: ["eval/borg_proof_dashboard.json", "docs/PUBLIC_SELF_SERVE_LAUNCH_GO_NO_GO.md"])
+    monkeypatch.setattr(
+        watchdog,
+        "_git_changed_paths",
+        lambda base, head: [
+            "eval/borg_proof_dashboard.json",
+            "docs/PUBLIC_SELF_SERVE_LAUNCH_GO_NO_GO.md",
+            "eval/production_inventory_board_snapshot.json",
+            "docs/20260531_BORG_PRODUCTION_INVENTORY_BOARD.md",
+        ],
+    )
     assert watchdog._changes_since_source_are_generated_artifacts("a" * 40, "b" * 40) is True
 
     monkeypatch.setattr(watchdog, "_git_changed_paths", lambda base, head: [])
