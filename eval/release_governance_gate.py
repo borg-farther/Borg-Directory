@@ -14,6 +14,7 @@ from __future__ import annotations
 
 import argparse
 import json
+import os
 import urllib.error
 import urllib.parse
 import urllib.request
@@ -199,7 +200,15 @@ def evaluate_branch_payload(
 
 def _github_get_json(path: str) -> dict[str, Any]:
     url = f"https://api.github.com/{path.lstrip('/')}"
-    request = urllib.request.Request(url, headers={"Accept": "application/vnd.github+json", "User-Agent": "borg-release-governance-gate"})
+    headers = {
+        "Accept": "application/vnd.github+json",
+        "User-Agent": "borg-release-governance-gate",
+        "X-GitHub-Api-Version": "2022-11-28",
+    }
+    token = os.environ.get("GITHUB_TOKEN") or os.environ.get("GH_TOKEN")
+    if token:
+        headers["Authorization"] = f"Bearer {token}"
+    request = urllib.request.Request(url, headers=headers)
     with urllib.request.urlopen(request, timeout=20) as response:  # nosec B310 - fixed GitHub API host
         return json.loads(response.read().decode("utf-8"))
 

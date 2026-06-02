@@ -28,6 +28,34 @@ def _hard_protection_payload(*, checks: list[str] | None = None) -> dict:
     }
 
 
+class _FakeGitHubResponse:
+    def __enter__(self):
+        return self
+
+    def __exit__(self, *args):
+        return False
+
+    def read(self) -> bytes:
+        return b'{"ok": true}'
+
+
+def test_github_get_json_uses_token_when_available(monkeypatch) -> None:
+    captured = {}
+
+    def fake_urlopen(request, timeout):
+        captured["authorization"] = request.get_header("Authorization")
+        captured["api_version"] = request.get_header("X-github-api-version") or request.get_header("X-GitHub-Api-Version")
+        captured["timeout"] = timeout
+        return _FakeGitHubResponse()
+
+    monkeypatch.setenv("GITHUB_TOKEN", "test-token")
+    monkeypatch.setattr(release_governance_gate.urllib.request, "urlopen", fake_urlopen)
+
+    assert release_governance_gate._github_get_json("repos/borg-farther/Borg-Directory") == {"ok": True}
+    assert captured["authorization"] == "Bearer test-token"
+    assert captured["timeout"] == 20
+
+
 def test_release_governance_gate_fails_unprotected_main() -> None:
     result = release_governance_gate.evaluate_branch_payload({"protected": False})
 
