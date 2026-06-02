@@ -70,10 +70,10 @@
   "self_service_ops_gate": "PASS",
   "served_runtime_freshness_gate": "FAIL",
   "source": "docs/public/status.json",
-  "source_revision": "9985506a7af8e74dd85789dc898eb66637ce4c5a+dirty",
+  "source_revision": "8a12952126e4f6a76a826d1f66a9114b9f3cd1f8+dirty",
   "source_version_consistency": "pyproject=3.3.15 runtime=3.3.15",
   "state": "NO-GO public self-serve; source/local release-candidate only",
   "status": "NO-GO",
-  "updated_at": "2026-06-01T23:51:28Z",
+  "updated_at": "2026-06-02T00:05:45Z",
   "verified_external_users": 0
 }
