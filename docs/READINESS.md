@@ -2,8 +2,8 @@
 
 ## Current verdict
 
-- Controlled first-10 beta: **NO-GO right now**. `agent-borg==3.3.15` exists on PyPI, but its upload predates the current source hardening revision, so package proof is stale until a new immutable version is published and freshly canaried. Release controls are also red: the served runtime fingerprint is stale and GitHub `main` is unprotected in the captured governance snapshot.
-- Public waitlist / narrow beta: **0 testers may proceed** until served-runtime freshness, release-governance, ops/watchdog, proof-dashboard, cold-start trust, and source/local first-user gates are all green; then the first-10 evidence contract caps the cohort at 10.
+- Controlled first-10 beta: **NO-GO right now**. `agent-borg==3.3.15` exists on PyPI, but its upload predates the current source hardening revision, so package proof is stale until `agent-borg==3.3.16` is published and freshly canaried. GitHub `main` release governance is enforced; the served runtime fingerprint is stale and remains a separate release-control blocker.
+- Public waitlist / narrow beta: **0 testers may proceed** until package freshness, served-runtime freshness, release-governance, ops/watchdog, proof-dashboard, cold-start trust, and source/local first-user gates are all green; then the first-10 evidence contract caps the cohort at 10.
 - Public self-serve launch: **NO-GO until first-10 external-user evidence passes** (10 verified external users, >=8 installs, >=6 useful rescues, 0 critical incidents).
 
 ## What passed for source/local package infrastructure
@@ -14,7 +14,7 @@
 - First-10 contract exists: [`FIRST_10_BETA_READINESS.md`](FIRST_10_BETA_READINESS.md).
 - Security/privacy/prompt-injection surface has a baseline and CI gates.
 - GitHub CI/security gates are part of the release proof chain. PR branches still need their own green checks and post-merge `main` proof refresh before branch-specific source changes are claimed on `main`.
-- Local first-user gate is green for source `agent-borg==3.3.15`, including generated rules and OpenClaw export. PyPI latest/fresh-install/stdio MCP proof is **not current for this source revision** because the same-version PyPI upload predates the latest hardening merge.
+- Local first-user gate must be rerun for source `agent-borg==3.3.16`, including generated rules and OpenClaw export. PyPI latest/fresh-install/stdio MCP proof is **not current for this source revision** because PyPI latest remains `agent-borg==3.3.15` until the new immutable release is published and freshly canaried.
 
 ## What is not proven
 

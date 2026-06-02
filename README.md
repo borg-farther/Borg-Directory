@@ -13,7 +13,7 @@ Give Borg an error, traceback, failed test, install problem, config failure, or 
 - **MCP server command:** `borg-mcp`
 - **Canonical repo:** https://github.com/borg-farther/Borg-Directory
 
-**Status:** `agent-borg==3.3.15` is published on PyPI, but that artifact is stale relative to the current source revision because its upload predates the latest hardening merge. Package proof is red until a new immutable version is published and freshly canaried. Controlled first-10 beta is currently **NO-GO** while package provenance, served runtime freshness, release governance, and first-10 evidence are red. Broad public self-serve launch, 100-user rollout, served/remote MCP, and measured external lift are **not claimed** until row-derived external-user evidence passes.
+**Status:** `agent-borg==3.3.15` is published on PyPI, but that artifact is stale relative to the current source revision because its upload predates the latest hardening merge. This branch targets the next immutable release, `agent-borg==3.3.16`; package proof is red until a new immutable version is published and freshly canaried. GitHub release governance is now enforced on `main`, while served runtime freshness and first-10 external-user evidence still gate controlled beta/public claims. Broad public self-serve launch, 100-user rollout, served/remote MCP, and measured external lift are **not claimed** until row-derived external-user evidence passes.
 
 ## Try Borg in 60 seconds
 
@@ -324,13 +324,13 @@ Why: agents often do not discover optional tools unless explicitly primed.
 
 ## 5. What is ready now
 
-`agent-borg==3.3.15` is published, and the older package/local stdio canary exists, but it is **not current for this source revision**. The latest PyPI release upload predates the current source hardening revision, so package proof is red until a new immutable version is published and freshly canaried. Release controls are also red: the served runtime fingerprint is stale and GitHub `main` is not protected in the captured governance snapshot. PR branches still need their own green checks and post-merge `main` proof refresh before branch-specific changes are claimed on `main`.
+`agent-borg==3.3.15` is published, and the older package/local stdio canary exists, but it is **not current for this source revision**. The latest PyPI release upload predates the current source hardening revision, so this branch targets `agent-borg==3.3.16`; package proof is red until a new immutable version is published and freshly canaried. Release governance is now enforced on GitHub `main` with exact required checks and CODEOWNERS review; served runtime freshness and first-10 external-user evidence remain separate blockers.
 
 - Install, CLI, Python API, and MCP entrypoints are present, but the currently published package is stale relative to source.
 - First-user rescue path returns ACTION / STOP / VERIFY or `NO_CONFIDENT_MATCH`.
 - Security/privacy/prompt-injection surface: PASS in CI/local gates.
 - Generated rules and OpenClaw export are covered by first-user/package gates.
-- PyPI latest is **not proven current** for the current source revision; controlled first-10 testers must **not** be invited until a new immutable package version, served-runtime freshness, release governance, ops/watchdog, and proof dashboards are all green. Current cap: 0.
+- PyPI latest is **not proven current** for the current source revision; controlled first-10 testers must **not** be invited until `agent-borg==3.3.16`, served-runtime freshness, ops/watchdog, and proof dashboards are all green. Current cap: 0 until those package/runtime gates are green; broad public self-serve remains evidence-gated after first-10.
 - Self-service ops guardrails are present: bad-answer intake, install/MCP support intake, first-10 evidence intake, support/SLA, rollback/comms dry-run, and watchdog workflow.
 - First-10 beta contract is published: [`docs/FIRST_10_BETA_READINESS.md`](https://github.com/borg-farther/Borg-Directory/blob/main/docs/FIRST_10_BETA_READINESS.md).
 

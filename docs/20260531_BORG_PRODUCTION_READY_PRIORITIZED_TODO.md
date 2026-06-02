@@ -1,9 +1,11 @@
 # Borg production-ready prioritized todo — current truth after PR45
 
+**Historical/internal — not current product documentation.** This artifact preserved the 2026-05-31 post-PR45 state. Current public truth for the 2026-06-02 `agent-borg==3.3.16` release branch lives in `README.md`, `docs/READINESS.md`, `docs/CHANNELS_AND_INSTALL_METHODS.md`, generated go/no-go reports, and the final PR/release proof.
+
 **Date:** 2026-05-31  
 **Canonical repo:** `https://github.com/borg-farther/Borg-Directory`  
 **Current source head verified:** `bd68c95733f545cc7a3cfd2700fb98734a4d3e91`  
-**Current source version:** `agent-borg==3.3.15`  
+**Source version at generation:** `agent-borg==3.3.15` (superseded; current release branch targets `agent-borg==3.3.16`)
 **Current rollout verdict:** **NO-GO for controlled first-10, public self-serve, served/remote MCP, 100-user rollout, and measured external lift**  
 **Current cap:** `0` real users
 

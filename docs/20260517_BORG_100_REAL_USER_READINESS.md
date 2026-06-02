@@ -1,6 +1,6 @@
 # Borg 100 real-user readiness
 
-Generated: 2026-06-02T00:05:45.514351+00:00
+Generated: 2026-06-02T10:03:26.524492+00:00
 
 100 real-user verdict: **NO-GO**
 Max recommended real users now: **0**
@@ -15,7 +15,7 @@ Real-user rollout requires first-10 external evidence before expanding to 100.
 - ready_for_10_controlled_beta: `False`
 - release_controls_ready: `False`
 - served_runtime_fresh: `False`
-- release_governance_ready: `False`
+- release_governance_ready: `True`
 - self_service_ops_ready: `True`
 - ops_readiness_watchdog_ready: `True`
 - infrastructure_ready_for_100: `False`
@@ -34,10 +34,11 @@ Real-user rollout requires first-10 external evidence before expanding to 100.
 ## Blockers
 
 - PyPI latest/fresh-install package evidence is not green: same-version PyPI upload predates current source revision
-- served runtime borg_version '3.3.14' != source version '3.3.15'
+- PyPI latest/fresh-install package evidence is not green: fresh install + MCP stdio canary is not green
+- served runtime borg_version '3.3.14' != source version '3.3.16'
+- served runtime source_version '3.3.15' != source version '3.3.16'
 - served runtime version_matches_source is not true
 - served runtime reload_status is not loaded_code_matches_source_behavior
-- release governance live check failed: HTTP Error 403: rate limit exceeded
 - first-10 external-user evidence has not passed: verified=0/10, real_users=0/10, installs=0/8, useful=0/6, critical_incidents=0/0
 
 ## Required action to unlock 100 real users

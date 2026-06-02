@@ -15,6 +15,8 @@ from __future__ import annotations
 import argparse
 import json
 import os
+import shutil
+import subprocess
 import urllib.error
 import urllib.parse
 import urllib.request
@@ -198,19 +200,85 @@ def evaluate_branch_payload(
     }
 
 
+def _github_env_token_candidates() -> list[str]:
+    """Return environment token candidates without logging or persisting secrets."""
+    candidates: list[str] = []
+    for name in ("GITHUB_TOKEN", "GH_TOKEN"):
+        token = os.environ.get(name)
+        if token and token not in candidates:
+            candidates.append(token)
+    return candidates
+
+
+def _github_cli_token_candidate() -> str | None:
+    """Return the gh CLI stored token without letting stale env tokens override it.
+
+    CI normally provides `GITHUB_TOKEN`. Local operator shells often only have
+    `gh` authenticated, while a stale exported `GITHUB_TOKEN` can produce 401s.
+    GitHub CLI itself honors those env vars, so sanitize them before asking for
+    the stored operator token. The token is never printed or persisted.
+    """
+    if shutil.which("gh"):
+        try:
+            clean_env = {key: value for key, value in os.environ.items() if key not in {"GITHUB_TOKEN", "GH_TOKEN"}}
+            proc = subprocess.run(
+                ["gh", "auth", "token"],
+                check=False,
+                capture_output=True,
+                env=clean_env,
+                text=True,
+                timeout=10,
+            )
+            token = proc.stdout.strip() if proc.returncode == 0 else ""
+            return token or None
+        except (OSError, subprocess.SubprocessError):
+            return None
+    return None
+
+
 def _github_get_json(path: str) -> dict[str, Any]:
     url = f"https://api.github.com/{path.lstrip('/')}"
-    headers = {
+    base_headers = {
         "Accept": "application/vnd.github+json",
         "User-Agent": "borg-release-governance-gate",
         "X-GitHub-Api-Version": "2022-11-28",
     }
-    token = os.environ.get("GITHUB_TOKEN") or os.environ.get("GH_TOKEN")
-    if token:
+    last_unauthorized: urllib.error.HTTPError | None = None
+    attempted_tokens = set()
+    for token in _github_env_token_candidates():
+        headers = dict(base_headers)
         headers["Authorization"] = f"Bearer {token}"
-    request = urllib.request.Request(url, headers=headers)
-    with urllib.request.urlopen(request, timeout=20) as response:  # nosec B310 - fixed GitHub API host
-        return json.loads(response.read().decode("utf-8"))
+        attempted_tokens.add(token)
+        request = urllib.request.Request(url, headers=headers)
+        try:
+            with urllib.request.urlopen(request, timeout=20) as response:  # nosec B310 - fixed GitHub API host
+                return json.loads(response.read().decode("utf-8"))
+        except urllib.error.HTTPError as exc:
+            if exc.code == 401:
+                last_unauthorized = exc
+                continue
+            raise
+    gh_token = _github_cli_token_candidate()
+    if gh_token and gh_token not in attempted_tokens:
+        headers = dict(base_headers)
+        headers["Authorization"] = f"Bearer {gh_token}"
+        request = urllib.request.Request(url, headers=headers)
+        try:
+            with urllib.request.urlopen(request, timeout=20) as response:  # nosec B310 - fixed GitHub API host
+                return json.loads(response.read().decode("utf-8"))
+        except urllib.error.HTTPError as exc:
+            if exc.code == 401:
+                last_unauthorized = exc
+            else:
+                raise
+    request = urllib.request.Request(url, headers=dict(base_headers))
+    try:
+        with urllib.request.urlopen(request, timeout=20) as response:  # nosec B310 - fixed GitHub API host
+            return json.loads(response.read().decode("utf-8"))
+    except urllib.error.HTTPError as exc:
+        if exc.code == 401 and last_unauthorized is not None:
+            raise last_unauthorized
+        raise
 
 
 def fetch_branch_payload(repo: str, branch: str) -> dict[str, Any]:

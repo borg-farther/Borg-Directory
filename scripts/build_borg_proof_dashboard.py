@@ -451,7 +451,11 @@ def build_model() -> dict:
     elif pypi_package_current:
         first_tester_action = f"Do not invite controlled first-10 testers yet: `agent-borg=={pypi_fresh_version or pv or 'CURRENT_VERSION'}` PyPI/fresh-install proof is green, but {', '.join(controlled_beta_missing or ['release/ops gates'])} must pass first."
     else:
-        first_tester_action = f"Do not invite controlled first-10 testers yet: publish a new immutable `agent-borg` version after `{pv or 'CURRENT_VERSION'}`, then require PyPI latest metadata, fresh-install, stdio MCP, served-runtime, release-governance, ops, and watchdog gates to pass before using that exact version with testers."
+        target_version = pv or "CURRENT_VERSION"
+        if pypi_latest_current is True and pypi_fresh_version == pv:
+            first_tester_action = f"Do not invite controlled first-10 testers yet: rerun or fix the fresh-install + stdio MCP canary for immutable `agent-borg=={target_version}`; if the published artifact itself is wrong, bump and publish a new immutable version after `{target_version}`. Served-runtime, release-governance, ops, and watchdog gates must also pass before tester use."
+        else:
+            first_tester_action = f"Do not invite controlled first-10 testers yet: publish immutable `agent-borg=={target_version}`, then require PyPI latest metadata, fresh-install, stdio MCP, served-runtime, release-governance, ops, and watchdog gates to pass before using that exact version with testers."
     next_actions = [
         first_tester_action,
         "Create a fresh-PyPI runbook: install package, run borg --version, configure MCP, run one rescue, capture exact timestamps and blockers.",

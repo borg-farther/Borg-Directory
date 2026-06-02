@@ -7,7 +7,7 @@ Historical/internal — not current product documentation. This closeout records
 - Source/hardening branch proof stack: **GREEN**.
 - Published package proof: **HISTORICAL ONLY** for the earlier local package/stdio evidence; current public status is red until a new immutable version is published after the current source revision and freshly canaried.
 - Served/Hermes MCP runtime: **NO-GO** until operator-supervised runtime cutover proves loaded code matches source/package.
-- Controlled first-10 beta: **NO-GO** while package provenance, served runtime freshness, release governance, and first-10 evidence are red.
+- Controlled first-10 beta: **NO-GO** while any required package, served-runtime, release-governance, ops/watchdog, proof-dashboard, or first-10 evidence gate is red.
 - Broad public self-serve: **NO-GO** until served runtime, release governance, ops/watchdog, docs, and row-derived first-10 external evidence all pass.
 - 100 real users: **NO-GO** until first-10 evidence passes and rollout gate advances.
 
@@ -151,15 +151,15 @@ real_user_rollout: ready_for_10_controlled_beta=false, ready_for_100_real_users=
 ops_readiness_watchdog: passed=true while preserving NO-GO public/controlled rollout state
 ```
 
-## Current machine-readiness blockers
+## Historical machine-readiness blockers from this 2026-05-31 snapshot
 
-These are still real and must not be papered over by local/source tests:
+These were real at snapshot time and must not be confused with current release-branch truth:
 
-1. `served runtime borg_version '3.3.14' != source version '3.3.15'`
-2. `served runtime version_matches_source is not true`
-3. `served runtime reload_status is not loaded_code_matches_source_behavior`
-4. `main branch is not protected`
-5. `first-10 external-user evidence has not passed: verified=0/10, real_users=0/10, installs=0/8, useful=0/6, critical_incidents=0/0`
+1. Served runtime did not match the then-current source version.
+2. Served runtime `version_matches_source` was not true.
+3. Served runtime `reload_status` required reload or patch proof.
+4. GitHub `main` release-governance proof had not yet passed in this snapshot.
+5. First-10 external-user evidence had not passed: `verified=0/10`, `real_users=0/10`, `installs=0/8`, `useful=0/6`, `critical_incidents=0/0`.
 
 ## Snapshot-derived status
 
@@ -167,7 +167,7 @@ These are still real and must not be papered over by local/source tests:
 - `ops_readiness_watchdog.passed=true`
 - `self_service_ops_gate.passed=true`
 - `served_runtime_freshness_gate=FAIL`
-- `release_governance_gate=FAIL`
+- `release_governance_gate=FAIL` in this historical snapshot; current release-branch proof must be read from the regenerated release-governance snapshot/dashboard.
 - `verified_external_users=0`
 - `max_recommended_real_users_now=0`
 - `docs/public/status.json.state="NO-GO public self-serve; source/local release-candidate only"`
@@ -175,7 +175,7 @@ These are still real and must not be papered over by local/source tests:
 ## Remaining uncertainties / operator actions
 
 - Served runtime cutover requires operator-supervised reload/cutover proof. Agents must not restart, kill, or signal Hermes/gateway processes.
-- Branch protection must be enabled/verified on GitHub `main` with required checks/CODEOWNERS policy as appropriate.
+- Branch protection must stay verified on GitHub `main` with required checks/CODEOWNERS policy as appropriate.
 - First-10 evidence must come from consented external-user rows; synthetic/load/internal proof does not count.
 - CI on any pushed PR/head SHA must still be checked separately; local proof does not prove GitHub Actions on the pushed commit.
 

@@ -74,10 +74,10 @@ CURRENT_CLAIM_DOCS = [
     Path("docs/20260517_BORG_100_REAL_USER_READINESS.md"),
     Path("docs/ROADMAP.md"),
     Path("docs/20260522_BORG_PRODUCTION_DAY_ONE_HARDENING_PLAN.md"),
-    Path("docs/20260531_BORG_PRODUCTION_READY_PRIORITIZED_TODO.md"),
     Path("docs/PUBLIC_SELF_SERVE_LAUNCH_GO_NO_GO.md"),
     Path("docs/VALUE_COMMUNICATION_DASHBOARD.md"),
     Path("docs/VALUE_COMMUNICATION_DASHBOARD.html"),
+    Path("docs/landing-page/index.html"),
     Path("docs/SELF_SERVICE_OPS_READINESS.md"),
     Path("docs/SELF_SERVICE_OPS_READINESS_REPORT.md"),
     Path("docs/FIRST_10_EVIDENCE_INTAKE.md"),
@@ -97,9 +97,19 @@ CURRENT_CLAIM_DOCS = [
     Path("docs/TRUST_AND_PROMOTION.md"),
     Path("docs/REVOCATION_AND_DELETION.md"),
     Path("docs/LEARNING_ATOM_SCHEMA.md"),
+    Path("deploy/docker/Dockerfile.borg"),
     Path("deploy/smithery/smithery.yaml"),
     Path("eval/borg_proof_dashboard.json"),
 ]
+
+HISTORICAL_OPERATOR_DOCS = {
+    Path("docs/20260528_BORG_PRODUCTION_READY_FINAL_TODO.md"),
+    Path("docs/20260531_BORG_EVAL_LOOP_OUTSTANDING_WORK.md"),
+    Path("docs/20260531_BORG_HARDENING_PROOF_CLOSEOUT.md"),
+    Path("docs/20260531_BORG_PRODUCTION_INVENTORY_BOARD.md"),
+    Path("docs/20260531_BORG_PRODUCTION_READY_PRIORITIZED_TODO.md"),
+    Path("docs/20260601_AGENT_BORG_3_3_16_IMMUTABLE_RELEASE_PACKET.md"),
+}
 
 UNSUPPORTED_WHEN_BLOCKED = [
     (re.compile(r"(?i)public\s+self[- ]serve\s+launch\s*[:\-]\s*(?:\*\*)?\s*(go|yes|ship|ready|approved)\b"), "public self-serve launch GO/ready claim"),
@@ -416,6 +426,48 @@ def _line_names_post_package_blocker(line_text: str) -> bool:
     return any(term in lower for term in release_control_terms)
 
 
+def _historical_operator_doc(text: str) -> bool:
+    """Return true for retained planning/proof artifacts that are not current setup docs."""
+    header = text[:700].lower()
+    return "historical/internal" in header or "not current product documentation" in header
+
+
+def _honest_stale_agent_borg_reference(text: str, match: re.Match[str], expected_version: str) -> bool:
+    """Allow current docs to name the stale PyPI version when they label it stale.
+
+    During a pre-publish release branch the source version is intentionally ahead
+    of PyPI. Current public surfaces must be allowed to say "3.3.15 is published
+    but stale; this branch targets 3.3.16" while still rejecting stale install
+    commands that would send users to the old package.
+    """
+    line_start = text.rfind("\n", 0, match.start()) + 1
+    line_end = text.find("\n", match.end())
+    if line_end == -1:
+        line_end = len(text)
+    line = text[line_start:line_end]
+    lower_line = line.lower()
+    stale_version = re.escape(match.group("version"))
+    install_pattern = re.compile(
+        rf"(?i)\b(?:pipx|pip3?|uv\s+tool|uv\s+pip|python3?\s+-m\s+pip|/[^\s]+/python\s+-m\s+pip)\b[^\n;|&]*\b(?:install|add)\b[^\n;|&]*\bagent-borg=={stale_version}\b"
+    )
+    if install_pattern.search(line):
+        return False
+    truth_terms = [
+        "stale",
+        "not current",
+        "predates",
+        "proof is red",
+        "proof is stale",
+        "not proven current",
+        "superseded",
+    ]
+    target_terms = [
+        f"agent-borg=={expected_version}",
+        f"`{expected_version}`",
+    ]
+    return any(term in lower_line for term in truth_terms) and any(term.lower() in lower_line for term in target_terms)
+
+
 def docs_claim_guard(
     paths: list[Path],
     expected_version: str,
@@ -432,8 +484,20 @@ def docs_claim_guard(
         text = path.read_text(encoding="utf-8", errors="replace")
         checked.append(str(rel))
 
+        is_historical = _historical_operator_doc(text)
+        if is_historical and rel in HISTORICAL_OPERATOR_DOCS:
+            continue
+        if is_historical and rel not in HISTORICAL_OPERATOR_DOCS:
+            violations.append({
+                "path": str(rel),
+                "kind": "current claim doc marked historical",
+                "detail": "historical/internal banner cannot bypass current public docs claim guards",
+            })
+
         for match in re.finditer(r"agent-borg==(?P<version>\d+\.\d+\.\d+)", text):
             if match.group("version") != expected_version:
+                if not package_evidence_ready and _honest_stale_agent_borg_reference(text, match, expected_version):
+                    continue
                 violations.append({
                     "path": str(rel),
                     "kind": "stale agent-borg pin",

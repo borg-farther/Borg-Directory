@@ -1,8 +1,8 @@
 # Borg production/day-one hardening plan
 
 Generated: 2026-05-22T09:57:48Z
-Branch: `production-readiness-hardening-20260522`
-Repo path: `/root/hermes-workspace/borg-firewall-fix`
+Current release branch: `release/agent-borg-3.3.16-20260602`
+Repo path: `/root/hermes-workspace/borg`
 
 ## Executive verdict
 
@@ -14,8 +14,8 @@ That nucleus is the day-one value path. Everything else is gated by evidence.
 
 ## Release-state split
 
-- Controlled supervised first-user path: **CONDITIONAL GO while package fresh-install gates remain green for the current release**.
-- Controlled first-10 beta: **NO-GO right now** while served-runtime freshness and release-governance gates are red; package/fresh-install/stdio MCP canaries are necessary but not sufficient.
+- Controlled supervised first-user path: **NO-GO until `agent-borg==3.3.16` package fresh-install gates are green for the current release**.
+- Controlled first-10 beta: **NO-GO right now** while package freshness, served-runtime freshness, ops/watchdog, and proof-dashboard gates remain incomplete; package/fresh-install/stdio MCP canaries are necessary but not sufficient.
 - Public self-serve launch: **NO-GO until first-10 external-user scoreboard passes**.
 - Served remote MCP: **NO-GO until live served runtime path and behavior match audited source**.
 - 100 real users: **NO-GO until first-10 evidence passes the 8/6/0 threshold**.
@@ -37,8 +37,8 @@ That nucleus is the day-one value path. Everything else is gated by evidence.
    - Permanent rule: do not synthesize or backfill fake rows.
 
 2. **Served MCP split-brain**
-   - Audited source path: `/root/hermes-workspace/borg-firewall-fix`.
-   - Served runtime reported a different path under `/root/hermes-workspace/borg`.
+   - Audited source path: `/root/hermes-workspace/borg`.
+   - Served runtime currently reports stale loaded package/source versions and a long-lived Hermes process context; source-path agreement alone is not enough.
    - Permanent rule: source tests do not prove live served MCP readiness; live canary + runtime fingerprint must pass after operator-approved runtime cutover.
 
 3. **Public launch claim discipline**
@@ -117,7 +117,7 @@ Fresh install proof, local branch only and no publish:
 
 ```bash
 python -m venv /tmp/borg-day-one-proof
-PYTHONPATH= /tmp/borg-day-one-proof/bin/python -m pip install --no-cache-dir /root/hermes-workspace/borg-firewall-fix
+PYTHONPATH= /tmp/borg-day-one-proof/bin/python -m pip install --no-cache-dir /root/hermes-workspace/borg
 cd /tmp
 PYTHONPATH= /tmp/borg-day-one-proof/bin/borg --version
 PYTHONPATH= /tmp/borg-day-one-proof/bin/borg rescue "ModuleNotFoundError: No module named flask" --short

@@ -77,6 +77,13 @@ def test_runtime_distribution_drafts_do_not_pin_stale_borg_versions() -> None:
     stale_pins = [pin for pin in re.findall(r"agent-borg==([0-9]+\.[0-9]+\.[0-9]+)", dockerfile) if pin != current_version]
     assert stale_pins == []
     assert 'borg --version | grep -q "${BORG_VERSION}"' in dockerfile
+    assert 'borg --version | grep -q "${BORG_VERSION}";' in dockerfile
+    bad_fail_open_healthcheck = '&& borg --version | grep -q "${BORG_VERSION}" \\\\n    && gh auth status > /dev/null 2>&1 || true'
+    assert bad_fail_open_healthcheck not in dockerfile
+
+    dockerignore = read(".dockerignore")
+    for ignored in [".git/", ".venv/", "venv/", "dist/", "build/", ".ruff_cache/", ".mypy_cache/", ".pytest_cache/"]:
+        assert ignored in dockerignore
 
     smithery = read("deploy/smithery/smithery.yaml")
     assert 'serverCommand: "borg-mcp"' in smithery
@@ -148,9 +155,9 @@ def test_current_docs_preserve_same_version_artifact_drift_truth() -> None:
     assert "package proof is red until a new immutable version is published" in watched["README.md"]
     assert "Broad public self-serve launch, 100-user rollout, served/remote MCP, and measured external lift are **not claimed**" in watched["README.md"]
     assert "Controlled first-10 beta: **NO-GO right now**" in watched["docs/READINESS.md"]
-    assert "package proof is stale until a new immutable version" in watched["docs/READINESS.md"]
+    assert "package proof is stale until `agent-borg==3.3.16` is published" in watched["docs/READINESS.md"]
     assert "served runtime fingerprint is stale" in watched["docs/READINESS.md"]
-    assert "GitHub `main` is unprotected" in watched["docs/READINESS.md"]
+    assert "GitHub `main` release governance is enforced" in watched["docs/READINESS.md"]
     assert "Public self-serve launch: **NO-GO until first-10 external-user evidence passes**" in watched["docs/READINESS.md"]
     assert "Controlled first-10 beta infrastructure: **NO-GO**" in watched["docs/PUBLIC_SELF_SERVE_LAUNCH_GO_NO_GO.md"]
 
@@ -259,12 +266,14 @@ def test_final_production_ready_todo_preserves_hard_gate_boundaries() -> None:
     todo = read("docs/20260528_BORG_PRODUCTION_READY_FINAL_TODO.md")
     required = [
         "same-version artifact is stale relative to the current source revision",
-        "Controlled first-10 beta is currently **NO-GO**",
-        "package provenance and release controls are red",
+        "Package proof is red until a new immutable version is published and freshly canaried",
+        "Controlled first-10 beta:** NO-GO right now",
+        "stale served runtime",
         "Broad public self-serve remains **NO-GO**",
         "100-real-user rollout remains **NO-GO**",
         "Published PyPI latest observed:** `agent-borg==3.3.15`",
         "Publish a new immutable post-hardening package version and keep the proof chain synchronized",
+        "`pipx install agent-borg==3.3.16` or isolated `pip install agent-borg==3.3.16`",
         "Generated rules / OpenClaw path",
         "Served/remote MCP production channel",
         "NO-GO until the actual served process is fingerprinted",
@@ -349,8 +358,6 @@ def test_non_current_public_docs_are_bannered_or_operator_scoped() -> None:
         "20260526-2046_REMOTE_FEDERATED_LEARNING_GO_PROOF.md",
         "20260526-2115_FEDERATED_LEARNING_OPTIMALITY_AUDIT.md",
         "20260526-2230_MAX_VALUE_COLLECTIVE_INTELLIGENCE_LOOP.md",
-        "20260528_BORG_PRODUCTION_READY_FINAL_TODO.md",
-        "20260531_BORG_PRODUCTION_READY_PRIORITIZED_TODO.md",
         "20260531_BORG_PRODUCTION_INVENTORY_BOARD.md",
     }
     docs = ROOT / "docs"

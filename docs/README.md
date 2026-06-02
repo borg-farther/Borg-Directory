@@ -19,7 +19,7 @@ belong under [`archive/`](archive/) and are not current product claims.
 - [`READINESS.md`](READINESS.md) — current readiness status and honest launch boundary
 - [`ROADMAP.md`](ROADMAP.md) — current roadmap and intentionally-not-claimed boundaries
 - [`20260522_BORG_PRODUCTION_DAY_ONE_HARDENING_PLAN.md`](20260522_BORG_PRODUCTION_DAY_ONE_HARDENING_PLAN.md) — hard-gated production/day-one hardening plan and proof checklist
-- [`20260531_BORG_PRODUCTION_READY_PRIORITIZED_TODO.md`](20260531_BORG_PRODUCTION_READY_PRIORITIZED_TODO.md) — current prioritized production-ready todo after PR45, with evidence ledger, approval boundaries, disproof gates, and final reflection
+
 - [`20260526-1302_OPTIMAL_SAFE_COLLECTIVE_LEARNING_LOOP.md`](20260526-1302_OPTIMAL_SAFE_COLLECTIVE_LEARNING_LOOP.md) — optimal safe collective learning loop, gates, current GO/NO-GO, and verification evidence
 - [`20260526-2046_REMOTE_FEDERATED_LEARNING_GO_PROOF.md`](20260526-2046_REMOTE_FEDERATED_LEARNING_GO_PROOF.md) — remote signed-registry protocol GO proof, explicitly not public launch or utility-lift proof
 - [`20260526-2115_FEDERATED_LEARNING_OPTIMALITY_AUDIT.md`](20260526-2115_FEDERATED_LEARNING_OPTIMALITY_AUDIT.md) — blunt optimality audit: protocol GO, internal loop primitives GO, Google-tier product impact NO-GO
@@ -32,6 +32,7 @@ belong under [`archive/`](archive/) and are not current product claims.
 - [`20260517_BORG_100_REAL_USER_READINESS.md`](20260517_BORG_100_REAL_USER_READINESS.md) — 100-real-user rollout gate: currently blocked by first-10 external-user evidence
 - [`PUBLIC_SELF_SERVE_LAUNCH_GO_NO_GO.md`](PUBLIC_SELF_SERVE_LAUNCH_GO_NO_GO.md) — canonical public self-serve launch gate output
 - [`BORG_PROOF_DASHBOARD.md`](BORG_PROOF_DASHBOARD.md) — generated proof dashboard with provenance and anti-hype labels
+- [`20260531_BORG_PRODUCTION_INVENTORY_BOARD.md`](20260531_BORG_PRODUCTION_INVENTORY_BOARD.md) — generated production inventory board with current proof lanes and blockers
 - [`VALUE_COMMUNICATION_DASHBOARD.md`](VALUE_COMMUNICATION_DASHBOARD.md) — value communication dashboard with verified-vs-unproven labels
 - [`../eval/public_self_serve_launch_gate_snapshot.json`](../eval/public_self_serve_launch_gate_snapshot.json) — machine-readable public self-serve launch gate snapshot
 - [`SECURITY_HARDENING_BASELINE.md`](SECURITY_HARDENING_BASELINE.md) — security gate summary
@@ -46,6 +47,7 @@ belong under [`archive/`](archive/) and are not current product claims.
 
 - [`20260522_PUBLIC_PRESENTATION_AUDIT.md`](20260522_PUBLIC_PRESENTATION_AUDIT.md) — historical public GitHub presentation audit
 - [`20260522_BORG_3310_RELEASE_PREFLIGHT_PUBLISHED.md`](20260522_BORG_3310_RELEASE_PREFLIGHT_PUBLISHED.md) — historical PyPI 3.3.10 release proof
+- [`20260531_BORG_PRODUCTION_READY_PRIORITIZED_TODO.md`](20260531_BORG_PRODUCTION_READY_PRIORITIZED_TODO.md) — historical/internal prioritized todo snapshot retained for provenance; not current product documentation
 
 ## Archive
 
@@ -61,7 +63,7 @@ They are retained for provenance, but they are not current product claims or fir
 
 ## Current truth
 
-- Controlled first-10 public-package beta: NO-GO right now. `agent-borg==3.3.15` is published, but package proof is stale until a new immutable version is published and freshly canaried; served-runtime freshness and release-governance gates are also red. Cap is 0 until package provenance, release controls, ops/watchdog, and proof dashboards are all green.
+- Controlled first-10 public-package beta: NO-GO right now. `agent-borg==3.3.15` is published, but package proof is stale until the next immutable version, `agent-borg==3.3.16`, is published and freshly canaried; served-runtime freshness and first-10 external-user evidence remain blockers. GitHub `main` release governance is enforced. Cap is 0 until package provenance, runtime/ops/watchdog, and proof dashboards are all green.
 - Public self-serve launch: not yet; requires real external-user evidence.
 - Agent-level success lift at statistical confidence: not yet proven.
 - Internal max-value collective intelligence loop primitives: GO; external lift still requires first-10 rows.

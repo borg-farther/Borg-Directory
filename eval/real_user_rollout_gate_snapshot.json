@@ -1,10 +1,11 @@
 {
   "blockers": [
     "PyPI latest/fresh-install package evidence is not green: same-version PyPI upload predates current source revision",
-    "served runtime borg_version '3.3.14' != source version '3.3.15'",
+    "PyPI latest/fresh-install package evidence is not green: fresh install + MCP stdio canary is not green",
+    "served runtime borg_version '3.3.14' != source version '3.3.16'",
+    "served runtime source_version '3.3.15' != source version '3.3.16'",
     "served runtime version_matches_source is not true",
     "served runtime reload_status is not loaded_code_matches_source_behavior",
-    "release governance live check failed: HTTP Error 403: rate limit exceeded",
     "first-10 external-user evidence has not passed: verified=0/10, real_users=0/10, installs=0/8, useful=0/6, critical_incidents=0/0"
   ],
   "first_10_external_evidence": {
@@ -38,12 +39,12 @@
     "exists": true,
     "failed_count": 0,
     "failures": [],
-    "generated_at_utc": "2026-05-30T19:28:30Z",
+    "generated_at_utc": "2026-06-02T10:01:26Z",
     "passed": true,
     "passed_count": 28
   },
   "gate_type": "real_user_rollout",
-  "generated_at_utc": "2026-06-02T00:05:45.514351+00:00",
+  "generated_at_utc": "2026-06-02T10:03:26.524492+00:00",
   "important_distinction": "load/readiness snapshots are synthetic/logical users; this gate controls real external-user rollout",
   "infrastructure_ready_for_100": false,
   "load_gates": {
@@ -51,11 +52,11 @@
       "duration_seconds": 30.0,
       "exists": true,
       "latency_ms": {
-        "avg": 0.5871485158298658,
-        "max": 4.4167679734528065,
-        "p50": 0.5916894879192114,
-        "p95": 0.7141415262594819,
-        "p99": 0.7846186403185129
+        "avg": 0.5503902532524503,
+        "max": 5.824899300932884,
+        "p50": 0.5340096540749073,
+        "p95": 0.7009429158642886,
+        "p99": 0.7570860907435419
       },
       "passed": true,
       "success_rate": 1.0,
@@ -65,11 +66,11 @@
       "duration_seconds": 30.0,
       "exists": true,
       "latency_ms": {
-        "avg": 0.7248919789759264,
-        "max": 57.36087867990136,
-        "p50": 0.6524496711790562,
-        "p95": 0.9827278554439545,
-        "p99": 3.343379381112749
+        "avg": 0.5394486826790642,
+        "max": 1.7737289890646935,
+        "p50": 0.5221501924097538,
+        "p95": 0.693068839609623,
+        "p99": 0.7233379036188128
       },
       "passed": true,
       "success_rate": 1.0,
@@ -81,16 +82,17 @@
   "no_fake_user_policy": "Do not mark first-10 complete or 100-real-user ready without consented external evidence rows.",
   "public_package_gate": {
     "blockers": [
-      "PyPI latest/fresh-install package evidence is not green: same-version PyPI upload predates current source revision"
+      "PyPI latest/fresh-install package evidence is not green: same-version PyPI upload predates current source revision",
+      "PyPI latest/fresh-install package evidence is not green: fresh install + MCP stdio canary is not green"
     ],
     "passed": false,
     "pypi_fresh_install_and_mcp_stdio": {
       "exists": true,
-      "expected_version": "3.3.15",
+      "expected_version": "3.3.16",
       "failed_count": 0,
       "failures": [],
       "freshness": {
-        "age_hours": 0.01317927138888889,
+        "age_hours": 9.974268363055556,
         "failure_kind": null,
         "max_age_hours": 24.0,
         "passed": true
@@ -101,14 +103,14 @@
         "version": "3.3.15"
       },
       "mcp_stdio_canary_passed": true,
-      "passed": true,
+      "passed": false,
       "path": "eval/pypi_fresh_install_snapshot.json",
       "version": "3.3.15"
     },
     "pypi_latest": {
       "banned_keywords_present": [],
       "expected_summary": "Failure memory CLI and MCP server for AI coding agents",
-      "expected_version": "3.3.15",
+      "expected_version": "3.3.16",
       "keyword_missing": false,
       "keywords": [
         "agent-tools",
@@ -156,8 +158,8 @@
         "oldest_release_upload_time_utc": "2026-05-28T17:50:29.231332+00:00",
         "passed": false,
         "release_file_count": 2,
-        "source_commit_time_utc": "2026-06-02T00:02:20+00:00",
-        "source_revision": "8a12952126e4f6a76a826d1f66a9114b9f3cd1f8+dirty",
+        "source_commit_time_utc": "2026-06-02T00:05:47+00:00",
+        "source_revision": "a735641a1101a46668939ea4061b5e5189165cec+dirty",
         "stale_release_files": [
           "agent_borg-3.3.15-py3-none-any.whl",
           "agent_borg-3.3.15.tar.gz"
@@ -173,28 +175,63 @@
   "ready_for_10_controlled_beta": false,
   "release_controls_gate": {
     "blockers": [
-      "served runtime borg_version '3.3.14' != source version '3.3.15'",
+      "served runtime borg_version '3.3.14' != source version '3.3.16'",
+      "served runtime source_version '3.3.15' != source version '3.3.16'",
       "served runtime version_matches_source is not true",
-      "served runtime reload_status is not loaded_code_matches_source_behavior",
-      "release governance live check failed: HTTP Error 403: rate limit exceeded"
+      "served runtime reload_status is not loaded_code_matches_source_behavior"
     ],
     "passed": false,
     "release_governance": {
-      "blockers": [
-        "release governance live check failed: HTTP Error 403: rate limit exceeded"
+      "allow_deletions": false,
+      "allow_force_pushes": false,
+      "blockers": [],
+      "bypass_allowances": [],
+      "codeowners_error_count": 0,
+      "codeowners_errors": [],
+      "codeowners_errors_checked": true,
+      "codeowners_review_required": true,
+      "dismiss_stale_reviews": true,
+      "enforce_admins": true,
+      "passed": true,
+      "protected": true,
+      "require_last_push_approval": true,
+      "required_approving_review_count": 1,
+      "required_checks_expected": [
+        "test (3.10)",
+        "test (3.11)",
+        "test (3.12)",
+        "dependency-audit",
+        "policy-check",
+        "secret-scan",
+        "static-security",
+        "ops-readiness-watchdog",
+        "old-account-reference"
       ],
-      "passed": false,
+      "required_checks_observed": [
+        "dependency-audit",
+        "old-account-reference",
+        "ops-readiness-watchdog",
+        "policy-check",
+        "secret-scan",
+        "static-security",
+        "test (3.10)",
+        "test (3.11)",
+        "test (3.12)"
+      ],
+      "required_conversation_resolution": true,
       "schema_version": 1,
       "snapshot": "eval/release_governance_snapshot.json",
-      "source": "github_api"
+      "source": "github_api",
+      "strict_required_status_checks": true
     },
     "served_runtime_freshness": {
       "blockers": [
-        "served runtime borg_version '3.3.14' != source version '3.3.15'",
+        "served runtime borg_version '3.3.14' != source version '3.3.16'",
+        "served runtime source_version '3.3.15' != source version '3.3.16'",
         "served runtime version_matches_source is not true",
         "served runtime reload_status is not loaded_code_matches_source_behavior"
       ],
-      "expected_version": "3.3.15",
+      "expected_version": "3.3.16",
       "passed": false,
       "schema_version": 1,
       "snapshot": "eval/served_runtime_fingerprint_snapshot.json",
@@ -223,10 +260,10 @@
   },
   "self_service_ops_gate": {
     "blockers": [],
-    "generated_at_utc": "2026-06-02T00:05:45.514032+00:00",
+    "generated_at_utc": "2026-06-02T10:03:26.524180+00:00",
     "ops_readiness_watchdog": {
       "blockers": [],
-      "generated_at_utc": "2026-06-02T00:05:44.893574+00:00",
+      "generated_at_utc": "2026-06-02T08:15:32.735089+00:00",
       "passed": true,
       "snapshot": "eval/ops_readiness_watchdog_snapshot.json",
       "truth_policy": "Watchdog passing means controlled first-10 ops proof is fresh and internally consistent. Broad public self-serve still requires row-derived first-10 external-user evidence."
@@ -237,7 +274,7 @@
   },
   "version": {
     "passed": true,
-    "project_version": "3.3.15",
-    "runtime_version": "3.3.15"
+    "project_version": "3.3.16",
+    "runtime_version": "3.3.16"
   }
 }

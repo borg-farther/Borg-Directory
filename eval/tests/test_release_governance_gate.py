@@ -1,6 +1,8 @@
 from __future__ import annotations
 
 import json
+import urllib.error
+from email.message import Message
 
 from eval import release_governance_gate
 
@@ -49,11 +51,46 @@ def test_github_get_json_uses_token_when_available(monkeypatch) -> None:
         return _FakeGitHubResponse()
 
     monkeypatch.setenv("GITHUB_TOKEN", "test-token")
+    monkeypatch.setattr(
+        release_governance_gate.subprocess,
+        "run",
+        lambda *args, **kwargs: (_ for _ in ()).throw(AssertionError("gh auth token should be lazy")),
+    )
     monkeypatch.setattr(release_governance_gate.urllib.request, "urlopen", fake_urlopen)
 
     assert release_governance_gate._github_get_json("repos/borg-farther/Borg-Directory") == {"ok": True}
     assert captured["authorization"] == "Bearer test-token"
     assert captured["timeout"] == 20
+
+
+def test_github_get_json_retries_gh_token_after_stale_env_token(monkeypatch) -> None:
+    calls: list[str | None] = []
+    gh_env: dict[str, str] = {}
+
+    def fake_urlopen(request, timeout):
+        calls.append(request.get_header("Authorization"))
+        if len(calls) == 1:
+            raise urllib.error.HTTPError(request.full_url, 401, "bad credentials", hdrs=Message(), fp=None)
+        return _FakeGitHubResponse()
+
+    class FakeCompleted:
+        returncode = 0
+        stdout = "gh-token\n"
+
+    def fake_run(*args, **kwargs):
+        gh_env.update(kwargs.get("env") or {})
+        return FakeCompleted()
+
+    monkeypatch.setenv("GITHUB_TOKEN", "stale-env-token")
+    monkeypatch.delenv("GH_TOKEN", raising=False)
+    monkeypatch.setattr(release_governance_gate.shutil, "which", lambda name: "/usr/bin/gh" if name == "gh" else None)
+    monkeypatch.setattr(release_governance_gate.subprocess, "run", fake_run)
+    monkeypatch.setattr(release_governance_gate.urllib.request, "urlopen", fake_urlopen)
+
+    assert release_governance_gate._github_get_json("repos/borg-farther/Borg-Directory") == {"ok": True}
+    assert calls == ["Bearer stale-env-token", "Bearer gh-token"]
+    assert "GITHUB_TOKEN" not in gh_env
+    assert "GH_TOKEN" not in gh_env
 
 
 def test_release_governance_gate_fails_unprotected_main() -> None:

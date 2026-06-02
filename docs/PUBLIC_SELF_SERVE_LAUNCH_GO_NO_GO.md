@@ -1,7 +1,7 @@
 # Borg public self-serve launch go/no-go
 
-Generated: 2026-06-02T00:05:45.249054+00:00
-Source version: `3.3.15`
+Generated: 2026-06-02T10:01:29.408976+00:00
+Source version: `3.3.16`
 
 Public self-serve launch: **NO-GO**
 Controlled first-10 beta infrastructure: **NO-GO**
@@ -15,10 +15,10 @@ Public self-serve is GO only after PyPI/fresh-install/MCP/docs/cold-start-trust/
 
 - `first_user_release`: `PASS`
 - `pypi_latest`: `FAIL`
-- `pypi_fresh_install_and_mcp_stdio`: `PASS`
+- `pypi_fresh_install_and_mcp_stdio`: `FAIL`
 - `cold_start_trust_hardening`: `PASS`
 - `served_runtime_freshness`: `FAIL`
-- `release_governance`: `FAIL`
+- `release_governance`: `PASS`
 - `self_service_ops_readiness`: `PASS`
 - `ops_readiness_watchdog`: `PASS`
 - `docs_claim_guard`: `PASS`
@@ -28,10 +28,11 @@ Public self-serve is GO only after PyPI/fresh-install/MCP/docs/cold-start-trust/
 ## Blockers
 
 - PyPI latest metadata is stale: same-version release upload predates current source revision
-- served runtime borg_version '3.3.14' != source version '3.3.15'
+- PyPI fresh-install + MCP stdio canary snapshot is missing or failing
+- served runtime borg_version '3.3.14' != source version '3.3.16'
+- served runtime source_version '3.3.15' != source version '3.3.16'
 - served runtime version_matches_source is not true
 - served runtime reload_status is not loaded_code_matches_source_behavior
-- release governance live check failed: HTTP Error 403: rate limit exceeded
 - first-10 external-user evidence has not passed: verified=0/10, real_users=0/10, installs=0/8, useful=0/6, critical_incidents=0/0
 
 ## Evidence artifacts

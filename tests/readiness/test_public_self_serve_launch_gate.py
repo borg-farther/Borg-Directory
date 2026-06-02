@@ -486,6 +486,130 @@ def test_docs_claim_guard_allows_explicit_same_version_drift_blocker_before_cana
     assert result["violations"] == []
 
 
+def test_docs_claim_guard_allows_honest_stale_pypi_latest_before_next_release(tmp_path: Path, monkeypatch) -> None:
+    monkeypatch.setattr(gate, "ROOT", tmp_path)
+    doc = tmp_path / "README.md"
+    doc.write_text(
+        "`agent-borg==3.3.15` is published on PyPI, but that artifact is stale; "
+        "this branch targets `agent-borg==3.3.16`.\n",
+        encoding="utf-8",
+    )
+
+    result = gate.docs_claim_guard(
+        [Path("README.md")],
+        "3.3.16",
+        public_evidence_ready=False,
+        package_evidence_ready=False,
+    )
+
+    assert result["passed"] is True
+    assert result["violations"] == []
+
+
+def test_docs_claim_guard_blocks_stale_pypi_latest_after_package_evidence_is_green(tmp_path: Path, monkeypatch) -> None:
+    monkeypatch.setattr(gate, "ROOT", tmp_path)
+    doc = tmp_path / "README.md"
+    doc.write_text(
+        "`agent-borg==3.3.15` is published on PyPI, but that artifact is stale; "
+        "this branch targets `agent-borg==3.3.16`.\n",
+        encoding="utf-8",
+    )
+
+    result = gate.docs_claim_guard(
+        [Path("README.md")],
+        "3.3.16",
+        public_evidence_ready=False,
+        package_evidence_ready=True,
+    )
+
+    assert result["passed"] is False
+    assert any(v["kind"] == "stale agent-borg pin" for v in result["violations"])
+
+
+def test_docs_claim_guard_still_blocks_stale_install_command_before_next_release(tmp_path: Path, monkeypatch) -> None:
+    monkeypatch.setattr(gate, "ROOT", tmp_path)
+    doc = tmp_path / "README.md"
+    doc.write_text(
+        "`agent-borg==3.3.15` is published on PyPI, but that artifact is stale; "
+        "this branch targets `agent-borg==3.3.16`.\n"
+        "pipx install agent-borg==3.3.15\n",
+        encoding="utf-8",
+    )
+
+    result = gate.docs_claim_guard(
+        [Path("README.md")],
+        "3.3.16",
+        public_evidence_ready=False,
+        package_evidence_ready=False,
+    )
+
+    assert result["passed"] is False
+    assert any(v["kind"] == "stale agent-borg pin" for v in result["violations"])
+
+
+def test_docs_claim_guard_blocks_stale_install_commands_with_flags_and_alt_tools(tmp_path: Path, monkeypatch) -> None:
+    monkeypatch.setattr(gate, "ROOT", tmp_path)
+    doc = tmp_path / "README.md"
+    doc.write_text(
+        "`agent-borg==3.3.15` is published on PyPI, but that artifact is stale; "
+        "this branch targets `agent-borg==3.3.16`.\n"
+        "python -m pip install --upgrade --no-cache-dir agent-borg==3.3.15\n"
+        "uv tool install --force agent-borg==3.3.15\n",
+        encoding="utf-8",
+    )
+
+    result = gate.docs_claim_guard(
+        [Path("README.md")],
+        "3.3.16",
+        public_evidence_ready=False,
+        package_evidence_ready=False,
+    )
+
+    assert result["passed"] is False
+    assert [v["kind"] for v in result["violations"]].count("stale agent-borg pin") == 2
+
+
+def test_docs_claim_guard_requires_explicit_stale_label_for_old_package_reference(tmp_path: Path, monkeypatch) -> None:
+    monkeypatch.setattr(gate, "ROOT", tmp_path)
+    doc = tmp_path / "README.md"
+    doc.write_text(
+        "`agent-borg==3.3.15` is published on PyPI; this branch targets `agent-borg==3.3.16`.\n",
+        encoding="utf-8",
+    )
+
+    result = gate.docs_claim_guard(
+        [Path("README.md")],
+        "3.3.16",
+        public_evidence_ready=False,
+        package_evidence_ready=False,
+    )
+
+    assert result["passed"] is False
+    assert any(v["kind"] == "stale agent-borg pin" for v in result["violations"])
+
+
+def test_docs_claim_guard_does_not_allow_historical_banner_on_current_claim_doc(tmp_path: Path, monkeypatch) -> None:
+    monkeypatch.setattr(gate, "ROOT", tmp_path)
+    doc = tmp_path / "README.md"
+    doc.write_text(
+        "Historical/internal — not current product documentation.\n"
+        "pipx install agent-borg==3.3.15\n",
+        encoding="utf-8",
+    )
+
+    result = gate.docs_claim_guard(
+        [Path("README.md")],
+        "3.3.16",
+        public_evidence_ready=False,
+        package_evidence_ready=False,
+    )
+
+    kinds = {v["kind"] for v in result["violations"]}
+    assert result["passed"] is False
+    assert "current claim doc marked historical" in kinds
+    assert "stale agent-borg pin" in kinds
+
+
 def test_pypi_latest_check_requires_source_version_and_urls(monkeypatch) -> None:
     monkeypatch.setattr(
         gate,

@@ -179,7 +179,12 @@ def _served_runtime_status(snapshot: dict[str, Any], expected_version: str) -> d
 def _release_governance_status(snapshot: dict[str, Any]) -> dict[str, Any]:
     if snapshot.get("_missing") or snapshot.get("_parse_error"):
         return {"passed": False, "blockers": ["release governance snapshot missing or unreadable"]}
-    return release_governance_gate.evaluate_branch_payload(snapshot)
+    if "passed" in snapshot and ("required_checks_observed" in snapshot or "protected" in snapshot):
+        evaluated = dict(snapshot)
+        evaluated["passed"] = bool(snapshot.get("passed"))
+        evaluated["blockers"] = list(snapshot.get("blockers") or [])
+        return evaluated
+    return release_governance_gate.evaluate_branch_payload(snapshot, require_codeowners_validation=True)
 
 
 def _self_service_ops_status() -> dict[str, Any]:
@@ -228,6 +233,8 @@ def compile_inventory() -> dict[str, Any]:
     optimizer = _read_json("eval/pack_optimizer_gate_snapshot.json")
 
     package_path_green = bool(versions["source_versions_match"] and pypi_package_current and first_user["passed"])
+    governance_green = bool(release_governance.get("passed") is True)
+    served_runtime_green = bool(served_runtime.get("passed") is True)
     release_controls_green = bool(served_runtime.get("passed") is True and release_governance.get("passed") is True)
     ops_green = bool(self_service_ops.get("passed") is True and watchdog_pass and rollback_effective_pass)
     public_ready = bool(package_path_green and release_controls_green and cold_start_pass and ops_green and first10["passed"])
@@ -317,7 +324,7 @@ def compile_inventory() -> dict[str, Any]:
             evidence=["eval/release_governance_snapshot.json", "GitHub branch API payload for main"],
             done=[f"protected={release_governance.get('protected')}", f"observed checks={release_governance.get('required_checks_observed')}"] if release_governance else [],
             blockers=list(release_governance.get("blockers") or []),
-            outstanding=["enable branch protection", "require CI/security/watchdog/account-firewall checks", "require CODEOWNERS review"],
+            outstanding=["maintain release-governance snapshot freshness", "keep required CI/security/watchdog/account-firewall checks exact", "keep CODEOWNERS validation green"] if release_governance.get("passed") else ["enable branch protection", "require CI/security/watchdog/account-firewall checks", "require CODEOWNERS review"],
             challenge="Green local checks do not matter if main can bypass the release ritual.",
         ),
         _component(
@@ -424,7 +431,9 @@ def compile_inventory() -> dict[str, Any]:
             "marketplaces, remote MCP listings, and public distribution channels",
             STATUS_BLOCKED,
             evidence=["deploy/smithery/smithery.yaml", "docs/ROADMAP.md", "docs/20260528_BORG_PRODUCTION_READY_FINAL_TODO.md"],
-            blockers=["served remote MCP and release governance are not green", "no production hosted registry ops proof"],
+            blockers=([] if served_runtime_green else ["served remote MCP/runtime freshness is not green"])
+            + ([] if governance_green else ["release governance is not green"])
+            + ["no production hosted registry ops proof"],
             outstanding=["keep Smithery/local stdio draft honest", "remote HTTP auth/rate-limit/audit-redaction proof", "served-runtime fingerprint for the listed channel"],
             challenge="Distribution breadth is not value; premature listings multiply support and trust failures.",
         ),
@@ -444,15 +453,24 @@ def compile_inventory() -> dict[str, Any]:
         {
             "priority": "P0",
             "item": "Refresh served runtime through operator-approved cutover",
-            "why": "Current served fingerprint says 3.3.14 while source/package are 3.3.15.",
+            "why": f"Current served fingerprint says {_nested(served_runtime, 'summary', 'borg_version') or 'unknown'} while source targets {versions.get('project_version')}.",
             "acceptance": ["served borg_version == source_version == PyPI latest", "runtime hash/path/schema canary captured", "behavior canaries pass"],
         },
-        {
-            "priority": "P0",
-            "item": "Turn on release governance",
-            "why": "main branch is currently unprotected in the captured GitHub branch payload.",
-            "acceptance": ["branch protection enabled", "required checks enforced", "CODEOWNERS review required", "release_governance_gate passes"],
-        },
+        (
+            {
+                "priority": "P0",
+                "item": "Turn on release governance",
+                "why": "Release governance snapshot is not green for the captured GitHub branch payload.",
+                "acceptance": ["branch protection enabled", "required checks enforced", "CODEOWNERS review required", "release_governance_gate passes"],
+            }
+            if not governance_green
+            else {
+                "priority": "P1",
+                "item": "Maintain release-governance freshness",
+                "why": "Current GitHub main release-governance proof is green; keep the snapshot fresh and exact-check policy enforced through PR/merge/tag.",
+                "acceptance": ["release_governance_gate passes", "required checks remain exact", "CODEOWNERS review remains required", "no bypass allowances appear"],
+            }
+        ),
         {
             "priority": "P0" if not ops_green else "P1",
             "item": "Maintain ops/watchdog/rollback readiness freshness",
@@ -498,7 +516,7 @@ def compile_inventory() -> dict[str, Any]:
     ]
 
     final_challenge = [
-        "Could package proof alone justify controlled beta? No: current release controls add served-runtime, governance, and ops freshness, all of which are red or stale.",
+        "Could package proof alone justify controlled beta? No: current release controls add served-runtime freshness, release-governance freshness, and ops freshness; any red/stale required gate blocks beta.",
         "Could protocol GO mean federated learning is production-ready? No: it proves signed sync/revocation mechanics, not hosted operations or public utility.",
         "Could internal outcome receipts prove recursive learning is ready? Only as internal primitives; external lift and autonomous promotion remain blocked.",
         "Could synthetic load tests stand in for users? No: first-10 row-derived evidence is 0/10 and explicitly blocks public/100-user claims.",

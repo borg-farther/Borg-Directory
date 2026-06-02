@@ -14,7 +14,7 @@
     "ready_for_10": true,
     "ready_for_100": true,
     "ready_for_1000": true,
-    "timestamp": "2026-05-31T10:10:48.023553+00:00"
+    "timestamp": "2026-06-02T10:03:26.595448+00:00"
   },
   "gates": {
     "first_user_surface": true,
@@ -27,30 +27,30 @@
   "loads": {
     "10": {
       "exists": true,
-      "p95_ms": 0.7141415262594819,
-      "p99_ms": 0.7846186403185129,
+      "p95_ms": 0.7009429158642886,
+      "p99_ms": 0.7570860907435419,
       "passed": true,
       "success_rate": 1.0,
-      "timestamp": "2026-05-31T10:09:46.692829+00:00",
-      "total_requests": 50316
+      "timestamp": "2026-06-02T10:02:24.261506+00:00",
+      "total_requests": 53718
     },
     "100": {
       "exists": true,
-      "p95_ms": 0.9827278554439545,
-      "p99_ms": 3.343379381112749,
+      "p95_ms": 0.693068839609623,
+      "p99_ms": 0.7233379036188128,
       "passed": true,
       "success_rate": 1.0,
-      "timestamp": "2026-05-31T10:10:16.830140+00:00",
-      "total_requests": 40066
+      "timestamp": "2026-06-02T10:02:54.393645+00:00",
+      "total_requests": 54025
     },
     "1000": {
       "exists": true,
-      "p95_ms": 0.7121274247765541,
-      "p99_ms": 0.7705441676080227,
+      "p95_ms": 0.6952499970793724,
+      "p99_ms": 0.7640478946268553,
       "passed": true,
       "success_rate": 1.0,
-      "timestamp": "2026-05-31T10:10:47.003248+00:00",
-      "total_requests": 49726
+      "timestamp": "2026-06-02T10:03:24.559311+00:00",
+      "total_requests": 53117
     }
   },
   "ready_for_10": true,
@@ -59,14 +59,16 @@
   "real_user_100_all_pass": false,
   "real_user_rollout": {
     "blockers": [
-      "served runtime borg_version '3.3.14' != source version '3.3.15'",
+      "PyPI latest/fresh-install package evidence is not green: same-version PyPI upload predates current source revision",
+      "PyPI latest/fresh-install package evidence is not green: fresh install + MCP stdio canary is not green",
+      "served runtime borg_version '3.3.14' != source version '3.3.16'",
+      "served runtime source_version '3.3.15' != source version '3.3.16'",
       "served runtime version_matches_source is not true",
       "served runtime reload_status is not loaded_code_matches_source_behavior",
-      "main branch is not protected",
       "first-10 external-user evidence has not passed: verified=0/10, real_users=0/10, installs=0/8, useful=0/6, critical_incidents=0/0"
     ],
     "exists": true,
-    "generated_at_utc": "2026-05-31T10:10:47.949738+00:00",
+    "generated_at_utc": "2026-06-02T10:03:26.524492+00:00",
     "infrastructure_ready_for_100": false,
     "max_recommended_real_users_now": 0,
     "ready_for_100_real_users": false,
@@ -94,10 +96,10 @@
   },
   "source": "eval/uat_scoreboard.py",
   "synthetic_load_all_pass": true,
-  "timestamp": "2026-05-31T10:10:48.072287+00:00",
+  "timestamp": "2026-06-02T10:03:26.639759+00:00",
   "version": {
     "passed": true,
-    "project_version": "3.3.15",
-    "runtime_version": "3.3.15"
+    "project_version": "3.3.16",
+    "runtime_version": "3.3.16"
   }
 }

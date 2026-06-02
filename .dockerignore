@@ -4,6 +4,18 @@ __pycache__/
 *.egg-info/
 .git/
 .github/
+.venv/
+venv/
+.env/
+dist/
+build/
+.ruff_cache/
+.mypy_cache/
+.pytest_cache/
+.tox/
+.nox/
+.coverage
+htmlcov/
 docs/
 benchmarks/
 eval/
@@ -18,7 +30,6 @@ check_*.py
 run_*.py
 verify_*.py
 *.pdf
-.pytest_cache/
 .env
 .env.*
 !.env.example
