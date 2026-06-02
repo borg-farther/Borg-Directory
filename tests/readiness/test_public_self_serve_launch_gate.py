@@ -748,6 +748,83 @@ def test_pypi_latest_check_fails_when_source_worktree_is_dirty(monkeypatch) -> N
     assert result["source_upload_alignment"]["failure_kind"] == "source_worktree_dirty"
 
 
+def test_pypi_latest_check_allows_dirty_post_upload_proof_artifacts(monkeypatch) -> None:
+    monkeypatch.setattr(
+        gate,
+        "source_revision_state",
+        lambda: {
+            "revision": "fedcba0987654321fedcba0987654321fedcba09+dirty",
+            "commit_time_utc": "2026-06-02T21:25:00+00:00",
+            "dirty": True,
+            "available": True,
+            "package_reference": "v9.9.9",
+            "package_reference_revision": "abcdef1234567890abcdef1234567890abcdef12",
+            "package_reference_commit_time_utc": "2026-05-25T00:00:00+00:00",
+            "package_dirty": False,
+            "package_dirty_paths": [],
+            "non_package_dirty_paths": [
+                "eval/pypi_fresh_install_snapshot.json",
+                "docs/PUBLIC_SELF_SERVE_LAUNCH_GO_NO_GO.md",
+            ],
+            "package_changed_paths_since_reference": [],
+        },
+    )
+
+    result = gate.pypi_latest_check("9.9.9", fetch_network=False, pypi_data=_pypi_fixture())
+
+    assert result["passed"] is True
+    alignment = result["source_upload_alignment"]
+    assert alignment["passed"] is True
+    assert alignment["alignment_basis"] == "package_reference"
+    assert alignment["package_reference"] == "v9.9.9"
+    assert alignment["worktree_dirty"] is True
+    assert alignment["package_dirty"] is False
+    assert alignment["package_dirty_paths"] == []
+    assert alignment["non_package_dirty_paths"] == [
+        "eval/pypi_fresh_install_snapshot.json",
+        "docs/PUBLIC_SELF_SERVE_LAUNCH_GO_NO_GO.md",
+    ]
+
+
+def test_pypi_latest_check_still_fails_when_package_source_is_dirty(monkeypatch) -> None:
+    monkeypatch.setattr(
+        gate,
+        "source_revision_state",
+        lambda: {
+            "revision": "fedcba0987654321fedcba0987654321fedcba09+dirty",
+            "commit_time_utc": "2026-06-02T21:25:00+00:00",
+            "dirty": True,
+            "available": True,
+            "package_reference": "v9.9.9",
+            "package_reference_revision": "abcdef1234567890abcdef1234567890abcdef12",
+            "package_reference_commit_time_utc": "2026-05-25T00:00:00+00:00",
+            "package_dirty": True,
+            "package_dirty_paths": ["borg/core/rescue.py"],
+            "non_package_dirty_paths": ["eval/pypi_fresh_install_snapshot.json"],
+            "package_changed_paths_since_reference": [],
+        },
+    )
+
+    result = gate.pypi_latest_check("9.9.9", fetch_network=False, pypi_data=_pypi_fixture())
+
+    assert result["passed"] is False
+    alignment = result["source_upload_alignment"]
+    assert alignment["failure_kind"] == "package_worktree_dirty"
+    assert alignment["package_dirty_paths"] == ["borg/core/rescue.py"]
+
+
+def test_package_impacting_path_classification_is_narrow() -> None:
+    assert gate._is_package_impacting_path("borg/core/rescue.py") is True
+    assert gate._is_package_impacting_path("borg/seeds_data/packs/systematic-debugging.yaml") is True
+    assert gate._is_package_impacting_path("pyproject.toml") is True
+    assert gate._is_package_impacting_path("README.md") is True
+    assert gate._is_package_impacting_path("LICENSE") is True
+    assert gate._is_package_impacting_path("MANIFEST.in") is True
+    assert gate._is_package_impacting_path("eval/public_self_serve_launch_gate.py") is False
+    assert gate._is_package_impacting_path("eval/pypi_fresh_install_snapshot.json") is False
+    assert gate._is_package_impacting_path("docs/PUBLIC_SELF_SERVE_LAUNCH_GO_NO_GO.md") is False
+
+
 def test_pypi_fresh_install_check_requires_current_timestamp(tmp_path: Path, monkeypatch) -> None:
     monkeypatch.setattr(gate, "ROOT", tmp_path)
     eval_dir = tmp_path / "eval"

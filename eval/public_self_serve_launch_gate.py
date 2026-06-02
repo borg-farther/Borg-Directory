@@ -41,6 +41,22 @@ BANNED_PYPI_COPY = [
     "collective intelligence for AI agents",
 ]
 
+PACKAGE_IMPACTING_EXACT_PATHS = {
+    "pyproject.toml",
+    "README.md",
+    "MANIFEST.in",
+    "setup.py",
+    "setup.cfg",
+}
+PACKAGE_IMPACTING_PREFIXES = (
+    "borg/",
+)
+PACKAGE_IMPACTING_LICENSE_PREFIXES = (
+    "LICENSE",
+    "COPYING",
+    "NOTICE",
+)
+
 REQUIRED_COLD_START_TRUST_CHECKS = {
     "meta_permission_mentions_are_not_permission_tasks",
     "meta_django_mentions_do_not_set_django_tech",
@@ -135,18 +151,113 @@ def source_version() -> str:
     return str(data["project"]["version"])
 
 
+def _git_output(args: list[str]) -> str:
+    return subprocess.check_output(["git", *args], cwd=ROOT, text=True, stderr=subprocess.DEVNULL).strip()
+
+
+def _git_lines(args: list[str]) -> list[str]:
+    output = _git_output(args)
+    return [line.strip() for line in output.splitlines() if line.strip()]
+
+
+def _normalize_repo_path(path: str) -> str:
+    return path.strip().strip('"').replace("\\", "/")
+
+
+def _status_paths() -> list[str]:
+    output = _git_output(["status", "--porcelain=v1"])
+    paths: list[str] = []
+    for line in output.splitlines():
+        if not line:
+            continue
+        raw = _normalize_repo_path(line[3:] if len(line) > 3 else line)
+        if not raw:
+            continue
+        if " -> " in raw:
+            paths.extend(_normalize_repo_path(part) for part in raw.split(" -> ") if part.strip())
+        else:
+            paths.append(raw)
+    return sorted(set(paths))
+
+
+def _is_package_impacting_path(path: str) -> bool:
+    normalized = _normalize_repo_path(path)
+    if not normalized:
+        return False
+    if normalized in PACKAGE_IMPACTING_EXACT_PATHS:
+        return True
+    if normalized.startswith(PACKAGE_IMPACTING_PREFIXES):
+        return True
+    return any(
+        normalized == prefix or normalized.startswith(f"{prefix}.")
+        for prefix in PACKAGE_IMPACTING_LICENSE_PREFIXES
+    )
+
+
 def source_revision_state() -> dict[str, Any]:
-    """Return current source revision and commit time for release-truth gates."""
+    """Return source/provenance state for release-truth gates.
+
+    PyPI packages are immutable. After upload, proof snapshots/docs are regenerated
+    and therefore make the worktree dirty before the proof-artifact commit. That
+    must not make the already-uploaded wheel look stale. Package-current proof is
+    anchored to the release tag for the package version while still failing closed
+    for dirty or post-tag package-impacting source/metadata paths.
+    """
     try:
-        revision = subprocess.check_output(["git", "rev-parse", "HEAD"], cwd=ROOT, text=True).strip()
-        commit_time = subprocess.check_output(["git", "show", "-s", "--format=%cI", "HEAD"], cwd=ROOT, text=True).strip()
-        dirty = bool(subprocess.check_output(["git", "status", "--porcelain"], cwd=ROOT, text=True).strip())
+        revision = _git_output(["rev-parse", "HEAD"])
+        commit_time = _git_output(["show", "-s", "--format=%cI", "HEAD"])
+        dirty_paths = _status_paths()
     except Exception:
         return {"revision": None, "commit_time_utc": None, "dirty": None, "available": False}
+
+    package_dirty_paths = sorted(path for path in dirty_paths if _is_package_impacting_path(path))
+    non_package_dirty_paths = sorted(path for path in dirty_paths if not _is_package_impacting_path(path))
+
+    package_reference = f"v{source_version()}"
+    package_reference_revision = None
+    package_reference_commit_time = None
+    package_reference_available = False
+    package_reference_ancestor_of_head: bool | None = None
+    package_changed_paths_since_reference: list[str] = []
+    non_package_changed_paths_since_reference: list[str] = []
+    package_reference_error = None
+
+    try:
+        package_reference_revision = _git_output(["rev-parse", "--verify", f"refs/tags/{package_reference}^{{commit}}"])
+        package_reference_commit_time = _git_output(["show", "-s", "--format=%cI", package_reference_revision])
+        package_reference_available = True
+        ancestor = subprocess.run(
+            ["git", "merge-base", "--is-ancestor", package_reference_revision, revision],
+            cwd=ROOT,
+            text=True,
+            stdout=subprocess.DEVNULL,
+            stderr=subprocess.DEVNULL,
+            check=False,
+        )
+        package_reference_ancestor_of_head = ancestor.returncode == 0
+        changed_paths = _git_lines(["diff", "--name-only", f"{package_reference_revision}..{revision}"])
+        package_changed_paths_since_reference = sorted(path for path in changed_paths if _is_package_impacting_path(path))
+        non_package_changed_paths_since_reference = sorted(path for path in changed_paths if not _is_package_impacting_path(path))
+    except Exception as exc:
+        package_reference_error = str(exc)
+
+    dirty = bool(dirty_paths)
     return {
         "revision": f"{revision}+dirty" if dirty else revision,
         "commit_time_utc": commit_time,
         "dirty": dirty,
+        "dirty_paths": dirty_paths,
+        "package_dirty": bool(package_dirty_paths),
+        "package_dirty_paths": package_dirty_paths,
+        "non_package_dirty_paths": non_package_dirty_paths,
+        "package_reference": package_reference,
+        "package_reference_available": package_reference_available,
+        "package_reference_revision": package_reference_revision,
+        "package_reference_commit_time_utc": package_reference_commit_time,
+        "package_reference_ancestor_of_head": package_reference_ancestor_of_head,
+        "package_reference_error": package_reference_error,
+        "package_changed_paths_since_reference": package_changed_paths_since_reference,
+        "non_package_changed_paths_since_reference": non_package_changed_paths_since_reference,
         "available": True,
     }
 
@@ -179,39 +290,72 @@ def _freshness_check(value: str | None, max_age_hours: float = 24.0) -> dict[str
 
 
 def source_upload_alignment_check(pypi_data: dict[str, Any]) -> dict[str, Any]:
-    """Fail when a same-version PyPI release cannot prove current source.
+    """Fail when a same-version PyPI release cannot prove package source.
 
     Version equality alone can hide a stale wheel: `agent-borg==X.Y.Z` may be
     installed from PyPI while newer commits with the same version are on `main`.
-    Every published file for the version must have a usable upload timestamp that
-    is not older than the claimed source commit. Dirty source trees cannot be
-    represented by an immutable PyPI artifact and therefore fail closed unless
-    an older upload already fails the more specific same-version drift check.
+    Package-current proof therefore compares PyPI release-file upload timestamps
+    against the immutable package reference tag (`vX.Y.Z`) when available, and
+    fails closed for any dirty or post-reference package-impacting source path.
+    Dirty generated proof artifacts are reported but do not make the already-
+    uploaded package artifact stale.
     """
     source = source_revision_state()
-    source_time = _parse_iso_datetime(source.get("commit_time_utc"))
     release_files = [item for item in (pypi_data.get("release_files") or []) if isinstance(item, dict)]
-    dirty_source = source.get("dirty") is True
+    worktree_dirty = source.get("dirty") is True
+    package_basis = bool(source.get("package_reference") and source.get("package_reference_commit_time_utc"))
+    alignment_basis = "package_reference" if package_basis else "current_source_revision"
+    comparison_time_raw = (
+        source.get("package_reference_commit_time_utc") if package_basis else source.get("commit_time_utc")
+    )
+    comparison_time = _parse_iso_datetime(str(comparison_time_raw) if comparison_time_raw else None)
+    package_dirty = source.get("package_dirty") is True if package_basis else worktree_dirty
+    package_dirty_paths = list(source.get("package_dirty_paths") or [])
+    non_package_dirty_paths = list(source.get("non_package_dirty_paths") or [])
+    package_changed_paths_since_reference = list(source.get("package_changed_paths_since_reference") or [])
+    non_package_changed_paths_since_reference = list(source.get("non_package_changed_paths_since_reference") or [])
 
-    if source_time is None:
+    base: dict[str, Any] = {
+        "source_revision": source.get("revision"),
+        "current_source_commit_time_utc": source.get("commit_time_utc"),
+        "source_commit_time_utc": comparison_time.isoformat() if comparison_time else comparison_time_raw,
+        "alignment_basis": alignment_basis,
+        "worktree_dirty": worktree_dirty,
+        "dirty_source": worktree_dirty,
+        "package_dirty": package_dirty,
+        "package_dirty_paths": package_dirty_paths,
+        "non_package_dirty_paths": non_package_dirty_paths,
+        "package_changed_paths_since_reference": package_changed_paths_since_reference,
+        "non_package_changed_paths_since_reference": non_package_changed_paths_since_reference,
+        "package_reference": source.get("package_reference"),
+        "package_reference_available": source.get("package_reference_available"),
+        "package_reference_revision": source.get("package_reference_revision"),
+        "package_reference_commit_time_utc": source.get("package_reference_commit_time_utc"),
+        "package_reference_ancestor_of_head": source.get("package_reference_ancestor_of_head"),
+        "package_reference_error": source.get("package_reference_error"),
+        "release_file_count": len(release_files),
+    }
+
+    if comparison_time is None:
         return {
             "passed": False,
             "failure_kind": "source_revision_time_unavailable",
-            "detail": "Current source revision time is unavailable; cannot prove PyPI artifact freshness.",
-            "source_revision": source.get("revision"),
-            "source_commit_time_utc": source.get("commit_time_utc"),
-            "dirty_source": dirty_source,
-            "release_file_count": len(release_files),
+            "detail": "Current source/package-reference revision time is unavailable; cannot prove PyPI artifact freshness.",
+            **base,
+        }
+    if package_basis and source.get("package_reference_ancestor_of_head") is False:
+        return {
+            "passed": False,
+            "failure_kind": "package_reference_not_ancestor_of_head",
+            "detail": "The package reference tag is not an ancestor of HEAD; cannot prove the current repo state is based on the published package source.",
+            **base,
         }
     if not release_files:
         return {
             "passed": False,
             "failure_kind": "missing_release_files",
             "detail": "PyPI release file metadata is missing; cannot prove all installable artifacts are newer than source.",
-            "source_revision": source.get("revision"),
-            "source_commit_time_utc": source_time.isoformat(),
-            "dirty_source": dirty_source,
-            "release_file_count": 0,
+            **base,
         }
 
     parsed_files: list[tuple[str, datetime]] = []
@@ -229,40 +373,58 @@ def source_upload_alignment_check(pypi_data: dict[str, Any]) -> dict[str, Any]:
             "passed": False,
             "failure_kind": "missing_release_upload_timestamp",
             "detail": "One or more PyPI release files lacks an upload timestamp; package-current proof must fail closed.",
-            "source_revision": source.get("revision"),
-            "source_commit_time_utc": source_time.isoformat(),
-            "dirty_source": dirty_source,
             "missing_timestamp_files": missing_timestamp_files,
-            "release_file_count": len(release_files),
+            **base,
         }
 
     upload_times = [upload_time for _, upload_time in parsed_files]
     latest_upload = max(upload_times)
     oldest_upload = min(upload_times)
-    stale_files = [filename for filename, upload_time in parsed_files if upload_time < source_time]
-    if stale_files:
-        passed = False
-        failure_kind = "same_version_pypi_upload_predates_source_revision"
-        detail = "PyPI release upload predates current source revision for at least one release file; publish a new immutable version before claiming package proof is current."
-    elif dirty_source:
-        passed = False
-        failure_kind = "source_worktree_dirty"
-        detail = "Current source tree is dirty; no immutable PyPI artifact can prove these uncommitted changes."
-    else:
-        passed = True
-        failure_kind = None
-        detail = "Every PyPI release file upload is not older than the current clean source revision."
-    return {
-        "passed": passed,
-        "failure_kind": failure_kind,
-        "detail": detail,
-        "source_revision": source.get("revision"),
-        "source_commit_time_utc": source_time.isoformat(),
+    stale_files = [filename for filename, upload_time in parsed_files if upload_time < comparison_time]
+    result_base = {
+        **base,
         "oldest_release_upload_time_utc": oldest_upload.isoformat(),
         "latest_release_upload_time_utc": latest_upload.isoformat(),
         "stale_release_files": stale_files,
-        "dirty_source": dirty_source,
-        "release_file_count": len(release_files),
+    }
+    if stale_files:
+        return {
+            "passed": False,
+            "failure_kind": "same_version_pypi_upload_predates_source_revision",
+            "detail": "PyPI release upload predates current source revision or package reference for at least one release file; publish a new immutable version before claiming package proof is current.",
+            **result_base,
+        }
+    if package_basis and package_dirty:
+        return {
+            "passed": False,
+            "failure_kind": "package_worktree_dirty",
+            "detail": "Package-impacting source or metadata is dirty; no immutable PyPI artifact can prove these uncommitted package changes.",
+            **result_base,
+        }
+    if package_basis and package_changed_paths_since_reference:
+        return {
+            "passed": False,
+            "failure_kind": "package_source_changed_after_reference",
+            "detail": "Package-impacting source or metadata changed after the package reference tag; publish a new immutable version before claiming package proof is current.",
+            **result_base,
+        }
+    if not package_basis and worktree_dirty:
+        return {
+            "passed": False,
+            "failure_kind": "source_worktree_dirty",
+            "detail": "Current source tree is dirty; no immutable PyPI artifact can prove these uncommitted changes.",
+            **result_base,
+        }
+    detail = (
+        "Every PyPI release file upload is not older than the package reference, and no package-impacting source is dirty or changed after that reference."
+        if package_basis
+        else "Every PyPI release file upload is not older than the current clean source revision."
+    )
+    return {
+        "passed": True,
+        "failure_kind": None,
+        "detail": detail,
+        **result_base,
     }
 
 
