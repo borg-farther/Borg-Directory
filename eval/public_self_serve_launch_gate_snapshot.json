@@ -14,7 +14,7 @@
       "exists": true,
       "failed_count": 0,
       "failures": [],
-      "generated_at_utc": "2026-06-02T09:33:14.704139+00:00",
+      "generated_at_utc": "2026-06-02T10:09:10.785062+00:00",
       "has_bad_answer_feedback_path": true,
       "missing_required_checks": [],
       "observed_check_count": 7,
@@ -118,7 +118,7 @@
     },
     "ops_readiness_watchdog": {
       "blockers": [],
-      "generated_at_utc": "2026-06-02T08:15:32.735089+00:00",
+      "generated_at_utc": "2026-06-02T10:11:10.755275+00:00",
       "passed": true,
       "snapshot": "eval/ops_readiness_watchdog_snapshot.json",
       "truth_policy": "Watchdog passing means controlled first-10 ops proof is fresh and internally consistent. Broad public self-serve still requires row-derived first-10 external-user evidence."
@@ -131,23 +131,22 @@
     "pypi_fresh_install_and_mcp_stdio": {
       "exists": true,
       "expected_version": "3.3.16",
-      "failed_count": 0,
-      "failures": [],
+      "failed_count": 1,
+      "failures": [
+        "pip_install_agent_borg"
+      ],
       "freshness": {
-        "age_hours": 9.941715086111111,
+        "age_hours": 0.03971058416666667,
         "failure_kind": null,
         "max_age_hours": 24.0,
         "passed": true
       },
-      "generated_at_utc": "2026-06-02T00:04:58Z",
-      "mcp_server_info": {
-        "name": "borg-mcp-server",
-        "version": "3.3.15"
-      },
-      "mcp_stdio_canary_passed": true,
+      "generated_at_utc": "2026-06-02T10:08:48Z",
+      "mcp_server_info": null,
+      "mcp_stdio_canary_passed": false,
       "passed": false,
       "path": "eval/pypi_fresh_install_snapshot.json",
-      "version": "3.3.15"
+      "version": "3.3.16"
     },
     "pypi_latest": {
       "banned_keywords_present": [],
@@ -200,8 +199,8 @@
         "oldest_release_upload_time_utc": "2026-05-28T17:50:29.231332+00:00",
         "passed": false,
         "release_file_count": 2,
-        "source_commit_time_utc": "2026-06-02T00:05:47+00:00",
-        "source_revision": "a735641a1101a46668939ea4061b5e5189165cec+dirty",
+        "source_commit_time_utc": "2026-06-02T10:04:31+00:00",
+        "source_revision": "7125ec9e19ea44efb5ec42bd69a1c9672db50983+dirty",
         "stale_release_files": [
           "agent_borg-3.3.15-py3-none-any.whl",
           "agent_borg-3.3.15.tar.gz"
@@ -257,7 +256,7 @@
     },
     "self_service_ops_readiness": {
       "blockers": [],
-      "generated_at_utc": "2026-06-02T10:01:29.307781+00:00",
+      "generated_at_utc": "2026-06-02T10:11:12.041283+00:00",
       "passed": true,
       "report": "docs/SELF_SERVICE_OPS_READINESS_REPORT.md",
       "rollout_policy": "Ops readiness is necessary but not sufficient for controlled first-10; package provenance, served-runtime freshness, release governance, ops/watchdog freshness, and first-10 guardrails must also pass. broad public self-serve still requires row-derived first-10 external evidence.",
@@ -284,7 +283,7 @@
       }
     }
   },
-  "generated_at_utc": "2026-06-02T10:01:29.408976+00:00",
+  "generated_at_utc": "2026-06-02T10:11:12.129841+00:00",
   "max_recommended_real_users_now": 0,
   "ready_for_controlled_first_10_beta": false,
   "ready_for_public_self_serve_launch": false,

@@ -44,7 +44,7 @@
     "passed_count": 28
   },
   "gate_type": "real_user_rollout",
-  "generated_at_utc": "2026-06-02T10:03:26.524492+00:00",
+  "generated_at_utc": "2026-06-02T10:11:13.450269+00:00",
   "important_distinction": "load/readiness snapshots are synthetic/logical users; this gate controls real external-user rollout",
   "infrastructure_ready_for_100": false,
   "load_gates": {
@@ -89,23 +89,22 @@
     "pypi_fresh_install_and_mcp_stdio": {
       "exists": true,
       "expected_version": "3.3.16",
-      "failed_count": 0,
-      "failures": [],
+      "failed_count": 1,
+      "failures": [
+        "pip_install_agent_borg"
+      ],
       "freshness": {
-        "age_hours": 9.974268363055556,
+        "age_hours": 0.040087829166666665,
         "failure_kind": null,
         "max_age_hours": 24.0,
         "passed": true
       },
-      "generated_at_utc": "2026-06-02T00:04:58Z",
-      "mcp_server_info": {
-        "name": "borg-mcp-server",
-        "version": "3.3.15"
-      },
-      "mcp_stdio_canary_passed": true,
+      "generated_at_utc": "2026-06-02T10:08:48Z",
+      "mcp_server_info": null,
+      "mcp_stdio_canary_passed": false,
       "passed": false,
       "path": "eval/pypi_fresh_install_snapshot.json",
-      "version": "3.3.15"
+      "version": "3.3.16"
     },
     "pypi_latest": {
       "banned_keywords_present": [],
@@ -158,8 +157,8 @@
         "oldest_release_upload_time_utc": "2026-05-28T17:50:29.231332+00:00",
         "passed": false,
         "release_file_count": 2,
-        "source_commit_time_utc": "2026-06-02T00:05:47+00:00",
-        "source_revision": "a735641a1101a46668939ea4061b5e5189165cec+dirty",
+        "source_commit_time_utc": "2026-06-02T10:04:31+00:00",
+        "source_revision": "7125ec9e19ea44efb5ec42bd69a1c9672db50983+dirty",
         "stale_release_files": [
           "agent_borg-3.3.15-py3-none-any.whl",
           "agent_borg-3.3.15.tar.gz"
@@ -260,10 +259,10 @@
   },
   "self_service_ops_gate": {
     "blockers": [],
-    "generated_at_utc": "2026-06-02T10:03:26.524180+00:00",
+    "generated_at_utc": "2026-06-02T10:11:13.449907+00:00",
     "ops_readiness_watchdog": {
       "blockers": [],
-      "generated_at_utc": "2026-06-02T08:15:32.735089+00:00",
+      "generated_at_utc": "2026-06-02T10:11:10.755275+00:00",
       "passed": true,
       "snapshot": "eval/ops_readiness_watchdog_snapshot.json",
       "truth_policy": "Watchdog passing means controlled first-10 ops proof is fresh and internally consistent. Broad public self-serve still requires row-derived first-10 external-user evidence."
