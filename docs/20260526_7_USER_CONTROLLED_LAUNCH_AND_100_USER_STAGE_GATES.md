@@ -1,11 +1,11 @@
 # Borg controlled 7-user launch and 100-user stage gates
 
 Generated: 2026-05-26
-Source: `agent-borg==3.3.15`, canonical repo `borg-farther/Borg-Directory`
+Source target: `agent-borg==3.3.16`, canonical repo `borg-farther/Borg-Directory`
 
 ## Executive verdict
 
-- **7 external users at once:** GO / CONDITIONAL, only through the public package local CLI / stdio MCP path, capped under the first-10 beta limit.
+- **7 external users at once:** NO-GO until `agent-borg==3.3.16` is published, freshly canaried, and the package/runtime/ops/watchdog proof chain is green; then controlled testers remain capped under the first-10 beta limit.
 - **Broad public self-serve:** NO-GO until row-derived first-10 external-user evidence passes.
 - **100 real users:** NO-GO until first-10 evidence passes and the 100-user rollout gate is green.
 - **Served Hermes/Borg MCP runtime:** NO-GO for launch traffic until an operator-supervised runtime fingerprint proves the served process version and code match the current package/source. Agents must not restart or reload the gateway.
@@ -19,7 +19,7 @@ Source: `agent-borg==3.3.15`, canonical repo `borg-farther/Borg-Directory`
    - Countermeasure: every status artifact must separate `synthetic_load_all_pass`, `ready_for_controlled_first_10_beta`, and `ready_for_100_real_users`.
 
 2. **Verify the package path users will actually run**
-   - Required: PyPI latest `agent-borg==3.3.15`; fresh install; `borg`, `borg-doctor`, `borg rescue`, and stdio `borg-mcp` canary.
+   - Required: PyPI latest `agent-borg==3.3.16`; fresh install; `borg`, `borg-doctor`, `borg rescue`, and stdio `borg-mcp` canary.
    - Challenge: local source tests can mask a broken wheel or stale PyPI README.
    - Countermeasure: run `eval/run_first_user_release_gate.py`, PyPI fresh-install snapshot checks, and public launch gate before invites.
 
@@ -106,7 +106,7 @@ Gate C is blocked until all are true:
 
 Every invite must include:
 
-1. Install path: `pipx install agent-borg==3.3.15`
+1. Install path: `pipx install agent-borg==3.3.16`
 2. Verify path: `borg version`, `borg-doctor --json`
 3. First value path: `borg rescue "<redacted real error>" --json`
 4. Optional local MCP path: configure `borg-mcp` as a stdio MCP server in the tester's own agent host.
@@ -118,7 +118,7 @@ Every invite must include:
 
 Re-evaluated from scratch:
 
-- If the question is only "can 7 users try Borg at once?" the answer is currently no for this source revision: `agent-borg==3.3.15` is stale relative to the latest hardening merge, so the cap is 0 until a new immutable package version and release-control proof are green.
+- If the question is only "can 7 users try Borg at once?" the answer is currently no for this source revision: `agent-borg==3.3.15` is stale relative to the latest hardening merge, so the cap is 0 until `agent-borg==3.3.16` is published, freshly canaried, and package/runtime/ops/release-control proof is green.
 - If the question is "is Borg ready for 100 concurrent public self-service users?" the answer is no, because 100 real-user readiness is evidence-gated and first-10 evidence is still zero.
 - If the question is "are local source and package enough?" the answer is no for served channels; runtime fingerprinting is a separate gate.
 - If the question is "should we build new features now?" the answer is no; the immediate work is proof, docs consistency, feedback capture, and fail-closed gates.

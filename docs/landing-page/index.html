@@ -440,19 +440,19 @@
         <a href="#install">Install</a>
         <a href="#how">How it works</a>
         <a href="#packs">Packs</a>
-        <a href="https://github.com/<OLD_ACCT>/guild-tools" target="_blank">GitHub</a>
+        <a href="https://github.com/borg-farther/Borg-Directory" target="_blank">GitHub</a>
       </div>
     </div>
   </nav>
 
   <section class="hero">
     <div class="container">
-      <div class="hero-badge">v1.0 now on PyPI</div>
+      <div class="hero-badge">agent-borg 3.3.16 release candidate; PyPI 3.3.15 is stale</div>
       <h1>Stop your agent burning tokens<br>on problems <span class="highlight">someone else already solved</span></h1>
-      <p>borg gives your AI agents access to a collective knowledge base of solutions — so they stop looping, stop asking, and just pull verified answers in milliseconds.</p>
+      <p>borg gives AI agents an evidence-gated rescue path — ACTION / STOP / VERIFY when there is a confident match, and NO_CONFIDENT_MATCH instead of weak advice when there is not.</p>
       <div class="hero-cta">
         <a href="#install" class="btn btn-primary">Install borg</a>
-        <a href="https://github.com/<OLD_ACCT>/guild-tools" class="btn btn-secondary" target="_blank">View on GitHub</a>
+        <a href="https://github.com/borg-farther/Borg-Directory" class="btn btn-secondary" target="_blank">View canonical repo</a>
       </div>
     </div>
   </section>
@@ -463,17 +463,17 @@
       <div class="comparison-grid">
         <div class="comparison-card before">
           <h3>Before borg</h3>
-          <div class="stat">$2.00</div>
-          <div class="sub">5 loop iterations, 47s wall time</div>
+          <div class="stat">loop</div>
+          <div class="sub">retries without a trusted stop condition</div>
           <div class="detail">
             Agent hits blocker → rephrases prompt → hits blocker again → rephrases → loops 5x → finally gives up or burns through budget
           </div>
         </div>
         <div class="comparison-arrow">→</div>
         <div class="comparison-card after">
-          <h3>After borg <span class="badge">94% cheaper</span></h3>
-          <div class="stat">$0.02</div>
-          <div class="sub">1 network lookup, 0.3s</div>
+          <h3>After borg <span class="badge">evidence-gated</span></h3>
+          <div class="stat">stop</div>
+          <div class="sub">one rescue lookup, then verify or fail closed</div>
           <div class="detail">
             Agent hits blocker → borg checks collective → solution pulled → agent continues immediately
           </div>
@@ -506,7 +506,7 @@
 
 <span class="comment"># --- borg integration ---</span>
 <span class="comment"># When you hit a blocker, run:</span>
-<span class="comment">#   borg query --stuck "describe the problem"</span>
+<span class="comment">#   borg rescue "describe the problem"</span>
 <span class="comment"># This checks the collective for known solutions.</span>
 
 <span class="comment"># Install borg CLI</span>
@@ -532,7 +532,7 @@ pip install agent-borg</pre>
 <pre><span class="comment"># Add to your .clinerules file</span>
 
 <span class="comment"># --- borg integration ---</span>
-<span class="comment"># On blocker: borg query --stuck "describe what broke"</span>
+<span class="comment"># On blocker: borg rescue "describe what broke"</span>
 <span class="comment"># Pulls verified solutions from the collective in &lt;1s.</span>
 
 <span class="comment"># One-time setup</span>
@@ -558,7 +558,7 @@ pip install agent-borg</pre>
 
 <span class="comment">## borg — collective problem solving</span>
 <span class="comment"># When stuck on an error or blocker:</span>
-<span class="comment">#   1. Run: borg query --stuck "&lt;error message>"</span>
+<span class="comment">#   1. Run: borg rescue "&lt;error message>"</span>
 <span class="comment">#   2. If a solution exists, apply it directly.</span>
 <span class="comment">#   3. Never loop twice on the same error class.</span>
 
@@ -581,12 +581,9 @@ pip install agent-borg</pre>
           <div class="platform-code">
             <div class="code-block">
               <button class="copy-btn" onclick="copy(this)">Copy</button>
-<pre><span class="comment"># Install borg via clawhub</span>
-clawhub install borg
-
-<span class="comment"># Then enable in openclaw config (~/.openclaw/config.yml):</span>
-<span class="comment"># plugins:</span>
-<span class="comment">#   - borg</span></pre>
+<pre><span class="comment"># OpenClaw marketplace listing is not public-ready yet.</span>
+<span class="comment"># Use the local CLI or MCP setup path from the canonical docs:</span>
+<span class="comment"># https://github.com/borg-farther/Borg-Directory/blob/main/docs/MCP_SETUP.md</span></pre>
             </div>
           </div>
         </div>
@@ -611,8 +608,8 @@ pip install agent-borg
 {
   "mcpServers": {
     "borg": {
-      "command": "python",
-      "args": ["-m", "borg.mcp.server"]
+      "command": "borg-mcp",
+      "args": []
     }
   }
 }</pre>
@@ -636,7 +633,7 @@ pip install agent-borg
         <div class="step">
           <div class="step-num">2</div>
           <h3>borg checks the collective</h3>
-          <p>The borg network queries thousands of verified solutions. Matched by error fingerprint — not keyword soup.</p>
+          <p>Borg checks verified local traces and workflow packs. Matched by error fingerprint and confidence gates — not keyword soup.</p>
         </div>
         <div class="step">
           <div class="step-num">3</div>
@@ -659,8 +656,8 @@ pip install agent-borg
             <span class="pack-icon">🐍</span>
             <span class="pack-name">python-errors</span>
           </div>
-          <div class="pack-desc">Index of 400+ Python exception patterns with verified fixes. Covers TypeError, AttributeError, import failures, and async edge cases.</div>
-          <div class="pack-stat">400+ solutions · Updated weekly</div>
+          <div class="pack-desc">Python exception patterns with verified fixes. Covers TypeError, AttributeError, import failures, and async edge cases.</div>
+          <div class="pack-stat">evidence-gated · no public-lift claim</div>
         </div>
 
         <div class="pack-card">
@@ -669,7 +666,7 @@ pip install agent-borg
             <span class="pack-name">git-reset</span>
           </div>
           <div class="pack-desc">Every git reset scenario documented: soft, mixed, hard, detached HEAD recovery, reflog-based undo, and force-push rollbacks.</div>
-          <div class="pack-stat">85+ scenarios · Community maintained</div>
+          <div class="pack-stat">workflow pack · verify before applying</div>
         </div>
 
         <div class="pack-card">
@@ -678,7 +675,7 @@ pip install agent-borg
             <span class="pack-name">docker-debug</span>
           </div>
           <div class="pack-desc">Container networking, volume mounts, multi-stage build failures, exit code meanings, and Docker API timeout patterns.</div>
-          <div class="pack-stat">120+ solutions · Verified</div>
+          <div class="pack-stat">debug patterns · verify before applying</div>
         </div>
 
         <div class="pack-card">
@@ -687,7 +684,7 @@ pip install agent-borg
             <span class="pack-name">http-status-codes</span>
           </div>
           <div class="pack-desc">What 429, 502, 504, and obscure HTTP status codes actually mean in production contexts — with remediation steps.</div>
-          <div class="pack-stat">60+ codes · Action-oriented</div>
+          <div class="pack-stat">action-oriented · no measured-lift claim</div>
         </div>
 
         <div class="pack-card">
@@ -696,7 +693,7 @@ pip install agent-borg
             <span class="pack-name">auth-patterns</span>
           </div>
           <div class="pack-desc">OAuth 2.0 token refresh flows, JWT validation gotchas, CORS preflight failures, and session cookie edge cases.</div>
-          <div class="pack-stat">95+ patterns · Security reviewed</div>
+          <div class="pack-stat">security-sensitive · review required</div>
         </div>
 
       </div>
@@ -708,7 +705,7 @@ pip install agent-borg
       <div class="logo">🧠 borg</div>
       <p>Collective intelligence for AI agents. Built by developers, for developers.</p>
       <div class="footer-links">
-        <a href="https://github.com/<OLD_ACCT>/guild-tools" target="_blank">
+        <a href="https://github.com/borg-farther/Borg-Directory" target="_blank">
           <svg width="16" height="16" viewBox="0 0 24 24" fill="currentColor"><path d="M12 0C5.37 0 0 5.37 0 12c0 5.31 3.435 9.795 8.205 11.385.6.105.825-.255.825-.57 0-.285-.015-1.23-.015-2.235-3.015.555-3.795-.735-4.035-1.41-.135-.345-.72-1.41-1.23-1.695-.42-.225-1.02-.78-.015-.795.945-.015 1.62.87 1.845 1.23 1.08 1.815 2.805 1.305 3.495.99.105-.78.42-1.305.765-1.605-2.67-.3-5.46-1.335-5.46-5.925 0-1.305.465-2.385 1.23-3.225-.12-.3-.54-1.53.12-3.18 0 0 1.005-.315 3.3 1.23.96-.27 1.98-.405 3-.405s2.04.135 3 .405c2.295-1.56 3.3-1.23 3.3-1.23.66 1.65.24 2.88.12 3.18.765.84 1.23 1.905 1.23 3.225 0 4.605-2.805 5.625-5.475 5.925.435.375.81 1.095.81 2.22 0 1.605-.015 2.895-.015 3.3 0 .315.225.69.825.57A12.02 12.02 0 0 0 24 12c0-6.63-5.37-12-12-12z"/></svg>
           GitHub
         </a>

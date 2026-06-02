@@ -1,24 +1,26 @@
 # Borg production-readiness final todo
 
-**Generated:** 2026-05-28 10:08 UTC; superseded/updated 2026-05-31 after PR45 same-version PyPI drift hardening
+**Historical/internal — not current product documentation.** Operator planning artifact preserved for audit history; current public truth for the 2026-06-02 release branch lives in `README.md`, `docs/READINESS.md`, `docs/CHANNELS_AND_INSTALL_METHODS.md`, and generated go/no-go reports.
+
+**Generated:** 2026-05-28 10:08 UTC; superseded/updated 2026-05-31 after PR45 same-version PyPI drift hardening and superseded again by the 2026-06-02 `agent-borg==3.3.16` release branch
 **Repo:** `https://github.com/borg-farther/Borg-Directory`
 **Current branch under review:** historical note; see `docs/20260531_BORG_PRODUCTION_READY_PRIORITIZED_TODO.md` for current production order
 **Current reviewed head:** superseded by `main` after PR44/PR45 hardening merges
 **Remote `origin/main`:** current proof must be refreshed from live `main`, not this historical branch-local note
-**Source target version:** `agent-borg==3.3.15`
+**Source target version at generation:** `agent-borg==3.3.15` (superseded; current release branch targets `agent-borg==3.3.16`)
 **Published PyPI latest observed:** `agent-borg==3.3.15`
 **Current public-package verdict:** `agent-borg==3.3.15` is published, but that same-version artifact is stale relative to the current source revision because its PyPI upload predates the latest hardening merge. Package proof is red until a new immutable version is published and freshly canaried; controlled first-10 beta, broad public self-serve, and 100-real-user rollout remain NO-GO.
 
 ## Executive verdict
 
-Borg has **`agent-borg==3.3.15` published on PyPI**, but that artifact is stale for current source. Controlled first-10 beta is currently **NO-GO** because package provenance and release controls are red: same-version PyPI drift, stale served runtime, and unprotected GitHub `main`. Broad public self-serve remains **NO-GO** and the 100-real-user rollout remains **NO-GO**.
+Borg had **`agent-borg==3.3.15` published on PyPI**, but that artifact is stale for current source. Controlled first-10 beta was **NO-GO** because package provenance and release controls were red: same-version PyPI drift, stale served runtime, and then-red GitHub release governance. Broad public self-serve remains **NO-GO** and the 100-real-user rollout remains **NO-GO** until row-derived external-user evidence passes.
 
 Earlier channel-completeness bugs were fixed and shipped in `agent-borg==3.3.15`, but later hardening landed after that upload. The current work is to publish a new immutable version from the hardened source, keep the proof chain honest, and preserve public/readiness documentation truth boundaries.
 
 The honest current state is:
 
-- **Source/local 3.3.15 release candidate:** CONDITIONAL GO — local gate and regression proof must remain green for the final PR head.
-- **GitHub `main`:** PR44/PR45 hardening merges are on `main`; release-governance enforcement is still red until branch protection/rulesets require checks and CODEOWNERS review.
+- **Source/local release candidate at this historical checkpoint:** CONDITIONAL GO — superseded by the 2026-06-02 `agent-borg==3.3.16` branch; local gate and regression proof must remain green for the final PR head.
+- **GitHub `main` at this historical checkpoint:** PR44/PR45 hardening merges were on `main`; this line is superseded by the 2026-06-02 proof that release governance is enforced.
 - **Published PyPI:** `agent-borg==3.3.15` is stale for current source; a new immutable version must be published and freshly canaried before package proof can go green.
 - **Local stdio MCP from current package/source:** source/local checks may pass, but published package proof is red until the new version canary passes.
 - **Generated rules / OpenClaw path:** shipped in `3.3.15`; keep covered by first-user gates.
@@ -104,9 +106,9 @@ This todo is based on four independent evidence paths:
 10. Open PR and verify GitHub Actions on the branch head.
 11. Merge only after checks are green.
 12. Verify post-merge `main` on the exact merge/follow-up SHA.
-13. Publish production PyPI only after irreversible-release preflight passes and operator approval is explicit for `agent-borg==3.3.15`.
-14. Poll PyPI JSON until latest is `3.3.15` and files are listed.
-15. Run the PyPI fresh-install canary against actual PyPI `3.3.15`.
+13. Publish production PyPI only after irreversible-release preflight passes and operator approval is explicit for `agent-borg==3.3.16`.
+14. Poll PyPI JSON until latest is `3.3.16` and files are listed.
+15. Run the PyPI fresh-install canary against actual PyPI `3.3.16`.
 16. Regenerate proof dashboard/status/value/impact snapshots from the final clean source and PyPI state.
 17. Commit post-release proof artifacts, push, and verify main-branch CI again.
 
@@ -116,7 +118,7 @@ This todo is based on four independent evidence paths:
 PYTHONDONTWRITEBYTECODE=1 python -m pytest -q -p no:cacheprovider tests/cli/test_first_user_cli_contract.py tests/core/test_generate.py::TestLoadPack tests/packaging/test_public_presentation_contract.py --tb=short
 PYTHONDONTWRITEBYTECODE=1 python eval/run_first_user_release_gate.py
 python -m build
-python -m twine check dist/agent_borg-3.3.15*
+python -m twine check dist/agent_borg-3.3.16*
 # after explicit PyPI approval and upload:
 PYTHONDONTWRITEBYTECODE=1 python eval/run_pypi_fresh_install_canary.py
 PYTHONDONTWRITEBYTECODE=1 python scripts/build_borg_proof_dashboard.py
@@ -195,7 +197,7 @@ git status --short
 
 1. Recruit 10 consented external users.
 2. Give each user the same published-package path:
-   - `pipx install agent-borg==3.3.15` or isolated `pip install agent-borg==3.3.15`.
+   - `pipx install agent-borg==3.3.16` or isolated `pip install agent-borg==3.3.16` after the immutable release is published.
    - `borg --version` / `borg-doctor --json`.
    - `borg rescue "<real error>" --json`.
    - MCP stdio setup and `tools/list` / `borg_rescue` where relevant.
@@ -303,7 +305,7 @@ Run first-user smoke on:
 
 - Linux, macOS, Windows.
 - Python 3.10, 3.11, 3.12.
-- `pipx install agent-borg==3.3.15` and isolated `pip install agent-borg==3.3.15`.
+- `pipx install agent-borg==3.3.16` and isolated `pip install agent-borg==3.3.16` after the immutable release is published.
 - At least two MCP hosts beyond the local stdio canary.
 
 **Hard gate for each environment:**

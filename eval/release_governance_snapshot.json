@@ -1,23 +1,21 @@
 {
-  "allow_deletions": null,
-  "allow_force_pushes": null,
-  "blockers": [
-    "release governance evidence unavailable: HTTP Error 403: rate limit exceeded"
-  ],
+  "allow_deletions": false,
+  "allow_force_pushes": false,
+  "blockers": [],
   "branch": "main",
   "bypass_allowances": [],
   "codeowners_error_count": 0,
   "codeowners_errors": [],
-  "codeowners_errors_checked": false,
-  "codeowners_review_required": null,
-  "dismiss_stale_reviews": null,
-  "enforce_admins": null,
-  "generated_at_utc": "2026-06-02T00:05:43.262496+00:00",
-  "passed": false,
-  "protected": null,
+  "codeowners_errors_checked": true,
+  "codeowners_review_required": true,
+  "dismiss_stale_reviews": true,
+  "enforce_admins": true,
+  "generated_at_utc": "2026-06-02T10:33:54.437749+00:00",
+  "passed": true,
+  "protected": true,
   "repo": "borg-farther/Borg-Directory",
-  "require_last_push_approval": null,
-  "required_approving_review_count": null,
+  "require_last_push_approval": true,
+  "required_approving_review_count": 1,
   "required_checks_expected": [
     "test (3.10)",
     "test (3.11)",
@@ -29,9 +27,19 @@
     "ops-readiness-watchdog",
     "old-account-reference"
   ],
-  "required_checks_observed": [],
-  "required_conversation_resolution": null,
+  "required_checks_observed": [
+    "dependency-audit",
+    "old-account-reference",
+    "ops-readiness-watchdog",
+    "policy-check",
+    "secret-scan",
+    "static-security",
+    "test (3.10)",
+    "test (3.11)",
+    "test (3.12)"
+  ],
+  "required_conversation_resolution": true,
   "schema_version": 1,
   "source": "github_api",
-  "strict_required_status_checks": null
+  "strict_required_status_checks": true
 }

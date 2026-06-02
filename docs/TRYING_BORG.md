@@ -199,4 +199,4 @@ Before attempting technical fixes for errors, bugs, installs, configs, deploymen
 
 ## 7. Readiness boundary
 
-Borg's `agent-borg==3.3.15` package/local stdio path is canaried, but controlled first-10 beta is currently NO-GO because served-runtime freshness and release-governance gates are red. Public self-serve launch readiness and agent-level success lift at statistical confidence remain NO-GO. See [`READINESS.md`](READINESS.md).
+Borg's published `agent-borg==3.3.15` package is stale relative to this source; the current branch targets `agent-borg==3.3.16`. Controlled first-10 beta is currently NO-GO until that package is published/freshly canaried and served-runtime freshness, release-governance, ops/watchdog, and proof-dashboard gates are green. Public self-serve launch readiness and agent-level success lift at statistical confidence remain NO-GO. See [`READINESS.md`](READINESS.md).

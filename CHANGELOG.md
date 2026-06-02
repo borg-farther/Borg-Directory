@@ -1,5 +1,11 @@
 # Changelog
 
+## 3.3.16 — 2026-06-02
+
+- Release-governance and public-proof hardening release: CODEOWNERS now validates against the user-owned repo, branch protection uses exact check-run contexts, and bypass/extra-context/snapshot-forgery cases fail closed.
+- Ops-readiness watchdog now proves source-revision honesty across committed generated proof artifacts, requires post-dashboard no-write verification, and authenticates GitHub governance reads in CI.
+- Public readiness dashboards and gates now separate package freshness, served-runtime freshness, branch protection, and first-10 external-user evidence instead of collapsing them into one misleading release verdict.
+
 ## 3.3.15 — 2026-05-28
 
 - First-user channel completeness release: `borg generate systematic-debugging --format all --output ...` now works from a clean wheel/PyPI install with empty `BORG_HOME`, using bundled seed packs instead of maintainer-only registry paths.

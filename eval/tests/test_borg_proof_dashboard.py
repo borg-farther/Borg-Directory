@@ -241,8 +241,8 @@ def test_dashboard_requires_mcp_stdio_canary_for_pypi_package_current(monkeypatc
     assert model["metrics"]["pypi_fresh_install_canary"]["value"] == "FAIL"
     assert model["metrics"]["pypi_package_current_gate"]["value"] == "FAIL"
     first_action = model["next_action_queue_before_sharing_git_with_first_user"][0]
-    assert "publish a new immutable `agent-borg` version after `9.9.9`" in first_action
-    assert "After `agent-borg==9.9.9` is published" not in first_action
+    assert "rerun or fix the fresh-install + stdio MCP canary for immutable `agent-borg==9.9.9`" in first_action
+    assert "publish immutable `agent-borg==9.9.9`" not in first_action
 
 
 def test_dashboard_rejects_future_pypi_canary_timestamp_for_package_current(monkeypatch):

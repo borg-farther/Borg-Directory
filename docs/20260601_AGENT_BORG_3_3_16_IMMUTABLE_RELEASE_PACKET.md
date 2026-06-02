@@ -3,6 +3,7 @@
 > Historical/internal — not current product documentation. Operator release-preflight artifact only; do not treat this as a user-facing install/readiness page.
 
 Generated: 2026-06-01T19:53Z
+Supersession note: as of the 2026-06-02 release branch, the source version bump to `3.3.16` is in flight and GitHub `main` release governance has been rechecked as enforced. This packet preserves the 2026-06-01 preflight state; do not use its branch-protection/version-bump bullets as current public readiness claims.
 Package: `agent-borg`
 Candidate next immutable version: `3.3.16`
 Production PyPI upload status: **NO-GO / NOT EXECUTED**
@@ -11,9 +12,9 @@ Production PyPI upload status: **NO-GO / NOT EXECUTED**
 
 Do **not** upload to production PyPI yet.
 
-`agent-borg==3.3.16` is still the lowest safe next immutable version because PyPI already contains `3.3.15` and does not contain `3.3.16`, but the release boundary remains blocked by approval, version bump, release provenance, served-runtime, governance, and first-10 evidence gates.
+`agent-borg==3.3.16` was the lowest safe next immutable version because PyPI already contained `3.3.15` and did not contain `3.3.16`. At packet generation time, the release boundary was still blocked by approval, version bump, release provenance, served-runtime, governance, and first-10 evidence gates.
 
-## Current hard facts
+## Hard facts at packet generation time
 
 - Source checkout: `/root/hermes-workspace/borg`
 - Canonical remote: `https://github.com/borg-farther/Borg-Directory`
@@ -27,23 +28,23 @@ Do **not** upload to production PyPI yet.
   - sdist: `2026-05-28T17:50:31.032755Z`
 - PyPI version availability checked: `3.3.16` absent, `3.3.17` absent.
 - Same-version artifact drift: **FAIL** — published `3.3.15` artifacts predate current source changes.
-- Live GitHub `main` protection: **FAIL** — `protected=false`; `/branches/main/protection` returns `404 Branch not protected`.
-- Live CODEOWNERS validation before this hardening PR: **FAIL** — `11` errors because `@borg-farther/maintainers` is invalid in a user-owned repo. Reversible fix in flight: use valid owner `@borg-farther` unless/until the repo moves to an organization with a visible write team.
+- Live GitHub `main` protection at packet generation time: **FAIL** — superseded by the 2026-06-02 release-branch proof, which rechecked GitHub `main` release governance as enforced.
+- Live CODEOWNERS validation before this hardening PR: **FAIL** — superseded by the 2026-06-02 release-branch proof, which rechecked CODEOWNERS validation as clean for the user-owned repo.
 - Actual GitHub Actions check-run contexts observed on current `main`: `test (3.10)`, `test (3.11)`, `test (3.12)`, `dependency-audit`, `policy-check`, `secret-scan`, `static-security`, `ops-readiness-watchdog`, `old-account-reference`.
 
 ## Why `3.3.15` cannot be reused
 
 PyPI versions are immutable. The package already has `agent-borg==3.3.15`. Even though source metadata still says `3.3.15`, current source contains changes after the published artifact timestamp. Re-uploading or pretending the existing `3.3.15` represents current source would be a release-truth violation.
 
-## Upload blockers
+## Upload blockers at packet generation time
 
 1. **No exact irreversible upload approval.** Production PyPI upload was not explicitly approved for `agent-borg==3.3.16`.
 2. **Source version has not been bumped.** Current source still says `3.3.15`.
 3. **No release commit/tag provenance.** There is no approved `3.3.16` release commit or tag.
 4. **Same-version PyPI drift remains red.** Published `3.3.15` is stale relative to source; next publish must use a new immutable version.
-5. **Main branch protection is red.** Live `main` is unprotected until GitHub admin settings are changed after the CODEOWNERS fix is merged.
-6. **CODEOWNERS validation was red on current `main`.** The repo owner is a user account, so team owner `@borg-farther/maintainers` is invalid; this packet's hardening branch fixes the file but live validation must be rechecked after merge.
-7. **Served runtime is stale.** Captured served Borg MCP runtime reports `borg_version=3.3.14` while source is `3.3.15`.
+5. **Main branch protection was red in this historical packet.** Superseded by the 2026-06-02 release-branch proof: GitHub `main` release governance is enforced.
+6. **CODEOWNERS validation was red in this historical packet.** Superseded by the 2026-06-02 release-branch proof: CODEOWNERS validation is clean for the user-owned repo.
+7. **Served runtime is stale.** Captured served Borg MCP runtime reports `borg_version=3.3.14` while the current release branch targets `3.3.16`.
 8. **First-10 evidence is zero.** Public self-serve and 100-user gates remain row-derived NO-GO.
 9. **Existing `dist/` artifacts are `3.3.15` only.** They may pass `twine check`, but they are not uploadable for this release.
 

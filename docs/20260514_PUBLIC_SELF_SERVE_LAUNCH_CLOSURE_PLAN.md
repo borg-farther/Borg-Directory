@@ -4,15 +4,15 @@ Generated: 2026-05-14 18:39 UTC
 
 ## Current state
 
-Borg's controlled first-10 package path is **NO-GO for the current source revision**. `agent-borg==3.3.15` previously had package-level evidence, but the PyPI upload now predates the latest source hardening merge; a new immutable version plus fresh package canaries is required before package-level evidence capture resumes. New hardening PRs must still pass their own CI before merge.
+Borg's controlled first-10 package path is **NO-GO for the current source revision**. `agent-borg==3.3.15` previously had package-level evidence, but the PyPI upload now predates the latest source hardening merge; `agent-borg==3.3.16` plus fresh package canaries is required before package-level evidence capture resumes. New hardening PRs must still pass their own CI before merge.
 
 Public self-serve launch remains **NO-GO** until row-derived first-10 external-user evidence passes. Served remote MCP remains a separate runtime cutover/canary channel, not proven by the PyPI stdio release.
 
 Hard evidence already completed or pending:
 
-- Branch/source readiness for 3.3.15: PASS on main; current collective-learning hardening PR is additive and must pass CI before merge
-- Local source first-user release gate for `agent-borg==3.3.15`: PASS
-- Fresh PyPI install/MCP/generate/OpenClaw canary for `agent-borg==3.3.15`: PASS
+- Branch/source readiness for 3.3.16: pending final PR CI and post-merge main proof
+- Local source first-user release gate for `agent-borg==3.3.16`: must be rerun on the final branch head
+- Fresh PyPI install/MCP/generate/OpenClaw canary for `agent-borg==3.3.16`: blocked until publish
 - self-service ops/watchdog gates: PASS for package-level evidence capture; broad public self-serve remains blocked by first-10 rows
 - security baseline: PASS in local gates
 - privacy/prompt-injection/atom/firewall tests: PASS in local gates
@@ -21,9 +21,13 @@ Hard evidence already completed or pending:
 
 ## Remaining self-serve blockers
 
-Two true blockers remain before broader launch claims:
+Three true blocker classes remain before broader launch claims:
 
-1. **First 10 real external users**
+1. **Current package proof and final release branch evidence**
+   - Need: final 3.3.16 branch PR CI, protected merge, post-merge main proof, production publish, and fresh PyPI install/stdout MCP canary for exactly `agent-borg==3.3.16`.
+   - Until that exact chain is green, public-package evidence capture stays paused even if source/local first-user gates pass.
+
+2. **First 10 real external users**
    - Need: real external-user outcome evidence, not simulations.
    - Done criteria:
      - 10 consented real external user rows in `eval/first_10_user_scoreboard.json`;
@@ -33,7 +37,7 @@ Two true blockers remain before broader launch claims:
      - every blocker/miss categorized;
      - at least one repeat-use/follow-up signal recorded.
 
-2. **Served remote MCP runtime identity**
+3. **Served remote MCP runtime identity**
    - Separate channel from local PyPI/stdin MCP.
    - Need: supervised live reload/cutover and live canary.
    - Done criteria:
@@ -65,7 +69,7 @@ Prior 3.3.10 proof lives in:
 - `docs/20260522_BORG_3310_RELEASE_PREFLIGHT_PUBLISHED.md` (historical)
 - `eval/pypi_fresh_install_snapshot.json` (current exact-version package canary)
 
-Current package path status: `agent-borg==3.3.15` is published but stale for the current source revision because the upload predates the latest hardening merge. Controlled first-10 is capped at 0 until a new immutable package version is published, freshly canaried, and release controls pass; broad public self-serve remains NO-GO until row-derived first-10 evidence passes.
+Current package path status: `agent-borg==3.3.15` is published but stale for the current source revision because the upload predates the latest hardening merge. Controlled first-10 is capped at 0 until `agent-borg==3.3.16` is published, freshly canaried, and package/runtime/ops/release-control proof passes; broad public self-serve remains NO-GO until row-derived first-10 evidence passes.
 
 ### Phase C — first-10 user sprint
 
@@ -76,8 +80,8 @@ For each user:
 1. Send invite and privacy warning.
 2. Record consent.
 3. User runs one of:
-   - `pipx install agent-borg==3.3.15`
-   - fallback venv install from PyPI: `/tmp/borg-beta-venv/bin/python -m pip install agent-borg==3.3.15`
+   - `pipx install agent-borg==3.3.16`
+   - fallback venv install from PyPI: `/tmp/borg-beta-venv/bin/python -m pip install agent-borg==3.3.16`
    - source-branch install only for maintainer-approved pre-release testing, never the default first-10 path.
 4. User runs:
    - `borg --version`

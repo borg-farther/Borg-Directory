@@ -6,7 +6,7 @@
 **Repo inspected:** `/root/hermes-workspace/borg`  
 **Canonical repo:** `https://github.com/borg-farther/Borg-Directory`  
 **Current local branch/head:** `main` @ `a7f5e769016ac83f249d57fe8e36b34f020dda3b`  
-**Current package/source version:** `agent-borg==3.3.15`  
+**Package/source version at generation:** `agent-borg==3.3.15` (superseded; current release branch targets `agent-borg==3.3.16`)
 **Current verdict:** **NO-GO** for controlled first-10, broad public self-serve, served/remote MCP launch, 100-user rollout, and measured external-lift claims.  
 **Current cap:** `0` real users.
 

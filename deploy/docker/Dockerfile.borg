@@ -22,16 +22,17 @@ RUN curl -fsSL https://cli.github.com/packages/githubcli-archive-keyring.gpg \
     && apt-get update && apt-get install -y gh \
     && rm -rf /var/lib/apt/lists/*
 
-# Install the same agent-borg version that public docs and PyPI freshness gates verify.
-# This ARG is intentionally tested against pyproject.toml to prevent stale served runtimes.
-ARG BORG_VERSION=3.3.15
+# Draft served-container path pins the release target. Build/publish this image only after
+# the matching PyPI release has passed freshness gates.
+ARG BORG_VERSION=3.3.16
 RUN pip install --no-cache-dir "agent-borg==${BORG_VERSION}"
 
 # Health check — verifies core tools are functional and the container runtime is the pinned version.
 HEALTHCHECK --interval=30s --timeout=10s --start-period=5s --retries=3 \
-    CMD git rev-parse --is-inside-work-tree > /dev/null 2>&1 || true \
-    && borg --version | grep -q "${BORG_VERSION}" \
-    && gh auth status > /dev/null 2>&1 || true
+    CMD set -eu; \
+    git rev-parse --is-inside-work-tree > /dev/null 2>&1 || true; \
+    borg --version | grep -q "${BORG_VERSION}"; \
+    gh auth status > /dev/null 2>&1 || true
 
 ENTRYPOINT ["borg"]
 CMD ["--version"]

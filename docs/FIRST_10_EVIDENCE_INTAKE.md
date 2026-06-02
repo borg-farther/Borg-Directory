@@ -4,7 +4,7 @@ This is the public intake contract for controlled first-10 beta evidence. It is 
 
 ## Intake path
 
-1. Tester installs the exact current package: `pipx install agent-borg==3.3.15`.
+1. Tester installs the exact current approved package: `pipx install agent-borg==3.3.16` after the PyPI fresh-install/MCP canary for that exact version is green.
 2. Tester runs one real redacted rescue: `borg rescue "<real redacted error>" --short`.
 3. Tester optionally attempts local stdio MCP setup with `borg-mcp`.
 4. Tester opens `.github/ISSUE_TEMPLATE/first-10-evidence.yml` and fills one row.

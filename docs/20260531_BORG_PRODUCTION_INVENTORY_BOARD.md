@@ -1,10 +1,10 @@
 # Borg production inventory board
 
-Generated: `2026-06-01T13:27:51Z`
+Generated: `2026-06-02T10:34:06Z`
 Repo: `https://github.com/borg-farther/Borg-Directory`
-Branch/head: `fix/readiness-watchdog-proof-order-20260601` / `cea423afff63f264a7d7c451d3e9e64fa5713fc5`
+Branch/head: `release/agent-borg-3.3.16-20260602` / `200001f089552b0bb0536e70ecb9e265c5008050`
 Working tree dirty: `True`
-Version: pyproject `3.3.15` / borg `__version__` `3.3.15`
+Version: pyproject `3.3.16` / borg `__version__` `3.3.16`
 
 ## Task outline / decomposition
 
@@ -31,11 +31,11 @@ Version: pyproject `3.3.15` / borg `__version__` `3.3.15`
 ## Evidence summary
 
 - first-10 external rows: `{'verified_external_users': 0, 'real_users': 0, 'install_successes': 0, 'useful_rescue_moments': 0, 'critical_privacy_security_failures': 0, 'repeat_use_within_7_days': 0}`
-- PyPI fresh install + stdio MCP: `True`
+- PyPI fresh install + stdio MCP: `False`
 - first-user release gate: `True`
 - cold-start trust: `True`
 - served runtime freshness: `False`
-- release governance: `False`
+- release governance: `True`
 - self-service ops: `True`
 - ops watchdog: `True`
 - rollback drill: `True`
@@ -55,12 +55,13 @@ Evidence:
 - `eval/first_user_release_gate_snapshot.json`
 - `eval/pypi_fresh_install_snapshot.json`
 Done/proven:
-- source versions match: True (3.3.15)
+- source versions match: True (3.3.16)
 - PyPI latest metadata/current-source gate green: False
-- PyPI fresh-install/stdout MCP canary green: True
+- PyPI fresh-install/stdout MCP canary green: False
 - first-user release gate green: True
 Blockers:
 - PyPI same-version release upload predates current source revision
+- PyPI fresh-install/stdout MCP canary is not green for the current source version
 - working tree is dirty/unshipped; current hardening branch is not committed/pushed/CI-proven
 Outstanding:
 - publish a new immutable version when source is ahead of PyPI
@@ -105,7 +106,8 @@ Evidence:
 Done/proven:
 - snapshot captured: borg_version=3.3.14, source_version=3.3.15
 Blockers:
-- served runtime borg_version '3.3.14' != source version '3.3.15'
+- served runtime borg_version '3.3.14' != source version '3.3.16'
+- served runtime source_version '3.3.15' != source version '3.3.16'
 - served runtime version_matches_source is not true
 - served runtime reload_status is not loaded_code_matches_source_behavior
 Outstanding:
@@ -117,20 +119,18 @@ Challenge:
 
 ### release_governance — GitHub release governance and main-branch protection
 
-Status: `NO_GO`
+Status: `GO`
 
 Evidence:
 - `eval/release_governance_snapshot.json`
 - `GitHub branch API payload for main`
 Done/proven:
-- protected=False
-- observed checks=[]
-Blockers:
-- main branch is not protected
+- protected=True
+- observed checks=['dependency-audit', 'old-account-reference', 'ops-readiness-watchdog', 'policy-check', 'secret-scan', 'static-security', 'test (3.10)', 'test (3.11)', 'test (3.12)']
 Outstanding:
-- enable branch protection
-- require CI/security/watchdog/account-firewall checks
-- require CODEOWNERS review
+- maintain release-governance snapshot freshness
+- keep required CI/security/watchdog/account-firewall checks exact
+- keep CODEOWNERS validation green
 Challenge:
 - Green local checks do not matter if main can bypass the release ritual.
 
@@ -178,10 +178,10 @@ Evidence:
 - `eval/public_self_serve_launch_gate.py --no-write`
 - `eval/real_user_rollout_gate.py --no-write`
 Blockers:
-- served runtime borg_version '3.3.14' != source version '3.3.15'
+- served runtime borg_version '3.3.14' != source version '3.3.16'
+- served runtime source_version '3.3.15' != source version '3.3.16'
 - served runtime version_matches_source is not true
 - served runtime reload_status is not loaded_code_matches_source_behavior
-- main branch is not protected
 Outstanding:
 - served runtime fresh
 - branch protection/release governance green
@@ -200,10 +200,10 @@ Evidence:
 - `eval/first_10_user_scoreboard.json`
 Blockers:
 - first-10 evidence not passed: verified=0/10, real_users=0/10, installs=0/8, useful=0/6, critical_incidents=0/0
-- served runtime borg_version '3.3.14' != source version '3.3.15'
+- served runtime borg_version '3.3.14' != source version '3.3.16'
+- served runtime source_version '3.3.15' != source version '3.3.16'
 - served runtime version_matches_source is not true
 - served runtime reload_status is not loaded_code_matches_source_behavior
-- main branch is not protected
 Outstanding:
 - pass first-10 row-derived evidence
 - keep package/served-runtime/governance/ops/docs gates green
@@ -323,7 +323,7 @@ Evidence:
 - `docs/ROADMAP.md`
 - `docs/20260528_BORG_PRODUCTION_READY_FINAL_TODO.md`
 Blockers:
-- served remote MCP and release governance are not green
+- served remote MCP/runtime freshness is not green
 - no production hosted registry ops proof
 Outstanding:
 - keep Smithery/local stdio draft honest
@@ -346,22 +346,22 @@ Acceptance:
 
 ### P0 — Refresh served runtime through operator-approved cutover
 
-Why: Current served fingerprint says 3.3.14 while source/package are 3.3.15.
+Why: Current served fingerprint says 3.3.14 while source targets 3.3.16.
 
 Acceptance:
 - served borg_version == source_version == PyPI latest
 - runtime hash/path/schema canary captured
 - behavior canaries pass
 
-### P0 — Turn on release governance
+### P1 — Maintain release-governance freshness
 
-Why: main branch is currently unprotected in the captured GitHub branch payload.
+Why: Current GitHub main release-governance proof is green; keep the snapshot fresh and exact-check policy enforced through PR/merge/tag.
 
 Acceptance:
-- branch protection enabled
-- required checks enforced
-- CODEOWNERS review required
 - release_governance_gate passes
+- required checks remain exact
+- CODEOWNERS review remains required
+- no bypass allowances appear
 
 ### P1 — Maintain ops/watchdog/rollback readiness freshness
 
@@ -439,7 +439,7 @@ Acceptance:
 
 ## Final reflective challenge pass
 
-- Could package proof alone justify controlled beta? No: current release controls add served-runtime, governance, and ops freshness, all of which are red or stale.
+- Could package proof alone justify controlled beta? No: current release controls add served-runtime freshness, release-governance freshness, and ops freshness; any red/stale required gate blocks beta.
 - Could protocol GO mean federated learning is production-ready? No: it proves signed sync/revocation mechanics, not hosted operations or public utility.
 - Could internal outcome receipts prove recursive learning is ready? Only as internal primitives; external lift and autonomous promotion remain blocked.
 - Could synthetic load tests stand in for users? No: first-10 row-derived evidence is 0/10 and explicitly blocks public/100-user claims.

@@ -1,6 +1,6 @@
 # Borg roadmap
 
-Rev: 2026-05-31
+Rev: 2026-06-02
 
 ## Product nucleus
 
@@ -8,11 +8,11 @@ Borg is failure memory for AI coding agents: a local CLI/MCP server that turns a
 
 ## Current public state
 
-- Source and published package target `agent-borg==3.3.15`, but the current PyPI artifact is stale relative to source because the upload predates the latest hardening merge. Package proof is red until a new immutable version is published and freshly canaried.
+- Current source target is `agent-borg==3.3.16`; published PyPI latest remains `agent-borg==3.3.15`, and that artifact is stale relative to source because the upload predates the latest hardening merge. Package proof is red until `3.3.16` is published and freshly canaried.
 - CLI command: `borg`.
 - MCP server command: `borg-mcp`.
 - GitHub default branch: `main` at `borg-farther/Borg-Directory`.
-- Controlled first-10 beta: NO-GO right now. `agent-borg==3.3.15` package proof is stale for the current source revision, and served-runtime freshness plus release-governance gates are red; cap is 0 until a new immutable package version, release controls, and ops/watchdog proof are green.
+- Controlled first-10 beta: NO-GO right now. `agent-borg==3.3.15` package proof is stale for the current source revision; cap is 0 until `agent-borg==3.3.16`, served-runtime freshness, release governance, ops/watchdog, and proof-dashboard proof are green.
 - Public self-serve launch: NO-GO until row-derived first-10 external evidence passes.
 - Served remote MCP: separate NO-GO channel until live runtime fingerprint/canary passes.
 
