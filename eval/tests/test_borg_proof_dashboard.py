@@ -22,6 +22,9 @@ def test_borg_proof_dashboard_artifacts_exist_and_are_honest(tmp_path, monkeypat
     monkeypatch.setattr(dashboard, "HTML_OUT", docs / "BORG_PROOF_DASHBOARD.html")
     monkeypatch.setattr(dashboard, "PUBLIC_OUT", public / "index.html")
     monkeypatch.setattr(dashboard, "PUBLIC_STATUS_OUT", docs / "public" / "status.json")
+    monkeypatch.setattr(dashboard, "PUBLIC_STATUS_ALIAS_OUT", docs / "status.json")
+    monkeypatch.setattr(dashboard, "PAGES_ROOT_OUT", docs / "index.html")
+    monkeypatch.setattr(dashboard, "PAGES_PROOF_ALIAS_OUT", docs / "proof-dashboard" / "index.html")
     monkeypatch.setattr(dashboard, "PUBLIC_VALUE_OUT", docs / "public" / "value.json")
     monkeypatch.setattr(dashboard, "PUBLIC_IMPACT_OUT", docs / "public" / "impact" / "impact.json")
 
@@ -32,9 +35,12 @@ def test_borg_proof_dashboard_artifacts_exist_and_are_honest(tmp_path, monkeypat
     html_path = dashboard.HTML_OUT
     public_path = dashboard.PUBLIC_OUT
     status_path = dashboard.PUBLIC_STATUS_OUT
+    status_alias_path = dashboard.PUBLIC_STATUS_ALIAS_OUT
+    root_index_path = dashboard.PAGES_ROOT_OUT
+    proof_alias_path = dashboard.PAGES_PROOF_ALIAS_OUT
     value_path = dashboard.PUBLIC_VALUE_OUT
     impact_path = dashboard.PUBLIC_IMPACT_OUT
-    for path in [json_path, md_path, html_path, public_path, status_path, value_path, impact_path]:
+    for path in [json_path, md_path, html_path, public_path, status_path, status_alias_path, root_index_path, proof_alias_path, value_path, impact_path]:
         assert path.exists(), path
     data = json.loads(json_path.read_text(encoding="utf-8"))
     assert data["repo"] == "https://github.com/borg-farther/Borg-Directory"
@@ -92,8 +98,16 @@ def test_borg_proof_dashboard_artifacts_exist_and_are_honest(tmp_path, monkeypat
     assert data["anti_hype"]["simulated_users_are_not_real_users"] is True
     assert "Simulated/logical users are not real users" in data["anti_hype"]["text"]
     status = json.loads(status_path.read_text(encoding="utf-8"))
+    status_alias = json.loads(status_alias_path.read_text(encoding="utf-8"))
     value = json.loads(value_path.read_text(encoding="utf-8"))
     impact = json.loads(impact_path.read_text(encoding="utf-8"))
+    assert status_alias == status
+    root_index = root_index_path.read_text(encoding="utf-8")
+    proof_alias = proof_alias_path.read_text(encoding="utf-8")
+    assert './public/proof-dashboard/' in root_index
+    assert './status.json' in root_index
+    assert '../public/proof-dashboard/' in proof_alias
+    assert '../status.json' in proof_alias
     assert status["updated_at"] == data["generated_at_utc"]
     assert value["updated_at"] == data["generated_at_utc"]
     assert impact["updated_at"] == data["generated_at_utc"]

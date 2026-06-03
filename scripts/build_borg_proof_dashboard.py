@@ -27,6 +27,9 @@ MD_OUT = DOCS / "BORG_PROOF_DASHBOARD.md"
 HTML_OUT = DOCS / "BORG_PROOF_DASHBOARD.html"
 PUBLIC_OUT = PUBLIC / "index.html"
 PUBLIC_STATUS_OUT = PUBLIC_ROOT / "status.json"
+PUBLIC_STATUS_ALIAS_OUT = DOCS / "status.json"
+PAGES_ROOT_OUT = DOCS / "index.html"
+PAGES_PROOF_ALIAS_OUT = DOCS / "proof-dashboard" / "index.html"
 PUBLIC_VALUE_OUT = PUBLIC_ROOT / "value.json"
 PUBLIC_IMPACT_OUT = PUBLIC_ROOT / "impact" / "impact.json"
 CANONICAL_REPO_URL = "https://github.com/borg-farther/Borg-Directory"
@@ -780,11 +783,50 @@ def display_path(path: Path) -> str:
         return str(path)
 
 
+def render_pages_redirect(*, title: str, target_href: str, status_href: str) -> str:
+    """Return a stable GitHub Pages redirect shell for human and bot users.
+
+    GitHub Pages can serve `/`, `/proof-dashboard/`, and `/status.json` from
+    the `/docs` source.  The canonical generated dashboard intentionally lives
+    under `docs/public/proof-dashboard/`; these small aliases keep natural
+    self-service URLs live without duplicating the dashboard payload.
+    """
+    safe_title = html.escape(title)
+    safe_target = html.escape(target_href, quote=True)
+    safe_status = html.escape(status_href, quote=True)
+    return f"""<!doctype html>
+<html lang=\"en\">
+<head>
+  <meta charset=\"utf-8\">
+  <meta name=\"viewport\" content=\"width=device-width, initial-scale=1\">
+  <meta http-equiv=\"refresh\" content=\"0; url={safe_target}\">
+  <title>{safe_title}</title>
+  <style>
+    :root {{ color-scheme: dark; }}
+    body {{ margin: 0; min-height: 100vh; display: grid; place-items: center; font-family: ui-sans-serif, system-ui, -apple-system, BlinkMacSystemFont, \"Segoe UI\", sans-serif; background: #05070d; color: #e5eefc; }}
+    main {{ max-width: 720px; padding: 32px; }}
+    a {{ color: #8bd3ff; }}
+  </style>
+</head>
+<body>
+  <main>
+    <h1>Redirecting to Borg proof dashboard…</h1>
+    <p>If redirect does not happen, open <a href=\"{safe_target}\">the canonical proof dashboard</a>.</p>
+    <p>Machine status: <a href=\"{safe_status}\">status.json</a></p>
+  </main>
+</body>
+</html>
+"""
+
+
 def main() -> int:
     DOCS.mkdir(parents=True, exist_ok=True)
     EVAL.mkdir(parents=True, exist_ok=True)
     PUBLIC.mkdir(parents=True, exist_ok=True)
     PUBLIC_STATUS_OUT.parent.mkdir(parents=True, exist_ok=True)
+    PUBLIC_STATUS_ALIAS_OUT.parent.mkdir(parents=True, exist_ok=True)
+    PAGES_ROOT_OUT.parent.mkdir(parents=True, exist_ok=True)
+    PAGES_PROOF_ALIAS_OUT.parent.mkdir(parents=True, exist_ok=True)
     PUBLIC_VALUE_OUT.parent.mkdir(parents=True, exist_ok=True)
     PUBLIC_IMPACT_OUT.parent.mkdir(parents=True, exist_ok=True)
     model = build_model()
@@ -795,7 +837,25 @@ def main() -> int:
     MD_OUT.write_text(md, encoding="utf-8")
     HTML_OUT.write_text(html_text, encoding="utf-8")
     PUBLIC_OUT.write_text(html_text, encoding="utf-8")
-    PUBLIC_STATUS_OUT.write_text(json.dumps(status_payload, indent=2, sort_keys=True) + "\n", encoding="utf-8")
+    status_text = json.dumps(status_payload, indent=2, sort_keys=True) + "\n"
+    PUBLIC_STATUS_OUT.write_text(status_text, encoding="utf-8")
+    PUBLIC_STATUS_ALIAS_OUT.write_text(status_text, encoding="utf-8")
+    PAGES_ROOT_OUT.write_text(
+        render_pages_redirect(
+            title="Borg proof dashboard",
+            target_href="./public/proof-dashboard/",
+            status_href="./status.json",
+        ),
+        encoding="utf-8",
+    )
+    PAGES_PROOF_ALIAS_OUT.write_text(
+        render_pages_redirect(
+            title="Borg proof dashboard redirect",
+            target_href="../public/proof-dashboard/",
+            status_href="../status.json",
+        ),
+        encoding="utf-8",
+    )
     PUBLIC_VALUE_OUT.write_text(json.dumps(value_payload, indent=2, sort_keys=True) + "\n", encoding="utf-8")
     PUBLIC_IMPACT_OUT.write_text(json.dumps(impact_payload, indent=2, sort_keys=True) + "\n", encoding="utf-8")
     print(display_path(MD_OUT))
@@ -803,6 +863,9 @@ def main() -> int:
     print(display_path(JSON_OUT))
     print(display_path(PUBLIC_OUT))
     print(display_path(PUBLIC_STATUS_OUT))
+    print(display_path(PUBLIC_STATUS_ALIAS_OUT))
+    print(display_path(PAGES_ROOT_OUT))
+    print(display_path(PAGES_PROOF_ALIAS_OUT))
     print(display_path(PUBLIC_VALUE_OUT))
     print(display_path(PUBLIC_IMPACT_OUT))
     return 0

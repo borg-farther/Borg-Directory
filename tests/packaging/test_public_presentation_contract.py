@@ -380,6 +380,7 @@ def test_non_current_public_docs_are_bannered_or_operator_scoped() -> None:
 
 def test_public_live_dashboard_json_endpoints_exist_and_no_go_is_badge_red() -> None:
     for relative in [
+        "docs/status.json",
         "docs/public/status.json",
         "docs/public/value.json",
         "docs/public/impact/impact.json",
@@ -389,8 +390,16 @@ def test_public_live_dashboard_json_endpoints_exist_and_no_go_is_badge_red() -> 
         assert payload["updated_at"]
 
     status = json.loads(read("docs/public/status.json"))
+    status_alias = json.loads(read("docs/status.json"))
     dashboard_payload = json.loads(read("eval/borg_proof_dashboard.json"))
     value = json.loads(read("docs/public/value.json"))
+    assert status_alias == status
+    root_index = read("docs/index.html")
+    proof_index = read("docs/proof-dashboard/index.html")
+    assert './public/proof-dashboard/' in root_index
+    assert './status.json' in root_index
+    assert '../public/proof-dashboard/' in proof_index
+    assert '../status.json' in proof_index
     assert status["repo"] == "https://github.com/borg-farther/Borg-Directory"
     assert status["state"].startswith("NO-GO public self-serve")
     if status["controlled_first_10_beta"]["verdict"] == "CONDITIONAL":
