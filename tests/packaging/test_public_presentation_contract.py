@@ -379,6 +379,8 @@ def test_non_current_public_docs_are_bannered_or_operator_scoped() -> None:
 
 
 def test_public_live_dashboard_json_endpoints_exist_and_no_go_is_badge_red() -> None:
+    assert (ROOT / "docs" / ".nojekyll").exists(), "GitHub Pages /docs source must publish static generated files without Jekyll"
+
     for relative in [
         "docs/status.json",
         "docs/public/status.json",
