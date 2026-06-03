@@ -10,7 +10,7 @@
       "No Borg analytics export proving active contributors or consumers was found.",
       "No first-10-user scoreboard with real outcomes exists yet.",
       "Ops readiness/watchdog plus served-runtime and release-governance gates must stay green; any P0/P1 bad-answer, privacy, support, stale-proof, stale-runtime, or branch-protection failure pauses controlled beta invites.",
-      "100-real-user gate remains blocked: [\"served runtime borg_version '3.3.14' != source version '3.3.17'\", \"served runtime source_version '3.3.15' != source version '3.3.17'\", 'served runtime version_matches_source is not true', 'served runtime reload_status is not loaded_code_matches_source_behavior', 'first-10 external-user evidence has not passed: verified=0/10, real_users=0/10, installs=0/8, useful=0/6, critical_incidents=0/0']",
+      "100-real-user gate remains blocked: [\"served runtime borg_version '3.3.14' != source version '3.3.17'\", \"served runtime source_version '3.3.15' != source version '3.3.17'\", 'served runtime version_matches_source is not true', 'served runtime reload_status is not loaded_code_matches_source_behavior', \"source_revision_honesty failed: {'passed': False, 'head': 'aaeaa5da023371bb64beae786ae3d93470162b13', 'git_clean': False, 'source_revision': 'e6f1f59a1f92302a2b769356b1e5a3e16c04e402+dirty', 'policy': 'Committed dashboards may be generated from a dirty tree and must mark +dirty; clean-tree status endpoints should match HEAD or a dirty ancestor used to generate committed proof artifacts.'}\", 'first-10 external-user evidence has not passed: verified=0/10, real_users=0/10, installs=0/8, useful=0/6, critical_incidents=0/0']",
       "Served/runtime freshness must be proven from eval/served_runtime_fingerprint_snapshot.json; source/fresh-process green is not live cutover proof.",
       "Release governance must be proven from eval/release_governance_snapshot.json; missing/unprotected branch details block release readiness."
     ],
@@ -68,11 +68,11 @@
       "sha256": "64506c28195ec35a14e633335085ea262e96eb9ea5aba75aec2d2303314be615"
     },
     {
-      "claim_derived": "100-real-user gate=False; max_recommended_real_users=0; blockers=[\"served runtime borg_version '3.3.14' != source version '3.3.17'\", \"served runtime source_version '3.3.15' != source version '3.3.17'\", 'served runtime version_matches_source is not true', 'served runtime reload_status is not loaded_code_matches_source_behavior', 'first-10 external-user evidence has not passed: verified=0/10, real_users=0/10, installs=0/8, useful=0/6, critical_incidents=0/0']",
+      "claim_derived": "100-real-user gate=False; max_recommended_real_users=0; blockers=[\"served runtime borg_version '3.3.14' != source version '3.3.17'\", \"served runtime source_version '3.3.15' != source version '3.3.17'\", 'served runtime version_matches_source is not true', 'served runtime reload_status is not loaded_code_matches_source_behavior', \"source_revision_honesty failed: {'passed': False, 'head': 'aaeaa5da023371bb64beae786ae3d93470162b13', 'git_clean': False, 'source_revision': 'e6f1f59a1f92302a2b769356b1e5a3e16c04e402+dirty', 'policy': 'Committed dashboards may be generated from a dirty tree and must mark +dirty; clean-tree status endpoints should match HEAD or a dirty ancestor used to generate committed proof artifacts.'}\", 'first-10 external-user evidence has not passed: verified=0/10, real_users=0/10, installs=0/8, useful=0/6, critical_incidents=0/0']",
       "exists": true,
-      "freshness_timestamp": "2026-06-03T15:30:43.920614+00:00",
+      "freshness_timestamp": "2026-06-03T15:35:40.928781+00:00",
       "path": "eval/real_user_rollout_gate_snapshot.json",
-      "sha256": "2a16137ae0aad68a7ebbfb1bda4dc4f19c5088f12238c385cd05e276cdb5f0d0"
+      "sha256": "eca9f6242812af3c6cbf85cc41a7227551b8062085601519e99fe80ef4e4ec58"
     },
     {
       "claim_derived": "first-10 row evidence users=0; measured_savings={'rows_with_measured_value': 0, 'dead_ends_avoided_confirmed': 0, 'net_minutes_saved': 0.0, 'positive_minutes_saved': 0.0, 'negative_minutes_cost': 0.0, 'net_tokens_saved': 0, 'positive_tokens_saved': 0, 'negative_tokens_cost': 0, 'counterfactual_basis_counts': {}}; gate=BLOCKED",
@@ -82,46 +82,46 @@
       "sha256": "232585546e34fc07459365e00123aa512098f215f7bcd6307d0bde9bb20813f0"
     },
     {
-      "claim_derived": "public self-serve gate=False; max_recommended_real_users=0; blockers=[\"served runtime borg_version '3.3.14' != source version '3.3.17'\", \"served runtime source_version '3.3.15' != source version '3.3.17'\", 'served runtime version_matches_source is not true', 'served runtime reload_status is not loaded_code_matches_source_behavior', 'first-10 external-user evidence has not passed: verified=0/10, real_users=0/10, installs=0/8, useful=0/6, critical_incidents=0/0']",
+      "claim_derived": "public self-serve gate=False; max_recommended_real_users=0; blockers=[\"served runtime borg_version '3.3.14' != source version '3.3.17'\", \"served runtime source_version '3.3.15' != source version '3.3.17'\", 'served runtime version_matches_source is not true', 'served runtime reload_status is not loaded_code_matches_source_behavior', \"source_revision_honesty failed: {'passed': False, 'head': 'aaeaa5da023371bb64beae786ae3d93470162b13', 'git_clean': False, 'source_revision': 'e6f1f59a1f92302a2b769356b1e5a3e16c04e402+dirty', 'policy': 'Committed dashboards may be generated from a dirty tree and must mark +dirty; clean-tree status endpoints should match HEAD or a dirty ancestor used to generate committed proof artifacts.'}\", 'first-10 external-user evidence has not passed: verified=0/10, real_users=0/10, installs=0/8, useful=0/6, critical_incidents=0/0']",
       "exists": true,
-      "freshness_timestamp": "2026-06-03T15:30:42.215357+00:00",
+      "freshness_timestamp": "2026-06-03T15:35:39.512578+00:00",
       "path": "eval/public_self_serve_launch_gate_snapshot.json",
-      "sha256": "6410ac29d9d89c421484d777c1a1d658ff246a8e90560e0eb7cfe8b46a6f0ca8"
+      "sha256": "153cb306f67b4b50fd8397d52e76667f37012c03192b1160c27b5201fb428dc0"
     },
     {
       "claim_derived": "cold-start trust gate=True; blockers=[]",
       "exists": true,
-      "freshness_timestamp": "2026-06-03T15:30:30.831601+00:00",
+      "freshness_timestamp": "2026-06-03T15:35:28.085168+00:00",
       "path": "eval/cold_start_trust_gate_snapshot.json",
-      "sha256": "f860a3bc41b4e008f3e337277b99d3fbf413531294f4417c879e2525abfae29f"
+      "sha256": "c721aedaa4d03aa3fb8519bf85d0afb1533b250902762ecdd2c1a2c69f75cb12"
     },
     {
       "claim_derived": "self-service ops gate=True; blockers=[]",
       "exists": true,
-      "freshness_timestamp": "2026-06-03T15:30:47.329330+00:00",
+      "freshness_timestamp": "2026-06-03T15:35:44.361550+00:00",
       "path": "eval/self_service_ops_gate_snapshot.json",
-      "sha256": "d1c2c14298f11b1aac07346c4f6922ca315e729339a6674ff0c6cc3c1240d47e"
+      "sha256": "3384a2bf305f1d6fdf962f5d3660bffdb17de55f2d37817b77b8cdd309b0625a"
     },
     {
       "claim_derived": "ops readiness watchdog=True; blocker details live in eval/ops_readiness_watchdog_snapshot.json",
       "exists": true,
-      "freshness_timestamp": "2026-06-03T15:30:46.977906+00:00",
+      "freshness_timestamp": "2026-06-03T15:35:44.020346+00:00",
       "path": "eval/ops_readiness_watchdog_snapshot.json",
-      "sha256": "118bd31f85336f3f3d6d93c5a44b96235813eb3412388ebc0428d9d8d40ce441"
+      "sha256": "fae5f49b2d9db63dad6c5a25232ecae5248f3dccbec8546f3ddeb78af49ddfca"
     },
     {
       "claim_derived": "rollback/comms drill=True; dry_run_only=True",
       "exists": true,
-      "freshness_timestamp": "2026-06-03T15:30:33.856674+00:00",
+      "freshness_timestamp": "2026-06-03T15:35:31.145219+00:00",
       "path": "eval/rollback_comms_drill_snapshot.json",
-      "sha256": "e0599ac15b0fd28577397acedd66b615cceeb3e88c02fece9dadab86999ee9b7"
+      "sha256": "2ecd805add53633a8b966e68d19f7fbc64c1ec708cd380cb028adb7b902b6b47"
     },
     {
       "claim_derived": "PyPI fresh-install canary success=True; version=3.3.17",
       "exists": true,
-      "freshness_timestamp": "2026-06-03T15:30:08Z",
+      "freshness_timestamp": "2026-06-03T15:35:08Z",
       "path": "eval/pypi_fresh_install_snapshot.json",
-      "sha256": "007a782a8a4119f5ee32dee8e444bfec14a2aea28fb82afe92bfd553691965d3"
+      "sha256": "95716483aa77bf363c44fff6b5953e12dea626832e8e1b4978a01df62b35ec08"
     },
     {
       "claim_derived": "logical load 10: passed=True; total_requests=48934; success_rate=1.0; p95_ms=0.7294940995052457; model=asyncio_logical_users",
@@ -361,7 +361,7 @@
       }
     ]
   },
-  "generated_at_utc": "2026-06-03T15:30:47Z",
+  "generated_at_utc": "2026-06-03T15:35:44Z",
   "metrics": {
     "active_contributors_consumers": {
       "honesty_label": "MISSING_BORG_ANALYTICS_ARTIFACT",
@@ -533,7 +533,7 @@
     "Before any public claim, replace logical-user load evidence with real external-user evidence or clearly label the distinction."
   ],
   "repo": "https://github.com/borg-farther/Borg-Directory",
-  "source_revision": "e6f1f59a1f92302a2b769356b1e5a3e16c04e402+dirty",
+  "source_revision": "aaeaa5da023371bb64beae786ae3d93470162b13+dirty",
   "top_verdict": {
     "broad_public_launch": {
       "verdict": "NO-GO",

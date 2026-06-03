@@ -1,6 +1,6 @@
 # Borg public self-serve launch go/no-go
 
-Generated: 2026-06-03T15:30:42.215357+00:00
+Generated: 2026-06-03T15:35:39.512578+00:00
 Source version: `3.3.17`
 
 Public self-serve launch: **NO-GO**
@@ -20,7 +20,7 @@ Public self-serve is GO only after PyPI/fresh-install/MCP/docs/cold-start-trust/
 - `served_runtime_freshness`: `FAIL`
 - `release_governance`: `PASS`
 - `self_service_ops_readiness`: `PASS`
-- `ops_readiness_watchdog`: `PASS`
+- `ops_readiness_watchdog`: `FAIL`
 - `docs_claim_guard`: `PASS`
 - `privacy_security_incident_pause`: `PASS`
 - `first_10_external_evidence`: `FAIL`
@@ -31,6 +31,7 @@ Public self-serve is GO only after PyPI/fresh-install/MCP/docs/cold-start-trust/
 - served runtime source_version '3.3.15' != source version '3.3.17'
 - served runtime version_matches_source is not true
 - served runtime reload_status is not loaded_code_matches_source_behavior
+- source_revision_honesty failed: {'passed': False, 'head': 'aaeaa5da023371bb64beae786ae3d93470162b13', 'git_clean': False, 'source_revision': 'e6f1f59a1f92302a2b769356b1e5a3e16c04e402+dirty', 'policy': 'Committed dashboards may be generated from a dirty tree and must mark +dirty; clean-tree status endpoints should match HEAD or a dirty ancestor used to generate committed proof artifacts.'}
 - first-10 external-user evidence has not passed: verified=0/10, real_users=0/10, installs=0/8, useful=0/6, critical_incidents=0/0
 
 ## Evidence artifacts

@@ -41,7 +41,7 @@
     }
   ],
   "gate_type": "cold_start_trust_hardening",
-  "generated_at_utc": "2026-06-03T15:30:30.831601+00:00",
+  "generated_at_utc": "2026-06-03T15:35:28.085168+00:00",
   "passed": true,
   "schema_version": 1,
   "trust_policy": "Borg must fail closed with NO_CONFIDENT_MATCH for meta/product/readiness prompts, must not inject unrelated framework guidance, and must preserve concrete error guidance for exact failures."

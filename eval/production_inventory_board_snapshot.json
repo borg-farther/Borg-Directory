@@ -366,7 +366,7 @@
     "Could synthetic load tests stand in for users? No: first-10 row-derived evidence is 0/10 and explicitly blocks public/100-user claims.",
     "Could a dashboard hide these blockers? It must not; stale generated artifacts are themselves blockers until rebuilt from current gates."
   ],
-  "generated_at_utc": "2026-06-03T15:30:47Z",
+  "generated_at_utc": "2026-06-03T15:35:44Z",
   "outstanding": [
     {
       "acceptance": [
@@ -486,16 +486,13 @@
   "source": {
     "git": {
       "branch": "post-release-proof-3.3.17",
-      "commit": "e6f1f59a1f92302a2b769356b1e5a3e16c04e402",
+      "commit": "aaeaa5da023371bb64beae786ae3d93470162b13",
       "dirty": true,
       "dirty_files": [
-        "M AGENTS.md",
-        " M docs/20260517_BORG_100_REAL_USER_READINESS.md",
-        " M docs/20260526_7_USER_CONTROLLED_LAUNCH_AND_100_USER_STAGE_GATES.md",
+        "M docs/20260517_BORG_100_REAL_USER_READINESS.md",
         " M docs/20260531_BORG_PRODUCTION_INVENTORY_BOARD.md",
         " M docs/BORG_PROOF_DASHBOARD.html",
         " M docs/BORG_PROOF_DASHBOARD.md",
-        " M docs/CHANNELS_AND_INSTALL_METHODS.md",
         " M docs/COLD_START_TRUST_HARDENING.md",
         " M docs/PUBLIC_SELF_SERVE_LAUNCH_GO_NO_GO.md",
         " M docs/SELF_SERVICE_OPS_READINESS_REPORT.md",
@@ -505,7 +502,6 @@
         " M docs/public/value.json",
         " M eval/borg_proof_dashboard.json",
         " M eval/cold_start_trust_gate_snapshot.json",
-        " M eval/ops_readiness_watchdog_post_dashboard_check.json",
         " M eval/ops_readiness_watchdog_snapshot.json",
         " M eval/production_inventory_board_snapshot.json",
         " M eval/public_self_serve_launch_gate_snapshot.json",
@@ -513,8 +509,7 @@
         " M eval/real_user_rollout_gate_snapshot.json",
         " M eval/release_governance_snapshot.json",
         " M eval/rollback_comms_drill_snapshot.json",
-        " M eval/self_service_ops_gate_snapshot.json",
-        " M eval/tests/test_production_inventory_board.py"
+        " M eval/self_service_ops_gate_snapshot.json"
       ],
       "remote": [
         "origin\thttps://github.com/borg-farther/Borg-Directory.git (fetch)",
