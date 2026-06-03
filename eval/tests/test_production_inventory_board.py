@@ -20,7 +20,7 @@ def test_production_inventory_preserves_split_verdicts() -> None:
     verdict = data["top_verdict"]
 
     package_component = _by_id(data, "source_package_cli_stdio")
-    if package_component["status"] in {"CONDITIONAL_GO", "IN_PROGRESS"}:
+    if package_component["status"] == "CONDITIONAL_GO":
         assert verdict["published_package_local_stdio"] == "CONDITIONAL_GO"
         if data["source"]["git"]["dirty"]:
             assert verdict["source_package_local_stdio"] == "IN_PROGRESS"
@@ -28,6 +28,16 @@ def test_production_inventory_preserves_split_verdicts() -> None:
         else:
             assert verdict["source_package_local_stdio"] == "CONDITIONAL_GO"
             assert verdict["current_source_hardening_branch"] == "CONDITIONAL_GO"
+    elif package_component["status"] == "IN_PROGRESS":
+        # Pre-upload release branches are allowed to be source-ahead of PyPI.
+        # That proves the branch is in progress, not that the already-published
+        # immutable package is current for this source version.
+        assert verdict["published_package_local_stdio"] == "NO_GO"
+        assert verdict["source_package_local_stdio"] in {"NO_GO", "IN_PROGRESS"}
+        assert any(
+            "publish a new immutable version" in item.lower()
+            for item in package_component["outstanding"] + package_component["blockers"]
+        )
     else:
         assert verdict["published_package_local_stdio"] == "NO_GO"
         assert verdict["source_package_local_stdio"] == "NO_GO"

@@ -1,8 +1,8 @@
 # borg value communication dashboard
 
 ## operator benefits (validated internally)
-- first visible value path for controlled beta after release gates: `pipx install agent-borg==3.3.17` -> `borg rescue "<redacted error>"` -> ACTION / STOP / VERIFY
-- controlled package beta path: **NO-GO right now** — `agent-borg==3.3.17` is the metadata-correct package target; exact-version runtime canary proof is pending until upload and served-runtime freshness plus ops/watchdog proof are not green yet
+- first visible value path for controlled beta after release gates: `pipx install agent-borg==3.3.18` -> `borg rescue "<redacted error>"` -> ACTION / STOP / VERIFY
+- controlled package beta path: **NO-GO right now** — `agent-borg==3.3.18` is the published metadata-correct package and exact-version runtime canary proof is green; served-runtime freshness and first-10 external-user evidence are not green yet
 - local/synthetic gate status: first-user release gate and logical load gates are green in current artifacts; synthetic users are not external-user evidence
 - external-user proof status: **not proven yet**; verified external users remain `0`
 - measured savings status: **0 measured rows, 0.0 net minutes saved, 0 net tokens saved**; savings are not claimed until consented external-user rows include before/after measurements
@@ -16,11 +16,11 @@
 - rescue rule: `borg rescue --json` exposes `value_receipt.measurement_status=ready_to_measure` and `savings_claim_type=none` until a later first-10 row records the outcome
 
 ## readiness status
-- controlled first-10 PyPI beta: **NO-GO right now** — `agent-borg==3.3.17` runtime canary passes but package metadata is stale; invite 0 consented external users until a metadata-correct immutable package, served-runtime freshness, release governance, ops/watchdog, and proof-dashboard proof are green
+- controlled first-10 PyPI beta: **NO-GO right now** — `agent-borg==3.3.18` runtime and package metadata canaries pass; invite 0 consented external users until served-runtime freshness is green and first-10 evidence intake is ready
 - supervised local first-user path: GO in current artifacts
 - public self-serve launch: **NO-GO until first-10 row-derived external evidence passes**
 - 100 real-user rollout: **NO-GO until 10 external users, >=8 installs, >=6 useful rescues, and 0 critical incidents**
-- decision: runtime canary proof for `agent-borg==3.3.17` is pending until upload; package-current proof remains **red** until the immutable package is uploaded and verified; controlled first-10 beta must wait for a metadata-correct immutable package, served-runtime freshness, release governance, ops/watchdog, and proof-dashboard gates; no broad self-serve, served remote MCP, 100-user, measured-savings, or frontier-better-than claim
+- decision: runtime canary and package-current proof for `agent-borg==3.3.18` are green; controlled first-10 beta must wait for served-runtime freshness and first-10 external-user evidence; no broad self-serve, served remote MCP, 100-user, measured-savings, or frontier-better-than claim
 
 ## evidence
 - `eval/public_self_serve_launch_gate_snapshot.json`

@@ -1,6 +1,6 @@
 # Borg 100 real-user readiness
 
-Generated: 2026-06-03T15:35:40.928781+00:00
+Generated: 2026-06-03T20:04:50.112619+00:00
 
 100 real-user verdict: **NO-GO**
 Max recommended real users now: **0**
@@ -17,7 +17,7 @@ Real-user rollout requires first-10 external evidence before expanding to 100.
 - served_runtime_fresh: `False`
 - release_governance_ready: `True`
 - self_service_ops_ready: `True`
-- ops_readiness_watchdog_ready: `False`
+- ops_readiness_watchdog_ready: `True`
 - infrastructure_ready_for_100: `False`
 - ready_for_100_real_users: `False`
 
@@ -33,11 +33,12 @@ Real-user rollout requires first-10 external evidence before expanding to 100.
 
 ## Blockers
 
-- served runtime borg_version '3.3.14' != source version '3.3.17'
-- served runtime source_version '3.3.15' != source version '3.3.17'
+- PyPI latest/fresh-install package evidence is not green: same-version PyPI upload predates current source revision
+- PyPI latest/fresh-install package evidence is not green: fresh install + MCP stdio canary is not green
+- served runtime borg_version '3.3.14' != source version '3.3.18'
+- served runtime source_version '3.3.15' != source version '3.3.18'
 - served runtime version_matches_source is not true
 - served runtime reload_status is not loaded_code_matches_source_behavior
-- source_revision_honesty failed: {'passed': False, 'head': 'aaeaa5da023371bb64beae786ae3d93470162b13', 'git_clean': False, 'source_revision': 'e6f1f59a1f92302a2b769356b1e5a3e16c04e402+dirty', 'policy': 'Committed dashboards may be generated from a dirty tree and must mark +dirty; clean-tree status endpoints should match HEAD or a dirty ancestor used to generate committed proof artifacts.'}
 - first-10 external-user evidence has not passed: verified=0/10, real_users=0/10, installs=0/8, useful=0/6, critical_incidents=0/0
 
 ## Required action to unlock 100 real users

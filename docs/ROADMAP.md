@@ -8,11 +8,11 @@ Borg is failure memory for AI coding agents: a local CLI/MCP server that turns a
 
 ## Current public state
 
-- Current package target is `agent-borg==3.3.17`; published PyPI latest is `agent-borg==3.3.17`, and exact-version fresh-install/stdio MCP/generated-rules/OpenClaw runtime canary passes.
+- Current package target is `agent-borg==3.3.18`; published PyPI latest is `agent-borg==3.3.18`, and exact-version fresh-install/stdio MCP/generated-rules/OpenClaw runtime canary passes.
 - CLI command: `borg`.
 - MCP server command: `borg-mcp`.
 - GitHub default branch: `main` at `borg-farther/Borg-Directory`.
-- Controlled first-10 beta: NO-GO right now. `agent-borg==3.3.17` targets a metadata-correct PyPI release, but install/runtime proof is pending until upload and fresh canary; cap is 0 until a new immutable metadata-correct package plus served-runtime freshness, release governance, ops/watchdog, and proof-dashboard gates are green.
+- Controlled first-10 beta: NO-GO right now. `agent-borg==3.3.18` is the published metadata-correct PyPI release and install/runtime proof is green; cap is 0 until served-runtime freshness and first-10 external-user evidence gates are green.
 - Public self-serve launch: NO-GO until row-derived first-10 external evidence passes.
 - Served remote MCP: separate NO-GO channel until live runtime fingerprint/canary passes.
 

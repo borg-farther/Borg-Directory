@@ -838,6 +838,27 @@ def docs_claim_guard(
                     })
 
         if package_evidence_ready:
+            always_stale_package_blockers_after_release = [
+                (r"(?i)metadata-correct (?:patch release|package) target", "stale package-target wording after PyPI canary"),
+                (r"(?i)(runtime|canary|proof|fresh-install|stdio MCP).{0,120}pending until upload", "stale pending-upload proof wording after PyPI canary"),
+                (r"(?i)package metadata is stale", "stale package-metadata-stale wording after PyPI canary"),
+                (r"(?i)package-current proof (?:is|remains).{0,40}red", "stale package-current-red wording after PyPI canary"),
+                (r"(?i)until (?:a |the )?metadata-correct immutable package", "stale metadata-correct-package blocker after PyPI canary"),
+                (r"(?i)cap is 0 until (?:a |the )?metadata-correct immutable package", "stale cap-zero-package blocker after PyPI canary"),
+                (r"(?i)production PyPI upload and fresh runtime canary are pending", "stale production-upload-pending wording after PyPI canary"),
+            ]
+            for pattern, label in always_stale_package_blockers_after_release:
+                match = re.search(pattern, text)
+                if match:
+                    line = text[: match.start()].count("\n") + 1
+                    line_text = text.splitlines()[line - 1] if line - 1 < len(text.splitlines()) else match.group(0)
+                    violations.append({
+                        "path": str(rel),
+                        "line": line,
+                        "kind": label,
+                        "detail": line_text[:180],
+                    })
+
             stale_package_blockers_after_release = [
                 (r"(?i)NO-GO for this source revision\W{0,40}until .*PyPI", "stale package NO-GO after PyPI canary"),
                 (r"(?i)blocked for `?agent-borg==" + re.escape(expected_version) + r"`? until PyPI", "stale package-blocked wording after PyPI canary"),
