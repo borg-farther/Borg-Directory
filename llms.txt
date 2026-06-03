@@ -14,7 +14,7 @@ Day-one value path:
 3. Expect ACTION / STOP / VERIFY / CONFIDENCE, or NO_CONFIDENT_MATCH.
 
 Current rollout boundary:
-- Controlled first-10 public-package beta is closed right now. agent-borg==3.3.15 exists on PyPI, but that stale release predates the current source hardening revision; this branch targets agent-borg==3.3.16. Cap is 0 until that immutable package version plus fresh-install/stdio MCP/generated-rules/OpenClaw/cold-start trust/self-service ops/watchdog/proof-dashboard, served-runtime freshness, and release-governance gates are green.
+- Controlled first-10 public-package beta is closed right now. agent-borg==3.3.16 exists on PyPI and exact-version fresh-install/stdio MCP/generated-rules/OpenClaw runtime canary passes, but PyPI long-description/metadata is stale for that immutable artifact. Cap is 0 until a metadata-correct immutable package plus served-runtime freshness and ops/watchdog/proof-dashboard gates are green.
 - Do not claim public self-serve launch, 100 real users, served remote MCP, or measured external lift until row-derived external-user evidence passes.
 
 Useful docs:

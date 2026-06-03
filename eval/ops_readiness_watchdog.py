@@ -290,6 +290,12 @@ def _is_package_release_blocker(blocker: str) -> bool:
     return (
         "pypi latest" in lower
         or "latest metadata" in lower
+        or "pypi project description" in lower
+        or "long-description" in lower
+        or "package metadata" in lower
+        or "source/metadata" in lower
+        or "package-impacting" in lower
+        or "package source" in lower
         or "fresh-install" in lower
         or "fresh install" in lower
         or "mcp stdio" in lower
@@ -319,6 +325,32 @@ def _has_release_control_gap(blockers: list[Any]) -> bool:
 
 def _has_first_10_gap(blockers: list[Any]) -> bool:
     return any(_is_first_10_blocker(str(blocker)) for blocker in blockers)
+
+
+def _without_watchdog_self_reference(blockers: list[Any]) -> list[str]:
+    """Return public/real-user blockers without recursive watchdog artifacts.
+
+    The committed public gate snapshot is generated with the ops-watchdog gate
+    included, but the watchdog compiles a live public gate with
+    ``require_ops_watchdog=False`` to avoid recursion. Comparing raw blocker
+    arrays would therefore fail whenever the only drift is the previous
+    watchdog snapshot's own diagnostic text. Keep the comparison strict for all
+    product blockers while ignoring only the watchdog/self-consistency records.
+    """
+
+    ignored_fragments = (
+        "public_gate_live_matches_snapshot failed",
+        "public_status_consistency failed",
+        "public_blockers_allowed failed",
+        "real_user_rollout_consistency failed",
+        "source_revision_honesty failed",
+        "ops readiness watchdog snapshot is missing or failing",
+    )
+    return [
+        str(blocker)
+        for blocker in blockers
+        if not any(fragment in str(blocker) for fragment in ignored_fragments)
+    ]
 
 
 def _is_pre_package_release_stage(live_public: dict[str, Any], live_real: dict[str, Any], pypi_current: bool) -> bool:
@@ -445,16 +477,18 @@ def compile_watchdog(*, max_snapshot_age_hours: float = 24.0, allow_public_block
         if not ok:
             checks["snapshot_freshness"]["passed"] = False
 
+    snapshot_blockers = _without_watchdog_self_reference(public_snapshot.get("blockers") or [])
+    live_blockers = _without_watchdog_self_reference(live_public.get("blockers") or [])
     checks["public_gate_live_matches_snapshot"] = {
         "passed": bool(
             public_snapshot.get("source_version") == live_public.get("source_version")
             and public_snapshot.get("ready_for_controlled_first_10_beta") == live_public.get("ready_for_controlled_first_10_beta")
             and public_snapshot.get("ready_for_public_self_serve_launch") == live_public.get("ready_for_public_self_serve_launch")
             and public_snapshot.get("max_recommended_real_users_now") == live_public.get("max_recommended_real_users_now")
-            and public_snapshot.get("blockers") == live_public.get("blockers")
+            and snapshot_blockers == live_blockers
         ),
-        "snapshot": {k: public_snapshot.get(k) for k in ["source_version", "ready_for_controlled_first_10_beta", "ready_for_public_self_serve_launch", "max_recommended_real_users_now", "blockers"]},
-        "live": {k: live_public.get(k) for k in ["source_version", "ready_for_controlled_first_10_beta", "ready_for_public_self_serve_launch", "max_recommended_real_users_now", "blockers"]},
+        "snapshot": {k: public_snapshot.get(k) for k in ["source_version", "ready_for_controlled_first_10_beta", "ready_for_public_self_serve_launch", "max_recommended_real_users_now"]} | {"blockers": snapshot_blockers},
+        "live": {k: live_public.get(k) for k in ["source_version", "ready_for_controlled_first_10_beta", "ready_for_public_self_serve_launch", "max_recommended_real_users_now"]} | {"blockers": live_blockers},
     }
     checks["real_user_rollout_consistency"] = {
         "passed": controlled_package_stage or pre_package_release_stage or release_control_blocked_stage,
@@ -475,18 +509,26 @@ def compile_watchdog(*, max_snapshot_age_hours: float = 24.0, allow_public_block
             and status.get("verified_external_users") == 0
     )
     pre_package_status_ok = bool(
-        status.get("state") == "NO-GO public self-serve; source/local release-candidate only"
+        status.get("state") in {
+            "NO-GO public self-serve; source/local release-candidate only",
+            "NO-GO public self-serve; PyPI runtime canary green, package metadata stale",
+        }
         and (status.get("controlled_first_10_beta") or {}).get("verdict") == "NO-GO"
         and status.get("max_recommended_real_users_now") == 0
         and status.get("verified_external_users") == 0
+    )
+    release_control_status_value = status.get("release_controls_gate")
+    release_control_detail_failed = bool(
+        status.get("served_runtime_freshness_gate") == "FAIL"
+        or status.get("release_governance_gate") == "FAIL"
     )
     release_control_blocked_status_ok = bool(
         status.get("state") == "NO-GO public self-serve; public package proof green, release controls blocked"
         and (status.get("controlled_first_10_beta") or {}).get("verdict") == "NO-GO"
         and status.get("max_recommended_real_users_now") == 0
         and status.get("verified_external_users") == 0
-        and status.get("served_runtime_freshness_gate") == "FAIL"
-        and status.get("release_governance_gate") == "FAIL"
+        and release_control_status_value in {"FAIL", None}
+        and release_control_detail_failed
     )
     checks["public_status_consistency"] = {
         "passed": bool(
@@ -498,6 +540,8 @@ def compile_watchdog(*, max_snapshot_age_hours: float = 24.0, allow_public_block
         "controlled_verdict": (status.get("controlled_first_10_beta") or {}).get("verdict"),
         "max_recommended_real_users_now": status.get("max_recommended_real_users_now"),
         "verified_external_users": status.get("verified_external_users"),
+        "release_controls_gate": release_control_status_value,
+        "release_control_detail_failed": release_control_detail_failed,
         "controlled_status_ok": controlled_status_ok,
         "pre_package_status_ok": pre_package_status_ok,
         "release_control_blocked_status_ok": release_control_blocked_status_ok,

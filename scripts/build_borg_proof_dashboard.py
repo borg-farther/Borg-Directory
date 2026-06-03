@@ -259,6 +259,8 @@ def build_model() -> dict:
     )
     pypi_latest_gate = nested(public_gate, ["gates", "pypi_latest"], {}) if isinstance(public_gate, dict) else {}
     pypi_latest_current = nested(pypi_latest_gate, ["passed"])
+    pypi_description_stale = bool(nested(pypi_latest_gate, ["description_stale_copy"], []))
+    pypi_alignment_failure = nested(pypi_latest_gate, ["source_upload_alignment", "failure_kind"])
     pypi_package_current = bool(pypi_latest_current is True and pypi_fresh_current)
 
     served_runtime_gate = first_dict(
@@ -334,7 +336,12 @@ def build_model() -> dict:
     )
     controlled_beta_missing = []
     if not pypi_package_current:
-        controlled_beta_missing.append("PyPI latest/fresh-install/stdout MCP package path")
+        if pypi_description_stale:
+            controlled_beta_missing.append("PyPI latest project description/long-description copy")
+        elif pypi_fresh_current and pypi_alignment_failure:
+            controlled_beta_missing.append(f"PyPI package source/metadata alignment ({pypi_alignment_failure})")
+        else:
+            controlled_beta_missing.append("PyPI latest/fresh-install/stdio MCP package path")
     if cold_start_trust_pass is not True:
         controlled_beta_missing.append("cold-start trust gate")
     if served_runtime_pass is not True:
@@ -449,11 +456,15 @@ def build_model() -> dict:
     if controlled_beta_ready and pypi_package_current:
         first_tester_action = f"Use `pipx install agent-borg=={pypi_fresh_version or pv or 'CURRENT_VERSION'}` with controlled first-10 beta testers and label it as beta evidence capture, not public launch."
     elif pypi_package_current:
-        first_tester_action = f"Do not invite controlled first-10 testers yet: `agent-borg=={pypi_fresh_version or pv or 'CURRENT_VERSION'}` PyPI/fresh-install proof is green, but {', '.join(controlled_beta_missing or ['release/ops gates'])} must pass first."
+        first_tester_action = f"Do not invite controlled first-10 testers yet: `agent-borg=={pypi_fresh_version or pv or 'CURRENT_VERSION'}` package metadata and runtime canaries pass, but {', '.join(controlled_beta_missing or ['release/ops gates'])} must pass first."
     else:
         target_version = pv or "CURRENT_VERSION"
-        if pypi_latest_current is True and pypi_fresh_version == pv:
+        if pypi_description_stale:
+            first_tester_action = f"Do not invite controlled first-10 testers yet: `agent-borg=={pypi_fresh_version or target_version}` fresh-install/runtime canary passes, but the PyPI project description/long-description is stale; publish a new immutable version after `{target_version}` before using public package metadata as current proof. Served-runtime, release-governance, ops, and watchdog gates must also pass."
+        elif pypi_latest_current is True and pypi_fresh_version == pv:
             first_tester_action = f"Do not invite controlled first-10 testers yet: rerun or fix the fresh-install + stdio MCP canary for immutable `agent-borg=={target_version}`; if the published artifact itself is wrong, bump and publish a new immutable version after `{target_version}`. Served-runtime, release-governance, ops, and watchdog gates must also pass before tester use."
+        elif pypi_fresh_current and pypi_alignment_failure:
+            first_tester_action = f"Do not invite controlled first-10 testers yet: `agent-borg=={pypi_fresh_version or target_version}` installs and runs, but package source/metadata alignment is blocked by `{pypi_alignment_failure}`; fix the source/proof state or publish a new immutable version after `{target_version}` before tester use."
         else:
             first_tester_action = f"Do not invite controlled first-10 testers yet: publish immutable `agent-borg=={target_version}`, then require PyPI latest metadata, fresh-install, stdio MCP, served-runtime, release-governance, ops, and watchdog gates to pass before using that exact version with testers."
     next_actions = [
@@ -663,6 +674,9 @@ def build_public_payloads(model: dict) -> tuple[dict, dict, dict]:
     controlled_is_green = controlled.get("verdict") == "CONDITIONAL"
     broad_is_green = broad.get("verdict") == "GO"
     package_path_green = metrics.get("pypi_package_current_gate", {}).get("value") == "PASS"
+    pypi_fresh_green = metrics.get("pypi_fresh_install_canary", {}).get("value") == "PASS"
+    flat_blockers = [str(item) for items in blockers.values() for item in (items if isinstance(items, list) else [items])]
+    pypi_metadata_stale = any("description" in item.lower() or "long-description" in item.lower() or "metadata" in item.lower() for item in flat_blockers)
     if broad_is_green:
         public_state = "GO public self-serve"
         value_detail = "Public self-serve launch gate is green with row-derived external-user evidence."
@@ -672,9 +686,15 @@ def build_public_payloads(model: dict) -> tuple[dict, dict, dict]:
     elif package_path_green:
         public_state = "NO-GO public self-serve; public package proof green, release controls blocked"
         value_detail = "Public-package controlled beta remains blocked until the failing release-control and ops gates pass; PyPI/package proof is green, but served-runtime freshness, release governance, rollback/self-service ops, watchdog, docs guard, and privacy/security gates must all stay green before invites."
+    elif pypi_fresh_green and not package_path_green:
+        public_state = "NO-GO public self-serve; PyPI runtime canary green, package metadata stale"
+        if pypi_metadata_stale:
+            value_detail = "Public-package controlled beta remains blocked: fresh PyPI install/runtime canary passes, but PyPI package metadata/description is not current proof."
+        else:
+            value_detail = "Public-package controlled beta remains blocked: fresh PyPI install/runtime canary passes, but PyPI metadata/source alignment is not current proof."
     else:
         public_state = "NO-GO public self-serve; source/local release-candidate only"
-        value_detail = "Public-package controlled beta remains blocked until package, release-control, and ops gates pass; PyPI/fresh-install proof is not yet green for the current source version."
+        value_detail = "Public-package controlled beta remains blocked until package, release-control, and ops gates pass; PyPI/fresh-install proof is not yet current for the source version."
 
     status_payload = {
         "schema_version": 1,

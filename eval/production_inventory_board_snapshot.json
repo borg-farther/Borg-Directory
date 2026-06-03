@@ -4,14 +4,13 @@
     {
       "assumption_challenge": "A clean PyPI canary proves installed package behavior, not source revisions that landed after the wheel upload or a long-lived served process.",
       "blockers": [
-        "PyPI same-version release upload predates current source revision",
-        "PyPI fresh-install/stdout MCP canary is not green for the current source version",
+        "PyPI latest metadata gate is not green for the current source revision",
         "working tree is dirty/unshipped; current hardening branch is not committed/pushed/CI-proven"
       ],
       "done": [
         "source versions match: True (3.3.16)",
         "PyPI latest metadata/current-source gate green: False",
-        "PyPI fresh-install/stdout MCP canary green: False",
+        "PyPI fresh-install/stdout MCP canary green: True",
         "first-user release gate green: True"
       ],
       "evidence": [
@@ -103,9 +102,15 @@
     },
     {
       "assumption_challenge": "Ops docs are not readiness unless the live snapshots are fresh and fail closed.",
-      "blockers": [],
+      "blockers": [
+        "ops readiness watchdog snapshot is failing or stale",
+        "real_user_rollout_consistency failed: {'passed': False, 'live': {'ready_for_10_controlled_beta': False, 'infrastructure_ready_for_100': False, 'ready_for_100_real_users': False, 'max_recommended_real_users_now': 0, 'blockers': [\"served runtime borg_version '3.3.14' != source version '3.3.16'\", \"served runtime source_version '3.3.15' != source version '3.3.16'\", 'served runtime version_matches_source is not true', 'served runtime reload_status is not loaded_code_matches_source_behavior', 'first-10 external-user evidence has not passed: verified=0/10, real_users=0/10, installs=0/8, useful=0/6, critical_incidents=0/0']}, 'controlled_package_stage': False, 'pre_package_release_stage': False, 'release_control_blocked_stage': False}",
+        "public_blockers_allowed failed: {'passed': False, 'allow_public_blocker': 'release_controls_or_first_10_evidence', 'blockers': [\"served runtime borg_version '3.3.14' != source version '3.3.16'\", \"served runtime source_version '3.3.15' != source version '3.3.16'\", 'served runtime version_matches_source is not true', 'served runtime reload_status is not loaded_code_matches_source_behavior', 'public docs/claim guard found stale install pins or unsupported launch/value claims', 'first-10 external-user evidence has not passed: verified=0/10, real_users=0/10, installs=0/8, useful=0/6, critical_incidents=0/0']}",
+        "public_status_consistency failed: {'passed': False, 'status_state': 'NO-GO public self-serve; source/local release-candidate only', 'controlled_verdict': 'NO-GO', 'max_recommended_real_users_now': 0, 'verified_external_users': 0, 'controlled_status_ok': False, 'pre_package_status_ok': True, 'release_control_blocked_status_ok': False}",
+        "source_revision_honesty failed: {'passed': False, 'head': '174467f81db4ed89d0719e00674ba55f93acff7b', 'git_clean': False, 'source_revision': '200001f089552b0bb0536e70ecb9e265c5008050+dirty', 'policy': 'Committed dashboards may be generated from a dirty tree and must mark +dirty; clean-tree status endpoints should match HEAD or a dirty ancestor used to generate committed proof artifacts.'}"
+      ],
       "done": [
-        "watchdog passed: True"
+        "watchdog passed: False"
       ],
       "evidence": [
         "eval/self_service_ops_gate_snapshot.json",
@@ -119,7 +124,7 @@
         "rerun self-service ops gate",
         "keep watchdog under freshness SLA"
       ],
-      "status": "GO"
+      "status": "NO_GO"
     },
     {
       "assumption_challenge": "Synthetic load users, internal dogfood, and anecdotes never count as first-10 external evidence.",
@@ -149,7 +154,12 @@
         "served runtime borg_version '3.3.14' != source version '3.3.16'",
         "served runtime source_version '3.3.15' != source version '3.3.16'",
         "served runtime version_matches_source is not true",
-        "served runtime reload_status is not loaded_code_matches_source_behavior"
+        "served runtime reload_status is not loaded_code_matches_source_behavior",
+        "ops readiness watchdog snapshot is failing or stale",
+        "real_user_rollout_consistency failed: {'passed': False, 'live': {'ready_for_10_controlled_beta': False, 'infrastructure_ready_for_100': False, 'ready_for_100_real_users': False, 'max_recommended_real_users_now': 0, 'blockers': [\"served runtime borg_version '3.3.14' != source version '3.3.16'\", \"served runtime source_version '3.3.15' != source version '3.3.16'\", 'served runtime version_matches_source is not true', 'served runtime reload_status is not loaded_code_matches_source_behavior', 'first-10 external-user evidence has not passed: verified=0/10, real_users=0/10, installs=0/8, useful=0/6, critical_incidents=0/0']}, 'controlled_package_stage': False, 'pre_package_release_stage': False, 'release_control_blocked_stage': False}",
+        "public_blockers_allowed failed: {'passed': False, 'allow_public_blocker': 'release_controls_or_first_10_evidence', 'blockers': [\"served runtime borg_version '3.3.14' != source version '3.3.16'\", \"served runtime source_version '3.3.15' != source version '3.3.16'\", 'served runtime version_matches_source is not true', 'served runtime reload_status is not loaded_code_matches_source_behavior', 'public docs/claim guard found stale install pins or unsupported launch/value claims', 'first-10 external-user evidence has not passed: verified=0/10, real_users=0/10, installs=0/8, useful=0/6, critical_incidents=0/0']}",
+        "public_status_consistency failed: {'passed': False, 'status_state': 'NO-GO public self-serve; source/local release-candidate only', 'controlled_verdict': 'NO-GO', 'max_recommended_real_users_now': 0, 'verified_external_users': 0, 'controlled_status_ok': False, 'pre_package_status_ok': True, 'release_control_blocked_status_ok': False}",
+        "source_revision_honesty failed: {'passed': False, 'head': '174467f81db4ed89d0719e00674ba55f93acff7b', 'git_clean': False, 'source_revision': '200001f089552b0bb0536e70ecb9e265c5008050+dirty', 'policy': 'Committed dashboards may be generated from a dirty tree and must mark +dirty; clean-tree status endpoints should match HEAD or a dirty ancestor used to generate committed proof artifacts.'}"
       ],
       "done": [],
       "evidence": [
@@ -173,7 +183,12 @@
         "served runtime borg_version '3.3.14' != source version '3.3.16'",
         "served runtime source_version '3.3.15' != source version '3.3.16'",
         "served runtime version_matches_source is not true",
-        "served runtime reload_status is not loaded_code_matches_source_behavior"
+        "served runtime reload_status is not loaded_code_matches_source_behavior",
+        "ops readiness watchdog snapshot is failing or stale",
+        "real_user_rollout_consistency failed: {'passed': False, 'live': {'ready_for_10_controlled_beta': False, 'infrastructure_ready_for_100': False, 'ready_for_100_real_users': False, 'max_recommended_real_users_now': 0, 'blockers': [\"served runtime borg_version '3.3.14' != source version '3.3.16'\", \"served runtime source_version '3.3.15' != source version '3.3.16'\", 'served runtime version_matches_source is not true', 'served runtime reload_status is not loaded_code_matches_source_behavior', 'first-10 external-user evidence has not passed: verified=0/10, real_users=0/10, installs=0/8, useful=0/6, critical_incidents=0/0']}, 'controlled_package_stage': False, 'pre_package_release_stage': False, 'release_control_blocked_stage': False}",
+        "public_blockers_allowed failed: {'passed': False, 'allow_public_blocker': 'release_controls_or_first_10_evidence', 'blockers': [\"served runtime borg_version '3.3.14' != source version '3.3.16'\", \"served runtime source_version '3.3.15' != source version '3.3.16'\", 'served runtime version_matches_source is not true', 'served runtime reload_status is not loaded_code_matches_source_behavior', 'public docs/claim guard found stale install pins or unsupported launch/value claims', 'first-10 external-user evidence has not passed: verified=0/10, real_users=0/10, installs=0/8, useful=0/6, critical_incidents=0/0']}",
+        "public_status_consistency failed: {'passed': False, 'status_state': 'NO-GO public self-serve; source/local release-candidate only', 'controlled_verdict': 'NO-GO', 'max_recommended_real_users_now': 0, 'verified_external_users': 0, 'controlled_status_ok': False, 'pre_package_status_ok': True, 'release_control_blocked_status_ok': False}",
+        "source_revision_honesty failed: {'passed': False, 'head': '174467f81db4ed89d0719e00674ba55f93acff7b', 'git_clean': False, 'source_revision': '200001f089552b0bb0536e70ecb9e265c5008050+dirty', 'policy': 'Committed dashboards may be generated from a dirty tree and must mark +dirty; clean-tree status endpoints should match HEAD or a dirty ancestor used to generate committed proof artifacts.'}"
       ],
       "done": [],
       "evidence": [
@@ -353,13 +368,13 @@
     "first_user_release_passed": true,
     "overall_optimality_ceiling": 2.0,
     "pack_optimizer_manual_go": true,
-    "pypi_fresh_install_passed": false,
+    "pypi_fresh_install_passed": true,
     "pypi_latest_metadata_current_source_passed": false,
     "release_governance_passed": true,
     "rollback_drill_passed": true,
     "self_service_ops_passed": true,
     "served_runtime_passed": false,
-    "watchdog_passed": true
+    "watchdog_passed": false
   },
   "final_reflective_challenge_pass": [
     "Could package proof alone justify controlled beta? No: current release controls add served-runtime freshness, release-governance freshness, and ops freshness; any red/stale required gate blocks beta.",
@@ -368,7 +383,7 @@
     "Could synthetic load tests stand in for users? No: first-10 row-derived evidence is 0/10 and explicitly blocks public/100-user claims.",
     "Could a dashboard hide these blockers? It must not; stale generated artifacts are themselves blockers until rebuilt from current gates."
   ],
-  "generated_at_utc": "2026-06-02T10:34:06Z",
+  "generated_at_utc": "2026-06-03T08:46:56Z",
   "outstanding": [
     {
       "acceptance": [
@@ -409,8 +424,8 @@
         "watchdog passes with freshness SLA"
       ],
       "item": "Maintain ops/watchdog/rollback readiness freshness",
-      "priority": "P1",
-      "why": "Self-service ops, watchdog, and rollback/comms proof are controlled-beta prerequisites; current gate state is green."
+      "priority": "P0",
+      "why": "Self-service ops, watchdog, and rollback/comms proof are controlled-beta prerequisites; current gate state is blocked or stale."
     },
     {
       "acceptance": [
@@ -487,31 +502,55 @@
   "schema_version": 1,
   "source": {
     "git": {
-      "branch": "release/agent-borg-3.3.16-20260602",
-      "commit": "200001f089552b0bb0536e70ecb9e265c5008050",
+      "branch": "post-release-proof-3.3.16",
+      "commit": "174467f81db4ed89d0719e00674ba55f93acff7b",
       "dirty": true,
       "dirty_files": [
-        "M docs/20260517_BORG_100_REAL_USER_READINESS.md",
-        " M docs/20260531_BORG_PRODUCTION_INVENTORY_BOARD.md",
+        "M AGENTS.md",
+        " M README.md",
+        " M SUPPORT.md",
+        " M docs/20260514_PUBLIC_SELF_SERVE_LAUNCH_CLOSURE_PLAN.md",
+        " M docs/20260517_BORG_100_REAL_USER_READINESS.md",
+        " M docs/20260526_7_USER_CONTROLLED_LAUNCH_AND_100_USER_STAGE_GATES.md",
         " M docs/BORG_PROOF_DASHBOARD.html",
         " M docs/BORG_PROOF_DASHBOARD.md",
+        " M docs/CHANNELS_AND_INSTALL_METHODS.md",
         " M docs/COLD_START_TRUST_HARDENING.md",
+        " M docs/FIRST_10_BETA_READINESS.md",
         " M docs/PUBLIC_SELF_SERVE_LAUNCH_GO_NO_GO.md",
+        " M docs/READINESS.md",
+        " M docs/README.md",
+        " M docs/ROADMAP.md",
         " M docs/SELF_SERVICE_OPS_READINESS_REPORT.md",
+        " M docs/TRYING_BORG.md",
+        " M docs/VALUE_COMMUNICATION_DASHBOARD.html",
+        " M docs/VALUE_COMMUNICATION_DASHBOARD.md",
+        " M docs/landing-page/index.html",
         " M docs/public/impact/impact.json",
         " M docs/public/proof-dashboard/index.html",
         " M docs/public/status.json",
         " M docs/public/value.json",
         " M eval/borg_proof_dashboard.json",
         " M eval/cold_start_trust_gate_snapshot.json",
+        " M eval/gate_run_snapshot.json",
+        " M eval/load_1000_snapshot.json",
+        " M eval/load_100_snapshot.json",
+        " M eval/load_10_snapshot.json",
+        " M eval/ops_readiness_watchdog.py",
+        " M eval/ops_readiness_watchdog_post_dashboard_check.json",
         " M eval/ops_readiness_watchdog_snapshot.json",
-        " M eval/production_inventory_board_snapshot.json",
+        " M eval/public_self_serve_launch_gate.py",
         " M eval/public_self_serve_launch_gate_snapshot.json",
         " M eval/pypi_fresh_install_snapshot.json",
         " M eval/real_user_rollout_gate_snapshot.json",
         " M eval/release_governance_snapshot.json",
         " M eval/rollback_comms_drill_snapshot.json",
-        " M eval/self_service_ops_gate_snapshot.json"
+        " M eval/self_service_ops_gate_snapshot.json",
+        " M eval/tests/test_borg_proof_dashboard.py",
+        " M eval/uat_scoreboard_snapshot.json",
+        " M llms.txt",
+        " M scripts/build_borg_proof_dashboard.py",
+        " M tests/readiness/test_public_self_serve_launch_gate.py"
       ],
       "remote": [
         "origin\thttps://github.com/borg-farther/Borg-Directory.git (fetch)",
@@ -527,11 +566,11 @@
     }
   },
   "status_counts": {
-    "GO": 2,
+    "GO": 1,
     "GO_INTERNAL_ONLY": 2,
     "GO_PROTOCOL_ONLY": 1,
     "IN_PROGRESS": 2,
-    "NO_GO": 7
+    "NO_GO": 8
   },
   "task_outline": [
     "reconstruct promised production features from docs/session evidence",

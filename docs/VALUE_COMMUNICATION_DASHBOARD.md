@@ -2,7 +2,7 @@
 
 ## operator benefits (validated internally)
 - first visible value path for controlled beta after release gates: `pipx install agent-borg==3.3.16` -> `borg rescue "<redacted error>"` -> ACTION / STOP / VERIFY
-- controlled package beta path: **NO-GO right now** — `agent-borg==3.3.15` exists on PyPI, but that upload predates the current source hardening revision, so package proof is stale until `agent-borg==3.3.16` is published and freshly canaried
+- controlled package beta path: **NO-GO right now** — `agent-borg==3.3.16` exists on PyPI and exact-version runtime canary passes, but PyPI long-description/metadata is stale and served-runtime freshness plus ops/watchdog proof are not green yet
 - local/synthetic gate status: first-user release gate and logical load gates are green in current artifacts; synthetic users are not external-user evidence
 - external-user proof status: **not proven yet**; verified external users remain `0`
 - measured savings status: **0 measured rows, 0.0 net minutes saved, 0 net tokens saved**; savings are not claimed until consented external-user rows include before/after measurements
@@ -16,11 +16,11 @@
 - rescue rule: `borg rescue --json` exposes `value_receipt.measurement_status=ready_to_measure` and `savings_claim_type=none` until a later first-10 row records the outcome
 
 ## readiness status
-- controlled first-10 PyPI beta: **NO-GO right now** — `agent-borg==3.3.15` package proof is stale for the current source revision; invite 0 consented external users until `agent-borg==3.3.16`, served-runtime freshness, release governance, ops/watchdog, and proof-dashboard proof are green
+- controlled first-10 PyPI beta: **NO-GO right now** — `agent-borg==3.3.16` runtime canary passes but package metadata is stale; invite 0 consented external users until a metadata-correct immutable package, served-runtime freshness, release governance, ops/watchdog, and proof-dashboard proof are green
 - supervised local first-user path: GO in current artifacts
 - public self-serve launch: **NO-GO until first-10 row-derived external evidence passes**
 - 100 real-user rollout: **NO-GO until 10 external users, >=8 installs, >=6 useful rescues, and 0 critical incidents**
-- decision: package proof is **not current** because PyPI latest is `agent-borg==3.3.15` while this branch targets `agent-borg==3.3.16`; controlled first-10 beta must wait for the new immutable package version, served-runtime freshness, release governance, ops/watchdog, and proof-dashboard gates; no broad self-serve, served remote MCP, 100-user, measured-savings, or frontier-better-than claim
+- decision: runtime canary proof is green for `agent-borg==3.3.16`, but package-current proof is **red** because immutable PyPI long-description/metadata is stale; controlled first-10 beta must wait for a metadata-correct immutable package, served-runtime freshness, release governance, ops/watchdog, and proof-dashboard gates; no broad self-serve, served remote MCP, 100-user, measured-savings, or frontier-better-than claim
 
 ## evidence
 - `eval/public_self_serve_launch_gate_snapshot.json`

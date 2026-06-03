@@ -6,30 +6,30 @@
 
 ## Executive truth
 
-A user arriving from GitHub can inspect the local Python package path, but controlled first-10 beta is **NO-GO** right now. `agent-borg==3.3.15` is published, but the PyPI artifact is stale relative to current source because its upload predates the latest hardening merge. This branch targets `agent-borg==3.3.16`; package proof is red until that immutable version is published and freshly canaried. The eventual target path is:
+A user arriving from GitHub/PyPI can use the production package runtime path, but controlled first-10 beta is **NO-GO** right now. `agent-borg==3.3.16` is published and exact-version fresh-install/stdio MCP/generated-rules/OpenClaw runtime canary passes, but PyPI long-description/metadata is stale; served-runtime freshness plus ops/watchdog/proof-dashboard proof are still red and keep the real-user cap at 0. The target path after package metadata/runtime/ops gates are green is:
 
-1. `pipx install agent-borg==<approved-new-version>`
+1. `pipx install agent-borg==3.3.16`
 2. `borg rescue "ModuleNotFoundError: No module named flask" --short`
 3. for MCP clients, configure local stdio command `borg-mcp`
 
-Do not invite controlled first-10 users until the new immutable package version, PyPI fresh-install/MCP/generate/OpenClaw canaries, served-runtime freshness, release governance, ops/watchdog, and proof-dashboard gates all pass. Keep served/remote MCP, broad public self-serve, 100-user rollout, and measured external lift blocked until their separate gates pass.
+Do not invite controlled first-10 users until PyPI fresh-install/MCP/generate/OpenClaw canaries remain green and served-runtime freshness, release governance, ops/watchdog, and proof-dashboard gates all pass. Keep served/remote MCP, broad public self-serve, 100-user rollout, and measured external lift blocked until their separate gates pass.
 
 ## Channel matrix
 
 | Channel / mix | User command or config | Gate | Current claim |
 |---|---|---:|---|
-| PyPI CLI via pipx | `pipx install agent-borg==3.3.16`; `borg rescue ...` | `eval/run_pypi_fresh_install_canary.py --version 3.3.16` after release | Current `3.3.15` package proof is stale; controlled first-10 beta blocked until `3.3.16`, served-runtime freshness, release governance, ops/watchdog, and proof-dashboard gates pass; public self-serve remains NO-GO |
-| PyPI in active Python env | `python -m pip install agent-borg==3.3.16` | same PyPI canary plus `borg-doctor --json` | Current package proof red because PyPI latest is still `3.3.15`; controlled beta is blocked until the new immutable release and runtime/ops proof are green |
+| PyPI CLI via pipx | `pipx install agent-borg==3.3.16`; `borg rescue ...` | `eval/run_pypi_fresh_install_canary.py --version 3.3.16` | Runtime canary passes for `3.3.16`; current package-metadata proof is red because PyPI long-description is stale. Controlled first-10 beta remains blocked until a metadata-correct package, served-runtime freshness, release governance, ops/watchdog, and proof-dashboard gates pass; public self-serve remains NO-GO |
+| PyPI in active Python env | `python -m pip install agent-borg==3.3.16` | same PyPI canary plus `borg-doctor --json` | Runtime canary passes for `3.3.16`; controlled beta is blocked until package metadata/runtime/ops proof is green |
 | GitHub direct install | `python -m pip install git+https://github.com/borg-farther/Borg-Directory.git@main` | channel smoke / source local gate | GO only after `origin/main` has the release commit and CI is green |
 | Local clone/editable | `git clone ...`; `python -m pip install -e .` | `eval/run_first_user_release_gate.py` and targeted first-user tests | GO for contributors/dev verification, not normal users |
-| CLI rescue/search/try | `borg rescue`, `borg search`, `borg try` | first-user release gate + PyPI canary | Source/local path exists; published package proof is not current for this source revision |
-| Platform rules export | `borg generate systematic-debugging --format all --output ./rules` | first-user release gate + PyPI canary file-output checks | Source/local path exists; published package proof is not current for this source revision |
-| OpenClaw export | `borg convert . --format openclaw --all --output ./openclaw-skills` | first-user release gate + PyPI canary file-output checks | Source/local path exists; published package proof is not current for this source revision |
-| Python API | `import borg; borg.check(...)` | first-user release gate + PyPI canary | Source/local path exists; published package proof is not current for this source revision |
-| Generic stdio MCP | MCP config command `borg-mcp` | PyPI canary JSON-RPC initialize/tools/call/fingerprint | Stdio path must be re-canaryed from a new immutable package; served Hermes/remote MCP remains NO-GO until runtime freshness passes |
-| Claude Code | `borg setup-claude --scope user --verify --fix` | first-user release gate + setup verification | External beta blocked until new package proof, runtime freshness, and ops/watchdog proof pass |
-| Hermes Agent | add `mcp_servers.borg` pointing at `borg-mcp` | docs + manual host verification | Local stdio MCP needs a fresh package canary; served Hermes runtime remains NO-GO until operator cutover proof |
-| Cursor / Cline / Windsurf rules | generated `.cursorrules`, `.clinerules`, `CLAUDE.md`, `.windsurfrules` | generator tests + first-user gate | Source/local export path exists; published package proof is not current for this source revision |
+| CLI rescue/search/try | `borg rescue`, `borg search`, `borg try` | first-user release gate + PyPI canary | Production PyPI runtime path works for `3.3.16`, but package metadata is stale; external beta still waits on metadata/runtime/ops gates |
+| Platform rules export | `borg generate systematic-debugging --format all --output ./rules` | first-user release gate + PyPI canary file-output checks | Production PyPI runtime path works for `3.3.16`, but package metadata is stale; external beta still waits on metadata/runtime/ops gates |
+| OpenClaw export | `borg convert . --format openclaw --all --output ./openclaw-skills` | first-user release gate + PyPI canary file-output checks | Production PyPI runtime path works for `3.3.16`, but package metadata is stale; external beta still waits on metadata/runtime/ops gates |
+| Python API | `import borg; borg.check(...)` | first-user release gate + PyPI canary | Production PyPI runtime path works for `3.3.16`, but package metadata is stale; external beta still waits on metadata/runtime/ops gates |
+| Generic stdio MCP | MCP config command `borg-mcp` | PyPI canary JSON-RPC initialize/tools/call/fingerprint | Local stdio path is canaried from `3.3.16`; served Hermes/remote MCP remains NO-GO until runtime freshness passes |
+| Claude Code | `borg setup-claude --scope user --verify --fix` | first-user release gate + setup verification | External beta blocked until runtime freshness and ops/watchdog proof pass |
+| Hermes Agent | add `mcp_servers.borg` pointing at `borg-mcp` | docs + manual host verification | Local stdio MCP runtime canary passes from PyPI; served Hermes runtime remains NO-GO until operator cutover proof |
+| Cursor / Cline / Windsurf rules | generated `.cursorrules`, `.clinerules`, `CLAUDE.md`, `.windsurfrules` | generator tests + first-user gate | Production PyPI runtime path works for `3.3.16`, but package metadata is stale; external beta still waits on metadata/runtime/ops gates |
 | Docker draft | `deploy/docker/Dockerfile.borg` | presentation contract only | Draft; not the primary first-user path |
 | Smithery listing | `deploy/smithery/smithery.yaml` | presentation contract only | Draft/local stdio metadata; remote/HTTP listing remains NO-GO |
 | Served/remote MCP | HTTP/remote service endpoint | live runtime fingerprint/cutover proof | NO-GO until actual served process is fingerprinted at current version |

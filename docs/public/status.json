@@ -4,7 +4,7 @@
       "No Borg analytics export proving active contributors or consumers was found.",
       "No first-10-user scoreboard with real outcomes exists yet.",
       "Ops readiness/watchdog plus served-runtime and release-governance gates must stay green; any P0/P1 bad-answer, privacy, support, stale-proof, stale-runtime, or branch-protection failure pauses controlled beta invites.",
-      "100-real-user gate remains blocked: ['PyPI latest/fresh-install package evidence is not green: same-version PyPI upload predates current source revision', 'PyPI latest/fresh-install package evidence is not green: fresh install + MCP stdio canary is not green', \"served runtime borg_version '3.3.14' != source version '3.3.16'\", \"served runtime source_version '3.3.15' != source version '3.3.16'\", 'served runtime version_matches_source is not true', 'served runtime reload_status is not loaded_code_matches_source_behavior', 'first-10 external-user evidence has not passed: verified=0/10, real_users=0/10, installs=0/8, useful=0/6, critical_incidents=0/0']",
+      "100-real-user gate remains blocked: ['PyPI latest/fresh-install package evidence is not green: latest metadata does not match source version', \"served runtime borg_version '3.3.14' != source version '3.3.16'\", \"served runtime source_version '3.3.15' != source version '3.3.16'\", 'served runtime version_matches_source is not true', 'served runtime reload_status is not loaded_code_matches_source_behavior', 'first-10 external-user evidence has not passed: verified=0/10, real_users=0/10, installs=0/8, useful=0/6, critical_incidents=0/0']",
       "Served/runtime freshness must be proven from eval/served_runtime_fingerprint_snapshot.json; source/fresh-process green is not live cutover proof.",
       "Release governance must be proven from eval/release_governance_snapshot.json; missing/unprotected branch details block release readiness."
     ],
@@ -38,7 +38,7 @@
   "cold_start_trust_hardening_gate": "PASS",
   "controlled_first_10_beta": {
     "verdict": "NO-GO",
-    "why": "Controlled first-10 beta is blocked until these failed gates are green: PyPI latest/fresh-install/stdout MCP package path; served-runtime freshness"
+    "why": "Controlled first-10 beta is blocked until these failed gates are green: PyPI latest project description/long-description copy; served-runtime freshness"
   },
   "decision": "NO-GO",
   "distribution_gate": "NO-GO",
@@ -70,10 +70,10 @@
   "self_service_ops_gate": "PASS",
   "served_runtime_freshness_gate": "FAIL",
   "source": "docs/public/status.json",
-  "source_revision": "200001f089552b0bb0536e70ecb9e265c5008050+dirty",
+  "source_revision": "174467f81db4ed89d0719e00674ba55f93acff7b+dirty",
   "source_version_consistency": "pyproject=3.3.16 runtime=3.3.16",
-  "state": "NO-GO public self-serve; source/local release-candidate only",
+  "state": "NO-GO public self-serve; PyPI runtime canary green, package metadata stale",
   "status": "NO-GO",
-  "updated_at": "2026-06-02T10:34:06Z",
+  "updated_at": "2026-06-03T12:03:04Z",
   "verified_external_users": 0
 }

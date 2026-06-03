@@ -4,15 +4,15 @@ Generated: 2026-05-14 18:39 UTC
 
 ## Current state
 
-Borg's controlled first-10 package path is **NO-GO for the current source revision**. `agent-borg==3.3.15` previously had package-level evidence, but the PyPI upload now predates the latest source hardening merge; `agent-borg==3.3.16` plus fresh package canaries is required before package-level evidence capture resumes. New hardening PRs must still pass their own CI before merge.
+Borg's controlled first-10 package path is **NO-GO for package metadata plus runtime/ops proof**, not for package installability. `agent-borg==3.3.16` is published and fresh runtime canaries pass, but PyPI long-description/metadata is stale for this immutable artifact. Served-runtime freshness and ops/watchdog/proof-dashboard consistency remain red, so package-level evidence capture stays paused until package metadata and release-control gates are green. New hardening PRs must still pass their own CI before merge.
 
 Public self-serve launch remains **NO-GO** until row-derived first-10 external-user evidence passes. Served remote MCP remains a separate runtime cutover/canary channel, not proven by the PyPI stdio release.
 
 Hard evidence already completed or pending:
 
-- Branch/source readiness for 3.3.16: pending final PR CI and post-merge main proof
-- Local source first-user release gate for `agent-borg==3.3.16`: must be rerun on the final branch head
-- Fresh PyPI install/MCP/generate/OpenClaw canary for `agent-borg==3.3.16`: blocked until publish
+- Branch/source readiness for 3.3.16: release main proof exists; this post-release proof branch still needs its own PR CI and post-merge main proof
+- Local source first-user release gate for `agent-borg==3.3.16`: green in current artifacts, but must be rerun after any package-impacting source change
+- Fresh PyPI install/MCP/generate/OpenClaw canary for `agent-borg==3.3.16`: PASS from production PyPI
 - self-service ops/watchdog gates: PASS for package-level evidence capture; broad public self-serve remains blocked by first-10 rows
 - security baseline: PASS in local gates
 - privacy/prompt-injection/atom/firewall tests: PASS in local gates
@@ -23,9 +23,9 @@ Hard evidence already completed or pending:
 
 Three true blocker classes remain before broader launch claims:
 
-1. **Current package proof and final release branch evidence**
-   - Need: final 3.3.16 branch PR CI, protected merge, post-merge main proof, production publish, and fresh PyPI install/stdout MCP canary for exactly `agent-borg==3.3.16`.
-   - Until that exact chain is green, public-package evidence capture stays paused even if source/local first-user gates pass.
+1. **Runtime/ops proof and post-release proof branch evidence**
+   - Need: served-runtime fingerprint/canary at `agent-borg==3.3.16`, green ops watchdog/proof dashboard, this post-release proof branch PR CI, protected merge, and post-merge main proof.
+   - Until that exact chain is green, public-package evidence capture stays paused even though production PyPI package canaries pass.
 
 2. **First 10 real external users**
    - Need: real external-user outcome evidence, not simulations.
@@ -69,7 +69,7 @@ Prior 3.3.10 proof lives in:
 - `docs/20260522_BORG_3310_RELEASE_PREFLIGHT_PUBLISHED.md` (historical)
 - `eval/pypi_fresh_install_snapshot.json` (current exact-version package canary)
 
-Current package path status: `agent-borg==3.3.15` is published but stale for the current source revision because the upload predates the latest hardening merge. Controlled first-10 is capped at 0 until `agent-borg==3.3.16` is published, freshly canaried, and package/runtime/ops/release-control proof passes; broad public self-serve remains NO-GO until row-derived first-10 evidence passes.
+Current package path status: `agent-borg==3.3.16` is published and fresh runtime canary passes from production PyPI, but PyPI long-description/metadata is stale. Controlled first-10 is capped at 0 until package metadata, served-runtime freshness, runtime/ops/release-control proof pass; broad public self-serve remains NO-GO until row-derived first-10 evidence passes.
 
 ### Phase C — first-10 user sprint
 

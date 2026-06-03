@@ -41,6 +41,17 @@ BANNED_PYPI_COPY = [
     "collective intelligence for AI agents",
 ]
 
+PYPI_DESCRIPTION_STALE_PATTERNS = [
+    (
+        re.compile(r"(?i)`?agent-borg==\d+\.\d+\.\d+`?\s+is\s+published\s+on\s+PyPI,\s+but\s+that\s+artifact\s+is\s+stale"),
+        "stale published-version status",
+    ),
+    (re.compile(r"(?i)this\s+branch\s+targets\s+the\s+next\s+immutable\s+release"), "stale next-immutable-release wording"),
+    (re.compile(r"(?i)package\s+proof\s+is\s+red\s+until\s+a\s+new\s+immutable\s+version"), "stale package-proof-red wording"),
+    (re.compile(r"(?i)currently\s+published\s+package\s+is\s+stale\s+relative\s+to\s+source"), "stale currently-published-package wording"),
+    (re.compile(r"(?i)PyPI\s+latest\s+is\s+\*\*not\s+proven\s+current\*\*"), "stale PyPI-latest-not-current wording"),
+]
+
 PACKAGE_IMPACTING_EXACT_PATHS = {
     "pyproject.toml",
     "README.md",
@@ -137,6 +148,7 @@ UNSUPPORTED_WHEN_BLOCKED = [
     (re.compile(r"(?i)Ready\s+to\s+share\s+Git\s+now\?\W{0,80}YES"), "stale Git-sharing YES claim"),
     (re.compile(r"(?i)version_package"), "stale proof-dashboard version metric"),
     (re.compile(r"\bready_for_(?:10|1000)=True\b"), "unqualified logical-load readiness claim"),
+    (re.compile(r"(?i)No hallucination, no retry loops, no burned tokens"), "unmeasured zero-failure/value claim without external evidence"),
 ]
 
 
@@ -152,7 +164,7 @@ def source_version() -> str:
 
 
 def _git_output(args: list[str]) -> str:
-    return subprocess.check_output(["git", *args], cwd=ROOT, text=True, stderr=subprocess.DEVNULL).strip()
+    return subprocess.check_output(["git", *args], cwd=ROOT, text=True, stderr=subprocess.DEVNULL).rstrip("\n")
 
 
 def _git_lines(args: list[str]) -> list[str]:
@@ -433,16 +445,19 @@ def fetch_pypi_latest(package: str = "agent-borg", timeout: int = 30) -> dict[st
     req = urllib.request.Request(url, headers={"User-Agent": "Borg-public-self-serve-gate/1.0"})
     with urllib.request.urlopen(req, timeout=timeout) as response:
         data = json.loads(response.read().decode("utf-8"))
-    latest = data.get("info", {}).get("version")
+    info = data.get("info", {}) if isinstance(data.get("info"), dict) else {}
+    latest = info.get("version")
     release_files = data.get("releases", {}).get(str(latest), []) if latest else []
     return {
         "package": package,
         "url": url,
         "version": latest,
-        "summary": data.get("info", {}).get("summary") or "",
-        "keywords": data.get("info", {}).get("keywords") or "",
-        "project_urls": data.get("info", {}).get("project_urls") or {},
-        "requires_dist": data.get("info", {}).get("requires_dist") or [],
+        "summary": info.get("summary") or "",
+        "description": info.get("description") or "",
+        "description_content_type": info.get("description_content_type") or "",
+        "keywords": info.get("keywords") or "",
+        "project_urls": info.get("project_urls") or {},
+        "requires_dist": info.get("requires_dist") or [],
         "release_files": [
             {
                 "filename": item.get("filename"),
@@ -453,6 +468,27 @@ def fetch_pypi_latest(package: str = "agent-borg", timeout: int = 30) -> dict[st
             for item in release_files
             if isinstance(item, dict)
         ],
+    }
+
+
+def pypi_description_copy_check(description: str) -> dict[str, Any]:
+    """Fail closed when PyPI long_description contains stale release-status copy."""
+    violations: list[dict[str, Any]] = []
+    lines = description.splitlines()
+    for pattern, label in PYPI_DESCRIPTION_STALE_PATTERNS:
+        for match in pattern.finditer(description):
+            line_number = description[: match.start()].count("\n") + 1
+            line_text = lines[line_number - 1] if 0 <= line_number - 1 < len(lines) else match.group(0)
+            violations.append({
+                "kind": label,
+                "line": line_number,
+                "detail": line_text[:240],
+            })
+            break
+    return {
+        "passed": not violations,
+        "description_length": len(description),
+        "violations": violations,
     }
 
 
@@ -480,6 +516,8 @@ def pypi_latest_check(expected_version: str, *, fetch_network: bool = True, pypi
     }
     latest = pypi_data.get("version")
     summary = str(pypi_data.get("summary") or "")
+    description = str(pypi_data.get("description") or "")
+    description_copy = pypi_description_copy_check(description)
     keywords = {
         token.strip()
         for token in re.split(r"[,\s]+", str(pypi_data.get("keywords") or ""))
@@ -497,6 +535,7 @@ def pypi_latest_check(expected_version: str, *, fetch_network: bool = True, pypi
         and not keyword_missing
         and not banned_keywords_present
         and not stale_copy
+        and bool(description_copy["passed"])
         and source_upload_alignment["passed"]
     )
     return {
@@ -510,6 +549,9 @@ def pypi_latest_check(expected_version: str, *, fetch_network: bool = True, pypi
         "keyword_missing": keyword_missing,
         "banned_keywords_present": banned_keywords_present,
         "stale_copy": stale_copy,
+        "description_content_type": pypi_data.get("description_content_type"),
+        "description_stale_copy": description_copy["violations"],
+        "description_length": description_copy["description_length"],
         "url_missing": url_missing,
         "url_mismatches": url_mismatches,
         "requires_dist": pypi_data.get("requires_dist") or [],
@@ -678,6 +720,19 @@ def docs_claim_guard(
             if match:
                 violations.append({"path": str(rel), "kind": label, "detail": match.group(0)[:180]})
 
+        for match in re.finditer(r"(?i)\bPyPI\s+(?P<version>\d+\.\d+\.\d+)\b", text):
+            if match.group("version") != expected_version:
+                line = text[: match.start()].count("\n") + 1
+                line_text = text.splitlines()[line - 1] if line - 1 < len(text.splitlines()) else match.group(0)
+                if "historical" in line_text.lower() or "superseded" in line_text.lower():
+                    continue
+                violations.append({
+                    "path": str(rel),
+                    "line": line,
+                    "kind": "stale PyPI version reference",
+                    "detail": line_text[:180],
+                })
+
         if re.search(r"(?im)^\s*(?:python\s+-m\s+)?pipx\s+install\s+git\+https://github\.com/borg-farther/Borg-Directory\.git\b", text):
             violations.append({"path": str(rel), "kind": "public git+ install path", "detail": "current public first-user docs must use PyPI agent-borg, not git+ source install"})
 
@@ -705,6 +760,10 @@ def docs_claim_guard(
                 (r"(?i)\bpackage/local stdio proof\b", "package/local stdio proof before current PyPI canary"),
                 (r"(?i)fresh-install/MCP/generate/OpenClaw canaries pass for controlled first-10 beta", "package canaries pass before current PyPI canary"),
                 (r"(?i)published package metadata, PyPI latest, and proof artifacts agree on `?agent-borg==", "published package metadata agreement before current PyPI canary"),
+                (r"(?i)\bpackage proof is\s+(?:\*\*)?current(?:\*\*)?\b", "package-current proof claim before metadata-correct package"),
+                (r"(?i)published `?agent-borg==" + re.escape(expected_version) + r"`? package is current for this source/package line", "package-current proof claim before metadata-correct package"),
+                (r"(?i)send only while .*fresh-install/MCP canary pass", "invite packet condition omits metadata/runtime/ops blockers"),
+                (r"(?i)we are running a small consented Borg beta for the first 10 external users", "active first-10 invite copy before beta gates"),
             ]
             for pattern, label in blocked_package_claims:
                 match = re.search(pattern, text)
@@ -760,7 +819,12 @@ def docs_claim_guard(
                 )
                 claims_invites_start = (
                     ("invite" in lower or "invites" in lower or "testers" in lower)
-                    and ("may start" in lower or "ready to invite" in lower or "invite up to" in lower)
+                    and (
+                        "may start" in lower
+                        or "ready to invite" in lower
+                        or "invite up to" in lower
+                        or "invite at most" in lower
+                    )
                     and "no-go" not in lower
                     and not negates_ready_claim
                     and not re.search(r"(?i)\b(after|until|pending|not yet|only after|before|blocked|do not|no invites)\b", line_text)
@@ -1065,10 +1129,16 @@ def compile_gate(
         blockers.append("first-user local release gate snapshot is missing or failing")
     if not pypi_latest["passed"]:
         alignment = pypi_latest.get("source_upload_alignment") or {}
-        if alignment.get("failure_kind") == "same_version_pypi_upload_predates_source_revision":
+        if pypi_latest.get("description_stale_copy"):
+            blockers.append("PyPI project description/long-description contains stale release-status copy")
+        elif alignment.get("failure_kind") == "same_version_pypi_upload_predates_source_revision":
             blockers.append("PyPI latest metadata is stale: same-version release upload predates current source revision")
+        elif alignment.get("failure_kind") == "package_worktree_dirty":
+            blockers.append("package-impacting source/metadata is dirty after the immutable package upload")
+        elif alignment.get("failure_kind") == "package_source_changed_after_reference":
+            blockers.append("package-impacting source/metadata changed after the immutable package reference tag")
         else:
-            blockers.append("PyPI latest metadata does not match source version or required project URLs")
+            blockers.append("PyPI latest metadata does not match source version, required project URLs, source alignment, or public copy policy")
     if not pypi_fresh["passed"]:
         blockers.append("PyPI fresh-install + MCP stdio canary snapshot is missing or failing")
     if not cold_start_trust["passed"]:

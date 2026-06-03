@@ -5,7 +5,7 @@ Source target: `agent-borg==3.3.16`, canonical repo `borg-farther/Borg-Directory
 
 ## Executive verdict
 
-- **7 external users at once:** NO-GO until `agent-borg==3.3.16` is published, freshly canaried, and the package/runtime/ops/watchdog proof chain is green; then controlled testers remain capped under the first-10 beta limit.
+- **7 external users at once:** NO-GO until `agent-borg==3.3.16` package canaries remain green and the served-runtime/ops/watchdog proof chain is green; then controlled testers remain capped under the first-10 beta limit.
 - **Broad public self-serve:** NO-GO until row-derived first-10 external-user evidence passes.
 - **100 real users:** NO-GO until first-10 evidence passes and the 100-user rollout gate is green.
 - **Served Hermes/Borg MCP runtime:** NO-GO for launch traffic until an operator-supervised runtime fingerprint proves the served process version and code match the current package/source. Agents must not restart or reload the gateway.

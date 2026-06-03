@@ -1,7 +1,6 @@
 {
   "blockers": [
-    "PyPI latest/fresh-install package evidence is not green: same-version PyPI upload predates current source revision",
-    "PyPI latest/fresh-install package evidence is not green: fresh install + MCP stdio canary is not green",
+    "PyPI latest/fresh-install package evidence is not green: latest metadata does not match source version",
     "served runtime borg_version '3.3.14' != source version '3.3.16'",
     "served runtime source_version '3.3.15' != source version '3.3.16'",
     "served runtime version_matches_source is not true",
@@ -44,7 +43,7 @@
     "passed_count": 28
   },
   "gate_type": "real_user_rollout",
-  "generated_at_utc": "2026-06-02T10:34:03.503150+00:00",
+  "generated_at_utc": "2026-06-03T12:03:04.559036+00:00",
   "important_distinction": "load/readiness snapshots are synthetic/logical users; this gate controls real external-user rollout",
   "infrastructure_ready_for_100": false,
   "load_gates": {
@@ -52,11 +51,11 @@
       "duration_seconds": 30.0,
       "exists": true,
       "latency_ms": {
-        "avg": 0.5503902532524503,
-        "max": 5.824899300932884,
-        "p50": 0.5340096540749073,
-        "p95": 0.7009429158642886,
-        "p99": 0.7570860907435419
+        "avg": 0.6038250712640609,
+        "max": 3.169081639498472,
+        "p50": 0.6139406468719244,
+        "p95": 0.7294940995052457,
+        "p99": 0.8128765365108848
       },
       "passed": true,
       "success_rate": 1.0,
@@ -66,11 +65,11 @@
       "duration_seconds": 30.0,
       "exists": true,
       "latency_ms": {
-        "avg": 0.5394486826790642,
-        "max": 1.7737289890646935,
-        "p50": 0.5221501924097538,
-        "p95": 0.693068839609623,
-        "p99": 0.7233379036188128
+        "avg": 0.5943035037966525,
+        "max": 8.170756045728922,
+        "p50": 0.5875711794942617,
+        "p95": 0.7360600866377354,
+        "p99": 0.9644317068159578
       },
       "passed": true,
       "success_rate": 1.0,
@@ -82,32 +81,61 @@
   "no_fake_user_policy": "Do not mark first-10 complete or 100-real-user ready without consented external evidence rows.",
   "public_package_gate": {
     "blockers": [
-      "PyPI latest/fresh-install package evidence is not green: same-version PyPI upload predates current source revision",
-      "PyPI latest/fresh-install package evidence is not green: fresh install + MCP stdio canary is not green"
+      "PyPI latest/fresh-install package evidence is not green: latest metadata does not match source version"
     ],
     "passed": false,
     "pypi_fresh_install_and_mcp_stdio": {
       "exists": true,
       "expected_version": "3.3.16",
-      "failed_count": 1,
-      "failures": [
-        "pip_install_agent_borg"
-      ],
+      "failed_count": 0,
+      "failures": [],
       "freshness": {
-        "age_hours": 0.008680153055555556,
+        "age_hours": 0.003431156388888889,
         "failure_kind": null,
         "max_age_hours": 24.0,
         "passed": true
       },
-      "generated_at_utc": "2026-06-02T10:33:31Z",
-      "mcp_server_info": null,
-      "mcp_stdio_canary_passed": false,
-      "passed": false,
+      "generated_at_utc": "2026-06-03T12:02:51Z",
+      "mcp_server_info": {
+        "name": "borg-mcp-server",
+        "version": "3.3.16"
+      },
+      "mcp_stdio_canary_passed": true,
+      "passed": true,
       "path": "eval/pypi_fresh_install_snapshot.json",
       "version": "3.3.16"
     },
     "pypi_latest": {
       "banned_keywords_present": [],
+      "description_content_type": "text/markdown",
+      "description_length": 15585,
+      "description_stale_copy": [
+        {
+          "detail": "**Status:** `agent-borg==3.3.15` is published on PyPI, but that artifact is stale relative to the current source revision because its upload predates the latest hardening merge. This branch targets the next immutable release, `agent-borg==3",
+          "kind": "stale published-version status",
+          "line": 16
+        },
+        {
+          "detail": "**Status:** `agent-borg==3.3.15` is published on PyPI, but that artifact is stale relative to the current source revision because its upload predates the latest hardening merge. This branch targets the next immutable release, `agent-borg==3",
+          "kind": "stale next-immutable-release wording",
+          "line": 16
+        },
+        {
+          "detail": "**Status:** `agent-borg==3.3.15` is published on PyPI, but that artifact is stale relative to the current source revision because its upload predates the latest hardening merge. This branch targets the next immutable release, `agent-borg==3",
+          "kind": "stale package-proof-red wording",
+          "line": 16
+        },
+        {
+          "detail": "- Install, CLI, Python API, and MCP entrypoints are present, but the currently published package is stale relative to source.",
+          "kind": "stale currently-published-package wording",
+          "line": 329
+        },
+        {
+          "detail": "- PyPI latest is **not proven current** for the current source revision; controlled first-10 testers must **not** be invited until `agent-borg==3.3.16`, served-runtime freshness, ops/watchdog, and proof dashboards are all green. Current cap",
+          "kind": "stale PyPI-latest-not-current wording",
+          "line": 333
+        }
+      ],
       "expected_summary": "Failure memory CLI and MCP server for AI coding agents",
       "expected_version": "3.3.16",
       "keyword_missing": false,
@@ -118,7 +146,7 @@
         "failure-memory",
         "mcp"
       ],
-      "latest_version": "3.3.15",
+      "latest_version": "3.3.16",
       "package": "agent-borg",
       "passed": false,
       "project_urls": {
@@ -150,19 +178,84 @@
         "uvicorn>=0.27; extra == \"all\""
       ],
       "source_upload_alignment": {
-        "detail": "PyPI release upload predates current source revision for at least one release file; publish a new immutable version before claiming package proof is current.",
+        "alignment_basis": "package_reference",
+        "current_source_commit_time_utc": "2026-06-02T21:44:21+00:00",
+        "detail": "Package-impacting source or metadata is dirty; no immutable PyPI artifact can prove these uncommitted package changes.",
         "dirty_source": true,
-        "failure_kind": "same_version_pypi_upload_predates_source_revision",
-        "latest_release_upload_time_utc": "2026-05-28T17:50:31.032755+00:00",
-        "oldest_release_upload_time_utc": "2026-05-28T17:50:29.231332+00:00",
+        "failure_kind": "package_worktree_dirty",
+        "latest_release_upload_time_utc": "2026-06-02T21:21:08.773074+00:00",
+        "non_package_changed_paths_since_reference": [
+          "eval/public_self_serve_launch_gate.py",
+          "tests/readiness/test_public_self_serve_launch_gate.py"
+        ],
+        "non_package_dirty_paths": [
+          "AGENTS.md",
+          "SUPPORT.md",
+          "docs/20260514_FIRST_10_USER_INVITE_PACKET.md",
+          "docs/20260514_PUBLIC_SELF_SERVE_LAUNCH_CLOSURE_PLAN.md",
+          "docs/20260517_BORG_100_REAL_USER_READINESS.md",
+          "docs/20260526_7_USER_CONTROLLED_LAUNCH_AND_100_USER_STAGE_GATES.md",
+          "docs/20260531_BORG_PRODUCTION_INVENTORY_BOARD.md",
+          "docs/BORG_PROOF_DASHBOARD.html",
+          "docs/BORG_PROOF_DASHBOARD.md",
+          "docs/CHANNELS_AND_INSTALL_METHODS.md",
+          "docs/COLD_START_TRUST_HARDENING.md",
+          "docs/FIRST_10_BETA_READINESS.md",
+          "docs/PUBLIC_SELF_SERVE_LAUNCH_GO_NO_GO.md",
+          "docs/READINESS.md",
+          "docs/README.md",
+          "docs/ROADMAP.md",
+          "docs/SELF_SERVICE_OPS_READINESS_REPORT.md",
+          "docs/TRYING_BORG.md",
+          "docs/VALUE_COMMUNICATION_DASHBOARD.html",
+          "docs/VALUE_COMMUNICATION_DASHBOARD.md",
+          "docs/landing-page/index.html",
+          "docs/public/impact/impact.json",
+          "docs/public/proof-dashboard/index.html",
+          "docs/public/status.json",
+          "docs/public/value.json",
+          "eval/borg_proof_dashboard.json",
+          "eval/cold_start_trust_gate_snapshot.json",
+          "eval/gate_run_snapshot.json",
+          "eval/load_1000_snapshot.json",
+          "eval/load_100_snapshot.json",
+          "eval/load_10_snapshot.json",
+          "eval/ops_readiness_watchdog.py",
+          "eval/ops_readiness_watchdog_post_dashboard_check.json",
+          "eval/ops_readiness_watchdog_snapshot.json",
+          "eval/production_inventory_board_snapshot.json",
+          "eval/public_self_serve_launch_gate.py",
+          "eval/public_self_serve_launch_gate_snapshot.json",
+          "eval/pypi_fresh_install_snapshot.json",
+          "eval/real_user_rollout_gate_snapshot.json",
+          "eval/release_governance_snapshot.json",
+          "eval/rollback_comms_drill_snapshot.json",
+          "eval/self_service_ops_gate_snapshot.json",
+          "eval/tests/test_borg_proof_dashboard.py",
+          "eval/uat_scoreboard_snapshot.json",
+          "llms.txt",
+          "scripts/build_borg_proof_dashboard.py",
+          "tests/packaging/test_public_presentation_contract.py",
+          "tests/readiness/test_public_self_serve_launch_gate.py"
+        ],
+        "oldest_release_upload_time_utc": "2026-06-02T21:21:07.262480+00:00",
+        "package_changed_paths_since_reference": [],
+        "package_dirty": true,
+        "package_dirty_paths": [
+          "README.md"
+        ],
+        "package_reference": "v3.3.16",
+        "package_reference_ancestor_of_head": true,
+        "package_reference_available": true,
+        "package_reference_commit_time_utc": "2026-06-02T14:27:34+01:00",
+        "package_reference_error": null,
+        "package_reference_revision": "2d5bc810bb3874580737e014144e1ab4bd2944cd",
         "passed": false,
         "release_file_count": 2,
-        "source_commit_time_utc": "2026-06-02T10:33:01+00:00",
-        "source_revision": "200001f089552b0bb0536e70ecb9e265c5008050+dirty",
-        "stale_release_files": [
-          "agent_borg-3.3.15-py3-none-any.whl",
-          "agent_borg-3.3.15.tar.gz"
-        ]
+        "source_commit_time_utc": "2026-06-02T13:27:34+00:00",
+        "source_revision": "174467f81db4ed89d0719e00674ba55f93acff7b+dirty",
+        "stale_release_files": [],
+        "worktree_dirty": true
       },
       "stale_copy": [],
       "summary": "Failure memory CLI and MCP server for AI coding agents",
@@ -259,10 +352,10 @@
   },
   "self_service_ops_gate": {
     "blockers": [],
-    "generated_at_utc": "2026-06-02T10:34:03.502709+00:00",
+    "generated_at_utc": "2026-06-03T12:03:04.558700+00:00",
     "ops_readiness_watchdog": {
       "blockers": [],
-      "generated_at_utc": "2026-06-02T10:34:00.301569+00:00",
+      "generated_at_utc": "2026-06-03T12:01:51.555925+00:00",
       "passed": true,
       "snapshot": "eval/ops_readiness_watchdog_snapshot.json",
       "truth_policy": "Watchdog passing means controlled first-10 ops proof is fresh and internally consistent. Broad public self-serve still requires row-derived first-10 external-user evidence."

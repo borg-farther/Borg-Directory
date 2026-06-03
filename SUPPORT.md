@@ -1,10 +1,10 @@
 # Borg support policy
 
-Borg has `agent-borg==3.3.15` on PyPI, but that artifact is stale relative to current source because the PyPI upload predates the latest hardening merge. This branch targets `agent-borg==3.3.16`; controlled first-10 beta is currently **NO-GO** until that immutable package version is published, freshly canaried, and synchronized with cold-start trust, self-service ops, watchdog/proof-dashboard, served-runtime freshness, and release-governance gates. GitHub `main` release governance is enforced; served runtime freshness and first-10 external-user evidence remain separate blockers. Broad public self-serve, 100-user rollout, served remote MCP, and measured external lift remain unclaimed until row-derived external-user evidence passes. Support expectations are intentionally narrow so tester outcomes remain measurable and do not create a fake broad-launch signal.
+Borg has `agent-borg==3.3.16` on PyPI, and the exact-version fresh-install, stdio MCP, generated-rules, OpenClaw, CLI, and Python API runtime canaries pass, but PyPI long-description/metadata is stale for that immutable artifact. Controlled first-10 beta is currently **NO-GO** until a metadata-correct immutable package is synchronized with green served-runtime freshness and ops/watchdog/proof-dashboard gates. GitHub `main` release governance is enforced; served runtime freshness and first-10 external-user evidence remain separate blockers. Broad public self-serve, 100-user rollout, served remote MCP, and measured lift are not claimed.
 
 ## Supported path
 
-- Target install after gates are green: a new immutable `agent-borg` version published after the current source revision, installed with `pipx install agent-borg==<approved-version>` or `pip install agent-borg==<approved-version>` in a clean environment.
+- Target install after gates are green: the next approved metadata-correct immutable `agent-borg` version; current `agent-borg==3.3.16` installs and runs, but PyPI metadata is stale and cannot be edited in place.
 - First command: `borg rescue "<redacted real error>" --short`.
 - MCP path: `borg-mcp` over stdio from a local client.
 - Evidence intake: `.github/ISSUE_TEMPLATE/first-10-evidence.yml`.
@@ -48,4 +48,4 @@ A first-10 row counts as self-service only when the tester can complete install,
 
 ## Current boundary
 
-Controlled first-10 beta can run only after the current release package, trust, ops, and watchdog gates are green for the same version. Broad public self-serve remains NO-GO until row-derived first-10 external-user evidence passes: 10 verified external users, at least 8 installs, at least 6 useful rescues, and 0 critical privacy/security incidents.
+Controlled first-10 beta can run only after the current immutable package metadata, trust, ops, and watchdog gates are green for the same version. Broad public self-serve remains NO-GO until row-derived first-10 external-user evidence passes: 10 verified external users, at least 8 installs, at least 6 useful rescues, and 0 critical privacy/security incidents.
