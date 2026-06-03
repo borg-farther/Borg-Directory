@@ -1,7 +1,7 @@
 # Borg first-10 user invite packet
 
 Generated: 2026-05-14T18:25:05Z
-Rev: 2026-06-03T09:00:00Z — controlled first-10 beta install path targets PyPI package `agent-borg==3.3.16`, but this packet is **not sendable right now**. Send only after a metadata-correct immutable package exists and the latest public gate confirms PyPI runtime canary, served-runtime freshness, ops/watchdog, proof-dashboard, and release-governance gates are green.
+Rev: 2026-06-03T09:00:00Z — controlled first-10 beta install path targets PyPI package `agent-borg==3.3.17`, but this packet is **not sendable right now**. Send only after a metadata-correct immutable package exists and the latest public gate confirms PyPI runtime canary, served-runtime freshness, ops/watchdog, proof-dashboard, and release-governance gates are green.
 
 ## Exact invite message
 
@@ -16,7 +16,7 @@ Preferred isolated install:
 ```bash
 python -m pip install --user pipx
 python -m pipx ensurepath
-pipx install agent-borg==3.3.16
+pipx install agent-borg==3.3.17
 borg --version
 borg rescue "paste a REDACTED real error here"
 ```
@@ -25,7 +25,7 @@ Fallback if pipx is unavailable:
 
 ```bash
 python -m venv /tmp/borg-beta-venv
-/tmp/borg-beta-venv/bin/python -m pip install agent-borg==3.3.16
+/tmp/borg-beta-venv/bin/python -m pip install agent-borg==3.3.17
 /tmp/borg-beta-venv/bin/borg --version
 /tmp/borg-beta-venv/bin/borg rescue "paste a REDACTED real error here"
 ```

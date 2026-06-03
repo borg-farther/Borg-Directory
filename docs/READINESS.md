@@ -2,7 +2,7 @@
 
 ## Current verdict
 
-- Controlled first-10 beta: **NO-GO right now**. `agent-borg==3.3.16` exists on PyPI and exact-version fresh-install/stdio MCP/generated-rules/OpenClaw runtime canaries pass, but PyPI long-description/metadata is stale for this immutable artifact. GitHub `main` release governance is enforced; the served runtime fingerprint is stale and remains a separate release-control blocker, and ops/watchdog proof is not green yet.
+- Controlled first-10 beta: **NO-GO right now**. `agent-borg==3.3.17` is the metadata-correct package target; exact-version fresh-install/stdio MCP/generated-rules/OpenClaw runtime canaries are pending until upload and verification. GitHub `main` release governance is enforced; the served runtime fingerprint is stale and remains a separate release-control blocker, and ops/watchdog proof is not green yet.
 - Public waitlist / narrow beta: **0 testers may proceed** until served-runtime freshness, ops/watchdog, proof-dashboard, cold-start trust, and source/local first-user gates are all green; then the first-10 evidence contract caps the cohort at 10.
 - Public self-serve launch: **NO-GO until first-10 external-user evidence passes** (10 verified external users, >=8 installs, >=6 useful rescues, 0 critical incidents).
 
@@ -14,7 +14,7 @@
 - First-10 contract exists: [`FIRST_10_BETA_READINESS.md`](FIRST_10_BETA_READINESS.md).
 - Security/privacy/prompt-injection surface has a baseline and CI gates.
 - GitHub CI/security gates are part of the release proof chain. PR branches still need their own green checks and post-merge `main` proof refresh before branch-specific source changes are claimed on `main`.
-- Local first-user gate and production PyPI package canaries are current for `agent-borg==3.3.16`, including generated rules, OpenClaw export, stdio MCP, CLI, and Python API. Served-runtime freshness and ops/watchdog proof remain the current release-control blockers.
+- Local first-user gate and production PyPI package canaries are current for `agent-borg==3.3.17`, including generated rules, OpenClaw export, stdio MCP, CLI, and Python API. Served-runtime freshness and ops/watchdog proof remain the current release-control blockers.
 
 ## What is not proven
 

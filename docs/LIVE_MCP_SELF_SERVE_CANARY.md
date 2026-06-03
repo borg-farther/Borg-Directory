@@ -7,7 +7,7 @@ Generated: 2026-05-23T20:15:16Z. Historical/stale canary retained as evidence of
 **BLOCKED_VERSION_DRIFT_OPERATOR_RELOAD_REQUIRED**
 
 The historical live Borg MCP calls were functionally responding, but the served process reported
-`borg_version=3.3.7` while the then-current source/PyPI target was `3.3.10`. Current source now targets `agent-borg==3.3.16`, and served remote MCP remains NO-GO until a fresh operator-supervised runtime fingerprint/canary passes against the current version.
+`borg_version=3.3.7` while the then-current source/PyPI target was `3.3.10`. Current source now targets `agent-borg==3.3.17`, and served remote MCP remains NO-GO until a fresh operator-supervised runtime fingerprint/canary passes against the current version.
 
 No gateway restart, kill, signal, or reload was performed by the agent.
 

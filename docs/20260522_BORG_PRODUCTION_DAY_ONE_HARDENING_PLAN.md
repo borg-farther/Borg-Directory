@@ -14,7 +14,7 @@ That nucleus is the day-one value path. Everything else is gated by evidence.
 
 ## Release-state split
 
-- Controlled supervised first-user path: **NO-GO until `agent-borg==3.3.16` package fresh-install gates are green for the current release**.
+- Controlled supervised first-user path: **NO-GO until `agent-borg==3.3.17` package fresh-install gates are green for the current release**.
 - Controlled first-10 beta: **NO-GO right now** while package freshness, served-runtime freshness, ops/watchdog, and proof-dashboard gates remain incomplete; package/fresh-install/stdio MCP canaries are necessary but not sufficient.
 - Public self-serve launch: **NO-GO until first-10 external-user scoreboard passes**.
 - Served remote MCP: **NO-GO until live served runtime path and behavior match audited source**.

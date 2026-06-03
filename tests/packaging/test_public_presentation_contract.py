@@ -151,11 +151,12 @@ def test_current_docs_preserve_same_version_artifact_drift_truth() -> None:
         for phrase in stale_or_unsupported:
             assert phrase not in text, f"{path} still contains stale/unsupported phrase: {phrase}"
 
-    assert "immutable PyPI long-description/metadata is stale" in watched["README.md"]
-    assert "metadata-correct immutable package" in watched["README.md"]
+    assert "metadata-correct patch release target" in watched["README.md"]
+    assert "exact-version PyPI fresh-install" in watched["README.md"]
     assert "Broad public self-serve launch, 100-user rollout, served/remote MCP, and measured external lift are **not claimed**" in watched["README.md"]
     assert "Controlled first-10 beta: **NO-GO right now**" in watched["docs/READINESS.md"]
-    assert "PyPI long-description/metadata is stale" in watched["docs/READINESS.md"]
+    assert "metadata-correct package target" in watched["docs/READINESS.md"]
+    assert "pending until upload and verification" in watched["docs/READINESS.md"]
     assert "served runtime fingerprint is stale" in watched["docs/READINESS.md"]
     assert "GitHub `main` release governance is enforced" in watched["docs/READINESS.md"]
     assert "Public self-serve launch: **NO-GO until first-10 external-user evidence passes**" in watched["docs/READINESS.md"]

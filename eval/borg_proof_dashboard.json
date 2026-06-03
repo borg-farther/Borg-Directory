@@ -10,7 +10,7 @@
       "No Borg analytics export proving active contributors or consumers was found.",
       "No first-10-user scoreboard with real outcomes exists yet.",
       "Ops readiness/watchdog plus served-runtime and release-governance gates must stay green; any P0/P1 bad-answer, privacy, support, stale-proof, stale-runtime, or branch-protection failure pauses controlled beta invites.",
-      "100-real-user gate remains blocked: ['PyPI latest/fresh-install package evidence is not green: latest metadata does not match source version', \"served runtime borg_version '3.3.14' != source version '3.3.16'\", \"served runtime source_version '3.3.15' != source version '3.3.16'\", 'served runtime version_matches_source is not true', 'served runtime reload_status is not loaded_code_matches_source_behavior', 'first-10 external-user evidence has not passed: verified=0/10, real_users=0/10, installs=0/8, useful=0/6, critical_incidents=0/0']",
+      "100-real-user gate remains blocked: ['PyPI latest/fresh-install package evidence is not green: same-version PyPI upload predates current source revision', 'PyPI latest/fresh-install package evidence is not green: fresh install + MCP stdio canary is not green', \"served runtime borg_version '3.3.14' != source version '3.3.17'\", \"served runtime source_version '3.3.15' != source version '3.3.17'\", 'served runtime version_matches_source is not true', 'served runtime reload_status is not loaded_code_matches_source_behavior', 'public_gate_live_matches_snapshot failed: {\\'passed\\': False, \\'snapshot\\': {\\'source_version\\': \\'3.3.17\\', \\'ready_for_controlled_first_10_beta\\': False, \\'ready_for_public_self_serve_launch\\': False, \\'max_recommended_real_users_now\\': 0, \\'blockers\\': [\\'PyPI project description/long-description contains stale release-status copy\\', \\'PyPI fresh-install + MCP stdio canary snapshot is missing or failing\\', \"served runtime borg_version \\'3.3.14\\' != source version \\'3.3.17\\'\", \"served runtime source_version \\'3.3.15\\' != source version \\'3.3.17\\'\", \\'served runtime version_matches_source is not true\\', \\'served runtime reload_status is not loaded_code_matches_source_behavior\\', \\'public docs/claim guard found stale install pins or unsupported launch/value claims\\', \\'first-10 external-user evidence has not passed: verified=0/10, real_users=0/10, installs=0/8, useful=0/6, critical_incidents=0/0\\']}, \\'live\\': {\\'source_version\\': \\'3.3.17\\', \\'ready_for_controlled_first_10_beta\\': False, \\'ready_for_public_self_serve_launch\\': False, \\'max_recommended_real_users_now\\': 0, \\'blockers\\': [\\'PyPI project description/long-description contains stale release-status copy\\', \\'PyPI fresh-install + MCP stdio canary snapshot is missing or failing\\', \"served runtime borg_version \\'3.3.14\\' != source version \\'3.3.17\\'\", \"served runtime source_version \\'3.3.15\\' != source version \\'3.3.17\\'\", \\'served runtime version_matches_source is not true\\', \\'served runtime reload_status is not loaded_code_matches_source_behavior\\', \\'first-10 external-user evidence has not passed: verified=0/10, real_users=0/10, installs=0/8, useful=0/6, critical_incidents=0/0\\']}}', 'first-10 external-user evidence has not passed: verified=0/10, real_users=0/10, installs=0/8, useful=0/6, critical_incidents=0/0']",
       "Served/runtime freshness must be proven from eval/served_runtime_fingerprint_snapshot.json; source/fresh-process green is not live cutover proof.",
       "Release governance must be proven from eval/release_governance_snapshot.json; missing/unprotected branch details block release readiness."
     ],
@@ -68,11 +68,11 @@
       "sha256": "64506c28195ec35a14e633335085ea262e96eb9ea5aba75aec2d2303314be615"
     },
     {
-      "claim_derived": "100-real-user gate=False; max_recommended_real_users=0; blockers=['PyPI latest/fresh-install package evidence is not green: latest metadata does not match source version', \"served runtime borg_version '3.3.14' != source version '3.3.16'\", \"served runtime source_version '3.3.15' != source version '3.3.16'\", 'served runtime version_matches_source is not true', 'served runtime reload_status is not loaded_code_matches_source_behavior', 'first-10 external-user evidence has not passed: verified=0/10, real_users=0/10, installs=0/8, useful=0/6, critical_incidents=0/0']",
+      "claim_derived": "100-real-user gate=False; max_recommended_real_users=0; blockers=['PyPI latest/fresh-install package evidence is not green: same-version PyPI upload predates current source revision', 'PyPI latest/fresh-install package evidence is not green: fresh install + MCP stdio canary is not green', \"served runtime borg_version '3.3.14' != source version '3.3.17'\", \"served runtime source_version '3.3.15' != source version '3.3.17'\", 'served runtime version_matches_source is not true', 'served runtime reload_status is not loaded_code_matches_source_behavior', 'public_gate_live_matches_snapshot failed: {\\'passed\\': False, \\'snapshot\\': {\\'source_version\\': \\'3.3.17\\', \\'ready_for_controlled_first_10_beta\\': False, \\'ready_for_public_self_serve_launch\\': False, \\'max_recommended_real_users_now\\': 0, \\'blockers\\': [\\'PyPI project description/long-description contains stale release-status copy\\', \\'PyPI fresh-install + MCP stdio canary snapshot is missing or failing\\', \"served runtime borg_version \\'3.3.14\\' != source version \\'3.3.17\\'\", \"served runtime source_version \\'3.3.15\\' != source version \\'3.3.17\\'\", \\'served runtime version_matches_source is not true\\', \\'served runtime reload_status is not loaded_code_matches_source_behavior\\', \\'public docs/claim guard found stale install pins or unsupported launch/value claims\\', \\'first-10 external-user evidence has not passed: verified=0/10, real_users=0/10, installs=0/8, useful=0/6, critical_incidents=0/0\\']}, \\'live\\': {\\'source_version\\': \\'3.3.17\\', \\'ready_for_controlled_first_10_beta\\': False, \\'ready_for_public_self_serve_launch\\': False, \\'max_recommended_real_users_now\\': 0, \\'blockers\\': [\\'PyPI project description/long-description contains stale release-status copy\\', \\'PyPI fresh-install + MCP stdio canary snapshot is missing or failing\\', \"served runtime borg_version \\'3.3.14\\' != source version \\'3.3.17\\'\", \"served runtime source_version \\'3.3.15\\' != source version \\'3.3.17\\'\", \\'served runtime version_matches_source is not true\\', \\'served runtime reload_status is not loaded_code_matches_source_behavior\\', \\'first-10 external-user evidence has not passed: verified=0/10, real_users=0/10, installs=0/8, useful=0/6, critical_incidents=0/0\\']}}', 'first-10 external-user evidence has not passed: verified=0/10, real_users=0/10, installs=0/8, useful=0/6, critical_incidents=0/0']",
       "exists": true,
-      "freshness_timestamp": "2026-06-03T12:42:44.008716+00:00",
+      "freshness_timestamp": "2026-06-03T14:33:34.490309+00:00",
       "path": "eval/real_user_rollout_gate_snapshot.json",
-      "sha256": "1eafa2bd93df3a7b915c3bf0750c93a90080a749a139b8467f540eeb98e64c53"
+      "sha256": "4bd20cf81d26206a4c13e4242bffc2ad79b709138f095a030898eda2f61803c0"
     },
     {
       "claim_derived": "first-10 row evidence users=0; measured_savings={'rows_with_measured_value': 0, 'dead_ends_avoided_confirmed': 0, 'net_minutes_saved': 0.0, 'positive_minutes_saved': 0.0, 'negative_minutes_cost': 0.0, 'net_tokens_saved': 0, 'positive_tokens_saved': 0, 'negative_tokens_cost': 0, 'counterfactual_basis_counts': {}}; gate=BLOCKED",
@@ -82,46 +82,46 @@
       "sha256": "232585546e34fc07459365e00123aa512098f215f7bcd6307d0bde9bb20813f0"
     },
     {
-      "claim_derived": "public self-serve gate=False; max_recommended_real_users=0; blockers=['PyPI project description/long-description contains stale release-status copy', \"served runtime borg_version '3.3.14' != source version '3.3.16'\", \"served runtime source_version '3.3.15' != source version '3.3.16'\", 'served runtime version_matches_source is not true', 'served runtime reload_status is not loaded_code_matches_source_behavior', 'first-10 external-user evidence has not passed: verified=0/10, real_users=0/10, installs=0/8, useful=0/6, critical_incidents=0/0']",
+      "claim_derived": "public self-serve gate=False; max_recommended_real_users=0; blockers=['PyPI project description/long-description contains stale release-status copy', 'PyPI fresh-install + MCP stdio canary snapshot is missing or failing', \"served runtime borg_version '3.3.14' != source version '3.3.17'\", \"served runtime source_version '3.3.15' != source version '3.3.17'\", 'served runtime version_matches_source is not true', 'served runtime reload_status is not loaded_code_matches_source_behavior', 'public_gate_live_matches_snapshot failed: {\\'passed\\': False, \\'snapshot\\': {\\'source_version\\': \\'3.3.17\\', \\'ready_for_controlled_first_10_beta\\': False, \\'ready_for_public_self_serve_launch\\': False, \\'max_recommended_real_users_now\\': 0, \\'blockers\\': [\\'PyPI project description/long-description contains stale release-status copy\\', \\'PyPI fresh-install + MCP stdio canary snapshot is missing or failing\\', \"served runtime borg_version \\'3.3.14\\' != source version \\'3.3.17\\'\", \"served runtime source_version \\'3.3.15\\' != source version \\'3.3.17\\'\", \\'served runtime version_matches_source is not true\\', \\'served runtime reload_status is not loaded_code_matches_source_behavior\\', \\'public docs/claim guard found stale install pins or unsupported launch/value claims\\', \\'first-10 external-user evidence has not passed: verified=0/10, real_users=0/10, installs=0/8, useful=0/6, critical_incidents=0/0\\']}, \\'live\\': {\\'source_version\\': \\'3.3.17\\', \\'ready_for_controlled_first_10_beta\\': False, \\'ready_for_public_self_serve_launch\\': False, \\'max_recommended_real_users_now\\': 0, \\'blockers\\': [\\'PyPI project description/long-description contains stale release-status copy\\', \\'PyPI fresh-install + MCP stdio canary snapshot is missing or failing\\', \"served runtime borg_version \\'3.3.14\\' != source version \\'3.3.17\\'\", \"served runtime source_version \\'3.3.15\\' != source version \\'3.3.17\\'\", \\'served runtime version_matches_source is not true\\', \\'served runtime reload_status is not loaded_code_matches_source_behavior\\', \\'first-10 external-user evidence has not passed: verified=0/10, real_users=0/10, installs=0/8, useful=0/6, critical_incidents=0/0\\']}}', 'first-10 external-user evidence has not passed: verified=0/10, real_users=0/10, installs=0/8, useful=0/6, critical_incidents=0/0']",
       "exists": true,
-      "freshness_timestamp": "2026-06-03T12:42:42.453374+00:00",
+      "freshness_timestamp": "2026-06-03T14:33:33.083008+00:00",
       "path": "eval/public_self_serve_launch_gate_snapshot.json",
-      "sha256": "963d34aa0eca072fce5fba1d5b10b4edaa6e3cc4047b8b49f64dead15a37c03b"
+      "sha256": "4df3f60252923f1227db98d3665c9e9bfc5d5d76dfecb89dfe48c8d299314d7b"
     },
     {
       "claim_derived": "cold-start trust gate=True; blockers=[]",
       "exists": true,
-      "freshness_timestamp": "2026-06-03T12:42:31.172319+00:00",
+      "freshness_timestamp": "2026-06-03T14:33:22.412689+00:00",
       "path": "eval/cold_start_trust_gate_snapshot.json",
-      "sha256": "badda3b864f20009a4cc59a5e9209cd0ed76df95fbf3d9b9994b8f8e57064222"
+      "sha256": "6ca9de86aaca684fa299c00dd94e3b363525cb0e4b808befaaa0d1ae3aa220f6"
     },
     {
       "claim_derived": "self-service ops gate=True; blockers=[]",
       "exists": true,
-      "freshness_timestamp": "2026-06-03T12:42:47.243575+00:00",
+      "freshness_timestamp": "2026-06-03T14:33:38.112094+00:00",
       "path": "eval/self_service_ops_gate_snapshot.json",
-      "sha256": "d9c59714efb0707896de59e721308e61f806c68c7dbf3d97aa178cd62448ee0f"
+      "sha256": "1ed56e8f8b8a6a23eb86abf6ba418402ef0e8b8b6e43c24c35c091e2df49c110"
     },
     {
       "claim_derived": "ops readiness watchdog=True; blocker details live in eval/ops_readiness_watchdog_snapshot.json",
       "exists": true,
-      "freshness_timestamp": "2026-06-03T12:42:47.060698+00:00",
+      "freshness_timestamp": "2026-06-03T14:33:37.958079+00:00",
       "path": "eval/ops_readiness_watchdog_snapshot.json",
-      "sha256": "edf7f4cce3c33ef05045f207c954f0e46e150c0d54cba7abd8a63e06686b73a1"
+      "sha256": "d4775eb9f928c2600ee1be16e3a9c672702a051726b6d889039e3f18e60eea2c"
     },
     {
       "claim_derived": "rollback/comms drill=True; dry_run_only=True",
       "exists": true,
-      "freshness_timestamp": "2026-06-03T12:42:34.130960+00:00",
+      "freshness_timestamp": "2026-06-03T14:33:25.287372+00:00",
       "path": "eval/rollback_comms_drill_snapshot.json",
-      "sha256": "04549265698b0187af9cc086ceb67afacdc3b6723a42c72448b58f585d7d255e"
+      "sha256": "0bc1eaa1dbc6be102068913f138dc6016e25db71d2e2c684b1819b16d10148c9"
     },
     {
-      "claim_derived": "PyPI fresh-install canary success=True; version=3.3.16",
+      "claim_derived": "PyPI fresh-install canary success=False; version=3.3.17",
       "exists": true,
-      "freshness_timestamp": "2026-06-03T12:42:07Z",
+      "freshness_timestamp": "2026-06-03T14:33:00Z",
       "path": "eval/pypi_fresh_install_snapshot.json",
-      "sha256": "3bbab034f809592b62c4503de8babb335797aaa95b4e4be196d03345624e816e"
+      "sha256": "9685c3b7e375a39bc004b4c44cd032335758fa56cdf24dc12ba98cf9821b4d89"
     },
     {
       "claim_derived": "logical load 10: passed=True; total_requests=48934; success_rate=1.0; p95_ms=0.7294940995052457; model=asyncio_logical_users",
@@ -145,18 +145,18 @@
       "sha256": "efd3c036fb2cfe1f6aa296f7f995070f6d4b569d4242ba1ebe416c86c92e4928"
     },
     {
-      "claim_derived": "package version=3.3.16; scripts declared in project metadata",
+      "claim_derived": "package version=3.3.17; scripts declared in project metadata",
       "exists": true,
-      "freshness_timestamp": "2026-06-02T13:28:06Z",
+      "freshness_timestamp": "2026-06-03T14:12:38Z",
       "path": "pyproject.toml",
-      "sha256": "87a7b7c43e63c0a0d46f0e69b01c1dd5ccd4308ba56304d1f6da53b80c6f64eb"
+      "sha256": "28009f7f613a6d80db0b57d963ac7cdf2588ecdffbf3e9257e7754aa6ca649f3"
     },
     {
-      "claim_derived": "runtime __version__=3.3.16; top-level check() delegates to search",
+      "claim_derived": "runtime __version__=3.3.17; top-level check() delegates to search",
       "exists": true,
-      "freshness_timestamp": "2026-06-02T13:28:06Z",
+      "freshness_timestamp": "2026-06-03T14:12:39Z",
       "path": "borg/__init__.py",
-      "sha256": "c5b0048872dafb21a4f6dc1ee5c7e7c6c471f4c203acbcc06cdb9f139f3c2191"
+      "sha256": "cde77892744496de644a92dd9356fd946f299c4dcc5cfc24d7248845cd27b597"
     }
   ],
   "first_10_user_scoreboard_template": {
@@ -361,7 +361,7 @@
       }
     ]
   },
-  "generated_at_utc": "2026-06-03T12:42:47Z",
+  "generated_at_utc": "2026-06-03T14:33:38Z",
   "metrics": {
     "active_contributors_consumers": {
       "honesty_label": "MISSING_BORG_ANALYTICS_ARTIFACT",
@@ -470,7 +470,7 @@
     "pypi_fresh_install_canary": {
       "honesty_label": "PYPI_FRESH_INSTALL_CURRENT_VERSION",
       "provenance": "eval/pypi_fresh_install_snapshot.json",
-      "value": "PASS"
+      "value": "FAIL"
     },
     "pypi_package_current_gate": {
       "honesty_label": "PYPI_METADATA_PLUS_FRESH_INSTALL_CURRENT_SOURCE",
@@ -510,7 +510,7 @@
     "source_version_consistency": {
       "honesty_label": "REPO_SOURCE",
       "provenance": "pyproject.toml; borg/__init__.py",
-      "value": "pyproject=3.3.16 runtime=3.3.16"
+      "value": "pyproject=3.3.17 runtime=3.3.17"
     },
     "uat_scoreboard_synthetic_load": {
       "honesty_label": "LOCAL_ARTIFACT_LOGICAL_USERS",
@@ -524,7 +524,7 @@
     }
   },
   "next_action_queue_before_sharing_git_with_first_user": [
-    "Do not invite controlled first-10 testers yet: `agent-borg==3.3.16` fresh-install/runtime canary passes, but the PyPI project description/long-description is stale; publish a new immutable version after `3.3.16` before using public package metadata as current proof. Served-runtime, release-governance, ops, and watchdog gates must also pass.",
+    "Do not invite controlled first-10 testers yet: `agent-borg==3.3.17` fresh-install/runtime canary passes, but the PyPI project description/long-description is stale; publish a new immutable version after `3.3.17` before using public package metadata as current proof. Served-runtime, release-governance, ops, and watchdog gates must also pass.",
     "Create a fresh-PyPI runbook: install package, run borg --version, configure MCP, run one rescue, capture exact timestamps and blockers.",
     "Keep the self-service ops gate and watchdog green before each tester invite; pause if bad-answer/support/privacy intake fails.",
     "Record first user in the first-10 scoreboard template using a pseudonym and consented outcome fields.",
@@ -533,7 +533,7 @@
     "Before any public claim, replace logical-user load evidence with real external-user evidence or clearly label the distinction."
   ],
   "repo": "https://github.com/borg-farther/Borg-Directory",
-  "source_revision": "051443233b35f816b8d28b35a544714adda77d7c+dirty",
+  "source_revision": "8643ad37d1c4f111ea23eee331af244be5d32a79+dirty",
   "top_verdict": {
     "broad_public_launch": {
       "verdict": "NO-GO",
