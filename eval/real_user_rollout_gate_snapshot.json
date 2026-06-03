@@ -43,7 +43,7 @@
     "passed_count": 28
   },
   "gate_type": "real_user_rollout",
-  "generated_at_utc": "2026-06-03T12:03:04.559036+00:00",
+  "generated_at_utc": "2026-06-03T12:42:44.008716+00:00",
   "important_distinction": "load/readiness snapshots are synthetic/logical users; this gate controls real external-user rollout",
   "infrastructure_ready_for_100": false,
   "load_gates": {
@@ -90,12 +90,12 @@
       "failed_count": 0,
       "failures": [],
       "freshness": {
-        "age_hours": 0.003431156388888889,
+        "age_hours": 0.009923212777777777,
         "failure_kind": null,
         "max_age_hours": 24.0,
         "passed": true
       },
-      "generated_at_utc": "2026-06-03T12:02:51Z",
+      "generated_at_utc": "2026-06-03T12:42:07Z",
       "mcp_server_info": {
         "name": "borg-mcp-server",
         "version": "3.3.16"
@@ -179,16 +179,13 @@
       ],
       "source_upload_alignment": {
         "alignment_basis": "package_reference",
-        "current_source_commit_time_utc": "2026-06-02T21:44:21+00:00",
-        "detail": "Package-impacting source or metadata is dirty; no immutable PyPI artifact can prove these uncommitted package changes.",
+        "current_source_commit_time_utc": "2026-06-03T12:41:35+00:00",
+        "detail": "Package-impacting source or metadata changed after the package reference tag; publish a new immutable version before claiming package proof is current.",
         "dirty_source": true,
-        "failure_kind": "package_worktree_dirty",
+        "failure_kind": "package_source_changed_after_reference",
         "latest_release_upload_time_utc": "2026-06-02T21:21:08.773074+00:00",
         "non_package_changed_paths_since_reference": [
-          "eval/public_self_serve_launch_gate.py",
-          "tests/readiness/test_public_self_serve_launch_gate.py"
-        ],
-        "non_package_dirty_paths": [
+          ".github/workflows/self-service-watchdog.yml",
           "AGENTS.md",
           "SUPPORT.md",
           "docs/20260514_FIRST_10_USER_INVITE_PACKET.md",
@@ -236,14 +233,37 @@
           "llms.txt",
           "scripts/build_borg_proof_dashboard.py",
           "tests/packaging/test_public_presentation_contract.py",
-          "tests/readiness/test_public_self_serve_launch_gate.py"
+          "tests/readiness/test_ops_readiness_watchdog.py",
+          "tests/readiness/test_public_self_serve_launch_gate.py",
+          "tests/readiness/test_self_service_ops_gate.py"
+        ],
+        "non_package_dirty_paths": [
+          "docs/20260517_BORG_100_REAL_USER_READINESS.md",
+          "docs/BORG_PROOF_DASHBOARD.html",
+          "docs/BORG_PROOF_DASHBOARD.md",
+          "docs/COLD_START_TRUST_HARDENING.md",
+          "docs/PUBLIC_SELF_SERVE_LAUNCH_GO_NO_GO.md",
+          "docs/SELF_SERVICE_OPS_READINESS_REPORT.md",
+          "docs/public/impact/impact.json",
+          "docs/public/proof-dashboard/index.html",
+          "docs/public/status.json",
+          "docs/public/value.json",
+          "eval/borg_proof_dashboard.json",
+          "eval/cold_start_trust_gate_snapshot.json",
+          "eval/ops_readiness_watchdog_snapshot.json",
+          "eval/public_self_serve_launch_gate_snapshot.json",
+          "eval/pypi_fresh_install_snapshot.json",
+          "eval/real_user_rollout_gate_snapshot.json",
+          "eval/release_governance_snapshot.json",
+          "eval/rollback_comms_drill_snapshot.json",
+          "eval/self_service_ops_gate_snapshot.json"
         ],
         "oldest_release_upload_time_utc": "2026-06-02T21:21:07.262480+00:00",
-        "package_changed_paths_since_reference": [],
-        "package_dirty": true,
-        "package_dirty_paths": [
+        "package_changed_paths_since_reference": [
           "README.md"
         ],
+        "package_dirty": false,
+        "package_dirty_paths": [],
         "package_reference": "v3.3.16",
         "package_reference_ancestor_of_head": true,
         "package_reference_available": true,
@@ -253,7 +273,7 @@
         "passed": false,
         "release_file_count": 2,
         "source_commit_time_utc": "2026-06-02T13:27:34+00:00",
-        "source_revision": "174467f81db4ed89d0719e00674ba55f93acff7b+dirty",
+        "source_revision": "051443233b35f816b8d28b35a544714adda77d7c+dirty",
         "stale_release_files": [],
         "worktree_dirty": true
       },
@@ -352,10 +372,10 @@
   },
   "self_service_ops_gate": {
     "blockers": [],
-    "generated_at_utc": "2026-06-03T12:03:04.558700+00:00",
+    "generated_at_utc": "2026-06-03T12:42:44.008244+00:00",
     "ops_readiness_watchdog": {
       "blockers": [],
-      "generated_at_utc": "2026-06-03T12:01:51.555925+00:00",
+      "generated_at_utc": "2026-06-03T12:42:40.756728+00:00",
       "passed": true,
       "snapshot": "eval/ops_readiness_watchdog_snapshot.json",
       "truth_policy": "Watchdog passing means controlled first-10 ops proof is fresh and internally consistent. Broad public self-serve still requires row-derived first-10 external-user evidence."
