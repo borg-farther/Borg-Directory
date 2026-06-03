@@ -13,7 +13,7 @@ Give Borg an error, traceback, failed test, install problem, config failure, or 
 - **MCP server command:** `borg-mcp`
 - **Canonical repo:** https://github.com/borg-farther/Borg-Directory
 
-**Status:** `agent-borg==3.3.15` is published on PyPI, but that artifact is stale relative to the current source revision because its upload predates the latest hardening merge. This branch targets the next immutable release, `agent-borg==3.3.16`; package proof is red until a new immutable version is published and freshly canaried. GitHub release governance is now enforced on `main`, while served runtime freshness and first-10 external-user evidence still gate controlled beta/public claims. Broad public self-serve launch, 100-user rollout, served/remote MCP, and measured external lift are **not claimed** until row-derived external-user evidence passes.
+**Status:** `agent-borg==3.3.16` is published on PyPI and the exact-version fresh-install, stdio MCP, generated-rules, OpenClaw, CLI, and Python API runtime canaries pass, but the immutable PyPI long-description/metadata is stale. Controlled first-10 beta is still **NO-GO** until a metadata-correct immutable package plus served-runtime freshness and ops/watchdog proof are green; GitHub `main` release governance is enforced. Broad public self-serve launch, 100-user rollout, served/remote MCP, and measured external lift are **not claimed** until row-derived external-user evidence passes.
 
 ## Try Borg in 60 seconds
 
@@ -324,17 +324,17 @@ Why: agents often do not discover optional tools unless explicitly primed.
 
 ## 5. What is ready now
 
-`agent-borg==3.3.15` is published, and the older package/local stdio canary exists, but it is **not current for this source revision**. The latest PyPI release upload predates the current source hardening revision, so this branch targets `agent-borg==3.3.16`; package proof is red until a new immutable version is published and freshly canaried. Release governance is now enforced on GitHub `main` with exact required checks and CODEOWNERS review; served runtime freshness and first-10 external-user evidence remain separate blockers.
+`agent-borg==3.3.16` is published on PyPI and the exact-version package runtime canary passes for this source/package line, but the PyPI long-description/metadata is stale for the immutable artifact. Release governance is enforced on GitHub `main` with exact required checks and CODEOWNERS review; a metadata-correct immutable package, served runtime freshness, ops/watchdog proof, and first-10 external-user evidence remain separate blockers.
 
-- Install, CLI, Python API, and MCP entrypoints are present, but the currently published package is stale relative to source.
+- Install, CLI, Python API, generated-rules/OpenClaw export, and stdio MCP entrypoints are present and freshly canaried from production PyPI `agent-borg==3.3.16`.
 - First-user rescue path returns ACTION / STOP / VERIFY or `NO_CONFIDENT_MATCH`.
 - Security/privacy/prompt-injection surface: PASS in CI/local gates.
 - Generated rules and OpenClaw export are covered by first-user/package gates.
-- PyPI latest is **not proven current** for the current source revision; controlled first-10 testers must **not** be invited until `agent-borg==3.3.16`, served-runtime freshness, ops/watchdog, and proof dashboards are all green. Current cap: 0 until those package/runtime gates are green; broad public self-serve remains evidence-gated after first-10.
+- PyPI latest is `agent-borg==3.3.16` and the fresh-install/stdio MCP runtime canary passes, but PyPI long-description/metadata is stale; controlled first-10 testers must **not** be invited until a metadata-correct package, served-runtime freshness, ops/watchdog, and proof dashboards are green. Current cap: 0 until those package/runtime/ops gates are green; broad public self-serve remains evidence-gated after first-10.
 - Self-service ops guardrails are present: bad-answer intake, install/MCP support intake, first-10 evidence intake, support/SLA, rollback/comms dry-run, and watchdog workflow.
 - First-10 beta contract is published: [`docs/FIRST_10_BETA_READINESS.md`](https://github.com/borg-farther/Borg-Directory/blob/main/docs/FIRST_10_BETA_READINESS.md).
 
-Do **not** route this into broad public self-serve or 100 real users. Invite at most 10 controlled testers with consented evidence capture. `python eval/public_self_serve_launch_gate.py` must still keep broad public self-serve blocked until real first-10 evidence passes.
+Do **not** route this into controlled first-10, broad public self-serve, or 100 real users yet. Invite **0** controlled testers until the metadata-correct immutable package, served-runtime freshness, ops/watchdog, and proof-dashboard gates are green; after those gates pass, the first-10 evidence contract may cap a consented cohort at 10. `python eval/public_self_serve_launch_gate.py` must still keep broad public self-serve blocked until real first-10 evidence passes.
 
 Not yet claimed:
 

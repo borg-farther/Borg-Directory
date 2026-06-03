@@ -688,7 +688,11 @@ def test_workflow_public_gate_guard_requires_each_blocker_to_be_allowed() -> Non
     assert "python eval/run_pypi_fresh_install_canary.py" in text
     assert "continuing so public/readiness gates can fail closed with the fresh snapshot" in text
     assert "allowed_public_blockers = all(" in text
-    assert "assert (controlled_package or pre_publish or release_controls_blocked) and allowed_public_blockers" in text
+    assert "pypi project description" in text
+    assert "long-description" in text
+    assert "package metadata" in text
+    assert "metadata_stale_blocked" in text
+    assert "assert (controlled_package or pre_publish or release_controls_blocked or metadata_stale_blocked) and allowed_public_blockers" in text
     assert "python scripts/build_borg_proof_dashboard.py" in text
     assert "python scripts/borg_proof_dashboard_lint.py" in text
 
@@ -704,9 +708,9 @@ def test_workflow_regenerates_mutable_evidence_before_dashboard_lint() -> None:
     assert positions["python eval/cold_start_trust_gate.py"] < positions["python eval/release_governance_gate.py --output eval/release_governance_snapshot.json"]
     assert positions["python eval/release_governance_gate.py --output eval/release_governance_snapshot.json"] < positions["python eval/public_self_serve_launch_gate.py"]
     assert positions["python eval/public_self_serve_launch_gate.py"] < positions["python eval/real_user_rollout_gate.py"]
-    assert positions["python eval/real_user_rollout_gate.py"] < positions["python eval/ops_readiness_watchdog.py"]
-    assert positions["python eval/ops_readiness_watchdog.py"] < positions["python scripts/build_borg_proof_dashboard.py"]
-    assert positions["python scripts/build_borg_proof_dashboard.py"] < positions["python eval/ops_readiness_watchdog.py --mode pr --json --no-write --output eval/ops_readiness_watchdog_post_dashboard_check.json --max-snapshot-age-hours 24 --allow-public-blocker release_controls_or_first_10_evidence --require-ci-schedule"]
+    assert positions["python eval/real_user_rollout_gate.py"] < positions["python scripts/build_borg_proof_dashboard.py"]
+    assert positions["python scripts/build_borg_proof_dashboard.py"] < positions["python eval/ops_readiness_watchdog.py"]
+    assert positions["python eval/ops_readiness_watchdog.py"] < positions["python eval/ops_readiness_watchdog.py --mode pr --json --no-write --output eval/ops_readiness_watchdog_post_dashboard_check.json --max-snapshot-age-hours 24 --allow-public-blocker release_controls_or_first_10_evidence --require-ci-schedule"]
     assert positions["python eval/ops_readiness_watchdog.py --mode pr --json --no-write --output eval/ops_readiness_watchdog_post_dashboard_check.json --max-snapshot-age-hours 24 --allow-public-blocker release_controls_or_first_10_evidence --require-ci-schedule"] < positions["python scripts/borg_proof_dashboard_lint.py"]
     assert workflow["sequence_ok"] is True
 

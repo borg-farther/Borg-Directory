@@ -34,8 +34,13 @@ def test_self_service_ops_gate_script_and_artifacts_are_present() -> None:
     assert workflow_text.index("python eval/release_governance_gate.py --output eval/release_governance_snapshot.json") < workflow_text.index("python eval/public_self_serve_launch_gate.py")
     post_dashboard_check = "python eval/ops_readiness_watchdog.py --mode pr --json --no-write --output eval/ops_readiness_watchdog_post_dashboard_check.json --max-snapshot-age-hours 24 --allow-public-blocker release_controls_or_first_10_evidence --require-ci-schedule"
     assert post_dashboard_check in workflow_text
-    assert workflow_text.index("python eval/ops_readiness_watchdog.py") < workflow_text.index("python scripts/build_borg_proof_dashboard.py")
-    assert workflow_text.index("python scripts/build_borg_proof_dashboard.py") < workflow_text.index(post_dashboard_check)
+    first_dashboard_build = workflow_text.index("python scripts/build_borg_proof_dashboard.py")
+    first_watchdog = workflow_text.index("python eval/ops_readiness_watchdog.py")
+    final_dashboard_build = workflow_text.rindex("python scripts/build_borg_proof_dashboard.py")
+    assert workflow_text.index("python eval/real_user_rollout_gate.py") < first_dashboard_build
+    assert first_dashboard_build < first_watchdog
+    assert first_watchdog < final_dashboard_build
+    assert final_dashboard_build < workflow_text.index(post_dashboard_check)
     assert workflow_text.index(post_dashboard_check) < workflow_text.index("python scripts/borg_proof_dashboard_lint.py")
     assert snapshot["checks"]["bad_answer_feedback_path"]["feedback_path"]["passed"] is True
 

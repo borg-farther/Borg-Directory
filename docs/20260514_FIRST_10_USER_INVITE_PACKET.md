@@ -1,15 +1,15 @@
 # Borg first-10 user invite packet
 
 Generated: 2026-05-14T18:25:05Z
-Rev: 2026-06-02T07:00:00Z — controlled first-10 beta install path targets PyPI package `agent-borg==3.3.16`; send only while the latest `eval/pypi_fresh_install_snapshot.json` confirms PyPI latest plus fresh-install/MCP canary pass for this exact version.
+Rev: 2026-06-03T09:00:00Z — controlled first-10 beta install path targets PyPI package `agent-borg==3.3.16`, but this packet is **not sendable right now**. Send only after a metadata-correct immutable package exists and the latest public gate confirms PyPI runtime canary, served-runtime freshness, ops/watchdog, proof-dashboard, and release-governance gates are green.
 
 ## Exact invite message
 
-Hi — we are running a small consented Borg beta for the first 10 external users. Borg is an error/debugging assistant that returns ACTION / STOP / VERIFY guidance from local/public project traces. Would you be willing to try one install and one real debugging query, then send redacted feedback? Please do not paste secrets, tokens, proprietary code, private customer data, or confidential logs.
+Hi — we are preparing a small consented Borg beta for the first 10 external users after the package metadata/runtime/ops gates pass. Borg is an error/debugging assistant that returns ACTION / STOP / VERIFY guidance from local/public project traces. Would you be willing to try one install and one real debugging query when the gate opens, then send redacted feedback? Please do not paste secrets, tokens, proprietary code, private customer data, or confidential logs.
 
 ## Install commands
 
-STOP gate: these commands are for the controlled first-10 beta only. Do **not** send them if `python eval/run_pypi_fresh_install_canary.py --version 3.3.16` fails or if more than 10 real external users would be invited before the first-10 evidence gate passes.
+STOP gate: these commands are for the controlled first-10 beta only. Do **not** send them while the current cap is 0. Do **not** send them if the PyPI metadata-current gate, `python eval/run_pypi_fresh_install_canary.py --version 3.3.16`, served-runtime freshness, ops/watchdog, proof-dashboard, or release-governance gate fails, or if more than 10 real external users would be invited before the first-10 evidence gate passes.
 
 Preferred isolated install:
 

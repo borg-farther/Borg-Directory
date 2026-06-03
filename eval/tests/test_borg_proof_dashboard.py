@@ -58,8 +58,21 @@ def test_borg_proof_dashboard_artifacts_exist_and_are_honest(tmp_path, monkeypat
         else:
             assert data["controlled_first_10_beta"]["answer"] == "NO-GO"
             assert data["top_verdict"]["controlled_first_10_beta"]["verdict"] == "NO-GO"
-            assert "served-runtime freshness" in data["top_verdict"]["controlled_first_10_beta"]["why"]
-            assert "release governance" in data["top_verdict"]["controlled_first_10_beta"]["why"]
+            why = data["top_verdict"]["controlled_first_10_beta"]["why"]
+            expected_missing_terms = []
+            if data["metrics"]["served_runtime_freshness_gate"]["value"] != "PASS":
+                expected_missing_terms.append("served-runtime freshness")
+            if data["metrics"]["release_governance_gate"]["value"] != "PASS":
+                expected_missing_terms.append("release governance")
+            if data["metrics"]["self_service_ops_gate"]["value"] != "PASS":
+                expected_missing_terms.append("self-service ops gate")
+            if data["metrics"]["ops_readiness_watchdog"]["value"] != "PASS":
+                expected_missing_terms.append("ops watchdog")
+            if data["metrics"]["rollback_comms_drill"]["value"] != "PASS":
+                expected_missing_terms.append("rollback/comms drill")
+            assert expected_missing_terms
+            for term in expected_missing_terms:
+                assert term in why
     else:
         assert data["controlled_first_10_beta"]["answer"] == "NO-GO"
         assert data["top_verdict"]["controlled_first_10_beta"]["verdict"] == "NO-GO"
@@ -108,11 +121,15 @@ def test_borg_proof_dashboard_artifacts_exist_and_are_honest(tmp_path, monkeypat
         assert status["state"] in {
             "NO-GO public self-serve; source/local release-candidate only",
             "NO-GO public self-serve; public package proof green, release controls blocked",
+            "NO-GO public self-serve; PyPI runtime canary green, package metadata stale",
         }
         if data["metrics"]["pypi_package_current_gate"]["value"] == "PASS":
             assert "public package proof green" in status["state"]
         else:
-            assert "source/local release-candidate only" in status["state"]
+            assert (
+                "source/local release-candidate only" in status["state"]
+                or "PyPI runtime canary green, package metadata stale" in status["state"]
+            )
     assert "ACTION / STOP / VERIFY" in value["headline"]
     assert "measured_savings" in value
     assert value["measured_savings"]["rows_with_measured_value"] == 0
@@ -192,9 +209,10 @@ def test_public_payload_does_not_call_package_green_when_pypi_latest_alignment_f
 
     status, value, _impact = dashboard.build_public_payloads(model)
 
-    assert status["state"] == "NO-GO public self-serve; source/local release-candidate only"
+    assert status["state"] == "NO-GO public self-serve; PyPI runtime canary green, package metadata stale"
     assert "public package proof green" not in status["state"]
-    assert "PyPI/fresh-install proof is not yet green for the current source version" in value["detail"]
+    assert "fresh PyPI install/runtime canary passes" in value["detail"]
+    assert "metadata/source alignment is not current proof" in value["detail"]
 
 
 def _minimal_dashboard_files(pypi_snapshot: dict[str, object]) -> dict[str, dict[str, object]]:

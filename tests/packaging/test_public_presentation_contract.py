@@ -151,11 +151,11 @@ def test_current_docs_preserve_same_version_artifact_drift_truth() -> None:
         for phrase in stale_or_unsupported:
             assert phrase not in text, f"{path} still contains stale/unsupported phrase: {phrase}"
 
-    assert "The latest PyPI release upload predates the current source hardening revision" in watched["README.md"]
-    assert "package proof is red until a new immutable version is published" in watched["README.md"]
+    assert "immutable PyPI long-description/metadata is stale" in watched["README.md"]
+    assert "metadata-correct immutable package" in watched["README.md"]
     assert "Broad public self-serve launch, 100-user rollout, served/remote MCP, and measured external lift are **not claimed**" in watched["README.md"]
     assert "Controlled first-10 beta: **NO-GO right now**" in watched["docs/READINESS.md"]
-    assert "package proof is stale until `agent-borg==3.3.16` is published" in watched["docs/READINESS.md"]
+    assert "PyPI long-description/metadata is stale" in watched["docs/READINESS.md"]
     assert "served runtime fingerprint is stale" in watched["docs/READINESS.md"]
     assert "GitHub `main` release governance is enforced" in watched["docs/READINESS.md"]
     assert "Public self-serve launch: **NO-GO until first-10 external-user evidence passes**" in watched["docs/READINESS.md"]
@@ -399,9 +399,13 @@ def test_public_live_dashboard_json_endpoints_exist_and_no_go_is_badge_red() -> 
         assert (
             "public package proof green, release controls blocked" in status["state"]
             or "source/local release-candidate only" in status["state"]
+            or "PyPI runtime canary green, package metadata stale" in status["state"]
         )
         if dashboard_payload["metrics"]["pypi_package_current_gate"]["value"] == "FAIL":
-            assert status["state"] == "NO-GO public self-serve; source/local release-candidate only"
+            assert status["state"] in {
+                "NO-GO public self-serve; source/local release-candidate only",
+                "NO-GO public self-serve; PyPI runtime canary green, package metadata stale",
+            }
             assert "package gates" not in value["headline"].lower()
     assert status["verified_external_users"] == 0
 

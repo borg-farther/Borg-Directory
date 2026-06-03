@@ -72,11 +72,14 @@ def _pypi_fixture(
     project_urls: dict[str, str] | None = None,
     summary: str | None = None,
     keywords: str | None = None,
+    description: str | None = None,
 ) -> dict[str, object]:
     return {
         "package": "agent-borg",
         "version": version,
         "summary": gate.EXPECTED_PYPI_SUMMARY if summary is None else summary,
+        "description": "Current release notes for agent-borg package users." if description is None else description,
+        "description_content_type": "text/markdown",
         "keywords": gate.REQUIRED_PYPI_KEYWORD if keywords is None else keywords,
         "release_files": [
             {"filename": f"agent_borg-{version}-py3-none-any.whl", "upload_time_iso_8601": "2026-05-26T00:00:00+00:00"},
@@ -102,6 +105,34 @@ def _clean_source_revision_state() -> dict[str, object]:
         "dirty": False,
         "available": True,
     }
+
+
+def test_status_paths_preserves_first_porcelain_path_when_unstaged(monkeypatch) -> None:
+    monkeypatch.setattr(
+        gate,
+        "_git_output",
+        lambda args: " M README.md\n M AGENTS.md\n?? docs/new.md\nR  old.md -> new.md",
+    )
+
+    paths = gate._status_paths()
+
+    assert "README.md" in paths
+    assert "AGENTS.md" in paths
+    assert "docs/new.md" in paths
+    assert "old.md" in paths
+    assert "new.md" in paths
+    assert "EADME.md" not in paths
+    assert "GENTS.md" not in paths
+    assert gate._is_package_impacting_path("README.md") is True
+
+
+def test_status_paths_detects_single_first_package_dirty_path(monkeypatch) -> None:
+    monkeypatch.setattr(gate, "_git_output", lambda args: " M README.md")
+
+    paths = gate._status_paths()
+
+    assert paths == ["README.md"]
+    assert [path for path in paths if gate._is_package_impacting_path(path)] == ["README.md"]
 
 
 def _write_cold_start_trust_snapshot(root: Path, *, passed: bool = True) -> None:
@@ -463,6 +494,52 @@ def test_docs_claim_guard_blocks_known_package_beta_contradictions(tmp_path: Pat
     assert "controlled beta invites-may-start before PyPI canary" in kinds
 
 
+def test_docs_claim_guard_blocks_metadata_stale_package_current_and_invite_copy(tmp_path: Path, monkeypatch) -> None:
+    monkeypatch.setattr(gate, "ROOT", tmp_path)
+    doc = tmp_path / "docs" / "TRYING_BORG.md"
+    invite = tmp_path / "docs" / "20260514_FIRST_10_USER_INVITE_PACKET.md"
+    value = tmp_path / "docs" / "VALUE_COMMUNICATION_DASHBOARD.md"
+    landing = tmp_path / "docs" / "landing-page" / "index.html"
+    for path in [doc, invite, value, landing]:
+        path.parent.mkdir(parents=True, exist_ok=True)
+    doc.write_text(
+        "Borg's published `agent-borg==9.9.9` package is current for this source/package line.\n",
+        encoding="utf-8",
+    )
+    invite.write_text(
+        "send only while the latest snapshot confirms PyPI latest plus fresh-install/MCP canary pass for this exact version.\n"
+        "Hi — we are running a small consented Borg beta for the first 10 external users.\n",
+        encoding="utf-8",
+    )
+    value.write_text(
+        "decision: package proof is **current** for `agent-borg==9.9.9`; controlled first-10 beta must wait for ops.\n",
+        encoding="utf-8",
+    )
+    landing.write_text(
+        "<p>Your agent receives a verified fix with context. No hallucination, no retry loops, no burned tokens.</p>\n",
+        encoding="utf-8",
+    )
+
+    result = gate.docs_claim_guard(
+        [
+            Path("docs/TRYING_BORG.md"),
+            Path("docs/20260514_FIRST_10_USER_INVITE_PACKET.md"),
+            Path("docs/VALUE_COMMUNICATION_DASHBOARD.md"),
+            Path("docs/landing-page/index.html"),
+        ],
+        "9.9.9",
+        public_evidence_ready=False,
+        package_evidence_ready=False,
+    )
+
+    kinds = {violation["kind"] for violation in result["violations"]}
+    assert result["passed"] is False
+    assert "package-current proof claim before metadata-correct package" in kinds
+    assert "invite packet condition omits metadata/runtime/ops blockers" in kinds
+    assert "active first-10 invite copy before beta gates" in kinds
+    assert "unmeasured zero-failure/value claim without external evidence" in kinds
+
+
 def test_docs_claim_guard_allows_explicit_same_version_drift_blocker_before_canary(tmp_path: Path, monkeypatch) -> None:
     monkeypatch.setattr(gate, "ROOT", tmp_path)
     doc = tmp_path / "docs" / "READINESS.md"
@@ -649,6 +726,78 @@ def test_pypi_latest_check_requires_source_version_and_urls(monkeypatch) -> None
     assert stale["passed"] is False
 
 
+def test_pypi_latest_check_fails_when_description_contains_stale_release_status(monkeypatch) -> None:
+    monkeypatch.setattr(
+        gate,
+        "source_revision_state",
+        lambda: {
+            "revision": "abcdef1234567890abcdef1234567890abcdef12",
+            "commit_time_utc": "2026-05-25T00:00:00+00:00",
+            "dirty": False,
+            "available": True,
+        },
+    )
+    stale_description = (
+        "**Status:** `agent-borg==3.3.15` is published on PyPI, but that artifact is stale. "
+        "This branch targets the next immutable release, `agent-borg==9.9.9`; "
+        "package proof is red until a new immutable version is published.\n"
+        "Install, CLI, Python API, and MCP entrypoints are present, but the currently published package is stale relative to source.\n"
+        "PyPI latest is **not proven current** for the current source revision.\n"
+    )
+
+    result = gate.pypi_latest_check(
+        "9.9.9",
+        fetch_network=False,
+        pypi_data=_pypi_fixture(description=stale_description),
+    )
+
+    assert result["passed"] is False
+    assert result["description_length"] == len(stale_description)
+    kinds = {item["kind"] for item in result["description_stale_copy"]}
+    assert "stale published-version status" in kinds
+    assert "stale next-immutable-release wording" in kinds
+    assert "stale package-proof-red wording" in kinds
+    assert "stale currently-published-package wording" in kinds
+    assert "stale PyPI-latest-not-current wording" in kinds
+
+
+def test_docs_claim_guard_blocks_stale_plain_pypi_version_reference(tmp_path: Path, monkeypatch) -> None:
+    monkeypatch.setattr(gate, "ROOT", tmp_path)
+    doc = tmp_path / "docs" / "landing-page" / "index.html"
+    doc.parent.mkdir(parents=True)
+    doc.write_text("<div>agent-borg 9.9.9 release candidate; PyPI 9.9.8 is stale</div>\n", encoding="utf-8")
+
+    result = gate.docs_claim_guard(
+        [Path("docs/landing-page/index.html")],
+        "9.9.9",
+        public_evidence_ready=False,
+        package_evidence_ready=False,
+    )
+
+    assert result["passed"] is False
+    assert any(v["kind"] == "stale PyPI version reference" for v in result["violations"])
+
+
+def test_docs_claim_guard_allows_historical_pypi_version_reference(tmp_path: Path, monkeypatch) -> None:
+    monkeypatch.setattr(gate, "ROOT", tmp_path)
+    doc = tmp_path / "docs" / "README.md"
+    doc.parent.mkdir(parents=True)
+    doc.write_text(
+        "- [old proof](old.md) — historical PyPI 3.3.10 release proof\n",
+        encoding="utf-8",
+    )
+
+    result = gate.docs_claim_guard(
+        [Path("docs/README.md")],
+        "9.9.9",
+        public_evidence_ready=False,
+        package_evidence_ready=False,
+    )
+
+    assert result["passed"] is True
+    assert result["violations"] == []
+
+
 def test_pypi_latest_check_fails_when_same_version_upload_predates_source_revision(monkeypatch) -> None:
     monkeypatch.setattr(
         gate,
@@ -746,6 +895,83 @@ def test_pypi_latest_check_fails_when_source_worktree_is_dirty(monkeypatch) -> N
 
     assert result["passed"] is False
     assert result["source_upload_alignment"]["failure_kind"] == "source_worktree_dirty"
+
+
+def test_pypi_latest_check_allows_dirty_post_upload_proof_artifacts(monkeypatch) -> None:
+    monkeypatch.setattr(
+        gate,
+        "source_revision_state",
+        lambda: {
+            "revision": "fedcba0987654321fedcba0987654321fedcba09+dirty",
+            "commit_time_utc": "2026-06-02T21:25:00+00:00",
+            "dirty": True,
+            "available": True,
+            "package_reference": "v9.9.9",
+            "package_reference_revision": "abcdef1234567890abcdef1234567890abcdef12",
+            "package_reference_commit_time_utc": "2026-05-25T00:00:00+00:00",
+            "package_dirty": False,
+            "package_dirty_paths": [],
+            "non_package_dirty_paths": [
+                "eval/pypi_fresh_install_snapshot.json",
+                "docs/PUBLIC_SELF_SERVE_LAUNCH_GO_NO_GO.md",
+            ],
+            "package_changed_paths_since_reference": [],
+        },
+    )
+
+    result = gate.pypi_latest_check("9.9.9", fetch_network=False, pypi_data=_pypi_fixture())
+
+    assert result["passed"] is True
+    alignment = result["source_upload_alignment"]
+    assert alignment["passed"] is True
+    assert alignment["alignment_basis"] == "package_reference"
+    assert alignment["package_reference"] == "v9.9.9"
+    assert alignment["worktree_dirty"] is True
+    assert alignment["package_dirty"] is False
+    assert alignment["package_dirty_paths"] == []
+    assert alignment["non_package_dirty_paths"] == [
+        "eval/pypi_fresh_install_snapshot.json",
+        "docs/PUBLIC_SELF_SERVE_LAUNCH_GO_NO_GO.md",
+    ]
+
+
+def test_pypi_latest_check_still_fails_when_package_source_is_dirty(monkeypatch) -> None:
+    monkeypatch.setattr(
+        gate,
+        "source_revision_state",
+        lambda: {
+            "revision": "fedcba0987654321fedcba0987654321fedcba09+dirty",
+            "commit_time_utc": "2026-06-02T21:25:00+00:00",
+            "dirty": True,
+            "available": True,
+            "package_reference": "v9.9.9",
+            "package_reference_revision": "abcdef1234567890abcdef1234567890abcdef12",
+            "package_reference_commit_time_utc": "2026-05-25T00:00:00+00:00",
+            "package_dirty": True,
+            "package_dirty_paths": ["borg/core/rescue.py"],
+            "non_package_dirty_paths": ["eval/pypi_fresh_install_snapshot.json"],
+            "package_changed_paths_since_reference": [],
+        },
+    )
+
+    result = gate.pypi_latest_check("9.9.9", fetch_network=False, pypi_data=_pypi_fixture())
+
+    assert result["passed"] is False
+    alignment = result["source_upload_alignment"]
+    assert alignment["failure_kind"] == "package_worktree_dirty"
+    assert alignment["package_dirty_paths"] == ["borg/core/rescue.py"]
+
+
+def test_package_impacting_path_classification_is_narrow() -> None:
+    assert gate._is_package_impacting_path("borg/core/rescue.py") is True
+    assert gate._is_package_impacting_path("borg/seeds_data/packs/systematic-debugging.yaml") is True
+    assert gate._is_package_impacting_path("pyproject.toml") is True
+    assert gate._is_package_impacting_path("README.md") is True
+    assert gate._is_package_impacting_path("LICENSE") is True
+    assert gate._is_package_impacting_path("MANIFEST.in") is True
+    assert gate._is_package_impacting_path("eval/public_self_serve_launch_gate.py") is False
+    assert gate._is_package_impacting_path("eval/pypi_fresh_install_snapshot.json") is False
+    assert gate._is_package_impacting_path("docs/PUBLIC_SELF_SERVE_LAUNCH_GO_NO_GO.md") is False
 
 
 def test_pypi_fresh_install_check_requires_current_timestamp(tmp_path: Path, monkeypatch) -> None:

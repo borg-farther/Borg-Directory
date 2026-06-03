@@ -1,8 +1,8 @@
 # Borg production inventory board
 
-Generated: `2026-06-02T10:34:06Z`
+Generated: `2026-06-03T08:46:56Z`
 Repo: `https://github.com/borg-farther/Borg-Directory`
-Branch/head: `release/agent-borg-3.3.16-20260602` / `200001f089552b0bb0536e70ecb9e265c5008050`
+Branch/head: `post-release-proof-3.3.16` / `174467f81db4ed89d0719e00674ba55f93acff7b`
 Working tree dirty: `True`
 Version: pyproject `3.3.16` / borg `__version__` `3.3.16`
 
@@ -31,13 +31,13 @@ Version: pyproject `3.3.16` / borg `__version__` `3.3.16`
 ## Evidence summary
 
 - first-10 external rows: `{'verified_external_users': 0, 'real_users': 0, 'install_successes': 0, 'useful_rescue_moments': 0, 'critical_privacy_security_failures': 0, 'repeat_use_within_7_days': 0}`
-- PyPI fresh install + stdio MCP: `False`
+- PyPI fresh install + stdio MCP: `True`
 - first-user release gate: `True`
 - cold-start trust: `True`
 - served runtime freshness: `False`
 - release governance: `True`
 - self-service ops: `True`
-- ops watchdog: `True`
+- ops watchdog: `False`
 - rollback drill: `True`
 - federated protocol gate: `True`
 - collective loop primitives: `True`
@@ -57,11 +57,10 @@ Evidence:
 Done/proven:
 - source versions match: True (3.3.16)
 - PyPI latest metadata/current-source gate green: False
-- PyPI fresh-install/stdout MCP canary green: False
+- PyPI fresh-install/stdout MCP canary green: True
 - first-user release gate green: True
 Blockers:
-- PyPI same-version release upload predates current source revision
-- PyPI fresh-install/stdout MCP canary is not green for the current source version
+- PyPI latest metadata gate is not green for the current source revision
 - working tree is dirty/unshipped; current hardening branch is not committed/pushed/CI-proven
 Outstanding:
 - publish a new immutable version when source is ahead of PyPI
@@ -136,14 +135,20 @@ Challenge:
 
 ### self_service_ops_watchdog — self-service ops, rollback/comms, support intake, watchdog freshness
 
-Status: `GO`
+Status: `NO_GO`
 
 Evidence:
 - `eval/self_service_ops_gate_snapshot.json`
 - `eval/ops_readiness_watchdog_snapshot.json`
 - `eval/rollback_comms_drill_snapshot.json`
 Done/proven:
-- watchdog passed: True
+- watchdog passed: False
+Blockers:
+- ops readiness watchdog snapshot is failing or stale
+- real_user_rollout_consistency failed: {'passed': False, 'live': {'ready_for_10_controlled_beta': False, 'infrastructure_ready_for_100': False, 'ready_for_100_real_users': False, 'max_recommended_real_users_now': 0, 'blockers': ["served runtime borg_version '3.3.14' != source version '3.3.16'", "served runtime source_version '3.3.15' != source version '3.3.16'", 'served runtime version_matches_source is not true', 'served runtime reload_status is not loaded_code_matches_source_behavior', 'first-10 external-user evidence has not passed: verified=0/10, real_users=0/10, installs=0/8, useful=0/6, critical_incidents=0/0']}, 'controlled_package_stage': False, 'pre_package_release_stage': False, 'release_control_blocked_stage': False}
+- public_blockers_allowed failed: {'passed': False, 'allow_public_blocker': 'release_controls_or_first_10_evidence', 'blockers': ["served runtime borg_version '3.3.14' != source version '3.3.16'", "served runtime source_version '3.3.15' != source version '3.3.16'", 'served runtime version_matches_source is not true', 'served runtime reload_status is not loaded_code_matches_source_behavior', 'public docs/claim guard found stale install pins or unsupported launch/value claims', 'first-10 external-user evidence has not passed: verified=0/10, real_users=0/10, installs=0/8, useful=0/6, critical_incidents=0/0']}
+- public_status_consistency failed: {'passed': False, 'status_state': 'NO-GO public self-serve; source/local release-candidate only', 'controlled_verdict': 'NO-GO', 'max_recommended_real_users_now': 0, 'verified_external_users': 0, 'controlled_status_ok': False, 'pre_package_status_ok': True, 'release_control_blocked_status_ok': False}
+- source_revision_honesty failed: {'passed': False, 'head': '174467f81db4ed89d0719e00674ba55f93acff7b', 'git_clean': False, 'source_revision': '200001f089552b0bb0536e70ecb9e265c5008050+dirty', 'policy': 'Committed dashboards may be generated from a dirty tree and must mark +dirty; clean-tree status endpoints should match HEAD or a dirty ancestor used to generate committed proof artifacts.'}
 Outstanding:
 - refresh rollback/comms drill
 - rerun self-service ops gate
@@ -182,6 +187,11 @@ Blockers:
 - served runtime source_version '3.3.15' != source version '3.3.16'
 - served runtime version_matches_source is not true
 - served runtime reload_status is not loaded_code_matches_source_behavior
+- ops readiness watchdog snapshot is failing or stale
+- real_user_rollout_consistency failed: {'passed': False, 'live': {'ready_for_10_controlled_beta': False, 'infrastructure_ready_for_100': False, 'ready_for_100_real_users': False, 'max_recommended_real_users_now': 0, 'blockers': ["served runtime borg_version '3.3.14' != source version '3.3.16'", "served runtime source_version '3.3.15' != source version '3.3.16'", 'served runtime version_matches_source is not true', 'served runtime reload_status is not loaded_code_matches_source_behavior', 'first-10 external-user evidence has not passed: verified=0/10, real_users=0/10, installs=0/8, useful=0/6, critical_incidents=0/0']}, 'controlled_package_stage': False, 'pre_package_release_stage': False, 'release_control_blocked_stage': False}
+- public_blockers_allowed failed: {'passed': False, 'allow_public_blocker': 'release_controls_or_first_10_evidence', 'blockers': ["served runtime borg_version '3.3.14' != source version '3.3.16'", "served runtime source_version '3.3.15' != source version '3.3.16'", 'served runtime version_matches_source is not true', 'served runtime reload_status is not loaded_code_matches_source_behavior', 'public docs/claim guard found stale install pins or unsupported launch/value claims', 'first-10 external-user evidence has not passed: verified=0/10, real_users=0/10, installs=0/8, useful=0/6, critical_incidents=0/0']}
+- public_status_consistency failed: {'passed': False, 'status_state': 'NO-GO public self-serve; source/local release-candidate only', 'controlled_verdict': 'NO-GO', 'max_recommended_real_users_now': 0, 'verified_external_users': 0, 'controlled_status_ok': False, 'pre_package_status_ok': True, 'release_control_blocked_status_ok': False}
+- source_revision_honesty failed: {'passed': False, 'head': '174467f81db4ed89d0719e00674ba55f93acff7b', 'git_clean': False, 'source_revision': '200001f089552b0bb0536e70ecb9e265c5008050+dirty', 'policy': 'Committed dashboards may be generated from a dirty tree and must mark +dirty; clean-tree status endpoints should match HEAD or a dirty ancestor used to generate committed proof artifacts.'}
 Outstanding:
 - served runtime fresh
 - branch protection/release governance green
@@ -204,6 +214,11 @@ Blockers:
 - served runtime source_version '3.3.15' != source version '3.3.16'
 - served runtime version_matches_source is not true
 - served runtime reload_status is not loaded_code_matches_source_behavior
+- ops readiness watchdog snapshot is failing or stale
+- real_user_rollout_consistency failed: {'passed': False, 'live': {'ready_for_10_controlled_beta': False, 'infrastructure_ready_for_100': False, 'ready_for_100_real_users': False, 'max_recommended_real_users_now': 0, 'blockers': ["served runtime borg_version '3.3.14' != source version '3.3.16'", "served runtime source_version '3.3.15' != source version '3.3.16'", 'served runtime version_matches_source is not true', 'served runtime reload_status is not loaded_code_matches_source_behavior', 'first-10 external-user evidence has not passed: verified=0/10, real_users=0/10, installs=0/8, useful=0/6, critical_incidents=0/0']}, 'controlled_package_stage': False, 'pre_package_release_stage': False, 'release_control_blocked_stage': False}
+- public_blockers_allowed failed: {'passed': False, 'allow_public_blocker': 'release_controls_or_first_10_evidence', 'blockers': ["served runtime borg_version '3.3.14' != source version '3.3.16'", "served runtime source_version '3.3.15' != source version '3.3.16'", 'served runtime version_matches_source is not true', 'served runtime reload_status is not loaded_code_matches_source_behavior', 'public docs/claim guard found stale install pins or unsupported launch/value claims', 'first-10 external-user evidence has not passed: verified=0/10, real_users=0/10, installs=0/8, useful=0/6, critical_incidents=0/0']}
+- public_status_consistency failed: {'passed': False, 'status_state': 'NO-GO public self-serve; source/local release-candidate only', 'controlled_verdict': 'NO-GO', 'max_recommended_real_users_now': 0, 'verified_external_users': 0, 'controlled_status_ok': False, 'pre_package_status_ok': True, 'release_control_blocked_status_ok': False}
+- source_revision_honesty failed: {'passed': False, 'head': '174467f81db4ed89d0719e00674ba55f93acff7b', 'git_clean': False, 'source_revision': '200001f089552b0bb0536e70ecb9e265c5008050+dirty', 'policy': 'Committed dashboards may be generated from a dirty tree and must mark +dirty; clean-tree status endpoints should match HEAD or a dirty ancestor used to generate committed proof artifacts.'}
 Outstanding:
 - pass first-10 row-derived evidence
 - keep package/served-runtime/governance/ops/docs gates green
@@ -363,9 +378,9 @@ Acceptance:
 - CODEOWNERS review remains required
 - no bypass allowances appear
 
-### P1 — Maintain ops/watchdog/rollback readiness freshness
+### P0 — Maintain ops/watchdog/rollback readiness freshness
 
-Why: Self-service ops, watchdog, and rollback/comms proof are controlled-beta prerequisites; current gate state is green.
+Why: Self-service ops, watchdog, and rollback/comms proof are controlled-beta prerequisites; current gate state is blocked or stale.
 
 Acceptance:
 - rollback drill fresh
