@@ -17,6 +17,22 @@ def read(relative: str) -> str:
     return (ROOT / relative).read_text(encoding="utf-8")
 
 
+def _tracked_docs_entries_by_mode(mode: str) -> list[str]:
+    result = subprocess.run(
+        ["git", "ls-files", "-s", "docs"],
+        cwd=ROOT,
+        check=True,
+        text=True,
+        capture_output=True,
+    )
+    paths: list[str] = []
+    for line in result.stdout.splitlines():
+        parts = line.split(maxsplit=3)
+        if len(parts) == 4 and parts[0] == mode and parts[3].startswith("docs/"):
+            paths.append(parts[3])
+    return paths
+
+
 def _gitlink_doc_roots() -> set[str]:
     """Return docs/* gitlink roots.
 
@@ -25,21 +41,23 @@ def _gitlink_doc_roots() -> set[str]:
     fails before Pages can publish any static file, so the public /docs source
     must not contain gitlinks.
     """
-    result = subprocess.run(
-        ["git", "ls-files", "-s", "docs"],
-        cwd=ROOT,
-        check=True,
-        text=True,
-        capture_output=True,
-    )
     roots: set[str] = set()
-    for line in result.stdout.splitlines():
-        parts = line.split(maxsplit=3)
-        if len(parts) == 4 and parts[0] == "160000" and parts[3].startswith("docs/"):
-            rel = Path(parts[3]).relative_to("docs")
-            if rel.parts:
-                roots.add(rel.parts[0])
+    for path in _tracked_docs_entries_by_mode("160000"):
+        rel = Path(path).relative_to("docs")
+        if rel.parts:
+            roots.add(rel.parts[0])
     return roots
+
+
+def _tracked_doc_symlinks() -> list[str]:
+    """Return tracked symlinks under docs/.
+
+    GitHub's Pages artifact uploader archives the selected source with
+    dereferencing enabled. A symlink from docs/ to a host-local or unreadable
+    path can fail artifact creation even when checkout succeeds, so the public
+    /docs source must be plain files/directories only.
+    """
+    return _tracked_docs_entries_by_mode("120000")
 
 
 def test_readme_leads_with_concrete_value_before_install_matrix() -> None:
@@ -387,6 +405,7 @@ def test_non_current_public_docs_are_bannered_or_operator_scoped() -> None:
 def test_public_live_dashboard_json_endpoints_exist_and_no_go_is_badge_red() -> None:
     assert (ROOT / "docs" / ".nojekyll").exists(), "GitHub Pages /docs source must publish static generated files without Jekyll"
     assert not _gitlink_doc_roots(), "GitHub Pages /docs source must not contain submodule gitlinks"
+    assert not _tracked_doc_symlinks(), "GitHub Pages /docs source must not contain tracked symlinks"
 
     for relative in [
         "docs/status.json",
