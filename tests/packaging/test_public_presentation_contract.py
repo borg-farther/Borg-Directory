@@ -18,7 +18,13 @@ def read(relative: str) -> str:
 
 
 def _gitlink_doc_roots() -> set[str]:
-    """Return docs/* gitlink roots that are preserved vendor/reference snapshots."""
+    """Return docs/* gitlink roots.
+
+    GitHub Pages legacy publishing checks out the selected source with
+    submodules enabled. A gitlink under docs/ without a valid .gitmodules URL
+    fails before Pages can publish any static file, so the public /docs source
+    must not contain gitlinks.
+    """
     result = subprocess.run(
         ["git", "ls-files", "-s", "docs"],
         cwd=ROOT,
@@ -380,6 +386,7 @@ def test_non_current_public_docs_are_bannered_or_operator_scoped() -> None:
 
 def test_public_live_dashboard_json_endpoints_exist_and_no_go_is_badge_red() -> None:
     assert (ROOT / "docs" / ".nojekyll").exists(), "GitHub Pages /docs source must publish static generated files without Jekyll"
+    assert not _gitlink_doc_roots(), "GitHub Pages /docs source must not contain submodule gitlinks"
 
     for relative in [
         "docs/status.json",
