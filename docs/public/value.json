@@ -1,5 +1,5 @@
 {
-  "detail": "Public-package controlled beta remains blocked until package, release-control, and ops gates pass; PyPI/fresh-install proof is not yet current for the source version.",
+  "detail": "Public-package controlled beta remains blocked until the failing release-control and ops gates pass; PyPI/package proof is green, but served-runtime freshness, release governance, rollback/self-service ops, watchdog, docs guard, and privacy/security gates must all stay green before invites.",
   "headline": "ACTION / STOP / VERIFY rescue packets are green in local/source first-user gates",
   "honesty_label": "LOCAL_SOURCE_GATE_NOT_EXTERNAL_ADOPTION",
   "measured_savings": {
@@ -18,7 +18,7 @@
   "primary_metric_scope": "local/source first-user release gate; not external adoption or public-package beta proof",
   "schema_version": 1,
   "summary": "Borg gives coding agents a concrete next action, a dead end to avoid, and a verification step for known failure classes.",
-  "updated_at": "2026-06-03T20:04:53Z",
+  "updated_at": "2026-06-03T20:24:18Z",
   "value_honesty_label": "ROW_DERIVED_EXTERNAL_USER_SAVINGS_REQUIRED",
   "verified_external_users": 0
 }

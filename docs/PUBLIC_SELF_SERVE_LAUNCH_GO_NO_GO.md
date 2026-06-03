@@ -1,6 +1,6 @@
 # Borg public self-serve launch go/no-go
 
-Generated: 2026-06-03T20:04:48.714708+00:00
+Generated: 2026-06-03T20:24:13.904292+00:00
 Source version: `3.3.18`
 
 Public self-serve launch: **NO-GO**
@@ -14,8 +14,8 @@ Public self-serve is GO only after PyPI/fresh-install/MCP/docs/cold-start-trust/
 ## Gate results
 
 - `first_user_release`: `PASS`
-- `pypi_latest`: `FAIL`
-- `pypi_fresh_install_and_mcp_stdio`: `FAIL`
+- `pypi_latest`: `PASS`
+- `pypi_fresh_install_and_mcp_stdio`: `PASS`
 - `cold_start_trust_hardening`: `PASS`
 - `served_runtime_freshness`: `FAIL`
 - `release_governance`: `PASS`
@@ -27,8 +27,6 @@ Public self-serve is GO only after PyPI/fresh-install/MCP/docs/cold-start-trust/
 
 ## Blockers
 
-- PyPI latest metadata is stale: same-version release upload predates current source revision
-- PyPI fresh-install + MCP stdio canary snapshot is missing or failing
 - served runtime borg_version '3.3.14' != source version '3.3.18'
 - served runtime source_version '3.3.15' != source version '3.3.18'
 - served runtime version_matches_source is not true
