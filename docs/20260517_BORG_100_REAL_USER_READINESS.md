@@ -34,8 +34,8 @@ Real-user rollout requires first-10 external evidence before expanding to 100.
 ## Blockers
 
 - PyPI latest/fresh-install package evidence is not green: latest metadata does not match source version
-- served runtime borg_version '3.3.14' != source version '3.3.16'
-- served runtime source_version '3.3.15' != source version '3.3.16'
+- served runtime borg_version '3.3.14' != source version '3.3.17'
+- served runtime source_version '3.3.15' != source version '3.3.17'
 - served runtime version_matches_source is not true
 - served runtime reload_status is not loaded_code_matches_source_behavior
 - first-10 external-user evidence has not passed: verified=0/10, real_users=0/10, installs=0/8, useful=0/6, critical_incidents=0/0

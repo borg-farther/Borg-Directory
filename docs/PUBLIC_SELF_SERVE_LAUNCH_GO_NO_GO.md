@@ -28,8 +28,8 @@ Public self-serve is GO only after PyPI/fresh-install/MCP/docs/cold-start-trust/
 ## Blockers
 
 - PyPI project description/long-description contains stale release-status copy
-- served runtime borg_version '3.3.14' != source version '3.3.16'
-- served runtime source_version '3.3.15' != source version '3.3.16'
+- served runtime borg_version '3.3.14' != source version '3.3.17'
+- served runtime source_version '3.3.15' != source version '3.3.17'
 - served runtime version_matches_source is not true
 - served runtime reload_status is not loaded_code_matches_source_behavior
 - first-10 external-user evidence has not passed: verified=0/10, real_users=0/10, installs=0/8, useful=0/6, critical_incidents=0/0

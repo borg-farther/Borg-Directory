@@ -1,6 +1,6 @@
 # Borg First-10 Beta Readiness Contract
 
-**Status:** controlled first-10 public-package beta is **NO-GO right now**. `agent-borg==3.3.16` fresh-install/stdio MCP/generated-rules/OpenClaw runtime canary passes, but PyPI long-description/metadata is stale for this immutable artifact. GitHub `main` release governance is enforced, but the served runtime fingerprint is stale and ops/watchdog proof is red. Invite **0** controlled testers until a metadata-correct immutable package, cold-start trust, self-service ops/watchdog/proof-dashboard, served-runtime freshness, and release-governance gates are all green. Public self-serve stays NO-GO until row-derived first-10 external evidence passes.
+**Status:** controlled first-10 public-package beta is **NO-GO right now**. `agent-borg==3.3.17` fresh-install/stdio MCP/generated-rules/OpenClaw runtime canary proof is pending until upload and verification. GitHub `main` release governance is enforced, but the served runtime fingerprint is stale and ops/watchdog proof is red. Invite **0** controlled testers until a metadata-correct immutable package, cold-start trust, self-service ops/watchdog/proof-dashboard, served-runtime freshness, and release-governance gates are all green. Public self-serve stays NO-GO until row-derived first-10 external evidence passes.
 
 **Success metric:** At least 6 of the first 10 users get one relevant ACTION/STOP/VERIFY moment without maintainer handholding, and every miss is recorded as NO_CONFIDENT_MATCH or explicit negative feedback instead of being hidden.
 
