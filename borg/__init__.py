@@ -37,7 +37,7 @@ else:
 
         __version__ = _pkg_version("agent-borg")
     except (ImportError, PackageNotFoundError):
-        __version__ = "3.3.17"  # fallback only when package metadata is unavailable
+        __version__ = "3.3.18"  # fallback only when package metadata is unavailable
 
 
 def check(context: str, constraints: dict | None = None, top_k: int = 3) -> list[dict[str, Any]]:

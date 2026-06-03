@@ -1,22 +1,22 @@
 # Borg first-10 user invite packet
 
 Generated: 2026-05-14T18:25:05Z
-Rev: 2026-06-03T09:00:00Z — controlled first-10 beta install path targets PyPI package `agent-borg==3.3.17`, but this packet is **not sendable right now**. Send only after a metadata-correct immutable package exists and the latest public gate confirms PyPI runtime canary, served-runtime freshness, ops/watchdog, proof-dashboard, and release-governance gates are green.
+Rev: 2026-06-03T19:10:00Z — controlled first-10 beta install path uses the published/canaried PyPI package `agent-borg==3.3.18`, but this packet is **not sendable right now**. Send only after the latest public gate confirms served-runtime freshness and first-10 evidence intake readiness; package/local runtime canaries are already green.
 
 ## Exact invite message
 
-Hi — we are preparing a small consented Borg beta for the first 10 external users after the package metadata/runtime/ops gates pass. Borg is an error/debugging assistant that returns ACTION / STOP / VERIFY guidance from local/public project traces. Would you be willing to try one install and one real debugging query when the gate opens, then send redacted feedback? Please do not paste secrets, tokens, proprietary code, private customer data, or confidential logs.
+Hi — we are preparing a small consented Borg beta for the first 10 external users after served-runtime freshness and evidence-intake gates pass. Borg is an error/debugging assistant that returns ACTION / STOP / VERIFY guidance from local/public project traces. Would you be willing to try one install and one real debugging query when the gate opens, then send redacted feedback? Please do not paste secrets, tokens, proprietary code, private customer data, or confidential logs.
 
 ## Install commands
 
-STOP gate: these commands are for the controlled first-10 beta only. Do **not** send them while the current cap is 0. Do **not** send them if the PyPI metadata-current gate, `python eval/run_pypi_fresh_install_canary.py --version 3.3.16`, served-runtime freshness, ops/watchdog, proof-dashboard, or release-governance gate fails, or if more than 10 real external users would be invited before the first-10 evidence gate passes.
+STOP gate: these commands are for the controlled first-10 beta only. Do **not** send them while the current cap is 0. Do **not** send them if served-runtime freshness fails, if `python eval/run_pypi_fresh_install_canary.py --version 3.3.18` regresses, or if more than 10 real external users would be invited before the first-10 evidence gate passes.
 
 Preferred isolated install:
 
 ```bash
 python -m pip install --user pipx
 python -m pipx ensurepath
-pipx install agent-borg==3.3.17
+pipx install agent-borg==3.3.18
 borg --version
 borg rescue "paste a REDACTED real error here"
 ```
@@ -25,7 +25,7 @@ Fallback if pipx is unavailable:
 
 ```bash
 python -m venv /tmp/borg-beta-venv
-/tmp/borg-beta-venv/bin/python -m pip install agent-borg==3.3.17
+/tmp/borg-beta-venv/bin/python -m pip install agent-borg==3.3.18
 /tmp/borg-beta-venv/bin/borg --version
 /tmp/borg-beta-venv/bin/borg rescue "paste a REDACTED real error here"
 ```

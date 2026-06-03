@@ -1,10 +1,10 @@
 # Borg support policy
 
-Borg targets `agent-borg==3.3.17` as the metadata-correct immutable package; exact-version fresh-install, stdio MCP, generated-rules, OpenClaw, CLI, and Python API canary proof is pending until upload and verification. Controlled first-10 beta is currently **NO-GO** until a metadata-correct immutable package is synchronized with green served-runtime freshness and ops/watchdog/proof-dashboard gates. GitHub `main` release governance is enforced; served runtime freshness and first-10 external-user evidence remain separate blockers. Broad public self-serve, 100-user rollout, served remote MCP, and measured lift are not claimed.
+Borg uses `agent-borg==3.3.18` as the published metadata-correct immutable package; exact-version fresh-install, stdio MCP, generated-rules, OpenClaw, CLI, and Python API canary proof is green. Controlled first-10 beta is currently **NO-GO** until served-runtime freshness and first-10 external-user evidence gates are green. GitHub `main` release governance is enforced; package/local proof is green; served runtime freshness and first-10 external-user evidence remain separate blockers. Broad public self-serve, 100-user rollout, served remote MCP, and measured lift are not claimed.
 
 ## Supported path
 
-- Target install after gates are green: the next approved metadata-correct immutable `agent-borg` version; `agent-borg==3.3.17` should be used only after the immutable package is uploaded and fresh-install canaries pass.
+- Supported package path: `agent-borg==3.3.18` from PyPI; first-10 invites remain paused for served-runtime freshness and external-evidence reasons, not because the package upload/canary is pending.
 - First command: `borg rescue "<redacted real error>" --short`.
 - MCP path: `borg-mcp` over stdio from a local client.
 - Evidence intake: `.github/ISSUE_TEMPLATE/first-10-evidence.yml`.

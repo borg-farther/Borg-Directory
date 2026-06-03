@@ -1,7 +1,7 @@
 # Borg production/day-one hardening plan
 
 Generated: 2026-05-22T09:57:48Z
-Current release branch: `release/agent-borg-3.3.16-20260602`
+Current release/proof branch: `post-release-proof-3.3.18`
 Repo path: `/root/hermes-workspace/borg`
 
 ## Executive verdict
@@ -14,8 +14,8 @@ That nucleus is the day-one value path. Everything else is gated by evidence.
 
 ## Release-state split
 
-- Controlled supervised first-user path: **NO-GO until `agent-borg==3.3.17` package fresh-install gates are green for the current release**.
-- Controlled first-10 beta: **NO-GO right now** while package freshness, served-runtime freshness, ops/watchdog, and proof-dashboard gates remain incomplete; package/fresh-install/stdio MCP canaries are necessary but not sufficient.
+- Controlled supervised first-user path: **CONDITIONAL GO for package/local stdio dry-runs** from `agent-borg==3.3.18`; do not count it as first-10 evidence without a consented external-user row.
+- Controlled first-10 beta: **NO-GO right now** while served-runtime freshness and first-10 external-user evidence remain incomplete; package/fresh-install/stdio MCP canaries are green but not sufficient.
 - Public self-serve launch: **NO-GO until first-10 external-user scoreboard passes**.
 - Served remote MCP: **NO-GO until live served runtime path and behavior match audited source**.
 - 100 real users: **NO-GO until first-10 evidence passes the 8/6/0 threshold**.
