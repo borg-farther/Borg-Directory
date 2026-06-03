@@ -110,6 +110,10 @@ jobs:
           assert (controlled_package or pre_publish or release_controls_blocked or metadata_stale_blocked) and allowed_public_blockers
           PY
 
+      - name: Rebuild public dashboard before watchdog source-honesty check
+        run: |
+          python scripts/build_borg_proof_dashboard.py
+
       - name: Regenerate watchdog snapshot for dashboard evidence
         run: |
           python eval/ops_readiness_watchdog.py --mode pr --json --max-snapshot-age-hours 24 --allow-public-blocker release_controls_or_first_10_evidence --require-ci-schedule

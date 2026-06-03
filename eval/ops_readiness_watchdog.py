@@ -210,8 +210,8 @@ def _workflow_has_schedule() -> dict[str, Any]:
         "python eval/release_governance_gate.py --output eval/release_governance_snapshot.json",
         "python eval/public_self_serve_launch_gate.py",
         "python eval/real_user_rollout_gate.py",
-        "python eval/ops_readiness_watchdog.py",
         "python scripts/build_borg_proof_dashboard.py",
+        "python eval/ops_readiness_watchdog.py",
         post_dashboard_check,
         "python scripts/borg_proof_dashboard_lint.py",
     ]
@@ -226,6 +226,7 @@ def _workflow_has_schedule() -> dict[str, Any]:
         "python eval/self_service_ops_gate.py",
         "python eval/public_self_serve_launch_gate.py",
         "python eval/real_user_rollout_gate.py",
+        "python scripts/build_borg_proof_dashboard.py",
         "python eval/ops_readiness_watchdog.py --mode pr --json --max-snapshot-age-hours 24 --allow-public-blocker release_controls_or_first_10_evidence --require-ci-schedule",
         "python eval/public_self_serve_launch_gate.py",
         "python eval/real_user_rollout_gate.py",
