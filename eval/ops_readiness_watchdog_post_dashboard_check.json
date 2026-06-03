@@ -2,14 +2,12 @@
   "blockers": [],
   "checks": {
     "cold_start_trust_current": {
-      "generated_at_utc": "2026-06-03T14:33:22.412689+00:00",
+      "generated_at_utc": "2026-06-03T15:35:28.085168+00:00",
       "passed": true
     },
     "public_blockers_allowed": {
       "allow_public_blocker": "release_controls_or_first_10_evidence",
       "blockers": [
-        "PyPI project description/long-description contains stale release-status copy",
-        "PyPI fresh-install + MCP stdio canary snapshot is missing or failing",
         "served runtime borg_version '3.3.14' != source version '3.3.17'",
         "served runtime source_version '3.3.15' != source version '3.3.17'",
         "served runtime version_matches_source is not true",
@@ -21,8 +19,6 @@
     "public_gate_live_matches_snapshot": {
       "live": {
         "blockers": [
-          "PyPI project description/long-description contains stale release-status copy",
-          "PyPI fresh-install + MCP stdio canary snapshot is missing or failing",
           "served runtime borg_version '3.3.14' != source version '3.3.17'",
           "served runtime source_version '3.3.15' != source version '3.3.17'",
           "served runtime version_matches_source is not true",
@@ -37,8 +33,6 @@
       "passed": true,
       "snapshot": {
         "blockers": [
-          "PyPI project description/long-description contains stale release-status copy",
-          "PyPI fresh-install + MCP stdio canary snapshot is missing or failing",
           "served runtime borg_version '3.3.14' != source version '3.3.17'",
           "served runtime source_version '3.3.15' != source version '3.3.17'",
           "served runtime version_matches_source is not true",
@@ -52,38 +46,36 @@
       }
     },
     "public_json_dashboard_consistency": {
-      "dashboard_generated_at_utc": "2026-06-03T14:33:38Z",
-      "dashboard_source_revision": "8643ad37d1c4f111ea23eee331af244be5d32a79+dirty",
+      "dashboard_generated_at_utc": "2026-06-03T15:35:44Z",
+      "dashboard_source_revision": "aaeaa5da023371bb64beae786ae3d93470162b13+dirty",
       "passed": true,
-      "status_source_revision": "8643ad37d1c4f111ea23eee331af244be5d32a79+dirty",
-      "status_updated_at": "2026-06-03T14:33:38Z"
+      "status_source_revision": "aaeaa5da023371bb64beae786ae3d93470162b13+dirty",
+      "status_updated_at": "2026-06-03T15:35:44Z"
     },
     "public_status_consistency": {
       "controlled_status_ok": false,
       "controlled_verdict": "NO-GO",
       "max_recommended_real_users_now": 0,
       "passed": true,
-      "pre_package_status_ok": true,
-      "release_control_blocked_status_ok": false,
+      "pre_package_status_ok": false,
+      "release_control_blocked_status_ok": true,
       "release_control_detail_failed": true,
       "release_controls_gate": "FAIL",
-      "status_state": "NO-GO public self-serve; source/local release-candidate only",
+      "status_state": "NO-GO public self-serve; public package proof green, release controls blocked",
       "verified_external_users": 0
     },
     "pypi_fresh_current": {
       "expected_version": "3.3.17",
-      "generated_at_utc": "2026-06-03T14:33:00Z",
+      "generated_at_utc": "2026-06-03T15:35:08Z",
       "passed": true,
-      "pre_package_release_stage": true,
-      "pypi_current": false,
+      "pre_package_release_stage": false,
+      "pypi_current": true,
       "version": "3.3.17"
     },
     "real_user_rollout_consistency": {
       "controlled_package_stage": false,
       "live": {
         "blockers": [
-          "PyPI latest/fresh-install package evidence is not green: same-version PyPI upload predates current source revision",
-          "PyPI latest/fresh-install package evidence is not green: fresh install + MCP stdio canary is not green",
           "served runtime borg_version '3.3.14' != source version '3.3.17'",
           "served runtime source_version '3.3.15' != source version '3.3.17'",
           "served runtime version_matches_source is not true",
@@ -96,8 +88,8 @@
         "ready_for_10_controlled_beta": false
       },
       "passed": true,
-      "pre_package_release_stage": true,
-      "release_control_blocked_stage": false
+      "pre_package_release_stage": false,
+      "release_control_blocked_stage": true
     },
     "self_service_ops_gate": {
       "blockers": [],
@@ -106,67 +98,67 @@
     "snapshot_freshness": {
       "items": {
         "borg_proof_dashboard": {
-          "age_hours": 0.0008575680555555554,
+          "age_hours": 0.0009576900000000001,
           "allowed_stale_reason": null,
           "passed": true,
           "raw_freshness_passed": true
         },
         "cold_start_trust_gate_snapshot": {
-          "age_hours": 0.005187375833333333,
+          "age_hours": 0.005378476111111112,
           "allowed_stale_reason": null,
           "passed": true,
           "raw_freshness_passed": true
         },
         "public_impact_json": {
-          "age_hours": 0.00085757,
+          "age_hours": 0.0009576922222222222,
           "allowed_stale_reason": null,
           "passed": true,
           "raw_freshness_passed": true
         },
         "public_self_serve_launch_gate_snapshot": {
-          "age_hours": 0.002223394722222222,
+          "age_hours": 0.0022041930555555555,
           "allowed_stale_reason": null,
           "passed": true,
           "raw_freshness_passed": true
         },
         "public_status_json": {
-          "age_hours": 0.000857568888888889,
+          "age_hours": 0.0009576908333333334,
           "allowed_stale_reason": null,
           "passed": true,
           "raw_freshness_passed": true
         },
         "public_value_json": {
-          "age_hours": 0.0008575694444444444,
+          "age_hours": 0.0009576913888888889,
           "allowed_stale_reason": null,
           "passed": true,
           "raw_freshness_passed": true
         },
         "pypi_fresh_install_snapshot": {
-          "age_hours": 0.011413121666666666,
+          "age_hours": 0.010957688611111112,
           "allowed_stale_reason": null,
           "passed": true,
           "raw_freshness_passed": true
         },
         "real_user_rollout_gate_snapshot": {
-          "age_hours": 0.0018324875,
+          "age_hours": 0.001810813888888889,
           "allowed_stale_reason": null,
           "passed": true,
           "raw_freshness_passed": true
         },
         "release_governance_snapshot": {
-          "age_hours": 0.004405948055555556,
+          "age_hours": 0.004572730277777778,
           "allowed_stale_reason": null,
           "passed": true,
           "raw_freshness_passed": true
         },
         "rollback_comms_drill_snapshot": {
-          "age_hours": 0.004388861388888889,
+          "age_hours": 0.004528471944444445,
           "allowed_stale_reason": null,
           "passed": true,
           "raw_freshness_passed": true
         },
         "self_service_ops_gate_snapshot": {
-          "age_hours": 0.0043627175,
+          "age_hours": 0.004542042222222222,
           "allowed_stale_reason": null,
           "passed": true,
           "raw_freshness_passed": true
@@ -176,10 +168,10 @@
     },
     "source_revision_honesty": {
       "git_clean": false,
-      "head": "8643ad37d1c4f111ea23eee331af244be5d32a79",
+      "head": "aaeaa5da023371bb64beae786ae3d93470162b13",
       "passed": true,
       "policy": "Committed dashboards may be generated from a dirty tree and must mark +dirty; clean-tree status endpoints should match HEAD or a dirty ancestor used to generate committed proof artifacts.",
-      "source_revision": "8643ad37d1c4f111ea23eee331af244be5d32a79+dirty"
+      "source_revision": "aaeaa5da023371bb64beae786ae3d93470162b13+dirty"
     },
     "watchdog_workflow": {
       "exists": true,
@@ -310,7 +302,7 @@
     }
   },
   "gate_type": "ops_readiness_watchdog",
-  "generated_at_utc": "2026-06-03T14:33:41.149040+00:00",
+  "generated_at_utc": "2026-06-03T15:35:47.504532+00:00",
   "max_recommended_real_users_now": 0,
   "passed": true,
   "ready_for_controlled_first_10_beta": false,

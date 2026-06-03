@@ -19,13 +19,18 @@ def test_production_inventory_preserves_split_verdicts() -> None:
     data = compile_inventory()
     verdict = data["top_verdict"]
 
-    assert verdict["published_package_local_stdio"] == "NO_GO"
-    if data["source"]["git"]["dirty"]:
-        assert verdict["source_package_local_stdio"] == "NO_GO"
-        assert verdict["current_source_hardening_branch"] == "IN_PROGRESS"
+    package_component = _by_id(data, "source_package_cli_stdio")
+    if package_component["status"] in {"CONDITIONAL_GO", "IN_PROGRESS"}:
+        assert verdict["published_package_local_stdio"] == "CONDITIONAL_GO"
+        if data["source"]["git"]["dirty"]:
+            assert verdict["source_package_local_stdio"] == "IN_PROGRESS"
+            assert verdict["current_source_hardening_branch"] == "IN_PROGRESS"
+        else:
+            assert verdict["source_package_local_stdio"] == "CONDITIONAL_GO"
+            assert verdict["current_source_hardening_branch"] == "CONDITIONAL_GO"
     else:
+        assert verdict["published_package_local_stdio"] == "NO_GO"
         assert verdict["source_package_local_stdio"] == "NO_GO"
-        assert verdict["current_source_hardening_branch"] == "CONDITIONAL_GO"
     assert verdict["global_federated_learning_protocol"] == "GO_PROTOCOL_ONLY"
     assert verdict["recursive_collective_learning_mechanism"] == "GO_INTERNAL_ONLY"
     assert verdict["recursive_pack_optimizer"] == "GO_INTERNAL_MANUAL_ONLY"
@@ -176,7 +181,8 @@ def test_inventory_artifacts_are_machine_readable_and_report_is_honest() -> None
     assert snapshot["top_verdict"]["google_tier_external_lift"] == "NO_GO"
     assert "broad public self-serve: `NO_GO`" in report
     assert "current source/hardening branch: `" in report
-    assert "published package/local stdio: `NO_GO`" in report
+    assert f"published package/local stdio: `{snapshot['top_verdict']['published_package_local_stdio']}`" in report
+    assert snapshot["top_verdict"]["published_package_local_stdio"] in {"NO_GO", "CONDITIONAL_GO"}
     assert "served runtime freshness: `NO_GO`" in report
     assert "remote MCP/marketplace distribution: `NO_GO`" in report
     assert "global/federated learning protocol: `GO_PROTOCOL_ONLY`" in report
