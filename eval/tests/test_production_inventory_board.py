@@ -29,15 +29,27 @@ def test_production_inventory_preserves_split_verdicts() -> None:
             assert verdict["source_package_local_stdio"] == "CONDITIONAL_GO"
             assert verdict["current_source_hardening_branch"] == "CONDITIONAL_GO"
     elif package_component["status"] == "IN_PROGRESS":
-        # Pre-upload release branches are allowed to be source-ahead of PyPI.
-        # That proves the branch is in progress, not that the already-published
-        # immutable package is current for this source version.
-        assert verdict["published_package_local_stdio"] == "NO_GO"
-        assert verdict["source_package_local_stdio"] in {"NO_GO", "IN_PROGRESS"}
-        assert any(
-            "publish a new immutable version" in item.lower()
-            for item in package_component["outstanding"] + package_component["blockers"]
+        # Pre-upload release branches and post-upload proof-refresh branches are
+        # both source IN_PROGRESS states. The published immutable package is
+        # CONDITIONAL_GO only after PyPI latest + fresh-install/MCP canaries are
+        # green for this exact source version; before upload it remains NO_GO.
+        package_proof_green = all(
+            any(fragment in item for item in package_component["done"])
+            for fragment in (
+                "PyPI latest metadata/current-source gate green: True",
+                "PyPI fresh-install/stdout MCP canary green: True",
+            )
         )
+        if package_proof_green:
+            assert verdict["published_package_local_stdio"] == "CONDITIONAL_GO"
+            assert verdict["source_package_local_stdio"] == "IN_PROGRESS"
+        else:
+            assert verdict["published_package_local_stdio"] == "NO_GO"
+            assert verdict["source_package_local_stdio"] in {"NO_GO", "IN_PROGRESS"}
+            assert any(
+                "publish a new immutable version" in item.lower()
+                for item in package_component["outstanding"] + package_component["blockers"]
+            )
     else:
         assert verdict["published_package_local_stdio"] == "NO_GO"
         assert verdict["source_package_local_stdio"] == "NO_GO"

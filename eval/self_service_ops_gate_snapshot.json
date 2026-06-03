@@ -117,12 +117,12 @@
         "required_owner": "@borg-farther"
       },
       "rollback_drill_snapshot": {
-        "age_hours": 2.905638888888889e-05,
+        "age_hours": 2.888111111111111e-05,
         "dry_run_only": true,
         "exists": true,
         "failed_steps": [],
         "fresh": true,
-        "generated_at_utc": "2026-06-03T20:04:41.413057+00:00",
+        "generated_at_utc": "2026-06-03T20:33:05.019869+00:00",
         "max_age_hours": 24.0,
         "missing_steps": [],
         "passed": true,
@@ -137,7 +137,7 @@
     }
   },
   "gate_type": "self_service_ops_readiness",
-  "generated_at_utc": "2026-06-03T20:04:41.517866+00:00",
+  "generated_at_utc": "2026-06-03T20:33:05.124064+00:00",
   "passed": true,
   "rollout_policy": "Ops readiness is necessary but not sufficient for controlled first-10; package provenance, served-runtime freshness, release governance, ops/watchdog freshness, and first-10 guardrails must also pass. broad public self-serve still requires row-derived first-10 external evidence.",
   "schema_version": 1
