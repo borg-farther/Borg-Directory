@@ -235,17 +235,10 @@ def build_model() -> dict:
     cold_start_trust_pass = nested(cold_start_trust, ["passed"])
     self_service_ops_pass = nested(self_service_ops, ["passed"])
     self_service_ops_blockers = nested(self_service_ops, ["blockers"], []) or []
-    try:
-        from eval import self_service_ops_gate as _self_service_ops_gate
-
-        live_self_service_ops = _self_service_ops_gate.compile_gate()
-        if isinstance(live_self_service_ops, dict):
-            self_service_ops = live_self_service_ops
-            self_service_ops_pass = bool(live_self_service_ops.get("passed"))
-            self_service_ops_blockers = live_self_service_ops.get("blockers") or []
-    except Exception as exc:
-        self_service_ops_pass = False
-        self_service_ops_blockers = [f"self-service ops gate could not be evaluated: {exc}"]
+    # Keep dashboard claims artifact-bound: the evidence row hashes
+    # eval/self_service_ops_gate_snapshot.json, so its status/timestamp must come
+    # from that file. Refresh the snapshot before running this dashboard builder
+    # instead of compiling a transient in-memory gate with a different timestamp.
     ops_watchdog_pass = nested(ops_watchdog, ["passed"])
     rollback_drill_pass = nested(rollback_drill, ["passed"])
     if any("rollback_drill_snapshot" in str(blocker) for blocker in self_service_ops_blockers):
@@ -375,7 +368,7 @@ def build_model() -> dict:
         if pypi_description_stale:
             controlled_beta_missing.append("PyPI latest project description/long-description copy")
         elif pypi_fresh_current and pypi_alignment_failure:
-            controlled_beta_missing.append(f"PyPI package source/metadata alignment ({pypi_alignment_failure})")
+            controlled_beta_missing.append(f"PyPI latest package source/metadata alignment ({pypi_alignment_failure})")
         else:
             controlled_beta_missing.append("PyPI latest/fresh-install/stdio MCP package path")
     if not github_source_current:

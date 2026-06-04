@@ -116,6 +116,16 @@ def main() -> int:
             actual = hashlib.sha256(source_path.read_bytes()).hexdigest()
             if item.get("sha256") != actual:
                 return fail(f"evidence row {idx} has stale sha256 for {item['path']}")
+            if source_path.suffix == ".json" and item.get("freshness_timestamp"):
+                try:
+                    source_payload = json.loads(source_path.read_text(encoding="utf-8"))
+                except Exception as exc:
+                    return fail(f"evidence row {idx} source JSON is unreadable for timestamp validation: {exc}")
+                source_timestamp = None
+                if isinstance(source_payload, dict):
+                    source_timestamp = source_payload.get("generated_at_utc") or source_payload.get("timestamp")
+                if isinstance(source_timestamp, str) and item.get("freshness_timestamp") != source_timestamp:
+                    return fail(f"evidence row {idx} freshness_timestamp does not match source JSON timestamp for {item['path']}")
 
     metrics = data.get("metrics", {})
     if public_status.get("controlled_first_10_beta") != data.get("top_verdict", {}).get("controlled_first_10_beta"):

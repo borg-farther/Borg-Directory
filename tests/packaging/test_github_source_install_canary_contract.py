@@ -78,6 +78,8 @@ def test_github_source_install_canary_script_contract() -> None:
         "python_api_check",
         "mcp_stdio_canary",
         "checkout_import_leakage",
+        "BORG_TEST_PACKS_DIR",
+        "BORG_MAINTAINER_PACKS_DIR",
         "install_source",
         "github_source",
     ]

@@ -53,26 +53,73 @@ def _print_json(raw: str) -> None:
         print(raw)
 
 
+def _safe_is_dir(path: Path) -> bool:
+    """Return whether path is a directory without leaking maintainer-path errors."""
+    try:
+        return path.is_dir()
+    except OSError:
+        return False
+
+
+def _iter_pack_yaml_files(path: Path) -> list[Path]:
+    """List pack YAML files from a root if it is readable."""
+    if not _safe_is_dir(path):
+        return []
+    try:
+        return sorted(path.glob("*.yaml"))
+    except OSError:
+        return []
+
+
+def _pack_source_roots() -> list[Path]:
+    """Pack roots for clean installs first, optional local fixtures by env only."""
+    import borg as borg_package
+
+    # ``borg.cli`` is a package shim that execs this legacy ``cli.py`` file, so
+    # ``__file__`` can point at ``borg/cli/__init__.py`` instead of ``borg/cli.py``.
+    # Anchor packaged seeds on the actual installed ``borg`` package root.
+    packaged_seed_packs = Path(borg_package.__file__).resolve().parent / "seeds_data" / "packs"
+    roots: list[Path] = [packaged_seed_packs]
+    env_packs_dir = os.environ.get("BORG_TEST_PACKS_DIR")
+    if env_packs_dir:
+        roots.append(Path(env_packs_dir))
+    maintainer_packs_dir = os.environ.get("BORG_MAINTAINER_PACKS_DIR")
+    if maintainer_packs_dir:
+        roots.append(Path(maintainer_packs_dir))
+
+    deduped: list[Path] = []
+    seen: set[str] = set()
+    for root in roots:
+        key = root.as_posix()
+        if key not in seen:
+            seen.add(key)
+            deduped.append(root)
+    return deduped
+
+
 def _load_builtin_packs() -> list:
-    """Load packs from the built-in guild-packs directory.
-    
-    This provides a fallback when no local packs are available.
+    """Load packaged seed packs, then optional external local fixtures.
+
+    Clean wheel/source installs must work without AB's maintainer-only
+    /root/hermes-workspace/guild-packs checkout.  Local fixture roots are
+    opt-in via BORG_TEST_PACKS_DIR or BORG_MAINTAINER_PACKS_DIR so public
+    source-install canaries cannot false-green from maintainer state.
     """
-    import pathlib
     import yaml
-    
+
     packs = []
-    guild_packs_dir = pathlib.Path("/root/hermes-workspace/guild-packs/packs")
-    
-    if guild_packs_dir.exists():
-        for pack_file in guild_packs_dir.glob("*.yaml"):
+    seen_ids: set[str] = set()
+    for pack_root in _pack_source_roots():
+        for pack_file in _iter_pack_yaml_files(pack_root):
             try:
                 pack_data = yaml.safe_load(pack_file.read_text(encoding="utf-8"))
-                if isinstance(pack_data, dict) and pack_data.get("type") == "workflow_pack":
+                pack_id = pack_data.get("id", "") if isinstance(pack_data, dict) else ""
+                if isinstance(pack_data, dict) and pack_data.get("type") == "workflow_pack" and pack_id not in seen_ids:
+                    seen_ids.add(pack_id)
                     packs.append(pack_data)
             except Exception:
                 continue
-    
+
     return packs
 
 
@@ -685,8 +732,7 @@ def _cmd_convert(args: argparse.Namespace) -> int:
         # Handle OpenClaw format (registry-wide conversion)
         if args.format == "openclaw":
             from borg.core.uri import get_available_pack_names
-            import pathlib
-            
+
             # Collect all packs
             packs = []
             seen_ids: set = set()
@@ -714,15 +760,11 @@ def _cmd_convert(args: argparse.Namespace) -> int:
                         except Exception:
                             continue
                 
-                # Also load ALL packs from the guild-packs directory
-                guild_packs_dir = pathlib.Path("/root/hermes-workspace/guild-packs/packs")
-                if guild_packs_dir.exists():
-                    for pack_file in guild_packs_dir.glob("*.yaml"):
-                        try:
-                            pack_data = yaml.safe_load(pack_file.read_text(encoding="utf-8"))
-                            _add_pack(pack_data)
-                        except Exception:
-                            continue
+                # Also load packaged seed packs and any readable local fixture roots.
+                # The maintainer-only /root/hermes-workspace path is guarded inside
+                # _load_builtin_packs so clean installs do not fail on PermissionError.
+                for pack_data in _load_builtin_packs():
+                    _add_pack(pack_data)
                 
                 # Fallback: use the borg core registry if no packs found
                 if not packs:

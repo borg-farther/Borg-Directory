@@ -97,6 +97,12 @@ def run_canary(install_source: str, version: str, *, install_source_label: str =
         runtime_cwd.mkdir(parents=True, exist_ok=True)
 
         env = os.environ.copy()
+        # Keep the source-install canary clean even on maintainer machines that
+        # have local fixture roots configured or readable.  The Git self-serve
+        # proof must come from packaged seed data plus the installed source, not
+        # from AB-only /root checkouts or test-pack directories.
+        for local_pack_env in ("BORG_TEST_PACKS_DIR", "BORG_MAINTAINER_PACKS_DIR"):
+            env.pop(local_pack_env, None)
         env.update({
             "PYTHONPATH": "",
             "PYTHONNOUSERSITE": "1",
