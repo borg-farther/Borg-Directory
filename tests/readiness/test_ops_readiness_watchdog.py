@@ -198,6 +198,7 @@ def test_watchdog_allows_only_first_10_external_evidence_as_public_blocker() -> 
         [
             "PyPI latest metadata does not match source version",
             "PyPI fresh-install + MCP stdio canary snapshot is missing",
+            "package-impacting source/metadata changed after the immutable package reference tag",
             "first-10 external-user evidence has not passed",
         ],
         "package_or_first_10_evidence",
@@ -205,6 +206,7 @@ def test_watchdog_allows_only_first_10_external_evidence_as_public_blocker() -> 
     assert watchdog._public_blockers_are_allowed(["self-service ops readiness gate is missing"], "package_or_first_10_evidence") is False
     assert watchdog._public_blockers_are_allowed(
         [
+            "package-impacting source/metadata changed after the immutable package reference tag",
             "served runtime borg_version '3.3.14' != source version '3.3.15'",
             "main branch is not protected",
             "CODEOWNERS validation has errors: 11",
@@ -750,11 +752,13 @@ def test_workflow_public_gate_guard_requires_each_blocker_to_be_allowed() -> Non
     assert "python eval/run_pypi_fresh_install_canary.py" in text
     assert "continuing so public/readiness gates can fail closed with the fresh snapshot" in text
     assert "allowed_public_blockers = all(" in text
-    assert "pypi project description" in text
-    assert "long-description" in text
-    assert "package metadata" in text
-    assert "metadata_stale_blocked" in text
-    assert "assert (controlled_package or pre_publish or release_controls_blocked or metadata_stale_blocked) and allowed_public_blockers" in text
+    assert "from eval.ops_readiness_watchdog import" in text
+    assert "_is_package_release_blocker" in text
+    assert "_has_package_release_gap" in text
+    assert "_has_release_control_gap" in text
+    assert "_has_first_10_gap" in text
+    assert "controlled_blocked_by_known_gates" in text
+    assert "assert (controlled_package or controlled_blocked_by_known_gates) and allowed_public_blockers" in text
     assert "python scripts/build_borg_proof_dashboard.py" in text
     assert "python scripts/borg_proof_dashboard_lint.py" in text
 
