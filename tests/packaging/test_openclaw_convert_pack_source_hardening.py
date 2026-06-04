@@ -41,3 +41,31 @@ def test_openclaw_all_convert_uses_bundled_packs_when_maintainer_path_is_inacces
     assert (output_dir / "SKILL.md").is_file()
     assert (output_dir / "references" / "pack-index.md").is_file()
     assert (output_dir / "references" / "packs" / "systematic-debugging.md").is_file()
+
+
+def test_generate_load_pack_uses_packaged_seed_without_maintainer_path_probe(monkeypatch) -> None:
+    """`borg generate <slug>` must not probe maintainer-only external pack roots."""
+    from borg.core import generate
+
+    monkeypatch.delenv("BORG_TEST_PACKS_DIR", raising=False)
+    monkeypatch.delenv("BORG_MAINTAINER_PACKS_DIR", raising=False)
+
+    original_exists = Path.exists
+    original_is_file = Path.is_file
+
+    def reject_maintainer_probe(self: Path) -> bool:
+        if self.as_posix().startswith("/root/hermes-workspace/guild-packs/packs"):
+            raise AssertionError("clean generate path must not probe maintainer-only guild-packs path")
+        return original_exists(self)
+
+    def guarded_is_file(self: Path) -> bool:
+        if self.as_posix().startswith("/root/hermes-workspace/guild-packs/packs"):
+            raise AssertionError("clean generate path must not probe maintainer-only guild-packs path")
+        return original_is_file(self)
+
+    monkeypatch.setattr(Path, "exists", reject_maintainer_probe)
+    monkeypatch.setattr(Path, "is_file", guarded_is_file)
+
+    pack = generate.load_pack("systematic-debugging")
+
+    assert pack["id"].endswith("systematic-debugging")

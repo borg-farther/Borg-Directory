@@ -128,6 +128,33 @@ def source_version() -> str:
     return str(data["project"]["version"])
 
 
+def _known_immutable_package_gap(results: list[CommandResult]) -> dict[str, Any]:
+    """Classify immutable PyPI-package gaps without marking the canary green.
+
+    GitHub/source self-service can be current while the already-published PyPI
+    wheel is not.  Keep the PyPI snapshot success=false, but expose a narrow
+    machine-readable reason so ops watchdogs can keep the GitHub lane green
+    without hiding the package-channel blocker.
+    """
+    failed = [result for result in results if not result.passed]
+    if len(failed) == 1 and failed[0].name == "borg_convert_openclaw_registry":
+        combined_output = f"{failed[0].stdout}\n{failed[0].stderr}".lower()
+        maintainer_path_dependency = "guild-packs/packs" in combined_output and (
+            "permission" in combined_output
+            or "denied" in combined_output
+            or "no such file" in combined_output
+            or "not found" in combined_output
+        )
+        if maintainer_path_dependency:
+            return {
+                "present": True,
+                "kind": "immutable_pypi_openclaw_maintainer_path_dependency",
+                "failed_results": [failed[0].name],
+                "detail": "published PyPI package still probes maintainer-only guild-packs path during OpenClaw registry conversion; GitHub/source install can carry the fix, but PyPI package proof remains red until a new immutable release",
+            }
+    return {"present": False, "failed_results": [result.name for result in failed]}
+
+
 def run_cmd(name: str, cmd: list[str], *, env: dict[str, str] | None = None, cwd: Path | None = None, timeout: int = 180, input_text: str | None = None) -> CommandResult:
     started = time.monotonic()
     run_cwd = cwd or Path(tempfile.gettempdir())
@@ -388,6 +415,8 @@ def run_canary(version: str) -> dict[str, Any]:
     finally:
         shutil.rmtree(venv_dir, ignore_errors=True)
 
+    known_gap = _known_immutable_package_gap(results)
+
     return {
         "schema_version": 1,
         "generated_at_utc": time.strftime("%Y-%m-%dT%H:%M:%SZ", time.gmtime()),
@@ -396,6 +425,7 @@ def run_canary(version: str) -> dict[str, Any]:
         "install_source": "pypi",
         "results": [asdict(result) for result in results],
         "mcp_stdio_canary": mcp_result,
+        "known_immutable_package_gap": known_gap,
         "success": all(result.passed for result in results) and bool(mcp_result.get("passed")),
     }
 
@@ -426,7 +456,8 @@ def main(argv: list[str] | None = None) -> int:
                 duration_s=0.0,
                 detail=f"exception={type(exc).__name__}",
             ))],
-            "mcp_stdio_canary": {"passed": False, "detail": "not run because canary raised before MCP check", "expected_version": args.version},
+            "mcp_stdio_canary": {"passed": False, "detail": "not run because canary failed before command sequence", "expected_version": args.version},
+            "known_immutable_package_gap": {"present": False, "failed_results": ["canary_unhandled_exception"]},
             "success": False,
         }
     output = Path(args.output)

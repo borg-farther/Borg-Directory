@@ -10,7 +10,7 @@ from eval import run_github_source_install_canary as github_canary
 from eval import run_pypi_fresh_install_canary as pypi_canary
 
 ROOT = Path(__file__).resolve().parents[2]
-CANONICAL_GITHUB_INSTALL = "git+https://github.com/borg-farther/Borg-Directory.git@main"
+CANONICAL_GITHUB_INSTALL_PREFIX = "git+https://github.com/borg-farther/Borg-Directory.git@"
 REQUIRED_RESULT_NAMES = [
     "fresh_venv_create",
     "pip_install_git_source",
@@ -38,7 +38,7 @@ def _snapshot_payload(**overrides: object) -> dict[str, object]:
         "package": "agent-borg",
         "version": "9.9.9",
         "install_source": "github_source",
-        "install_target": CANONICAL_GITHUB_INSTALL,
+        "install_target": f"{CANONICAL_GITHUB_INSTALL_PREFIX}{head}",
         "source_resolution": {
             "passed": True,
             "resolved_commit": head,
@@ -77,7 +77,7 @@ def test_github_source_install_canary_script_contract() -> None:
     contract_text = text + canary_env_text
 
     required_tokens = [
-        CANONICAL_GITHUB_INSTALL,
+        CANONICAL_GITHUB_INSTALL_PREFIX,
         "github_source_install_snapshot.json",
         "tempfile.mkdtemp",
         "runtime-cwd",
@@ -223,7 +223,8 @@ def test_public_gate_accepts_fresh_github_source_snapshot(tmp_path: Path, monkey
 
     assert result["passed"] is True
     assert result["install_source"] == "github_source"
-    assert result["install_target"] == CANONICAL_GITHUB_INSTALL
+    assert result["install_target"] == f"{CANONICAL_GITHUB_INSTALL_PREFIX}{_current_head()}"
+    assert result["install_target_commit"] == _current_head()
     assert result["version"] == "9.9.9"
     assert result["checkout_import_leakage_passed"] is True
     assert result["source_resolution_passed"] is True
@@ -291,6 +292,7 @@ def test_public_gate_rejects_github_source_snapshot_resolved_to_old_non_ancestor
     old_sha = "a" * 40
     _write_snapshot(
         snapshot,
+        install_target=f"{CANONICAL_GITHUB_INSTALL_PREFIX}{old_sha}",
         source_resolution={
             "passed": True,
             "resolved_commit": old_sha,
@@ -312,6 +314,7 @@ def test_public_gate_rejects_github_source_snapshot_with_unrelated_source_change
     old_sha = "b" * 40
     _write_snapshot(
         snapshot,
+        install_target=f"{CANONICAL_GITHUB_INSTALL_PREFIX}{old_sha}",
         source_resolution={
             "passed": True,
             "resolved_commit": old_sha,
@@ -343,6 +346,7 @@ def test_public_gate_accepts_github_source_snapshot_from_ancestor_when_only_gene
     old_sha = "c" * 40
     _write_snapshot(
         snapshot,
+        install_target=f"{CANONICAL_GITHUB_INSTALL_PREFIX}{old_sha}",
         source_resolution={
             "passed": True,
             "resolved_commit": old_sha,
@@ -388,6 +392,37 @@ def test_public_gate_rejects_non_canonical_git_source_snapshot(tmp_path: Path) -
 
     assert result["passed"] is False
     assert result["canonical_install_target"] is False
+
+
+def test_public_gate_rejects_moving_branch_git_source_target_even_with_commit_metadata(tmp_path: Path) -> None:
+    snapshot = tmp_path / "github_source_install_snapshot.json"
+    _write_snapshot(snapshot, install_target=f"{CANONICAL_GITHUB_INSTALL_PREFIX}main")
+
+    result = public_gate.github_source_install_check(snapshot, "9.9.9", max_snapshot_age_hours=24.0)
+
+    assert result["passed"] is False
+    assert result["canonical_install_target"] is False
+    assert result["install_target_commit"] is None
+
+
+def test_pypi_canary_classifies_known_immutable_openclaw_maintainer_path_gap() -> None:
+    result = pypi_canary.CommandResult(
+        name="borg_convert_openclaw_registry",
+        command=["borg", "convert", ".", "--format", "openclaw"],
+        cwd="/tmp",
+        returncode=1,
+        passed=False,
+        stdout="",
+        stderr="PermissionError: [Errno 13] Permission denied: '/root/hermes-workspace/guild-packs/packs'",
+        duration_s=0.01,
+        detail="exit=1",
+    )
+
+    gap = pypi_canary._known_immutable_package_gap([result])
+
+    assert gap["present"] is True
+    assert gap["kind"] == "immutable_pypi_openclaw_maintainer_path_dependency"
+    assert gap["failed_results"] == ["borg_convert_openclaw_registry"]
 
 
 def test_public_gate_rejects_checkout_import_leakage_inside_repo(tmp_path: Path) -> None:

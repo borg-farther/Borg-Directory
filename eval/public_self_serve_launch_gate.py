@@ -717,8 +717,17 @@ def pypi_fresh_install_check(path: Path, expected_version: str, *, max_snapshot_
     }
 
 
+def _github_install_target_commit(target: Any) -> str | None:
+    if not isinstance(target, str) or not target.startswith(CANONICAL_GITHUB_INSTALL_PREFIX) or "git+file://" in target:
+        return None
+    revision = target[len(CANONICAL_GITHUB_INSTALL_PREFIX):]
+    if re.fullmatch(r"[0-9a-f]{40}", revision):
+        return revision
+    return None
+
+
 def _github_install_target_is_canonical(target: Any) -> bool:
-    return isinstance(target, str) and target.startswith(CANONICAL_GITHUB_INSTALL_PREFIX) and "git+file://" not in target
+    return _github_install_target_commit(target) is not None
 
 
 def _installed_file_outside_repo(installed_file: Any) -> bool:
@@ -754,13 +763,18 @@ def github_source_install_check(path: Path, expected_version: str, *, max_snapsh
     freshness = _freshness_check(data.get("generated_at_utc"), max_snapshot_age_hours)
     install_source = data.get("install_source")
     install_target = data.get("install_target")
-    canonical_install_target = _github_install_target_is_canonical(install_target)
+    install_target_commit = _github_install_target_commit(install_target)
+    canonical_install_target = install_target_commit is not None
     source_resolution = data.get("source_resolution") or {}
     resolved_commit = source_resolution.get("resolved_commit")
     source_commit_honesty = _source_commit_is_honest_for_current_head(resolved_commit)
     expected_commit = source_resolution.get("expected_commit")
     expected_commit_is_sha = isinstance(expected_commit, str) and re.fullmatch(r"[0-9a-f]{40}", expected_commit) is not None
-    commit_matches_recorded_expected = bool(expected_commit_is_sha and resolved_commit == expected_commit)
+    commit_matches_recorded_expected = bool(
+        expected_commit_is_sha
+        and resolved_commit == expected_commit
+        and install_target_commit == expected_commit
+    )
     source_resolution_passed = (
         bool(source_resolution.get("passed"))
         and bool(resolved_commit)
@@ -798,6 +812,7 @@ def github_source_install_check(path: Path, expected_version: str, *, max_snapsh
         "install_source": install_source,
         "install_target": install_target,
         "canonical_install_target": canonical_install_target,
+        "install_target_commit": install_target_commit,
         "source_resolution_passed": source_resolution_passed,
         "source_resolution": source_resolution,
         "resolved_commit": resolved_commit,

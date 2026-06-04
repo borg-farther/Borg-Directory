@@ -251,7 +251,7 @@ def _write_github_source_install_snapshot(root: Path, *, version: str = "9.9.9",
             "success": passed,
             "version": version,
             "install_source": "github_source",
-            "install_target": "git+https://github.com/borg-farther/Borg-Directory.git@main",
+            "install_target": f"git+https://github.com/borg-farther/Borg-Directory.git@{resolved_commit}",
             "source_resolution": {
                 "passed": passed,
                 "resolved_commit": resolved_commit,
