@@ -1,8 +1,8 @@
 # Borg production inventory board
 
-Generated: `2026-06-04T21:19:30Z`
+Generated: `2026-06-04T22:56:58Z`
 Repo: `https://github.com/borg-farther/Borg-Directory`
-Branch/head: `ab/git-source-self-service-proof-20260604` / `d8a1f98b9bc92ab1b01afb92df3b23be9c787d72`
+Branch/head: `ab/git-source-self-service-proof-20260604` / `fdf72d74e43c6cfcfe941dbd094371dfa4e199a2`
 Working tree dirty: `True`
 Version: pyproject `3.3.18` / borg `__version__` `3.3.18`
 
@@ -32,8 +32,8 @@ Version: pyproject `3.3.18` / borg `__version__` `3.3.18`
 ## Evidence summary
 
 - first-10 external rows: `{'verified_external_users': 0, 'real_users': 0, 'install_successes': 0, 'useful_rescue_moments': 0, 'critical_privacy_security_failures': 0, 'repeat_use_within_7_days': 0}`
-- GitHub source install + commit binding: `True` resolved=`d8a1f98b9bc92ab1b01afb92df3b23be9c787d72` expected_sha=`True` matches_expected=`True`
-- PyPI fresh install + stdio MCP: `False`
+- GitHub source install + commit binding: `True` resolved=`fdf72d74e43c6cfcfe941dbd094371dfa4e199a2` expected_sha=`True` matches_expected=`True`
+- PyPI fresh install + stdio MCP: `True`
 - first-user release gate: `True`
 - cold-start trust: `True`
 - served runtime freshness: `False`
@@ -59,11 +59,10 @@ Evidence:
 Done/proven:
 - source versions match: True (3.3.18)
 - PyPI latest metadata/current-source gate green: False
-- PyPI fresh-install/stdout MCP canary green: False
+- PyPI fresh-install/stdout MCP canary green: True
 - first-user release gate green: True
 Blockers:
 - PyPI latest metadata gate is not green for the current source revision
-- PyPI fresh-install/stdout MCP canary is not green for the current source version
 - working tree is dirty/unshipped; current hardening branch is not committed/pushed/CI-proven
 Outstanding:
 - publish a new immutable version when source is ahead of PyPI
@@ -84,7 +83,7 @@ Evidence:
 Done/proven:
 - snapshot exists: True
 - canonical GitHub target: True
-- resolved commit: d8a1f98b9bc92ab1b01afb92df3b23be9c787d72
+- resolved commit: fdf72d74e43c6cfcfe941dbd094371dfa4e199a2
 - expected commit is 40-hex SHA: True
 - resolved commit matches recorded expected: True
 - checkout import leakage check passed: True
