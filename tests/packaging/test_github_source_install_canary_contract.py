@@ -129,6 +129,27 @@ def test_public_gate_accepts_fresh_github_source_snapshot(tmp_path: Path) -> Non
     assert result["missing_required_results"] == []
 
 
+def test_source_commit_honesty_rejects_exact_head_with_non_generated_dirty_path(monkeypatch) -> None:
+    head = _current_head()
+    monkeypatch.setattr(public_gate, "_status_paths", lambda: ["borg/cli.py", "eval/github_source_install_snapshot.json"])
+
+    result = public_gate._source_commit_is_honest_for_current_head(head)
+
+    assert result["passed"] is False
+    assert result["reason"] == "exact_head_with_non_generated_dirty_paths"
+    assert result["non_generated_dirty_paths"] == ["borg/cli.py"]
+
+
+def test_source_commit_honesty_accepts_exact_head_with_only_generated_dirty_path(monkeypatch) -> None:
+    head = _current_head()
+    monkeypatch.setattr(public_gate, "_status_paths", lambda: ["eval/github_source_install_snapshot.json"])
+
+    result = public_gate._source_commit_is_honest_for_current_head(head)
+
+    assert result["passed"] is True
+    assert result["reason"] == "exact_head"
+
+
 def test_public_gate_rejects_github_source_snapshot_without_commit_binding(tmp_path: Path) -> None:
     snapshot = tmp_path / "github_source_install_snapshot.json"
     _write_snapshot(snapshot, source_resolution={"passed": False})

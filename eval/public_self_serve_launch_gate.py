@@ -240,12 +240,22 @@ def _source_commit_is_honest_for_current_head(commit: Any) -> dict[str, Any]:
     commit_text = str(commit or "")
     try:
         head = _git_output(["rev-parse", "HEAD"])
+        dirty_paths = _status_paths()
     except Exception:
         return {"passed": False, "resolved_commit": commit_text or None, "head": None, "changed_paths_since_resolved": [], "reason": "git_head_unavailable"}
+    non_generated_dirty = sorted(path for path in dirty_paths if path not in GENERATED_PROOF_ARTIFACT_PATHS)
     if not re.fullmatch(r"[0-9a-f]{40}", commit_text):
-        return {"passed": False, "resolved_commit": commit_text or None, "head": head, "changed_paths_since_resolved": [], "reason": "missing_or_invalid_resolved_commit"}
+        return {"passed": False, "resolved_commit": commit_text or None, "head": head, "dirty_paths": dirty_paths, "non_generated_dirty_paths": non_generated_dirty, "changed_paths_since_resolved": [], "reason": "missing_or_invalid_resolved_commit"}
     if commit_text == head:
-        return {"passed": True, "resolved_commit": commit_text, "head": head, "changed_paths_since_resolved": [], "reason": "exact_head"}
+        return {
+            "passed": not non_generated_dirty,
+            "resolved_commit": commit_text,
+            "head": head,
+            "dirty_paths": dirty_paths,
+            "non_generated_dirty_paths": non_generated_dirty,
+            "changed_paths_since_resolved": [],
+            "reason": "exact_head" if not non_generated_dirty else "exact_head_with_non_generated_dirty_paths",
+        }
     if not _git_is_ancestor(commit_text, head):
         return {"passed": False, "resolved_commit": commit_text, "head": head, "changed_paths_since_resolved": [], "reason": "resolved_commit_not_ancestor_of_head"}
     changed_paths = _git_lines(["diff", "--name-only", f"{commit_text}..{head}"])
