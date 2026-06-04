@@ -254,6 +254,7 @@ def test_generated_artifact_change_filter_rejects_source_or_docs_drift(monkeypat
             "docs/PUBLIC_SELF_SERVE_LAUNCH_GO_NO_GO.md",
             "eval/production_inventory_board_snapshot.json",
             "docs/20260531_BORG_PRODUCTION_INVENTORY_BOARD.md",
+            "docs/status.json",
         ],
     )
     assert watchdog._changes_since_source_are_generated_artifacts("a" * 40, "b" * 40) is True

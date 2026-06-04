@@ -105,6 +105,7 @@ GENERATED_PROOF_ARTIFACT_PATHS = {
     "docs/PUBLIC_SELF_SERVE_LAUNCH_GO_NO_GO.md",
     "docs/SELF_SERVICE_OPS_READINESS_REPORT.md",
     "docs/public/status.json",
+    "docs/status.json",
     "docs/public/value.json",
     "docs/public/impact/impact.json",
     "docs/public/proof-dashboard/index.html",

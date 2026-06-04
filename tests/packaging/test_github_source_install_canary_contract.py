@@ -142,7 +142,7 @@ def test_source_commit_honesty_rejects_exact_head_with_non_generated_dirty_path(
 
 def test_source_commit_honesty_accepts_exact_head_with_only_generated_dirty_path(monkeypatch) -> None:
     head = _current_head()
-    monkeypatch.setattr(public_gate, "_status_paths", lambda: ["eval/github_source_install_snapshot.json"])
+    monkeypatch.setattr(public_gate, "_status_paths", lambda: ["eval/github_source_install_snapshot.json", "docs/status.json"])
 
     result = public_gate._source_commit_is_honest_for_current_head(head)
 
