@@ -27,7 +27,9 @@ from eval.run_pypi_fresh_install_canary import (  # noqa: E402
     BANNED_PUBLIC_COPY,
     EXPECTED_SUMMARY,
     CommandResult,
+    canary_env,
     mcp_stdio_canary,
+    redact_text,
     run_cmd,
     source_version,
 )
@@ -67,17 +69,21 @@ def _direct_url_resolution(result: CommandResult, expected_commit: str | None) -
     vcs = parsed.get("vcs_info") if isinstance(parsed, dict) else {}
     if not isinstance(vcs, dict):
         vcs = {}
+    vcs_name = vcs.get("vcs")
     resolved_commit = vcs.get("commit_id")
     requested_revision = vcs.get("requested_revision")
-    commit_matches_expected = bool(expected_commit and resolved_commit == expected_commit)
+    expected_commit_is_sha = isinstance(expected_commit, str) and bool(__import__("re").fullmatch(r"[0-9a-f]{40}", expected_commit))
+    commit_matches_expected = bool(expected_commit_is_sha and resolved_commit == expected_commit)
     return {
-        "passed": bool(result.passed and resolved_commit and (expected_commit is None or commit_matches_expected)),
+        "passed": bool(result.passed and vcs_name == "git" and resolved_commit and expected_commit_is_sha and commit_matches_expected),
         "direct_url": parsed if isinstance(parsed, dict) else {},
+        "vcs": vcs_name,
         "requested_revision": requested_revision,
         "resolved_commit": resolved_commit,
         "expected_commit": expected_commit,
-        "commit_matches_expected": commit_matches_expected if expected_commit else None,
-        "detail": "installed VCS direct_url commit matches expected commit" if commit_matches_expected else "installed VCS direct_url commit missing or not bound to expected commit",
+        "expected_commit_is_sha": expected_commit_is_sha,
+        "commit_matches_expected": commit_matches_expected,
+        "detail": "installed VCS direct_url commit matches expected commit" if commit_matches_expected else "installed VCS direct_url commit missing or not bound to a recorded 40-hex expected commit",
     }
 
 
@@ -96,7 +102,7 @@ def _checkout_import_leakage_check(result: CommandResult) -> dict[str, Any]:
     return {
         "passed": bool(installed_file_text) and not leaked,
         "installed_file": installed_file_text or None,
-        "repo_root": str(ROOT),
+        "repo_root": "<repo-root>",
         "detail": "installed borg module is outside the source checkout" if installed_file_text and not leaked else "checkout import leakage detected or installed module path missing",
     }
 
@@ -127,27 +133,20 @@ def run_canary(
         isolated_borg_home.mkdir(parents=True, exist_ok=True)
         runtime_cwd.mkdir(parents=True, exist_ok=True)
 
-        env = os.environ.copy()
+        env = canary_env(home=isolated_home, borg_home=isolated_borg_home)
         # Keep the source-install canary clean even on maintainer machines that
         # have local fixture roots configured or readable.  The Git self-serve
         # proof must come from packaged seed data plus the installed source, not
         # from AB-only /root checkouts or test-pack directories.
         for local_pack_env in ("BORG_TEST_PACKS_DIR", "BORG_MAINTAINER_PACKS_DIR"):
             env.pop(local_pack_env, None)
-        env.update({
-            "PYTHONPATH": "",
-            "PYTHONNOUSERSITE": "1",
-            "HOME": str(isolated_home),
-            "BORG_HOME": str(isolated_borg_home),
-            "BORG_DIR": str(isolated_borg_home),
-        })
         pip_env = env.copy()
         pip_env.update({
             "PIP_CONFIG_FILE": os.devnull,
             "PIP_DISABLE_PIP_VERSION_CHECK": "1",
         })
 
-        results.append(run_cmd("fresh_venv_create", [sys.executable, "-m", "venv", str(venv_dir)], timeout=120))
+        results.append(run_cmd("fresh_venv_create", [sys.executable, "-m", "venv", str(venv_dir)], env=env, cwd=venv_dir.parent, timeout=120))
         if results[-1].passed:
             results.append(run_cmd(
                 "pip_install_git_source",
@@ -247,10 +246,10 @@ def run_canary(
         "package": "agent-borg",
         "version": version,
         "install_source": install_source_label,
-        "install_target": install_source,
+        "install_target": redact_text(install_source),
         "source_resolution": source_resolution,
         "runtime_cwd_policy": "all runtime commands execute from an isolated non-repo runtime-cwd",
-        "repo_root": str(ROOT),
+        "repo_root": "<repo-root>",
         "checkout_import_leakage": checkout_import_leakage,
         "results": [asdict(result) for result in results],
         "mcp_stdio_canary": mcp_result,
@@ -267,12 +266,39 @@ def main(argv: list[str] | None = None) -> int:
     parser.add_argument("--output", default=str(SNAPSHOT), help="Snapshot JSON path")
     args = parser.parse_args(argv)
 
-    snapshot = run_canary(
-        args.install_source,
-        args.version,
-        install_source_label=args.install_source_label,
-        expected_commit=args.expected_commit,
-    )
+    try:
+        snapshot = run_canary(
+            args.install_source,
+            args.version,
+            install_source_label=args.install_source_label,
+            expected_commit=args.expected_commit,
+        )
+    except Exception as exc:
+        snapshot = {
+            "schema_version": 1,
+            "generated_at_utc": time.strftime("%Y-%m-%dT%H:%M:%SZ", time.gmtime()),
+            "package": "agent-borg",
+            "version": args.version,
+            "install_source": args.install_source_label,
+            "install_target": redact_text(args.install_source),
+            "source_resolution": {"passed": False, "detail": "not run because canary raised before source resolution", "expected_commit": args.expected_commit},
+            "runtime_cwd_policy": "all runtime commands execute from an isolated non-repo runtime-cwd",
+            "repo_root": "<repo-root>",
+            "checkout_import_leakage": {"passed": False, "detail": "not run because canary raised before import leakage check"},
+            "results": [asdict(CommandResult(
+                name="canary_unhandled_exception",
+                command=[],
+                cwd=redact_text(Path(tempfile.gettempdir())),
+                returncode=1,
+                passed=False,
+                stdout="",
+                stderr=redact_text(f"{type(exc).__name__}: {exc}"),
+                duration_s=0.0,
+                detail=f"exception={type(exc).__name__}",
+            ))],
+            "mcp_stdio_canary": {"passed": False, "detail": "not run because canary raised before MCP check", "expected_version": args.version},
+            "success": False,
+        }
     output = Path(args.output)
     output.parent.mkdir(parents=True, exist_ok=True)
     output.write_text(json.dumps(snapshot, indent=2, sort_keys=True) + "\n", encoding="utf-8")

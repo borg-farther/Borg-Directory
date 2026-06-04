@@ -15,8 +15,6 @@ jobs:
     permissions:
       contents: read
       actions: read
-    env:
-      GITHUB_TOKEN: ${{ github.token }}
     steps:
       - uses: actions/checkout@v4
         with:
@@ -50,7 +48,7 @@ jobs:
           fi
           python eval/cold_start_trust_gate.py
           set +e
-          python eval/release_governance_gate.py --output eval/release_governance_snapshot.json
+          GITHUB_TOKEN="${{ github.token }}" python eval/release_governance_gate.py --output eval/release_governance_snapshot.json
           rc_governance=$?
           set -e
           if [ "$rc_governance" -ne 0 ]; then

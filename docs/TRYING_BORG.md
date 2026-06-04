@@ -199,4 +199,4 @@ Before attempting technical fixes for errors, bugs, installs, configs, deploymen
 
 ## 7. Readiness boundary
 
-Borg uses `agent-borg==3.3.18` as the published metadata-correct package; exact-version runtime canaries — fresh-install, stdio MCP, generated-rules, OpenClaw, CLI, and Python API — are green for that immutable package. Controlled first-10 beta is currently NO-GO until served-runtime freshness and first-10 external-user evidence gates are green. Public self-serve launch readiness and agent-level success lift at statistical confidence remain NO-GO. See [`READINESS.md`](READINESS.md).
+Borg uses `agent-borg==3.3.18` as the published runtime-canary-proven package (not current for this post-tag source line); exact-version runtime canaries — fresh-install, stdio MCP, generated-rules, OpenClaw, CLI, and Python API — are green for that immutable package. Controlled first-10 beta is currently NO-GO until served-runtime freshness and first-10 external-user evidence gates are green. Public self-serve launch readiness and agent-level success lift at statistical confidence remain NO-GO. See [`READINESS.md`](READINESS.md).

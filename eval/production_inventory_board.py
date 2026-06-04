@@ -29,6 +29,7 @@ if str(ROOT) not in sys.path:
     sys.path.insert(0, str(ROOT))
 
 from eval.first_10_evidence import evaluate_scoreboard  # noqa: E402
+from eval import public_self_serve_launch_gate as public_launch_gate  # noqa: E402
 from eval import release_governance_gate, served_runtime_gate, self_service_ops_gate  # noqa: E402
 
 SNAPSHOT = ROOT / "eval" / "production_inventory_board_snapshot.json"
@@ -223,6 +224,8 @@ def compile_inventory() -> dict[str, Any]:
     rollback_snapshot_pass = bool(rollback.get("passed") is True)
     rollback_effective_pass = bool(rollback_snapshot_pass and not any("rollback_drill_snapshot" in blocker for blocker in raw_ops_blockers))
     public_gate = _read_json("eval/public_self_serve_launch_gate_snapshot.json")
+    github_source = public_launch_gate.github_source_install_check(ROOT / "eval" / "github_source_install_snapshot.json", expected_version)
+    github_source_pass = bool(github_source.get("passed") is True)
     pypi_latest_gate = (public_gate.get("gates") or {}).get("pypi_latest") or {}
     pypi_latest_pass = bool(pypi_latest_gate.get("passed") is True)
     pypi_package_current = bool(pypi_latest_pass and pypi_fresh_pass)
@@ -291,6 +294,34 @@ def compile_inventory() -> dict[str, Any]:
             blockers=pypi_package_blockers + (["working tree is dirty/unshipped; current hardening branch is not committed/pushed/CI-proven"] if git["dirty"] else []),
             outstanding=["publish a new immutable version when source is ahead of PyPI", "rerun full proof on the final branch head", "commit/push and watch CI before claiming shipped"],
             challenge="A clean PyPI canary proves installed package behavior, not source revisions that landed after the wheel upload or a long-lived served process.",
+        ),
+        _component(
+            "github_source_install_cli_api_stdio",
+            "GitHub source install, direct_url commit binding, CLI/API, generated rules, OpenClaw, and local stdio MCP",
+            STATUS_GO if github_source_pass else STATUS_BLOCKED,
+            evidence=[
+                "eval/run_github_source_install_canary.py",
+                "eval/github_source_install_snapshot.json",
+                "pip direct_url.json vcs_info.commit_id",
+                "eval/public_self_serve_launch_gate.py github_source_install_check",
+            ],
+            done=[
+                f"snapshot exists: {github_source.get('exists')}",
+                f"canonical GitHub target: {github_source.get('canonical_install_target')}",
+                f"resolved commit: {github_source.get('resolved_commit')}",
+                f"expected commit is 40-hex SHA: {github_source.get('expected_commit_is_sha')}",
+                f"resolved commit matches recorded expected: {github_source.get('commit_matches_recorded_expected')}",
+                f"checkout import leakage check passed: {github_source.get('checkout_import_leakage_passed')}",
+                f"failed command count: {github_source.get('failed_count')}",
+            ],
+            blockers=[] if github_source_pass else [
+                "GitHub source-install proof is not current/strict for this working tree",
+                f"source honesty: {github_source.get('source_commit_honesty')}",
+                f"missing required results: {github_source.get('missing_required_results')}",
+                f"failures: {github_source.get('failures')}",
+            ],
+            outstanding=["rerun exact-SHA GitHub source canary after final commit", "refresh public/dashboard/watchdog artifacts", "watch exact-head GitHub Actions before merge"],
+            challenge="A git+https install URL is not proof by itself; pip direct_url must resolve to the expected PR SHA and runtime commands must execute outside the checkout.",
         ),
         _component(
             "security_hardening_current_branch",
@@ -516,6 +547,7 @@ def compile_inventory() -> dict[str, Any]:
     ]
 
     final_challenge = [
+        "Could GitHub source proof alone justify public readiness? No: it proves one install channel only; PyPI/current-source, served runtime, governance, ops, and row-derived users are separate gates.",
         "Could package proof alone justify controlled beta? No: current release controls add served-runtime freshness, release-governance freshness, and ops freshness; any red/stale required gate blocks beta.",
         "Could protocol GO mean federated learning is production-ready? No: it proves signed sync/revocation mechanics, not hosted operations or public utility.",
         "Could internal outcome receipts prove recursive learning is ready? Only as internal primitives; external lift and autonomous promotion remain blocked.",
@@ -523,24 +555,42 @@ def compile_inventory() -> dict[str, Any]:
         "Could a dashboard hide these blockers? It must not; stale generated artifacts are themselves blockers until rebuilt from current gates.",
     ]
 
+    current_blockers_ordered = []
+    if not github_source_pass:
+        current_blockers_ordered.append("GitHub source-install exact-SHA proof is stale/missing/failing for the current working tree")
+    if not pypi_package_current:
+        current_blockers_ordered.append("PyPI package-current/source-alignment proof is not green")
+    if not served_runtime_green:
+        current_blockers_ordered.append("served runtime stale or not proven current")
+    if not governance_green:
+        current_blockers_ordered.append("main branch protection/release governance not green")
+    if not ops_green:
+        current_blockers_ordered.append("rollback/self-service ops freshness not green")
+    if git["dirty"]:
+        current_blockers_ordered.append("current hardening branch unshipped/full-proof pending")
+    if not first10["passed"]:
+        current_blockers_ordered.append("first-10 external evidence 0/10")
+    current_blockers_ordered.append("public self-serve, 100-user, marketplace, measured-lift claims blocked until above gates pass")
+
     return {
         "schema_version": 1,
         "generated_at_utc": _now(),
         "board_name": "borg_production_inventory_board",
         "source": {
             "repo": "https://github.com/borg-farther/Borg-Directory",
-            "root": str(ROOT),
+            "root": "<repo-root>",
             "git": git,
             "versions": versions,
         },
         "task_outline": [
             "reconstruct promised production features from docs/session evidence",
-            "separate proof lanes: source/package, served runtime, governance, ops, external users, federated protocol, recursive learning, measured value",
+            "separate proof lanes: GitHub source install, PyPI package, served runtime, governance, ops, external users, federated protocol, recursive learning, measured value",
             "challenge readiness claims against fail-closed gates and row-derived evidence",
             "produce durable docs and machine-readable outstanding inventory",
             "add regression tests so future edits cannot collapse the boundaries",
         ],
         "top_verdict": {
+            "github_source_install": "GO" if github_source_pass else "NO_GO",
             "controlled_first_10_beta": "CONDITIONAL_GO" if controlled_ready else "NO_GO",
             "public_self_serve": "GO" if public_ready else "NO_GO",
             "hundred_real_users": "NO_GO",
@@ -558,6 +608,10 @@ def compile_inventory() -> dict[str, Any]:
         "status_counts": status_counts,
         "evidence_summary": {
             "first_10_counts": first10_counts,
+            "github_source_install_passed": github_source_pass,
+            "github_source_install_resolved_commit": github_source.get("resolved_commit"),
+            "github_source_install_expected_commit_is_sha": github_source.get("expected_commit_is_sha"),
+            "github_source_install_commit_matches_expected": github_source.get("commit_matches_recorded_expected"),
             "pypi_latest_metadata_current_source_passed": pypi_latest_pass,
             "pypi_fresh_install_passed": pypi_fresh_pass,
             "first_user_release_passed": first_user["passed"],
@@ -575,14 +629,7 @@ def compile_inventory() -> dict[str, Any]:
         "components": components,
         "outstanding": outstanding,
         "final_reflective_challenge_pass": final_challenge,
-        "current_blockers_ordered": [
-            "served runtime stale or not proven current",
-            "main branch protection/release governance not green",
-            "rollback/self-service ops freshness not green",
-            "current hardening branch unshipped/full-proof pending",
-            "first-10 external evidence 0/10",
-            "public self-serve, 100-user, marketplace, measured-lift claims blocked until above gates pass",
-        ],
+        "current_blockers_ordered": current_blockers_ordered,
     }
 
 
@@ -612,6 +659,7 @@ def render_markdown(data: dict[str, Any]) -> str:
         "",
         "## Bottom-line verdicts",
         "",
+        f"- GitHub source install: `{verdict['github_source_install']}`",
         f"- controlled first-10 beta: `{verdict['controlled_first_10_beta']}`",
         f"- broad public self-serve: `{verdict['public_self_serve']}`",
         f"- 100 real users: `{verdict['hundred_real_users']}`",
@@ -627,6 +675,7 @@ def render_markdown(data: dict[str, Any]) -> str:
         "## Evidence summary",
         "",
         f"- first-10 external rows: `{evidence['first_10_counts']}`",
+        f"- GitHub source install + commit binding: `{evidence['github_source_install_passed']}` resolved=`{evidence['github_source_install_resolved_commit']}` expected_sha=`{evidence['github_source_install_expected_commit_is_sha']}` matches_expected=`{evidence['github_source_install_commit_matches_expected']}`",
         f"- PyPI fresh install + stdio MCP: `{evidence['pypi_fresh_install_passed']}`",
         f"- first-user release gate: `{evidence['first_user_release_passed']}`",
         f"- cold-start trust: `{evidence['cold_start_trust_passed']}`",

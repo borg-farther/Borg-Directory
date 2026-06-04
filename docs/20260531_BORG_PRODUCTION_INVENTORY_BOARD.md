@@ -1,26 +1,27 @@
 # Borg production inventory board
 
-Generated: `2026-06-03T15:35:44Z`
+Generated: `2026-06-04T19:53:50Z`
 Repo: `https://github.com/borg-farther/Borg-Directory`
-Branch/head: `post-release-proof-3.3.17` / `aaeaa5da023371bb64beae786ae3d93470162b13`
+Branch/head: `ab/git-source-self-service-proof-20260604` / `16281fa2f0f17ec852f1471f7da4ec6295349d00`
 Working tree dirty: `True`
-Version: pyproject `3.3.17` / borg `__version__` `3.3.17`
+Version: pyproject `3.3.18` / borg `__version__` `3.3.18`
 
 ## Task outline / decomposition
 
 - reconstruct promised production features from docs/session evidence
-- separate proof lanes: source/package, served runtime, governance, ops, external users, federated protocol, recursive learning, measured value
+- separate proof lanes: GitHub source install, PyPI package, served runtime, governance, ops, external users, federated protocol, recursive learning, measured value
 - challenge readiness claims against fail-closed gates and row-derived evidence
 - produce durable docs and machine-readable outstanding inventory
 - add regression tests so future edits cannot collapse the boundaries
 
 ## Bottom-line verdicts
 
+- GitHub source install: `NO_GO`
 - controlled first-10 beta: `NO_GO`
 - broad public self-serve: `NO_GO`
 - 100 real users: `NO_GO`
 - current source/hardening branch: `IN_PROGRESS`
-- published package/local stdio: `CONDITIONAL_GO`
+- published package/local stdio: `NO_GO`
 - served runtime freshness: `NO_GO`
 - remote MCP/marketplace distribution: `NO_GO`
 - global/federated learning protocol: `GO_PROTOCOL_ONLY`
@@ -31,6 +32,7 @@ Version: pyproject `3.3.17` / borg `__version__` `3.3.17`
 ## Evidence summary
 
 - first-10 external rows: `{'verified_external_users': 0, 'real_users': 0, 'install_successes': 0, 'useful_rescue_moments': 0, 'critical_privacy_security_failures': 0, 'repeat_use_within_7_days': 0}`
+- GitHub source install + commit binding: `False` resolved=`71213e1c7b3167905d3afc927da6706798fbe400` expected_sha=`True` matches_expected=`True`
 - PyPI fresh install + stdio MCP: `True`
 - first-user release gate: `True`
 - cold-start trust: `True`
@@ -55,11 +57,12 @@ Evidence:
 - `eval/first_user_release_gate_snapshot.json`
 - `eval/pypi_fresh_install_snapshot.json`
 Done/proven:
-- source versions match: True (3.3.17)
-- PyPI latest metadata/current-source gate green: True
+- source versions match: True (3.3.18)
+- PyPI latest metadata/current-source gate green: False
 - PyPI fresh-install/stdout MCP canary green: True
 - first-user release gate green: True
 Blockers:
+- PyPI latest metadata gate is not green for the current source revision
 - working tree is dirty/unshipped; current hardening branch is not committed/pushed/CI-proven
 Outstanding:
 - publish a new immutable version when source is ahead of PyPI
@@ -67,6 +70,35 @@ Outstanding:
 - commit/push and watch CI before claiming shipped
 Challenge:
 - A clean PyPI canary proves installed package behavior, not source revisions that landed after the wheel upload or a long-lived served process.
+
+### github_source_install_cli_api_stdio — GitHub source install, direct_url commit binding, CLI/API, generated rules, OpenClaw, and local stdio MCP
+
+Status: `NO_GO`
+
+Evidence:
+- `eval/run_github_source_install_canary.py`
+- `eval/github_source_install_snapshot.json`
+- `pip direct_url.json vcs_info.commit_id`
+- `eval/public_self_serve_launch_gate.py github_source_install_check`
+Done/proven:
+- snapshot exists: True
+- canonical GitHub target: True
+- resolved commit: 71213e1c7b3167905d3afc927da6706798fbe400
+- expected commit is 40-hex SHA: True
+- resolved commit matches recorded expected: True
+- checkout import leakage check passed: True
+- failed command count: 0
+Blockers:
+- GitHub source-install proof is not current/strict for this working tree
+- source honesty: {'passed': False, 'resolved_commit': '71213e1c7b3167905d3afc927da6706798fbe400', 'head': '16281fa2f0f17ec852f1471f7da4ec6295349d00', 'dirty_paths': ['.github/workflows/self-service-watchdog.yml', 'AGENTS.md', 'README.md', 'SUPPORT.md', 'docs/20260514_PUBLIC_SELF_SERVE_LAUNCH_CLOSURE_PLAN.md', 'docs/20260531_BORG_PRODUCTION_INVENTORY_BOARD.md', 'docs/CHANNELS_AND_INSTALL_METHODS.md', 'docs/PUBLIC_SELF_SERVE_LAUNCH_GO_NO_GO.md', 'docs/READINESS.md', 'docs/README.md', 'docs/ROADMAP.md', 'docs/TRYING_BORG.md', 'docs/VALUE_COMMUNICATION_DASHBOARD.html', 'docs/VALUE_COMMUNICATION_DASHBOARD.md', 'eval/ops_readiness_watchdog.py', 'eval/production_inventory_board.py', 'eval/production_inventory_board_snapshot.json', 'eval/public_self_serve_launch_gate.py', 'eval/real_user_rollout_gate.py', 'eval/run_github_source_install_canary.py', 'eval/run_pypi_fresh_install_canary.py', 'eval/tests/test_production_inventory_board.py', 'eval/tests/test_real_user_rollout_gate.py', 'llms.txt', 'tests/packaging/test_github_source_install_canary_contract.py', 'tests/packaging/test_public_presentation_contract.py', 'tests/readiness/test_ops_readiness_watchdog.py', 'tests/readiness/test_public_self_serve_launch_gate.py'], 'non_generated_dirty_paths': ['.github/workflows/self-service-watchdog.yml', 'AGENTS.md', 'README.md', 'SUPPORT.md', 'docs/20260514_PUBLIC_SELF_SERVE_LAUNCH_CLOSURE_PLAN.md', 'docs/CHANNELS_AND_INSTALL_METHODS.md', 'docs/READINESS.md', 'docs/README.md', 'docs/ROADMAP.md', 'docs/TRYING_BORG.md', 'docs/VALUE_COMMUNICATION_DASHBOARD.html', 'docs/VALUE_COMMUNICATION_DASHBOARD.md', 'eval/ops_readiness_watchdog.py', 'eval/production_inventory_board.py', 'eval/public_self_serve_launch_gate.py', 'eval/real_user_rollout_gate.py', 'eval/run_github_source_install_canary.py', 'eval/run_pypi_fresh_install_canary.py', 'eval/tests/test_production_inventory_board.py', 'eval/tests/test_real_user_rollout_gate.py', 'llms.txt', 'tests/packaging/test_github_source_install_canary_contract.py', 'tests/packaging/test_public_presentation_contract.py', 'tests/readiness/test_ops_readiness_watchdog.py', 'tests/readiness/test_public_self_serve_launch_gate.py'], 'changed_paths_since_resolved': [], 'reason': 'non_generated_dirty_paths'}
+- missing required results: []
+- failures: []
+Outstanding:
+- rerun exact-SHA GitHub source canary after final commit
+- refresh public/dashboard/watchdog artifacts
+- watch exact-head GitHub Actions before merge
+Challenge:
+- A git+https install URL is not proof by itself; pip direct_url must resolve to the expected PR SHA and runtime commands must execute outside the checkout.
 
 ### security_hardening_current_branch — current hardening branch: pack safety, pickle removal, HTTP/MCP hardening, docs truth gates
 
@@ -104,8 +136,8 @@ Evidence:
 Done/proven:
 - snapshot captured: borg_version=3.3.14, source_version=3.3.15
 Blockers:
-- served runtime borg_version '3.3.14' != source version '3.3.17'
-- served runtime source_version '3.3.15' != source version '3.3.17'
+- served runtime borg_version '3.3.14' != source version '3.3.18'
+- served runtime source_version '3.3.15' != source version '3.3.18'
 - served runtime version_matches_source is not true
 - served runtime reload_status is not loaded_code_matches_source_behavior
 Outstanding:
@@ -176,8 +208,8 @@ Evidence:
 - `eval/public_self_serve_launch_gate.py --no-write`
 - `eval/real_user_rollout_gate.py --no-write`
 Blockers:
-- served runtime borg_version '3.3.14' != source version '3.3.17'
-- served runtime source_version '3.3.15' != source version '3.3.17'
+- served runtime borg_version '3.3.14' != source version '3.3.18'
+- served runtime source_version '3.3.15' != source version '3.3.18'
 - served runtime version_matches_source is not true
 - served runtime reload_status is not loaded_code_matches_source_behavior
 Outstanding:
@@ -198,8 +230,8 @@ Evidence:
 - `eval/first_10_user_scoreboard.json`
 Blockers:
 - first-10 evidence not passed: verified=0/10, real_users=0/10, installs=0/8, useful=0/6, critical_incidents=0/0
-- served runtime borg_version '3.3.14' != source version '3.3.17'
-- served runtime source_version '3.3.15' != source version '3.3.17'
+- served runtime borg_version '3.3.14' != source version '3.3.18'
+- served runtime source_version '3.3.15' != source version '3.3.18'
 - served runtime version_matches_source is not true
 - served runtime reload_status is not loaded_code_matches_source_behavior
 Outstanding:
@@ -344,7 +376,7 @@ Acceptance:
 
 ### P0 — Refresh served runtime through operator-approved cutover
 
-Why: Current served fingerprint says 3.3.14 while source targets 3.3.17.
+Why: Current served fingerprint says 3.3.14 while source targets 3.3.18.
 
 Acceptance:
 - served borg_version == source_version == PyPI latest
@@ -437,6 +469,7 @@ Acceptance:
 
 ## Final reflective challenge pass
 
+- Could GitHub source proof alone justify public readiness? No: it proves one install channel only; PyPI/current-source, served runtime, governance, ops, and row-derived users are separate gates.
 - Could package proof alone justify controlled beta? No: current release controls add served-runtime freshness, release-governance freshness, and ops freshness; any red/stale required gate blocks beta.
 - Could protocol GO mean federated learning is production-ready? No: it proves signed sync/revocation mechanics, not hosted operations or public utility.
 - Could internal outcome receipts prove recursive learning is ready? Only as internal primitives; external lift and autonomous promotion remain blocked.
@@ -445,9 +478,9 @@ Acceptance:
 
 ## Current blocker hierarchy
 
-1. served runtime stale or not proven current
-2. main branch protection/release governance not green
-3. rollback/self-service ops freshness not green
+1. GitHub source-install exact-SHA proof is stale/missing/failing for the current working tree
+2. PyPI package-current/source-alignment proof is not green
+3. served runtime stale or not proven current
 4. current hardening branch unshipped/full-proof pending
 5. first-10 external evidence 0/10
 6. public self-serve, 100-user, marketplace, measured-lift claims blocked until above gates pass

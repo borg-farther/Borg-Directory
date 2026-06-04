@@ -169,17 +169,24 @@ def test_current_docs_preserve_same_version_artifact_drift_truth() -> None:
         "package/local stdio proof",
         "fresh-install/MCP/generate/OpenClaw canaries pass for controlled first-10 beta",
         "published package metadata, PyPI latest, and proof artifacts agree on `agent-borg==3.3.15`",
+        "metadata-correct production PyPI package",
+        "published metadata-correct package",
+        "package-current proof for `agent-borg==3.3.18` are green",
+        "PyPI latest/fresh-install/stdio MCP proof for `agent-borg==3.3.18` is green",
+        "production PyPI package canaries are current",
+        "Runtime and package-metadata canaries pass",
     ]
 
     for path, text in watched.items():
         for phrase in stale_or_unsupported:
             assert phrase not in text, f"{path} still contains stale/unsupported phrase: {phrase}"
 
-    assert "published, metadata-correct production PyPI package" in watched["README.md"]
-    assert "Exact-version PyPI fresh-install" in watched["README.md"]
+    assert "exact-version PyPI fresh-install" in watched["README.md"]
+    assert "package-current proof is red" in watched["README.md"]
+    assert "PyPI fresh-install" in watched["README.md"]
     assert "Broad public self-serve launch, 100-user rollout, served/remote MCP, and measured external lift are **not claimed**" in watched["README.md"]
     assert "Controlled first-10 beta: **NO-GO right now**" in watched["docs/READINESS.md"]
-    assert "published metadata-correct package" in watched["docs/READINESS.md"]
+    assert "runtime-canary-proven package" in watched["docs/READINESS.md"]
     assert "runtime canaries are green" in watched["docs/READINESS.md"]
     assert "served runtime fingerprint is stale" in watched["docs/READINESS.md"]
     assert "GitHub `main` release governance is enforced" in watched["docs/READINESS.md"]
@@ -259,7 +266,8 @@ def test_channel_matrix_documents_all_first_user_mix_paths() -> None:
     assert f"agent-borg=={current_version}" in matrix
     for phrase in [
         "pipx install agent-borg==",
-        "python -m pip install git+https://github.com/borg-farther/Borg-Directory.git@main",
+        "python -m pip install git+https://github.com/borg-farther/Borg-Directory.git@<40-hex-sha>",
+        "--expected-commit <sha>",
         "borg generate systematic-debugging --format all --output",
         "borg convert . --format openclaw --all --output",
         "import borg, json",

@@ -245,6 +245,20 @@ def test_source_revision_honesty_rejects_dirty_ancestor_when_non_generated_files
     assert watchdog._source_revision_is_honest(f"{base}+dirty", head, clean=True) is False
 
 
+def test_source_revision_honesty_rejects_head_dirty_with_non_generated_worktree(monkeypatch) -> None:
+    head = "b" * 40
+    monkeypatch.setattr(watchdog, "_git_dirty_paths", lambda: ["eval/borg_proof_dashboard.json", "borg/cli.py"])
+
+    assert watchdog._source_revision_is_honest(f"{head}+dirty", head, clean=False) is False
+
+
+def test_source_revision_honesty_accepts_head_dirty_with_only_generated_worktree(monkeypatch) -> None:
+    head = "b" * 40
+    monkeypatch.setattr(watchdog, "_git_dirty_paths", lambda: ["eval/borg_proof_dashboard.json", "docs/status.json"])
+
+    assert watchdog._source_revision_is_honest(f"{head}+dirty", head, clean=False) is True
+
+
 def test_generated_artifact_change_filter_rejects_source_or_docs_drift(monkeypatch) -> None:
     monkeypatch.setattr(
         watchdog,
@@ -501,8 +515,11 @@ def test_ops_watchdog_accepts_release_control_blocked_no_go_stage(monkeypatch) -
     assert snapshot["checks"]["public_status_consistency"]["release_control_blocked_status_ok"] is True
 
 
-def test_source_revision_honesty_rejects_unrelated_dirty_source_revision() -> None:
+def test_source_revision_honesty_rejects_unrelated_dirty_source_revision(monkeypatch) -> None:
+    monkeypatch.setattr(watchdog, "_git_dirty_paths", lambda: ["eval/borg_proof_dashboard.json"])
     assert watchdog._source_revision_is_honest("a" * 40 + "+dirty", "a" * 40, clean=False) is True
+    monkeypatch.setattr(watchdog, "_git_dirty_paths", lambda: ["borg/cli.py"])
+    assert watchdog._source_revision_is_honest("a" * 40 + "+dirty", "a" * 40, clean=False) is False
     assert watchdog._source_revision_is_honest("c" * 40 + "+dirty", "a" * 40, clean=False) is False
 
 

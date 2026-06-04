@@ -1,10 +1,13 @@
 from __future__ import annotations
 
 import json
+import subprocess
 from datetime import datetime, timezone
 from pathlib import Path
 
 from eval import public_self_serve_launch_gate as public_gate
+from eval import run_github_source_install_canary as github_canary
+from eval import run_pypi_fresh_install_canary as pypi_canary
 
 ROOT = Path(__file__).resolve().parents[2]
 CANONICAL_GITHUB_INSTALL = "git+https://github.com/borg-farther/Borg-Directory.git@main"
@@ -70,6 +73,8 @@ def test_github_source_install_canary_script_contract() -> None:
     script = ROOT / "eval" / "run_github_source_install_canary.py"
     assert script.exists(), "missing GitHub source-install canary"
     text = script.read_text(encoding="utf-8")
+    canary_env_text = (ROOT / "eval" / "run_pypi_fresh_install_canary.py").read_text(encoding="utf-8")
+    contract_text = text + canary_env_text
 
     required_tokens = [
         CANONICAL_GITHUB_INSTALL,
@@ -100,9 +105,105 @@ def test_github_source_install_canary_script_contract() -> None:
         "BORG_MAINTAINER_PACKS_DIR",
         "install_source",
         "github_source",
+        "canary_env",
+        "GITHUB_TOKEN",
+        "redact_text",
     ]
     for token in required_tokens:
-        assert token in text
+        assert token in contract_text
+
+
+def test_canary_env_strips_ci_and_operator_credentials(monkeypatch, tmp_path: Path) -> None:
+    monkeypatch.setenv("PATH", "/usr/bin")
+    monkeypatch.setenv("GITHUB_TOKEN", "ghs_" + "fixture")
+    monkeypatch.setenv("GH_TOKEN", "gho_" + "fixture")
+    monkeypatch.setenv("AWS_SECRET_ACCESS_KEY", "aws-" + "fixture")
+    monkeypatch.setenv("PIP_INDEX_URL", "https://" + "u" + ":" + "p" + "@example.invalid/simple")
+
+    env = pypi_canary.canary_env(
+        home=tmp_path / "home",
+        borg_home=tmp_path / "borg-home",
+        extra={"GITHUB_TOKEN": "ghs_" + "reintroduced", "SAFE_EXTRA": "ok"},
+    )
+
+    assert env["PATH"] == "/usr/bin"
+    assert env["PYTHONPATH"] == ""
+    assert env["PYTHONNOUSERSITE"] == "1"
+    assert "GITHUB_TOKEN" not in env
+    assert "GH_TOKEN" not in env
+    assert "AWS_SECRET_ACCESS_KEY" not in env
+    assert "PIP_INDEX_URL" not in env
+    assert "GITHUB_TOKEN" not in env
+    assert env["SAFE_EXTRA"] == "ok"
+
+
+def test_redaction_handles_url_userinfo_and_home_paths() -> None:
+    raw_secret = "super-" + "secret-" + "value"
+    userinfo_url = "https://" + "u" + ":" + "p" + "@example.invalid/simple"
+    text = f"token={raw_secret}\n" + userinfo_url + f"\nhttps://tokenonly@example.invalid/repo\n{Path.home()}/.config"
+
+    redacted = pypi_canary.redact_text(text)
+
+    assert raw_secret not in redacted
+    assert userinfo_url not in redacted
+    assert "https://tokenonly@" not in redacted
+    assert str(Path.home()) not in redacted
+    assert "[REDACTED]" in redacted
+
+
+def test_run_cmd_timeout_fails_closed_and_redacts_output(monkeypatch) -> None:
+    raw_secret = "super-" + "secret-" + "value"
+    userinfo_url = "https://" + "u" + ":" + "p" + "@example.invalid/simple"
+
+    def fake_run(*args, **kwargs):  # type: ignore[no-untyped-def]
+        raise subprocess.TimeoutExpired(
+            cmd=["demo"],
+            timeout=1,
+            output=f"token={raw_secret}\n" + userinfo_url,
+            stderr="password:another-" + "secret-value",
+        )
+
+    monkeypatch.setattr(pypi_canary.subprocess, "run", fake_run)
+
+    result = pypi_canary.run_cmd(
+        "demo_timeout",
+        ["demo", f"--password={raw_secret}", userinfo_url],
+        timeout=1,
+    )
+
+    assert result.passed is False
+    assert result.returncode == 124
+    assert "[REDACTED]" in result.stdout
+    assert "[REDACTED]" in result.stderr
+    assert result.cwd
+    assert all(raw_secret not in part and ("u" + ":" + "p" + "@example") not in part for part in result.command)
+
+
+def test_github_canary_main_writes_failing_snapshot_on_unhandled_exception(monkeypatch, tmp_path: Path) -> None:
+    raw_secret = "super-" + "secret-" + "value"
+
+    def explode(*args, **kwargs):  # type: ignore[no-untyped-def]
+        raise RuntimeError(f"token={raw_secret}")
+
+    output = tmp_path / "github_source_install_snapshot.json"
+    monkeypatch.setattr(github_canary, "run_canary", explode)
+
+    rc = github_canary.main([
+        "--version",
+        "9.9.9",
+        "--install-source",
+        "git+https://" + "u" + ":" + "p" + "@example.invalid/repo.git@deadbeef",
+        "--output",
+        str(output),
+    ])
+
+    payload = json.loads(output.read_text(encoding="utf-8"))
+    assert rc == 1
+    assert payload["success"] is False
+    assert payload["results"][0]["name"] == "canary_unhandled_exception"
+    assert "[REDACTED]" in payload["install_target"]
+    assert raw_secret not in json.dumps(payload)
+    assert ("u" + ":" + "p" + "@example") not in json.dumps(payload)
 
 
 def test_public_gate_checks_github_source_snapshot_missing(tmp_path: Path) -> None:
@@ -113,8 +214,9 @@ def test_public_gate_checks_github_source_snapshot_missing(tmp_path: Path) -> No
     assert "GitHub source-install" in result["error"]
 
 
-def test_public_gate_accepts_fresh_github_source_snapshot(tmp_path: Path) -> None:
+def test_public_gate_accepts_fresh_github_source_snapshot(tmp_path: Path, monkeypatch) -> None:
     snapshot = tmp_path / "github_source_install_snapshot.json"
+    monkeypatch.setattr(public_gate, "_status_paths", lambda: ["eval/github_source_install_snapshot.json"])
     _write_snapshot(snapshot)
 
     result = public_gate.github_source_install_check(snapshot, "9.9.9", max_snapshot_age_hours=24.0)
@@ -150,14 +252,38 @@ def test_source_commit_honesty_accepts_exact_head_with_only_generated_dirty_path
     assert result["reason"] == "exact_head"
 
 
-def test_public_gate_rejects_github_source_snapshot_without_commit_binding(tmp_path: Path) -> None:
+def test_public_gate_rejects_github_source_snapshot_without_commit_binding(tmp_path: Path, monkeypatch) -> None:
     snapshot = tmp_path / "github_source_install_snapshot.json"
-    _write_snapshot(snapshot, source_resolution={"passed": False})
+    monkeypatch.setattr(public_gate, "_status_paths", lambda: ["eval/github_source_install_snapshot.json"])
+    _write_snapshot(snapshot, source_resolution={"passed": True, "resolved_commit": _current_head()})
 
     result = public_gate.github_source_install_check(snapshot, "9.9.9", max_snapshot_age_hours=24.0)
 
     assert result["passed"] is False
     assert result["source_resolution_passed"] is False
+    assert result["expected_commit_is_sha"] is False
+
+
+def test_direct_url_resolution_requires_expected_git_commit_binding() -> None:
+    result = pypi_canary.CommandResult(
+        name="pip_direct_url_agent_borg",
+        command=["python", "-c", "print-direct-url"],
+        cwd="/tmp",
+        returncode=0,
+        passed=True,
+        stdout=json.dumps({"vcs_info": {"vcs": "git", "commit_id": "a" * 40, "requested_revision": "main"}}),
+        stderr="",
+        duration_s=0.01,
+        detail="exit=0",
+    )
+
+    missing = github_canary._direct_url_resolution(result, None)
+    matching = github_canary._direct_url_resolution(result, "a" * 40)
+
+    assert missing["passed"] is False
+    assert missing["expected_commit_is_sha"] is False
+    assert matching["passed"] is True
+    assert matching["commit_matches_expected"] is True
 
 
 def test_public_gate_rejects_github_source_snapshot_resolved_to_old_non_ancestor_sha(tmp_path: Path) -> None:

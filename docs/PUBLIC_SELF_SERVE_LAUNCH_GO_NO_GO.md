@@ -9,7 +9,7 @@ Max recommended real users now: **0**
 
 ## Hard rule
 
-Public self-serve is GO only after PyPI/fresh-install/MCP/docs/cold-start-trust/served-runtime/release-governance/self-service-ops/watchdog gates pass AND row-derived first-10 external-user evidence passes. Synthetic users and aggregate-only edits never count.
+Public self-serve is GO only after PyPI/latest fresh-install/MCP, GitHub source-install, docs/cold-start-trust/served-runtime/release-governance/self-service-ops/watchdog gates pass AND row-derived first-10 external-user evidence passes. Synthetic users and aggregate-only edits never count.
 
 ## Gate results
 

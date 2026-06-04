@@ -4,7 +4,7 @@ Generated: 2026-05-14 18:39 UTC
 
 ## Current state
 
-Borg's controlled first-10 package path is **NO-GO for served-runtime freshness and external evidence**, not for package installability. `agent-borg==3.3.18` is the published metadata-correct package and fresh runtime canaries are green. Package-level evidence capture can proceed only after served-runtime freshness and first-10 evidence intake are ready. New hardening PRs must still pass their own CI before source-specific claims are published.
+Borg's controlled first-10 package path is **NO-GO for served-runtime freshness and external evidence**, not for package installability. `agent-borg==3.3.18` is the published runtime-canary-proven package (not current for this post-tag source line) and fresh runtime canaries are green. Package-level evidence capture can proceed only after served-runtime freshness and first-10 evidence intake are ready. New hardening PRs must still pass their own CI before source-specific claims are published.
 
 Public self-serve launch remains **NO-GO** until row-derived first-10 external-user evidence passes. Served remote MCP remains a separate runtime cutover/canary channel, not proven by the PyPI stdio release.
 
@@ -69,7 +69,7 @@ Prior 3.3.10 proof lives in:
 - `docs/20260522_BORG_3310_RELEASE_PREFLIGHT_PUBLISHED.md` (historical)
 - `eval/pypi_fresh_install_snapshot.json` (current exact-version package canary)
 
-Current package path status: `agent-borg==3.3.18` is the published metadata-correct package; production PyPI upload and fresh runtime canary pass. Controlled first-10 is capped at 0 until served-runtime freshness and first-10 evidence gates pass; broad public self-serve remains NO-GO until row-derived first-10 evidence passes.
+Current package path status: `agent-borg==3.3.18` is the published runtime-canary-proven package (not current for this post-tag source line); production PyPI upload and fresh runtime canary pass. Controlled first-10 is capped at 0 until served-runtime freshness and first-10 evidence gates pass; broad public self-serve remains NO-GO until row-derived first-10 evidence passes.
 
 ### Phase C — first-10 user sprint
 

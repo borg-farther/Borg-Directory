@@ -189,6 +189,7 @@ UNSUPPORTED_WHEN_BLOCKED = [
     (re.compile(r"(?i)\bstatistically\s+significant\b.*\b(agent|external|lift|completion)"), "statistically significant external/agent lift claim"),
     (re.compile(r"(?i)\bfrontier[- ]better[- ]than\b.*\b(proven|yes|true|go)"), "frontier-better-than proven claim"),
     (re.compile(r"(?i)Ready\s+to\s+share\s+Git\s+now\?\W{0,80}YES"), "stale Git-sharing YES claim"),
+    (re.compile(r"(?i)GitHub direct install.{0,240}GO only after"), "GitHub direct install GO claim without first-user evidence"),
     (re.compile(r"(?i)version_package"), "stale proof-dashboard version metric"),
     (re.compile(r"\bready_for_(?:10|1000)=True\b"), "unqualified logical-load readiness claim"),
     (re.compile(r"(?i)No hallucination, no retry loops, no burned tokens"), "unmeasured zero-failure/value claim without external evidence"),
@@ -259,12 +260,24 @@ def _source_commit_is_honest_for_current_head(commit: Any) -> dict[str, Any]:
         }
     if not _git_is_ancestor(commit_text, head):
         return {"passed": False, "resolved_commit": commit_text, "head": head, "changed_paths_since_resolved": [], "reason": "resolved_commit_not_ancestor_of_head"}
+    if non_generated_dirty:
+        return {
+            "passed": False,
+            "resolved_commit": commit_text,
+            "head": head,
+            "dirty_paths": dirty_paths,
+            "non_generated_dirty_paths": non_generated_dirty,
+            "changed_paths_since_resolved": [],
+            "reason": "non_generated_dirty_paths",
+        }
     changed_paths = _git_lines(["diff", "--name-only", f"{commit_text}..{head}"])
     non_generated = sorted(path for path in changed_paths if path not in GENERATED_PROOF_ARTIFACT_PATHS)
     return {
         "passed": not non_generated,
         "resolved_commit": commit_text,
         "head": head,
+        "dirty_paths": dirty_paths,
+        "non_generated_dirty_paths": non_generated_dirty,
         "changed_paths_since_resolved": changed_paths,
         "non_generated_paths_since_resolved": non_generated,
         "reason": "ancestor_with_only_generated_artifacts" if not non_generated else "ancestor_has_source_or_non_generated_changes",
@@ -746,13 +759,12 @@ def github_source_install_check(path: Path, expected_version: str, *, max_snapsh
     resolved_commit = source_resolution.get("resolved_commit")
     source_commit_honesty = _source_commit_is_honest_for_current_head(resolved_commit)
     expected_commit = source_resolution.get("expected_commit")
-    commit_matches_recorded_expected = (
-        expected_commit in (None, "")
-        or (isinstance(expected_commit, str) and resolved_commit == expected_commit)
-    )
+    expected_commit_is_sha = isinstance(expected_commit, str) and re.fullmatch(r"[0-9a-f]{40}", expected_commit) is not None
+    commit_matches_recorded_expected = bool(expected_commit_is_sha and resolved_commit == expected_commit)
     source_resolution_passed = (
         bool(source_resolution.get("passed"))
         and bool(resolved_commit)
+        and expected_commit_is_sha
         and commit_matches_recorded_expected
         and bool(source_commit_honesty.get("passed"))
     )
@@ -789,6 +801,7 @@ def github_source_install_check(path: Path, expected_version: str, *, max_snapsh
         "source_resolution_passed": source_resolution_passed,
         "source_resolution": source_resolution,
         "resolved_commit": resolved_commit,
+        "expected_commit_is_sha": expected_commit_is_sha,
         "commit_matches_recorded_expected": commit_matches_recorded_expected,
         "source_commit_honesty": source_commit_honesty,
         "failed_count": len(failures),
@@ -958,6 +971,12 @@ def docs_claim_guard(
                 (r"(?i)\bpackage/local stdio proof\b", "package/local stdio proof before current PyPI canary"),
                 (r"(?i)fresh-install/MCP/generate/OpenClaw canaries pass for controlled first-10 beta", "package canaries pass before current PyPI canary"),
                 (r"(?i)published package metadata, PyPI latest, and proof artifacts agree on `?agent-borg==", "published package metadata agreement before current PyPI canary"),
+                (r"(?i)\bmetadata-correct (?:production PyPI )?package\b", "metadata-correct package claim before current package proof"),
+                (r"(?i)\bcurrent source line\b", "current-source package claim before current package proof"),
+                (r"(?i)\bpackage/local proof (?:is )?green\b", "package/local proof green before current package proof"),
+                (r"(?i)\bpackage-current proof.{0,80}\bgreen\b", "package-current proof green before current package proof"),
+                (r"(?i)\bPyPI latest metadata.{0,120}\bpass(?:es|ed)?\b", "PyPI latest metadata pass claim before current package proof"),
+                (r"(?i)\bruntime canary and package-current proof.{0,80}\bgreen\b", "runtime/package-current green before current package proof"),
                 (r"(?i)\bpackage proof is\s+(?:\*\*)?current(?:\*\*)?\b", "package-current proof claim before metadata-correct package"),
                 (r"(?i)published `?agent-borg==" + re.escape(expected_version) + r"`? package is current for this source/package line", "package-current proof claim before metadata-correct package"),
                 (r"(?i)send only while .*fresh-install/MCP canary pass", "invite packet condition omits metadata/runtime/ops blockers"),
@@ -1411,7 +1430,7 @@ def compile_gate(
             "first_10_external_evidence": first_10,
         },
         "blockers": blockers,
-        "truth_policy": "Public self-serve is GO only after PyPI/fresh-install/MCP/docs/cold-start-trust/served-runtime/release-governance/self-service-ops/watchdog gates pass AND row-derived first-10 external-user evidence passes. Synthetic users and aggregate-only edits never count.",
+        "truth_policy": "Public self-serve is GO only after PyPI/latest fresh-install/MCP, GitHub source-install, docs/cold-start-trust/served-runtime/release-governance/self-service-ops/watchdog gates pass AND row-derived first-10 external-user evidence passes. Synthetic users and aggregate-only edits never count.",
     }
 
 

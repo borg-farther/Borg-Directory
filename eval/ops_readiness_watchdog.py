@@ -69,6 +69,23 @@ def _git_clean() -> bool:
         return False
 
 
+def _git_dirty_paths() -> list[str]:
+    try:
+        output = subprocess.check_output(["git", "status", "--porcelain=v1"], cwd=ROOT, text=True)
+    except Exception:
+        return ["__git_status_unavailable__"]
+    paths: list[str] = []
+    for line in output.splitlines():
+        raw = line[3:].strip().replace("\\", "/") if len(line) > 3 else line.strip().replace("\\", "/")
+        if not raw:
+            continue
+        if " -> " in raw:
+            paths.extend(part.strip().replace("\\", "/") for part in raw.split(" -> ") if part.strip())
+        else:
+            paths.append(raw)
+    return sorted(set(paths))
+
+
 def _git_is_ancestor(candidate: str, head: str | None) -> bool:
     if not candidate or not head:
         return False
@@ -88,16 +105,20 @@ def _source_revision_is_honest(source_rev: Any, head: str | None, clean: bool) -
     if not source_rev or not head:
         return False
     source = str(source_rev)
+    dirty_paths_are_generated = clean or all(_is_generated_proof_artifact(path) for path in _git_dirty_paths())
     if source == head:
         # Exact HEAD is honest only when the verifying checkout is clean. A
         # dirty working tree must be recorded as <base>+dirty so generated
         # proof artifacts cannot masquerade as clean-source output.
         return clean
     if source == f"{head}+dirty":
-        return True
+        return dirty_paths_are_generated
     if source.endswith("+dirty"):
         base = source.removesuffix("+dirty")
-        return base == head or (_git_is_ancestor(base, head) and _changes_since_source_are_generated_artifacts(base, head))
+        return (
+            dirty_paths_are_generated
+            and (base == head or (_git_is_ancestor(base, head) and _changes_since_source_are_generated_artifacts(base, head)))
+        )
     return False
 
 

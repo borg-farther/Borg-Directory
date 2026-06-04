@@ -2,7 +2,7 @@
 
 ## operator benefits (validated internally)
 - first visible value path for controlled beta after release gates: `pipx install agent-borg==3.3.18` -> `borg rescue "<redacted error>"` -> ACTION / STOP / VERIFY
-- controlled package beta path: **NO-GO right now** — `agent-borg==3.3.18` is the published metadata-correct package and exact-version runtime canary proof is green; served-runtime freshness and first-10 external-user evidence are not green yet
+- controlled package beta path: **NO-GO right now** — `agent-borg==3.3.18` is the published runtime-canary-proven package (not current for this post-tag source line) and exact-version runtime canary proof is green; served-runtime freshness and first-10 external-user evidence are not green yet
 - local/synthetic gate status: first-user release gate and logical load gates are green in current artifacts; synthetic users are not external-user evidence
 - external-user proof status: **not proven yet**; verified external users remain `0`
 - measured savings status: **0 measured rows, 0.0 net minutes saved, 0 net tokens saved**; savings are not claimed until consented external-user rows include before/after measurements
@@ -20,7 +20,7 @@
 - supervised local first-user path: GO in current artifacts
 - public self-serve launch: **NO-GO until first-10 row-derived external evidence passes**
 - 100 real-user rollout: **NO-GO until 10 external users, >=8 installs, >=6 useful rescues, and 0 critical incidents**
-- decision: runtime canary and package-current proof for `agent-borg==3.3.18` are green; controlled first-10 beta must wait for served-runtime freshness and first-10 external-user evidence; no broad self-serve, served remote MCP, 100-user, measured-savings, or frontier-better-than claim
+- decision: runtime canary and runtime canary proof for `agent-borg==3.3.18` is green, but package-current proof is red; controlled first-10 beta must wait for served-runtime freshness and first-10 external-user evidence; no broad self-serve, served remote MCP, 100-user, measured-savings, or frontier-better-than claim
 
 ## evidence
 - `eval/public_self_serve_launch_gate_snapshot.json`
