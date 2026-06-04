@@ -1,6 +1,7 @@
 {
   "blockers": [
     "package-impacting source/metadata changed after the immutable package reference tag",
+    "PyPI fresh-install + MCP stdio canary snapshot is missing or failing",
     "served runtime borg_version '3.3.14' != source version '3.3.18'",
     "served runtime source_version '3.3.15' != source version '3.3.18'",
     "served runtime version_matches_source is not true",
@@ -13,7 +14,7 @@
       "exists": true,
       "failed_count": 0,
       "failures": [],
-      "generated_at_utc": "2026-06-04T20:22:21.152087+00:00",
+      "generated_at_utc": "2026-06-04T21:18:58.771412+00:00",
       "has_bad_answer_feedback_path": true,
       "missing_required_checks": [],
       "observed_check_count": 7,
@@ -125,15 +126,16 @@
       "failed_count": 0,
       "failures": [],
       "freshness": {
-        "age_hours": 0.27213843944444444,
+        "age_hours": 0.01636436861111111,
         "failure_kind": null,
         "max_age_hours": 24.0,
         "passed": true
       },
-      "generated_at_utc": "2026-06-04T20:06:10Z",
+      "generated_at_utc": "2026-06-04T21:18:12Z",
       "install_source": "github_source",
-      "install_target": "git+https://github.com/borg-farther/Borg-Directory.git@56bc982131c39b4f879bbbdd644f9e99a7c254b6",
-      "installed_file": "/tmp/borg-github-source-sosdgat1/lib/python3.11/site-packages/borg/__init__.py",
+      "install_target": "git+https://github.com/borg-farther/Borg-Directory.git@d8a1f98b9bc92ab1b01afb92df3b23be9c787d72",
+      "install_target_commit": "d8a1f98b9bc92ab1b01afb92df3b23be9c787d72",
+      "installed_file": "/tmp/borg-github-source-b09708h0/lib/python3.11/site-packages/borg/__init__.py",
       "mcp_server_info": {
         "name": "borg-mcp-server",
         "version": "3.3.18"
@@ -143,7 +145,7 @@
       "missing_required_results": [],
       "passed": true,
       "path": "eval/github_source_install_snapshot.json",
-      "resolved_commit": "56bc982131c39b4f879bbbdd644f9e99a7c254b6",
+      "resolved_commit": "d8a1f98b9bc92ab1b01afb92df3b23be9c787d72",
       "source_commit_honesty": {
         "changed_paths_since_resolved": [],
         "dirty_paths": [
@@ -169,11 +171,11 @@
           "eval/rollback_comms_drill_snapshot.json",
           "eval/self_service_ops_gate_snapshot.json"
         ],
-        "head": "56bc982131c39b4f879bbbdd644f9e99a7c254b6",
+        "head": "d8a1f98b9bc92ab1b01afb92df3b23be9c787d72",
         "non_generated_dirty_paths": [],
         "passed": true,
         "reason": "exact_head",
-        "resolved_commit": "56bc982131c39b4f879bbbdd644f9e99a7c254b6"
+        "resolved_commit": "d8a1f98b9bc92ab1b01afb92df3b23be9c787d72"
       },
       "source_resolution": {
         "commit_matches_expected": true,
@@ -181,16 +183,16 @@
         "direct_url": {
           "url": "https://github.com/borg-farther/Borg-Directory.git",
           "vcs_info": {
-            "commit_id": "56bc982131c39b4f879bbbdd644f9e99a7c254b6",
-            "requested_revision": "56bc982131c39b4f879bbbdd644f9e99a7c254b6",
+            "commit_id": "d8a1f98b9bc92ab1b01afb92df3b23be9c787d72",
+            "requested_revision": "d8a1f98b9bc92ab1b01afb92df3b23be9c787d72",
             "vcs": "git"
           }
         },
-        "expected_commit": "56bc982131c39b4f879bbbdd644f9e99a7c254b6",
+        "expected_commit": "d8a1f98b9bc92ab1b01afb92df3b23be9c787d72",
         "expected_commit_is_sha": true,
         "passed": true,
-        "requested_revision": "56bc982131c39b4f879bbbdd644f9e99a7c254b6",
-        "resolved_commit": "56bc982131c39b4f879bbbdd644f9e99a7c254b6",
+        "requested_revision": "d8a1f98b9bc92ab1b01afb92df3b23be9c787d72",
+        "resolved_commit": "d8a1f98b9bc92ab1b01afb92df3b23be9c787d72",
         "vcs": "git"
       },
       "source_resolution_passed": true,
@@ -198,7 +200,7 @@
     },
     "ops_readiness_watchdog": {
       "blockers": [],
-      "generated_at_utc": "2026-06-04T20:22:29.506447+00:00",
+      "generated_at_utc": "2026-06-04T21:19:10.732019+00:00",
       "passed": true,
       "snapshot": "eval/ops_readiness_watchdog_snapshot.json",
       "truth_policy": "Watchdog passing means controlled first-10 ops proof is fresh and internally consistent. Broad public self-serve still requires row-derived first-10 external-user evidence."
@@ -211,21 +213,23 @@
     "pypi_fresh_install_and_mcp_stdio": {
       "exists": true,
       "expected_version": "3.3.18",
-      "failed_count": 0,
-      "failures": [],
+      "failed_count": 1,
+      "failures": [
+        "borg_convert_openclaw_registry"
+      ],
       "freshness": {
-        "age_hours": 0.008249385277777778,
+        "age_hours": 0.009142031666666666,
         "failure_kind": null,
         "max_age_hours": 24.0,
         "passed": true
       },
-      "generated_at_utc": "2026-06-04T20:22:00Z",
+      "generated_at_utc": "2026-06-04T21:18:38Z",
       "mcp_server_info": {
         "name": "borg-mcp-server",
         "version": "3.3.18"
       },
       "mcp_stdio_canary_passed": true,
-      "passed": true,
+      "passed": false,
       "path": "eval/pypi_fresh_install_snapshot.json",
       "version": "3.3.18"
     },
@@ -277,7 +281,7 @@
       ],
       "source_upload_alignment": {
         "alignment_basis": "package_reference",
-        "current_source_commit_time_utc": "2026-06-04T20:05:39+00:00",
+        "current_source_commit_time_utc": "2026-06-04T21:17:40+00:00",
         "detail": "Package-impacting source or metadata changed after the package reference tag; publish a new immutable version before claiming package proof is current.",
         "dirty_source": true,
         "failure_kind": "package_source_changed_after_reference",
@@ -372,7 +376,8 @@
         "oldest_release_upload_time_utc": "2026-06-03T20:19:07.209583+00:00",
         "package_changed_paths_since_reference": [
           "README.md",
-          "borg/cli.py"
+          "borg/cli.py",
+          "borg/core/generate.py"
         ],
         "package_dirty": false,
         "package_dirty_paths": [],
@@ -385,7 +390,7 @@
         "passed": false,
         "release_file_count": 2,
         "source_commit_time_utc": "2026-06-03T20:14:10+00:00",
-        "source_revision": "56bc982131c39b4f879bbbdd644f9e99a7c254b6+dirty",
+        "source_revision": "d8a1f98b9bc92ab1b01afb92df3b23be9c787d72+dirty",
         "stale_release_files": [],
         "worktree_dirty": true
       },
@@ -439,7 +444,7 @@
     },
     "self_service_ops_readiness": {
       "blockers": [],
-      "generated_at_utc": "2026-06-04T20:22:30.957448+00:00",
+      "generated_at_utc": "2026-06-04T21:19:12.015408+00:00",
       "passed": true,
       "report": "docs/SELF_SERVICE_OPS_READINESS_REPORT.md",
       "rollout_policy": "Ops readiness is necessary but not sufficient for controlled first-10; package provenance, served-runtime freshness, release governance, ops/watchdog freshness, and first-10 guardrails must also pass. broad public self-serve still requires row-derived first-10 external evidence.",
@@ -466,7 +471,7 @@
       }
     }
   },
-  "generated_at_utc": "2026-06-04T20:22:31.108645+00:00",
+  "generated_at_utc": "2026-06-04T21:19:12.159454+00:00",
   "max_recommended_real_users_now": 0,
   "ready_for_controlled_first_10_beta": false,
   "ready_for_public_self_serve_launch": false,

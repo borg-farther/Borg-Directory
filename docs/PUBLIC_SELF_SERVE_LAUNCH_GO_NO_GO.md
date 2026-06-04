@@ -1,6 +1,6 @@
 # Borg public self-serve launch go/no-go
 
-Generated: 2026-06-04T20:22:31.108645+00:00
+Generated: 2026-06-04T21:19:12.159454+00:00
 Source version: `3.3.18`
 
 Public self-serve launch: **NO-GO**
@@ -15,7 +15,7 @@ Public self-serve is GO only after PyPI/latest fresh-install/MCP, GitHub source-
 
 - `first_user_release`: `PASS`
 - `pypi_latest`: `FAIL`
-- `pypi_fresh_install_and_mcp_stdio`: `PASS`
+- `pypi_fresh_install_and_mcp_stdio`: `FAIL`
 - `github_source_install_and_mcp_stdio`: `PASS`
 - `cold_start_trust_hardening`: `PASS`
 - `served_runtime_freshness`: `FAIL`
@@ -29,6 +29,7 @@ Public self-serve is GO only after PyPI/latest fresh-install/MCP, GitHub source-
 ## Blockers
 
 - package-impacting source/metadata changed after the immutable package reference tag
+- PyPI fresh-install + MCP stdio canary snapshot is missing or failing
 - served runtime borg_version '3.3.14' != source version '3.3.18'
 - served runtime source_version '3.3.15' != source version '3.3.18'
 - served runtime version_matches_source is not true

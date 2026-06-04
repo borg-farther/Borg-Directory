@@ -2,7 +2,7 @@
   "blockers": [],
   "checks": {
     "cold_start_trust_current": {
-      "generated_at_utc": "2026-06-04T20:22:21.152087+00:00",
+      "generated_at_utc": "2026-06-04T21:18:58.771412+00:00",
       "passed": true
     },
     "github_source_current": {
@@ -15,15 +15,16 @@
       "failed_count": 0,
       "failures": [],
       "freshness": {
-        "age_hours": 0.27365540972222224,
+        "age_hours": 0.017801135555555556,
         "failure_kind": null,
         "max_age_hours": 24.0,
         "passed": true
       },
-      "generated_at_utc": "2026-06-04T20:06:10Z",
+      "generated_at_utc": "2026-06-04T21:18:12Z",
       "install_source": "github_source",
-      "install_target": "git+https://github.com/borg-farther/Borg-Directory.git@56bc982131c39b4f879bbbdd644f9e99a7c254b6",
-      "installed_file": "/tmp/borg-github-source-sosdgat1/lib/python3.11/site-packages/borg/__init__.py",
+      "install_target": "git+https://github.com/borg-farther/Borg-Directory.git@d8a1f98b9bc92ab1b01afb92df3b23be9c787d72",
+      "install_target_commit": "d8a1f98b9bc92ab1b01afb92df3b23be9c787d72",
+      "installed_file": "/tmp/borg-github-source-b09708h0/lib/python3.11/site-packages/borg/__init__.py",
       "mcp_server_info": {
         "name": "borg-mcp-server",
         "version": "3.3.18"
@@ -33,7 +34,7 @@
       "missing_required_results": [],
       "passed": true,
       "path": "eval/github_source_install_snapshot.json",
-      "resolved_commit": "56bc982131c39b4f879bbbdd644f9e99a7c254b6",
+      "resolved_commit": "d8a1f98b9bc92ab1b01afb92df3b23be9c787d72",
       "source_commit_honesty": {
         "changed_paths_since_resolved": [],
         "dirty_paths": [
@@ -59,11 +60,11 @@
           "eval/rollback_comms_drill_snapshot.json",
           "eval/self_service_ops_gate_snapshot.json"
         ],
-        "head": "56bc982131c39b4f879bbbdd644f9e99a7c254b6",
+        "head": "d8a1f98b9bc92ab1b01afb92df3b23be9c787d72",
         "non_generated_dirty_paths": [],
         "passed": true,
         "reason": "exact_head",
-        "resolved_commit": "56bc982131c39b4f879bbbdd644f9e99a7c254b6"
+        "resolved_commit": "d8a1f98b9bc92ab1b01afb92df3b23be9c787d72"
       },
       "source_resolution": {
         "commit_matches_expected": true,
@@ -71,16 +72,16 @@
         "direct_url": {
           "url": "https://github.com/borg-farther/Borg-Directory.git",
           "vcs_info": {
-            "commit_id": "56bc982131c39b4f879bbbdd644f9e99a7c254b6",
-            "requested_revision": "56bc982131c39b4f879bbbdd644f9e99a7c254b6",
+            "commit_id": "d8a1f98b9bc92ab1b01afb92df3b23be9c787d72",
+            "requested_revision": "d8a1f98b9bc92ab1b01afb92df3b23be9c787d72",
             "vcs": "git"
           }
         },
-        "expected_commit": "56bc982131c39b4f879bbbdd644f9e99a7c254b6",
+        "expected_commit": "d8a1f98b9bc92ab1b01afb92df3b23be9c787d72",
         "expected_commit_is_sha": true,
         "passed": true,
-        "requested_revision": "56bc982131c39b4f879bbbdd644f9e99a7c254b6",
-        "resolved_commit": "56bc982131c39b4f879bbbdd644f9e99a7c254b6",
+        "requested_revision": "d8a1f98b9bc92ab1b01afb92df3b23be9c787d72",
+        "resolved_commit": "d8a1f98b9bc92ab1b01afb92df3b23be9c787d72",
         "vcs": "git"
       },
       "source_resolution_passed": true,
@@ -90,6 +91,7 @@
       "allow_public_blocker": "release_controls_or_first_10_evidence",
       "blockers": [
         "package-impacting source/metadata changed after the immutable package reference tag",
+        "PyPI fresh-install + MCP stdio canary snapshot is missing or failing",
         "served runtime borg_version '3.3.14' != source version '3.3.18'",
         "served runtime source_version '3.3.15' != source version '3.3.18'",
         "served runtime version_matches_source is not true",
@@ -102,6 +104,7 @@
       "live": {
         "blockers": [
           "package-impacting source/metadata changed after the immutable package reference tag",
+          "PyPI fresh-install + MCP stdio canary snapshot is missing or failing",
           "served runtime borg_version '3.3.14' != source version '3.3.18'",
           "served runtime source_version '3.3.15' != source version '3.3.18'",
           "served runtime version_matches_source is not true",
@@ -117,6 +120,7 @@
       "snapshot": {
         "blockers": [
           "package-impacting source/metadata changed after the immutable package reference tag",
+          "PyPI fresh-install + MCP stdio canary snapshot is missing or failing",
           "served runtime borg_version '3.3.14' != source version '3.3.18'",
           "served runtime source_version '3.3.15' != source version '3.3.18'",
           "served runtime version_matches_source is not true",
@@ -130,11 +134,11 @@
       }
     },
     "public_json_dashboard_consistency": {
-      "dashboard_generated_at_utc": "2026-06-04T20:22:26Z",
-      "dashboard_source_revision": "56bc982131c39b4f879bbbdd644f9e99a7c254b6+dirty",
+      "dashboard_generated_at_utc": "2026-06-04T21:19:05Z",
+      "dashboard_source_revision": "d8a1f98b9bc92ab1b01afb92df3b23be9c787d72+dirty",
       "passed": true,
-      "status_source_revision": "56bc982131c39b4f879bbbdd644f9e99a7c254b6+dirty",
-      "status_updated_at": "2026-06-04T20:22:26Z"
+      "status_source_revision": "d8a1f98b9bc92ab1b01afb92df3b23be9c787d72+dirty",
+      "status_updated_at": "2026-06-04T21:19:05Z"
     },
     "public_status_consistency": {
       "controlled_status_ok": false,
@@ -145,12 +149,12 @@
       "release_control_blocked_status_ok": false,
       "release_control_detail_failed": true,
       "release_controls_gate": "FAIL",
-      "status_state": "NO-GO public self-serve; PyPI runtime canary green, package metadata stale",
+      "status_state": "NO-GO public self-serve; source/local release-candidate only",
       "verified_external_users": 0
     },
     "pypi_fresh_current": {
       "expected_version": "3.3.18",
-      "generated_at_utc": "2026-06-04T20:22:00Z",
+      "generated_at_utc": "2026-06-04T21:18:38Z",
       "passed": true,
       "pre_package_release_stage": true,
       "pypi_current": false,
@@ -161,6 +165,7 @@
       "live": {
         "blockers": [
           "PyPI latest/fresh-install package evidence is not green: latest metadata does not match source version",
+          "PyPI latest/fresh-install package evidence is not green: fresh install + MCP stdio canary is not green",
           "served runtime borg_version '3.3.14' != source version '3.3.18'",
           "served runtime source_version '3.3.15' != source version '3.3.18'",
           "served runtime version_matches_source is not true",
@@ -183,73 +188,73 @@
     "snapshot_freshness": {
       "items": {
         "borg_proof_dashboard": {
-          "age_hours": 0.0025502261111111113,
+          "age_hours": 0.003085537777777778,
           "allowed_stale_reason": null,
           "passed": true,
           "raw_freshness_passed": true
         },
         "cold_start_trust_gate_snapshot": {
-          "age_hours": 0.0038968680555555553,
+          "age_hours": 0.004815700555555556,
           "allowed_stale_reason": null,
           "passed": true,
           "raw_freshness_passed": true
         },
         "github_source_install_snapshot": {
-          "age_hours": 0.2736613363888889,
+          "age_hours": 0.01780775888888889,
           "allowed_stale_reason": null,
           "passed": true,
           "raw_freshness_passed": true
         },
         "public_impact_json": {
-          "age_hours": 0.002550230833333333,
+          "age_hours": 0.0030855475,
           "allowed_stale_reason": null,
           "passed": true,
           "raw_freshness_passed": true
         },
         "public_self_serve_launch_gate_snapshot": {
-          "age_hours": 0.0011311524999999998,
+          "age_hours": 0.0010967952777777778,
           "allowed_stale_reason": null,
           "passed": true,
           "raw_freshness_passed": true
         },
         "public_status_json": {
-          "age_hours": 0.002550226944444444,
+          "age_hours": 0.003085538611111111,
           "allowed_stale_reason": null,
           "passed": true,
           "raw_freshness_passed": true
         },
         "public_value_json": {
-          "age_hours": 0.0025502274999999997,
+          "age_hours": 0.0030855391666666666,
           "allowed_stale_reason": null,
           "passed": true,
           "raw_freshness_passed": true
         },
         "pypi_fresh_install_snapshot": {
-          "age_hours": 0.009772446666666667,
+          "age_hours": 0.010585535833333333,
           "allowed_stale_reason": null,
           "passed": true,
           "raw_freshness_passed": true
         },
         "real_user_rollout_gate_snapshot": {
-          "age_hours": 0.0007771747222222223,
+          "age_hours": 0.0007450786111111111,
           "allowed_stale_reason": null,
           "passed": true,
           "raw_freshness_passed": true
         },
         "release_governance_snapshot": {
-          "age_hours": 0.0032215805555555555,
+          "age_hours": 0.004024189166666667,
           "allowed_stale_reason": null,
           "passed": true,
           "raw_freshness_passed": true
         },
         "rollback_comms_drill_snapshot": {
-          "age_hours": 0.0032071741666666663,
+          "age_hours": 0.0039785091666666664,
           "allowed_stale_reason": null,
           "passed": true,
           "raw_freshness_passed": true
         },
         "self_service_ops_gate_snapshot": {
-          "age_hours": 0.003183735277777778,
+          "age_hours": 0.0039303866666666664,
           "allowed_stale_reason": null,
           "passed": true,
           "raw_freshness_passed": true
@@ -259,10 +264,10 @@
     },
     "source_revision_honesty": {
       "git_clean": false,
-      "head": "56bc982131c39b4f879bbbdd644f9e99a7c254b6",
+      "head": "d8a1f98b9bc92ab1b01afb92df3b23be9c787d72",
       "passed": true,
       "policy": "Committed dashboards may be generated from a dirty tree and must mark +dirty; clean-tree status endpoints should match HEAD or a dirty ancestor used to generate committed proof artifacts.",
-      "source_revision": "56bc982131c39b4f879bbbdd644f9e99a7c254b6+dirty"
+      "source_revision": "d8a1f98b9bc92ab1b01afb92df3b23be9c787d72+dirty"
     },
     "watchdog_workflow": {
       "exists": true,
@@ -273,15 +278,15 @@
       "order_ok": true,
       "order_positions": {
         "python eval/cold_start_trust_gate.py": 441,
-        "python eval/ops_readiness_watchdog.py": 2304,
-        "python eval/ops_readiness_watchdog.py --mode pr --json --no-write --output eval/ops_readiness_watchdog_post_dashboard_check.json --max-snapshot-age-hours 24 --allow-public-blocker release_controls_or_first_10_evidence --require-ci-schedule": 3068,
+        "python eval/ops_readiness_watchdog.py": 2735,
+        "python eval/ops_readiness_watchdog.py --mode pr --json --no-write --output eval/ops_readiness_watchdog_post_dashboard_check.json --max-snapshot-age-hours 24 --allow-public-blocker release_controls_or_first_10_evidence --require-ci-schedule": 3499,
         "python eval/public_self_serve_launch_gate.py": 767,
-        "python eval/real_user_rollout_gate.py": 849,
+        "python eval/real_user_rollout_gate.py": 869,
         "python eval/release_governance_gate.py --output eval/release_governance_snapshot.json": 520,
         "python eval/run_github_source_install_canary.py": 209,
         "python eval/run_pypi_fresh_install_canary.py": 106,
-        "python scripts/borg_proof_dashboard_lint.py": 3308,
-        "python scripts/build_borg_proof_dashboard.py": 2259
+        "python scripts/borg_proof_dashboard_lint.py": 3739,
+        "python scripts/build_borg_proof_dashboard.py": 2279
       },
       "passed": true,
       "path": ".github/workflows/self-service-watchdog.yml",
@@ -354,54 +359,54 @@
         },
         {
           "index": 7,
-          "position": 849,
+          "position": 869,
           "snippet": "python eval/real_user_rollout_gate.py"
         },
         {
           "index": 8,
-          "position": 2259,
+          "position": 2279,
           "snippet": "python scripts/build_borg_proof_dashboard.py"
         },
         {
           "index": 9,
-          "position": 2304,
+          "position": 2735,
           "snippet": "python eval/ops_readiness_watchdog.py --mode pr --json --max-snapshot-age-hours 24 --allow-public-blocker release_controls_or_first_10_evidence --require-ci-schedule"
         },
         {
           "index": 10,
-          "position": 2495,
+          "position": 2926,
           "snippet": "python eval/public_self_serve_launch_gate.py"
         },
         {
           "index": 11,
-          "position": 2592,
+          "position": 3023,
           "snippet": "python eval/real_user_rollout_gate.py"
         },
         {
           "index": 12,
-          "position": 2857,
+          "position": 3288,
           "snippet": "python eval/ops_readiness_watchdog.py --mode pr --json --max-snapshot-age-hours 24 --allow-public-blocker release_controls_or_first_10_evidence --require-ci-schedule"
         },
         {
           "index": 13,
-          "position": 3023,
+          "position": 3454,
           "snippet": "python scripts/build_borg_proof_dashboard.py"
         },
         {
           "index": 14,
-          "position": 3068,
+          "position": 3499,
           "snippet": "python eval/ops_readiness_watchdog.py --mode pr --json --no-write --output eval/ops_readiness_watchdog_post_dashboard_check.json --max-snapshot-age-hours 24 --allow-public-blocker release_controls_or_first_10_evidence --require-ci-schedule"
         },
         {
           "index": 15,
-          "position": 3308,
+          "position": 3739,
           "snippet": "python scripts/borg_proof_dashboard_lint.py"
         }
       ]
     }
   },
   "gate_type": "ops_readiness_watchdog",
-  "generated_at_utc": "2026-06-04T20:22:35.221712+00:00",
+  "generated_at_utc": "2026-06-04T21:19:16.148009+00:00",
   "max_recommended_real_users_now": 0,
   "passed": true,
   "ready_for_controlled_first_10_beta": false,

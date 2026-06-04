@@ -5,12 +5,13 @@
       "assumption_challenge": "A clean PyPI canary proves installed package behavior, not source revisions that landed after the wheel upload or a long-lived served process.",
       "blockers": [
         "PyPI latest metadata gate is not green for the current source revision",
+        "PyPI fresh-install/stdout MCP canary is not green for the current source version",
         "working tree is dirty/unshipped; current hardening branch is not committed/pushed/CI-proven"
       ],
       "done": [
         "source versions match: True (3.3.18)",
         "PyPI latest metadata/current-source gate green: False",
-        "PyPI fresh-install/stdout MCP canary green: True",
+        "PyPI fresh-install/stdout MCP canary green: False",
         "first-user release gate green: True"
       ],
       "evidence": [
@@ -33,7 +34,7 @@
       "done": [
         "snapshot exists: True",
         "canonical GitHub target: True",
-        "resolved commit: 56bc982131c39b4f879bbbdd644f9e99a7c254b6",
+        "resolved commit: d8a1f98b9bc92ab1b01afb92df3b23be9c787d72",
         "expected commit is 40-hex SHA: True",
         "resolved commit matches recorded expected: True",
         "checkout import leakage check passed: True",
@@ -379,10 +380,10 @@
     "github_source_install_commit_matches_expected": true,
     "github_source_install_expected_commit_is_sha": true,
     "github_source_install_passed": true,
-    "github_source_install_resolved_commit": "56bc982131c39b4f879bbbdd644f9e99a7c254b6",
+    "github_source_install_resolved_commit": "d8a1f98b9bc92ab1b01afb92df3b23be9c787d72",
     "overall_optimality_ceiling": 2.0,
     "pack_optimizer_manual_go": true,
-    "pypi_fresh_install_passed": true,
+    "pypi_fresh_install_passed": false,
     "pypi_latest_metadata_current_source_passed": false,
     "release_governance_passed": true,
     "rollback_drill_passed": true,
@@ -398,7 +399,7 @@
     "Could synthetic load tests stand in for users? No: first-10 row-derived evidence is 0/10 and explicitly blocks public/100-user claims.",
     "Could a dashboard hide these blockers? It must not; stale generated artifacts are themselves blockers until rebuilt from current gates."
   ],
-  "generated_at_utc": "2026-06-04T20:22:35Z",
+  "generated_at_utc": "2026-06-04T21:19:30Z",
   "outstanding": [
     {
       "acceptance": [
@@ -518,7 +519,7 @@
   "source": {
     "git": {
       "branch": "ab/git-source-self-service-proof-20260604",
-      "commit": "56bc982131c39b4f879bbbdd644f9e99a7c254b6",
+      "commit": "d8a1f98b9bc92ab1b01afb92df3b23be9c787d72",
       "dirty": true,
       "dirty_files": [
         "M docs/20260517_BORG_100_REAL_USER_READINESS.md",
@@ -535,6 +536,7 @@
         " M eval/borg_proof_dashboard.json",
         " M eval/cold_start_trust_gate_snapshot.json",
         " M eval/github_source_install_snapshot.json",
+        " M eval/ops_readiness_watchdog_post_dashboard_check.json",
         " M eval/ops_readiness_watchdog_snapshot.json",
         " M eval/public_self_serve_launch_gate_snapshot.json",
         " M eval/pypi_fresh_install_snapshot.json",
