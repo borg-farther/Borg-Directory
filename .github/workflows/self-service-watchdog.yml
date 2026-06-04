@@ -42,7 +42,7 @@ jobs:
             echo "PyPI canary failed; continuing so public/readiness gates can fail closed with the fresh snapshot."
           fi
           set +e
-          python eval/run_github_source_install_canary.py --install-source "git+https://github.com/${GITHUB_REPOSITORY}.git@${GITHUB_SHA}"
+          python eval/run_github_source_install_canary.py --install-source "git+https://github.com/${GITHUB_REPOSITORY}.git@${GITHUB_SHA}" --expected-commit "${GITHUB_SHA}"
           rc_github_source=$?
           set -e
           if [ "$rc_github_source" -ne 0 ]; then

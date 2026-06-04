@@ -290,8 +290,27 @@ def _is_first_10_blocker(blocker: str) -> bool:
     return "first-10" in lower or "verified=" in lower or "external-user evidence" in lower
 
 
+def _is_safety_or_incident_blocker(blocker: str) -> bool:
+    lower = blocker.lower()
+    return any(
+        term in lower
+        for term in (
+            "security incident",
+            "privacy incident",
+            "privacy blocker",
+            "secret leak",
+            "credential leak",
+            "token exfiltration",
+            "exfiltration",
+            "customer trace data",
+        )
+    )
+
+
 def _is_package_release_blocker(blocker: str) -> bool:
     lower = blocker.lower()
+    if _is_safety_or_incident_blocker(blocker):
+        return False
     return (
         "pypi latest" in lower
         or "latest metadata" in lower

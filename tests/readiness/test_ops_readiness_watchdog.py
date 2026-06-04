@@ -215,6 +215,12 @@ def test_watchdog_allows_only_first_10_external_evidence_as_public_blocker() -> 
         "release_controls_or_first_10_evidence",
     ) is True
     assert watchdog._public_blockers_are_allowed(["self-service ops readiness gate is missing"], "release_controls_or_first_10_evidence") is False
+    for unsafe in [
+        "security incident: MCP stdio token exfiltration detected",
+        "privacy blocker: package source includes customer trace data",
+    ]:
+        assert watchdog._is_package_release_blocker(unsafe) is False
+        assert watchdog._public_blockers_are_allowed([unsafe], "release_controls_or_first_10_evidence") is False
 
 
 def test_source_revision_honesty_accepts_dirty_ancestor_in_clean_pr_checkout(monkeypatch) -> None:

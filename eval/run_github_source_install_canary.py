@@ -57,6 +57,30 @@ def _expected_files_ok(name: str, generated_rules_dir: Path, openclaw_dir: Path)
     return True
 
 
+def _direct_url_resolution(result: CommandResult, expected_commit: str | None) -> dict[str, Any]:
+    """Extract VCS commit proof from pip's installed direct_url.json output."""
+    parsed: dict[str, Any] = {}
+    try:
+        parsed = json.loads(result.stdout.strip().splitlines()[-1])
+    except (IndexError, json.JSONDecodeError):
+        parsed = {}
+    vcs = parsed.get("vcs_info") if isinstance(parsed, dict) else {}
+    if not isinstance(vcs, dict):
+        vcs = {}
+    resolved_commit = vcs.get("commit_id")
+    requested_revision = vcs.get("requested_revision")
+    commit_matches_expected = bool(expected_commit and resolved_commit == expected_commit)
+    return {
+        "passed": bool(result.passed and resolved_commit and (expected_commit is None or commit_matches_expected)),
+        "direct_url": parsed if isinstance(parsed, dict) else {},
+        "requested_revision": requested_revision,
+        "resolved_commit": resolved_commit,
+        "expected_commit": expected_commit,
+        "commit_matches_expected": commit_matches_expected if expected_commit else None,
+        "detail": "installed VCS direct_url commit matches expected commit" if commit_matches_expected else "installed VCS direct_url commit missing or not bound to expected commit",
+    }
+
+
 def _checkout_import_leakage_check(result: CommandResult) -> dict[str, Any]:
     installed_file = None
     try:
@@ -77,11 +101,18 @@ def _checkout_import_leakage_check(result: CommandResult) -> dict[str, Any]:
     }
 
 
-def run_canary(install_source: str, version: str, *, install_source_label: str = "github_source") -> dict[str, Any]:
+def run_canary(
+    install_source: str,
+    version: str,
+    *,
+    install_source_label: str = "github_source",
+    expected_commit: str | None = None,
+) -> dict[str, Any]:
     venv_dir = Path(tempfile.mkdtemp(prefix="borg-github-source-"))
     results: list[CommandResult] = []
     mcp_result: dict[str, Any] = {"passed": False, "detail": "not run"}
     checkout_import_leakage: dict[str, Any] = {"passed": False, "detail": "not run"}
+    source_resolution: dict[str, Any] = {"passed": False, "detail": "not run"}
     runtime_cwd = venv_dir / "runtime-cwd"
     try:
         py = venv_dir / "bin" / "python"
@@ -160,6 +191,27 @@ def run_canary(install_source: str, version: str, *, install_source_label: str =
         ]
 
         if install_ok:
+            direct_url_result = run_cmd(
+                "pip_direct_url_agent_borg",
+                [
+                    str(py),
+                    "-c",
+                    "import importlib.metadata as m, json; d=m.distribution('agent-borg'); print(d.read_text('direct_url.json') or '{}')",
+                ],
+                env=env,
+                cwd=runtime_cwd,
+                timeout=60,
+            )
+            source_resolution = _direct_url_resolution(direct_url_result, expected_commit)
+            require_vcs_commit = install_source_label == "github_source" or install_source.startswith("git+")
+            if not require_vcs_commit and not source_resolution.get("resolved_commit"):
+                source_resolution["passed"] = True
+                source_resolution["detail"] = "non-VCS local source smoke; resolved commit is not required"
+            if not source_resolution.get("passed"):
+                direct_url_result.passed = False
+                direct_url_result.detail = str(source_resolution.get("detail"))
+            results.append(direct_url_result)
+
             for name, cmd, needles in commands:
                 result = run_cmd(name, cmd, env=env, cwd=runtime_cwd, timeout=180)
                 combined = result.stdout + result.stderr
@@ -183,7 +235,12 @@ def run_canary(install_source: str, version: str, *, install_source_label: str =
     finally:
         shutil.rmtree(venv_dir, ignore_errors=True)
 
-    passed = all(result.passed for result in results) and bool(mcp_result.get("passed")) and bool(checkout_import_leakage.get("passed"))
+    passed = (
+        all(result.passed for result in results)
+        and bool(mcp_result.get("passed"))
+        and bool(checkout_import_leakage.get("passed"))
+        and bool(source_resolution.get("passed"))
+    )
     return {
         "schema_version": 1,
         "generated_at_utc": time.strftime("%Y-%m-%dT%H:%M:%SZ", time.gmtime()),
@@ -191,6 +248,7 @@ def run_canary(install_source: str, version: str, *, install_source_label: str =
         "version": version,
         "install_source": install_source_label,
         "install_target": install_source,
+        "source_resolution": source_resolution,
         "runtime_cwd_policy": "all runtime commands execute from an isolated non-repo runtime-cwd",
         "repo_root": str(ROOT),
         "checkout_import_leakage": checkout_import_leakage,
@@ -204,11 +262,17 @@ def main(argv: list[str] | None = None) -> int:
     parser = argparse.ArgumentParser(description="Run a fresh GitHub/source install canary for agent-borg")
     parser.add_argument("--version", default=source_version(), help="Expected agent-borg version after VCS install")
     parser.add_argument("--install-source", default=DEFAULT_GITHUB_INSTALL_SOURCE, help="pip VCS install source, e.g. git+https://...@main or git+file:///checkout")
+    parser.add_argument("--expected-commit", default=None, help="Expected VCS commit id that pip direct_url.json must resolve to")
     parser.add_argument("--install-source-label", default="github_source", help="Machine label for the source channel")
     parser.add_argument("--output", default=str(SNAPSHOT), help="Snapshot JSON path")
     args = parser.parse_args(argv)
 
-    snapshot = run_canary(args.install_source, args.version, install_source_label=args.install_source_label)
+    snapshot = run_canary(
+        args.install_source,
+        args.version,
+        install_source_label=args.install_source_label,
+        expected_commit=args.expected_commit,
+    )
     output = Path(args.output)
     output.parent.mkdir(parents=True, exist_ok=True)
     output.write_text(json.dumps(snapshot, indent=2, sort_keys=True) + "\n", encoding="utf-8")

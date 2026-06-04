@@ -45,6 +45,7 @@ CANONICAL_GITHUB_INSTALL_PREFIX = "git+https://github.com/borg-farther/Borg-Dire
 REQUIRED_GITHUB_SOURCE_CANARY_RESULTS = {
     "fresh_venv_create",
     "pip_install_git_source",
+    "pip_direct_url_agent_borg",
     "pip_show_agent_borg",
     "borg_version",
     "borg_help",
@@ -82,6 +83,32 @@ PACKAGE_IMPACTING_LICENSE_PREFIXES = (
     "COPYING",
     "NOTICE",
 )
+
+GENERATED_PROOF_ARTIFACT_PATHS = {
+    "eval/borg_proof_dashboard.json",
+    "eval/ops_readiness_watchdog_snapshot.json",
+    "eval/ops_readiness_watchdog_post_dashboard_check.json",
+    "eval/public_self_serve_launch_gate_snapshot.json",
+    "eval/real_user_rollout_gate_snapshot.json",
+    "eval/pypi_fresh_install_snapshot.json",
+    "eval/github_source_install_snapshot.json",
+    "eval/cold_start_trust_gate_snapshot.json",
+    "eval/release_governance_snapshot.json",
+    "eval/self_service_ops_gate_snapshot.json",
+    "eval/rollback_comms_drill_snapshot.json",
+    "eval/production_inventory_board_snapshot.json",
+    "docs/BORG_PROOF_DASHBOARD.md",
+    "docs/BORG_PROOF_DASHBOARD.html",
+    "docs/20260517_BORG_100_REAL_USER_READINESS.md",
+    "docs/20260531_BORG_PRODUCTION_INVENTORY_BOARD.md",
+    "docs/COLD_START_TRUST_HARDENING.md",
+    "docs/PUBLIC_SELF_SERVE_LAUNCH_GO_NO_GO.md",
+    "docs/SELF_SERVICE_OPS_READINESS_REPORT.md",
+    "docs/public/status.json",
+    "docs/public/value.json",
+    "docs/public/impact/impact.json",
+    "docs/public/proof-dashboard/index.html",
+}
 
 REQUIRED_COLD_START_TRUST_CHECKS = {
     "meta_permission_mentions_are_not_permission_tasks",
@@ -185,6 +212,52 @@ def _git_output(args: list[str]) -> str:
 def _git_lines(args: list[str]) -> list[str]:
     output = _git_output(args)
     return [line.strip() for line in output.splitlines() if line.strip()]
+
+
+def _git_is_ancestor(candidate: str, head: str) -> bool:
+    if not candidate or not head:
+        return False
+    try:
+        subprocess.check_call(
+            ["git", "merge-base", "--is-ancestor", candidate, head],
+            cwd=ROOT,
+            stdout=subprocess.DEVNULL,
+            stderr=subprocess.DEVNULL,
+        )
+        return True
+    except Exception:
+        return False
+
+
+def _source_commit_is_honest_for_current_head(commit: Any) -> dict[str, Any]:
+    """Validate that a GitHub source canary proved current source, not stale main.
+
+    Exact HEAD is ideal. A previous commit is allowed only when it is an
+    ancestor and every committed change since it is a generated proof artifact;
+    this lets proof snapshots be committed after the code they prove without
+    letting package/source changes false-green.
+    """
+    commit_text = str(commit or "")
+    try:
+        head = _git_output(["rev-parse", "HEAD"])
+    except Exception:
+        return {"passed": False, "resolved_commit": commit_text or None, "head": None, "changed_paths_since_resolved": [], "reason": "git_head_unavailable"}
+    if not re.fullmatch(r"[0-9a-f]{40}", commit_text):
+        return {"passed": False, "resolved_commit": commit_text or None, "head": head, "changed_paths_since_resolved": [], "reason": "missing_or_invalid_resolved_commit"}
+    if commit_text == head:
+        return {"passed": True, "resolved_commit": commit_text, "head": head, "changed_paths_since_resolved": [], "reason": "exact_head"}
+    if not _git_is_ancestor(commit_text, head):
+        return {"passed": False, "resolved_commit": commit_text, "head": head, "changed_paths_since_resolved": [], "reason": "resolved_commit_not_ancestor_of_head"}
+    changed_paths = _git_lines(["diff", "--name-only", f"{commit_text}..{head}"])
+    non_generated = sorted(path for path in changed_paths if path not in GENERATED_PROOF_ARTIFACT_PATHS)
+    return {
+        "passed": not non_generated,
+        "resolved_commit": commit_text,
+        "head": head,
+        "changed_paths_since_resolved": changed_paths,
+        "non_generated_paths_since_resolved": non_generated,
+        "reason": "ancestor_with_only_generated_artifacts" if not non_generated else "ancestor_has_source_or_non_generated_changes",
+    }
 
 
 def _normalize_repo_path(path: str) -> str:
@@ -658,6 +731,20 @@ def github_source_install_check(path: Path, expected_version: str, *, max_snapsh
     install_source = data.get("install_source")
     install_target = data.get("install_target")
     canonical_install_target = _github_install_target_is_canonical(install_target)
+    source_resolution = data.get("source_resolution") or {}
+    resolved_commit = source_resolution.get("resolved_commit")
+    source_commit_honesty = _source_commit_is_honest_for_current_head(resolved_commit)
+    expected_commit = source_resolution.get("expected_commit")
+    commit_matches_recorded_expected = (
+        expected_commit in (None, "")
+        or (isinstance(expected_commit, str) and resolved_commit == expected_commit)
+    )
+    source_resolution_passed = (
+        bool(source_resolution.get("passed"))
+        and bool(resolved_commit)
+        and commit_matches_recorded_expected
+        and bool(source_commit_honesty.get("passed"))
+    )
     mcp_passed = (
         bool(mcp.get("passed"))
         and mcp_server_info.get("name") == "borg-mcp-server"
@@ -671,6 +758,7 @@ def github_source_install_check(path: Path, expected_version: str, *, max_snapsh
         and data.get("version") == expected_version
         and install_source == "github_source"
         and canonical_install_target
+        and source_resolution_passed
         and not failures
         and not missing_required_results
         and mcp_passed
@@ -687,6 +775,11 @@ def github_source_install_check(path: Path, expected_version: str, *, max_snapsh
         "install_source": install_source,
         "install_target": install_target,
         "canonical_install_target": canonical_install_target,
+        "source_resolution_passed": source_resolution_passed,
+        "source_resolution": source_resolution,
+        "resolved_commit": resolved_commit,
+        "commit_matches_recorded_expected": commit_matches_recorded_expected,
+        "source_commit_honesty": source_commit_honesty,
         "failed_count": len(failures),
         "failures": failures,
         "missing_required_results": missing_required_results,

@@ -11,6 +11,7 @@ CANONICAL_GITHUB_INSTALL = "git+https://github.com/borg-farther/Borg-Directory.g
 REQUIRED_RESULT_NAMES = [
     "fresh_venv_create",
     "pip_install_git_source",
+    "pip_direct_url_agent_borg",
     "pip_show_agent_borg",
     "borg_version",
     "borg_help",
@@ -22,7 +23,12 @@ REQUIRED_RESULT_NAMES = [
 ]
 
 
+def _current_head() -> str:
+    return public_gate._git_output(["rev-parse", "HEAD"])
+
+
 def _snapshot_payload(**overrides: object) -> dict[str, object]:
+    head = _current_head()
     payload: dict[str, object] = {
         "schema_version": 1,
         "generated_at_utc": datetime.now(timezone.utc).isoformat(),
@@ -30,6 +36,13 @@ def _snapshot_payload(**overrides: object) -> dict[str, object]:
         "version": "9.9.9",
         "install_source": "github_source",
         "install_target": CANONICAL_GITHUB_INSTALL,
+        "source_resolution": {
+            "passed": True,
+            "resolved_commit": head,
+            "expected_commit": head,
+            "commit_matches_expected": True,
+            "requested_revision": "main",
+        },
         "success": True,
         "checkout_import_leakage": {
             "passed": True,
@@ -70,6 +83,11 @@ def test_github_source_install_canary_script_contract() -> None:
         "BORG_HOME",
         "BORG_DIR",
         "pip_install_git_source",
+        "pip_direct_url_agent_borg",
+        "direct_url.json",
+        "--expected-commit",
+        "resolved_commit",
+        "source_resolution",
         "borg_version",
         "borg_doctor_json",
         "borg_rescue_json",
@@ -106,7 +124,102 @@ def test_public_gate_accepts_fresh_github_source_snapshot(tmp_path: Path) -> Non
     assert result["install_target"] == CANONICAL_GITHUB_INSTALL
     assert result["version"] == "9.9.9"
     assert result["checkout_import_leakage_passed"] is True
+    assert result["source_resolution_passed"] is True
+    assert result["resolved_commit"] == _current_head()
     assert result["missing_required_results"] == []
+
+
+def test_public_gate_rejects_github_source_snapshot_without_commit_binding(tmp_path: Path) -> None:
+    snapshot = tmp_path / "github_source_install_snapshot.json"
+    _write_snapshot(snapshot, source_resolution={"passed": False})
+
+    result = public_gate.github_source_install_check(snapshot, "9.9.9", max_snapshot_age_hours=24.0)
+
+    assert result["passed"] is False
+    assert result["source_resolution_passed"] is False
+
+
+def test_public_gate_rejects_github_source_snapshot_resolved_to_old_non_ancestor_sha(tmp_path: Path) -> None:
+    snapshot = tmp_path / "github_source_install_snapshot.json"
+    old_sha = "a" * 40
+    _write_snapshot(
+        snapshot,
+        source_resolution={
+            "passed": True,
+            "resolved_commit": old_sha,
+            "expected_commit": old_sha,
+            "commit_matches_expected": True,
+            "requested_revision": "main",
+        },
+    )
+
+    result = public_gate.github_source_install_check(snapshot, "9.9.9", max_snapshot_age_hours=24.0)
+
+    assert result["passed"] is False
+    assert result["source_resolution_passed"] is False
+    assert result["source_commit_honesty"]["reason"] == "resolved_commit_not_ancestor_of_head"
+
+
+def test_public_gate_rejects_github_source_snapshot_with_unrelated_source_changes_since_commit(tmp_path: Path, monkeypatch) -> None:
+    snapshot = tmp_path / "github_source_install_snapshot.json"
+    old_sha = "b" * 40
+    _write_snapshot(
+        snapshot,
+        source_resolution={
+            "passed": True,
+            "resolved_commit": old_sha,
+            "expected_commit": old_sha,
+            "commit_matches_expected": True,
+            "requested_revision": "main",
+        },
+    )
+    monkeypatch.setattr(
+        public_gate,
+        "_source_commit_is_honest_for_current_head",
+        lambda commit: {
+            "passed": False,
+            "resolved_commit": commit,
+            "head": _current_head(),
+            "reason": "ancestor_has_source_or_non_generated_changes",
+            "non_generated_paths_since_resolved": ["borg/cli.py"],
+        },
+    )
+
+    result = public_gate.github_source_install_check(snapshot, "9.9.9", max_snapshot_age_hours=24.0)
+
+    assert result["passed"] is False
+    assert result["source_commit_honesty"]["non_generated_paths_since_resolved"] == ["borg/cli.py"]
+
+
+def test_public_gate_accepts_github_source_snapshot_from_ancestor_when_only_generated_artifacts_changed(tmp_path: Path, monkeypatch) -> None:
+    snapshot = tmp_path / "github_source_install_snapshot.json"
+    old_sha = "c" * 40
+    _write_snapshot(
+        snapshot,
+        source_resolution={
+            "passed": True,
+            "resolved_commit": old_sha,
+            "expected_commit": old_sha,
+            "commit_matches_expected": True,
+            "requested_revision": "main",
+        },
+    )
+    monkeypatch.setattr(
+        public_gate,
+        "_source_commit_is_honest_for_current_head",
+        lambda commit: {
+            "passed": True,
+            "resolved_commit": commit,
+            "head": _current_head(),
+            "reason": "ancestor_with_only_generated_artifacts",
+            "changed_paths_since_resolved": ["eval/github_source_install_snapshot.json"],
+        },
+    )
+
+    result = public_gate.github_source_install_check(snapshot, "9.9.9", max_snapshot_age_hours=24.0)
+
+    assert result["passed"] is True
+    assert result["source_commit_honesty"]["reason"] == "ancestor_with_only_generated_artifacts"
 
 
 def test_public_gate_rejects_incomplete_github_source_snapshot(tmp_path: Path) -> None:
@@ -163,6 +276,7 @@ def test_self_service_watchdog_workflow_runs_canonical_github_source_canary_befo
     assert "python eval/run_github_source_install_canary.py" in workflow
     assert "git+file://${GITHUB_WORKSPACE}" not in workflow
     assert "git+https://github.com/${GITHUB_REPOSITORY}.git@${GITHUB_SHA}" in workflow
+    assert "--expected-commit \"${GITHUB_SHA}\"" in workflow
     assert "GitHub source canary failed; continuing" in workflow
     assert workflow.index("python eval/run_pypi_fresh_install_canary.py") < workflow.index("python eval/run_github_source_install_canary.py")
     assert workflow.index("python eval/run_github_source_install_canary.py") < workflow.index("python eval/public_self_serve_launch_gate.py")
