@@ -117,6 +117,7 @@ def _is_generated_proof_artifact(path: str) -> bool:
         "eval/public_self_serve_launch_gate_snapshot.json",
         "eval/real_user_rollout_gate_snapshot.json",
         "eval/pypi_fresh_install_snapshot.json",
+        "eval/github_source_install_snapshot.json",
         "eval/cold_start_trust_gate_snapshot.json",
         "eval/release_governance_snapshot.json",
         "eval/self_service_ops_gate_snapshot.json",
@@ -190,6 +191,7 @@ def _workflow_has_schedule() -> dict[str, Any]:
     ]
     required_commands = [
         "python eval/run_pypi_fresh_install_canary.py",
+        "python eval/run_github_source_install_canary.py",
         "python eval/cold_start_trust_gate.py",
         "python eval/release_governance_gate.py --output eval/release_governance_snapshot.json",
         "python eval/rollback_comms_drill.py",
@@ -206,6 +208,7 @@ def _workflow_has_schedule() -> dict[str, Any]:
     missing = missing_triggers + missing_commands
     ordered = [
         "python eval/run_pypi_fresh_install_canary.py",
+        "python eval/run_github_source_install_canary.py",
         "python eval/cold_start_trust_gate.py",
         "python eval/release_governance_gate.py --output eval/release_governance_snapshot.json",
         "python eval/public_self_serve_launch_gate.py",
@@ -220,6 +223,7 @@ def _workflow_has_schedule() -> dict[str, Any]:
     order_ok = not order_missing and all(positions[left] < positions[right] for left, right in zip(ordered, ordered[1:]))
     ordered_sequence = [
         "python eval/run_pypi_fresh_install_canary.py",
+        "python eval/run_github_source_install_canary.py",
         "python eval/cold_start_trust_gate.py",
         "python eval/release_governance_gate.py --output eval/release_governance_snapshot.json",
         "python eval/rollback_comms_drill.py",
@@ -402,6 +406,7 @@ def compile_watchdog(*, max_snapshot_age_hours: float = 24.0, allow_public_block
     impact = _read_json(ROOT / "docs" / "public" / "impact" / "impact.json")
     dashboard = _read_json(ROOT / "eval" / "borg_proof_dashboard.json")
     pypi = _read_json(ROOT / "eval" / "pypi_fresh_install_snapshot.json")
+    github_source = _read_json(ROOT / "eval" / "github_source_install_snapshot.json")
     cold = _read_json(ROOT / "eval" / "cold_start_trust_gate_snapshot.json")
 
     live_public = public_gate.compile_gate(fetch_network=True, require_ops_watchdog=False)
@@ -415,6 +420,11 @@ def compile_watchdog(*, max_snapshot_age_hours: float = 24.0, allow_public_block
         and pypi.get("version") == version
         and bool((pypi.get("mcp_stdio_canary") or {}).get("passed"))
         and live_pypi_latest.get("passed") is True
+    )
+    github_source_current = public_gate.github_source_install_check(
+        ROOT / "eval" / "github_source_install_snapshot.json",
+        version,
+        max_snapshot_age_hours=max_snapshot_age_hours,
     )
     pre_package_release_stage = _is_pre_package_release_stage(live_public, live_real, pypi_current)
     release_control_blocked_stage = _is_release_control_blocked_stage(live_public, live_real, pypi_current)
@@ -438,6 +448,7 @@ def compile_watchdog(*, max_snapshot_age_hours: float = 24.0, allow_public_block
         "pypi_current": pypi_current,
         "pre_package_release_stage": pre_package_release_stage,
     }
+    checks["github_source_current"] = github_source_current
     checks["cold_start_trust_current"] = {
         "passed": cold.get("passed") is True,
         "generated_at_utc": cold.get("generated_at_utc"),
@@ -446,6 +457,7 @@ def compile_watchdog(*, max_snapshot_age_hours: float = 24.0, allow_public_block
     for name, data in {
         "public_self_serve_launch_gate_snapshot": public_snapshot,
         "pypi_fresh_install_snapshot": pypi,
+        "github_source_install_snapshot": github_source,
         "cold_start_trust_gate_snapshot": cold,
         "borg_proof_dashboard": dashboard,
         "public_status_json": status,
@@ -524,7 +536,10 @@ def compile_watchdog(*, max_snapshot_age_hours: float = 24.0, allow_public_block
         or status.get("release_governance_gate") == "FAIL"
     )
     release_control_blocked_status_ok = bool(
-        status.get("state") == "NO-GO public self-serve; public package proof green, release controls blocked"
+        status.get("state") in {
+            "NO-GO public self-serve; public package proof green, release controls blocked",
+            "NO-GO public self-serve; package and GitHub source proof green, release controls blocked",
+        }
         and (status.get("controlled_first_10_beta") or {}).get("verdict") == "NO-GO"
         and status.get("max_recommended_real_users_now") == 0
         and status.get("verified_external_users") == 0

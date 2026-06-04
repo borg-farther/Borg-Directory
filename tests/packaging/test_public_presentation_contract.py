@@ -436,6 +436,7 @@ def test_public_live_dashboard_json_endpoints_exist_and_no_go_is_badge_red() -> 
     else:
         assert (
             "public package proof green, release controls blocked" in status["state"]
+            or "package and GitHub source proof green, release controls blocked" in status["state"]
             or "source/local release-candidate only" in status["state"]
             or "PyPI runtime canary green, package metadata stale" in status["state"]
         )

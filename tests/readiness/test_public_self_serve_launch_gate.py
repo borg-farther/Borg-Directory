@@ -231,6 +231,40 @@ def _write_release_runtime_snapshots(root: Path) -> None:
     _write_release_governance_snapshot(root)
 
 
+def _write_github_source_install_snapshot(root: Path, *, version: str = "9.9.9", passed: bool = True) -> None:
+    required_results = [
+        "fresh_venv_create",
+        "pip_install_git_source",
+        "pip_show_agent_borg",
+        "borg_version",
+        "borg_help",
+        "borg_rescue_json",
+        "borg_doctor_json",
+        "borg_generate_systematic_debugging_rules",
+        "borg_convert_openclaw_registry",
+        "python_api_check",
+    ]
+    (root / "eval" / "github_source_install_snapshot.json").write_text(
+        json.dumps({
+            "success": passed,
+            "version": version,
+            "install_source": "github_source",
+            "install_target": "git+https://github.com/borg-farther/Borg-Directory.git@main",
+            "generated_at_utc": _fresh_timestamp(),
+            "results": [{"name": name, "passed": passed} for name in required_results],
+            "mcp_stdio_canary": {
+                "passed": passed,
+                "server_info": {"name": "borg-mcp-server", "version": version},
+                "required_tools_present": ["borg_observe", "borg_rescue", "borg_runtime_fingerprint", "error_lookup"],
+                "alias_value_signal": passed,
+                "fingerprint_signal": passed,
+            },
+            "checkout_import_leakage": {"passed": passed, "installed_file": "/tmp/borg-venv/site-packages/borg/__init__.py"},
+        }),
+        encoding="utf-8",
+    )
+
+
 def test_row_derived_evidence_rejects_forged_aggregates_with_empty_rows() -> None:
     data = _scoreboard([])
     data["truth_policy"]["verified_external_users"] = 10  # type: ignore[index]
@@ -1101,6 +1135,7 @@ def test_public_self_serve_gate_passes_only_when_all_artifacts_and_real_rows_pas
         }),
         encoding="utf-8",
     )
+    _write_github_source_install_snapshot(tmp_path)
 
     snapshot = gate.compile_gate(
         fetch_network=False,
@@ -1134,6 +1169,7 @@ def test_public_self_serve_gate_blocks_empty_evidence_even_when_infra_passes(tmp
         }),
         encoding="utf-8",
     )
+    _write_github_source_install_snapshot(tmp_path)
 
     snapshot = gate.compile_gate(
         fetch_network=False,
@@ -1267,6 +1303,7 @@ def _write_public_gate_happy_fixture(root: Path, monkeypatch) -> None:  # type: 
         }),
         encoding="utf-8",
     )
+    _write_github_source_install_snapshot(root)
 
 
 def test_public_self_serve_gate_blocks_when_served_runtime_is_stale(tmp_path: Path, monkeypatch) -> None:
@@ -1393,6 +1430,7 @@ def _write_rollout_fixture(root: Path, *, watchdog_passed: bool) -> None:
         }),
         encoding="utf-8",
     )
+    _write_github_source_install_snapshot(root)
     (root / "eval" / "first_10_user_scoreboard.json").write_text(json.dumps(_scoreboard([])), encoding="utf-8")
     _write_ops_watchdog_snapshot(root, passed=watchdog_passed)
     _write_release_runtime_snapshots(root)

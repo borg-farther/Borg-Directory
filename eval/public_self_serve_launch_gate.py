@@ -3,8 +3,9 @@
 
 This is the canonical hard gate for broad public self-serve. It is intentionally
 stricter than local first-user or synthetic load gates: it requires row-derived
-external-user evidence, PyPI latest/fresh-install proof, MCP stdio canary proof,
-and docs/claim consistency. It returns nonzero until those are all true.
+external-user evidence, PyPI latest/fresh-install proof, GitHub source-install
+proof, MCP stdio canary proof, and docs/claim consistency. It returns nonzero
+until those are all true.
 """
 from __future__ import annotations
 
@@ -40,6 +41,20 @@ BANNED_PYPI_COPY = [
     "Collective Intelligence for AI Agents",
     "collective intelligence for AI agents",
 ]
+CANONICAL_GITHUB_INSTALL_PREFIX = "git+https://github.com/borg-farther/Borg-Directory.git@"
+REQUIRED_GITHUB_SOURCE_CANARY_RESULTS = {
+    "fresh_venv_create",
+    "pip_install_git_source",
+    "pip_show_agent_borg",
+    "borg_version",
+    "borg_help",
+    "borg_rescue_json",
+    "borg_doctor_json",
+    "borg_generate_systematic_debugging_rules",
+    "borg_convert_openclaw_registry",
+    "python_api_check",
+}
+REQUIRED_GITHUB_SOURCE_MCP_TOOLS = {"borg_observe", "borg_rescue", "borg_runtime_fingerprint", "error_lookup"}
 
 PYPI_DESCRIPTION_STALE_PATTERNS = [
     (
@@ -605,6 +620,85 @@ def pypi_fresh_install_check(path: Path, expected_version: str, *, max_snapshot_
     }
 
 
+def _github_install_target_is_canonical(target: Any) -> bool:
+    return isinstance(target, str) and target.startswith(CANONICAL_GITHUB_INSTALL_PREFIX) and "git+file://" not in target
+
+
+def _installed_file_outside_repo(installed_file: Any) -> bool:
+    if not isinstance(installed_file, str) or not installed_file:
+        return False
+    try:
+        installed = Path(installed_file).resolve()
+        repo = ROOT.resolve()
+    except (OSError, RuntimeError):
+        return False
+    installed_text = installed.as_posix()
+    repo_text = repo.as_posix().rstrip("/")
+    return installed_text != repo_text and not installed_text.startswith(repo_text + "/")
+
+
+def github_source_install_check(path: Path, expected_version: str, *, max_snapshot_age_hours: float = 24.0) -> dict[str, Any]:
+    """Validate the committed GitHub/source-install self-service canary snapshot."""
+    data = _read_json(path)
+    rel_path = str(path.relative_to(ROOT)) if path.is_relative_to(ROOT) else str(path)
+    if not data:
+        return {"passed": False, "exists": False, "path": rel_path, "error": "missing GitHub source-install snapshot"}
+    results = data.get("results") or []
+    failures = [item.get("name") for item in results if not item.get("passed")]
+    passed_result_names = {str(item.get("name")) for item in results if item.get("passed") and item.get("name")}
+    missing_required_results = sorted(REQUIRED_GITHUB_SOURCE_CANARY_RESULTS - passed_result_names)
+    mcp = data.get("mcp_stdio_canary") or {}
+    mcp_tools = set(mcp.get("required_tools_present") or [])
+    missing_mcp_tools = sorted(REQUIRED_GITHUB_SOURCE_MCP_TOOLS - {str(tool) for tool in mcp_tools})
+    mcp_server_info = mcp.get("server_info") or {}
+    leakage = data.get("checkout_import_leakage") or {}
+    installed_file = leakage.get("installed_file")
+    leakage_passed = bool(leakage.get("passed")) and _installed_file_outside_repo(installed_file)
+    freshness = _freshness_check(data.get("generated_at_utc"), max_snapshot_age_hours)
+    install_source = data.get("install_source")
+    install_target = data.get("install_target")
+    canonical_install_target = _github_install_target_is_canonical(install_target)
+    mcp_passed = (
+        bool(mcp.get("passed"))
+        and mcp_server_info.get("name") == "borg-mcp-server"
+        and mcp_server_info.get("version") == expected_version
+        and mcp.get("alias_value_signal") is True
+        and mcp.get("fingerprint_signal") is True
+        and not missing_mcp_tools
+    )
+    passed = (
+        bool(data.get("success"))
+        and data.get("version") == expected_version
+        and install_source == "github_source"
+        and canonical_install_target
+        and not failures
+        and not missing_required_results
+        and mcp_passed
+        and leakage_passed
+        and bool(freshness["passed"])
+    )
+    return {
+        "passed": passed,
+        "exists": True,
+        "path": rel_path,
+        "generated_at_utc": data.get("generated_at_utc"),
+        "version": data.get("version"),
+        "expected_version": expected_version,
+        "install_source": install_source,
+        "install_target": install_target,
+        "canonical_install_target": canonical_install_target,
+        "failed_count": len(failures),
+        "failures": failures,
+        "missing_required_results": missing_required_results,
+        "mcp_stdio_canary_passed": mcp_passed,
+        "mcp_server_info": mcp_server_info,
+        "missing_mcp_tools": missing_mcp_tools,
+        "checkout_import_leakage_passed": leakage_passed,
+        "installed_file": installed_file,
+        "freshness": freshness,
+    }
+
+
 def _line_names_post_package_blocker(line_text: str) -> bool:
     """True when docs block beta on non-package release controls.
 
@@ -1109,6 +1203,7 @@ def compile_gate(
     first_user = first_user_release_check(ROOT / "eval" / "first_user_release_gate_snapshot.json")
     pypi_latest = pypi_latest_check(version, fetch_network=fetch_network, pypi_data=pypi_data)
     pypi_fresh = pypi_fresh_install_check(ROOT / "eval" / "pypi_fresh_install_snapshot.json", version)
+    github_source = github_source_install_check(ROOT / "eval" / "github_source_install_snapshot.json", version)
     cold_start_trust = cold_start_trust_check(ROOT / "eval" / "cold_start_trust_gate_snapshot.json")
     served_runtime = served_runtime_freshness_check(ROOT / "eval" / "served_runtime_fingerprint_snapshot.json", version)
     release_governance = release_governance_check(fetch_network=fetch_network)
@@ -1136,6 +1231,7 @@ def compile_gate(
     infrastructure_ready = bool(
         first_user["passed"]
         and package_evidence_ready
+        and github_source["passed"]
         and cold_start_trust["passed"]
         and served_runtime["passed"]
         and release_governance["passed"]
@@ -1162,6 +1258,8 @@ def compile_gate(
             blockers.append("PyPI latest metadata does not match source version, required project URLs, source alignment, or public copy policy")
     if not pypi_fresh["passed"]:
         blockers.append("PyPI fresh-install + MCP stdio canary snapshot is missing or failing")
+    if not github_source["passed"]:
+        blockers.append("GitHub source-install + MCP stdio canary snapshot is missing or failing")
     if not cold_start_trust["passed"]:
         blockers.append("cold-start trust hardening gate snapshot is missing or failing")
     if not served_runtime["passed"]:
@@ -1194,6 +1292,7 @@ def compile_gate(
             "first_user_release": first_user,
             "pypi_latest": pypi_latest,
             "pypi_fresh_install_and_mcp_stdio": pypi_fresh,
+            "github_source_install_and_mcp_stdio": github_source,
             "cold_start_trust_hardening": cold_start_trust,
             "served_runtime_freshness": served_runtime,
             "release_governance": release_governance,
@@ -1245,6 +1344,7 @@ def write_report(snapshot: dict[str, Any]) -> None:
         "- `eval/public_self_serve_launch_gate_snapshot.json`",
         "- `eval/first_10_user_scoreboard.json`",
         "- `eval/pypi_fresh_install_snapshot.json`",
+        "- `eval/github_source_install_snapshot.json`",
         "- `eval/first_user_release_gate_snapshot.json`",
         "- `eval/cold_start_trust_gate_snapshot.json`",
         "- `eval/served_runtime_fingerprint_snapshot.json`",

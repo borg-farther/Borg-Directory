@@ -41,6 +41,13 @@ jobs:
           if [ "$rc_pypi" -ne 0 ]; then
             echo "PyPI canary failed; continuing so public/readiness gates can fail closed with the fresh snapshot."
           fi
+          set +e
+          python eval/run_github_source_install_canary.py --install-source "git+https://github.com/${GITHUB_REPOSITORY}.git@${GITHUB_SHA}"
+          rc_github_source=$?
+          set -e
+          if [ "$rc_github_source" -ne 0 ]; then
+            echo "GitHub source canary failed; continuing so public/readiness gates can fail closed with the fresh snapshot."
+          fi
           python eval/cold_start_trust_gate.py
           set +e
           python eval/release_governance_gate.py --output eval/release_governance_snapshot.json

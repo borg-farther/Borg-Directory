@@ -32,6 +32,58 @@ def _pre_package_public_snapshot() -> dict[str, object]:
     }
 
 
+def _github_source_snapshot(now: str, *, version: str = "9.9.9", passed: bool = True) -> dict[str, object]:
+    required_results = [
+        "fresh_venv_create",
+        "pip_install_git_source",
+        "pip_show_agent_borg",
+        "borg_version",
+        "borg_help",
+        "borg_rescue_json",
+        "borg_doctor_json",
+        "borg_generate_systematic_debugging_rules",
+        "borg_convert_openclaw_registry",
+        "python_api_check",
+    ]
+    return {
+        "success": passed,
+        "version": version,
+        "install_source": "github_source",
+        "install_target": "git+https://github.com/borg-farther/Borg-Directory.git@main",
+        "generated_at_utc": now,
+        "results": [{"name": name, "passed": passed} for name in required_results],
+        "mcp_stdio_canary": {
+            "passed": passed,
+            "server_info": {"name": "borg-mcp-server", "version": version},
+            "required_tools_present": ["borg_observe", "borg_rescue", "borg_runtime_fingerprint", "error_lookup"],
+            "alias_value_signal": passed,
+            "fingerprint_signal": passed,
+        },
+        "checkout_import_leakage": {
+            "passed": passed,
+            "installed_file": "/tmp/borg-source-venv/lib/python3.12/site-packages/borg/__init__.py",
+        },
+    }
+
+
+def _github_source_gate(now: str, *, version: str = "9.9.9", passed: bool = True) -> dict[str, object]:
+    return {
+        "passed": passed,
+        "exists": True,
+        "path": "eval/github_source_install_snapshot.json",
+        "success": passed,
+        "version": version,
+        "install_source": "github_source",
+        "install_target": "git+https://github.com/borg-farther/Borg-Directory.git@main",
+        "canonical_install_target": True,
+        "missing_required_results": [],
+        "missing_mcp_tools": [],
+        "mcp_stdio_canary_passed": passed,
+        "checkout_import_leakage_passed": passed,
+        "freshness": {"passed": passed, "age_hours": 1.0, "generated_at_utc": now},
+    }
+
+
 def _measured_savings() -> dict[str, object]:
     return {
         "rows_with_measured_value": 0,
@@ -244,11 +296,13 @@ def test_ops_watchdog_compiles_consistent_green_ops_snapshot(monkeypatch) -> Non
     monkeypatch.setattr(watchdog, "_git_clean", lambda: True)
 
     now = "2026-05-25T00:00:00+00:00"
+    monkeypatch.setattr(watchdog.public_gate, "github_source_install_check", lambda path, expected_version, max_snapshot_age_hours=24.0: _github_source_gate(now, version=expected_version))
     rev = "a" * 40
     files = {
         "eval/public_self_serve_launch_gate_snapshot.json": _public_snapshot() | {"generated_at_utc": now},
         "eval/borg_proof_dashboard.json": _dashboard(now, rev),
         "eval/pypi_fresh_install_snapshot.json": {"success": True, "version": "9.9.9", "generated_at_utc": now, "mcp_stdio_canary": {"passed": True}},
+        "eval/github_source_install_snapshot.json": _github_source_snapshot(now),
         "eval/cold_start_trust_gate_snapshot.json": {"passed": True, "generated_at_utc": now},
         "eval/self_service_ops_gate_snapshot.json": {"passed": True, "generated_at_utc": now},
         "eval/rollback_comms_drill_snapshot.json": {"passed": True, "dry_run_only": True, "generated_at_utc": now},
@@ -336,12 +390,14 @@ def test_ops_watchdog_accepts_pre_package_release_no_go_stage(monkeypatch) -> No
     monkeypatch.setattr(watchdog, "_git_clean", lambda: True)
 
     now = "2026-05-25T00:00:00+00:00"
+    monkeypatch.setattr(watchdog.public_gate, "github_source_install_check", lambda path, expected_version, max_snapshot_age_hours=24.0: _github_source_gate(now, version=expected_version))
     stale_pypi = "2026-05-23T00:00:00+00:00"
     rev = "a" * 40
     files = {
         "eval/public_self_serve_launch_gate_snapshot.json": _pre_package_public_snapshot() | {"generated_at_utc": now},
         "eval/borg_proof_dashboard.json": _pre_package_dashboard(now, rev),
         "eval/pypi_fresh_install_snapshot.json": {"success": True, "version": "9.9.8", "generated_at_utc": stale_pypi, "mcp_stdio_canary": {"passed": True}},
+        "eval/github_source_install_snapshot.json": _github_source_snapshot(now),
         "eval/cold_start_trust_gate_snapshot.json": {"passed": True, "generated_at_utc": now},
         "eval/self_service_ops_gate_snapshot.json": {"passed": True, "generated_at_utc": now},
         "eval/rollback_comms_drill_snapshot.json": {"passed": True, "dry_run_only": True, "generated_at_utc": now},
@@ -394,6 +450,7 @@ def test_ops_watchdog_accepts_release_control_blocked_no_go_stage(monkeypatch) -
     monkeypatch.setattr(watchdog, "_git_clean", lambda: True)
 
     now = "2026-05-25T00:00:00+00:00"
+    monkeypatch.setattr(watchdog.public_gate, "github_source_install_check", lambda path, expected_version, max_snapshot_age_hours=24.0: _github_source_gate(now, version=expected_version))
     rev = "a" * 40
     dashboard = _pre_package_dashboard(now, rev)
     metrics = dashboard["metrics"]
@@ -404,6 +461,7 @@ def test_ops_watchdog_accepts_release_control_blocked_no_go_stage(monkeypatch) -
         "eval/public_self_serve_launch_gate_snapshot.json": public_snapshot | {"generated_at_utc": now},
         "eval/borg_proof_dashboard.json": dashboard,
         "eval/pypi_fresh_install_snapshot.json": {"success": True, "version": "9.9.9", "generated_at_utc": now, "mcp_stdio_canary": {"passed": True}},
+        "eval/github_source_install_snapshot.json": _github_source_snapshot(now),
         "eval/cold_start_trust_gate_snapshot.json": {"passed": True, "generated_at_utc": now},
         "eval/self_service_ops_gate_snapshot.json": {"passed": True, "generated_at_utc": now},
         "eval/rollback_comms_drill_snapshot.json": {"passed": True, "dry_run_only": True, "generated_at_utc": now},
@@ -589,6 +647,7 @@ def test_ops_watchdog_rejects_release_control_stage_with_stale_pre_package_statu
     monkeypatch.setattr(watchdog, "_git_clean", lambda: True)
 
     now = "2026-05-25T00:00:00+00:00"
+    monkeypatch.setattr(watchdog.public_gate, "github_source_install_check", lambda path, expected_version, max_snapshot_age_hours=24.0: _github_source_gate(now, version=expected_version))
     rev = "a" * 40
     dashboard = _pre_package_dashboard(now, rev)
     metrics = dashboard["metrics"]
@@ -599,6 +658,7 @@ def test_ops_watchdog_rejects_release_control_stage_with_stale_pre_package_statu
         "eval/public_self_serve_launch_gate_snapshot.json": public_snapshot | {"generated_at_utc": now},
         "eval/borg_proof_dashboard.json": dashboard,
         "eval/pypi_fresh_install_snapshot.json": {"success": True, "version": "9.9.9", "generated_at_utc": now, "mcp_stdio_canary": {"passed": True}},
+        "eval/github_source_install_snapshot.json": _github_source_snapshot(now),
         "eval/cold_start_trust_gate_snapshot.json": {"passed": True, "generated_at_utc": now},
         "eval/self_service_ops_gate_snapshot.json": {"passed": True, "generated_at_utc": now},
         "eval/rollback_comms_drill_snapshot.json": {"passed": True, "dry_run_only": True, "generated_at_utc": now},
@@ -646,6 +706,7 @@ def test_ops_watchdog_rejects_release_control_stage_with_unrelated_real_rollout_
     monkeypatch.setattr(watchdog, "_git_clean", lambda: True)
 
     now = "2026-05-25T00:00:00+00:00"
+    monkeypatch.setattr(watchdog.public_gate, "github_source_install_check", lambda path, expected_version, max_snapshot_age_hours=24.0: _github_source_gate(now, version=expected_version))
     rev = "a" * 40
     dashboard = _pre_package_dashboard(now, rev)
     metrics = dashboard["metrics"]
@@ -656,6 +717,7 @@ def test_ops_watchdog_rejects_release_control_stage_with_unrelated_real_rollout_
         "eval/public_self_serve_launch_gate_snapshot.json": public_snapshot | {"generated_at_utc": now},
         "eval/borg_proof_dashboard.json": dashboard,
         "eval/pypi_fresh_install_snapshot.json": {"success": True, "version": "9.9.9", "generated_at_utc": now, "mcp_stdio_canary": {"passed": True}},
+        "eval/github_source_install_snapshot.json": _github_source_snapshot(now),
         "eval/cold_start_trust_gate_snapshot.json": {"passed": True, "generated_at_utc": now},
         "eval/self_service_ops_gate_snapshot.json": {"passed": True, "generated_at_utc": now},
         "eval/rollback_comms_drill_snapshot.json": {"passed": True, "dry_run_only": True, "generated_at_utc": now},
@@ -740,11 +802,13 @@ def test_ops_watchdog_blocks_stale_public_json_even_when_snapshots_are_fresh(mon
     monkeypatch.setattr(watchdog, "_git_clean", lambda: True)
 
     now = "2026-05-25T00:00:00+00:00"
+    monkeypatch.setattr(watchdog.public_gate, "github_source_install_check", lambda path, expected_version, max_snapshot_age_hours=24.0: _github_source_gate(now, version=expected_version))
     rev = "a" * 40
     files = {
         "eval/public_self_serve_launch_gate_snapshot.json": _public_snapshot() | {"generated_at_utc": now},
         "eval/borg_proof_dashboard.json": _dashboard(now, rev),
         "eval/pypi_fresh_install_snapshot.json": {"success": True, "version": "9.9.9", "generated_at_utc": now, "mcp_stdio_canary": {"passed": True}},
+        "eval/github_source_install_snapshot.json": _github_source_snapshot(now),
         "eval/cold_start_trust_gate_snapshot.json": {"passed": True, "generated_at_utc": now},
         "eval/self_service_ops_gate_snapshot.json": {"passed": True, "generated_at_utc": now},
         "eval/rollback_comms_drill_snapshot.json": {"passed": True, "dry_run_only": True, "generated_at_utc": now},

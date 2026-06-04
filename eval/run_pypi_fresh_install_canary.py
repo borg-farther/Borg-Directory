@@ -77,7 +77,7 @@ def run_cmd(name: str, cmd: list[str], *, env: dict[str, str] | None = None, cwd
     )
 
 
-def mcp_stdio_canary(borg_mcp: Path, env: dict[str, str], expected_version: str) -> dict[str, Any]:
+def mcp_stdio_canary(borg_mcp: Path, env: dict[str, str], expected_version: str, *, cwd: Path | None = None) -> dict[str, Any]:
     requests = [
         {"jsonrpc": "2.0", "id": 1, "method": "initialize", "params": {}},
         {"jsonrpc": "2.0", "id": 2, "method": "tools/list", "params": {}},
@@ -98,7 +98,7 @@ def mcp_stdio_canary(borg_mcp: Path, env: dict[str, str], expected_version: str)
         },
     ]
     input_text = "\n".join(json.dumps(req) for req in requests) + "\n"
-    result = run_cmd("mcp_stdio_jsonrpc", [str(borg_mcp)], env=env, timeout=180, input_text=input_text)
+    result = run_cmd("mcp_stdio_jsonrpc", [str(borg_mcp)], env=env, cwd=cwd, timeout=180, input_text=input_text)
     responses = []
     parse_errors: list[str] = []
     for line in result.stdout.splitlines():
