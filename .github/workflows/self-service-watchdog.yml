@@ -61,7 +61,7 @@ jobs:
           python eval/rollback_comms_drill.py
           python eval/self_service_ops_gate.py
           set +e
-          python eval/public_self_serve_launch_gate.py > /tmp/public_gate.json
+          python eval/public_self_serve_launch_gate.py --skip-ops-watchdog > /tmp/public_gate.json
           rc_public=$?
           python eval/real_user_rollout_gate.py > /tmp/real_user_gate.json
           rc_real=$?
@@ -114,7 +114,7 @@ jobs:
         run: |
           set -euo pipefail
           set +e
-          python eval/public_self_serve_launch_gate.py > /tmp/public_gate_after_dashboard.json
+          python eval/public_self_serve_launch_gate.py --skip-ops-watchdog > /tmp/public_gate_after_dashboard.json
           rc_public=$?
           python eval/real_user_rollout_gate.py > /tmp/real_user_gate_after_dashboard.json
           rc_real=$?

@@ -1363,6 +1363,17 @@ def test_public_self_serve_gate_blocks_when_ops_watchdog_fails(tmp_path: Path, m
     assert any("ops readiness watchdog failed" in blocker for blocker in snapshot["blockers"])
 
 
+def test_public_self_serve_gate_can_skip_ops_watchdog_for_watchdog_bootstrap(tmp_path: Path, monkeypatch) -> None:
+    _write_public_gate_happy_fixture(tmp_path, monkeypatch)
+    _write_ops_watchdog_snapshot(tmp_path, passed=False)
+
+    snapshot = gate.compile_gate(fetch_network=False, pypi_data=_pypi_fixture(), require_ops_watchdog=False)
+
+    assert snapshot["gates"]["ops_readiness_watchdog"]["passed"] is True
+    assert snapshot["gates"]["ops_readiness_watchdog"]["skipped"] is True
+    assert not any("ops readiness watchdog" in blocker for blocker in snapshot["blockers"])
+
+
 def _write_public_gate_happy_fixture(root: Path, monkeypatch) -> None:  # type: ignore[no-untyped-def]
     monkeypatch.setattr(gate, "ROOT", root)
     monkeypatch.setattr(gate, "CURRENT_CLAIM_DOCS", [Path("README.md")])

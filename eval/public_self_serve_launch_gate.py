@@ -1506,9 +1506,14 @@ def main(argv: list[str] | None = None) -> int:
     parser = argparse.ArgumentParser(description="Compile Borg public self-serve launch readiness")
     parser.add_argument("--no-network", action="store_true", help="Do not query PyPI; gate fails unless test code injects PyPI data")
     parser.add_argument("--no-write", action="store_true", help="Do not write snapshot/report artifacts")
+    parser.add_argument(
+        "--skip-ops-watchdog",
+        action="store_true",
+        help="Break watchdog bootstrap recursion: omit the existing ops-watchdog snapshot while the watchdog is about to regenerate itself.",
+    )
     args = parser.parse_args(argv)
 
-    snapshot = compile_gate(fetch_network=not args.no_network)
+    snapshot = compile_gate(fetch_network=not args.no_network, require_ops_watchdog=not args.skip_ops_watchdog)
     if not args.no_write:
         SNAPSHOT.write_text(json.dumps(snapshot, indent=2, sort_keys=True) + "\n", encoding="utf-8")
         write_report(snapshot)
