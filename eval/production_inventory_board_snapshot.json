@@ -29,16 +29,11 @@
     },
     {
       "assumption_challenge": "A git+https install URL is not proof by itself; pip direct_url must resolve to the expected PR SHA and runtime commands must execute outside the checkout.",
-      "blockers": [
-        "GitHub source-install proof is not current/strict for this working tree",
-        "source honesty: {'passed': False, 'resolved_commit': '71213e1c7b3167905d3afc927da6706798fbe400', 'head': '16281fa2f0f17ec852f1471f7da4ec6295349d00', 'dirty_paths': ['.github/workflows/self-service-watchdog.yml', 'AGENTS.md', 'README.md', 'SUPPORT.md', 'docs/20260514_PUBLIC_SELF_SERVE_LAUNCH_CLOSURE_PLAN.md', 'docs/20260531_BORG_PRODUCTION_INVENTORY_BOARD.md', 'docs/CHANNELS_AND_INSTALL_METHODS.md', 'docs/PUBLIC_SELF_SERVE_LAUNCH_GO_NO_GO.md', 'docs/READINESS.md', 'docs/README.md', 'docs/ROADMAP.md', 'docs/TRYING_BORG.md', 'docs/VALUE_COMMUNICATION_DASHBOARD.html', 'docs/VALUE_COMMUNICATION_DASHBOARD.md', 'eval/ops_readiness_watchdog.py', 'eval/production_inventory_board.py', 'eval/production_inventory_board_snapshot.json', 'eval/public_self_serve_launch_gate.py', 'eval/real_user_rollout_gate.py', 'eval/run_github_source_install_canary.py', 'eval/run_pypi_fresh_install_canary.py', 'eval/tests/test_production_inventory_board.py', 'eval/tests/test_real_user_rollout_gate.py', 'llms.txt', 'tests/packaging/test_github_source_install_canary_contract.py', 'tests/packaging/test_public_presentation_contract.py', 'tests/readiness/test_ops_readiness_watchdog.py', 'tests/readiness/test_public_self_serve_launch_gate.py'], 'non_generated_dirty_paths': ['.github/workflows/self-service-watchdog.yml', 'AGENTS.md', 'README.md', 'SUPPORT.md', 'docs/20260514_PUBLIC_SELF_SERVE_LAUNCH_CLOSURE_PLAN.md', 'docs/CHANNELS_AND_INSTALL_METHODS.md', 'docs/READINESS.md', 'docs/README.md', 'docs/ROADMAP.md', 'docs/TRYING_BORG.md', 'docs/VALUE_COMMUNICATION_DASHBOARD.html', 'docs/VALUE_COMMUNICATION_DASHBOARD.md', 'eval/ops_readiness_watchdog.py', 'eval/production_inventory_board.py', 'eval/public_self_serve_launch_gate.py', 'eval/real_user_rollout_gate.py', 'eval/run_github_source_install_canary.py', 'eval/run_pypi_fresh_install_canary.py', 'eval/tests/test_production_inventory_board.py', 'eval/tests/test_real_user_rollout_gate.py', 'llms.txt', 'tests/packaging/test_github_source_install_canary_contract.py', 'tests/packaging/test_public_presentation_contract.py', 'tests/readiness/test_ops_readiness_watchdog.py', 'tests/readiness/test_public_self_serve_launch_gate.py'], 'changed_paths_since_resolved': [], 'reason': 'non_generated_dirty_paths'}",
-        "missing required results: []",
-        "failures: []"
-      ],
+      "blockers": [],
       "done": [
         "snapshot exists: True",
         "canonical GitHub target: True",
-        "resolved commit: 71213e1c7b3167905d3afc927da6706798fbe400",
+        "resolved commit: 56bc982131c39b4f879bbbdd644f9e99a7c254b6",
         "expected commit is 40-hex SHA: True",
         "resolved commit matches recorded expected: True",
         "checkout import leakage check passed: True",
@@ -57,7 +52,7 @@
         "refresh public/dashboard/watchdog artifacts",
         "watch exact-head GitHub Actions before merge"
       ],
-      "status": "NO_GO"
+      "status": "GO"
     },
     {
       "assumption_challenge": "Regression tests for narrow fixes are not equivalent to a release proof over every changed surface.",
@@ -362,7 +357,6 @@
     }
   ],
   "current_blockers_ordered": [
-    "GitHub source-install exact-SHA proof is stale/missing/failing for the current working tree",
     "PyPI package-current/source-alignment proof is not green",
     "served runtime stale or not proven current",
     "current hardening branch unshipped/full-proof pending",
@@ -384,8 +378,8 @@
     "first_user_release_passed": true,
     "github_source_install_commit_matches_expected": true,
     "github_source_install_expected_commit_is_sha": true,
-    "github_source_install_passed": false,
-    "github_source_install_resolved_commit": "71213e1c7b3167905d3afc927da6706798fbe400",
+    "github_source_install_passed": true,
+    "github_source_install_resolved_commit": "56bc982131c39b4f879bbbdd644f9e99a7c254b6",
     "overall_optimality_ceiling": 2.0,
     "pack_optimizer_manual_go": true,
     "pypi_fresh_install_passed": true,
@@ -404,7 +398,7 @@
     "Could synthetic load tests stand in for users? No: first-10 row-derived evidence is 0/10 and explicitly blocks public/100-user claims.",
     "Could a dashboard hide these blockers? It must not; stale generated artifacts are themselves blockers until rebuilt from current gates."
   ],
-  "generated_at_utc": "2026-06-04T19:53:50Z",
+  "generated_at_utc": "2026-06-04T20:22:35Z",
   "outstanding": [
     {
       "acceptance": [
@@ -524,37 +518,30 @@
   "source": {
     "git": {
       "branch": "ab/git-source-self-service-proof-20260604",
-      "commit": "16281fa2f0f17ec852f1471f7da4ec6295349d00",
+      "commit": "56bc982131c39b4f879bbbdd644f9e99a7c254b6",
       "dirty": true,
       "dirty_files": [
-        "M .github/workflows/self-service-watchdog.yml",
-        " M AGENTS.md",
-        " M README.md",
-        " M SUPPORT.md",
-        " M docs/20260514_PUBLIC_SELF_SERVE_LAUNCH_CLOSURE_PLAN.md",
-        " M docs/20260531_BORG_PRODUCTION_INVENTORY_BOARD.md",
-        " M docs/CHANNELS_AND_INSTALL_METHODS.md",
+        "M docs/20260517_BORG_100_REAL_USER_READINESS.md",
+        " M docs/BORG_PROOF_DASHBOARD.html",
+        " M docs/BORG_PROOF_DASHBOARD.md",
+        " M docs/COLD_START_TRUST_HARDENING.md",
         " M docs/PUBLIC_SELF_SERVE_LAUNCH_GO_NO_GO.md",
-        " M docs/READINESS.md",
-        " M docs/README.md",
-        " M docs/ROADMAP.md",
-        " M docs/TRYING_BORG.md",
-        " M docs/VALUE_COMMUNICATION_DASHBOARD.html",
-        " M docs/VALUE_COMMUNICATION_DASHBOARD.md",
-        " M eval/ops_readiness_watchdog.py",
-        " M eval/production_inventory_board.py",
-        " M eval/production_inventory_board_snapshot.json",
-        " M eval/public_self_serve_launch_gate.py",
-        " M eval/real_user_rollout_gate.py",
-        " M eval/run_github_source_install_canary.py",
-        " M eval/run_pypi_fresh_install_canary.py",
-        " M eval/tests/test_production_inventory_board.py",
-        " M eval/tests/test_real_user_rollout_gate.py",
-        " M llms.txt",
-        " M tests/packaging/test_github_source_install_canary_contract.py",
-        " M tests/packaging/test_public_presentation_contract.py",
-        " M tests/readiness/test_ops_readiness_watchdog.py",
-        " M tests/readiness/test_public_self_serve_launch_gate.py"
+        " M docs/SELF_SERVICE_OPS_READINESS_REPORT.md",
+        " M docs/public/impact/impact.json",
+        " M docs/public/proof-dashboard/index.html",
+        " M docs/public/status.json",
+        " M docs/public/value.json",
+        " M docs/status.json",
+        " M eval/borg_proof_dashboard.json",
+        " M eval/cold_start_trust_gate_snapshot.json",
+        " M eval/github_source_install_snapshot.json",
+        " M eval/ops_readiness_watchdog_snapshot.json",
+        " M eval/public_self_serve_launch_gate_snapshot.json",
+        " M eval/pypi_fresh_install_snapshot.json",
+        " M eval/real_user_rollout_gate_snapshot.json",
+        " M eval/release_governance_snapshot.json",
+        " M eval/rollback_comms_drill_snapshot.json",
+        " M eval/self_service_ops_gate_snapshot.json"
       ],
       "remote": [
         "origin\thttps://github.com/borg-farther/Borg-Directory.git (fetch)",
@@ -570,11 +557,11 @@
     }
   },
   "status_counts": {
-    "GO": 2,
+    "GO": 3,
     "GO_INTERNAL_ONLY": 2,
     "GO_PROTOCOL_ONLY": 1,
     "IN_PROGRESS": 2,
-    "NO_GO": 8
+    "NO_GO": 7
   },
   "task_outline": [
     "reconstruct promised production features from docs/session evidence",
@@ -586,7 +573,7 @@
   "top_verdict": {
     "controlled_first_10_beta": "NO_GO",
     "current_source_hardening_branch": "IN_PROGRESS",
-    "github_source_install": "NO_GO",
+    "github_source_install": "GO",
     "global_federated_learning_protocol": "GO_PROTOCOL_ONLY",
     "google_tier_external_lift": "NO_GO",
     "hundred_real_users": "NO_GO",

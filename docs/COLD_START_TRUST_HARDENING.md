@@ -1,6 +1,6 @@
 # Borg cold-start trust hardening
 
-Generated: `2026-06-04T18:34:40.193771+00:00`
+Generated: `2026-06-04T20:22:21.152087+00:00`
 Gate: **PASS**
 
 ## Why this gate exists

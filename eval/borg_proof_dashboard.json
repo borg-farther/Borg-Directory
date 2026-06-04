@@ -71,9 +71,9 @@
     {
       "claim_derived": "100-real-user gate=False; max_recommended_real_users=0; blockers=['PyPI latest/fresh-install package evidence is not green: latest metadata does not match source version', \"served runtime borg_version '3.3.14' != source version '3.3.18'\", \"served runtime source_version '3.3.15' != source version '3.3.18'\", 'served runtime version_matches_source is not true', 'served runtime reload_status is not loaded_code_matches_source_behavior', 'first-10 external-user evidence has not passed: verified=0/10, real_users=0/10, installs=0/8, useful=0/6, critical_incidents=0/0']",
       "exists": true,
-      "freshness_timestamp": "2026-06-04T18:34:51.660134+00:00",
+      "freshness_timestamp": "2026-06-04T20:22:32.383005+00:00",
       "path": "eval/real_user_rollout_gate_snapshot.json",
-      "sha256": "7e3052fafac307df003f025deae1699eea5e85d75c5bc644d2c6a74480a3819c"
+      "sha256": "c9e4b15e879b4401bda5399ed1939523d395fbc459730b2fe8c6c0dd1ebd6865"
     },
     {
       "claim_derived": "first-10 row evidence users=0; measured_savings={'rows_with_measured_value': 0, 'dead_ends_avoided_confirmed': 0, 'net_minutes_saved': 0.0, 'positive_minutes_saved': 0.0, 'negative_minutes_cost': 0.0, 'net_tokens_saved': 0, 'positive_tokens_saved': 0, 'negative_tokens_cost': 0, 'counterfactual_basis_counts': {}}; gate=BLOCKED",
@@ -85,51 +85,51 @@
     {
       "claim_derived": "public self-serve gate=False; max_recommended_real_users=0; blockers=['package-impacting source/metadata changed after the immutable package reference tag', \"served runtime borg_version '3.3.14' != source version '3.3.18'\", \"served runtime source_version '3.3.15' != source version '3.3.18'\", 'served runtime version_matches_source is not true', 'served runtime reload_status is not loaded_code_matches_source_behavior', 'first-10 external-user evidence has not passed: verified=0/10, real_users=0/10, installs=0/8, useful=0/6, critical_incidents=0/0']",
       "exists": true,
-      "freshness_timestamp": "2026-06-04T18:34:50.139032+00:00",
+      "freshness_timestamp": "2026-06-04T20:22:31.108645+00:00",
       "path": "eval/public_self_serve_launch_gate_snapshot.json",
-      "sha256": "7ba18646244ce3f48c76bc973f2b72606d55dc91cbb9389473e0caada0eed443"
+      "sha256": "f6d3cb81c0a70d0d98dd3e9f33b4f7563c4091f4385af1f435ff28b95d9f70bc"
     },
     {
       "claim_derived": "cold-start trust gate=True; blockers=[]",
       "exists": true,
-      "freshness_timestamp": "2026-06-04T18:34:40.193771+00:00",
+      "freshness_timestamp": "2026-06-04T20:22:21.152087+00:00",
       "path": "eval/cold_start_trust_gate_snapshot.json",
-      "sha256": "2278a990d12aecc40c02b7c7e34d6da82b6d8b4d38c3f54636dc77a544537673"
+      "sha256": "55128f1d8beb27510cd3fbae5f1baf1b2904e7a71dfddfcb31c88f3ea03fc871"
     },
     {
       "claim_derived": "self-service ops gate=True; blockers=[]",
       "exists": true,
-      "freshness_timestamp": "2026-06-04T18:34:43.024186+00:00",
+      "freshness_timestamp": "2026-06-04T20:22:23.719391+00:00",
       "path": "eval/self_service_ops_gate_snapshot.json",
-      "sha256": "fc8fd908dfa16c8b0cde15ffa98a975388473c0a0550aed0f5b79a19d7154a77"
+      "sha256": "e8628134ce846bde873a17fdcf2d681966879503318589b9abee711fbe636b70"
     },
     {
       "claim_derived": "ops readiness watchdog=True; blocker details live in eval/ops_readiness_watchdog_snapshot.json",
       "exists": true,
-      "freshness_timestamp": "2026-06-04T18:34:54.415643+00:00",
+      "freshness_timestamp": "2026-06-04T20:22:35.221712+00:00",
       "path": "eval/ops_readiness_watchdog_snapshot.json",
-      "sha256": "6da13352bc746d57a3995a7cc20a61388100eb3b6b32b0bed6c07c659f0affa9"
+      "sha256": "ade2806c2b7695fb052078529fa691c4a7ca967affc223eaf901dcad9669d0e3"
     },
     {
       "claim_derived": "rollback/comms drill=True; dry_run_only=True",
       "exists": true,
-      "freshness_timestamp": "2026-06-04T18:34:42.941818+00:00",
+      "freshness_timestamp": "2026-06-04T20:22:23.635012+00:00",
       "path": "eval/rollback_comms_drill_snapshot.json",
-      "sha256": "90cb8505254d0fb062e17f7a15f1cf24e0e6759a226a30a6b1f352b8b39bb4b7"
+      "sha256": "de2d88b625bf601b2480984818330becd57102db182860a3ebea8627d16bf90b"
     },
     {
       "claim_derived": "PyPI fresh-install canary success=True; version=3.3.18",
       "exists": true,
-      "freshness_timestamp": "2026-06-04T18:33:59Z",
+      "freshness_timestamp": "2026-06-04T20:22:00Z",
       "path": "eval/pypi_fresh_install_snapshot.json",
-      "sha256": "0c18e40f1573ed90c5bc97618e5daac73c17fc8d1a57bdb82bc1cea7eb3eb290"
+      "sha256": "dd83d020f05a32a1f6a6f052abff2f679cdfebd1797c1e0f8579ed829c20a8ba"
     },
     {
       "claim_derived": "GitHub source-install canary strict_gate=True; success=True; version=3.3.18; canonical_target=True; missing_required_results=[]; missing_mcp_tools=[]",
       "exists": true,
-      "freshness_timestamp": "2026-06-04T18:34:12Z",
+      "freshness_timestamp": "2026-06-04T20:06:10Z",
       "path": "eval/github_source_install_snapshot.json",
-      "sha256": "b84fc375413f63dbbb6eb591418b56c9e09972598e414b78f9986a2a3f2d9cd5"
+      "sha256": "560c34229d1577ba0a895944b1bed4355820bcaa8ad2ca9d292506ba193f92f7"
     },
     {
       "claim_derived": "logical load 10: passed=True; total_requests=48934; success_rate=1.0; p95_ms=0.7294940995052457; model=asyncio_logical_users",
@@ -369,7 +369,7 @@
       }
     ]
   },
-  "generated_at_utc": "2026-06-04T18:34:54Z",
+  "generated_at_utc": "2026-06-04T20:22:35Z",
   "metrics": {
     "active_contributors_consumers": {
       "honesty_label": "MISSING_BORG_ANALYTICS_ARTIFACT",
@@ -404,19 +404,20 @@
         "checkout_import_leakage_passed": true,
         "commit_matches_recorded_expected": true,
         "exists": true,
+        "expected_commit_is_sha": true,
         "expected_version": "3.3.18",
         "failed_count": 0,
         "failures": [],
         "freshness": {
-          "age_hours": 0.011820761666666665,
+          "age_hours": 0.2737132288888889,
           "failure_kind": null,
           "max_age_hours": 24.0,
           "passed": true
         },
-        "generated_at_utc": "2026-06-04T18:34:12Z",
+        "generated_at_utc": "2026-06-04T20:06:10Z",
         "install_source": "github_source",
-        "install_target": "git+https://github.com/borg-farther/Borg-Directory.git@71213e1c7b3167905d3afc927da6706798fbe400",
-        "installed_file": "/tmp/borg-github-source-6aqo_yw4/lib/python3.11/site-packages/borg/__init__.py",
+        "install_target": "git+https://github.com/borg-farther/Borg-Directory.git@56bc982131c39b4f879bbbdd644f9e99a7c254b6",
+        "installed_file": "/tmp/borg-github-source-sosdgat1/lib/python3.11/site-packages/borg/__init__.py",
         "mcp_server_info": {
           "name": "borg-mcp-server",
           "version": "3.3.18"
@@ -426,7 +427,7 @@
         "missing_required_results": [],
         "passed": true,
         "path": "eval/github_source_install_snapshot.json",
-        "resolved_commit": "71213e1c7b3167905d3afc927da6706798fbe400",
+        "resolved_commit": "56bc982131c39b4f879bbbdd644f9e99a7c254b6",
         "source_commit_honesty": {
           "changed_paths_since_resolved": [],
           "dirty_paths": [
@@ -444,7 +445,6 @@
             "eval/borg_proof_dashboard.json",
             "eval/cold_start_trust_gate_snapshot.json",
             "eval/github_source_install_snapshot.json",
-            "eval/ops_readiness_watchdog_post_dashboard_check.json",
             "eval/ops_readiness_watchdog_snapshot.json",
             "eval/public_self_serve_launch_gate_snapshot.json",
             "eval/pypi_fresh_install_snapshot.json",
@@ -453,11 +453,11 @@
             "eval/rollback_comms_drill_snapshot.json",
             "eval/self_service_ops_gate_snapshot.json"
           ],
-          "head": "71213e1c7b3167905d3afc927da6706798fbe400",
+          "head": "56bc982131c39b4f879bbbdd644f9e99a7c254b6",
           "non_generated_dirty_paths": [],
           "passed": true,
           "reason": "exact_head",
-          "resolved_commit": "71213e1c7b3167905d3afc927da6706798fbe400"
+          "resolved_commit": "56bc982131c39b4f879bbbdd644f9e99a7c254b6"
         },
         "source_resolution": {
           "commit_matches_expected": true,
@@ -465,15 +465,17 @@
           "direct_url": {
             "url": "https://github.com/borg-farther/Borg-Directory.git",
             "vcs_info": {
-              "commit_id": "71213e1c7b3167905d3afc927da6706798fbe400",
-              "requested_revision": "71213e1c7b3167905d3afc927da6706798fbe400",
+              "commit_id": "56bc982131c39b4f879bbbdd644f9e99a7c254b6",
+              "requested_revision": "56bc982131c39b4f879bbbdd644f9e99a7c254b6",
               "vcs": "git"
             }
           },
-          "expected_commit": "71213e1c7b3167905d3afc927da6706798fbe400",
+          "expected_commit": "56bc982131c39b4f879bbbdd644f9e99a7c254b6",
+          "expected_commit_is_sha": true,
           "passed": true,
-          "requested_revision": "71213e1c7b3167905d3afc927da6706798fbe400",
-          "resolved_commit": "71213e1c7b3167905d3afc927da6706798fbe400"
+          "requested_revision": "56bc982131c39b4f879bbbdd644f9e99a7c254b6",
+          "resolved_commit": "56bc982131c39b4f879bbbdd644f9e99a7c254b6",
+          "vcs": "git"
         },
         "source_resolution_passed": true,
         "version": "3.3.18"
@@ -634,7 +636,7 @@
     "Before any public claim, replace logical-user load evidence with real external-user evidence or clearly label the distinction."
   ],
   "repo": "https://github.com/borg-farther/Borg-Directory",
-  "source_revision": "71213e1c7b3167905d3afc927da6706798fbe400+dirty",
+  "source_revision": "56bc982131c39b4f879bbbdd644f9e99a7c254b6+dirty",
   "top_verdict": {
     "broad_public_launch": {
       "verdict": "NO-GO",

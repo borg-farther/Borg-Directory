@@ -1,8 +1,8 @@
 # Borg production inventory board
 
-Generated: `2026-06-04T19:53:50Z`
+Generated: `2026-06-04T20:22:35Z`
 Repo: `https://github.com/borg-farther/Borg-Directory`
-Branch/head: `ab/git-source-self-service-proof-20260604` / `16281fa2f0f17ec852f1471f7da4ec6295349d00`
+Branch/head: `ab/git-source-self-service-proof-20260604` / `56bc982131c39b4f879bbbdd644f9e99a7c254b6`
 Working tree dirty: `True`
 Version: pyproject `3.3.18` / borg `__version__` `3.3.18`
 
@@ -16,7 +16,7 @@ Version: pyproject `3.3.18` / borg `__version__` `3.3.18`
 
 ## Bottom-line verdicts
 
-- GitHub source install: `NO_GO`
+- GitHub source install: `GO`
 - controlled first-10 beta: `NO_GO`
 - broad public self-serve: `NO_GO`
 - 100 real users: `NO_GO`
@@ -32,7 +32,7 @@ Version: pyproject `3.3.18` / borg `__version__` `3.3.18`
 ## Evidence summary
 
 - first-10 external rows: `{'verified_external_users': 0, 'real_users': 0, 'install_successes': 0, 'useful_rescue_moments': 0, 'critical_privacy_security_failures': 0, 'repeat_use_within_7_days': 0}`
-- GitHub source install + commit binding: `False` resolved=`71213e1c7b3167905d3afc927da6706798fbe400` expected_sha=`True` matches_expected=`True`
+- GitHub source install + commit binding: `True` resolved=`56bc982131c39b4f879bbbdd644f9e99a7c254b6` expected_sha=`True` matches_expected=`True`
 - PyPI fresh install + stdio MCP: `True`
 - first-user release gate: `True`
 - cold-start trust: `True`
@@ -73,7 +73,7 @@ Challenge:
 
 ### github_source_install_cli_api_stdio — GitHub source install, direct_url commit binding, CLI/API, generated rules, OpenClaw, and local stdio MCP
 
-Status: `NO_GO`
+Status: `GO`
 
 Evidence:
 - `eval/run_github_source_install_canary.py`
@@ -83,16 +83,11 @@ Evidence:
 Done/proven:
 - snapshot exists: True
 - canonical GitHub target: True
-- resolved commit: 71213e1c7b3167905d3afc927da6706798fbe400
+- resolved commit: 56bc982131c39b4f879bbbdd644f9e99a7c254b6
 - expected commit is 40-hex SHA: True
 - resolved commit matches recorded expected: True
 - checkout import leakage check passed: True
 - failed command count: 0
-Blockers:
-- GitHub source-install proof is not current/strict for this working tree
-- source honesty: {'passed': False, 'resolved_commit': '71213e1c7b3167905d3afc927da6706798fbe400', 'head': '16281fa2f0f17ec852f1471f7da4ec6295349d00', 'dirty_paths': ['.github/workflows/self-service-watchdog.yml', 'AGENTS.md', 'README.md', 'SUPPORT.md', 'docs/20260514_PUBLIC_SELF_SERVE_LAUNCH_CLOSURE_PLAN.md', 'docs/20260531_BORG_PRODUCTION_INVENTORY_BOARD.md', 'docs/CHANNELS_AND_INSTALL_METHODS.md', 'docs/PUBLIC_SELF_SERVE_LAUNCH_GO_NO_GO.md', 'docs/READINESS.md', 'docs/README.md', 'docs/ROADMAP.md', 'docs/TRYING_BORG.md', 'docs/VALUE_COMMUNICATION_DASHBOARD.html', 'docs/VALUE_COMMUNICATION_DASHBOARD.md', 'eval/ops_readiness_watchdog.py', 'eval/production_inventory_board.py', 'eval/production_inventory_board_snapshot.json', 'eval/public_self_serve_launch_gate.py', 'eval/real_user_rollout_gate.py', 'eval/run_github_source_install_canary.py', 'eval/run_pypi_fresh_install_canary.py', 'eval/tests/test_production_inventory_board.py', 'eval/tests/test_real_user_rollout_gate.py', 'llms.txt', 'tests/packaging/test_github_source_install_canary_contract.py', 'tests/packaging/test_public_presentation_contract.py', 'tests/readiness/test_ops_readiness_watchdog.py', 'tests/readiness/test_public_self_serve_launch_gate.py'], 'non_generated_dirty_paths': ['.github/workflows/self-service-watchdog.yml', 'AGENTS.md', 'README.md', 'SUPPORT.md', 'docs/20260514_PUBLIC_SELF_SERVE_LAUNCH_CLOSURE_PLAN.md', 'docs/CHANNELS_AND_INSTALL_METHODS.md', 'docs/READINESS.md', 'docs/README.md', 'docs/ROADMAP.md', 'docs/TRYING_BORG.md', 'docs/VALUE_COMMUNICATION_DASHBOARD.html', 'docs/VALUE_COMMUNICATION_DASHBOARD.md', 'eval/ops_readiness_watchdog.py', 'eval/production_inventory_board.py', 'eval/public_self_serve_launch_gate.py', 'eval/real_user_rollout_gate.py', 'eval/run_github_source_install_canary.py', 'eval/run_pypi_fresh_install_canary.py', 'eval/tests/test_production_inventory_board.py', 'eval/tests/test_real_user_rollout_gate.py', 'llms.txt', 'tests/packaging/test_github_source_install_canary_contract.py', 'tests/packaging/test_public_presentation_contract.py', 'tests/readiness/test_ops_readiness_watchdog.py', 'tests/readiness/test_public_self_serve_launch_gate.py'], 'changed_paths_since_resolved': [], 'reason': 'non_generated_dirty_paths'}
-- missing required results: []
-- failures: []
 Outstanding:
 - rerun exact-SHA GitHub source canary after final commit
 - refresh public/dashboard/watchdog artifacts
@@ -478,12 +473,11 @@ Acceptance:
 
 ## Current blocker hierarchy
 
-1. GitHub source-install exact-SHA proof is stale/missing/failing for the current working tree
-2. PyPI package-current/source-alignment proof is not green
-3. served runtime stale or not proven current
-4. current hardening branch unshipped/full-proof pending
-5. first-10 external evidence 0/10
-6. public self-serve, 100-user, marketplace, measured-lift claims blocked until above gates pass
+1. PyPI package-current/source-alignment proof is not green
+2. served runtime stale or not proven current
+3. current hardening branch unshipped/full-proof pending
+4. first-10 external evidence 0/10
+5. public self-serve, 100-user, marketplace, measured-lift claims blocked until above gates pass
 
 ## Hard boundary
 
