@@ -175,19 +175,25 @@ def test_current_docs_preserve_same_version_artifact_drift_truth() -> None:
         "PyPI latest/fresh-install/stdio MCP proof for `agent-borg==3.3.18` is green",
         "production PyPI package canaries are current",
         "Runtime and package-metadata canaries pass",
+        "runtime-canary-proven package",
+        "exact-version runtime/package canaries pass",
+        "fresh runtime canaries are green",
+        "production PyPI package canaries pass",
+        "package/local runtime canaries are already green",
+        "runtime and package metadata canaries pass",
     ]
 
     for path, text in watched.items():
         for phrase in stale_or_unsupported:
             assert phrase not in text, f"{path} still contains stale/unsupported phrase: {phrase}"
 
-    assert "exact-version PyPI fresh-install" in watched["README.md"]
-    assert "package-current proof is red" in watched["README.md"]
-    assert "PyPI fresh-install" in watched["README.md"]
+    assert "GitHub exact-SHA source install" in watched["README.md"]
+    assert "full PyPI package canary is **red**" in watched["README.md"]
+    assert "clean-install OpenClaw registry conversion" in watched["README.md"]
     assert "Broad public self-serve launch, 100-user rollout, served/remote MCP, and measured external lift are **not claimed**" in watched["README.md"]
     assert "Controlled first-10 beta: **NO-GO right now**" in watched["docs/READINESS.md"]
-    assert "runtime-canary-proven package" in watched["docs/READINESS.md"]
-    assert "runtime canaries are green" in watched["docs/READINESS.md"]
+    assert "Published PyPI `agent-borg==3.3.18` is not package-current" in watched["docs/READINESS.md"]
+    assert "full PyPI package canary is red" in watched["docs/READINESS.md"]
     assert "served runtime fingerprint is stale" in watched["docs/READINESS.md"]
     assert "GitHub `main` release governance is enforced" in watched["docs/READINESS.md"]
     assert "Public self-serve launch: **NO-GO until first-10 external-user evidence passes**" in watched["docs/READINESS.md"]

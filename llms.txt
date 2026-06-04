@@ -14,7 +14,7 @@ Day-one value path:
 3. Expect ACTION / STOP / VERIFY / CONFIDENCE, or NO_CONFIDENT_MATCH.
 
 Current rollout boundary:
-- Controlled first-10 public-package beta is closed right now. agent-borg==3.3.18 is the published runtime-canary-proven package (not current for this post-tag source line); exact-version fresh-install/stdio MCP/generated-rules/OpenClaw runtime canary proof is green. Cap is 0 until served-runtime freshness and first-10 external-user evidence gates are green.
+- Controlled first-10 public-package beta is closed right now. GitHub exact-SHA source install is canary-green for local CLI/API/stdio MCP/generated-rules/OpenClaw at the proven PR head. Published agent-borg==3.3.18 is not package-current for this source line and the full PyPI package canary is red because immutable 3.3.18 still fails clean-install OpenClaw registry conversion. Cap is 0 until package proof, served-runtime freshness, and first-10 external-user evidence gates are green.
 - Do not claim public self-serve launch, 100 real users, served remote MCP, or measured external lift until row-derived external-user evidence passes.
 
 Useful docs:

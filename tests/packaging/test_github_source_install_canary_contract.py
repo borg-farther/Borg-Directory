@@ -457,8 +457,15 @@ def test_self_service_watchdog_workflow_runs_canonical_github_source_canary_befo
 
     assert "python eval/run_github_source_install_canary.py" in workflow
     assert "git+file://${GITHUB_WORKSPACE}" not in workflow
-    assert "git+https://github.com/${GITHUB_REPOSITORY}.git@${GITHUB_SHA}" in workflow
-    assert "--expected-commit \"${GITHUB_SHA}\"" in workflow
+    assert "SOURCE_CANARY_REPOSITORY=\"${GITHUB_REPOSITORY}\"" in workflow
+    assert "SOURCE_CANARY_SHA=\"${GITHUB_SHA}\"" in workflow
+    assert "${{ github.event_name }}" in workflow
+    assert "${{ github.event.pull_request.head.repo.full_name }}" in workflow
+    assert "${{ github.event.pull_request.head.sha }}" in workflow
+    assert "git+https://github.com/${SOURCE_CANARY_REPOSITORY}.git@${SOURCE_CANARY_SHA}" in workflow
+    assert "--expected-commit \"${SOURCE_CANARY_SHA}\"" in workflow
+    assert "git+https://github.com/${GITHUB_REPOSITORY}.git@${GITHUB_SHA}" not in workflow
+    assert "--expected-commit \"${GITHUB_SHA}\"" not in workflow
     assert "GitHub source canary failed; continuing" in workflow
     assert workflow.index("python eval/run_pypi_fresh_install_canary.py") < workflow.index("python eval/run_github_source_install_canary.py")
     assert workflow.index("python eval/run_github_source_install_canary.py") < workflow.index("python eval/public_self_serve_launch_gate.py")

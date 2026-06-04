@@ -4,7 +4,7 @@ Generated: 2026-05-14 18:39 UTC
 
 ## Current state
 
-Borg's controlled first-10 package path is **NO-GO for served-runtime freshness and external evidence**, not for package installability. `agent-borg==3.3.18` is the published runtime-canary-proven package (not current for this post-tag source line) and fresh runtime canaries are green. Package-level evidence capture can proceed only after served-runtime freshness and first-10 evidence intake are ready. New hardening PRs must still pass their own CI before source-specific claims are published.
+Borg's controlled first-10 package path is **NO-GO for package proof, served-runtime freshness, and external evidence**. GitHub exact-SHA source install is canary-green for local CLI/API/stdio MCP/generated-rules/OpenClaw, but published PyPI `agent-borg==3.3.18` full package proof is red because immutable `3.3.18` still fails clean-install OpenClaw registry conversion. Package-level evidence capture can proceed only after a new immutable package passes, served-runtime freshness is green, and first-10 evidence intake is ready. New hardening PRs must still pass their own CI before source-specific claims are published.
 
 Public self-serve launch remains **NO-GO** until row-derived first-10 external-user evidence passes. Served remote MCP remains a separate runtime cutover/canary channel, not proven by the PyPI stdio release.
 
@@ -12,7 +12,7 @@ Hard evidence already completed or pending:
 
 - Branch/source readiness for 3.3.18: release main proof exists; this post-release proof branch still needs its own PR CI and post-merge main proof
 - Local source first-user release gate for `agent-borg==3.3.18`: green in current artifacts, but must be rerun after any package-impacting source change
-- Fresh PyPI install/MCP/generate/OpenClaw canary for `agent-borg==3.3.18`: PASS from production PyPI
+- Fresh PyPI install/MCP/generate/OpenClaw canary for `agent-borg==3.3.18`: FAIL from production PyPI due clean-install OpenClaw registry conversion; immutable package gap, new release required
 - self-service ops/watchdog gates: PASS for package-level evidence capture; broad public self-serve remains blocked by first-10 rows
 - security baseline: PASS in local gates
 - privacy/prompt-injection/atom/firewall tests: PASS in local gates
@@ -25,7 +25,7 @@ Three true blocker classes remain before broader launch claims:
 
 1. **Runtime/ops proof and post-release proof branch evidence**
    - Need: served-runtime fingerprint/canary at `agent-borg==3.3.18`, green ops watchdog/proof dashboard, this post-release proof branch PR CI, protected merge, and post-merge main proof.
-   - Until that exact chain is green, public-package evidence capture stays paused even though production PyPI package canaries pass.
+   - Until that exact chain is green, public-package evidence capture stays paused because production PyPI package proof is red.
 
 2. **First 10 real external users**
    - Need: real external-user outcome evidence, not simulations.
@@ -69,7 +69,7 @@ Prior 3.3.10 proof lives in:
 - `docs/20260522_BORG_3310_RELEASE_PREFLIGHT_PUBLISHED.md` (historical)
 - `eval/pypi_fresh_install_snapshot.json` (current exact-version package canary)
 
-Current package path status: `agent-borg==3.3.18` is the published runtime-canary-proven package (not current for this post-tag source line); production PyPI upload and fresh runtime canary pass. Controlled first-10 is capped at 0 until served-runtime freshness and first-10 evidence gates pass; broad public self-serve remains NO-GO until row-derived first-10 evidence passes.
+Current package path status: GitHub exact-SHA source install is canary-green for local CLI/API/stdio MCP/generated-rules/OpenClaw, but published PyPI `agent-borg==3.3.18` full package proof is red until a new immutable release fixes clean-install OpenClaw registry conversion. Controlled first-10 is capped at 0 until new package proof, served-runtime freshness, and first-10 evidence gates pass; broad public self-serve remains NO-GO until row-derived first-10 evidence passes.
 
 ### Phase C — first-10 user sprint
 
