@@ -232,9 +232,11 @@ def _write_release_runtime_snapshots(root: Path) -> None:
 
 
 def _write_github_source_install_snapshot(root: Path, *, version: str = "9.9.9", passed: bool = True) -> None:
+    resolved_commit = "f" * 40
     required_results = [
         "fresh_venv_create",
         "pip_install_git_source",
+        "pip_direct_url_agent_borg",
         "pip_show_agent_borg",
         "borg_version",
         "borg_help",
@@ -250,6 +252,13 @@ def _write_github_source_install_snapshot(root: Path, *, version: str = "9.9.9",
             "version": version,
             "install_source": "github_source",
             "install_target": "git+https://github.com/borg-farther/Borg-Directory.git@main",
+            "source_resolution": {
+                "passed": passed,
+                "resolved_commit": resolved_commit,
+                "expected_commit": resolved_commit,
+                "commit_matches_expected": passed,
+                "requested_revision": "main",
+            },
             "generated_at_utc": _fresh_timestamp(),
             "results": [{"name": name, "passed": passed} for name in required_results],
             "mcp_stdio_canary": {
@@ -262,6 +271,20 @@ def _write_github_source_install_snapshot(root: Path, *, version: str = "9.9.9",
             "checkout_import_leakage": {"passed": passed, "installed_file": "/tmp/borg-venv/site-packages/borg/__init__.py"},
         }),
         encoding="utf-8",
+    )
+
+
+def _trust_github_source_commit_binding(monkeypatch) -> None:  # type: ignore[no-untyped-def]
+    monkeypatch.setattr(
+        gate,
+        "_source_commit_is_honest_for_current_head",
+        lambda commit: {
+            "passed": True,
+            "resolved_commit": commit,
+            "head": commit,
+            "reason": "unit_test_commit_binding_trusted",
+            "changed_paths_since_resolved": [],
+        },
     )
 
 
@@ -1115,6 +1138,7 @@ def test_public_self_serve_gate_passes_only_when_all_artifacts_and_real_rows_pas
     monkeypatch.setattr(gate, "ROOT", tmp_path)
     monkeypatch.setattr(gate, "CURRENT_CLAIM_DOCS", [Path("README.md")])
     monkeypatch.setattr(gate, "source_revision_state", _clean_source_revision_state)
+    _trust_github_source_commit_binding(monkeypatch)
     (tmp_path / "eval").mkdir()
     (tmp_path / "docs").mkdir()
     (tmp_path / "pyproject.toml").write_text('[project]\nname = "agent-borg"\nversion = "9.9.9"\n', encoding="utf-8")
@@ -1150,6 +1174,7 @@ def test_public_self_serve_gate_blocks_empty_evidence_even_when_infra_passes(tmp
     monkeypatch.setattr(gate, "ROOT", tmp_path)
     monkeypatch.setattr(gate, "CURRENT_CLAIM_DOCS", [Path("README.md")])
     monkeypatch.setattr(gate, "source_revision_state", _clean_source_revision_state)
+    _trust_github_source_commit_binding(monkeypatch)
     (tmp_path / "eval").mkdir()
     (tmp_path / "pyproject.toml").write_text('[project]\nname = "agent-borg"\nversion = "9.9.9"\n', encoding="utf-8")
     (tmp_path / "README.md").write_text("pipx install agent-borg==9.9.9\nPublic self-serve launch: NO-GO until evidence.\n", encoding="utf-8")
@@ -1284,6 +1309,7 @@ def _write_public_gate_happy_fixture(root: Path, monkeypatch) -> None:  # type: 
     monkeypatch.setattr(gate, "ROOT", root)
     monkeypatch.setattr(gate, "CURRENT_CLAIM_DOCS", [Path("README.md")])
     monkeypatch.setattr(gate, "source_revision_state", _clean_source_revision_state)
+    _trust_github_source_commit_binding(monkeypatch)
     (root / "eval").mkdir()
     (root / "pyproject.toml").write_text('[project]\nname = "agent-borg"\nversion = "9.9.9"\n', encoding="utf-8")
     (root / "README.md").write_text("pipx install agent-borg==9.9.9\nPublic self-serve launch: NO-GO until evidence.\n", encoding="utf-8")
