@@ -1001,11 +1001,19 @@ def docs_claim_guard(
                 match = re.search(pattern, text)
                 if match:
                     line = text[: match.start()].count("\n") + 1
+                    line_text = text.splitlines()[line - 1] if line - 1 < len(text.splitlines()) else match.group(0)
+                    negated_or_future_condition = re.search(
+                        r"(?i)\b(do not|no-go|not current|not green|blocked|red|must wait|wait for|until|before|require|required|only after)\b",
+                        line_text,
+                    )
+                    pass_claim_label = "pass claim" in label or "canaries-passed claim" in label or "green before" in label
+                    if pass_claim_label and negated_or_future_condition:
+                        continue
                     violations.append({
                         "path": str(rel),
                         "line": line,
                         "kind": label,
-                        "detail": text.splitlines()[line - 1][:180] if line - 1 < len(text.splitlines()) else match.group(0)[:180],
+                        "detail": line_text[:180],
                     })
 
             for line_number, line_text in enumerate(text.splitlines(), start=1):

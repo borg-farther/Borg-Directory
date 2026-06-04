@@ -473,6 +473,28 @@ def test_docs_claim_guard_blocks_controlled_beta_go_until_package_canary_passes(
     assert any(v["kind"] == "controlled first-10 package GO before PyPI canary" for v in result["violations"])
 
 
+def test_docs_claim_guard_allows_future_condition_action_queue_when_package_is_red(tmp_path: Path, monkeypatch) -> None:
+    monkeypatch.setattr(gate, "ROOT", tmp_path)
+    doc = tmp_path / "docs" / "BORG_PROOF_DASHBOARD.md"
+    doc.parent.mkdir()
+    doc.write_text(
+        "Do not invite controlled first-10 testers yet: publish immutable `agent-borg==9.9.9`, "
+        "then require PyPI latest metadata, fresh-install, stdio MCP, served-runtime, "
+        "release-governance, ops, and watchdog gates to pass before using that exact version with testers.\n",
+        encoding="utf-8",
+    )
+
+    result = gate.docs_claim_guard(
+        [Path("docs/BORG_PROOF_DASHBOARD.md")],
+        "9.9.9",
+        public_evidence_ready=False,
+        package_evidence_ready=False,
+    )
+
+    assert result["passed"] is True
+    assert result["violations"] == []
+
+
 def test_docs_claim_guard_blocks_markdown_stale_package_no_go_after_canary(tmp_path: Path, monkeypatch) -> None:
     monkeypatch.setattr(gate, "ROOT", tmp_path)
     doc = tmp_path / "README.md"
