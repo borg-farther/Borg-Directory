@@ -43,6 +43,10 @@ The ops gate blocks nonexistent helper names and requires the GitHub intake temp
 - public status update;
 - user notification template.
 
+## Hermes plugin deployment note
+
+`borg_search_assist` matcher logic is repository-owned in `borg/integrations/borg_search_assist.py`. The deployed Hermes plugin at `~/.hermes/plugins/borg_search_assist/__init__.py` should remain a thin shim copied from `borg/integrations/hermes_plugins/borg_search_assist/__init__.py` after preserving the active file as `init.py.bak-20260605`. This prevents the matcher from drifting as unversioned live plugin code without adding scratchpad files or plugin directories to the public package root.
+
 ## Watchdog automation
 
 `.github/workflows/self-service-watchdog.yml` runs on pull request, push to main, schedule, and manual dispatch. It checks package proof, cold-start trust, public launch fail-closed state, proof dashboard lint, self-service ops readiness, and stale snapshot consistency.
