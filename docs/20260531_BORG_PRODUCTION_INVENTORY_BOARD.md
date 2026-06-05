@@ -1,8 +1,8 @@
 # Borg production inventory board
 
-Generated: `2026-06-04T22:56:58Z`
+Generated: `2026-06-05T10:24:17Z`
 Repo: `https://github.com/borg-farther/Borg-Directory`
-Branch/head: `ab/git-source-self-service-proof-20260604` / `fdf72d74e43c6cfcfe941dbd094371dfa4e199a2`
+Branch/head: `ab/git-source-self-service-proof-20260604` / `af152bb15ee998dbc091ff6bbbb88fd94b3968bb`
 Working tree dirty: `True`
 Version: pyproject `3.3.18` / borg `__version__` `3.3.18`
 
@@ -32,7 +32,7 @@ Version: pyproject `3.3.18` / borg `__version__` `3.3.18`
 ## Evidence summary
 
 - first-10 external rows: `{'verified_external_users': 0, 'real_users': 0, 'install_successes': 0, 'useful_rescue_moments': 0, 'critical_privacy_security_failures': 0, 'repeat_use_within_7_days': 0}`
-- GitHub source install + commit binding: `True` resolved=`fdf72d74e43c6cfcfe941dbd094371dfa4e199a2` expected_sha=`True` matches_expected=`True`
+- GitHub source install + commit binding: `True` resolved=`af152bb15ee998dbc091ff6bbbb88fd94b3968bb` expected_sha=`True` matches_expected=`True`
 - PyPI fresh install + stdio MCP: `True`
 - first-user release gate: `True`
 - cold-start trust: `True`
@@ -83,7 +83,7 @@ Evidence:
 Done/proven:
 - snapshot exists: True
 - canonical GitHub target: True
-- resolved commit: fdf72d74e43c6cfcfe941dbd094371dfa4e199a2
+- resolved commit: af152bb15ee998dbc091ff6bbbb88fd94b3968bb
 - expected commit is 40-hex SHA: True
 - resolved commit matches recorded expected: True
 - checkout import leakage check passed: True

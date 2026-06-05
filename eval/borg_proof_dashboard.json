@@ -71,9 +71,9 @@
     {
       "claim_derived": "100-real-user gate=False; max_recommended_real_users=0; blockers=['PyPI latest/fresh-install package evidence is not green: latest metadata does not match source version', \"served runtime borg_version '3.3.14' != source version '3.3.18'\", \"served runtime source_version '3.3.15' != source version '3.3.18'\", 'served runtime version_matches_source is not true', 'served runtime reload_status is not loaded_code_matches_source_behavior', 'first-10 external-user evidence has not passed: verified=0/10, real_users=0/10, installs=0/8, useful=0/6, critical_incidents=0/0']",
       "exists": true,
-      "freshness_timestamp": "2026-06-04T22:56:55.804017+00:00",
+      "freshness_timestamp": "2026-06-05T10:24:11.281527+00:00",
       "path": "eval/real_user_rollout_gate_snapshot.json",
-      "sha256": "b9468a6275012be0d7cf152f0d84556d293e1556d0f1f068910ce87c325eeb73"
+      "sha256": "3ace6828005a04eb79832e5e30b3e3bcae7892d8e643e266b584496e09a18a19"
     },
     {
       "claim_derived": "first-10 row evidence users=0; measured_savings={'rows_with_measured_value': 0, 'dead_ends_avoided_confirmed': 0, 'net_minutes_saved': 0.0, 'positive_minutes_saved': 0.0, 'negative_minutes_cost': 0.0, 'net_tokens_saved': 0, 'positive_tokens_saved': 0, 'negative_tokens_cost': 0, 'counterfactual_basis_counts': {}}; gate=BLOCKED",
@@ -85,51 +85,51 @@
     {
       "claim_derived": "public self-serve gate=False; max_recommended_real_users=0; blockers=['package-impacting source/metadata changed after the immutable package reference tag', \"served runtime borg_version '3.3.14' != source version '3.3.18'\", \"served runtime source_version '3.3.15' != source version '3.3.18'\", 'served runtime version_matches_source is not true', 'served runtime reload_status is not loaded_code_matches_source_behavior', 'first-10 external-user evidence has not passed: verified=0/10, real_users=0/10, installs=0/8, useful=0/6, critical_incidents=0/0']",
       "exists": true,
-      "freshness_timestamp": "2026-06-04T22:56:54.555366+00:00",
+      "freshness_timestamp": "2026-06-05T10:24:10.013190+00:00",
       "path": "eval/public_self_serve_launch_gate_snapshot.json",
-      "sha256": "7921935709d1a4d8ea25842909ee073011f21c6aaf718214cea8d16d84b1ddb2"
+      "sha256": "f65f39e8d2214f71fe8c7aa4a70b4d7c3bf805958fc41bf89ea73dfd4929a625"
     },
     {
       "claim_derived": "cold-start trust gate=True; blockers=[]",
       "exists": true,
-      "freshness_timestamp": "2026-06-04T22:55:27.027323+00:00",
+      "freshness_timestamp": "2026-06-05T10:23:56.294485+00:00",
       "path": "eval/cold_start_trust_gate_snapshot.json",
-      "sha256": "3e36c449712f1024094ad99b56c23d3f82e69294a0b1b2009f864043a3007f85"
+      "sha256": "feefa7e04285bca0c61d7dde023fb197532e88f01927d69b62d7c89b231ca4fd"
     },
     {
       "claim_derived": "self-service ops gate=True; blockers=[]",
       "exists": true,
-      "freshness_timestamp": "2026-06-04T22:55:29.540400+00:00",
+      "freshness_timestamp": "2026-06-05T10:23:59.069117+00:00",
       "path": "eval/self_service_ops_gate_snapshot.json",
-      "sha256": "93b4fdaf9e4f54527a53cc7afdf4a7db1ed2946cff54c4420f2f2174c8edbe17"
+      "sha256": "c8edd3174cc6f830b34e838ed2e35d1f11efee03e143e291a4d44afa8d771454"
     },
     {
       "claim_derived": "ops readiness watchdog=True; blocker details live in eval/ops_readiness_watchdog_snapshot.json",
       "exists": true,
-      "freshness_timestamp": "2026-06-04T22:56:58.346916+00:00",
+      "freshness_timestamp": "2026-06-05T10:24:14.052578+00:00",
       "path": "eval/ops_readiness_watchdog_snapshot.json",
-      "sha256": "35ca36ca7b32c7b9297875c3876f6c705ca9ad1b412b1118bca8987dbf9cce59"
+      "sha256": "c828e824c64d803ab26f05d014e3b70191e86f4a97d2b00200d378d068e831c5"
     },
     {
       "claim_derived": "rollback/comms drill=True; dry_run_only=True",
       "exists": true,
-      "freshness_timestamp": "2026-06-04T22:55:29.467641+00:00",
+      "freshness_timestamp": "2026-06-05T10:23:58.989613+00:00",
       "path": "eval/rollback_comms_drill_snapshot.json",
-      "sha256": "7edd898d15b17f4398d51ae2095013a87223506a4c04b288c2bf6db9648fbb18"
+      "sha256": "d0922eb9d432f0037958cb11797b9e201409dcd01137e657a423b8290d205bba"
     },
     {
       "claim_derived": "PyPI fresh-install canary success=True; version=3.3.18",
       "exists": true,
-      "freshness_timestamp": "2026-06-04T22:55:08Z",
+      "freshness_timestamp": "2026-06-05T10:23:36Z",
       "path": "eval/pypi_fresh_install_snapshot.json",
-      "sha256": "ffcf74941350bc7be5f313ab2bf454f72dfa40d09cbae9cd019f9e1422c0cf09"
+      "sha256": "ab30e0efd664867a910d695a1b9ef133bfd277f869efd93006b190a165724cc6"
     },
     {
       "claim_derived": "GitHub source-install canary strict_gate=True; success=True; version=3.3.18; canonical_target=True; missing_required_results=[]; missing_mcp_tools=[]",
       "exists": true,
-      "freshness_timestamp": "2026-06-04T22:54:15Z",
+      "freshness_timestamp": "2026-06-05T10:23:29Z",
       "path": "eval/github_source_install_snapshot.json",
-      "sha256": "38d22d7e6019d1081a661831ba79de9c3971280c0840175217468d65048ee416"
+      "sha256": "2b40b12b22c5f61edce928545e3bc28a6f976fce995832006d379bf954c64946"
     },
     {
       "claim_derived": "logical load 10: passed=True; total_requests=48934; success_rate=1.0; p95_ms=0.7294940995052457; model=asyncio_logical_users",
@@ -369,7 +369,7 @@
       }
     ]
   },
-  "generated_at_utc": "2026-06-04T22:56:58Z",
+  "generated_at_utc": "2026-06-05T10:24:14Z",
   "metrics": {
     "active_contributors_consumers": {
       "honesty_label": "MISSING_BORG_ANALYTICS_ARTIFACT",
@@ -409,16 +409,16 @@
         "failed_count": 0,
         "failures": [],
         "freshness": {
-          "age_hours": 0.04540972888888889,
+          "age_hours": 0.012547761388888887,
           "failure_kind": null,
           "max_age_hours": 24.0,
           "passed": true
         },
-        "generated_at_utc": "2026-06-04T22:54:15Z",
+        "generated_at_utc": "2026-06-05T10:23:29Z",
         "install_source": "github_source",
-        "install_target": "git+https://github.com/borg-farther/Borg-Directory.git@fdf72d74e43c6cfcfe941dbd094371dfa4e199a2",
-        "install_target_commit": "fdf72d74e43c6cfcfe941dbd094371dfa4e199a2",
-        "installed_file": "/tmp/borg-github-source-5jq3vb_c/lib/python3.11/site-packages/borg/__init__.py",
+        "install_target": "git+https://github.com/borg-farther/Borg-Directory.git@af152bb15ee998dbc091ff6bbbb88fd94b3968bb",
+        "install_target_commit": "af152bb15ee998dbc091ff6bbbb88fd94b3968bb",
+        "installed_file": "/tmp/borg-github-source-8prgqhmb/lib/python3.11/site-packages/borg/__init__.py",
         "mcp_server_info": {
           "name": "borg-mcp-server",
           "version": "3.3.18"
@@ -428,12 +428,11 @@
         "missing_required_results": [],
         "passed": true,
         "path": "eval/github_source_install_snapshot.json",
-        "resolved_commit": "fdf72d74e43c6cfcfe941dbd094371dfa4e199a2",
+        "resolved_commit": "af152bb15ee998dbc091ff6bbbb88fd94b3968bb",
         "source_commit_honesty": {
           "changed_paths_since_resolved": [],
           "dirty_paths": [
             "docs/20260517_BORG_100_REAL_USER_READINESS.md",
-            "docs/20260531_BORG_PRODUCTION_INVENTORY_BOARD.md",
             "docs/BORG_PROOF_DASHBOARD.html",
             "docs/BORG_PROOF_DASHBOARD.md",
             "docs/COLD_START_TRUST_HARDENING.md",
@@ -447,9 +446,7 @@
             "eval/borg_proof_dashboard.json",
             "eval/cold_start_trust_gate_snapshot.json",
             "eval/github_source_install_snapshot.json",
-            "eval/ops_readiness_watchdog_post_dashboard_check.json",
             "eval/ops_readiness_watchdog_snapshot.json",
-            "eval/production_inventory_board_snapshot.json",
             "eval/public_self_serve_launch_gate_snapshot.json",
             "eval/pypi_fresh_install_snapshot.json",
             "eval/real_user_rollout_gate_snapshot.json",
@@ -457,11 +454,11 @@
             "eval/rollback_comms_drill_snapshot.json",
             "eval/self_service_ops_gate_snapshot.json"
           ],
-          "head": "fdf72d74e43c6cfcfe941dbd094371dfa4e199a2",
+          "head": "af152bb15ee998dbc091ff6bbbb88fd94b3968bb",
           "non_generated_dirty_paths": [],
           "passed": true,
           "reason": "exact_head",
-          "resolved_commit": "fdf72d74e43c6cfcfe941dbd094371dfa4e199a2"
+          "resolved_commit": "af152bb15ee998dbc091ff6bbbb88fd94b3968bb"
         },
         "source_resolution": {
           "commit_matches_expected": true,
@@ -469,16 +466,16 @@
           "direct_url": {
             "url": "https://github.com/borg-farther/Borg-Directory.git",
             "vcs_info": {
-              "commit_id": "fdf72d74e43c6cfcfe941dbd094371dfa4e199a2",
-              "requested_revision": "fdf72d74e43c6cfcfe941dbd094371dfa4e199a2",
+              "commit_id": "af152bb15ee998dbc091ff6bbbb88fd94b3968bb",
+              "requested_revision": "af152bb15ee998dbc091ff6bbbb88fd94b3968bb",
               "vcs": "git"
             }
           },
-          "expected_commit": "fdf72d74e43c6cfcfe941dbd094371dfa4e199a2",
+          "expected_commit": "af152bb15ee998dbc091ff6bbbb88fd94b3968bb",
           "expected_commit_is_sha": true,
           "passed": true,
-          "requested_revision": "fdf72d74e43c6cfcfe941dbd094371dfa4e199a2",
-          "resolved_commit": "fdf72d74e43c6cfcfe941dbd094371dfa4e199a2",
+          "requested_revision": "af152bb15ee998dbc091ff6bbbb88fd94b3968bb",
+          "resolved_commit": "af152bb15ee998dbc091ff6bbbb88fd94b3968bb",
           "vcs": "git"
         },
         "source_resolution_passed": true,
@@ -640,7 +637,7 @@
     "Before any public claim, replace logical-user load evidence with real external-user evidence or clearly label the distinction."
   ],
   "repo": "https://github.com/borg-farther/Borg-Directory",
-  "source_revision": "fdf72d74e43c6cfcfe941dbd094371dfa4e199a2+dirty",
+  "source_revision": "af152bb15ee998dbc091ff6bbbb88fd94b3968bb+dirty",
   "top_verdict": {
     "broad_public_launch": {
       "verdict": "NO-GO",
