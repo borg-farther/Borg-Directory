@@ -53,6 +53,14 @@ def test_production_inventory_preserves_split_verdicts() -> None:
     else:
         assert verdict["published_package_local_stdio"] == "NO_GO"
         assert verdict["source_package_local_stdio"] == "NO_GO"
+    github_source = _by_id(data, "github_source_install_cli_api_stdio")
+    assert verdict["github_source_install"] in {"GO", "NO_GO"}
+    if github_source["status"] == "GO":
+        assert verdict["github_source_install"] == "GO"
+        assert any("expected commit is 40-hex SHA: True" in item for item in github_source["done"])
+    else:
+        assert verdict["github_source_install"] == "NO_GO"
+        assert any("GitHub source-install proof" in blocker for blocker in github_source["blockers"])
     assert verdict["global_federated_learning_protocol"] == "GO_PROTOCOL_ONLY"
     assert verdict["recursive_collective_learning_mechanism"] == "GO_INTERNAL_ONLY"
     assert verdict["recursive_pack_optimizer"] == "GO_INTERNAL_MANUAL_ONLY"
@@ -202,6 +210,10 @@ def test_inventory_artifacts_are_machine_readable_and_report_is_honest() -> None
     assert snapshot["top_verdict"]["public_self_serve"] == "NO_GO"
     assert snapshot["top_verdict"]["google_tier_external_lift"] == "NO_GO"
     assert "broad public self-serve: `NO_GO`" in report
+    assert "GitHub source install: `" in report
+    assert snapshot["top_verdict"]["github_source_install"] in {"GO", "NO_GO"}
+    assert "GitHub source install + commit binding" in report
+    assert "github_source_install_cli_api_stdio" in report
     assert "current source/hardening branch: `" in report
     assert f"published package/local stdio: `{snapshot['top_verdict']['published_package_local_stdio']}`" in report
     assert snapshot["top_verdict"]["published_package_local_stdio"] in {"NO_GO", "CONDITIONAL_GO"}
@@ -209,3 +221,17 @@ def test_inventory_artifacts_are_machine_readable_and_report_is_honest() -> None
     assert "remote MCP/marketplace distribution: `NO_GO`" in report
     assert "global/federated learning protocol: `GO_PROTOCOL_ONLY`" in report
     assert "Google/God-tier measured external lift: `NO_GO`" in report
+
+
+def test_checked_in_inventory_artifacts_match_current_source_version_and_not_stale_branch() -> None:
+    snapshot = json.loads(SNAPSHOT.read_text(encoding="utf-8"))
+    report = REPORT.read_text(encoding="utf-8")
+    current_version = source_version()
+
+    assert snapshot["source"]["versions"]["project_version"] == current_version
+    assert snapshot["source"]["versions"]["runtime_version"] == current_version
+    assert f"Version: pyproject `{current_version}` / borg `__version__` `{current_version}`" in report
+    assert "post-release-proof-3.3.17" not in report
+    assert "source version '3.3.17'" not in report
+    assert "pyproject `3.3.17`" not in report
+    assert snapshot["source"]["root"] == "<repo-root>"

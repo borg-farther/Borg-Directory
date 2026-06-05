@@ -4,11 +4,12 @@
     {
       "assumption_challenge": "A clean PyPI canary proves installed package behavior, not source revisions that landed after the wheel upload or a long-lived served process.",
       "blockers": [
+        "PyPI latest metadata gate is not green for the current source revision",
         "working tree is dirty/unshipped; current hardening branch is not committed/pushed/CI-proven"
       ],
       "done": [
-        "source versions match: True (3.3.17)",
-        "PyPI latest metadata/current-source gate green: True",
+        "source versions match: True (3.3.18)",
+        "PyPI latest metadata/current-source gate green: False",
         "PyPI fresh-install/stdout MCP canary green: True",
         "first-user release gate green: True"
       ],
@@ -25,6 +26,33 @@
         "commit/push and watch CI before claiming shipped"
       ],
       "status": "IN_PROGRESS"
+    },
+    {
+      "assumption_challenge": "A git+https install URL is not proof by itself; pip direct_url must resolve to the expected PR SHA and runtime commands must execute outside the checkout.",
+      "blockers": [],
+      "done": [
+        "snapshot exists: True",
+        "canonical GitHub target: True",
+        "resolved commit: af152bb15ee998dbc091ff6bbbb88fd94b3968bb",
+        "expected commit is 40-hex SHA: True",
+        "resolved commit matches recorded expected: True",
+        "checkout import leakage check passed: True",
+        "failed command count: 0"
+      ],
+      "evidence": [
+        "eval/run_github_source_install_canary.py",
+        "eval/github_source_install_snapshot.json",
+        "pip direct_url.json vcs_info.commit_id",
+        "eval/public_self_serve_launch_gate.py github_source_install_check"
+      ],
+      "id": "github_source_install_cli_api_stdio",
+      "name": "GitHub source install, direct_url commit binding, CLI/API, generated rules, OpenClaw, and local stdio MCP",
+      "outstanding": [
+        "rerun exact-SHA GitHub source canary after final commit",
+        "refresh public/dashboard/watchdog artifacts",
+        "watch exact-head GitHub Actions before merge"
+      ],
+      "status": "GO"
     },
     {
       "assumption_challenge": "Regression tests for narrow fixes are not equivalent to a release proof over every changed surface.",
@@ -58,8 +86,8 @@
     {
       "assumption_challenge": "Local source, PyPI, and fresh stdio MCP can all be green while a long-lived served process is stale.",
       "blockers": [
-        "served runtime borg_version '3.3.14' != source version '3.3.17'",
-        "served runtime source_version '3.3.15' != source version '3.3.17'",
+        "served runtime borg_version '3.3.14' != source version '3.3.18'",
+        "served runtime source_version '3.3.15' != source version '3.3.18'",
         "served runtime version_matches_source is not true",
         "served runtime reload_status is not loaded_code_matches_source_behavior"
       ],
@@ -144,8 +172,8 @@
     {
       "assumption_challenge": "Earlier conditional GO is revoked when release controls or ops freshness fail.",
       "blockers": [
-        "served runtime borg_version '3.3.14' != source version '3.3.17'",
-        "served runtime source_version '3.3.15' != source version '3.3.17'",
+        "served runtime borg_version '3.3.14' != source version '3.3.18'",
+        "served runtime source_version '3.3.15' != source version '3.3.18'",
         "served runtime version_matches_source is not true",
         "served runtime reload_status is not loaded_code_matches_source_behavior"
       ],
@@ -168,8 +196,8 @@
       "assumption_challenge": "A polished dashboard is dangerous if it hides the first-10 or served-runtime blockers.",
       "blockers": [
         "first-10 evidence not passed: verified=0/10, real_users=0/10, installs=0/8, useful=0/6, critical_incidents=0/0",
-        "served runtime borg_version '3.3.14' != source version '3.3.17'",
-        "served runtime source_version '3.3.15' != source version '3.3.17'",
+        "served runtime borg_version '3.3.14' != source version '3.3.18'",
+        "served runtime source_version '3.3.15' != source version '3.3.18'",
         "served runtime version_matches_source is not true",
         "served runtime reload_status is not loaded_code_matches_source_behavior"
       ],
@@ -329,9 +357,8 @@
     }
   ],
   "current_blockers_ordered": [
+    "PyPI package-current/source-alignment proof is not green",
     "served runtime stale or not proven current",
-    "main branch protection/release governance not green",
-    "rollback/self-service ops freshness not green",
     "current hardening branch unshipped/full-proof pending",
     "first-10 external evidence 0/10",
     "public self-serve, 100-user, marketplace, measured-lift claims blocked until above gates pass"
@@ -349,10 +376,14 @@
       "verified_external_users": 0
     },
     "first_user_release_passed": true,
+    "github_source_install_commit_matches_expected": true,
+    "github_source_install_expected_commit_is_sha": true,
+    "github_source_install_passed": true,
+    "github_source_install_resolved_commit": "af152bb15ee998dbc091ff6bbbb88fd94b3968bb",
     "overall_optimality_ceiling": 2.0,
     "pack_optimizer_manual_go": true,
     "pypi_fresh_install_passed": true,
-    "pypi_latest_metadata_current_source_passed": true,
+    "pypi_latest_metadata_current_source_passed": false,
     "release_governance_passed": true,
     "rollback_drill_passed": true,
     "self_service_ops_passed": true,
@@ -360,13 +391,14 @@
     "watchdog_passed": true
   },
   "final_reflective_challenge_pass": [
+    "Could GitHub source proof alone justify public readiness? No: it proves one install channel only; PyPI/current-source, served runtime, governance, ops, and row-derived users are separate gates.",
     "Could package proof alone justify controlled beta? No: current release controls add served-runtime freshness, release-governance freshness, and ops freshness; any red/stale required gate blocks beta.",
     "Could protocol GO mean federated learning is production-ready? No: it proves signed sync/revocation mechanics, not hosted operations or public utility.",
     "Could internal outcome receipts prove recursive learning is ready? Only as internal primitives; external lift and autonomous promotion remain blocked.",
     "Could synthetic load tests stand in for users? No: first-10 row-derived evidence is 0/10 and explicitly blocks public/100-user claims.",
     "Could a dashboard hide these blockers? It must not; stale generated artifacts are themselves blockers until rebuilt from current gates."
   ],
-  "generated_at_utc": "2026-06-03T15:35:44Z",
+  "generated_at_utc": "2026-06-05T10:24:17Z",
   "outstanding": [
     {
       "acceptance": [
@@ -387,7 +419,7 @@
       ],
       "item": "Refresh served runtime through operator-approved cutover",
       "priority": "P0",
-      "why": "Current served fingerprint says 3.3.14 while source targets 3.3.17."
+      "why": "Current served fingerprint says 3.3.14 while source targets 3.3.18."
     },
     {
       "acceptance": [
@@ -485,12 +517,11 @@
   "schema_version": 1,
   "source": {
     "git": {
-      "branch": "post-release-proof-3.3.17",
-      "commit": "aaeaa5da023371bb64beae786ae3d93470162b13",
+      "branch": "ab/git-source-self-service-proof-20260604",
+      "commit": "af152bb15ee998dbc091ff6bbbb88fd94b3968bb",
       "dirty": true,
       "dirty_files": [
         "M docs/20260517_BORG_100_REAL_USER_READINESS.md",
-        " M docs/20260531_BORG_PRODUCTION_INVENTORY_BOARD.md",
         " M docs/BORG_PROOF_DASHBOARD.html",
         " M docs/BORG_PROOF_DASHBOARD.md",
         " M docs/COLD_START_TRUST_HARDENING.md",
@@ -500,10 +531,12 @@
         " M docs/public/proof-dashboard/index.html",
         " M docs/public/status.json",
         " M docs/public/value.json",
+        " M docs/status.json",
         " M eval/borg_proof_dashboard.json",
         " M eval/cold_start_trust_gate_snapshot.json",
+        " M eval/github_source_install_snapshot.json",
+        " M eval/ops_readiness_watchdog_post_dashboard_check.json",
         " M eval/ops_readiness_watchdog_snapshot.json",
-        " M eval/production_inventory_board_snapshot.json",
         " M eval/public_self_serve_launch_gate_snapshot.json",
         " M eval/pypi_fresh_install_snapshot.json",
         " M eval/real_user_rollout_gate_snapshot.json",
@@ -517,15 +550,15 @@
       ]
     },
     "repo": "https://github.com/borg-farther/Borg-Directory",
-    "root": "/root/hermes-workspace/borg",
+    "root": "<repo-root>",
     "versions": {
-      "project_version": "3.3.17",
-      "runtime_version": "3.3.17",
+      "project_version": "3.3.18",
+      "runtime_version": "3.3.18",
       "source_versions_match": true
     }
   },
   "status_counts": {
-    "GO": 2,
+    "GO": 3,
     "GO_INTERNAL_ONLY": 2,
     "GO_PROTOCOL_ONLY": 1,
     "IN_PROGRESS": 2,
@@ -533,7 +566,7 @@
   },
   "task_outline": [
     "reconstruct promised production features from docs/session evidence",
-    "separate proof lanes: source/package, served runtime, governance, ops, external users, federated protocol, recursive learning, measured value",
+    "separate proof lanes: GitHub source install, PyPI package, served runtime, governance, ops, external users, federated protocol, recursive learning, measured value",
     "challenge readiness claims against fail-closed gates and row-derived evidence",
     "produce durable docs and machine-readable outstanding inventory",
     "add regression tests so future edits cannot collapse the boundaries"
@@ -541,16 +574,17 @@
   "top_verdict": {
     "controlled_first_10_beta": "NO_GO",
     "current_source_hardening_branch": "IN_PROGRESS",
+    "github_source_install": "GO",
     "global_federated_learning_protocol": "GO_PROTOCOL_ONLY",
     "google_tier_external_lift": "NO_GO",
     "hundred_real_users": "NO_GO",
     "public_self_serve": "NO_GO",
-    "published_package_local_stdio": "CONDITIONAL_GO",
+    "published_package_local_stdio": "NO_GO",
     "recursive_collective_learning_mechanism": "GO_INTERNAL_ONLY",
     "recursive_pack_optimizer": "GO_INTERNAL_MANUAL_ONLY",
     "remote_mcp_distribution": "NO_GO",
     "served_remote_mcp": "NO_GO",
     "served_runtime_freshness": "NO_GO",
-    "source_package_local_stdio": "IN_PROGRESS"
+    "source_package_local_stdio": "NO_GO"
   }
 }

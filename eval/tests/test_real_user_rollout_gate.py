@@ -114,11 +114,29 @@ def test_real_user_rollout_package_gate_names_same_version_pypi_drift(monkeypatc
         "pypi_fresh_install_check",
         lambda path, version: {"passed": True},
     )
+    monkeypatch.setattr(
+        rollout_gate.public_gate,
+        "github_source_install_check",
+        lambda path, version: {"passed": True},
+    )
 
     result = rollout_gate._public_package_ready()
 
     assert result["passed"] is False
     assert "PyPI latest/fresh-install package evidence is not green: same-version PyPI upload predates current source revision" in result["blockers"]
+
+
+def test_real_user_rollout_package_gate_requires_github_source_install(monkeypatch) -> None:
+    monkeypatch.setattr(rollout_gate, "_version_consistent", lambda: {"project_version": "9.9.9"})
+    monkeypatch.setattr(rollout_gate.public_gate, "pypi_latest_check", lambda version, fetch_network=True: {"passed": True})
+    monkeypatch.setattr(rollout_gate.public_gate, "pypi_fresh_install_check", lambda path, version: {"passed": True})
+    monkeypatch.setattr(rollout_gate.public_gate, "github_source_install_check", lambda path, version: {"passed": False})
+
+    result = rollout_gate._public_package_ready()
+
+    assert result["passed"] is False
+    assert "GitHub source-install evidence is not green: exact source install + MCP stdio canary is not green" in result["blockers"]
+    assert result["github_source_install_and_mcp_stdio"]["passed"] is False
 
 
 def test_real_user_rollout_gate_blocks_controlled_beta_when_release_controls_fail(monkeypatch) -> None:

@@ -50,6 +50,7 @@ SOURCE_PATHS = [
     "eval/ops_readiness_watchdog_snapshot.json",
     "eval/rollback_comms_drill_snapshot.json",
     "eval/pypi_fresh_install_snapshot.json",
+    "eval/github_source_install_snapshot.json",
     "eval/load_10_snapshot.json",
     "eval/load_100_snapshot.json",
     "eval/load_1000_snapshot.json",
@@ -192,6 +193,7 @@ def build_model() -> dict:
     ops_watchdog = load_json("eval/ops_readiness_watchdog_snapshot.json")
     rollback_drill = load_json("eval/rollback_comms_drill_snapshot.json")
     pypi_fresh = load_json("eval/pypi_fresh_install_snapshot.json")
+    github_source = load_json("eval/github_source_install_snapshot.json")
     loads = {str(n): load_json(f"eval/load_{n}_snapshot.json") for n in (10, 100, 1000)}
     pv, rv = pyproject_version(), init_version()
     commit = current_commit()
@@ -233,17 +235,10 @@ def build_model() -> dict:
     cold_start_trust_pass = nested(cold_start_trust, ["passed"])
     self_service_ops_pass = nested(self_service_ops, ["passed"])
     self_service_ops_blockers = nested(self_service_ops, ["blockers"], []) or []
-    try:
-        from eval import self_service_ops_gate as _self_service_ops_gate
-
-        live_self_service_ops = _self_service_ops_gate.compile_gate()
-        if isinstance(live_self_service_ops, dict):
-            self_service_ops = live_self_service_ops
-            self_service_ops_pass = bool(live_self_service_ops.get("passed"))
-            self_service_ops_blockers = live_self_service_ops.get("blockers") or []
-    except Exception as exc:
-        self_service_ops_pass = False
-        self_service_ops_blockers = [f"self-service ops gate could not be evaluated: {exc}"]
+    # Keep dashboard claims artifact-bound: the evidence row hashes
+    # eval/self_service_ops_gate_snapshot.json, so its status/timestamp must come
+    # from that file. Refresh the snapshot before running this dashboard builder
+    # instead of compiling a transient in-memory gate with a different timestamp.
     ops_watchdog_pass = nested(ops_watchdog, ["passed"])
     rollback_drill_pass = nested(rollback_drill, ["passed"])
     if any("rollback_drill_snapshot" in str(blocker) for blocker in self_service_ops_blockers):
@@ -265,6 +260,36 @@ def build_model() -> dict:
     pypi_description_stale = bool(nested(pypi_latest_gate, ["description_stale_copy"], []))
     pypi_alignment_failure = nested(pypi_latest_gate, ["source_upload_alignment", "failure_kind"])
     pypi_package_current = bool(pypi_latest_current is True and pypi_fresh_current)
+    github_source_pass = nested(github_source, ["success"])
+    github_source_version = nested(github_source, ["version"])
+    github_source_mcp_pass = nested(github_source, ["mcp_stdio_canary", "passed"])
+    github_source_leakage_pass = nested(github_source, ["checkout_import_leakage", "passed"])
+    github_source_generated_at = nested(github_source, ["generated_at_utc"])
+    github_source_age = age_hours(github_source_generated_at if isinstance(github_source_generated_at, str) else None)
+    github_source_age_ok = freshness_passed(github_source_age, 24.0)
+    github_source_gate: dict = {
+        "passed": False,
+        "exists": github_source is not None,
+        "path": "eval/github_source_install_snapshot.json",
+        "error": "GitHub source-install gate not evaluated",
+    }
+    try:
+        from eval import public_self_serve_launch_gate as _public_self_serve_launch_gate
+
+        github_source_gate = _public_self_serve_launch_gate.github_source_install_check(
+            ROOT / "eval" / "github_source_install_snapshot.json",
+            str(pv or "UNKNOWN"),
+            max_snapshot_age_hours=24.0,
+        )
+    except Exception as exc:
+        github_source_gate = {
+            "passed": False,
+            "exists": github_source is not None,
+            "path": "eval/github_source_install_snapshot.json",
+            "error": f"GitHub source-install gate could not be evaluated: {exc}",
+        }
+    github_source_green = bool(github_source_gate.get("passed") is True)
+    github_source_current = github_source_green
 
     served_runtime_gate = first_dict(
         nested(public_gate, ["gates", "served_runtime_freshness"]),
@@ -329,6 +354,7 @@ def build_model() -> dict:
     local_release_candidate_ready = bool(version_consistent and (first_gate_pass is True) and (uat_pass is True) and (gate_pass is True))
     controlled_beta_ready = bool(
         pypi_package_current
+        and github_source_current
         and cold_start_trust_pass is True
         and served_runtime_pass is True
         and release_governance_pass is True
@@ -342,9 +368,11 @@ def build_model() -> dict:
         if pypi_description_stale:
             controlled_beta_missing.append("PyPI latest project description/long-description copy")
         elif pypi_fresh_current and pypi_alignment_failure:
-            controlled_beta_missing.append(f"PyPI package source/metadata alignment ({pypi_alignment_failure})")
+            controlled_beta_missing.append(f"PyPI latest package source/metadata alignment ({pypi_alignment_failure})")
         else:
             controlled_beta_missing.append("PyPI latest/fresh-install/stdio MCP package path")
+    if not github_source_current:
+        controlled_beta_missing.append("GitHub source-install/stdio MCP channel")
     if cold_start_trust_pass is not True:
         controlled_beta_missing.append("cold-start trust gate")
     if served_runtime_pass is not True:
@@ -384,15 +412,16 @@ def build_model() -> dict:
         "broad_public_launch": {
             "verdict": "NO-GO" if public_self_serve_pass is not True else "GO",
             "why": (
-                "Public self-serve gate is blocked only by row-derived first-10 external-user evidence; PyPI/latest/fresh-install/MCP/docs/cold-start-trust/served-runtime/release-governance/self-service-ops/ops-watchdog gates are green."
+                "Public self-serve gate is blocked only by row-derived first-10 external-user evidence; PyPI/latest/fresh-install/MCP, GitHub source-install, docs/cold-start-trust/served-runtime/release-governance/self-service-ops/ops-watchdog gates are green."
                 if pypi_package_current
+                and github_source_current
                 and cold_start_trust_pass is True
                 and served_runtime_pass is True
                 and release_governance_pass is True
                 and self_service_ops_pass is True
                 and ops_watchdog_pass is True
                 and public_self_serve_pass is not True
-                else "Public self-serve gate is blocked until PyPI latest/fresh-install/MCP/docs/cold-start-trust/served-runtime/release-governance/self-service-ops/ops-watchdog gates pass and first-10 external evidence exists."
+                else "Public self-serve gate is blocked until PyPI latest/fresh-install/MCP, GitHub source-install, docs/cold-start-trust/served-runtime/release-governance/self-service-ops/ops-watchdog gates pass and first-10 external evidence exists."
             ) if public_self_serve_pass is not True else "Public self-serve gate has passed with row-derived external evidence.",
         },
     }
@@ -417,6 +446,9 @@ def build_model() -> dict:
         "ops_readiness_watchdog": {"value": status_bool(ops_watchdog_pass), "honesty_label": "OPS_PROOF_FRESHNESS_GATE", "provenance": "eval/ops_readiness_watchdog_snapshot.json" if ops_watchdog else "MISSING"},
         "rollback_comms_drill": {"value": status_bool(rollback_drill_pass), "honesty_label": "DRY_RUN_ROLLBACK_COMMS_DRILL", "provenance": "eval/rollback_comms_drill_snapshot.json" if rollback_drill else "MISSING"},
         "pypi_fresh_install_canary": {"value": status_bool(pypi_fresh_current), "honesty_label": "PYPI_FRESH_INSTALL_CURRENT_VERSION", "provenance": "eval/pypi_fresh_install_snapshot.json" if pypi_fresh else "MISSING"},
+        "github_source_install_canary": {"value": status_bool(github_source_current), "honesty_label": "GITHUB_SOURCE_FRESH_INSTALL_CURRENT_VERSION", "provenance": "eval/github_source_install_snapshot.json" if github_source else "MISSING"},
+        "github_source_green": {"value": status_bool(github_source_green), "honesty_label": "STRICT_GITHUB_SOURCE_INSTALL_GATE", "provenance": f"eval/github_source_install_snapshot.json; canonical_target={github_source_gate.get('canonical_install_target')}; missing_results={github_source_gate.get('missing_required_results', [])}; missing_mcp_tools={github_source_gate.get('missing_mcp_tools', [])}"},
+        "github_source_gate_detail": {"value": github_source_gate, "honesty_label": "STRICT_GITHUB_SOURCE_INSTALL_GATE_DETAIL", "provenance": "eval/public_self_serve_launch_gate.py github_source_install_check"},
         "pypi_package_current_gate": {"value": status_bool(pypi_package_current), "honesty_label": "PYPI_METADATA_PLUS_FRESH_INSTALL_CURRENT_SOURCE", "provenance": "eval/public_self_serve_launch_gate_snapshot.json gates.pypi_latest + eval/pypi_fresh_install_snapshot.json"},
         "source_version_consistency": {"value": f"pyproject={pv or 'MISSING'} runtime={rv or 'MISSING'}", "honesty_label": "REPO_SOURCE", "provenance": "pyproject.toml; borg/__init__.py"},
         "host_runtime_split_brain": {"value": status_bool(served_runtime_pass), "honesty_label": "SERVED_RUNTIME_EVIDENCE", "provenance": "Dashboard reads eval/served_runtime_fingerprint_snapshot.json; it does not restart or mutate long-lived Hermes/MCP runtimes. Served runtime GO requires borg_runtime_fingerprint with version_matches_source=true, reload_status=loaded_code_matches_source_behavior, and observe_behavior_canary.passed=true." if served_runtime_snapshot else "MISSING eval/served_runtime_fingerprint_snapshot.json; source/fresh-process green is not live cutover proof."},
@@ -427,6 +459,7 @@ def build_model() -> dict:
         "user_affecting": [
             "No real external first-user install/rescue outcome has been recorded yet.",
             "PyPI package gate is not green for the current source revision yet." if not pypi_package_current else "PyPI latest metadata and fresh-install canary are green for the current source revision.",
+            "GitHub source-install canary is not green for the current source revision yet." if not github_source_current else "GitHub source-install canary is green: git-based install, CLI/API, and local stdio MCP work from an isolated non-repo environment.",
             "Cold-start trust gate is not green yet." if cold_start_trust_pass is not True else "Cold-start trust gate is green: meta/readiness prompts fail closed before random framework guidance reaches first users.",
             "Served runtime freshness gate is not green yet." if served_runtime_pass is not True else "Served runtime freshness gate is green: live MCP fingerprint matches source and behavior canaries.",
             "Release governance gate is not green yet." if release_governance_pass is not True else "Release governance gate is green: main branch protection, required checks, and CODEOWNERS review are proven.",
@@ -526,6 +559,10 @@ def build_model() -> dict:
         evidence.append(source_record("eval/pypi_fresh_install_snapshot.json", f"PyPI fresh-install canary success={pypi_fresh_pass}; version={nested(pypi_fresh, ['version'])}", nested(pypi_fresh, ["generated_at_utc"])))
     else:
         evidence.append(source_record("eval/pypi_fresh_install_snapshot.json", "PyPI fresh-install canary missing"))
+    if github_source:
+        evidence.append(source_record("eval/github_source_install_snapshot.json", f"GitHub source-install canary strict_gate={github_source_green}; success={github_source_pass}; version={nested(github_source, ['version'])}; canonical_target={github_source_gate.get('canonical_install_target')}; missing_required_results={github_source_gate.get('missing_required_results', [])}; missing_mcp_tools={github_source_gate.get('missing_mcp_tools', [])}", freshness_value(nested(github_source, ["generated_at_utc"]))))
+    else:
+        evidence.append(source_record("eval/github_source_install_snapshot.json", "GitHub source-install canary missing"))
     for n, data in loads.items():
         evidence.append(source_record(f"eval/load_{n}_snapshot.json", f"logical load {n}: passed={load_summary[str(n)]['passed']}; total_requests={load_summary[str(n)]['total_requests']}; success_rate={load_summary[str(n)]['success_rate']}; p95_ms={load_summary[str(n)]['p95_ms']}; model={load_summary[str(n)]['concurrency_model']}", load_summary[str(n)]["timestamp"]))
     evidence.append(source_record("pyproject.toml", f"package version={pv}; scripts declared in project metadata"))
@@ -677,6 +714,7 @@ def build_public_payloads(model: dict) -> tuple[dict, dict, dict]:
     controlled_is_green = controlled.get("verdict") == "CONDITIONAL"
     broad_is_green = broad.get("verdict") == "GO"
     package_path_green = metrics.get("pypi_package_current_gate", {}).get("value") == "PASS"
+    github_source_path_green = metrics.get("github_source_green", {}).get("value") == "PASS"
     pypi_fresh_green = metrics.get("pypi_fresh_install_canary", {}).get("value") == "PASS"
     flat_blockers = [str(item) for items in blockers.values() for item in (items if isinstance(items, list) else [items])]
     pypi_metadata_stale = any("description" in item.lower() or "long-description" in item.lower() or "metadata" in item.lower() for item in flat_blockers)
@@ -686,9 +724,12 @@ def build_public_payloads(model: dict) -> tuple[dict, dict, dict]:
     elif controlled_is_green:
         public_state = "NO-GO public self-serve; controlled first-10 beta CONDITIONAL GO while gates remain green"
         value_detail = "Controlled first-10 public-package beta package, served-runtime, release-governance, and ops guardrails are green; public self-serve remains blocked until row-derived first-10 external-user evidence passes."
+    elif package_path_green and github_source_path_green:
+        public_state = "NO-GO public self-serve; package and GitHub source proof green, release controls blocked"
+        value_detail = "Public-package and GitHub source-install controlled beta channels are green, but controlled beta remains blocked until the failing release-control and ops gates pass; served-runtime freshness, release governance, rollback/self-service ops, watchdog, docs guard, and privacy/security gates must all stay green before invites."
     elif package_path_green:
-        public_state = "NO-GO public self-serve; public package proof green, release controls blocked"
-        value_detail = "Public-package controlled beta remains blocked until the failing release-control and ops gates pass; PyPI/package proof is green, but served-runtime freshness, release governance, rollback/self-service ops, watchdog, docs guard, and privacy/security gates must all stay green before invites."
+        public_state = "NO-GO public self-serve; public package proof green, GitHub source proof blocked"
+        value_detail = "Public-package controlled beta remains blocked: PyPI/package proof is green, but GitHub source-install proof or release-control/ops gates are not green for this source revision."
     elif pypi_fresh_green and not package_path_green:
         public_state = "NO-GO public self-serve; PyPI runtime canary green, package metadata stale"
         if pypi_metadata_stale:
@@ -724,6 +765,8 @@ def build_public_payloads(model: dict) -> tuple[dict, dict, dict]:
         "self_service_ops_gate": metrics.get("self_service_ops_gate", {}).get("value", "UNKNOWN"),
         "ops_readiness_watchdog": metrics.get("ops_readiness_watchdog", {}).get("value", "UNKNOWN"),
         "rollback_comms_drill": metrics.get("rollback_comms_drill", {}).get("value", "UNKNOWN"),
+        "github_source_green": metrics.get("github_source_green", {}).get("value", "UNKNOWN"),
+        "github_source_install_canary": metrics.get("github_source_install_canary", {}).get("value", "UNKNOWN"),
         "blockers": blockers,
         "evidence": [
             "eval/first_user_release_gate_snapshot.json",
@@ -735,6 +778,7 @@ def build_public_payloads(model: dict) -> tuple[dict, dict, dict]:
             "eval/ops_readiness_watchdog_snapshot.json",
             "eval/rollback_comms_drill_snapshot.json",
             "eval/pypi_fresh_install_snapshot.json",
+            "eval/github_source_install_snapshot.json",
             "eval/real_user_rollout_gate_snapshot.json",
         ],
     }

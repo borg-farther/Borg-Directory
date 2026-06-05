@@ -1,7 +1,7 @@
 # Borg first-10 user invite packet
 
 Generated: 2026-05-14T18:25:05Z
-Rev: 2026-06-03T19:10:00Z — controlled first-10 beta install path uses the published/canaried PyPI package `agent-borg==3.3.18`, but this packet is **not sendable right now**. Send only after the latest public gate confirms served-runtime freshness and first-10 evidence intake readiness; package/local runtime canaries are already green.
+Rev: 2026-06-04T21:46:00Z — controlled first-10 beta install commands are **not sendable right now**. Send only after the latest public gate confirms a new immutable package has green PyPI package-current/source-alignment proof, served-runtime freshness, and first-10 evidence intake readiness. The GitHub exact-SHA source lane is canary-green for local CLI/API/stdio MCP/generated-rules/OpenClaw, but published PyPI `agent-borg==3.3.18` package-current/source-alignment proof is red.
 
 ## Exact invite message
 
@@ -9,7 +9,7 @@ Hi — we are preparing a small consented Borg beta for the first 10 external us
 
 ## Install commands
 
-STOP gate: these commands are for the controlled first-10 beta only. Do **not** send them while the current cap is 0. Do **not** send them if served-runtime freshness fails, if `python eval/run_pypi_fresh_install_canary.py --version 3.3.18` regresses, or if more than 10 real external users would be invited before the first-10 evidence gate passes.
+STOP gate: these commands are for a future controlled first-10 beta only. Do **not** send them while the current cap is 0. Do **not** send them while the package-current/source-alignment proof is red, if served-runtime freshness fails, or if more than 10 real external users would be invited before the first-10 evidence gate passes.
 
 Preferred isolated install:
 

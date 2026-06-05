@@ -15,8 +15,6 @@ jobs:
     permissions:
       contents: read
       actions: read
-    env:
-      GITHUB_TOKEN: ${{ github.token }}
     steps:
       - uses: actions/checkout@v4
         with:
@@ -41,9 +39,22 @@ jobs:
           if [ "$rc_pypi" -ne 0 ]; then
             echo "PyPI canary failed; continuing so public/readiness gates can fail closed with the fresh snapshot."
           fi
+          SOURCE_CANARY_REPOSITORY="${GITHUB_REPOSITORY}"
+          SOURCE_CANARY_SHA="${GITHUB_SHA}"
+          if [ "${{ github.event_name }}" = "pull_request" ]; then
+            SOURCE_CANARY_REPOSITORY="${{ github.event.pull_request.head.repo.full_name }}"
+            SOURCE_CANARY_SHA="${{ github.event.pull_request.head.sha }}"
+          fi
+          set +e
+          python eval/run_github_source_install_canary.py --install-source "git+https://github.com/${SOURCE_CANARY_REPOSITORY}.git@${SOURCE_CANARY_SHA}" --expected-commit "${SOURCE_CANARY_SHA}"
+          rc_github_source=$?
+          set -e
+          if [ "$rc_github_source" -ne 0 ]; then
+            echo "GitHub source canary failed; continuing so public/readiness gates can fail closed with the fresh snapshot."
+          fi
           python eval/cold_start_trust_gate.py
           set +e
-          python eval/release_governance_gate.py --output eval/release_governance_snapshot.json
+          GITHUB_TOKEN="${{ github.token }}" python eval/release_governance_gate.py --output eval/release_governance_snapshot.json
           rc_governance=$?
           set -e
           if [ "$rc_governance" -ne 0 ]; then
@@ -56,7 +67,7 @@ jobs:
           python eval/rollback_comms_drill.py
           python eval/self_service_ops_gate.py
           set +e
-          python eval/public_self_serve_launch_gate.py > /tmp/public_gate.json
+          python eval/public_self_serve_launch_gate.py --skip-ops-watchdog > /tmp/public_gate.json
           rc_public=$?
           python eval/real_user_rollout_gate.py > /tmp/real_user_gate.json
           rc_real=$?
@@ -73,46 +84,57 @@ jobs:
           fi
           python - <<'PY'
           import json
+          from eval.ops_readiness_watchdog import (
+              _has_first_10_gap,
+              _has_package_release_gap,
+              _has_release_control_gap,
+              _is_first_10_blocker,
+              _is_package_release_blocker,
+              _is_release_control_blocker,
+          )
           data=json.load(open('/tmp/public_gate.json'))
           assert data['ready_for_public_self_serve_launch'] is False
-          blockers='\n'.join(data.get('blockers') or []).lower()
+          blocker_list = data.get('blockers') or []
           controlled_package = data['ready_for_controlled_first_10_beta'] is True and data['max_recommended_real_users_now'] == 10
-          pre_publish = (
+          controlled_blocked_by_known_gates = (
               data['ready_for_controlled_first_10_beta'] is False
               and data['max_recommended_real_users_now'] == 0
-              and ('pypi latest' in blockers or 'latest metadata' in blockers or 'pypi project description' in blockers or 'long-description' in blockers or 'package metadata' in blockers)
-              and ('fresh-install' in blockers or 'fresh install' in blockers or 'mcp stdio' in blockers)
-              and ('first-10' in blockers or 'verified=' in blockers)
-          )
-          release_controls_blocked = (
-              data['ready_for_controlled_first_10_beta'] is False
-              and data['max_recommended_real_users_now'] == 0
-              and ('served runtime' in blockers or 'version_matches_source' in blockers or 'reload_status' in blockers)
-              and ('release governance' in blockers or 'codeowners' in blockers or 'branch protection' in blockers or 'main branch is not protected' in blockers)
-              and ('first-10' in blockers or 'verified=' in blockers)
-          )
-          metadata_stale_blocked = (
-              data['ready_for_controlled_first_10_beta'] is False
-              and data['max_recommended_real_users_now'] == 0
-              and ('pypi project description' in blockers or 'long-description' in blockers or 'package metadata' in blockers)
-              and ('first-10' in blockers or 'verified=' in blockers)
+              and _has_first_10_gap(blocker_list)
+              and (_has_package_release_gap(blocker_list) or _has_release_control_gap(blocker_list))
           )
           def _is_first_10(blocker):
-              b=blocker.lower()
-              return 'first-10' in b or 'verified=' in b or 'external-user evidence' in b
+              return _is_first_10_blocker(str(blocker))
           def _is_package(blocker):
-              b=blocker.lower()
-              return 'pypi latest' in b or 'latest metadata' in b or 'pypi project description' in b or 'long-description' in b or 'package metadata' in b or 'fresh-install' in b or 'fresh install' in b or 'mcp stdio' in b
+              return _is_package_release_blocker(str(blocker))
           def _is_release_control(blocker):
-              b=blocker.lower()
-              return 'served runtime' in b or 'version_matches_source' in b or 'reload_status' in b or 'release governance' in b or 'codeowners' in b or 'branch protection' in b or 'main branch is not protected' in b
-          allowed_public_blockers = all(_is_first_10(b) or _is_package(b) or _is_release_control(b) for b in (data.get('blockers') or []))
-          assert (controlled_package or pre_publish or release_controls_blocked or metadata_stale_blocked) and allowed_public_blockers
+              return _is_release_control_blocker(str(blocker))
+          allowed_public_blockers = all(_is_first_10(b) or _is_package(b) or _is_release_control(b) for b in blocker_list)
+          assert (controlled_package or controlled_blocked_by_known_gates) and allowed_public_blockers
           PY
 
       - name: Rebuild public dashboard before watchdog source-honesty check
         run: |
           python scripts/build_borg_proof_dashboard.py
+
+      - name: Refresh public and real-user snapshots after dashboard rebuild
+        run: |
+          set -euo pipefail
+          set +e
+          python eval/public_self_serve_launch_gate.py --skip-ops-watchdog > /tmp/public_gate_after_dashboard.json
+          rc_public=$?
+          python eval/real_user_rollout_gate.py > /tmp/real_user_gate_after_dashboard.json
+          rc_real=$?
+          set -e
+          cat /tmp/public_gate_after_dashboard.json
+          cat /tmp/real_user_gate_after_dashboard.json
+          if [ "$rc_public" -ne 1 ]; then
+            echo "expected public self-serve gate to fail closed after dashboard rebuild; got rc=$rc_public"
+            exit 1
+          fi
+          if [ "$rc_real" -ne 1 ]; then
+            echo "expected real-user rollout gate to fail closed after dashboard rebuild; got rc=$rc_real"
+            exit 1
+          fi
 
       - name: Regenerate watchdog snapshot for dashboard evidence
         run: |

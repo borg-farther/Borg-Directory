@@ -2,7 +2,7 @@
 
 ## Current verdict
 
-- Controlled first-10 beta: **NO-GO right now**. `agent-borg==3.3.18` is the published metadata-correct package; exact-version fresh-install/stdio MCP/generated-rules/OpenClaw runtime canaries are green. GitHub `main` release governance is enforced; the served runtime fingerprint is stale and remains a separate release-control blocker, and first-10 external-user evidence is still zero.
+- Controlled first-10 beta: **NO-GO right now**. GitHub exact-SHA source install is canary-green for local CLI/API/stdio MCP/generated-rules/OpenClaw at the proven PR head. Published PyPI `agent-borg==3.3.18` is not package-current for this source line and the package-current/source-alignment proof is red because package-impacting source/metadata changed after the immutable `3.3.18` tag/reference. GitHub `main` release governance is enforced; the served runtime fingerprint is stale and remains a separate release-control blocker, and first-10 external-user evidence is still zero.
 - Public waitlist / narrow beta: **0 testers may proceed** until served-runtime freshness is green and first-10 evidence intake is ready to capture consented external-user rows; then the first-10 evidence contract caps the cohort at 10.
 - Public self-serve launch: **NO-GO until first-10 external-user evidence passes** (10 verified external users, >=8 installs, >=6 useful rescues, 0 critical incidents).
 
@@ -14,7 +14,7 @@
 - First-10 contract exists: [`FIRST_10_BETA_READINESS.md`](FIRST_10_BETA_READINESS.md).
 - Security/privacy/prompt-injection surface has a baseline and CI gates.
 - GitHub CI/security gates are part of the release proof chain. PR branches still need their own green checks and post-merge `main` proof refresh before branch-specific source changes are claimed on `main`.
-- Local first-user gate and production PyPI package canaries are current for `agent-borg==3.3.18`, including generated rules, OpenClaw export, stdio MCP, CLI, and Python API. Served-runtime freshness and first-10 external-user evidence remain the current release-control blockers.
+- Local first-user gates and GitHub exact-SHA source install canaries are green for local CLI/API/stdio MCP/generated-rules/OpenClaw from an isolated non-repo environment. Published PyPI `agent-borg==3.3.18` is usable for basic install/CLI/API/MCP signals, but the package-current/source-alignment proof remains red until a new immutable version ships the post-tag package-impacting changes. Served-runtime freshness and first-10 external-user evidence remain the current release-control blockers.
 
 ## What is not proven
 

@@ -524,9 +524,11 @@ def load_pack(pack_identifier: str) -> Dict[str, Any]:
     if env_packs_dir:
         pack_roots.append(pathlib.Path(env_packs_dir))
 
-    # Backward-compatible local maintainer checkout path. Keep it last and guard all
-    # probes because CI users may not be allowed to stat paths under /root.
-    pack_roots.append(pathlib.Path("/root/hermes-workspace/guild-packs/packs"))
+    # Optional maintainer checkout path.  It must be opt-in so clean CI, PyPI,
+    # and GitHub source installs cannot false-green by probing AB's workspace.
+    maintainer_packs_dir = os.environ.get("BORG_MAINTAINER_PACKS_DIR")
+    if maintainer_packs_dir:
+        pack_roots.append(pathlib.Path(maintainer_packs_dir))
 
     seen: set[str] = set()
     for pack_root in pack_roots:

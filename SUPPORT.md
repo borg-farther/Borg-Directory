@@ -1,6 +1,6 @@
 # Borg support policy
 
-Borg uses `agent-borg==3.3.18` as the published metadata-correct immutable package; exact-version fresh-install, stdio MCP, generated-rules, OpenClaw, CLI, and Python API canary proof is green. Controlled first-10 beta is currently **NO-GO** until served-runtime freshness and first-10 external-user evidence gates are green. GitHub `main` release governance is enforced; package/local proof is green; served runtime freshness and first-10 external-user evidence remain separate blockers. Broad public self-serve, 100-user rollout, served remote MCP, and measured lift are not claimed.
+Borg uses `agent-borg==3.3.18` as the published immutable package whose exact-version runtime canaries pass; package-current proof for this post-tag source line is red until a new immutable version is published. Controlled first-10 beta is currently **NO-GO** until served-runtime freshness and first-10 external-user evidence gates are green. GitHub `main` release governance is enforced; local runtime canaries pass for the immutable package, but package-current proof is red; served runtime freshness and first-10 external-user evidence remain separate blockers. Broad public self-serve, 100-user rollout, served remote MCP, and measured lift are not claimed.
 
 ## Supported path
 

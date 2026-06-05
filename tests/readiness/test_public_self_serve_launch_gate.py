@@ -231,6 +231,92 @@ def _write_release_runtime_snapshots(root: Path) -> None:
     _write_release_governance_snapshot(root)
 
 
+def _write_github_source_install_snapshot(root: Path, *, version: str = "9.9.9", passed: bool = True) -> None:
+    resolved_commit = "f" * 40
+    required_results = [
+        "fresh_venv_create",
+        "pip_install_git_source",
+        "pip_direct_url_agent_borg",
+        "pip_show_agent_borg",
+        "borg_version",
+        "borg_help",
+        "borg_rescue_json",
+        "borg_doctor_json",
+        "borg_generate_systematic_debugging_rules",
+        "borg_convert_openclaw_registry",
+        "python_api_check",
+    ]
+    (root / "eval" / "github_source_install_snapshot.json").write_text(
+        json.dumps({
+            "success": passed,
+            "version": version,
+            "install_source": "github_source",
+            "install_target": f"git+https://github.com/borg-farther/Borg-Directory.git@{resolved_commit}",
+            "source_resolution": {
+                "passed": passed,
+                "resolved_commit": resolved_commit,
+                "expected_commit": resolved_commit,
+                "commit_matches_expected": passed,
+                "requested_revision": "main",
+            },
+            "generated_at_utc": _fresh_timestamp(),
+            "results": [{"name": name, "passed": passed} for name in required_results],
+            "mcp_stdio_canary": {
+                "passed": passed,
+                "server_info": {"name": "borg-mcp-server", "version": version},
+                "required_tools_present": ["borg_observe", "borg_rescue", "borg_runtime_fingerprint", "error_lookup"],
+                "alias_value_signal": passed,
+                "fingerprint_signal": passed,
+            },
+            "checkout_import_leakage": {"passed": passed, "installed_file": "/tmp/borg-venv/site-packages/borg/__init__.py"},
+        }),
+        encoding="utf-8",
+    )
+
+
+def _trust_github_source_commit_binding(monkeypatch) -> None:  # type: ignore[no-untyped-def]
+    monkeypatch.setattr(
+        gate,
+        "_source_commit_is_honest_for_current_head",
+        lambda commit: {
+            "passed": True,
+            "resolved_commit": commit,
+            "head": commit,
+            "reason": "unit_test_commit_binding_trusted",
+            "changed_paths_since_resolved": [],
+        },
+    )
+
+
+def test_source_commit_honesty_rejects_ancestor_with_non_generated_dirty_paths(monkeypatch) -> None:
+    base = "a" * 40
+    head = "b" * 40
+    monkeypatch.setattr(gate, "_git_output", lambda args: head if args == ["rev-parse", "HEAD"] else "")
+    monkeypatch.setattr(gate, "_status_paths", lambda: ["eval/github_source_install_snapshot.json", "borg/cli.py"])
+    monkeypatch.setattr(gate, "_git_is_ancestor", lambda candidate, current: candidate == base and current == head)
+    monkeypatch.setattr(gate, "_git_lines", lambda args: ["eval/github_source_install_snapshot.json"])
+
+    result = gate._source_commit_is_honest_for_current_head(base)
+
+    assert result["passed"] is False
+    assert result["reason"] == "non_generated_dirty_paths"
+    assert result["non_generated_dirty_paths"] == ["borg/cli.py"]
+
+
+def test_source_commit_honesty_accepts_ancestor_with_only_generated_dirty_paths(monkeypatch) -> None:
+    base = "a" * 40
+    head = "b" * 40
+    monkeypatch.setattr(gate, "_git_output", lambda args: head if args == ["rev-parse", "HEAD"] else "")
+    monkeypatch.setattr(gate, "_status_paths", lambda: ["eval/github_source_install_snapshot.json", "docs/status.json"])
+    monkeypatch.setattr(gate, "_git_is_ancestor", lambda candidate, current: candidate == base and current == head)
+    monkeypatch.setattr(gate, "_git_lines", lambda args: ["eval/github_source_install_snapshot.json"])
+
+    result = gate._source_commit_is_honest_for_current_head(base)
+
+    assert result["passed"] is True
+    assert result["reason"] == "ancestor_with_only_generated_artifacts"
+
+
 def test_row_derived_evidence_rejects_forged_aggregates_with_empty_rows() -> None:
     data = _scoreboard([])
     data["truth_policy"]["verified_external_users"] = 10  # type: ignore[index]
@@ -387,6 +473,28 @@ def test_docs_claim_guard_blocks_controlled_beta_go_until_package_canary_passes(
     assert any(v["kind"] == "controlled first-10 package GO before PyPI canary" for v in result["violations"])
 
 
+def test_docs_claim_guard_allows_future_condition_action_queue_when_package_is_red(tmp_path: Path, monkeypatch) -> None:
+    monkeypatch.setattr(gate, "ROOT", tmp_path)
+    doc = tmp_path / "docs" / "BORG_PROOF_DASHBOARD.md"
+    doc.parent.mkdir()
+    doc.write_text(
+        "Do not invite controlled first-10 testers yet: publish immutable `agent-borg==9.9.9`, "
+        "then require PyPI latest metadata, fresh-install, stdio MCP, served-runtime, "
+        "release-governance, ops, and watchdog gates to pass before using that exact version with testers.\n",
+        encoding="utf-8",
+    )
+
+    result = gate.docs_claim_guard(
+        [Path("docs/BORG_PROOF_DASHBOARD.md")],
+        "9.9.9",
+        public_evidence_ready=False,
+        package_evidence_ready=False,
+    )
+
+    assert result["passed"] is True
+    assert result["violations"] == []
+
+
 def test_docs_claim_guard_blocks_markdown_stale_package_no_go_after_canary(tmp_path: Path, monkeypatch) -> None:
     monkeypatch.setattr(gate, "ROOT", tmp_path)
     doc = tmp_path / "README.md"
@@ -503,7 +611,10 @@ def test_docs_claim_guard_blocks_metadata_stale_package_current_and_invite_copy(
     for path in [doc, invite, value, landing]:
         path.parent.mkdir(parents=True, exist_ok=True)
     doc.write_text(
-        "Borg's published `agent-borg==9.9.9` package is current for this source/package line.\n",
+        "Borg's published `agent-borg==9.9.9` package is current for this source/package line.\n"
+        "It is a metadata-correct production PyPI package for the current source line.\n"
+        "PyPI latest metadata and fresh install pass.\n"
+        "GitHub direct install: GO only after origin/main has CI green.\n",
         encoding="utf-8",
     )
     invite.write_text(
@@ -535,6 +646,10 @@ def test_docs_claim_guard_blocks_metadata_stale_package_current_and_invite_copy(
     kinds = {violation["kind"] for violation in result["violations"]}
     assert result["passed"] is False
     assert "package-current proof claim before metadata-correct package" in kinds
+    assert "metadata-correct package claim before current package proof" in kinds
+    assert "current-source package claim before current package proof" in kinds
+    assert "PyPI latest metadata pass claim before current package proof" in kinds
+    assert "GitHub direct install GO claim without first-user evidence" in kinds
     assert "invite packet condition omits metadata/runtime/ops blockers" in kinds
     assert "active first-10 invite copy before beta gates" in kinds
     assert "unmeasured zero-failure/value claim without external evidence" in kinds
@@ -1081,6 +1196,7 @@ def test_public_self_serve_gate_passes_only_when_all_artifacts_and_real_rows_pas
     monkeypatch.setattr(gate, "ROOT", tmp_path)
     monkeypatch.setattr(gate, "CURRENT_CLAIM_DOCS", [Path("README.md")])
     monkeypatch.setattr(gate, "source_revision_state", _clean_source_revision_state)
+    _trust_github_source_commit_binding(monkeypatch)
     (tmp_path / "eval").mkdir()
     (tmp_path / "docs").mkdir()
     (tmp_path / "pyproject.toml").write_text('[project]\nname = "agent-borg"\nversion = "9.9.9"\n', encoding="utf-8")
@@ -1101,6 +1217,7 @@ def test_public_self_serve_gate_passes_only_when_all_artifacts_and_real_rows_pas
         }),
         encoding="utf-8",
     )
+    _write_github_source_install_snapshot(tmp_path)
 
     snapshot = gate.compile_gate(
         fetch_network=False,
@@ -1115,6 +1232,7 @@ def test_public_self_serve_gate_blocks_empty_evidence_even_when_infra_passes(tmp
     monkeypatch.setattr(gate, "ROOT", tmp_path)
     monkeypatch.setattr(gate, "CURRENT_CLAIM_DOCS", [Path("README.md")])
     monkeypatch.setattr(gate, "source_revision_state", _clean_source_revision_state)
+    _trust_github_source_commit_binding(monkeypatch)
     (tmp_path / "eval").mkdir()
     (tmp_path / "pyproject.toml").write_text('[project]\nname = "agent-borg"\nversion = "9.9.9"\n', encoding="utf-8")
     (tmp_path / "README.md").write_text("pipx install agent-borg==9.9.9\nPublic self-serve launch: NO-GO until evidence.\n", encoding="utf-8")
@@ -1134,6 +1252,7 @@ def test_public_self_serve_gate_blocks_empty_evidence_even_when_infra_passes(tmp
         }),
         encoding="utf-8",
     )
+    _write_github_source_install_snapshot(tmp_path)
 
     snapshot = gate.compile_gate(
         fetch_network=False,
@@ -1244,10 +1363,22 @@ def test_public_self_serve_gate_blocks_when_ops_watchdog_fails(tmp_path: Path, m
     assert any("ops readiness watchdog failed" in blocker for blocker in snapshot["blockers"])
 
 
+def test_public_self_serve_gate_can_skip_ops_watchdog_for_watchdog_bootstrap(tmp_path: Path, monkeypatch) -> None:
+    _write_public_gate_happy_fixture(tmp_path, monkeypatch)
+    _write_ops_watchdog_snapshot(tmp_path, passed=False)
+
+    snapshot = gate.compile_gate(fetch_network=False, pypi_data=_pypi_fixture(), require_ops_watchdog=False)
+
+    assert snapshot["gates"]["ops_readiness_watchdog"]["passed"] is True
+    assert snapshot["gates"]["ops_readiness_watchdog"]["skipped"] is True
+    assert not any("ops readiness watchdog" in blocker for blocker in snapshot["blockers"])
+
+
 def _write_public_gate_happy_fixture(root: Path, monkeypatch) -> None:  # type: ignore[no-untyped-def]
     monkeypatch.setattr(gate, "ROOT", root)
     monkeypatch.setattr(gate, "CURRENT_CLAIM_DOCS", [Path("README.md")])
     monkeypatch.setattr(gate, "source_revision_state", _clean_source_revision_state)
+    _trust_github_source_commit_binding(monkeypatch)
     (root / "eval").mkdir()
     (root / "pyproject.toml").write_text('[project]\nname = "agent-borg"\nversion = "9.9.9"\n', encoding="utf-8")
     (root / "README.md").write_text("pipx install agent-borg==9.9.9\nPublic self-serve launch: NO-GO until evidence.\n", encoding="utf-8")
@@ -1267,6 +1398,7 @@ def _write_public_gate_happy_fixture(root: Path, monkeypatch) -> None:  # type: 
         }),
         encoding="utf-8",
     )
+    _write_github_source_install_snapshot(root)
 
 
 def test_public_self_serve_gate_blocks_when_served_runtime_is_stale(tmp_path: Path, monkeypatch) -> None:
@@ -1393,6 +1525,7 @@ def _write_rollout_fixture(root: Path, *, watchdog_passed: bool) -> None:
         }),
         encoding="utf-8",
     )
+    _write_github_source_install_snapshot(root)
     (root / "eval" / "first_10_user_scoreboard.json").write_text(json.dumps(_scoreboard([])), encoding="utf-8")
     _write_ops_watchdog_snapshot(root, passed=watchdog_passed)
     _write_release_runtime_snapshots(root)
@@ -1402,6 +1535,7 @@ def test_real_user_rollout_gate_blocks_controlled_beta_when_ops_watchdog_fails(t
     monkeypatch.setattr(rollout, "ROOT", tmp_path)
     monkeypatch.setattr(rollout.public_gate, "ROOT", tmp_path)
     monkeypatch.setattr(rollout.public_gate, "source_version", lambda: "9.9.9")
+    _trust_github_source_commit_binding(monkeypatch)
     monkeypatch.setattr(rollout.public_gate, "pypi_latest_check", lambda expected, fetch_network=True: {"passed": True, "version": expected})
     monkeypatch.setattr(rollout.public_gate.release_governance_gate, "fetch_live_branch_payload", lambda repo, branch: _release_governance_payload(protected=True))
     monkeypatch.setattr(rollout.public_gate.release_governance_gate, "fetch_codeowners_errors", lambda repo, ref=None: [])
@@ -1421,6 +1555,7 @@ def test_real_user_rollout_gate_allows_controlled_beta_only_when_ops_watchdog_pa
     monkeypatch.setattr(rollout, "ROOT", tmp_path)
     monkeypatch.setattr(rollout.public_gate, "ROOT", tmp_path)
     monkeypatch.setattr(rollout.public_gate, "source_version", lambda: "9.9.9")
+    _trust_github_source_commit_binding(monkeypatch)
     monkeypatch.setattr(rollout.public_gate, "pypi_latest_check", lambda expected, fetch_network=True: {"passed": True, "version": expected})
     monkeypatch.setattr(rollout.public_gate.release_governance_gate, "fetch_live_branch_payload", lambda repo, branch: _release_governance_payload(protected=True))
     monkeypatch.setattr(rollout.public_gate.release_governance_gate, "fetch_codeowners_errors", lambda repo, ref=None: [])
@@ -1440,6 +1575,7 @@ def test_real_user_rollout_gate_blocks_controlled_beta_when_release_controls_fai
     monkeypatch.setattr(rollout, "ROOT", tmp_path)
     monkeypatch.setattr(rollout.public_gate, "ROOT", tmp_path)
     monkeypatch.setattr(rollout.public_gate, "source_version", lambda: "9.9.9")
+    _trust_github_source_commit_binding(monkeypatch)
     monkeypatch.setattr(rollout.public_gate, "pypi_latest_check", lambda expected, fetch_network=True: {"passed": True, "version": expected})
     monkeypatch.setattr(rollout.public_gate.release_governance_gate, "fetch_live_branch_payload", lambda repo, branch: _release_governance_payload(protected=True))
     monkeypatch.setattr(rollout.public_gate.release_governance_gate, "fetch_codeowners_errors", lambda repo, ref=None: [])
@@ -1459,9 +1595,9 @@ def test_pypi_fresh_install_canary_fails_closed_when_release_not_on_pypi(monkeyp
     def fake_run_cmd(name, cmd, **kwargs):  # type: ignore[no-untyped-def]
         calls.append(name)
         if name == "fresh_venv_create":
-            return canary.CommandResult(name, list(cmd), 0, True, "", "", 0.0, "exit=0")
+            return canary.CommandResult(name, list(cmd), "/tmp", 0, True, "", "", 0.0, "exit=0")
         if name == "pip_install_agent_borg":
-            return canary.CommandResult(name, list(cmd), 1, False, "", "ERROR: No matching distribution found", 0.0, "exit=1")
+            return canary.CommandResult(name, list(cmd), "/tmp", 1, False, "", "ERROR: No matching distribution found", 0.0, "exit=1")
         raise AssertionError(f"unexpected command after failed install: {name}")
 
     monkeypatch.setattr(canary, "run_cmd", fake_run_cmd)
@@ -1502,7 +1638,7 @@ def test_pypi_mcp_canary_accepts_installed_package_runtime_fingerprint(monkeypat
     stdout = "\n".join(json.dumps(response) for response in responses) + "\n"
 
     def fake_run_cmd(name, cmd, **kwargs):  # type: ignore[no-untyped-def]
-        return canary.CommandResult(name, list(cmd), 0, True, stdout, "", 0.0, "exit=0")
+        return canary.CommandResult(name, list(cmd), "/tmp", 0, True, stdout, "", 0.0, "exit=0")
 
     monkeypatch.setattr(canary, "run_cmd", fake_run_cmd)
 

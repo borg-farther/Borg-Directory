@@ -3,8 +3,9 @@
 
 This is the canonical hard gate for broad public self-serve. It is intentionally
 stricter than local first-user or synthetic load gates: it requires row-derived
-external-user evidence, PyPI latest/fresh-install proof, MCP stdio canary proof,
-and docs/claim consistency. It returns nonzero until those are all true.
+external-user evidence, PyPI latest/fresh-install proof, GitHub source-install
+proof, MCP stdio canary proof, and docs/claim consistency. It returns nonzero
+until those are all true.
 """
 from __future__ import annotations
 
@@ -40,6 +41,21 @@ BANNED_PYPI_COPY = [
     "Collective Intelligence for AI Agents",
     "collective intelligence for AI agents",
 ]
+CANONICAL_GITHUB_INSTALL_PREFIX = "git+https://github.com/borg-farther/Borg-Directory.git@"
+REQUIRED_GITHUB_SOURCE_CANARY_RESULTS = {
+    "fresh_venv_create",
+    "pip_install_git_source",
+    "pip_direct_url_agent_borg",
+    "pip_show_agent_borg",
+    "borg_version",
+    "borg_help",
+    "borg_rescue_json",
+    "borg_doctor_json",
+    "borg_generate_systematic_debugging_rules",
+    "borg_convert_openclaw_registry",
+    "python_api_check",
+}
+REQUIRED_GITHUB_SOURCE_MCP_TOOLS = {"borg_observe", "borg_rescue", "borg_runtime_fingerprint", "error_lookup"}
 
 PYPI_DESCRIPTION_STALE_PATTERNS = [
     (
@@ -67,6 +83,33 @@ PACKAGE_IMPACTING_LICENSE_PREFIXES = (
     "COPYING",
     "NOTICE",
 )
+
+GENERATED_PROOF_ARTIFACT_PATHS = {
+    "eval/borg_proof_dashboard.json",
+    "eval/ops_readiness_watchdog_snapshot.json",
+    "eval/ops_readiness_watchdog_post_dashboard_check.json",
+    "eval/public_self_serve_launch_gate_snapshot.json",
+    "eval/real_user_rollout_gate_snapshot.json",
+    "eval/pypi_fresh_install_snapshot.json",
+    "eval/github_source_install_snapshot.json",
+    "eval/cold_start_trust_gate_snapshot.json",
+    "eval/release_governance_snapshot.json",
+    "eval/self_service_ops_gate_snapshot.json",
+    "eval/rollback_comms_drill_snapshot.json",
+    "eval/production_inventory_board_snapshot.json",
+    "docs/BORG_PROOF_DASHBOARD.md",
+    "docs/BORG_PROOF_DASHBOARD.html",
+    "docs/20260517_BORG_100_REAL_USER_READINESS.md",
+    "docs/20260531_BORG_PRODUCTION_INVENTORY_BOARD.md",
+    "docs/COLD_START_TRUST_HARDENING.md",
+    "docs/PUBLIC_SELF_SERVE_LAUNCH_GO_NO_GO.md",
+    "docs/SELF_SERVICE_OPS_READINESS_REPORT.md",
+    "docs/public/status.json",
+    "docs/status.json",
+    "docs/public/value.json",
+    "docs/public/impact/impact.json",
+    "docs/public/proof-dashboard/index.html",
+}
 
 REQUIRED_COLD_START_TRUST_CHECKS = {
     "meta_permission_mentions_are_not_permission_tasks",
@@ -146,6 +189,7 @@ UNSUPPORTED_WHEN_BLOCKED = [
     (re.compile(r"(?i)\bstatistically\s+significant\b.*\b(agent|external|lift|completion)"), "statistically significant external/agent lift claim"),
     (re.compile(r"(?i)\bfrontier[- ]better[- ]than\b.*\b(proven|yes|true|go)"), "frontier-better-than proven claim"),
     (re.compile(r"(?i)Ready\s+to\s+share\s+Git\s+now\?\W{0,80}YES"), "stale Git-sharing YES claim"),
+    (re.compile(r"(?i)GitHub direct install.{0,240}GO only after"), "GitHub direct install GO claim without first-user evidence"),
     (re.compile(r"(?i)version_package"), "stale proof-dashboard version metric"),
     (re.compile(r"\bready_for_(?:10|1000)=True\b"), "unqualified logical-load readiness claim"),
     (re.compile(r"(?i)No hallucination, no retry loops, no burned tokens"), "unmeasured zero-failure/value claim without external evidence"),
@@ -170,6 +214,74 @@ def _git_output(args: list[str]) -> str:
 def _git_lines(args: list[str]) -> list[str]:
     output = _git_output(args)
     return [line.strip() for line in output.splitlines() if line.strip()]
+
+
+def _git_is_ancestor(candidate: str, head: str) -> bool:
+    if not candidate or not head:
+        return False
+    try:
+        subprocess.check_call(
+            ["git", "merge-base", "--is-ancestor", candidate, head],
+            cwd=ROOT,
+            stdout=subprocess.DEVNULL,
+            stderr=subprocess.DEVNULL,
+        )
+        return True
+    except Exception:
+        return False
+
+
+def _source_commit_is_honest_for_current_head(commit: Any) -> dict[str, Any]:
+    """Validate that a GitHub source canary proved current source, not stale main.
+
+    Exact HEAD is ideal. A previous commit is allowed only when it is an
+    ancestor and every committed change since it is a generated proof artifact;
+    this lets proof snapshots be committed after the code they prove without
+    letting package/source changes false-green.
+    """
+    commit_text = str(commit or "")
+    try:
+        head = _git_output(["rev-parse", "HEAD"])
+        dirty_paths = _status_paths()
+    except Exception:
+        return {"passed": False, "resolved_commit": commit_text or None, "head": None, "changed_paths_since_resolved": [], "reason": "git_head_unavailable"}
+    non_generated_dirty = sorted(path for path in dirty_paths if path not in GENERATED_PROOF_ARTIFACT_PATHS)
+    if not re.fullmatch(r"[0-9a-f]{40}", commit_text):
+        return {"passed": False, "resolved_commit": commit_text or None, "head": head, "dirty_paths": dirty_paths, "non_generated_dirty_paths": non_generated_dirty, "changed_paths_since_resolved": [], "reason": "missing_or_invalid_resolved_commit"}
+    if commit_text == head:
+        return {
+            "passed": not non_generated_dirty,
+            "resolved_commit": commit_text,
+            "head": head,
+            "dirty_paths": dirty_paths,
+            "non_generated_dirty_paths": non_generated_dirty,
+            "changed_paths_since_resolved": [],
+            "reason": "exact_head" if not non_generated_dirty else "exact_head_with_non_generated_dirty_paths",
+        }
+    if not _git_is_ancestor(commit_text, head):
+        return {"passed": False, "resolved_commit": commit_text, "head": head, "changed_paths_since_resolved": [], "reason": "resolved_commit_not_ancestor_of_head"}
+    if non_generated_dirty:
+        return {
+            "passed": False,
+            "resolved_commit": commit_text,
+            "head": head,
+            "dirty_paths": dirty_paths,
+            "non_generated_dirty_paths": non_generated_dirty,
+            "changed_paths_since_resolved": [],
+            "reason": "non_generated_dirty_paths",
+        }
+    changed_paths = _git_lines(["diff", "--name-only", f"{commit_text}..{head}"])
+    non_generated = sorted(path for path in changed_paths if path not in GENERATED_PROOF_ARTIFACT_PATHS)
+    return {
+        "passed": not non_generated,
+        "resolved_commit": commit_text,
+        "head": head,
+        "dirty_paths": dirty_paths,
+        "non_generated_dirty_paths": non_generated_dirty,
+        "changed_paths_since_resolved": changed_paths,
+        "non_generated_paths_since_resolved": non_generated,
+        "reason": "ancestor_with_only_generated_artifacts" if not non_generated else "ancestor_has_source_or_non_generated_changes",
+    }
 
 
 def _normalize_repo_path(path: str) -> str:
@@ -605,6 +717,120 @@ def pypi_fresh_install_check(path: Path, expected_version: str, *, max_snapshot_
     }
 
 
+def _github_install_target_commit(target: Any) -> str | None:
+    if not isinstance(target, str) or not target.startswith(CANONICAL_GITHUB_INSTALL_PREFIX) or "git+file://" in target:
+        return None
+    revision = target[len(CANONICAL_GITHUB_INSTALL_PREFIX):]
+    if re.fullmatch(r"[0-9a-f]{40}", revision):
+        return revision
+    return None
+
+
+def _github_install_target_is_canonical(target: Any) -> bool:
+    return _github_install_target_commit(target) is not None
+
+
+def _installed_file_outside_repo(installed_file: Any) -> bool:
+    if not isinstance(installed_file, str) or not installed_file:
+        return False
+    try:
+        installed = Path(installed_file).resolve()
+        repo = ROOT.resolve()
+    except (OSError, RuntimeError):
+        return False
+    installed_text = installed.as_posix()
+    repo_text = repo.as_posix().rstrip("/")
+    return installed_text != repo_text and not installed_text.startswith(repo_text + "/")
+
+
+def github_source_install_check(path: Path, expected_version: str, *, max_snapshot_age_hours: float = 24.0) -> dict[str, Any]:
+    """Validate the committed GitHub/source-install self-service canary snapshot."""
+    data = _read_json(path)
+    rel_path = str(path.relative_to(ROOT)) if path.is_relative_to(ROOT) else str(path)
+    if not data:
+        return {"passed": False, "exists": False, "path": rel_path, "error": "missing GitHub source-install snapshot"}
+    results = data.get("results") or []
+    failures = [item.get("name") for item in results if not item.get("passed")]
+    passed_result_names = {str(item.get("name")) for item in results if item.get("passed") and item.get("name")}
+    missing_required_results = sorted(REQUIRED_GITHUB_SOURCE_CANARY_RESULTS - passed_result_names)
+    mcp = data.get("mcp_stdio_canary") or {}
+    mcp_tools = set(mcp.get("required_tools_present") or [])
+    missing_mcp_tools = sorted(REQUIRED_GITHUB_SOURCE_MCP_TOOLS - {str(tool) for tool in mcp_tools})
+    mcp_server_info = mcp.get("server_info") or {}
+    leakage = data.get("checkout_import_leakage") or {}
+    installed_file = leakage.get("installed_file")
+    leakage_passed = bool(leakage.get("passed")) and _installed_file_outside_repo(installed_file)
+    freshness = _freshness_check(data.get("generated_at_utc"), max_snapshot_age_hours)
+    install_source = data.get("install_source")
+    install_target = data.get("install_target")
+    install_target_commit = _github_install_target_commit(install_target)
+    canonical_install_target = install_target_commit is not None
+    source_resolution = data.get("source_resolution") or {}
+    resolved_commit = source_resolution.get("resolved_commit")
+    source_commit_honesty = _source_commit_is_honest_for_current_head(resolved_commit)
+    expected_commit = source_resolution.get("expected_commit")
+    expected_commit_is_sha = isinstance(expected_commit, str) and re.fullmatch(r"[0-9a-f]{40}", expected_commit) is not None
+    commit_matches_recorded_expected = bool(
+        expected_commit_is_sha
+        and resolved_commit == expected_commit
+        and install_target_commit == expected_commit
+    )
+    source_resolution_passed = (
+        bool(source_resolution.get("passed"))
+        and bool(resolved_commit)
+        and expected_commit_is_sha
+        and commit_matches_recorded_expected
+        and bool(source_commit_honesty.get("passed"))
+    )
+    mcp_passed = (
+        bool(mcp.get("passed"))
+        and mcp_server_info.get("name") == "borg-mcp-server"
+        and mcp_server_info.get("version") == expected_version
+        and mcp.get("alias_value_signal") is True
+        and mcp.get("fingerprint_signal") is True
+        and not missing_mcp_tools
+    )
+    passed = (
+        bool(data.get("success"))
+        and data.get("version") == expected_version
+        and install_source == "github_source"
+        and canonical_install_target
+        and source_resolution_passed
+        and not failures
+        and not missing_required_results
+        and mcp_passed
+        and leakage_passed
+        and bool(freshness["passed"])
+    )
+    return {
+        "passed": passed,
+        "exists": True,
+        "path": rel_path,
+        "generated_at_utc": data.get("generated_at_utc"),
+        "version": data.get("version"),
+        "expected_version": expected_version,
+        "install_source": install_source,
+        "install_target": install_target,
+        "canonical_install_target": canonical_install_target,
+        "install_target_commit": install_target_commit,
+        "source_resolution_passed": source_resolution_passed,
+        "source_resolution": source_resolution,
+        "resolved_commit": resolved_commit,
+        "expected_commit_is_sha": expected_commit_is_sha,
+        "commit_matches_recorded_expected": commit_matches_recorded_expected,
+        "source_commit_honesty": source_commit_honesty,
+        "failed_count": len(failures),
+        "failures": failures,
+        "missing_required_results": missing_required_results,
+        "mcp_stdio_canary_passed": mcp_passed,
+        "mcp_server_info": mcp_server_info,
+        "missing_mcp_tools": missing_mcp_tools,
+        "checkout_import_leakage_passed": leakage_passed,
+        "installed_file": installed_file,
+        "freshness": freshness,
+    }
+
+
 def _line_names_post_package_blocker(line_text: str) -> bool:
     """True when docs block beta on non-package release controls.
 
@@ -760,6 +986,12 @@ def docs_claim_guard(
                 (r"(?i)\bpackage/local stdio proof\b", "package/local stdio proof before current PyPI canary"),
                 (r"(?i)fresh-install/MCP/generate/OpenClaw canaries pass for controlled first-10 beta", "package canaries pass before current PyPI canary"),
                 (r"(?i)published package metadata, PyPI latest, and proof artifacts agree on `?agent-borg==", "published package metadata agreement before current PyPI canary"),
+                (r"(?i)\bmetadata-correct (?:production PyPI )?package\b", "metadata-correct package claim before current package proof"),
+                (r"(?i)\bcurrent source line\b", "current-source package claim before current package proof"),
+                (r"(?i)\bpackage/local proof (?:is )?green\b", "package/local proof green before current package proof"),
+                (r"(?i)\bpackage-current proof.{0,80}\bgreen\b", "package-current proof green before current package proof"),
+                (r"(?i)\bPyPI latest metadata.{0,120}\bpass(?:es|ed)?\b", "PyPI latest metadata pass claim before current package proof"),
+                (r"(?i)\bruntime canary and package-current proof.{0,80}\bgreen\b", "runtime/package-current green before current package proof"),
                 (r"(?i)\bpackage proof is\s+(?:\*\*)?current(?:\*\*)?\b", "package-current proof claim before metadata-correct package"),
                 (r"(?i)published `?agent-borg==" + re.escape(expected_version) + r"`? package is current for this source/package line", "package-current proof claim before metadata-correct package"),
                 (r"(?i)send only while .*fresh-install/MCP canary pass", "invite packet condition omits metadata/runtime/ops blockers"),
@@ -769,11 +1001,19 @@ def docs_claim_guard(
                 match = re.search(pattern, text)
                 if match:
                     line = text[: match.start()].count("\n") + 1
+                    line_text = text.splitlines()[line - 1] if line - 1 < len(text.splitlines()) else match.group(0)
+                    negated_or_future_condition = re.search(
+                        r"(?i)\b(do not|no-go|not current|not green|blocked|red|must wait|wait for|until|before|require|required|only after)\b",
+                        line_text,
+                    )
+                    pass_claim_label = "pass claim" in label or "canaries-passed claim" in label or "green before" in label
+                    if pass_claim_label and negated_or_future_condition:
+                        continue
                     violations.append({
                         "path": str(rel),
                         "line": line,
                         "kind": label,
-                        "detail": text.splitlines()[line - 1][:180] if line - 1 < len(text.splitlines()) else match.group(0)[:180],
+                        "detail": line_text[:180],
                     })
 
             for line_number, line_text in enumerate(text.splitlines(), start=1):
@@ -1109,6 +1349,7 @@ def compile_gate(
     first_user = first_user_release_check(ROOT / "eval" / "first_user_release_gate_snapshot.json")
     pypi_latest = pypi_latest_check(version, fetch_network=fetch_network, pypi_data=pypi_data)
     pypi_fresh = pypi_fresh_install_check(ROOT / "eval" / "pypi_fresh_install_snapshot.json", version)
+    github_source = github_source_install_check(ROOT / "eval" / "github_source_install_snapshot.json", version)
     cold_start_trust = cold_start_trust_check(ROOT / "eval" / "cold_start_trust_gate_snapshot.json")
     served_runtime = served_runtime_freshness_check(ROOT / "eval" / "served_runtime_fingerprint_snapshot.json", version)
     release_governance = release_governance_check(fetch_network=fetch_network)
@@ -1136,6 +1377,7 @@ def compile_gate(
     infrastructure_ready = bool(
         first_user["passed"]
         and package_evidence_ready
+        and github_source["passed"]
         and cold_start_trust["passed"]
         and served_runtime["passed"]
         and release_governance["passed"]
@@ -1162,6 +1404,8 @@ def compile_gate(
             blockers.append("PyPI latest metadata does not match source version, required project URLs, source alignment, or public copy policy")
     if not pypi_fresh["passed"]:
         blockers.append("PyPI fresh-install + MCP stdio canary snapshot is missing or failing")
+    if not github_source["passed"]:
+        blockers.append("GitHub source-install + MCP stdio canary snapshot is missing or failing")
     if not cold_start_trust["passed"]:
         blockers.append("cold-start trust hardening gate snapshot is missing or failing")
     if not served_runtime["passed"]:
@@ -1194,6 +1438,7 @@ def compile_gate(
             "first_user_release": first_user,
             "pypi_latest": pypi_latest,
             "pypi_fresh_install_and_mcp_stdio": pypi_fresh,
+            "github_source_install_and_mcp_stdio": github_source,
             "cold_start_trust_hardening": cold_start_trust,
             "served_runtime_freshness": served_runtime,
             "release_governance": release_governance,
@@ -1208,7 +1453,7 @@ def compile_gate(
             "first_10_external_evidence": first_10,
         },
         "blockers": blockers,
-        "truth_policy": "Public self-serve is GO only after PyPI/fresh-install/MCP/docs/cold-start-trust/served-runtime/release-governance/self-service-ops/watchdog gates pass AND row-derived first-10 external-user evidence passes. Synthetic users and aggregate-only edits never count.",
+        "truth_policy": "Public self-serve is GO only after PyPI/latest fresh-install/MCP, GitHub source-install, docs/cold-start-trust/served-runtime/release-governance/self-service-ops/watchdog gates pass AND row-derived first-10 external-user evidence passes. Synthetic users and aggregate-only edits never count.",
     }
 
 
@@ -1245,6 +1490,7 @@ def write_report(snapshot: dict[str, Any]) -> None:
         "- `eval/public_self_serve_launch_gate_snapshot.json`",
         "- `eval/first_10_user_scoreboard.json`",
         "- `eval/pypi_fresh_install_snapshot.json`",
+        "- `eval/github_source_install_snapshot.json`",
         "- `eval/first_user_release_gate_snapshot.json`",
         "- `eval/cold_start_trust_gate_snapshot.json`",
         "- `eval/served_runtime_fingerprint_snapshot.json`",
@@ -1260,9 +1506,14 @@ def main(argv: list[str] | None = None) -> int:
     parser = argparse.ArgumentParser(description="Compile Borg public self-serve launch readiness")
     parser.add_argument("--no-network", action="store_true", help="Do not query PyPI; gate fails unless test code injects PyPI data")
     parser.add_argument("--no-write", action="store_true", help="Do not write snapshot/report artifacts")
+    parser.add_argument(
+        "--skip-ops-watchdog",
+        action="store_true",
+        help="Break watchdog bootstrap recursion: omit the existing ops-watchdog snapshot while the watchdog is about to regenerate itself.",
+    )
     args = parser.parse_args(argv)
 
-    snapshot = compile_gate(fetch_network=not args.no_network)
+    snapshot = compile_gate(fetch_network=not args.no_network, require_ops_watchdog=not args.skip_ops_watchdog)
     if not args.no_write:
         SNAPSHOT.write_text(json.dumps(snapshot, indent=2, sort_keys=True) + "\n", encoding="utf-8")
         write_report(snapshot)

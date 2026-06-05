@@ -2,7 +2,7 @@
 
 ## operator benefits (validated internally)
 - first visible value path for controlled beta after release gates: `pipx install agent-borg==3.3.18` -> `borg rescue "<redacted error>"` -> ACTION / STOP / VERIFY
-- controlled package beta path: **NO-GO right now** — `agent-borg==3.3.18` is the published metadata-correct package and exact-version runtime canary proof is green; served-runtime freshness and first-10 external-user evidence are not green yet
+- controlled package beta path: **NO-GO right now** — GitHub exact-SHA source install is canary-green for local CLI/API/stdio MCP/generated-rules/OpenClaw at the proven PR head; published PyPI `agent-borg==3.3.18` package-current/source-alignment proof is red until a new immutable release ships the post-tag package-impacting changes; served-runtime freshness and first-10 external-user evidence are not green yet
 - local/synthetic gate status: first-user release gate and logical load gates are green in current artifacts; synthetic users are not external-user evidence
 - external-user proof status: **not proven yet**; verified external users remain `0`
 - measured savings status: **0 measured rows, 0.0 net minutes saved, 0 net tokens saved**; savings are not claimed until consented external-user rows include before/after measurements
@@ -16,11 +16,11 @@
 - rescue rule: `borg rescue --json` exposes `value_receipt.measurement_status=ready_to_measure` and `savings_claim_type=none` until a later first-10 row records the outcome
 
 ## readiness status
-- controlled first-10 PyPI beta: **NO-GO right now** — `agent-borg==3.3.18` runtime and package metadata canaries pass; invite 0 consented external users until served-runtime freshness is green and first-10 evidence intake is ready
+- controlled first-10 PyPI beta: **NO-GO right now** — `agent-borg==3.3.18` basic runtime signals exist, but package-current/source-alignment proof is red until a new immutable release ships the post-tag package-impacting changes; invite 0 consented external users until package-current proof, served-runtime freshness, and first-10 evidence intake are green
 - supervised local first-user path: GO in current artifacts
 - public self-serve launch: **NO-GO until first-10 row-derived external evidence passes**
 - 100 real-user rollout: **NO-GO until 10 external users, >=8 installs, >=6 useful rescues, and 0 critical incidents**
-- decision: runtime canary and package-current proof for `agent-borg==3.3.18` are green; controlled first-10 beta must wait for served-runtime freshness and first-10 external-user evidence; no broad self-serve, served remote MCP, 100-user, measured-savings, or frontier-better-than claim
+- decision: GitHub exact-SHA source canary is green for local CLI/API/stdio MCP/generated-rules/OpenClaw, but published PyPI `agent-borg==3.3.18` package-current/source-alignment proof is red; controlled first-10 beta must wait for new package-current proof, served-runtime freshness, and first-10 external-user evidence; no broad self-serve, served remote MCP, 100-user, measured-savings, or frontier-better-than claim
 
 ## evidence
 - `eval/public_self_serve_launch_gate_snapshot.json`

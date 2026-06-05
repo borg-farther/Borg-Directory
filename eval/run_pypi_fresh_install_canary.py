@@ -11,6 +11,7 @@ from __future__ import annotations
 import argparse
 import json
 import os
+import re
 import shutil
 import subprocess
 import sys
@@ -36,11 +37,84 @@ BANNED_PUBLIC_COPY = [
     "battle-tested workflows from thousands of agents",
 ]
 
+SAFE_ENV_KEYS = {
+    "PATH",
+    "LANG",
+    "LC_ALL",
+    "TMPDIR",
+    "SSL_CERT_FILE",
+    "REQUESTS_CA_BUNDLE",
+    "CURL_CA_BUNDLE",
+    "GIT_SSL_CAINFO",
+}
+SENSITIVE_ENV_KEYS = {
+    "GITHUB_TOKEN",
+    "GH_TOKEN",
+    "ACTIONS_ID_TOKEN_REQUEST_TOKEN",
+    "ACTIONS_ID_TOKEN_REQUEST_URL",
+    "SSH_AUTH_SOCK",
+    "PIP_INDEX_URL",
+    "PIP_EXTRA_INDEX_URL",
+    "TWINE_PASSWORD",
+    "TWINE_USERNAME",
+}
+SENSITIVE_ENV_PREFIXES = (
+    "AWS_",
+    "AZURE_",
+    "GOOGLE_",
+    "GCLOUD_",
+    "OPENAI_",
+    "ANTHROPIC_",
+    "HUGGINGFACE_",
+    "HF_",
+)
+SECRET_VALUE_PATTERN = re.compile(
+    r"(?i)(token|password|passwd|secret|api[_-]?key|authorization|bearer)([=:\s]+)([^\s'\"]{8,})"
+)
+URL_USERINFO_PATTERN = re.compile(r"(?i)(https?://)([^/\s:@]+)(?::([^@\s/]+))?@")
+
+
+def _is_sensitive_env_key(key: str) -> bool:
+    return key in SENSITIVE_ENV_KEYS or key.startswith(SENSITIVE_ENV_PREFIXES)
+
+
+def redact_text(value: Any) -> str:
+    """Redact credential-shaped strings before snapshots print command output."""
+    text = str(value)
+    text = text.replace(str(Path.home()), "<home>")
+    text = text.replace(str(ROOT), "<repo-root>")
+    text = URL_USERINFO_PATTERN.sub(r"\1[REDACTED]@", text)
+    text = SECRET_VALUE_PATTERN.sub(r"\1\2[REDACTED]", text)
+    return text
+
+
+def _redact_cmd(cmd: list[str]) -> list[str]:
+    return [redact_text(part) for part in cmd]
+
+
+def canary_env(*, home: Path, borg_home: Path, extra: dict[str, str] | None = None) -> dict[str, str]:
+    """Build a minimal env for untrusted fresh-install/runtime canaries."""
+    env = {key: value for key, value in os.environ.items() if key in SAFE_ENV_KEYS}
+    for key in list(env):
+        if _is_sensitive_env_key(key):
+            env.pop(key, None)
+    env.update({
+        "PYTHONPATH": "",
+        "PYTHONNOUSERSITE": "1",
+        "HOME": str(home),
+        "BORG_HOME": str(borg_home),
+        "BORG_DIR": str(borg_home),
+    })
+    if extra:
+        env.update({key: value for key, value in extra.items() if not _is_sensitive_env_key(key)})
+    return env
+
 
 @dataclass
 class CommandResult:
     name: str
     command: list[str]
+    cwd: str
     returncode: int
     passed: bool
     stdout: str
@@ -54,30 +128,86 @@ def source_version() -> str:
     return str(data["project"]["version"])
 
 
+def _known_immutable_package_gap(results: list[CommandResult]) -> dict[str, Any]:
+    """Classify immutable PyPI-package gaps without marking the canary green.
+
+    GitHub/source self-service can be current while the already-published PyPI
+    wheel is not.  Keep the PyPI snapshot success=false, but expose a narrow
+    machine-readable reason so ops watchdogs can keep the GitHub lane green
+    without hiding the package-channel blocker.
+    """
+    failed = [result for result in results if not result.passed]
+    if len(failed) == 1 and failed[0].name == "borg_convert_openclaw_registry":
+        combined_output = f"{failed[0].stdout}\n{failed[0].stderr}".lower()
+        maintainer_path_dependency = "guild-packs/packs" in combined_output and (
+            "permission" in combined_output
+            or "denied" in combined_output
+            or "no such file" in combined_output
+            or "not found" in combined_output
+        )
+        if maintainer_path_dependency:
+            return {
+                "present": True,
+                "kind": "immutable_pypi_openclaw_maintainer_path_dependency",
+                "failed_results": [failed[0].name],
+                "detail": "published PyPI package still probes maintainer-only guild-packs path during OpenClaw registry conversion; GitHub/source install can carry the fix, but PyPI package proof remains red until a new immutable release",
+            }
+    return {"present": False, "failed_results": [result.name for result in failed]}
+
+
 def run_cmd(name: str, cmd: list[str], *, env: dict[str, str] | None = None, cwd: Path | None = None, timeout: int = 180, input_text: str | None = None) -> CommandResult:
     started = time.monotonic()
-    proc = subprocess.run(
-        cmd,
-        cwd=str(cwd or Path(tempfile.gettempdir())),
-        env=env,
-        input=input_text,
-        capture_output=True,
-        text=True,
-        timeout=timeout,
-    )
+    run_cwd = cwd or Path(tempfile.gettempdir())
+    try:
+        proc = subprocess.run(
+            cmd,
+            cwd=str(run_cwd),
+            env=env,
+            input=input_text,
+            capture_output=True,
+            text=True,
+            timeout=timeout,
+        )
+    except subprocess.TimeoutExpired as exc:
+        stdout = exc.stdout.decode(errors="replace") if isinstance(exc.stdout, bytes) else (exc.stdout or "")
+        stderr = exc.stderr.decode(errors="replace") if isinstance(exc.stderr, bytes) else (exc.stderr or "")
+        return CommandResult(
+            name=name,
+            command=_redact_cmd(cmd),
+            cwd=redact_text(run_cwd),
+            returncode=124,
+            passed=False,
+            stdout=redact_text(stdout),
+            stderr=redact_text(stderr),
+            duration_s=round(time.monotonic() - started, 3),
+            detail=f"timeout>{timeout}s",
+        )
+    except Exception as exc:  # fail closed and still let callers write snapshots
+        return CommandResult(
+            name=name,
+            command=_redact_cmd(cmd),
+            cwd=redact_text(run_cwd),
+            returncode=1,
+            passed=False,
+            stdout="",
+            stderr=redact_text(f"{type(exc).__name__}: {exc}"),
+            duration_s=round(time.monotonic() - started, 3),
+            detail=f"exception={type(exc).__name__}",
+        )
     return CommandResult(
         name=name,
-        command=cmd,
+        command=_redact_cmd(cmd),
+        cwd=redact_text(run_cwd),
         returncode=proc.returncode,
         passed=proc.returncode == 0,
-        stdout=proc.stdout,
-        stderr=proc.stderr,
+        stdout=redact_text(proc.stdout),
+        stderr=redact_text(proc.stderr),
         duration_s=round(time.monotonic() - started, 3),
         detail="exit=0" if proc.returncode == 0 else f"exit={proc.returncode}",
     )
 
 
-def mcp_stdio_canary(borg_mcp: Path, env: dict[str, str], expected_version: str) -> dict[str, Any]:
+def mcp_stdio_canary(borg_mcp: Path, env: dict[str, str], expected_version: str, *, cwd: Path | None = None) -> dict[str, Any]:
     requests = [
         {"jsonrpc": "2.0", "id": 1, "method": "initialize", "params": {}},
         {"jsonrpc": "2.0", "id": 2, "method": "tools/list", "params": {}},
@@ -98,7 +228,7 @@ def mcp_stdio_canary(borg_mcp: Path, env: dict[str, str], expected_version: str)
         },
     ]
     input_text = "\n".join(json.dumps(req) for req in requests) + "\n"
-    result = run_cmd("mcp_stdio_jsonrpc", [str(borg_mcp)], env=env, timeout=180, input_text=input_text)
+    result = run_cmd("mcp_stdio_jsonrpc", [str(borg_mcp)], env=env, cwd=cwd, timeout=180, input_text=input_text)
     responses = []
     parse_errors: list[str] = []
     for line in result.stdout.splitlines():
@@ -204,21 +334,14 @@ def run_canary(version: str) -> dict[str, Any]:
         isolated_home = venv_dir / "home"
         isolated_borg_home = venv_dir / "borg-home"
         isolated_home.mkdir(parents=True, exist_ok=True)
-        env = os.environ.copy()
-        env.update({
-            "PYTHONPATH": "",
-            "PYTHONNOUSERSITE": "1",
-            "HOME": str(isolated_home),
-            "BORG_HOME": str(isolated_borg_home),
-            "BORG_DIR": str(isolated_borg_home),
-        })
+        env = canary_env(home=isolated_home, borg_home=isolated_borg_home)
         pip_env = env.copy()
         pip_env.update({
             "PIP_CONFIG_FILE": os.devnull,
             "PIP_DISABLE_PIP_VERSION_CHECK": "1",
         })
 
-        results.append(run_cmd("fresh_venv_create", [sys.executable, "-m", "venv", str(venv_dir)], timeout=120))
+        results.append(run_cmd("fresh_venv_create", [sys.executable, "-m", "venv", str(venv_dir)], env=env, cwd=venv_dir.parent, timeout=120))
         if results[-1].passed:
             results.append(run_cmd(
                 "pip_install_agent_borg",
@@ -292,6 +415,8 @@ def run_canary(version: str) -> dict[str, Any]:
     finally:
         shutil.rmtree(venv_dir, ignore_errors=True)
 
+    known_gap = _known_immutable_package_gap(results)
+
     return {
         "schema_version": 1,
         "generated_at_utc": time.strftime("%Y-%m-%dT%H:%M:%SZ", time.gmtime()),
@@ -300,6 +425,7 @@ def run_canary(version: str) -> dict[str, Any]:
         "install_source": "pypi",
         "results": [asdict(result) for result in results],
         "mcp_stdio_canary": mcp_result,
+        "known_immutable_package_gap": known_gap,
         "success": all(result.passed for result in results) and bool(mcp_result.get("passed")),
     }
 
@@ -310,8 +436,32 @@ def main(argv: list[str] | None = None) -> int:
     parser.add_argument("--output", default=str(SNAPSHOT), help="Snapshot JSON path")
     args = parser.parse_args(argv)
 
-    snapshot = run_canary(args.version)
+    try:
+        snapshot = run_canary(args.version)
+    except Exception as exc:
+        snapshot = {
+            "schema_version": 1,
+            "generated_at_utc": time.strftime("%Y-%m-%dT%H:%M:%SZ", time.gmtime()),
+            "package": "agent-borg",
+            "version": args.version,
+            "install_source": "pypi",
+            "results": [asdict(CommandResult(
+                name="canary_unhandled_exception",
+                command=[],
+                cwd=redact_text(Path(tempfile.gettempdir())),
+                returncode=1,
+                passed=False,
+                stdout="",
+                stderr=redact_text(f"{type(exc).__name__}: {exc}"),
+                duration_s=0.0,
+                detail=f"exception={type(exc).__name__}",
+            ))],
+            "mcp_stdio_canary": {"passed": False, "detail": "not run because canary failed before command sequence", "expected_version": args.version},
+            "known_immutable_package_gap": {"present": False, "failed_results": ["canary_unhandled_exception"]},
+            "success": False,
+        }
     output = Path(args.output)
+    output.parent.mkdir(parents=True, exist_ok=True)
     output.write_text(json.dumps(snapshot, indent=2, sort_keys=True) + "\n", encoding="utf-8")
     print(json.dumps(snapshot, indent=2, sort_keys=True))
     return 0 if snapshot["success"] else 1

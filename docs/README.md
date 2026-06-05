@@ -63,7 +63,7 @@ They are retained for provenance, but they are not current product claims or fir
 
 ## Current truth
 
-- Controlled first-10 public-package beta: NO-GO right now. `agent-borg==3.3.18` is the published metadata-correct package; exact-version fresh-install/stdio MCP/generated-rules/OpenClaw runtime canary proof is green. GitHub `main` release governance is enforced. Cap is 0 until served-runtime freshness and first-10 external-user evidence gates are green.
+- Controlled first-10 public-package beta: NO-GO right now. GitHub exact-SHA source install is canary-green for local CLI/API/stdio MCP/generated-rules/OpenClaw at the proven PR head. Published PyPI `agent-borg==3.3.18` package-current/source-alignment proof is red until a new immutable release ships the post-tag package-impacting changes. GitHub `main` release governance is enforced. Cap is 0 until package-current proof, served-runtime freshness, and first-10 external-user evidence gates are green.
 - Public self-serve launch: not yet; requires real external-user evidence.
 - Agent-level success lift at statistical confidence: not yet proven.
 - Internal max-value collective intelligence loop primitives: GO; external lift still requires first-10 rows.

@@ -14,7 +14,7 @@ Day-one value path:
 3. Expect ACTION / STOP / VERIFY / CONFIDENCE, or NO_CONFIDENT_MATCH.
 
 Current rollout boundary:
-- Controlled first-10 public-package beta is closed right now. agent-borg==3.3.18 is the published metadata-correct package; exact-version fresh-install/stdio MCP/generated-rules/OpenClaw runtime canary proof is green. Cap is 0 until served-runtime freshness and first-10 external-user evidence gates are green.
+- Controlled first-10 public-package beta is closed right now. GitHub exact-SHA source install is canary-green for local CLI/API/stdio MCP/generated-rules/OpenClaw at the proven PR head. Published agent-borg==3.3.18 passes fresh-install CLI/API/local stdio MCP/generated-rules/OpenClaw canaries, but is not package-current for this source line because package-impacting source/metadata changed after the immutable 3.3.18 tag/reference. Cap is 0 until package-current proof, served-runtime freshness, and first-10 external-user evidence gates are green.
 - Do not claim public self-serve launch, 100 real users, served remote MCP, or measured external lift until row-derived external-user evidence passes.
 
 Useful docs:

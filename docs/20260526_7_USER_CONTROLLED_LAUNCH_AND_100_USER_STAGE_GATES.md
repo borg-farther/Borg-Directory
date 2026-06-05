@@ -118,9 +118,9 @@ Every invite must include:
 
 Re-evaluated from scratch:
 
-- If the question is only "can 7 users try Borg at once?" the answer is currently no for this source revision: `agent-borg==3.3.18` is published and freshly canaried, but the cap stays 0 until served-runtime freshness, ops/watchdog, release-control proof, and first-10 evidence are green.
+- If the question is only "can 7 users try Borg at once?" the answer is currently no for this source revision: GitHub exact-SHA source install is canary-green, but published PyPI `agent-borg==3.3.18` package-current/source-alignment proof is red and the cap stays 0 until new package-current proof, served-runtime freshness, ops/watchdog, release-control proof, and first-10 evidence are green.
 - If the question is "is Borg ready for 100 concurrent public self-service users?" the answer is no, because 100 real-user readiness is evidence-gated and first-10 evidence is still zero.
 - If the question is "are local source and package enough?" the answer is no for served channels; runtime fingerprinting is a separate gate.
 - If the question is "should we build new features now?" the answer is no; the immediate work is proof, docs consistency, feedback capture, and fail-closed gates.
 
-Bottom line: do not launch 7 yet. The immutable package is now published and freshly canaried; next clear served-runtime freshness and ops/watchdog gates, then launch at most 10 controlled testers with consented row capture, pause on any incident, and do not expand beyond 10 until row-derived evidence passes.
+Bottom line: do not launch 7 yet. GitHub exact-SHA source install is green, but the immutable PyPI package-current/source-alignment proof is red until a new release ships the post-tag package-impacting changes; next publish/canary the new immutable package, clear served-runtime freshness and ops/watchdog gates, then launch at most 10 controlled testers with consented row capture, pause on any incident, and do not expand beyond 10 until row-derived evidence passes.

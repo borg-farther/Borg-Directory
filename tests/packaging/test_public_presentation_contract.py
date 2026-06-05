@@ -169,18 +169,34 @@ def test_current_docs_preserve_same_version_artifact_drift_truth() -> None:
         "package/local stdio proof",
         "fresh-install/MCP/generate/OpenClaw canaries pass for controlled first-10 beta",
         "published package metadata, PyPI latest, and proof artifacts agree on `agent-borg==3.3.15`",
+        "metadata-correct production PyPI package",
+        "published metadata-correct package",
+        "package-current proof for `agent-borg==3.3.18` are green",
+        "PyPI latest/fresh-install/stdio MCP proof for `agent-borg==3.3.18` is green",
+        "production PyPI package canaries are current",
+        "Runtime and package-metadata canaries pass",
+        "clean-install OpenClaw registry conversion fails",
+        "fails clean-install OpenClaw",
+        "full PyPI package canary is red",
+        "runtime-canary-proven package",
+        "exact-version runtime/package canaries pass",
+        "fresh runtime canaries are green",
+        "production PyPI package canaries pass",
+        "package/local runtime canaries are already green",
+        "runtime and package metadata canaries pass",
     ]
 
     for path, text in watched.items():
         for phrase in stale_or_unsupported:
             assert phrase not in text, f"{path} still contains stale/unsupported phrase: {phrase}"
 
-    assert "published, metadata-correct production PyPI package" in watched["README.md"]
-    assert "Exact-version PyPI fresh-install" in watched["README.md"]
+    assert "GitHub exact-SHA source install" in watched["README.md"]
+    assert "package-current/source-alignment proof is **red**" in watched["README.md"]
+    assert "package-impacting source/metadata changed after the immutable `3.3.18` tag/reference" in watched["README.md"]
     assert "Broad public self-serve launch, 100-user rollout, served/remote MCP, and measured external lift are **not claimed**" in watched["README.md"]
     assert "Controlled first-10 beta: **NO-GO right now**" in watched["docs/READINESS.md"]
-    assert "published metadata-correct package" in watched["docs/READINESS.md"]
-    assert "runtime canaries are green" in watched["docs/READINESS.md"]
+    assert "Published PyPI `agent-borg==3.3.18` is not package-current" in watched["docs/READINESS.md"]
+    assert "package-current/source-alignment proof is red" in watched["docs/READINESS.md"]
     assert "served runtime fingerprint is stale" in watched["docs/READINESS.md"]
     assert "GitHub `main` release governance is enforced" in watched["docs/READINESS.md"]
     assert "Public self-serve launch: **NO-GO until first-10 external-user evidence passes**" in watched["docs/READINESS.md"]
@@ -259,7 +275,8 @@ def test_channel_matrix_documents_all_first_user_mix_paths() -> None:
     assert f"agent-borg=={current_version}" in matrix
     for phrase in [
         "pipx install agent-borg==",
-        "python -m pip install git+https://github.com/borg-farther/Borg-Directory.git@main",
+        "python -m pip install git+https://github.com/borg-farther/Borg-Directory.git@<40-hex-sha>",
+        "--expected-commit <sha>",
         "borg generate systematic-debugging --format all --output",
         "borg convert . --format openclaw --all --output",
         "import borg, json",
@@ -435,7 +452,8 @@ def test_public_live_dashboard_json_endpoints_exist_and_no_go_is_badge_red() -> 
         assert "source/local release-candidate only" not in status["state"]
     else:
         assert (
-            "public package proof green, release controls blocked" in status["state"]
+            "public package-current proof green, release controls blocked" in status["state"]
+            or "package and GitHub source proof green, release controls blocked" in status["state"]
             or "source/local release-candidate only" in status["state"]
             or "PyPI runtime canary green, package metadata stale" in status["state"]
         )

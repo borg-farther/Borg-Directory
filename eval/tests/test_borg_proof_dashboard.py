@@ -135,10 +135,12 @@ def test_borg_proof_dashboard_artifacts_exist_and_are_honest(tmp_path, monkeypat
         assert status["state"] in {
             "NO-GO public self-serve; source/local release-candidate only",
             "NO-GO public self-serve; public package proof green, release controls blocked",
+            "NO-GO public self-serve; package and GitHub source proof green, release controls blocked",
+            "NO-GO public self-serve; public package proof green, GitHub source proof blocked",
             "NO-GO public self-serve; PyPI runtime canary green, package metadata stale",
         }
         if data["metrics"]["pypi_package_current_gate"]["value"] == "PASS":
-            assert "public package proof green" in status["state"]
+            assert "package" in status["state"] and "proof green" in status["state"]
         else:
             assert (
                 "source/local release-candidate only" in status["state"]
