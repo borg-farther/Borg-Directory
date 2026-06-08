@@ -20,12 +20,12 @@ Before attempting technical fixes for errors, bugs, installs, configs, deploymen
 
 ## Clean-user smoke path
 
-Run this before handing Borg to a tester, after the current release version is published and proof dashboards are green:
+Run this before handing Borg to a tester. Use the GitHub source-smoke channel while PyPI/package proof is red; switch this section back to `agent-borg` only after a new immutable PyPI release is published and its fresh-install/OpenClaw canary is green.
 
-Install package `agent-borg`; it provides `borg`, `borg-mcp`, and `borg-doctor`. Do **not** use `pip install borg`, `brew install borgbackup`, `apt install borgbackup`, `apt-get install borgbackup`, `dnf install borgbackup`, or `pacman -S borg`; those are unrelated.
+Install package `agent-borg` only after that package proof is green; it provides `borg`, `borg-mcp`, and `borg-doctor`. Do **not** use `pip install borg`, `brew install borgbackup`, `apt install borgbackup`, `apt-get install borgbackup`, `dnf install borgbackup`, or `pacman -S borg`; those are unrelated.
 
 ```bash
-python3 -m pip install agent-borg
+python3 -m pip install 'git+https://github.com/borg-farther/Borg-Directory.git@main'
 borg version
 borg-doctor --json
 borg rescue 'ModuleNotFoundError: No module named flask' --json
@@ -165,7 +165,7 @@ Send each tester this:
    Package name is `agent-borg`; command after install is `borg`. Do **not** install `borg` or `borgbackup`.
    
    ```bash
-   python3 -m pip install agent-borg
+   python3 -m pip install 'git+https://github.com/borg-farther/Borg-Directory.git@main'
    borg version
    borg-doctor --json
    ```

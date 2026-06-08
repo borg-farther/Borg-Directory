@@ -9,7 +9,7 @@
 
 ## What passed for source/local package infrastructure
 
-- Public install path exists: `python3 -m pip install agent-borg`.
+- Current public source-smoke install path exists: `python3 -m pip install 'git+https://github.com/borg-farther/Borg-Directory.git@main'`; package install resumes after the next immutable PyPI release is freshly canaried.
 - CLI entrypoints exist: `borg`, `borg-mcp`, `borg-doctor`.
 - First value path exists: `borg rescue "<error>"` returns ACTION / STOP / VERIFY or `NO_CONFIDENT_MATCH`.
 - First-10 contract exists: [`FIRST_10_BETA_READINESS.md`](FIRST_10_BETA_READINESS.md).

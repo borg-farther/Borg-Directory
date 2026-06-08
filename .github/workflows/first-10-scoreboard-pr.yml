@@ -1,0 +1,91 @@
+name: first-10-scoreboard-pr
+
+on:
+  workflow_dispatch:
+    inputs:
+      issue_number:
+        description: "GitHub issue number from the first-10 evidence form"
+        required: true
+        type: string
+      reviewer_note:
+        description: "Short maintainer review note; do not include secrets"
+        required: true
+        type: string
+
+permissions:
+  contents: write
+  issues: read
+  pull-requests: write
+
+jobs:
+  reviewed-scoreboard-pr:
+    name: create reviewed first-10 evidence PR
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.11"
+
+      - name: Fetch reviewed issue body
+        env:
+          GH_TOKEN: ${{ github.token }}
+          ISSUE_NUMBER: ${{ inputs.issue_number }}
+          REPO: ${{ github.repository }}
+        run: |
+          set -euo pipefail
+          gh issue view "$ISSUE_NUMBER" --repo "$REPO" --json body,author,url,title,state,labels > /tmp/first10-issue.json
+          jq -r '.body' /tmp/first10-issue.json > /tmp/first10-issue-body.md
+          jq -r '.author.login' /tmp/first10-issue.json > /tmp/first10-github-actor.txt
+          jq -r '.url' /tmp/first10-issue.json > /tmp/first10-issue-url.txt
+          jq -e '(.state == "OPEN" or .state == "CLOSED")' /tmp/first10-issue.json >/dev/null
+          jq -e '[.labels[].name] | any(. == "first-10-evidence")' /tmp/first10-issue.json >/dev/null
+
+      - name: Append reviewed row and regenerate fail-closed proof
+        env:
+          BORG_INTERNAL_ACTORS: ${{ vars.BORG_INTERNAL_ACTORS || 'borg-farther,github-actions[bot]' }}
+          REVIEWER: ${{ github.actor }}
+        run: |
+          set -euo pipefail
+          python eval/first_10_reviewed_issue_append.py \
+            --issue-body /tmp/first10-issue-body.md \
+            --issue-url "$(cat /tmp/first10-issue-url.txt)" \
+            --github-actor "$(cat /tmp/first10-github-actor.txt)" \
+            --reviewer "$REVIEWER" \
+            --internal-actors "$BORG_INTERNAL_ACTORS" \
+            --write
+          python eval/first_10_evidence.py --input eval/first_10_user_scoreboard.json --write
+          python eval/public_self_serve_launch_gate.py || true
+          python eval/real_user_rollout_gate.py || true
+          python scripts/build_borg_proof_dashboard.py || true
+          python scripts/borg_proof_dashboard_lint.py
+
+      - name: Create scoreboard PR
+        env:
+          GH_TOKEN: ${{ github.token }}
+          ISSUE_NUMBER: ${{ inputs.issue_number }}
+          REVIEWER_NOTE: ${{ inputs.reviewer_note }}
+          REVIEWER: ${{ github.actor }}
+          REPO: ${{ github.repository }}
+        run: |
+          set -euo pipefail
+          if git diff --quiet; then
+            echo "No scoreboard/proof changes to publish."
+            exit 0
+          fi
+          BRANCH="first-10-evidence/issue-${ISSUE_NUMBER}"
+          git config user.name "github-actions[bot]"
+          git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
+          git checkout -b "$BRANCH"
+          git add eval/first_10_user_scoreboard.json eval/first_10_evidence_snapshot.json eval/public_self_serve_launch_gate_snapshot.json eval/real_user_rollout_gate_snapshot.json eval/borg_proof_dashboard.json docs/BORG_PROOF_DASHBOARD.md docs/BORG_PROOF_DASHBOARD.html docs/PUBLIC_SELF_SERVE_LAUNCH_GO_NO_GO.md docs/20260517_BORG_100_REAL_USER_READINESS.md docs/public/proof-dashboard/index.html docs/public/status.json docs/public/value.json docs/public/impact.json
+          git commit -m "evidence: add reviewed first-10 row from issue #${ISSUE_NUMBER}"
+          git push --set-upstream origin "$BRANCH"
+          gh pr create \
+            --repo "$REPO" \
+            --base main \
+            --head "$BRANCH" \
+            --title "evidence: add reviewed first-10 row from issue #${ISSUE_NUMBER}" \
+            --body "Maintainer-reviewed first-10 evidence candidate from #${ISSUE_NUMBER}.\n\nReviewer: ${REVIEWER}\nReview note: ${REVIEWER_NOTE}\n\nThis PR is the counting boundary: the issue workflow only creates a candidate artifact; this PR must still pass CI and receive review before the row counts on main."

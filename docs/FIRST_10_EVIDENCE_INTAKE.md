@@ -10,7 +10,16 @@ This is the public intake contract for controlled first-10 beta evidence. It is 
 4. Tester opens `.github/ISSUE_TEMPLATE/first-10-evidence.yml` and fills one row.
 5. GitHub issue automation runs `eval/first_10_issue_import.py` to produce a validated candidate row artifact. The issue URL itself is used as `external_user_evidence_uri` when the form field is blank.
 6. Maintainer validates redaction, consent, external-user actor, and row shape.
-7. Maintainer appends the normalized row to `eval/first_10_user_scoreboard.json` by PR.
+7. Maintainer appends the normalized row through the reviewed append path, not by hand-editing aggregates. Either run the manual workflow `.github/workflows/first-10-scoreboard-pr.yml` with the issue number, or run locally:
+   ```bash
+   python eval/first_10_reviewed_issue_append.py \
+     --issue-body /path/to/issue-body.md \
+     --issue-url https://github.com/borg-farther/Borg-Directory/issues/<n> \
+     --github-actor <external-github-actor> \
+     --reviewer <human-maintainer-reviewer> \
+     --internal-actors "$BORG_INTERNAL_ACTORS" \
+     --write
+   ```
 8. Maintainer runs:
    - `python eval/first_10_evidence.py --input eval/first_10_user_scoreboard.json --write`
    - `python eval/public_self_serve_launch_gate.py`

@@ -1,6 +1,6 @@
 # Borg self-service operations readiness
 
-Generated: `2026-06-08T20:01:04.694178+00:00`
+Generated: `2026-06-08T20:23:25.369468+00:00`
 Verdict: **PASS**
 
 ## Scope
@@ -40,7 +40,9 @@ None.
 - `codeowners`: `PASS` — `.github/CODEOWNERS`
 - `watchdog_workflow`: `PASS` — `.github/workflows/self-service-watchdog.yml`
 - `first_10_issue_importer`: `PASS` — `eval/first_10_issue_import.py`
+- `first_10_reviewed_issue_appender`: `PASS` — `eval/first_10_reviewed_issue_append.py`
 - `first_10_candidate_queue_workflow`: `PASS` — `.github/workflows/first-10-evidence-candidate.yml`
+- `first_10_scoreboard_pr_workflow`: `PASS` — `.github/workflows/first-10-scoreboard-pr.yml`
 - `rollback_drill_snapshot`: `PASS` — `eval/rollback_comms_drill_snapshot.json`
 
 ### bad_answer_feedback_path

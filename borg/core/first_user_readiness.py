@@ -172,7 +172,7 @@ def first_10_readiness_packet() -> Dict[str, Any]:
         "supported_mixes": list(SUPPORTED_FIRST_USER_MIXES),
         "gates": [gate.to_dict() for gate in FIRST_10_GATES],
         "smoke_commands": [
-            "python3 -m pip install agent-borg",
+            "python3 -m pip install 'git+https://github.com/borg-farther/Borg-Directory.git@main'",
             "borg version",
             "borg-doctor --json",
             "borg rescue 'ModuleNotFoundError: No module named flask' --json",

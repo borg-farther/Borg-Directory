@@ -11,7 +11,16 @@ Hi — we are preparing a small consented Borg beta for the first 10 external us
 
 STOP gate: these commands are for the controlled first-10 beta only. Do **not** send them while the current cap is 0. Do **not** send package commands until the next immutable PyPI release passes fresh-install/stdio MCP/generated-rules/OpenClaw canaries, and do not invite more than 10 real external users before the first-10 evidence gate passes.
 
-Preferred isolated install:
+Source-smoke install while PyPI proof is red:
+
+```bash
+python -m venv /tmp/borg-source-smoke-venv
+/tmp/borg-source-smoke-venv/bin/python -m pip install 'git+https://github.com/borg-farther/Borg-Directory.git@main'
+/tmp/borg-source-smoke-venv/bin/borg --version
+/tmp/borg-source-smoke-venv/bin/borg rescue "paste a REDACTED real error here"
+```
+
+Package install after the next immutable release is canaried:
 
 ```bash
 python -m pip install --user pipx
@@ -30,7 +39,7 @@ python -m venv /tmp/borg-beta-venv
 /tmp/borg-beta-venv/bin/borg rescue "paste a REDACTED real error here"
 ```
 
-Source-branch install is only for maintainer-approved pre-release testing, not the default first-10 path.
+Source-smoke install from GitHub is the current approved public smoke path while PyPI/package proof is red. Package install becomes the default first-10 path only after the next immutable release is freshly canaried.
 
 ## Consent and privacy warning
 
