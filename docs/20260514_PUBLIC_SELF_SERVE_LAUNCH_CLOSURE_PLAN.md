@@ -4,7 +4,7 @@ Generated: 2026-05-14 18:39 UTC
 
 ## Current state
 
-Borg's controlled first-10 package path is **NO-GO for served-runtime freshness and external evidence**, not for package installability. `agent-borg==3.3.18` is the published metadata-correct package and fresh runtime canaries are green. Package-level evidence capture can proceed only after served-runtime freshness and first-10 evidence intake are ready. New hardening PRs must still pass their own CI before source-specific claims are published.
+Borg's controlled first-10 package path is **NO-GO right now / cap 0**. `agent-borg==3.3.18` is the published package, but current-source PyPI/package proof is not green because the new bundled-pack clean-install fix has not shipped in an immutable PyPI release. Package-level evidence capture can proceed only after source/package/release/ops/docs gates and first-10 evidence intake are ready. New hardening PRs must still pass their own CI before source-specific claims are published.
 
 Public self-serve launch remains **NO-GO** until row-derived first-10 external-user evidence passes. Served remote MCP remains a separate runtime cutover/canary channel, not proven by the PyPI stdio release.
 
@@ -12,7 +12,7 @@ Hard evidence already completed or pending:
 
 - Branch/source readiness for 3.3.18: release main proof exists; this post-release proof branch still needs its own PR CI and post-merge main proof
 - Local source first-user release gate for `agent-borg==3.3.18`: green in current artifacts, but must be rerun after any package-impacting source change
-- Fresh PyPI install/MCP/generate/OpenClaw canary for `agent-borg==3.3.18`: PASS from production PyPI
+- Fresh PyPI install/MCP/generate/OpenClaw canary for `agent-borg==3.3.18`: FAIL-CLOSED for current-source proof until the next immutable package release includes the bundled-pack clean-install fix
 - self-service ops/watchdog gates: PASS for package-level evidence capture; broad public self-serve remains blocked by first-10 rows
 - security baseline: PASS in local gates
 - privacy/prompt-injection/atom/firewall tests: PASS in local gates
@@ -24,8 +24,8 @@ Hard evidence already completed or pending:
 Three true blocker classes remain before broader launch claims:
 
 1. **Runtime/ops proof and post-release proof branch evidence**
-   - Need: served-runtime fingerprint/canary at `agent-borg==3.3.18`, green ops watchdog/proof dashboard, this post-release proof branch PR CI, protected merge, and post-merge main proof.
-   - Until that exact chain is green, public-package evidence capture stays paused even though production PyPI package canaries pass.
+   - Need: served-runtime fingerprint/canary, green ops watchdog/proof dashboard, this post-release proof branch PR CI, protected merge, and post-merge main proof.
+   - Until that exact chain is green, public-package evidence capture stays paused.
 
 2. **First 10 real external users**
    - Need: real external-user outcome evidence, not simulations.
@@ -69,7 +69,7 @@ Prior 3.3.10 proof lives in:
 - `docs/20260522_BORG_3310_RELEASE_PREFLIGHT_PUBLISHED.md` (historical)
 - `eval/pypi_fresh_install_snapshot.json` (current exact-version package canary)
 
-Current package path status: `agent-borg==3.3.18` is the published metadata-correct package; production PyPI upload and fresh runtime canary pass. Controlled first-10 is capped at 0 until served-runtime freshness and first-10 evidence gates pass; broad public self-serve remains NO-GO until row-derived first-10 evidence passes.
+Current package path status: `agent-borg==3.3.18` is the published package, but current-source PyPI/package proof is **NO-GO** until the next immutable package release includes the bundled-pack clean-install fix and the fresh runtime/OpenClaw canary passes. Controlled first-10 is capped at 0 until source/package/release/ops/docs and first-10 evidence gates pass; broad public self-serve remains NO-GO until row-derived first-10 evidence passes.
 
 ### Phase C — first-10 user sprint
 
@@ -79,10 +79,10 @@ For each user:
 
 1. Send invite and privacy warning.
 2. Record consent.
-3. User runs one of:
-   - `pipx install agent-borg==3.3.18`
-   - fallback venv install from PyPI: `/tmp/borg-beta-venv/bin/python -m pip install agent-borg==3.3.18`
-   - source-branch install only for maintainer-approved pre-release testing, never the default first-10 path.
+3. User runs one maintainer-approved install channel:
+   - current source-smoke path while PyPI proof is red: `python -m pip install 'git+https://github.com/borg-farther/Borg-Directory.git@main'`
+   - next package path only after canary: `pipx install agent-borg==<next-canaried-version>`
+   - fallback venv package install only after canary: `/tmp/borg-beta-venv/bin/python -m pip install agent-borg==<next-canaried-version>`
 4. User runs:
    - `borg --version`
    - `borg rescue "<redacted real error>"`
@@ -112,7 +112,7 @@ Then refresh final launch artifacts:
 Public self-serve launch is **GO** only if:
 
 - first-10 scoreboard: PASS thresholds;
-- package PyPI/fresh-install/stdio MCP canary: PASS;
+- package PyPI/fresh-install/stdio MCP/generated-rules/OpenClaw canary: PASS for the next immutable release that includes current source fixes;
 - served remote MCP canary: PASS if remote MCP is part of the launch surface;
 - repo branch is pushed and reviewable;
 - docs claim scrub remains PASS;

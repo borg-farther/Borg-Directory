@@ -2,19 +2,20 @@
 
 ## Current verdict
 
-- Controlled first-10 beta: **NO-GO right now**. `agent-borg==3.3.18` is the published metadata-correct package; exact-version fresh-install/stdio MCP/generated-rules/OpenClaw runtime canaries are green. GitHub `main` release governance is enforced; the served runtime fingerprint is stale and remains a separate release-control blocker, and first-10 external-user evidence is still zero.
-- Public waitlist / narrow beta: **0 testers may proceed** until served-runtime freshness is green and first-10 evidence intake is ready to capture consented external-user rows; then the first-10 evidence contract caps the cohort at 10.
+- GitHub source exact-commit install: **GO** when `eval/github_source_install_snapshot.json` is green; clean VCS install from canonical GitHub passed CLI, Python API, rescue/doctor, and local stdio MCP canaries.
+- Controlled first-10 beta: **NO-GO until source/package/release/ops/docs gates are green**. `agent-borg==3.3.18` is the published package, but current-source PyPI/package proof must pass exact-version PyPI fresh-install/stdio MCP/generated-rules/OpenClaw runtime canary, served-runtime fingerprint, release governance, self-service ops, watchdog, and docs-claim guard before any controlled beta invites.
+- Public waitlist / narrow beta: **0 real users recommended right now**. Move back to at most 10 controlled, consented, instrumented external users only after those gates are green; every row must capture install outcome, first useful rescue outcome, MCP/setup blockers, negative feedback, and consented measurement fields. No synthetic or maintainer-only run counts.
 - Public self-serve launch: **NO-GO until first-10 external-user evidence passes** (10 verified external users, >=8 installs, >=6 useful rescues, 0 critical incidents).
 
 ## What passed for source/local package infrastructure
 
-- Public install path exists: `python3 -m pip install agent-borg`.
+- Current public source-smoke install path exists: `python3 -m pip install 'git+https://github.com/borg-farther/Borg-Directory.git@main'`; package install resumes after the next immutable PyPI release is freshly canaried.
 - CLI entrypoints exist: `borg`, `borg-mcp`, `borg-doctor`.
 - First value path exists: `borg rescue "<error>"` returns ACTION / STOP / VERIFY or `NO_CONFIDENT_MATCH`.
 - First-10 contract exists: [`FIRST_10_BETA_READINESS.md`](FIRST_10_BETA_READINESS.md).
 - Security/privacy/prompt-injection surface has a baseline and CI gates.
-- GitHub CI/security gates are part of the release proof chain. PR branches still need their own green checks and post-merge `main` proof refresh before branch-specific source changes are claimed on `main`.
-- Local first-user gate and production PyPI package canaries are current for `agent-borg==3.3.18`, including generated rules, OpenClaw export, stdio MCP, CLI, and Python API. Served-runtime freshness and first-10 external-user evidence remain the current release-control blockers.
+- GitHub `main` release governance is enforced and part of the release proof chain. PR branches still need their own green checks and post-merge `main` proof refresh before branch-specific source changes are claimed on `main`.
+- Local first-user path, GitHub source exact-commit canary, exact-version PyPI fresh-install/stdio MCP canary, served-runtime fingerprint, release governance, self-service ops, and watchdog checks are the required proof chain for `agent-borg==3.3.18`. Current verdicts come from the generated gate snapshots; GitHub source is green, current-source PyPI proof remains blocked until the next package release, and first-10 external-user evidence remains the broad public launch blocker after source/package/ops gates are green.
 
 ## What is not proven
 
@@ -36,6 +37,7 @@
 - [`PROMPT_INJECTION_THREAT_MODEL.md`](PROMPT_INJECTION_THREAT_MODEL.md)
 - [`../eval/first_user_release_gate_snapshot.json`](../eval/first_user_release_gate_snapshot.json)
 - [`../eval/pypi_fresh_install_snapshot.json`](../eval/pypi_fresh_install_snapshot.json)
+- [`../eval/github_source_install_snapshot.json`](../eval/github_source_install_snapshot.json)
 - [`../eval/served_runtime_fingerprint_snapshot.json`](../eval/served_runtime_fingerprint_snapshot.json)
 - [`../eval/release_governance_snapshot.json`](../eval/release_governance_snapshot.json)
 - [`../eval/ops_readiness_watchdog_snapshot.json`](../eval/ops_readiness_watchdog_snapshot.json)

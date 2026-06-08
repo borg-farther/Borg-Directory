@@ -1,0 +1,80 @@
+name: first-10 evidence candidate
+
+on:
+  issues:
+    types: [opened, edited, reopened, labeled]
+
+permissions:
+  contents: read
+  issues: write
+
+defaults:
+  run:
+    shell: bash
+
+jobs:
+  validate-candidate:
+    if: contains(join(github.event.issue.labels.*.name, ','), 'first-10-evidence') || startsWith(github.event.issue.title, '[first-10-evidence]')
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Set up Python
+        uses: actions/setup-python@v5
+        with:
+          python-version: '3.11'
+
+      - name: Write issue body
+        env:
+          ISSUE_BODY_PATH: ${{ runner.temp }}/issue-body.md
+        run: |
+          python - <<'PY'
+          import json, os
+          from pathlib import Path
+          event = json.loads(Path(os.environ['GITHUB_EVENT_PATH']).read_text(encoding='utf-8'))
+          Path(os.environ['ISSUE_BODY_PATH']).write_text(event.get('issue', {}).get('body') or '', encoding='utf-8')
+          PY
+
+      - name: Validate first-10 issue candidate row
+        id: import_candidate
+        env:
+          ISSUE_BODY_PATH: ${{ runner.temp }}/issue-body.md
+          CANDIDATE_ROW_PATH: ${{ runner.temp }}/first-10-candidate-row.json
+          ISSUE_URL: ${{ github.event.issue.html_url }}
+          ISSUE_ACTOR: ${{ github.event.issue.user.login }}
+          INTERNAL_ACTORS: ${{ vars.BORG_INTERNAL_ACTORS || 'borg-farther,github-actions[bot]' }}
+        run: |
+          python eval/first_10_issue_import.py \
+            --issue-body "$ISSUE_BODY_PATH" \
+            --issue-url "$ISSUE_URL" \
+            --github-actor "$ISSUE_ACTOR" \
+            --internal-actors "$INTERNAL_ACTORS" \
+            --output "$CANDIDATE_ROW_PATH" \
+            | tee "$RUNNER_TEMP/first-10-import-result.json"
+
+      - name: Upload validated candidate artifact
+        if: success()
+        uses: actions/upload-artifact@v4
+        with:
+          name: first-10-candidate-row-${{ github.event.issue.number }}
+          path: |
+            ${{ runner.temp }}/first-10-candidate-row.json
+            ${{ runner.temp }}/first-10-import-result.json
+          if-no-files-found: error
+
+      - name: Comment with validation result
+        if: always()
+        uses: actions/github-script@v7
+        with:
+          script: |
+            const ok = '${{ steps.import_candidate.outcome }}' === 'success';
+            const body = ok
+              ? 'first-10 evidence candidate validation passed. A candidate-row artifact was uploaded for maintainer PR review. This issue is not counted until a reviewer appends the validated row to the official scoreboard in a PR.'
+              : 'first-10 evidence candidate validation failed. Please check consent, redaction, required fields, and that this issue is a real external-user test. Nothing was counted.';
+            await github.rest.issues.createComment({
+              owner: context.repo.owner,
+              repo: context.repo.repo,
+              issue_number: context.issue.number,
+              body,
+            });

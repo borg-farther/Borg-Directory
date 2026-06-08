@@ -38,6 +38,8 @@ REQUIRED_DOCS = {
 REQUIRED_ISSUE_TEMPLATES = {
     "bad_answer": Path(".github/ISSUE_TEMPLATE/bad-answer.yml"),
     "first_10_evidence": Path(".github/ISSUE_TEMPLATE/first-10-evidence.yml"),
+    "source_smoke_feedback": Path(".github/ISSUE_TEMPLATE/source-smoke-feedback.yml"),
+    "first_10_request": Path(".github/ISSUE_TEMPLATE/first-10-request.yml"),
     "install_mcp_support": Path(".github/ISSUE_TEMPLATE/install-mcp-support.yml"),
     "issue_config": Path(".github/ISSUE_TEMPLATE/config.yml"),
 }
@@ -45,6 +47,10 @@ REQUIRED_ISSUE_TEMPLATES = {
 REQUIRED_STATIC_FILES = {
     "codeowners": Path(".github/CODEOWNERS"),
     "watchdog_workflow": Path(".github/workflows/self-service-watchdog.yml"),
+    "first_10_issue_importer": Path("eval/first_10_issue_import.py"),
+    "first_10_reviewed_issue_appender": Path("eval/first_10_reviewed_issue_append.py"),
+    "first_10_candidate_queue_workflow": Path(".github/workflows/first-10-evidence-candidate.yml"),
+    "first_10_scoreboard_pr_workflow": Path(".github/workflows/first-10-scoreboard-pr.yml"),
     "rollback_drill_snapshot": Path("eval/rollback_comms_drill_snapshot.json"),
 }
 
@@ -115,11 +121,30 @@ INSTALL_SUPPORT_REQUIRED_FIELDS = [
     "privacy-confirmation",
 ]
 
+SOURCE_SMOKE_REQUIRED_FIELDS = [
+    "install-command",
+    "operating-system",
+    "python-version",
+    "install-success",
+    "first-command-output-redacted",
+    "action-stop-verify-visible",
+    "privacy-confirmation",
+]
+
+FIRST10_REQUEST_REQUIRED_FIELDS = [
+    "intended-install-channel",
+    "operating-system",
+    "agent-host",
+    "intended-use-redacted",
+    "consent-boundary",
+]
+
 # These IDs must exist in the first-10 issue form so the row contract stays
 # visible to testers, but they are intentionally optional until a tester has
 # measured savings/value evidence. Requiring blank-able numeric inputs would
 # make GitHub issue submission impossible for unmeasured rows.
 PRESENT_ONLY_ISSUE_FIELDS = {
+    "external-user-evidence-uri",
     "baseline-minutes-without-borg",
     "actual-minutes-with-borg",
     "net-minutes-saved",
@@ -143,6 +168,44 @@ WORKFLOW_REQUIRED_SNIPPETS = [
     "python scripts/build_borg_proof_dashboard.py",
     "python eval/ops_readiness_watchdog.py --mode pr --json --no-write --output eval/ops_readiness_watchdog_post_dashboard_check.json --max-snapshot-age-hours 24 --allow-public-blocker release_controls_or_first_10_evidence --require-ci-schedule",
     "python scripts/borg_proof_dashboard_lint.py",
+]
+
+CANDIDATE_WORKFLOW_REQUIRED_SNIPPETS = [
+    "issues:",
+    "first-10-evidence",
+    "python eval/first_10_issue_import.py",
+    "--github-actor",
+    "github.event.issue.user.login",
+    "--issue-url",
+    "github.event.issue.html_url",
+    "upload-artifact",
+]
+
+SCOREBOARD_PR_WORKFLOW_REQUIRED_SNIPPETS = [
+    "workflow_dispatch:",
+    "issue_number",
+    "gh issue view",
+    "first-10-evidence",
+    "python eval/first_10_reviewed_issue_append.py",
+    "--reviewer",
+    "python eval/first_10_evidence.py --input eval/first_10_user_scoreboard.json --write",
+    "gh pr create",
+]
+
+ISSUE_IMPORTER_REQUIRED_SNIPPETS = [
+    "row_from_issue_body",
+    "validate_single_row",
+    "github_actor is required",
+    "privacy-confirmation",
+    "borg-farther/Borg-Directory/issues",
+]
+
+REVIEWED_APPEND_REQUIRED_SNIPPETS = [
+    "reviewed_scoreboard_update",
+    "reviewer must be different from github_actor",
+    "duplicate external_user_evidence_uri",
+    "--write",
+    "scoreboard_with_derived_fields",
 ]
 
 BAD_FEEDBACK_BANNED = ["borg_rate(helpful=False)", "borg_rate"]
@@ -236,6 +299,60 @@ def _watchdog_workflow_check(path: Path) -> dict[str, Any]:
         "exists": path.exists(),
         "passed": path.exists() and not missing,
         "missing_snippets": missing,
+    }
+
+
+def _first_10_candidate_workflow_check(path: Path) -> dict[str, Any]:
+    text = _read(path)
+    missing = [snippet for snippet in CANDIDATE_WORKFLOW_REQUIRED_SNIPPETS if snippet not in text]
+    mutates_scoreboard = "first_10_user_scoreboard.json" in text
+    return {
+        "path": _rel(path),
+        "exists": path.exists(),
+        "passed": path.exists() and not missing and not mutates_scoreboard,
+        "missing_snippets": missing,
+        "mutates_scoreboard": mutates_scoreboard,
+        "policy": "Issue intake may produce candidate artifacts, but must not mutate the official first-10 scoreboard without PR review.",
+    }
+
+
+def _first_10_scoreboard_pr_workflow_check(path: Path) -> dict[str, Any]:
+    text = _read(path)
+    missing = [snippet for snippet in SCOREBOARD_PR_WORKFLOW_REQUIRED_SNIPPETS if snippet not in text]
+    directly_pushes_main = bool(re.search(r"git push\s+.*\bmain\b", text))
+    auto_merges_pr = "gh pr merge" in text or "--auto" in text
+    return {
+        "path": _rel(path),
+        "exists": path.exists(),
+        "passed": path.exists() and not missing and not directly_pushes_main and not auto_merges_pr,
+        "missing_snippets": missing,
+        "directly_pushes_main": directly_pushes_main,
+        "auto_merges_pr": auto_merges_pr,
+        "policy": "Reviewed evidence workflow may open a PR with a scoreboard row, but it must not push main or auto-merge; PR review remains the counting boundary.",
+    }
+
+
+def _first_10_issue_importer_check(path: Path) -> dict[str, Any]:
+    text = _read(path)
+    missing = [snippet for snippet in ISSUE_IMPORTER_REQUIRED_SNIPPETS if snippet not in text]
+    return {
+        "path": _rel(path),
+        "exists": path.exists(),
+        "passed": path.exists() and not missing,
+        "missing_snippets": missing,
+        "policy": "Importer must require issue URL, GitHub actor, privacy confirmation, and same validator used by row-derived first-10 gates.",
+    }
+
+
+def _first_10_reviewed_appender_check(path: Path) -> dict[str, Any]:
+    text = _read(path)
+    missing = [snippet for snippet in REVIEWED_APPEND_REQUIRED_SNIPPETS if snippet not in text]
+    return {
+        "path": _rel(path),
+        "exists": path.exists(),
+        "passed": path.exists() and not missing,
+        "missing_snippets": missing,
+        "policy": "Reviewed appender is the only scoreboard mutation path for issue evidence; it requires distinct human review and row-derived validation before writing.",
     }
 
 
@@ -336,6 +453,8 @@ def compile_gate() -> dict[str, Any]:
     template_checks = {
         "bad_answer": _issue_template_check(ROOT / REQUIRED_ISSUE_TEMPLATES["bad_answer"], BAD_ANSWER_REQUIRED_FIELDS),
         "first_10_evidence": _issue_template_check(ROOT / REQUIRED_ISSUE_TEMPLATES["first_10_evidence"], FIRST10_REQUIRED_FIELDS),
+        "source_smoke_feedback": _issue_template_check(ROOT / REQUIRED_ISSUE_TEMPLATES["source_smoke_feedback"], SOURCE_SMOKE_REQUIRED_FIELDS),
+        "first_10_request": _issue_template_check(ROOT / REQUIRED_ISSUE_TEMPLATES["first_10_request"], FIRST10_REQUEST_REQUIRED_FIELDS),
         "install_mcp_support": _issue_template_check(ROOT / REQUIRED_ISSUE_TEMPLATES["install_mcp_support"], INSTALL_SUPPORT_REQUIRED_FIELDS),
         "issue_config": {"path": _rel(ROOT / REQUIRED_ISSUE_TEMPLATES["issue_config"]), "exists": (ROOT / REQUIRED_ISSUE_TEMPLATES["issue_config"]).exists(), "passed": (ROOT / REQUIRED_ISSUE_TEMPLATES["issue_config"]).exists()},
     }
@@ -343,6 +462,10 @@ def compile_gate() -> dict[str, Any]:
     static_checks = {
         "codeowners": _codeowners_file_check(ROOT / REQUIRED_STATIC_FILES["codeowners"]),
         "watchdog_workflow": _watchdog_workflow_check(ROOT / REQUIRED_STATIC_FILES["watchdog_workflow"]),
+        "first_10_issue_importer": _first_10_issue_importer_check(ROOT / REQUIRED_STATIC_FILES["first_10_issue_importer"]),
+        "first_10_reviewed_issue_appender": _first_10_reviewed_appender_check(ROOT / REQUIRED_STATIC_FILES["first_10_reviewed_issue_appender"]),
+        "first_10_candidate_queue_workflow": _first_10_candidate_workflow_check(ROOT / REQUIRED_STATIC_FILES["first_10_candidate_queue_workflow"]),
+        "first_10_scoreboard_pr_workflow": _first_10_scoreboard_pr_workflow_check(ROOT / REQUIRED_STATIC_FILES["first_10_scoreboard_pr_workflow"]),
         "rollback_drill_snapshot": _rollback_drill_check(ROOT / REQUIRED_STATIC_FILES["rollback_drill_snapshot"]),
     }
 

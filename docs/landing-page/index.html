@@ -447,7 +447,7 @@
 
   <section class="hero">
     <div class="container">
-      <div class="hero-badge">agent-borg 3.3.18 package/runtime canaries pass; public rollout is evidence-gated</div>
+      <div class="hero-badge">GitHub source smoke is canaried; PyPI package/current proof and public rollout remain evidence-gated</div>
       <h1>Stop your agent burning tokens<br>on problems <span class="highlight">someone else already solved</span></h1>
       <p>borg gives AI agents an evidence-gated rescue path — ACTION / STOP / VERIFY when there is a confident match, and NO_CONFIDENT_MATCH instead of weak advice when there is not.</p>
       <div class="hero-cta">
@@ -475,7 +475,7 @@
           <div class="stat">stop</div>
           <div class="sub">one rescue lookup, then verify or fail closed</div>
           <div class="detail">
-            Agent hits blocker → borg checks collective → solution pulled → agent continues immediately
+            Agent hits blocker → borg returns ACTION / STOP / VERIFY or NO_CONFIDENT_MATCH → agent verifies before continuing
           </div>
         </div>
       </div>
@@ -484,8 +484,8 @@
 
   <section class="install" id="install">
     <div class="container">
-      <h2>One-command install</h2>
-      <p>Add borg to your agent in under a minute</p>
+      <h2>Current source-smoke install</h2>
+      <p>Use a fresh virtualenv; package install returns after the next PyPI canary</p>
 
       <div class="platforms">
 
@@ -511,7 +511,7 @@
 
 <span class="comment"># Install borg CLI</span>
 <span class="comment"># Run once in your project root:</span>
-pip install agent-borg</pre>
+python -m pip install 'git+https://github.com/borg-farther/Borg-Directory.git@main'</pre>
             </div>
           </div>
         </div>
@@ -533,10 +533,10 @@ pip install agent-borg</pre>
 
 <span class="comment"># --- borg integration ---</span>
 <span class="comment"># On blocker: borg rescue "describe what broke"</span>
-<span class="comment"># Pulls verified solutions from the collective in &lt;1s.</span>
+<span class="comment"># Checks local/source traces and returns ACTION / STOP / VERIFY or NO_CONFIDENT_MATCH.</span>
 
 <span class="comment"># One-time setup</span>
-pip install agent-borg</pre>
+python -m pip install 'git+https://github.com/borg-farther/Borg-Directory.git@main'</pre>
             </div>
           </div>
         </div>
@@ -559,11 +559,11 @@ pip install agent-borg</pre>
 <span class="comment">## borg — collective problem solving</span>
 <span class="comment"># When stuck on an error or blocker:</span>
 <span class="comment">#   1. Run: borg rescue "&lt;error message>"</span>
-<span class="comment">#   2. If a solution exists, apply it directly.</span>
+<span class="comment">#   2. If Borg returns guidance, rerun VERIFY before trusting it.</span>
 <span class="comment">#   3. Never loop twice on the same error class.</span>
 
 <span class="comment"># Install borg (one-time)</span>
-pip install agent-borg</pre>
+python -m pip install 'git+https://github.com/borg-farther/Borg-Directory.git@main'</pre>
             </div>
           </div>
         </div>
@@ -594,7 +594,7 @@ pip install agent-borg</pre>
             <div class="platform-icon">⚡</div>
             <div class="platform-info">
               <div class="platform-name">MCP (Model Context Protocol)</div>
-              <div class="platform-tag">pip install + JSON config</div>
+              <div class="platform-tag">GitHub source install + JSON config</div>
             </div>
             <div class="platform-toggle">Show</div>
           </div>
@@ -602,7 +602,7 @@ pip install agent-borg</pre>
             <div class="code-block">
               <button class="copy-btn" onclick="copy(this)">Copy</button>
 <pre><span class="comment"># Install the borg MCP server</span>
-pip install agent-borg
+python -m pip install 'git+https://github.com/borg-farther/Borg-Directory.git@main'
 
 <span class="comment"># Add to your MCP config (e.g. cursor settings.json):</span>
 {
@@ -637,7 +637,7 @@ pip install agent-borg
         </div>
         <div class="step">
           <div class="step-num">3</div>
-          <h3>Solution pulled & applied</h3>
+          <h3>Guidance returned, then verified</h3>
           <p>Your agent receives ACTION / STOP / VERIFY guidance with context. Claims about avoided loops or saved tokens require row-derived external evidence; current public lift is not claimed.</p>
         </div>
       </div>

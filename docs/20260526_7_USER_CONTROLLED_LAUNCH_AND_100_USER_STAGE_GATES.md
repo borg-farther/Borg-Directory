@@ -106,7 +106,7 @@ Gate C is blocked until all are true:
 
 Every invite must include:
 
-1. Install path: `pipx install agent-borg==3.3.18`
+1. Install path: current source-smoke channel while PyPI proof is red — `python -m pip install 'git+https://github.com/borg-farther/Borg-Directory.git@main'`; package installs resume only after the next immutable PyPI release passes fresh-install/OpenClaw canaries
 2. Verify path: `borg version`, `borg-doctor --json`
 3. First value path: `borg rescue "<redacted real error>" --json`
 4. Optional local MCP path: configure `borg-mcp` as a stdio MCP server in the tester's own agent host.
@@ -118,9 +118,9 @@ Every invite must include:
 
 Re-evaluated from scratch:
 
-- If the question is only "can 7 users try Borg at once?" the answer is currently no for this source revision: `agent-borg==3.3.18` is published and freshly canaried, but the cap stays 0 until served-runtime freshness, ops/watchdog, release-control proof, and first-10 evidence are green.
+- If the question is only "can 7 users try Borg at once?" the answer is currently no for this source revision: `agent-borg==3.3.18` is published, but current-source package/PyPI proof is red until a new immutable release includes the bundled-pack clean-install fix and passes fresh canaries; the cap stays 0 until source/package/release/ops/docs and first-10 evidence are green.
 - If the question is "is Borg ready for 100 concurrent public self-service users?" the answer is no, because 100 real-user readiness is evidence-gated and first-10 evidence is still zero.
 - If the question is "are local source and package enough?" the answer is no for served channels; runtime fingerprinting is a separate gate.
 - If the question is "should we build new features now?" the answer is no; the immediate work is proof, docs consistency, feedback capture, and fail-closed gates.
 
-Bottom line: do not launch 7 yet. The immutable package is now published and freshly canaried; next clear served-runtime freshness and ops/watchdog gates, then launch at most 10 controlled testers with consented row capture, pause on any incident, and do not expand beyond 10 until row-derived evidence passes.
+Bottom line: do not launch 7 yet. The current usable tester path is source-smoke from GitHub while PyPI/package proof is red; next cut an explicitly approved immutable package release, prove it with fresh-install/OpenClaw canaries, clear ops/watchdog gates, then launch at most 10 controlled testers with consented row capture, pause on any incident, and do not expand beyond 10 until row-derived evidence passes.

@@ -17,6 +17,24 @@ Do **not** install these for Borg:
 
 Requires Python 3.10+.
 
+## Current source-smoke install
+
+Until the next immutable PyPI release passes the fresh-install/OpenClaw canary, use the current public GitHub source-smoke path from a fresh virtualenv:
+
+```bash
+python3 -m venv /tmp/borg-source-smoke
+. /tmp/borg-source-smoke/bin/activate
+python -m pip install --upgrade pip
+python -m pip install 'git+https://github.com/borg-farther/Borg-Directory.git@main'
+
+command -v borg
+command -v borg-mcp
+borg version
+borg-doctor --json
+```
+
+The OS-specific package-install commands below are for the next canaried PyPI release; they are not current-source package proof while PyPI fresh-install/OpenClaw is red.
+
 ---
 
 ## macOS

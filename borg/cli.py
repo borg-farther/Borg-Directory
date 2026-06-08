@@ -54,25 +54,63 @@ def _print_json(raw: str) -> None:
 
 
 def _load_builtin_packs() -> list:
-    """Load packs from the built-in guild-packs directory.
-    
-    This provides a fallback when no local packs are available.
+    """Load bundled seed packs, with explicit test-pack override.
+
+    Public installs and CI runners cannot assume access to operator-only paths like
+    ``/root/hermes-workspace/guild-packs``. Prefer seed packs shipped inside the
+    wheel; load external packs only when the caller explicitly sets
+    ``BORG_TEST_PACKS_DIR``.
     """
     import pathlib
     import yaml
-    
+
     packs = []
-    guild_packs_dir = pathlib.Path("/root/hermes-workspace/guild-packs/packs")
-    
-    if guild_packs_dir.exists():
-        for pack_file in guild_packs_dir.glob("*.yaml"):
+    seen_ids: set[str] = set()
+
+    def _readable_dir(path: pathlib.Path) -> bool:
+        try:
+            return path.exists() and path.is_dir()
+        except OSError:
+            return False
+
+    def _add_pack(pack_data) -> None:
+        if not isinstance(pack_data, dict):
+            return
+        pack_id = str(pack_data.get("id") or pack_data.get("name") or "")
+        if not pack_id or pack_id in seen_ids:
+            return
+        if not pack_data.get("id") and pack_data.get("name"):
+            pack_data = dict(pack_data)
+            pack_data["id"] = f"borg://hermes/{pack_id}"
+        seen_ids.add(pack_id)
+        packs.append(pack_data)
+
+    module_path = pathlib.Path(__file__).resolve()
+    package_root = module_path.parent
+    # Entry points import borg.cli as the package at borg/cli/__init__.py, which
+    # execs this legacy module. In that mode __file__ points at borg/cli/__init__.py,
+    # not borg/cli.py. Resolve back to the distribution package root before looking
+    # for bundled seed packs, otherwise fresh public installs cannot find them.
+    if module_path.name == "__init__.py" and module_path.parent.name == "cli":
+        package_root = module_path.parents[1]
+    pack_dirs = [package_root / "seeds_data" / "packs"]
+    env_packs_dir = os.environ.get("BORG_TEST_PACKS_DIR")
+    if env_packs_dir:
+        pack_dirs.append(pathlib.Path(env_packs_dir))
+
+    for pack_dir in pack_dirs:
+        if not _readable_dir(pack_dir):
+            continue
+        try:
+            pack_files = sorted(pack_dir.glob("*.yaml")) + sorted(pack_dir.glob("*.yml"))
+        except OSError:
+            continue
+        for pack_file in pack_files:
             try:
-                pack_data = yaml.safe_load(pack_file.read_text(encoding="utf-8"))
-                if isinstance(pack_data, dict) and pack_data.get("type") == "workflow_pack":
-                    packs.append(pack_data)
+                _add_pack(yaml.safe_load(pack_file.read_text(encoding="utf-8")))
             except Exception:
                 continue
-    
+
     return packs
 
 
@@ -685,7 +723,6 @@ def _cmd_convert(args: argparse.Namespace) -> int:
         # Handle OpenClaw format (registry-wide conversion)
         if args.format == "openclaw":
             from borg.core.uri import get_available_pack_names
-            import pathlib
             
             # Collect all packs
             packs = []
@@ -694,39 +731,42 @@ def _cmd_convert(args: argparse.Namespace) -> int:
             def _add_pack(pack_data):
                 """Add pack if not duplicate."""
                 if isinstance(pack_data, dict):
-                    pack_id = pack_data.get("id", "")
+                    pack_id = str(pack_data.get("id") or pack_data.get("name") or "")
                     if pack_id and pack_id not in seen_ids:
+                        if not pack_data.get("id") and pack_data.get("name"):
+                            pack_data = dict(pack_data)
+                            pack_data["id"] = f"borg://hermes/{pack_id}"
                         seen_ids.add(pack_id)
                         packs.append(pack_data)
             
             if args.all:
-                # Load all packs from local guild dir
-                pack_names = get_available_pack_names()
-                
+                # Load packs from user BORG_DIR when present, but public installs must
+                # not depend on maintainer-only checkout paths.
+                try:
+                    pack_names = get_available_pack_names()
+                except Exception:
+                    pack_names = []
+
                 guild_dir = get_borg_dir()
-                
+
                 for pack_name in pack_names:
                     pack_yaml = guild_dir / pack_name / "pack.yaml"
-                    if pack_yaml.exists():
+                    try:
+                        pack_yaml_exists = pack_yaml.exists() and pack_yaml.is_file()
+                    except OSError:
+                        pack_yaml_exists = False
+                    if pack_yaml_exists:
                         try:
                             pack_data = yaml.safe_load(pack_yaml.read_text(encoding="utf-8"))
                             _add_pack(pack_data)
                         except Exception:
                             continue
-                
-                # Also load ALL packs from the guild-packs directory
-                guild_packs_dir = pathlib.Path("/root/hermes-workspace/guild-packs/packs")
-                if guild_packs_dir.exists():
-                    for pack_file in guild_packs_dir.glob("*.yaml"):
-                        try:
-                            pack_data = yaml.safe_load(pack_file.read_text(encoding="utf-8"))
-                            _add_pack(pack_data)
-                        except Exception:
-                            continue
-                
-                # Fallback: use the borg core registry if no packs found
-                if not packs:
-                    packs = _load_builtin_packs()
+
+                # Then load bundled seed packs, with any test pack directory
+                # explicitly supplied through BORG_TEST_PACKS_DIR. This is the
+                # clean public-install path.
+                for pack_data in _load_builtin_packs():
+                    _add_pack(pack_data)
             
             if not packs:
                 print("Error: No packs found to convert", file=sys.stderr)

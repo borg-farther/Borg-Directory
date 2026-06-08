@@ -6,8 +6,8 @@ This is the canonical Borg product repo. Borg is failure memory for AI coding ag
 - Canonical GitHub repo: `https://github.com/borg-farther/Borg-Directory`
 - Package users install: `agent-borg`
 - Commands users run: `borg`, `borg-mcp`, `borg-doctor`
-- Day-one value path: `pipx install agent-borg` then `borg rescue "<real error>" --short`.
-- Current rollout boundary: `agent-borg==3.3.18` is the metadata-correct production PyPI package; exact-version fresh-install, local stdio MCP, generated-rules, and OpenClaw runtime canaries pass for the published package. Controlled first-10 beta remains **NO-GO** until served-runtime freshness plus ops/watchdog/proof-dashboard gates and first-10 external-user evidence are green. GitHub `main` release governance is enforced; served runtime freshness and first-10 external-user evidence remain separate blockers. Do not claim public self-serve, 100-user rollout, served remote MCP, or measured external lift until row-derived external-user evidence passes.
+- Day-one source-smoke path: fresh venv, `python -m pip install 'git+https://github.com/borg-farther/Borg-Directory.git@main'`, then `borg rescue "<real error>" --short`.
+- Current rollout boundary: GitHub source install is **GO** for the current source path when `eval/github_source_install_snapshot.json` is green (canonical GitHub VCS install with CLI/API/rescue/doctor/local stdio MCP). `agent-borg==3.3.18` remains the production PyPI package, but current-source PyPI/package proof is **NO-GO** until a new immutable package release includes the bundled-pack clean-install fix and the PyPI fresh-install/OpenClaw canary is green. Controlled first-10 and broad public self-serve stay NO-GO until their separate source/package/release/ops/docs/evidence gates pass.
 
 ## Before editing
 

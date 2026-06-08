@@ -1,6 +1,6 @@
 # Borg First-10 Beta Readiness Contract
 
-**Status:** controlled first-10 public-package beta is **NO-GO right now**. `agent-borg==3.3.18` fresh-install/stdio MCP/generated-rules/OpenClaw runtime canary proof is green and GitHub `main` release governance is enforced, but the served runtime fingerprint is stale and first-10 external-user evidence is zero. Invite **0** controlled testers until served-runtime freshness is green and evidence intake is ready to capture consented external-user rows. Public self-serve stays NO-GO until row-derived first-10 external evidence passes.
+**Status:** controlled first-10 public-package beta is **NO-GO right now / cap 0**. GitHub source install is GO when `eval/github_source_install_snapshot.json` is green, with CLI, Python API, rescue/doctor, and local stdio MCP canaries. PyPI `agent-borg==3.3.18` remains the published package, but current-source PyPI/package proof is NO-GO until a new immutable package release includes the bundled-pack clean-install fix and the PyPI fresh-install/OpenClaw canary is green. Broad public self-serve and measured external lift remain unclaimed until row-derived external-user evidence passes.
 
 **Success metric:** At least 6 of the first 10 users get one relevant ACTION/STOP/VERIFY moment without maintainer handholding, and every miss is recorded as NO_CONFIDENT_MATCH or explicit negative feedback instead of being hidden.
 
@@ -20,12 +20,12 @@ Before attempting technical fixes for errors, bugs, installs, configs, deploymen
 
 ## Clean-user smoke path
 
-Run this before handing Borg to a tester, after the current release version is published and proof dashboards are green:
+Run this before handing Borg to a tester. Use the GitHub source-smoke channel while PyPI/package proof is red; switch this section back to `agent-borg` only after a new immutable PyPI release is published and its fresh-install/OpenClaw canary is green.
 
-Install package `agent-borg`; it provides `borg`, `borg-mcp`, and `borg-doctor`. Do **not** use `pip install borg`, `brew install borgbackup`, `apt install borgbackup`, `apt-get install borgbackup`, `dnf install borgbackup`, or `pacman -S borg`; those are unrelated.
+Install package `agent-borg` only after that package proof is green; it provides `borg`, `borg-mcp`, and `borg-doctor`. Do **not** use `pip install borg`, `brew install borgbackup`, `apt install borgbackup`, `apt-get install borgbackup`, `dnf install borgbackup`, or `pacman -S borg`; those are unrelated.
 
 ```bash
-python3 -m pip install agent-borg
+python3 -m pip install 'git+https://github.com/borg-farther/Borg-Directory.git@main'
 borg version
 borg-doctor --json
 borg rescue 'ModuleNotFoundError: No module named flask' --json
@@ -165,7 +165,7 @@ Send each tester this:
    Package name is `agent-borg`; command after install is `borg`. Do **not** install `borg` or `borgbackup`.
    
    ```bash
-   python3 -m pip install agent-borg
+   python3 -m pip install 'git+https://github.com/borg-farther/Borg-Directory.git@main'
    borg version
    borg-doctor --json
    ```

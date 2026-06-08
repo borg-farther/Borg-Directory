@@ -25,14 +25,14 @@
       },
       "first_10_intake": {
         "exists": true,
-        "minimum_bytes": 2872,
+        "minimum_bytes": 3788,
         "missing_phrases": [],
         "passed": true,
         "path": "docs/FIRST_10_EVIDENCE_INTAKE.md"
       },
       "ops_readiness": {
         "exists": true,
-        "minimum_bytes": 3366,
+        "minimum_bytes": 3842,
         "missing_phrases": [],
         "passed": true,
         "path": "docs/SELF_SERVICE_OPS_READINESS.md"
@@ -76,6 +76,15 @@
         "passed": true,
         "path": ".github/ISSUE_TEMPLATE/first-10-evidence.yml"
       },
+      "first_10_request": {
+        "exists": true,
+        "has_secret_redaction_warning": true,
+        "missing_fields": [],
+        "non_required_fields": [],
+        "parse_error": "",
+        "passed": true,
+        "path": ".github/ISSUE_TEMPLATE/first-10-request.yml"
+      },
       "install_mcp_support": {
         "exists": true,
         "has_secret_redaction_warning": true,
@@ -89,6 +98,15 @@
         "exists": true,
         "passed": true,
         "path": ".github/ISSUE_TEMPLATE/config.yml"
+      },
+      "source_smoke_feedback": {
+        "exists": true,
+        "has_secret_redaction_warning": true,
+        "missing_fields": [],
+        "non_required_fields": [],
+        "parse_error": "",
+        "passed": true,
+        "path": ".github/ISSUE_TEMPLATE/source-smoke-feedback.yml"
       }
     },
     "static_files": {
@@ -116,13 +134,44 @@
         "policy": "Static self-service ops parses non-comment CODEOWNERS owner tokens exactly; live owner validity and enforcement are proven by the release governance gate.",
         "required_owner": "@borg-farther"
       },
+      "first_10_candidate_queue_workflow": {
+        "exists": true,
+        "missing_snippets": [],
+        "mutates_scoreboard": false,
+        "passed": true,
+        "path": ".github/workflows/first-10-evidence-candidate.yml",
+        "policy": "Issue intake may produce candidate artifacts, but must not mutate the official first-10 scoreboard without PR review."
+      },
+      "first_10_issue_importer": {
+        "exists": true,
+        "missing_snippets": [],
+        "passed": true,
+        "path": "eval/first_10_issue_import.py",
+        "policy": "Importer must require issue URL, GitHub actor, privacy confirmation, and same validator used by row-derived first-10 gates."
+      },
+      "first_10_reviewed_issue_appender": {
+        "exists": true,
+        "missing_snippets": [],
+        "passed": true,
+        "path": "eval/first_10_reviewed_issue_append.py",
+        "policy": "Reviewed appender is the only scoreboard mutation path for issue evidence; it requires distinct human review and row-derived validation before writing."
+      },
+      "first_10_scoreboard_pr_workflow": {
+        "auto_merges_pr": false,
+        "directly_pushes_main": false,
+        "exists": true,
+        "missing_snippets": [],
+        "passed": true,
+        "path": ".github/workflows/first-10-scoreboard-pr.yml",
+        "policy": "Reviewed evidence workflow may open a PR with a scoreboard row, but it must not push main or auto-merge; PR review remains the counting boundary."
+      },
       "rollback_drill_snapshot": {
-        "age_hours": 2.888111111111111e-05,
+        "age_hours": 0.00035946361111111107,
         "dry_run_only": true,
         "exists": true,
         "failed_steps": [],
         "fresh": true,
-        "generated_at_utc": "2026-06-03T20:33:05.019869+00:00",
+        "generated_at_utc": "2026-06-08T20:27:40.084288+00:00",
         "max_age_hours": 24.0,
         "missing_steps": [],
         "passed": true,
@@ -137,7 +186,7 @@
     }
   },
   "gate_type": "self_service_ops_readiness",
-  "generated_at_utc": "2026-06-03T20:33:05.124064+00:00",
+  "generated_at_utc": "2026-06-08T20:27:41.378542+00:00",
   "passed": true,
   "rollout_policy": "Ops readiness is necessary but not sufficient for controlled first-10; package provenance, served-runtime freshness, release governance, ops/watchdog freshness, and first-10 guardrails must also pass. broad public self-serve still requires row-derived first-10 external evidence.",
   "schema_version": 1

@@ -63,7 +63,8 @@ They are retained for provenance, but they are not current product claims or fir
 
 ## Current truth
 
-- Controlled first-10 public-package beta: NO-GO right now. `agent-borg==3.3.18` is the published metadata-correct package; exact-version fresh-install/stdio MCP/generated-rules/OpenClaw runtime canary proof is green. GitHub `main` release governance is enforced. Cap is 0 until served-runtime freshness and first-10 external-user evidence gates are green.
+- GitHub source exact-commit install: GO when `eval/github_source_install_snapshot.json` is green; clean VCS install from canonical GitHub passes CLI, Python API, rescue/doctor, and local stdio MCP canaries.
+- Controlled first-10 public-package beta: NO-GO right now / cap 0. `agent-borg==3.3.18` remains the published metadata-correct package, but current-source PyPI/package proof is NO-GO until a new immutable package release includes the bundled-pack clean-install fix and the PyPI fresh-install/OpenClaw canary is green. GitHub `main` release governance is enforced.
 - Public self-serve launch: not yet; requires real external-user evidence.
 - Agent-level success lift at statistical confidence: not yet proven.
 - Internal max-value collective intelligence loop primitives: GO; external lift still requires first-10 rows.

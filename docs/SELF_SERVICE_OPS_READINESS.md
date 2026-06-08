@@ -11,7 +11,11 @@ Borg's package path may enter the first external-user evidence cohort only after
 ## Required public paths
 
 - Bad first answer: `.github/ISSUE_TEMPLATE/bad-answer.yml`
+- Source-channel smoke feedback: `.github/ISSUE_TEMPLATE/source-smoke-feedback.yml`
+- First-10 waitlist/request: `.github/ISSUE_TEMPLATE/first-10-request.yml`
 - First-10 evidence row: `.github/ISSUE_TEMPLATE/first-10-evidence.yml`
+- Validated candidate importer: `eval/first_10_issue_import.py` plus `.github/workflows/first-10-evidence-candidate.yml`
+- Reviewed counting path: `eval/first_10_reviewed_issue_append.py` plus manual `.github/workflows/first-10-scoreboard-pr.yml`; candidate issues do not count until a reviewed scoreboard PR merges.
 - Install/MCP support: `.github/ISSUE_TEMPLATE/install-mcp-support.yml`
 - Support policy: `SUPPORT.md`
 - Security/privacy escalation: `SECURITY.md`

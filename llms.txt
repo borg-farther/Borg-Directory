@@ -9,12 +9,12 @@ MCP server command: borg-mcp
 Python: 3.10+
 
 Day-one value path:
-1. pipx install agent-borg
+1. python -m pip install 'git+https://github.com/borg-farther/Borg-Directory.git@main' in a fresh virtualenv while current-source PyPI proof is red
 2. borg rescue "ModuleNotFoundError: No module named flask" --short
 3. Expect ACTION / STOP / VERIFY / CONFIDENCE, or NO_CONFIDENT_MATCH.
 
 Current rollout boundary:
-- Controlled first-10 public-package beta is closed right now. agent-borg==3.3.18 is the published metadata-correct package; exact-version fresh-install/stdio MCP/generated-rules/OpenClaw runtime canary proof is green. Cap is 0 until served-runtime freshness and first-10 external-user evidence gates are green.
+- Controlled first-10 public-package beta is closed right now. agent-borg==3.3.18 is published, but current-source PyPI fresh-install/stdio MCP/generated-rules/OpenClaw proof is not green until a new immutable release includes the bundled-pack clean-install fix. Cap is 0 until source/package/release/ops/docs and first-10 external-user evidence gates are green.
 - Do not claim public self-serve launch, 100 real users, served remote MCP, or measured external lift until row-derived external-user evidence passes.
 
 Useful docs:

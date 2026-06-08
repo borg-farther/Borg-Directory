@@ -1,7 +1,7 @@
 # Borg first-10 user invite packet
 
 Generated: 2026-05-14T18:25:05Z
-Rev: 2026-06-03T19:10:00Z — controlled first-10 beta install path uses the published/canaried PyPI package `agent-borg==3.3.18`, but this packet is **not sendable right now**. Send only after the latest public gate confirms served-runtime freshness and first-10 evidence intake readiness; package/local runtime canaries are already green.
+Rev: 2026-06-08T00:00:00Z — controlled first-10 beta install path is **not sendable right now**. Do not invite until the latest public gate confirms source/package/release/ops/docs gates are green, the next immutable PyPI release has passed fresh-install/stdio MCP/generated-rules/OpenClaw canaries, and first-10 evidence intake is ready. Current cap: 0.
 
 ## Exact invite message
 
@@ -9,14 +9,23 @@ Hi — we are preparing a small consented Borg beta for the first 10 external us
 
 ## Install commands
 
-STOP gate: these commands are for the controlled first-10 beta only. Do **not** send them while the current cap is 0. Do **not** send them if served-runtime freshness fails, if `python eval/run_pypi_fresh_install_canary.py --version 3.3.18` regresses, or if more than 10 real external users would be invited before the first-10 evidence gate passes.
+STOP gate: these commands are for the controlled first-10 beta only. Do **not** send them while the current cap is 0. Do **not** send package commands until the next immutable PyPI release passes fresh-install/stdio MCP/generated-rules/OpenClaw canaries, and do not invite more than 10 real external users before the first-10 evidence gate passes.
 
-Preferred isolated install:
+Source-smoke install while PyPI proof is red:
+
+```bash
+python -m venv /tmp/borg-source-smoke-venv
+/tmp/borg-source-smoke-venv/bin/python -m pip install 'git+https://github.com/borg-farther/Borg-Directory.git@main'
+/tmp/borg-source-smoke-venv/bin/borg --version
+/tmp/borg-source-smoke-venv/bin/borg rescue "paste a REDACTED real error here"
+```
+
+Package install after the next immutable release is canaried:
 
 ```bash
 python -m pip install --user pipx
 python -m pipx ensurepath
-pipx install agent-borg==3.3.18
+pipx install agent-borg==<next-canaried-version>
 borg --version
 borg rescue "paste a REDACTED real error here"
 ```
@@ -25,12 +34,12 @@ Fallback if pipx is unavailable:
 
 ```bash
 python -m venv /tmp/borg-beta-venv
-/tmp/borg-beta-venv/bin/python -m pip install agent-borg==3.3.18
+/tmp/borg-beta-venv/bin/python -m pip install agent-borg==<next-canaried-version>
 /tmp/borg-beta-venv/bin/borg --version
 /tmp/borg-beta-venv/bin/borg rescue "paste a REDACTED real error here"
 ```
 
-Source-branch install is only for maintainer-approved pre-release testing, not the default first-10 path.
+Source-smoke install from GitHub is the current approved public smoke path while PyPI/package proof is red. Package install becomes the default first-10 path only after the next immutable release is freshly canaried.
 
 ## Consent and privacy warning
 

@@ -166,7 +166,7 @@ git status --short
 
 **Do:**
 
-1. Keep current public/user-facing status at controlled first-10 package beta GO-with-constraints while PyPI/latest, fresh-install, stdio MCP, generated-rules/OpenClaw, cold-start trust, self-service ops, watchdog, and public presentation tests remain green.
+1. Keep current public/user-facing status at controlled first-10 package beta NO-GO / cap 0 until PyPI/latest, fresh-install, stdio MCP, generated-rules/OpenClaw, cold-start trust, self-service ops, watchdog, and public presentation tests are green for a new immutable release.
 2. After any package/docs/proof change, rerun:
    - PyPI fresh-install canary;
    - stdio MCP canary;

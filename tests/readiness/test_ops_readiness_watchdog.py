@@ -191,9 +191,13 @@ def test_generated_artifact_change_filter_rejects_source_or_docs_drift(monkeypat
         "_git_changed_paths",
         lambda base, head: [
             "eval/borg_proof_dashboard.json",
-            "docs/PUBLIC_SELF_SERVE_LAUNCH_GO_NO_GO.md",
+            "eval/github_source_install_snapshot.json",
+            "eval/ops_readiness_watchdog_snapshot.json",
             "eval/production_inventory_board_snapshot.json",
+            "docs/PUBLIC_SELF_SERVE_LAUNCH_GO_NO_GO.md",
             "docs/20260531_BORG_PRODUCTION_INVENTORY_BOARD.md",
+            "docs/index.html",
+            "docs/status.json",
         ],
     )
     assert watchdog._changes_since_source_are_generated_artifacts("a" * 40, "b" * 40) is True
@@ -683,18 +687,46 @@ def test_ops_watchdog_rejects_release_control_stage_with_unrelated_real_rollout_
     assert snapshot["checks"]["real_user_rollout_consistency"]["release_control_blocked_stage"] is False
 
 
-def test_workflow_public_gate_guard_requires_each_blocker_to_be_allowed() -> None:
+def test_workflow_public_gate_guard_reuses_watchdog_fail_closed_classifier() -> None:
     text = (watchdog.ROOT / ".github" / "workflows" / "self-service-watchdog.yml").read_text(encoding="utf-8")
+    assert "python eval/run_github_source_install_canary.py" in text
     assert "python eval/run_pypi_fresh_install_canary.py" in text
     assert "continuing so public/readiness gates can fail closed with the fresh snapshot" in text
-    assert "allowed_public_blockers = all(" in text
-    assert "pypi project description" in text
-    assert "long-description" in text
-    assert "package metadata" in text
-    assert "metadata_stale_blocked" in text
-    assert "assert (controlled_package or pre_publish or release_controls_blocked or metadata_stale_blocked) and allowed_public_blockers" in text
+    assert "from eval.ops_readiness_watchdog import public_gate_fail_closed_state_is_expected" in text
+    assert "assert public_gate_fail_closed_state_is_expected(data), data.get('blockers')" in text
+    assert "allowed_public_blockers = all(" not in text
+    assert "metadata_stale_blocked" not in text
     assert "python scripts/build_borg_proof_dashboard.py" in text
     assert "python scripts/borg_proof_dashboard_lint.py" in text
+
+
+def test_public_gate_fail_closed_guard_accepts_ci_package_and_release_api_blockers() -> None:
+    snapshot = {
+        "ready_for_controlled_first_10_beta": False,
+        "ready_for_public_self_serve_launch": False,
+        "max_recommended_real_users_now": 0,
+        "blockers": [
+            "PyPI fresh-install + MCP stdio canary snapshot is missing or failing",
+            "release governance live check failed: HTTP Error 403: Forbidden",
+            "first-10 external-user evidence has not passed: verified=0/10, real_users=0/10",
+        ],
+    }
+
+    assert watchdog.public_gate_fail_closed_state_is_expected(snapshot) is True
+
+
+def test_public_gate_fail_closed_guard_rejects_unclassified_blockers() -> None:
+    snapshot = {
+        "ready_for_controlled_first_10_beta": False,
+        "ready_for_public_self_serve_launch": False,
+        "max_recommended_real_users_now": 0,
+        "blockers": [
+            "self-service ops readiness gate is missing",
+            "first-10 external-user evidence has not passed: verified=0/10",
+        ],
+    }
+
+    assert watchdog.public_gate_fail_closed_state_is_expected(snapshot) is False
 
 
 def test_workflow_regenerates_mutable_evidence_before_dashboard_lint() -> None:
@@ -703,6 +735,8 @@ def test_workflow_regenerates_mutable_evidence_before_dashboard_lint() -> None:
     assert workflow["missing"] == []
     assert workflow["order_ok"] is True
     positions = workflow["order_positions"]
+    assert positions["python eval/run_github_source_install_canary.py"] < positions["python eval/run_pypi_fresh_install_canary.py"]
+    assert positions["python eval/run_github_source_install_canary.py"] < positions["python eval/public_self_serve_launch_gate.py"]
     assert positions["python eval/run_pypi_fresh_install_canary.py"] < positions["python eval/public_self_serve_launch_gate.py"]
     assert positions["python eval/run_pypi_fresh_install_canary.py"] < positions["python eval/cold_start_trust_gate.py"]
     assert positions["python eval/cold_start_trust_gate.py"] < positions["python eval/release_governance_gate.py --output eval/release_governance_snapshot.json"]

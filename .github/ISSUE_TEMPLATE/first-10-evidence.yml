@@ -6,7 +6,7 @@ body:
   - type: markdown
     attributes:
       value: |
-        Submit one tester outcome row. This does not make public self-serve GO by itself. Maintainers validate/redact and then update `eval/first_10_user_scoreboard.json`. Do not include secrets or raw private traces.
+        Submit one tester outcome row only after a maintainer-approved real external test. Broad public self-serve and controlled first-10 package beta remain closed/cap 0 until the gates say otherwise. This issue does not make public self-serve GO by itself. Maintainers validate/redact and then update `eval/first_10_user_scoreboard.json` by PR. Do not include secrets or raw private traces. If this GitHub issue is the evidence artifact, leave `external-user-evidence-uri` blank; the importer fills it from the issue URL.
   - type: input
     id: user-id-pseudonym
     attributes:
@@ -19,10 +19,10 @@ body:
     id: external-user-evidence-uri
     attributes:
       label: external-user-evidence-uri
-      description: HTTPS evidence URI or issue link for this row.
+      description: Optional HTTPS evidence URI. Leave blank when this GitHub issue is the evidence artifact; the import script will use the issue URL.
       placeholder: "https://github.com/borg-farther/Borg-Directory/issues/123"
     validations:
-      required: true
+      required: false
   - type: checkboxes
     id: consent-confirmed
     attributes:
@@ -34,7 +34,7 @@ body:
     id: install-method
     attributes:
       label: install-method
-      placeholder: "pipx install agent-borg==3.3.14"
+      placeholder: "source: python -m pip install git+https://github.com/borg-farther/Borg-Directory.git@main; next package: pipx install agent-borg==<next-canaried-version>"
     validations:
       required: true
   - type: dropdown

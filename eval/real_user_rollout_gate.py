@@ -91,9 +91,12 @@ def _load_ready(users: int) -> dict[str, Any]:
 
 def _public_package_ready() -> dict[str, Any]:
     version = _version_consistent().get("project_version") or public_gate.source_version()
+    github_source = public_gate.github_source_install_check(ROOT / "eval" / "github_source_install_snapshot.json", str(version))
     pypi_latest = public_gate.pypi_latest_check(str(version), fetch_network=True)
     pypi_fresh = public_gate.pypi_fresh_install_check(ROOT / "eval" / "pypi_fresh_install_snapshot.json", str(version))
     blockers: list[str] = []
+    if not github_source.get("passed"):
+        blockers.append("GitHub source-install package evidence is not green: fresh source install + MCP stdio canary is not green")
     if not pypi_latest.get("passed"):
         alignment = pypi_latest.get("source_upload_alignment") or {}
         if alignment.get("failure_kind") == "same_version_pypi_upload_predates_source_revision":
@@ -103,7 +106,8 @@ def _public_package_ready() -> dict[str, Any]:
     if not pypi_fresh.get("passed"):
         blockers.append("PyPI latest/fresh-install package evidence is not green: fresh install + MCP stdio canary is not green")
     return {
-        "passed": bool(pypi_latest.get("passed") and pypi_fresh.get("passed")),
+        "passed": bool(github_source.get("passed") and pypi_latest.get("passed") and pypi_fresh.get("passed")),
+        "github_source_install_and_mcp_stdio": github_source,
         "pypi_latest": pypi_latest,
         "pypi_fresh_install_and_mcp_stdio": pypi_fresh,
         "blockers": blockers,

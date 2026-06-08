@@ -71,7 +71,7 @@ def test_readme_leads_with_concrete_value_before_install_matrix() -> None:
     assert 'borg rescue "ModuleNotFoundError: No module named flask" --short' in top
     assert "BORG RESCUE" in top and "status: matched" in top
     assert "Canonical/no-loss policy" not in top
-    assert top.index("## Try Borg in 60 seconds") < text.index("## 1. Install `agent-borg`")
+    assert top.index("## Try Borg in 60 seconds") < text.index("## 1. Install path")
 
 
 def test_release_governance_docs_use_exact_check_contexts_and_valid_codeowner() -> None:
@@ -157,10 +157,15 @@ def test_current_docs_preserve_same_version_artifact_drift_truth() -> None:
         "guild-packs 2.1.1",
         "guildpacks CLI",
         "guild_observe",
-        "conditional GO for controlled first-10 beta",
         "CONDITIONAL GO for `agent-borg==3.3.15`",
         "PyPI latest, fresh-install, and stdio MCP canaries are green for this version",
         "PyPI latest metadata and fresh PyPI install + stdio MCP canary are green for `agent-borg==3.3.15`",
+        "exact-version fresh-install, stdio MCP, generated-rules, OpenClaw, CLI, and Python API canary proof is green",
+        "Exact-version PyPI fresh-install, stdio MCP, generated-rules, OpenClaw, CLI, and Python API canaries pass",
+        "package/local proof is green",
+        "runtime and package metadata canaries pass",
+        "runtime canary and package-current proof for `agent-borg==3.3.18` are green",
+        "Production PyPI package/runtime path works",
         "controlled first-10 beta invites may start",
         "Controlled first-10 beta infrastructure: **GO**",
         "up to 10 consented controlled testers may proceed",
@@ -175,16 +180,17 @@ def test_current_docs_preserve_same_version_artifact_drift_truth() -> None:
         for phrase in stale_or_unsupported:
             assert phrase not in text, f"{path} still contains stale/unsupported phrase: {phrase}"
 
-    assert "published, metadata-correct production PyPI package" in watched["README.md"]
-    assert "Exact-version PyPI fresh-install" in watched["README.md"]
+    assert "GitHub source exact-commit install is **GO**" in watched["README.md"]
+    assert "current-source PyPI/package proof is **NO-GO**" in watched["README.md"]
     assert "Broad public self-serve launch, 100-user rollout, served/remote MCP, and measured external lift are **not claimed**" in watched["README.md"]
-    assert "Controlled first-10 beta: **NO-GO right now**" in watched["docs/READINESS.md"]
-    assert "published metadata-correct package" in watched["docs/READINESS.md"]
-    assert "runtime canaries are green" in watched["docs/READINESS.md"]
-    assert "served runtime fingerprint is stale" in watched["docs/READINESS.md"]
+    assert "GitHub source exact-commit install: **GO**" in watched["docs/READINESS.md"]
+    assert "Controlled first-10 beta: **NO-GO until source/package/release/ops/docs gates are green**" in watched["docs/READINESS.md"]
+    assert "GitHub source exact-commit canary" in watched["docs/READINESS.md"]
+    assert "served-runtime fingerprint" in watched["docs/READINESS.md"]
     assert "GitHub `main` release governance is enforced" in watched["docs/READINESS.md"]
     assert "Public self-serve launch: **NO-GO until first-10 external-user evidence passes**" in watched["docs/READINESS.md"]
     assert "Controlled first-10 beta infrastructure: **NO-GO**" in watched["docs/PUBLIC_SELF_SERVE_LAUNCH_GO_NO_GO.md"]
+    assert "first-10 external-user evidence has not passed" in watched["docs/PUBLIC_SELF_SERVE_LAUNCH_GO_NO_GO.md"]
 
 
 def test_prioritized_production_ready_todo_locks_current_blockers_and_boundaries() -> None:
@@ -259,7 +265,9 @@ def test_channel_matrix_documents_all_first_user_mix_paths() -> None:
     assert f"agent-borg=={current_version}" in matrix
     for phrase in [
         "pipx install agent-borg==",
-        "python -m pip install git+https://github.com/borg-farther/Borg-Directory.git@main",
+        "python -m pip install 'git+https://github.com/borg-farther/Borg-Directory.git@main'",
+        "eval/github_source_install_snapshot.json",
+        "GitHub source exact-commit canary",
         "borg generate systematic-debugging --format all --output",
         "borg convert . --format openclaw --all --output",
         "import borg, json",

@@ -4,9 +4,26 @@ Use this when you want the shortest safe path.
 
 ## Install
 
-Install package `agent-borg`; it provides the `borg` CLI and `borg-mcp` MCP server command.
+Current usable smoke path is GitHub source from the public repo on `main`. It provides the `borg` CLI and `borg-mcp` MCP server command without relying on the stale current PyPI artifact.
 
 Do **not** install `borg`, `borgbackup`, `brew install borgbackup`, `apt install borgbackup`, `apt-get install borgbackup`, `dnf install borgbackup`, or `pacman -S borg`. Those are unrelated to this AI-agent tool.
+
+```bash
+python3 -m venv /tmp/borg-source-smoke
+. /tmp/borg-source-smoke/bin/activate
+python -m pip install --upgrade pip
+python -m pip install 'git+https://github.com/borg-farther/Borg-Directory.git@main'
+
+command -v borg
+borg version
+borg-doctor --json
+```
+
+PyPI package install (`agent-borg`) returns after the next immutable release passes the fresh-install/OpenClaw canary.
+
+### Package install path after next PyPI canary
+
+The OS-specific commands below are the package-install path for the next immutable release, not current-source proof while PyPI fresh-install/OpenClaw is red.
 
 ### macOS
 

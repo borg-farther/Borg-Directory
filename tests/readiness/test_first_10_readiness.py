@@ -11,6 +11,8 @@ import json
 from pathlib import Path
 
 from eval import first_10_evidence as evidence
+from eval import first_10_issue_import
+from eval import first_10_reviewed_issue_append
 from borg.core.first_user_readiness import (
     FIRST_10_GATES,
     PRIMING_PARAGRAPH,
@@ -40,7 +42,8 @@ def test_first_10_packet_contains_install_mcp_feedback_and_priming():
     packet = first_10_readiness_packet()
     commands = "\n".join(packet["smoke_commands"])
 
-    assert "python3 -m pip install agent-borg" in commands
+    assert "python3 -m pip install 'git+https://github.com/borg-farther/Borg-Directory.git@main'" in commands
+    assert "python3 -m pip install agent-borg" not in commands
     assert "borg-doctor --json" in commands
     assert "borg rescue" in commands
     assert "borg setup-claude --scope user --verify --fix" in commands
@@ -290,3 +293,238 @@ def test_first_10_scoreboard_rejects_forged_or_inconsistent_savings_fields():
         for item in result["invalid_rows"]
         for reason in item["reasons"]
     )
+
+
+def test_first_10_issue_import_uses_issue_url_and_validates_candidate_row():
+    body = """
+### user-id-pseudonym
+external-user-alpha
+
+### external-user-evidence-uri
+_No response_
+
+### consent-confirmed
+- [x] The tester consented to a redacted evidence row being used for first-10 readiness.
+
+### install-method
+pipx install agent-borg==3.3.19
+
+### install-success
+true
+
+### time-to-first-rescue-minutes
+4
+
+### rescue-input-redacted
+ModuleNotFoundError: No module named flask
+
+### rescue-returned-action-stop-verify
+true
+
+### rescue-useful
+true
+
+### mcp-setup-attempted
+false
+
+### mcp-setup-success
+not-attempted
+
+### no-confident-match-when-unknown
+true
+
+### blocker-category
+none
+
+### blocker-notes-redacted
+none
+
+### privacy-security-incident
+false
+
+### repeat-use-within-7-days
+unknown
+
+### outcome-recorded
+true
+
+### savings-counterfactual-basis
+not-measured
+
+### dead-end-avoided-confirmed
+unknown
+
+### user-confirmed-value
+true
+
+### privacy-confirmation
+- [x] I redacted secrets, private repo names, tokens, credentials, and personal data.
+- [x] I understand maintainers may reject this row if redaction or evidence is incomplete.
+"""
+    issue_url = "https://github.com/borg-farther/Borg-Directory/issues/123"
+
+    row = first_10_issue_import.row_from_issue_body(
+        body,
+        issue_url=issue_url,
+        github_actor="external-contributor",
+        internal_actors={"internal-maintainer"},
+    )
+    result = first_10_issue_import.validate_single_row(row)
+
+    assert row["external_user_evidence_uri"] == issue_url
+    assert row["consent_confirmed"] is True
+    assert row["install_success"] is True
+    assert result["schema_valid"] is True
+    assert result["derived_counts"]["verified_external_users"] == 1
+    assert result["thresholds_passed"] is False
+
+
+def test_first_10_issue_import_rejects_bots_and_internal_actors():
+    body = """
+### user-id-pseudonym
+external-user-alpha
+
+### external-user-evidence-uri
+https://github.com/borg-farther/Borg-Directory/issues/123
+"""
+
+    for actor in ["dependabot[bot]", "internal-maintainer"]:
+        try:
+            first_10_issue_import.row_from_issue_body(
+                body,
+                issue_url="https://github.com/borg-farther/Borg-Directory/issues/123",
+                github_actor=actor,
+                internal_actors={"internal-maintainer"},
+            )
+        except ValueError as exc:
+            assert "not eligible external evidence" in str(exc)
+        else:
+            raise AssertionError(f"actor should have been rejected: {actor}")
+
+
+def _valid_first_10_issue_body(user_id: str = "external-user-alpha") -> str:
+    return f"""
+### user-id-pseudonym
+{user_id}
+
+### external-user-evidence-uri
+_No response_
+
+### consent-confirmed
+- [x] The tester consented to a redacted evidence row being used for first-10 readiness.
+
+### install-method
+python -m pip install 'git+https://github.com/borg-farther/Borg-Directory.git@main'
+
+### install-success
+true
+
+### time-to-first-rescue-minutes
+4
+
+### rescue-input-redacted
+ModuleNotFoundError: No module named flask
+
+### rescue-returned-action-stop-verify
+true
+
+### rescue-useful
+true
+
+### mcp-setup-attempted
+false
+
+### mcp-setup-success
+not-attempted
+
+### no-confident-match-when-unknown
+true
+
+### blocker-category
+none
+
+### blocker-notes-redacted
+none
+
+### privacy-security-incident
+false
+
+### repeat-use-within-7-days
+unknown
+
+### outcome-recorded
+true
+
+### savings-counterfactual-basis
+not-measured
+
+### dead-end-avoided-confirmed
+unknown
+
+### user-confirmed-value
+true
+
+### privacy-confirmation
+- [x] I redacted secrets, private repo names, tokens, credentials, and personal data.
+- [x] I understand maintainers may reject this row if redaction or evidence is incomplete.
+"""
+
+
+def test_reviewed_issue_append_updates_scoreboard_only_after_human_review():
+    scoreboard = _first_10_value_scoreboard([])
+    updated, row, result = first_10_reviewed_issue_append.reviewed_scoreboard_update(
+        scoreboard,
+        issue_body=_valid_first_10_issue_body(),
+        issue_url="https://github.com/borg-farther/Borg-Directory/issues/456",
+        github_actor="external-contributor",
+        reviewer="human-reviewer",
+        internal_actors={"human-reviewer"},
+    )
+
+    assert row["external_user_evidence_uri"] == "https://github.com/borg-farther/Borg-Directory/issues/456"
+    assert updated["current_counts"]["real_users"] == 1
+    assert updated["truth_policy"]["verified_external_users"] == 1
+    assert updated["current_verdict"]["public_self_serve_launch_gate"] == "BLOCKED"
+    assert result["schema_valid"] is True
+    assert result["stored_consistency"]["passed"] is True
+    assert result["thresholds_passed"] is False
+
+
+def test_reviewed_issue_append_rejects_self_review_and_duplicate_evidence():
+    scoreboard = _first_10_value_scoreboard([])
+    updated, _row, _result = first_10_reviewed_issue_append.reviewed_scoreboard_update(
+        scoreboard,
+        issue_body=_valid_first_10_issue_body("external-user-alpha"),
+        issue_url="https://github.com/borg-farther/Borg-Directory/issues/456",
+        github_actor="external-contributor",
+        reviewer="human-reviewer",
+        internal_actors={"human-reviewer"},
+    )
+
+    try:
+        first_10_reviewed_issue_append.reviewed_scoreboard_update(
+            scoreboard,
+            issue_body=_valid_first_10_issue_body("external-user-beta"),
+            issue_url="https://github.com/borg-farther/Borg-Directory/issues/457",
+            github_actor="external-contributor",
+            reviewer="external-contributor",
+            internal_actors={"human-reviewer"},
+        )
+    except ValueError as exc:
+        assert "self-reviewed" in str(exc)
+    else:
+        raise AssertionError("self-reviewed row should not count")
+
+    try:
+        first_10_reviewed_issue_append.reviewed_scoreboard_update(
+            updated,
+            issue_body=_valid_first_10_issue_body("external-user-beta"),
+            issue_url="https://github.com/borg-farther/Borg-Directory/issues/456",
+            github_actor="external-contributor-2",
+            reviewer="human-reviewer",
+            internal_actors={"human-reviewer"},
+        )
+    except ValueError as exc:
+        assert "duplicate external_user_evidence_uri" in str(exc)
+    else:
+        raise AssertionError("duplicate evidence URI should not count")

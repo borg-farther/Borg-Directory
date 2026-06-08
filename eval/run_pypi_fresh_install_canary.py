@@ -11,6 +11,7 @@ from __future__ import annotations
 import argparse
 import json
 import os
+import re
 import shutil
 import subprocess
 import sys
@@ -52,6 +53,26 @@ class CommandResult:
 def source_version() -> str:
     data = tomllib.loads((ROOT / "pyproject.toml").read_text(encoding="utf-8"))
     return str(data["project"]["version"])
+
+
+def bundled_seed_pack_count() -> int:
+    """Number of seed packs expected in a clean public package registry.
+
+    This catches maintainer-path leakage: if `borg convert --format openclaw --all`
+    silently reads `/root/hermes-workspace/guild-packs`, a local maintainer canary
+    may pass while GitHub Actions or first users fail with permission errors.
+    """
+    packs_dir = ROOT / "borg" / "seeds_data" / "packs"
+    names: set[str] = set()
+    for pack_file in list(packs_dir.glob("*.yaml")) + list(packs_dir.glob("*.yml")):
+        name = pack_file.name
+        if name.endswith(".workflow.yaml"):
+            names.add(name[: -len(".workflow.yaml")])
+        elif name.endswith(".yaml"):
+            names.add(name[: -len(".yaml")])
+        elif name.endswith(".yml"):
+            names.add(name[: -len(".yml")])
+    return len(names)
 
 
 def run_cmd(name: str, cmd: list[str], *, env: dict[str, str] | None = None, cwd: Path | None = None, timeout: int = 180, input_text: str | None = None) -> CommandResult:
@@ -238,6 +259,7 @@ def run_canary(version: str) -> dict[str, Any]:
         install_ok = bool(results and results[-1].name == "pip_install_agent_borg" and results[-1].passed)
         generated_rules_dir = venv_dir / "generated-rules"
         openclaw_dir = venv_dir / "openclaw"
+        expected_seed_pack_count = bundled_seed_pack_count()
         commands = [
             ("pip_show_agent_borg", [str(py), "-m", "pip", "show", "agent-borg"], [f"Version: {version}", f"Summary: {EXPECTED_SUMMARY}"]),
             ("borg_version", [str(borg), "--version"], [version]),
@@ -276,11 +298,21 @@ def run_canary(version: str) -> dict[str, Any]:
                         (openclaw_dir / filename).exists()
                         for filename in ["SKILL.md", "references/pack-index.md", "references/packs/systematic-debugging.md"]
                     )
+                    count_match = re.search(r"Converted\s+(\d+)\s+packs\s+to\s+OpenClaw", combined)
+                    converted_count = int(count_match.group(1)) if count_match else None
+                    if converted_count != expected_seed_pack_count:
+                        files_ok = False
+                        result.detail = (
+                            f"OpenClaw registry converted {converted_count!r} packs; expected "
+                            f"{expected_seed_pack_count} bundled seed packs. Public clean installs must not "
+                            "depend on maintainer-only /root/hermes-workspace/guild-packs data."
+                        )
                 if result.passed and all(needle in combined for needle in needles) and not stale_copy and files_ok:
                     result.detail = "expected value signal present"
                 else:
                     result.passed = False
-                    result.detail = "missing expected output tokens, stale public copy present, expected files missing, or command failed"
+                    if result.detail == "exit=0" or not result.detail:
+                        result.detail = "missing expected output tokens, stale public copy present, expected files missing, or command failed"
                 results.append(result)
 
             if borg_mcp.exists():
@@ -299,6 +331,7 @@ def run_canary(version: str) -> dict[str, Any]:
         "version": version,
         "install_source": "pypi",
         "results": [asdict(result) for result in results],
+        "expected_bundled_seed_pack_count": bundled_seed_pack_count(),
         "mcp_stdio_canary": mcp_result,
         "success": all(result.passed for result in results) and bool(mcp_result.get("passed")),
     }

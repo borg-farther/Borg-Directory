@@ -21,6 +21,10 @@ def test_self_service_ops_gate_script_and_artifacts_are_present() -> None:
     assert snapshot["checks"]["static_files"]["codeowners"]["passed"] is True
     assert snapshot["checks"]["static_files"]["codeowners"]["contains_banned_owner"] is False
     assert snapshot["checks"]["static_files"]["watchdog_workflow"]["passed"] is True
+    assert snapshot["checks"]["static_files"]["first_10_issue_importer"]["passed"] is True
+    assert snapshot["checks"]["static_files"]["first_10_reviewed_issue_appender"]["passed"] is True
+    assert snapshot["checks"]["static_files"]["first_10_candidate_queue_workflow"]["passed"] is True
+    assert snapshot["checks"]["static_files"]["first_10_scoreboard_pr_workflow"]["passed"] is True
     workflow_text = (ROOT / ".github" / "workflows" / "self-service-watchdog.yml").read_text(encoding="utf-8")
     assert "--max-snapshot-age-hours 24" in workflow_text
     assert "--max-snapshot-age-hours 168" not in workflow_text

@@ -1,0 +1,48 @@
+name: First-10 invite request / waitlist
+description: Ask to join the controlled first-10 evidence cohort when gates reopen.
+title: "[first-10-request]: "
+labels: ["first-10-request", "waitlist", "needs-triage"]
+body:
+  - type: markdown
+    attributes:
+      value: |
+        Broad public self-serve is not open yet. Use this to request a controlled first-10 slot or to be notified when the package/source gates reopen. Do not include secrets, credentials, private repo URLs, or raw private traces.
+  - type: input
+    id: intended-install-channel
+    attributes:
+      label: intended-install-channel
+      placeholder: "GitHub source smoke | next PyPI release | MCP setup"
+    validations:
+      required: true
+  - type: input
+    id: operating-system
+    attributes:
+      label: operating-system
+      placeholder: "macOS 14, Ubuntu 24.04, Windows 11"
+    validations:
+      required: true
+  - type: input
+    id: agent-host
+    attributes:
+      label: agent-host
+      placeholder: "Claude Code, Hermes, Cursor, OpenClaw, human CLI only, other"
+    validations:
+      required: true
+  - type: textarea
+    id: intended-use-redacted
+    attributes:
+      label: intended-use-redacted
+      description: Redacted summary of the kind of failure/debugging task you want Borg to help with.
+    validations:
+      required: true
+  - type: checkboxes
+    id: consent-boundary
+    attributes:
+      label: consent-boundary
+      options:
+        - label: I understand this request is not counted as first-10 evidence until a real external test row is validated.
+          required: true
+        - label: I can provide a redacted outcome row after testing if selected.
+          required: true
+        - label: I will not post secrets, private traces, credentials, tokens, or personal data.
+          required: true
