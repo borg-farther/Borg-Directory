@@ -1,8 +1,8 @@
 # Borg Proof Dashboard
 
-Generated: `2026-06-08T10:58:07Z`
+Generated: `2026-06-08T11:05:15Z`
 Repo: `https://github.com/borg-farther/Borg-Directory`
-Source snapshot: `3dd1069ec0a8ffd1e9390a0ce1bb522e78f14a1e+dirty`
+Source snapshot: `272c23061352098dc308185371338e6373344daa+dirty`
 
 ## Big top verdict
 
@@ -49,17 +49,17 @@ Source snapshot: `3dd1069ec0a8ffd1e9390a0ce1bb522e78f14a1e+dirty`
 
 | Source file path | Exists | SHA256 | Freshness timestamp | Exact claim derived |
 | --- | --- | --- | --- | --- |
-| eval/first_user_release_gate_snapshot.json | True | 7d0361c8ec68076688b68ba33a33919cb611a33447155e8e274f23fcbd280a5d | 2026-06-08T10:57:13Z | first-user release gate all_pass=True |
+| eval/first_user_release_gate_snapshot.json | True | 4acf2e794326ef1e0c486ffc2a604a9649b1dbe673bba7a37c096ccb7e413b5d | 2026-06-08T11:05:09Z | first-user release gate all_pass=True |
 | eval/uat_scoreboard_snapshot.json | True | 74916ab2c869fd9a7a08dedb8689c1506f571e2d2e9c07560246c520ce420e11 | 2026-06-07T20:15:40.778723+00:00 | UAT synthetic_load_all_pass=True; real_user_100_all_pass=False; ready_for_10_logical_load=True; ready_for_1000_logical_load=True; not_real_user_or_public_beta_evidence=True |
 | eval/gate_run_snapshot.json | True | 92fce969983f454dced78eac67e8634962284e7eef2e9aca5fef291b2d1e7094 | 2026-06-07T20:15:40.737235+00:00 | gate run synthetic_load_all_pass=True; overall_100_real_user_pass=False; ready_for_10_logical_load=True; ready_for_1000_logical_load=True; not_real_user_or_public_beta_evidence=True |
-| eval/real_user_rollout_gate_snapshot.json | True | 35078c00a8105dfeb2469fec55ad292cfbffca84fb4f3065abecea562b0dd7be | 2026-06-08T10:57:16.779892+00:00 | 100-real-user gate=False; max_recommended_real_users=10; blockers=['first-10 external-user evidence has not passed: verified=0/10, real_users=0/10, installs=0/8, useful=0/6, critical_incidents=0/0'] |
+| eval/real_user_rollout_gate_snapshot.json | True | 04774bc6d753ef55df7c85686f1f34a9e1a900830ca60bc83e7834737f0fc102 | 2026-06-08T11:05:12.442034+00:00 | 100-real-user gate=False; max_recommended_real_users=10; blockers=['first-10 external-user evidence has not passed: verified=0/10, real_users=0/10, installs=0/8, useful=0/6, critical_incidents=0/0'] |
 | eval/first_10_user_scoreboard.json | True | 232585546e34fc07459365e00123aa512098f215f7bcd6307d0bde9bb20813f0 | 2026-05-25T23:32:37Z | first-10 row evidence users=0; measured_savings={'rows_with_measured_value': 0, 'dead_ends_avoided_confirmed': 0, 'net_minutes_saved': 0.0, 'positive_minutes_saved': 0.0, 'negative_minutes_cost': 0.0, 'net_tokens_saved': 0, 'positive_tokens_saved': 0, 'negative_tokens_cost': 0, 'counterfactual_basis_counts': {}}; gate=BLOCKED |
-| eval/public_self_serve_launch_gate_snapshot.json | True | 35ec6fd336ca7f91bee26ba50d66aa0b8890b9b01035a40443480d2ae5fe6f05 | 2026-06-08T10:57:15.333263+00:00 | public self-serve gate=False; max_recommended_real_users=10; blockers=['first-10 external-user evidence has not passed: verified=0/10, real_users=0/10, installs=0/8, useful=0/6, critical_incidents=0/0'] |
+| eval/public_self_serve_launch_gate_snapshot.json | True | c942b01e76e0edd98952fd9854d6230a74b8338b90cd1ecb8eb9ece8b5697f45 | 2026-06-08T11:05:11.012704+00:00 | public self-serve gate=False; max_recommended_real_users=10; blockers=['first-10 external-user evidence has not passed: verified=0/10, real_users=0/10, installs=0/8, useful=0/6, critical_incidents=0/0'] |
 | eval/cold_start_trust_gate_snapshot.json | True | ccc5cb369b2818e72d0516788861fc085707b5451eb6710dd6f1e449c6c7418b | 2026-06-07T23:45:46.996124+00:00 | cold-start trust gate=True; blockers=[] |
-| eval/self_service_ops_gate_snapshot.json | True | 5e7517222428bae16d83e7897ff1c2bdcee39e8ebbe525ac0b083216b8aeee0a | 2026-06-08T10:58:07.112535+00:00 | self-service ops gate=True; blockers=[] |
-| eval/ops_readiness_watchdog_snapshot.json | True | 798ee73bb2c4892424615c96d7ef66c8afa6bc0a6e21d565edc8cb706e617ffa | 2026-06-08T10:58:06.947604+00:00 | ops readiness watchdog=True; blocker details live in eval/ops_readiness_watchdog_snapshot.json |
+| eval/self_service_ops_gate_snapshot.json | True | 5e7517222428bae16d83e7897ff1c2bdcee39e8ebbe525ac0b083216b8aeee0a | 2026-06-08T11:05:15.625992+00:00 | self-service ops gate=True; blockers=[] |
+| eval/ops_readiness_watchdog_snapshot.json | True | fc7532e6d27de87e747681be339844d7d1a819022a933e030f439837f422dbba | 2026-06-08T11:05:15.475821+00:00 | ops readiness watchdog=True; blocker details live in eval/ops_readiness_watchdog_snapshot.json |
 | eval/rollback_comms_drill_snapshot.json | True | 20b9562df58f19e7b8a2800779af979c329ebde12b58c39ac2a49a7eba5631a7 | 2026-06-07T23:45:49.519759+00:00 | rollback/comms drill=True; dry_run_only=True |
-| eval/pypi_fresh_install_snapshot.json | True | 88a1b102261e3a812b7bbc15ec968bc7e36263b4535ec262a22ba296e57636aa | 2026-06-08T10:57:05Z | PyPI fresh-install canary success=True; version=3.3.18 |
+| eval/pypi_fresh_install_snapshot.json | True | 73f6fd732527f767ee7b8ac13611e2b8c6c0161e9212c00e92fc1e629cdd474e | 2026-06-08T11:05:00Z | PyPI fresh-install canary success=True; version=3.3.18 |
 | eval/load_10_snapshot.json | True | 399cdc975b7fda8ec44386362d48b80ced66cf2c2ee0664278217405c8da0aaa | 2026-06-07T20:14:38.570812+00:00 | logical load 10: passed=True; total_requests=55999; success_rate=1.0; p95_ms=0.7014390866970643; model=asyncio_logical_users |
 | eval/load_100_snapshot.json | True | 554799f1bd185d72f7ac64326704be22e776b0a92bbd4f6c7d188d1c9a31a484 | 2026-06-07T20:15:08.685576+00:00 | logical load 100: passed=True; total_requests=50923; success_rate=1.0; p95_ms=0.7358029950410123; model=asyncio_logical_users |
 | eval/load_1000_snapshot.json | True | 02cc4cd8f04392c110b85fcec8bd76b8c605ac92d4329ae3ddb1db31d25fdf8e | 2026-06-07T20:15:38.851782+00:00 | logical load 1000: passed=True; total_requests=51969; success_rate=1.0; p95_ms=0.7105699914973229; model=asyncio_logical_users |

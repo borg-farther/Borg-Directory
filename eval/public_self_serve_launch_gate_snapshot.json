@@ -105,7 +105,7 @@
       "exists": true,
       "failed_count": 0,
       "failures": [],
-      "generated_at_utc": "2026-06-08T10:57:13Z",
+      "generated_at_utc": "2026-06-08T11:05:09Z",
       "passed": true,
       "passed_count": 26,
       "path": "eval/first_user_release_gate_snapshot.json"
@@ -116,21 +116,21 @@
       "failed_count": 0,
       "failures": [],
       "freshness": {
-        "age_hours": 0.0046925441666666665,
+        "age_hours": 0.0045588125,
         "failure_kind": null,
         "max_age_hours": 24.0,
         "passed": true
       },
-      "generated_at_utc": "2026-06-08T10:56:57Z",
+      "generated_at_utc": "2026-06-08T11:04:53Z",
       "mcp_stdio_canary_passed": true,
       "missing_results": [],
       "passed": true,
       "path": "eval/github_source_install_snapshot.json",
       "python_distribution_probe_passed": true,
       "source_alignment": {
-        "changed_paths_since_install_count": 0,
-        "current_revision": "3dd1069ec0a8ffd1e9390a0ce1bb522e78f14a1e",
-        "detail": "installed commit equals current HEAD",
+        "changed_paths_since_install_count": 46,
+        "current_revision": "272c23061352098dc308185371338e6373344daa",
+        "detail": "installed commit is an ancestor and only non-package proof/docs/test artifacts changed",
         "dirty_package_paths": [],
         "package_changed_paths_since_install": [],
         "passed": true
@@ -148,7 +148,7 @@
     },
     "ops_readiness_watchdog": {
       "blockers": [],
-      "generated_at_utc": "2026-06-07T23:46:00.418462+00:00",
+      "generated_at_utc": "2026-06-08T10:58:06.947604+00:00",
       "passed": true,
       "snapshot": "eval/ops_readiness_watchdog_snapshot.json",
       "truth_policy": "Watchdog passing means controlled first-10 ops proof is fresh and internally consistent. Broad public self-serve still requires row-derived first-10 external-user evidence."
@@ -164,12 +164,12 @@
       "failed_count": 0,
       "failures": [],
       "freshness": {
-        "age_hours": 0.0025080799999999998,
+        "age_hours": 0.0026550780555555553,
         "failure_kind": null,
         "max_age_hours": 24.0,
         "passed": true
       },
-      "generated_at_utc": "2026-06-08T10:57:05Z",
+      "generated_at_utc": "2026-06-08T11:05:00Z",
       "mcp_server_info": {
         "name": "borg-mcp-server",
         "version": "3.3.18"
@@ -227,18 +227,21 @@
       ],
       "source_upload_alignment": {
         "alignment_basis": "package_reference",
-        "current_source_commit_time_utc": "2026-06-03T23:18:12+01:00",
+        "current_source_commit_time_utc": "2026-06-08T11:04:02+00:00",
         "detail": "Every PyPI release file upload is not older than the package reference, and no package-impacting source is dirty or changed after that reference.",
         "dirty_source": true,
         "failure_kind": null,
         "latest_release_upload_time_utc": "2026-06-03T20:19:08.726312+00:00",
         "non_package_changed_paths_since_reference": [
+          ".github/workflows/self-service-watchdog.yml",
           "docs/.nojekyll",
           "docs/20260517_BORG_100_REAL_USER_READINESS.md",
+          "docs/20260531_BORG_PRODUCTION_INVENTORY_BOARD.md",
           "docs/BORG_PROOF_DASHBOARD.html",
           "docs/BORG_PROOF_DASHBOARD.md",
           "docs/COLD_START_TRUST_HARDENING.md",
           "docs/PUBLIC_SELF_SERVE_LAUNCH_GO_NO_GO.md",
+          "docs/READINESS.md",
           "docs/SELF_SERVICE_OPS_READINESS_REPORT.md",
           "docs/agent0",
           "docs/ai-memecoin-trading-bot",
@@ -248,37 +251,6 @@
           "docs/index.html",
           "docs/plugin-solana",
           "docs/proof-dashboard/index.html",
-          "docs/public/impact/impact.json",
-          "docs/public/proof-dashboard/index.html",
-          "docs/public/status.json",
-          "docs/public/value.json",
-          "docs/status.json",
-          "eval/borg_proof_dashboard.json",
-          "eval/cold_start_trust_gate_snapshot.json",
-          "eval/ops_readiness_watchdog_post_dashboard_check.json",
-          "eval/ops_readiness_watchdog_snapshot.json",
-          "eval/public_self_serve_launch_gate_snapshot.json",
-          "eval/pypi_fresh_install_snapshot.json",
-          "eval/real_user_rollout_gate_snapshot.json",
-          "eval/release_governance_snapshot.json",
-          "eval/rollback_comms_drill_snapshot.json",
-          "eval/self_service_ops_gate_snapshot.json",
-          "eval/tests/test_borg_proof_dashboard.py",
-          "eval/tests/test_production_inventory_board.py",
-          "scripts/build_borg_proof_dashboard.py",
-          "tests/packaging/test_public_presentation_contract.py"
-        ],
-        "non_package_dirty_paths": [
-          ".github/workflows/self-service-watchdog.yml",
-          "docs/20260517_BORG_100_REAL_USER_READINESS.md",
-          "docs/20260531_BORG_PRODUCTION_INVENTORY_BOARD.md",
-          "docs/BORG_PROOF_DASHBOARD.html",
-          "docs/BORG_PROOF_DASHBOARD.md",
-          "docs/COLD_START_TRUST_HARDENING.md",
-          "docs/PUBLIC_SELF_SERVE_LAUNCH_GO_NO_GO.md",
-          "docs/READINESS.md",
-          "docs/SELF_SERVICE_OPS_READINESS_REPORT.md",
-          "docs/index.html",
           "docs/public/impact/impact.json",
           "docs/public/proof-dashboard/index.html",
           "docs/public/status.json",
@@ -316,6 +288,11 @@
           "tests/readiness/test_ops_readiness_watchdog.py",
           "tests/readiness/test_public_self_serve_launch_gate.py"
         ],
+        "non_package_dirty_paths": [
+          "eval/first_user_release_gate_snapshot.json",
+          "eval/github_source_install_snapshot.json",
+          "eval/pypi_fresh_install_snapshot.json"
+        ],
         "oldest_release_upload_time_utc": "2026-06-03T20:19:07.209583+00:00",
         "package_changed_paths_since_reference": [],
         "package_dirty": false,
@@ -329,7 +306,7 @@
         "passed": true,
         "release_file_count": 2,
         "source_commit_time_utc": "2026-06-03T20:14:10+00:00",
-        "source_revision": "3dd1069ec0a8ffd1e9390a0ce1bb522e78f14a1e+dirty",
+        "source_revision": "272c23061352098dc308185371338e6373344daa+dirty",
         "stale_release_files": [],
         "worktree_dirty": true
       },
@@ -383,7 +360,7 @@
     },
     "self_service_ops_readiness": {
       "blockers": [],
-      "generated_at_utc": "2026-06-08T10:57:15.131719+00:00",
+      "generated_at_utc": "2026-06-08T11:05:10.804752+00:00",
       "passed": true,
       "report": "docs/SELF_SERVICE_OPS_READINESS_REPORT.md",
       "rollout_policy": "Ops readiness is necessary but not sufficient for controlled first-10; package provenance, served-runtime freshness, release governance, ops/watchdog freshness, and first-10 guardrails must also pass. broad public self-serve still requires row-derived first-10 external evidence.",
@@ -405,7 +382,7 @@
       }
     }
   },
-  "generated_at_utc": "2026-06-08T10:57:15.333263+00:00",
+  "generated_at_utc": "2026-06-08T11:05:11.012704+00:00",
   "max_recommended_real_users_now": 10,
   "ready_for_controlled_first_10_beta": true,
   "ready_for_public_self_serve_launch": false,

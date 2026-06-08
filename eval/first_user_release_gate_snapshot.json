@@ -1,5 +1,5 @@
 {
-  "generated_at_utc": "2026-06-08T10:57:13Z",
+  "generated_at_utc": "2026-06-08T11:05:09Z",
   "repo": "/tmp/borg-public-selfserve-worktree-20260607",
   "results": [
     {
@@ -127,10 +127,10 @@
         "/root/.hermes/hermes-agent/venv/bin/python",
         "-m",
         "venv",
-        "/tmp/borg-first-user-gate-dn1mk4z3"
+        "/tmp/borg-first-user-gate-50hchcrw"
       ],
       "detail": "exit=0",
-      "duration_s": 3.823,
+      "duration_s": 5.017,
       "name": "fresh_venv_create",
       "passed": true,
       "returncode": 0,
@@ -139,26 +139,26 @@
     },
     {
       "command": [
-        "/tmp/borg-first-user-gate-dn1mk4z3/bin/pip",
+        "/tmp/borg-first-user-gate-50hchcrw/bin/pip",
         "install",
         "--no-cache-dir",
         "/tmp/borg-public-selfserve-worktree-20260607/dist/agent_borg-3.3.18-py3-none-any.whl"
       ],
       "detail": "exit=0",
-      "duration_s": 1.255,
+      "duration_s": 1.26,
       "name": "fresh_install_agent_borg",
       "passed": true,
       "returncode": 0,
       "stderr": "\n[notice] A new release of pip is available: 24.0 -> 26.1.2\n[notice] To update, run: python3.11 -m pip install --upgrade pip\n",
-      "stdout": "Processing ./dist/agent_borg-3.3.18-py3-none-any.whl\nCollecting pyyaml>=6.0 (from agent-borg==3.3.18)\n  Downloading pyyaml-6.0.3-cp311-cp311-manylinux2014_x86_64.manylinux_2_17_x86_64.manylinux_2_28_x86_64.whl.metadata (2.4 kB)\nDownloading pyyaml-6.0.3-cp311-cp311-manylinux2014_x86_64.manylinux_2_17_x86_64.manylinux_2_28_x86_64.whl (806 kB)\n   \u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501 806.6/806.6 kB 25.1 MB/s eta 0:00:00\nInstalling collected packages: pyyaml, agent-borg\nSuccessfully installed agent-borg-3.3.18 pyyaml-6.0.3\n"
+      "stdout": "Processing ./dist/agent_borg-3.3.18-py3-none-any.whl\nCollecting pyyaml>=6.0 (from agent-borg==3.3.18)\n  Downloading pyyaml-6.0.3-cp311-cp311-manylinux2014_x86_64.manylinux_2_17_x86_64.manylinux_2_28_x86_64.whl.metadata (2.4 kB)\nDownloading pyyaml-6.0.3-cp311-cp311-manylinux2014_x86_64.manylinux_2_17_x86_64.manylinux_2_28_x86_64.whl (806 kB)\n   \u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501 806.6/806.6 kB 32.3 MB/s eta 0:00:00\nInstalling collected packages: pyyaml, agent-borg\nSuccessfully installed agent-borg-3.3.18 pyyaml-6.0.3\n"
     },
     {
       "command": [
-        "/tmp/borg-first-user-gate-dn1mk4z3/bin/borg",
+        "/tmp/borg-first-user-gate-50hchcrw/bin/borg",
         "--version"
       ],
       "detail": "public command returned expected value signal",
-      "duration_s": 0.155,
+      "duration_s": 0.14,
       "name": "borg_version",
       "passed": true,
       "returncode": 0,
@@ -167,11 +167,11 @@
     },
     {
       "command": [
-        "/tmp/borg-first-user-gate-dn1mk4z3/bin/borg",
+        "/tmp/borg-first-user-gate-50hchcrw/bin/borg",
         "--help"
       ],
       "detail": "public command returned expected value signal",
-      "duration_s": 0.136,
+      "duration_s": 0.149,
       "name": "borg_help",
       "passed": true,
       "returncode": 0,
@@ -180,13 +180,13 @@
     },
     {
       "command": [
-        "/tmp/borg-first-user-gate-dn1mk4z3/bin/borg",
+        "/tmp/borg-first-user-gate-50hchcrw/bin/borg",
         "rescue",
         "ModuleNotFoundError: No module named flask",
         "--short"
       ],
       "detail": "public command returned expected value signal",
-      "duration_s": 0.187,
+      "duration_s": 0.188,
       "name": "borg_rescue_text",
       "passed": true,
       "returncode": 0,
@@ -195,13 +195,13 @@
     },
     {
       "command": [
-        "/tmp/borg-first-user-gate-dn1mk4z3/bin/borg",
+        "/tmp/borg-first-user-gate-50hchcrw/bin/borg",
         "rescue",
         "ModuleNotFoundError: No module named flask",
         "--json"
       ],
       "detail": "public command returned expected value signal",
-      "duration_s": 0.186,
+      "duration_s": 0.198,
       "name": "borg_rescue_json",
       "passed": true,
       "returncode": 0,
@@ -210,25 +210,25 @@
     },
     {
       "command": [
-        "/tmp/borg-first-user-gate-dn1mk4z3/bin/borg-doctor",
+        "/tmp/borg-first-user-gate-50hchcrw/bin/borg-doctor",
         "--json"
       ],
       "detail": "public command returned expected value signal",
-      "duration_s": 0.535,
+      "duration_s": 0.529,
       "name": "borg_doctor_json",
       "passed": true,
       "returncode": 0,
       "stderr": "",
-      "stdout": "{\n  \"checks\": [\n    {\n      \"detail\": \"314 traces at /tmp/borg-first-user-gate-dn1mk4z3/borg-home/traces.db\",\n      \"name\": \"trace_db\",\n      \"passed\": true\n    },\n    {\n      \"detail\": \"ACTION: proceed with normal debugging for docker; Borg has no proven cache hit. | CONFIDENCE: BORG [NO CONFIDENT MATCH] -- no relevant traces, synthetic hits, or pack matches.\",\n      \"name\": \"borg_observe\",\n      \"passed\": true\n    },\n    {\n      \"detail\": \"BORG: Feedback recorded  guidance worked. Score updated for trace 6b53ee82.\",\n      \"name\": \"borg_rate\",\n      \"passed\": true\n    },\n    {\n      \"detail\": \"responds to initialize\",\n      \"name\": \"mcp_stdio\",\n      \"passed\": true\n    }\n  ],\n  \"runtime\": {\n    \"atom_count\": null,\n    \"atom_db_path\": \"/tmp/borg-first-user-gate-dn1mk4z3/borg-home/atoms.db\",\n    \"borg_home\": \"/tmp/borg-first-user-gate-dn1mk4z3/borg-home\",\n    \"module_hash\": \"cb5bcde2504e5803\",\n    \"module_path\": \"/tmp/borg-first-user-gate-dn1mk4z3/lib/python3.11/site-packages/borg/__init__.py\",\n    \"package_version\": \"3.3.18\",\n    \"pid\": 62385,\n    \"python\": \"/tmp/borg-first-user-gate-dn1mk4z3/bin/python3.11\",\n    \"trace_count\": 314,\n    \"trace_db_path\": \"/tmp/borg-first-user-gate-dn1mk4z3/borg-home/traces.db\"\n  },\n  \"success\": true\n}\n"
+      "stdout": "{\n  \"checks\": [\n    {\n      \"detail\": \"314 traces at /tmp/borg-first-user-gate-50hchcrw/borg-home/traces.db\",\n      \"name\": \"trace_db\",\n      \"passed\": true\n    },\n    {\n      \"detail\": \"ACTION: proceed with normal debugging for docker; Borg has no proven cache hit. | CONFIDENCE: BORG [NO CONFIDENT MATCH] -- no relevant traces, synthetic hits, or pack matches.\",\n      \"name\": \"borg_observe\",\n      \"passed\": true\n    },\n    {\n      \"detail\": \"BORG: Feedback recorded  guidance worked. Score updated for trace 6b53ee82.\",\n      \"name\": \"borg_rate\",\n      \"passed\": true\n    },\n    {\n      \"detail\": \"responds to initialize\",\n      \"name\": \"mcp_stdio\",\n      \"passed\": true\n    }\n  ],\n  \"runtime\": {\n    \"atom_count\": null,\n    \"atom_db_path\": \"/tmp/borg-first-user-gate-50hchcrw/borg-home/atoms.db\",\n    \"borg_home\": \"/tmp/borg-first-user-gate-50hchcrw/borg-home\",\n    \"module_hash\": \"cb5bcde2504e5803\",\n    \"module_path\": \"/tmp/borg-first-user-gate-50hchcrw/lib/python3.11/site-packages/borg/__init__.py\",\n    \"package_version\": \"3.3.18\",\n    \"pid\": 64648,\n    \"python\": \"/tmp/borg-first-user-gate-50hchcrw/bin/python3.11\",\n    \"trace_count\": 314,\n    \"trace_db_path\": \"/tmp/borg-first-user-gate-50hchcrw/borg-home/traces.db\"\n  },\n  \"success\": true\n}\n"
     },
     {
       "command": [
-        "/tmp/borg-first-user-gate-dn1mk4z3/bin/borg",
+        "/tmp/borg-first-user-gate-50hchcrw/bin/borg",
         "try",
         "systematic-debugging"
       ],
       "detail": "public command returned expected value signal",
-      "duration_s": 0.263,
+      "duration_s": 0.239,
       "name": "borg_try_bare",
       "passed": true,
       "returncode": 0,
@@ -237,12 +237,12 @@
     },
     {
       "command": [
-        "/tmp/borg-first-user-gate-dn1mk4z3/bin/borg",
+        "/tmp/borg-first-user-gate-50hchcrw/bin/borg",
         "try",
         "borg://hermes/systematic-debugging"
       ],
       "detail": "public command returned expected value signal",
-      "duration_s": 0.18,
+      "duration_s": 0.194,
       "name": "borg_try_borg_uri",
       "passed": true,
       "returncode": 0,
@@ -251,12 +251,12 @@
     },
     {
       "command": [
-        "/tmp/borg-first-user-gate-dn1mk4z3/bin/borg",
+        "/tmp/borg-first-user-gate-50hchcrw/bin/borg",
         "try",
         "guild://hermes/systematic-debugging"
       ],
       "detail": "public command returned expected value signal",
-      "duration_s": 0.169,
+      "duration_s": 0.184,
       "name": "borg_try_guild_uri",
       "passed": true,
       "returncode": 0,
@@ -265,44 +265,44 @@
     },
     {
       "command": [
-        "/tmp/borg-first-user-gate-dn1mk4z3/bin/borg",
+        "/tmp/borg-first-user-gate-50hchcrw/bin/borg",
         "generate",
         "systematic-debugging",
         "--format",
         "all",
         "--output",
-        "/tmp/borg-first-user-gate-dn1mk4z3/generated-rules"
+        "/tmp/borg-first-user-gate-50hchcrw/generated-rules"
       ],
       "detail": "public command returned expected value signal",
-      "duration_s": 0.128,
+      "duration_s": 0.141,
       "name": "borg_generate_rules",
       "passed": true,
       "returncode": 0,
       "stderr": "",
-      "stdout": "  .cursorrules -> /tmp/borg-first-user-gate-dn1mk4z3/generated-rules/.cursorrules\n  .clinerules -> /tmp/borg-first-user-gate-dn1mk4z3/generated-rules/.clinerules\n  CLAUDE.md -> /tmp/borg-first-user-gate-dn1mk4z3/generated-rules/CLAUDE.md\n  .windsurfrules -> /tmp/borg-first-user-gate-dn1mk4z3/generated-rules/.windsurfrules\n"
+      "stdout": "  .cursorrules -> /tmp/borg-first-user-gate-50hchcrw/generated-rules/.cursorrules\n  .clinerules -> /tmp/borg-first-user-gate-50hchcrw/generated-rules/.clinerules\n  CLAUDE.md -> /tmp/borg-first-user-gate-50hchcrw/generated-rules/CLAUDE.md\n  .windsurfrules -> /tmp/borg-first-user-gate-50hchcrw/generated-rules/.windsurfrules\n"
     },
     {
       "command": [
-        "/tmp/borg-first-user-gate-dn1mk4z3/bin/borg",
+        "/tmp/borg-first-user-gate-50hchcrw/bin/borg",
         "convert",
         ".",
         "--format",
         "openclaw",
         "--all",
         "--output",
-        "/tmp/borg-first-user-gate-dn1mk4z3/openclaw"
+        "/tmp/borg-first-user-gate-50hchcrw/openclaw"
       ],
       "detail": "public command returned expected value signal",
-      "duration_s": 0.33,
+      "duration_s": 0.358,
       "name": "borg_convert_openclaw",
       "passed": true,
       "returncode": 0,
       "stderr": "",
-      "stdout": "Converted 21 packs to OpenClaw skill format\nOutput directory: /tmp/borg-first-user-gate-dn1mk4z3/openclaw\nFiles written: 22\nSKILL.md lines: 95\n\nPack slugs: code-review, plan, github-repo-management, plan-rubric, quick-debug, github-issues, systematic-debugging, code-review-rubric, jupyter-live-kernel, ascii-art, test-driven-development, codebase-inspection, requesting-code-review, systematic-debugging-rubric, subagent-driven-development, github-auth, github-pr-workflow, writing-plans, github-code-review, excalidraw\n"
+      "stdout": "Converted 21 packs to OpenClaw skill format\nOutput directory: /tmp/borg-first-user-gate-50hchcrw/openclaw\nFiles written: 22\nSKILL.md lines: 95\n\nPack slugs: code-review, plan, github-repo-management, plan-rubric, quick-debug, github-issues, systematic-debugging, code-review-rubric, jupyter-live-kernel, ascii-art, test-driven-development, codebase-inspection, requesting-code-review, systematic-debugging-rubric, subagent-driven-development, github-auth, github-pr-workflow, writing-plans, github-code-review, excalidraw\n"
     },
     {
       "command": [
-        "/tmp/borg-first-user-gate-dn1mk4z3/bin/borg",
+        "/tmp/borg-first-user-gate-50hchcrw/bin/borg",
         "setup-claude",
         "--scope",
         "user",
@@ -310,26 +310,26 @@
         "--fix"
       ],
       "detail": "public command returned expected value signal",
-      "duration_s": 0.233,
+      "duration_s": 0.252,
       "name": "borg_setup_claude_flags",
       "passed": true,
       "returncode": 0,
       "stderr": "",
-      "stdout": "[setup-claude] Verify: PASS (initialize handshake ok)\n[setup-claude] Claude Code setup complete!\n  \u2022 MCP config updated \u2192 /tmp/borg-first-user-gate-dn1mk4z3/home/.claude.json\n\nNext steps:\n  1. Restart Claude (scope=user) so it reloads MCP config\n  2. Confirm Borg tools appear (borg_observe, borg_search, borg_suggest)\n  3. Run 'borg search <query>' to validate end-to-end\n"
+      "stdout": "[setup-claude] Verify: PASS (initialize handshake ok)\n[setup-claude] Claude Code setup complete!\n  \u2022 MCP config updated \u2192 /tmp/borg-first-user-gate-50hchcrw/home/.claude.json\n\nNext steps:\n  1. Restart Claude (scope=user) so it reloads MCP config\n  2. Confirm Borg tools appear (borg_observe, borg_search, borg_suggest)\n  3. Run 'borg search <query>' to validate end-to-end\n"
     },
     {
       "command": [
-        "/tmp/borg-first-user-gate-dn1mk4z3/bin/python",
+        "/tmp/borg-first-user-gate-50hchcrw/bin/python",
         "-c",
         "import borg, json; r=borg.check('ModuleNotFoundError: No module named flask', top_k=1); print(json.dumps({'version': borg.__version__, 'borg_file': borg.__file__, 'result_type': type(r).__name__, 'count': len(r)}))"
       ],
       "detail": "borg.check returned list from installed wheel without checkout import leakage",
-      "duration_s": 0.221,
+      "duration_s": 0.227,
       "name": "public_import_api_check",
       "passed": true,
       "returncode": 0,
       "stderr": "",
-      "stdout": "{\"version\": \"3.3.18\", \"borg_file\": \"/tmp/borg-first-user-gate-dn1mk4z3/lib/python3.11/site-packages/borg/__init__.py\", \"result_type\": \"list\", \"count\": 1}\n"
+      "stdout": "{\"version\": \"3.3.18\", \"borg_file\": \"/tmp/borg-first-user-gate-50hchcrw/lib/python3.11/site-packages/borg/__init__.py\", \"result_type\": \"list\", \"count\": 1}\n"
     }
   ],
   "success": true
