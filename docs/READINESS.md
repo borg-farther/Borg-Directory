@@ -2,8 +2,8 @@
 
 ## Current verdict
 
-- Controlled first-10 beta: **CONDITIONAL GO while gates remain green**. `agent-borg==3.3.18` is the published metadata-correct package; GitHub source exact-commit install, exact-version PyPI fresh-install/stdio MCP/generated-rules/OpenClaw runtime canaries, served-runtime fingerprint, release governance, self-service ops, and watchdog gates are green. This is not broad self-service: cap at 10 controlled, consented, instrumented external users and pause on any stale gate or P0/P1 support/privacy/security issue.
-- Public waitlist / narrow beta: **maximum 10 controlled evidence-capture testers** while the above gates remain green. Every row must capture install outcome, first useful rescue outcome, MCP/setup blockers, negative feedback, and consented measurement fields; no synthetic or maintainer-only run counts.
+- Controlled first-10 beta: **NO-GO until source/package/release/ops/docs gates are green**. `agent-borg==3.3.18` is the published package, but current source/package proof must pass the GitHub source exact-commit canary, exact-version PyPI fresh-install/stdio MCP/generated-rules/OpenClaw runtime canary, served-runtime fingerprint, release governance, self-service ops, watchdog, and docs-claim guard before any controlled beta invites.
+- Public waitlist / narrow beta: **0 real users recommended right now**. Move back to at most 10 controlled, consented, instrumented external users only after those gates are green; every row must capture install outcome, first useful rescue outcome, MCP/setup blockers, negative feedback, and consented measurement fields. No synthetic or maintainer-only run counts.
 - Public self-serve launch: **NO-GO until first-10 external-user evidence passes** (10 verified external users, >=8 installs, >=6 useful rescues, 0 critical incidents).
 
 ## What passed for source/local package infrastructure
@@ -14,7 +14,7 @@
 - First-10 contract exists: [`FIRST_10_BETA_READINESS.md`](FIRST_10_BETA_READINESS.md).
 - Security/privacy/prompt-injection surface has a baseline and CI gates.
 - GitHub `main` release governance is enforced and part of the release proof chain. PR branches still need their own green checks and post-merge `main` proof refresh before branch-specific source changes are claimed on `main`.
-- Local first-user gate, GitHub source exact-commit canary, production PyPI package canaries, served-runtime fingerprint, release governance, self-service ops, and watchdog are current for `agent-borg==3.3.18`, including generated rules, OpenClaw export, stdio MCP, CLI, and Python API. First-10 external-user evidence remains the only current broad public launch blocker.
+- Local first-user path, GitHub source exact-commit canary, exact-version PyPI fresh-install/stdio MCP canary, served-runtime fingerprint, release governance, self-service ops, and watchdog checks are the required proof chain for `agent-borg==3.3.18`. Current verdicts come from the generated gate snapshots; first-10 external-user evidence remains the broad public launch blocker after the source/package/ops gates are green.
 
 ## What is not proven
 
