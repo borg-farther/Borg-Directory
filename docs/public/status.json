@@ -71,10 +71,10 @@
   "self_service_ops_gate": "PASS",
   "served_runtime_freshness_gate": "PASS",
   "source": "docs/public/status.json",
-  "source_revision": "272c23061352098dc308185371338e6373344daa+dirty",
+  "source_revision": "0a8b0c8c6918811574e93993ab139b9882822fc3+dirty",
   "source_version_consistency": "pyproject=3.3.18 runtime=3.3.18",
   "state": "NO-GO public self-serve; controlled first-10 beta CONDITIONAL GO while gates remain green",
   "status": "NO-GO",
-  "updated_at": "2026-06-08T11:05:15Z",
+  "updated_at": "2026-06-08T11:25:07Z",
   "verified_external_users": 0
 }
