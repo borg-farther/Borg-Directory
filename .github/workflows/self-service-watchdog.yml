@@ -81,41 +81,10 @@ jobs:
           fi
           python - <<'PY'
           import json
-          data=json.load(open('/tmp/public_gate.json'))
-          assert data['ready_for_public_self_serve_launch'] is False
-          blockers='\n'.join(data.get('blockers') or []).lower()
-          controlled_package = data['ready_for_controlled_first_10_beta'] is True and data['max_recommended_real_users_now'] == 10
-          pre_publish = (
-              data['ready_for_controlled_first_10_beta'] is False
-              and data['max_recommended_real_users_now'] == 0
-              and ('pypi latest' in blockers or 'latest metadata' in blockers or 'pypi project description' in blockers or 'long-description' in blockers or 'package metadata' in blockers)
-              and ('fresh-install' in blockers or 'fresh install' in blockers or 'mcp stdio' in blockers)
-              and ('first-10' in blockers or 'verified=' in blockers)
-          )
-          release_controls_blocked = (
-              data['ready_for_controlled_first_10_beta'] is False
-              and data['max_recommended_real_users_now'] == 0
-              and ('served runtime' in blockers or 'version_matches_source' in blockers or 'reload_status' in blockers)
-              and ('release governance' in blockers or 'codeowners' in blockers or 'branch protection' in blockers or 'main branch is not protected' in blockers)
-              and ('first-10' in blockers or 'verified=' in blockers)
-          )
-          metadata_stale_blocked = (
-              data['ready_for_controlled_first_10_beta'] is False
-              and data['max_recommended_real_users_now'] == 0
-              and ('pypi project description' in blockers or 'long-description' in blockers or 'package metadata' in blockers)
-              and ('first-10' in blockers or 'verified=' in blockers)
-          )
-          def _is_first_10(blocker):
-              b=blocker.lower()
-              return 'first-10' in b or 'verified=' in b or 'external-user evidence' in b
-          def _is_package(blocker):
-              b=blocker.lower()
-              return 'pypi latest' in b or 'latest metadata' in b or 'pypi project description' in b or 'long-description' in b or 'package metadata' in b or 'fresh-install' in b or 'fresh install' in b or 'mcp stdio' in b
-          def _is_release_control(blocker):
-              b=blocker.lower()
-              return 'served runtime' in b or 'version_matches_source' in b or 'reload_status' in b or 'release governance' in b or 'codeowners' in b or 'branch protection' in b or 'main branch is not protected' in b
-          allowed_public_blockers = all(_is_first_10(b) or _is_package(b) or _is_release_control(b) for b in (data.get('blockers') or []))
-          assert (controlled_package or pre_publish or release_controls_blocked or metadata_stale_blocked) and allowed_public_blockers
+          from eval.ops_readiness_watchdog import public_gate_fail_closed_state_is_expected
+
+          data = json.load(open('/tmp/public_gate.json'))
+          assert public_gate_fail_closed_state_is_expected(data), data.get('blockers')
           PY
 
       - name: Rebuild public dashboard before watchdog source-honesty check

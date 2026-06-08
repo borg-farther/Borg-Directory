@@ -343,6 +343,35 @@ def _has_first_10_gap(blockers: list[Any]) -> bool:
     return any(_is_first_10_blocker(str(blocker)) for blocker in blockers)
 
 
+def public_gate_fail_closed_state_is_expected(snapshot: dict[str, Any], allowed_key: str = "release_controls_or_first_10_evidence") -> bool:
+    """Return whether a public self-serve gate snapshot is safely fail-closed.
+
+    GitHub Actions regenerates mutable evidence on pull requests. Some checks can
+    legitimately fail closed there (for example release-governance API 403s or a
+    fresh PyPI canary that proves the package path is not green yet). Keep this
+    guard tied to the watchdog's blocker classifier so the workflow does not drift
+    from the product policy.
+    """
+
+    if snapshot.get("ready_for_public_self_serve_launch") is not False:
+        return False
+    blockers = snapshot.get("blockers") or []
+    if not _public_blockers_are_allowed(blockers, allowed_key):
+        return False
+    controlled_first_10 = (
+        snapshot.get("ready_for_controlled_first_10_beta") is True
+        and snapshot.get("max_recommended_real_users_now") == 10
+        and _has_first_10_gap(blockers)
+    )
+    package_or_release_fail_closed = (
+        snapshot.get("ready_for_controlled_first_10_beta") is False
+        and snapshot.get("max_recommended_real_users_now") == 0
+        and _has_first_10_gap(blockers)
+        and (_has_package_release_gap(blockers) or _has_release_control_gap(blockers))
+    )
+    return controlled_first_10 or package_or_release_fail_closed
+
+
 def _without_watchdog_self_reference(blockers: list[Any]) -> list[str]:
     """Return public/real-user blockers without recursive watchdog artifacts.
 
