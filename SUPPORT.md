@@ -1,6 +1,6 @@
 # Borg support policy
 
-Borg has a narrow GitHub source-channel **GO**: clean VCS install from canonical GitHub resolved source commit `4d829c50b82179bd0afca6f0f7cc03bb79fa983f` and passed CLI, Python API, rescue/doctor, and local stdio MCP canaries. PyPI `agent-borg==3.3.18` remains the published metadata-correct package, but current-source package proof is **NO-GO** until a new immutable release includes the bundled-pack clean-install fix and the PyPI fresh-install/OpenClaw canary is green. Controlled first-10 beta is **NO-GO / cap 0** until source/package/release/ops/docs gates and first-10 external-user evidence are green. Broad public self-serve, 100-user rollout, served remote MCP, and measured lift are not claimed.
+Borg has a narrow GitHub source-channel **GO** when the committed canary snapshot is green: clean VCS install from canonical GitHub passes CLI, Python API, rescue/doctor, and local stdio MCP canaries. PyPI `agent-borg==3.3.18` remains the published package, but current-source package proof is **NO-GO** until a new immutable release includes the bundled-pack clean-install fix and the PyPI fresh-install/OpenClaw canary is green. Controlled first-10 beta is still **NO-GO / cap 0** until package/source/release/ops/docs and first-10 evidence gates pass. Broad public self-serve remains NO-GO until row-derived external evidence passes.
 
 ## Supported path
 

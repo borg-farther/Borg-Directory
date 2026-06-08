@@ -133,7 +133,7 @@ def test_readme_has_early_agent_runner_why_and_how() -> None:
     text = _read(Path("README.md"))
 
     agent_start = _heading_start(text, r"^##\s+For people running AI agents\b")
-    install_start = _heading_start(text, r"^##\s+1\.\s+Install `agent-borg`")
+    install_start = _heading_start(text, r"^##\s+1\.\s+Install path")
     assert agent_start < install_start
 
     block = text[agent_start:install_start]

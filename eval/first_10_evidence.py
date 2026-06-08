@@ -58,11 +58,29 @@ SECRET_PATTERNS = [
     re.compile(r"\bgh[pousr]_[A-Za-z0-9_]{20,}\b"),
     re.compile(r"\bxox[baprs]-[A-Za-z0-9-]{20,}\b"),
     re.compile(r"\bAKIA[0-9A-Z]{16}\b"),
-    re.compile(r"(?i)\b(password|passwd|api[_-]?key|secret|token)\s*=\s*[^\s<][^\s]{5,}"),
+    re.compile(r"(?i)\b(password|passwd|api[_-]?key|secret|token)\s*[:=]\s*[^\s<][^\s]{3,}"),
+    re.compile(r"(?i)\b(?:authorization|x-api-key)\s*:\s*(?:bearer\s+)?[A-Za-z0-9._~+/=-]{8,}"),
 ]
 
 PLACEHOLDER_RE = re.compile(r"(?i)\b(todo|tbd|placeholder|lorem ipsum|example\.com/placeholder|fake-user|synthetic-user)\b")
 INTERNAL_RE = re.compile(r"(?i)\b(internal|maintainer|synthetic|simulated|agent-test|test-user|fake)\b")
+BOT_RE = re.compile(r"(?i)(\[bot\]\b|\bbot\b|\bdependabot\b|\brenovate\b|\bgithub-actions\b|-bot\b)")
+
+REQUIRED_EVIDENCE_TEXT_FIELDS = [
+    "install_method",
+    "rescue_input_redacted",
+    "blocker_category",
+]
+REQUIRED_EVIDENCE_BOOLEAN_FIELDS = [
+    "install_success",
+    "rescue_returned_action_stop_verify",
+    "rescue_useful",
+    "mcp_setup_attempted",
+    "mcp_setup_success",
+    "no_confident_match_when_unknown",
+    "privacy_security_incident",
+    "repeat_use_within_7_days",
+]
 
 MIN_TOTAL_REAL_USERS = 10
 MIN_INSTALL_SUCCESSES = 8
@@ -96,6 +114,38 @@ def _truthy(value: Any) -> bool:
         return value != 0
     if isinstance(value, str):
         return value.strip().lower() in {"1", "true", "yes", "y", "pass", "passed", "success", "successful"}
+    return False
+
+
+def _boolish_present(value: Any) -> bool:
+    """Return True when a row explicitly recorded a boolean/tri-state answer."""
+    if isinstance(value, bool):
+        return True
+    if isinstance(value, (int, float)) and value in (0, 1):
+        return True
+    if isinstance(value, str):
+        text = value.strip().lower()
+        return text in {
+            "1",
+            "0",
+            "true",
+            "false",
+            "yes",
+            "no",
+            "y",
+            "n",
+            "pass",
+            "passed",
+            "success",
+            "successful",
+            "fail",
+            "failed",
+            "unknown",
+            "not-tested",
+            "not_tested",
+            "not-attempted",
+            "not_attempted",
+        }
     return False
 
 
@@ -181,26 +231,19 @@ def _value_reasons_and_measurement(row: dict[str, Any]) -> tuple[list[str], dict
     Measurement is optional for first-10 adoption. Once any savings/value field is
     present, it must be internally consistent, consented, and externally sourced.
     """
-    value_fields = [
+    measurement_fields = [
         "baseline_minutes_without_borg",
         "actual_minutes_with_borg",
         "net_minutes_saved",
         "baseline_tokens_without_borg",
         "actual_tokens_with_borg",
         "net_tokens_saved",
-        "savings_counterfactual_basis",
-        "dead_end_avoided_confirmed",
-        "user_confirmed_value",
     ]
-    def field_has_value(field: str) -> bool:
-        value = row.get(field)
-        if field in {"dead_end_avoided_confirmed", "user_confirmed_value"}:
-            return _truthy(value)
-        if field == "savings_counterfactual_basis":
-            return _counterfactual_basis(row) not in UNMEASURED_SAVINGS_BASIS
-        return _number_is_present(value)
-
-    has_any_value_field = any(field_has_value(field) for field in value_fields)
+    has_any_value_field = (
+        any(_number_is_present(row.get(field)) for field in measurement_fields)
+        or _counterfactual_basis(row) not in UNMEASURED_SAVINGS_BASIS
+        or _truthy(row.get("dead_end_avoided_confirmed"))
+    )
     if not has_any_value_field:
         return [], None
 
@@ -303,25 +346,37 @@ def _row_reasons(row: dict[str, Any]) -> list[str]:
 
     user_id = str(row.get("user_id_pseudonym") or "").strip()
     evidence_uri = str(row.get("external_user_evidence_uri") or "").strip()
-    text_for_internal_check = " ".join(
-        str(row.get(key) or "")
-        for key in ["user_id_pseudonym", "external_user_evidence_uri", "install_method", "blocker_notes_redacted"]
-    )
 
     if not _is_nonempty(user_id):
         reasons.append("missing non-placeholder user_id_pseudonym")
+    if BOT_RE.search(user_id):
+        reasons.append("user_id_pseudonym appears to identify a bot or automation account")
     if not _is_valid_external_evidence_uri(evidence_uri):
         reasons.append("missing valid https external_user_evidence_uri")
     if not _truthy(row.get("consent_confirmed")):
         reasons.append("consent_confirmed is not true")
     if not _truthy(row.get("outcome_recorded")):
         reasons.append("outcome_recorded is not true")
-    if INTERNAL_RE.search(text_for_internal_check):
-        reasons.append("row appears internal, maintainer, synthetic, simulated, or fake")
+
+    for field in REQUIRED_EVIDENCE_TEXT_FIELDS:
+        if not _is_nonempty(row.get(field)):
+            reasons.append(f"missing non-placeholder {field}")
+
+    time_to_first_rescue = _number_or_none(row.get("time_to_first_rescue_minutes"))
+    if time_to_first_rescue is None or time_to_first_rescue < 0:
+        reasons.append("time_to_first_rescue_minutes must be numeric and non-negative")
+
+    for field in REQUIRED_EVIDENCE_BOOLEAN_FIELDS:
+        if not _boolish_present(row.get(field)):
+            reasons.append(f"missing explicit boolean/tri-state {field}")
 
     for field, value in _iter_string_fields(row):
         if _has_secret(value):
             reasons.append(f"{field} appears to contain an unredacted secret")
+        if INTERNAL_RE.search(value):
+            reasons.append(f"{field} appears internal, maintainer, synthetic, simulated, or fake")
+        if BOT_RE.search(value):
+            reasons.append(f"{field} appears to identify a bot or automation account")
 
     return reasons
 

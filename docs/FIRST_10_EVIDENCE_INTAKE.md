@@ -4,13 +4,14 @@ This is the public intake contract for controlled first-10 beta evidence. It is 
 
 ## Intake path
 
-1. Tester installs the exact current approved package: `pipx install agent-borg==3.3.18` after the PyPI fresh-install/MCP canary for that exact version is green.
+1. Tester uses the maintainer-approved channel for that cohort: the GitHub source-smoke path while PyPI proof is red, or the next immutable PyPI package only after its fresh-install/MCP/generated-rules/OpenClaw canary is green.
 2. Tester runs one real redacted rescue: `borg rescue "<real redacted error>" --short`.
 3. Tester optionally attempts local stdio MCP setup with `borg-mcp`.
 4. Tester opens `.github/ISSUE_TEMPLATE/first-10-evidence.yml` and fills one row.
-5. Maintainer validates redaction, consent, and row shape.
-6. Maintainer appends the normalized row to `eval/first_10_user_scoreboard.json`.
-7. Maintainer runs:
+5. GitHub issue automation runs `eval/first_10_issue_import.py` to produce a validated candidate row artifact. The issue URL itself is used as `external_user_evidence_uri` when the form field is blank.
+6. Maintainer validates redaction, consent, external-user actor, and row shape.
+7. Maintainer appends the normalized row to `eval/first_10_user_scoreboard.json` by PR.
+8. Maintainer runs:
    - `python eval/first_10_evidence.py --input eval/first_10_user_scoreboard.json --write`
    - `python eval/public_self_serve_launch_gate.py`
    - `python eval/real_user_rollout_gate.py`
@@ -53,7 +54,7 @@ A row counts only when:
 
 - the tester is external, not a maintainer/internal agent/synthetic load user;
 - consent is confirmed;
-- evidence URI is HTTPS and secret-free;
+- normalized/imported evidence URI is HTTPS and secret-free; the issue form may leave it blank only when `eval/first_10_issue_import.py` fills it from the canonical GitHub issue URL;
 - the row is redacted and does not contain credentials;
 - duplicate pseudonyms are rejected;
 - aggregate counters in the scoreboard match row-derived counts.

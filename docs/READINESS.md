@@ -2,7 +2,7 @@
 
 ## Current verdict
 
-- GitHub source exact-commit install: **GO** for source commit `4d829c50b82179bd0afca6f0f7cc03bb79fa983f`; clean VCS install from canonical GitHub passed CLI, Python API, rescue/doctor, and local stdio MCP canaries.
+- GitHub source exact-commit install: **GO** when `eval/github_source_install_snapshot.json` is green; clean VCS install from canonical GitHub passed CLI, Python API, rescue/doctor, and local stdio MCP canaries.
 - Controlled first-10 beta: **NO-GO until source/package/release/ops/docs gates are green**. `agent-borg==3.3.18` is the published package, but current-source PyPI/package proof must pass exact-version PyPI fresh-install/stdio MCP/generated-rules/OpenClaw runtime canary, served-runtime fingerprint, release governance, self-service ops, watchdog, and docs-claim guard before any controlled beta invites.
 - Public waitlist / narrow beta: **0 real users recommended right now**. Move back to at most 10 controlled, consented, instrumented external users only after those gates are green; every row must capture install outcome, first useful rescue outcome, MCP/setup blockers, negative feedback, and consented measurement fields. No synthetic or maintainer-only run counts.
 - Public self-serve launch: **NO-GO until first-10 external-user evidence passes** (10 verified external users, >=8 installs, >=6 useful rescues, 0 critical incidents).

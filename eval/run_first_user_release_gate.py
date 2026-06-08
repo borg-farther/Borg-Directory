@@ -97,6 +97,26 @@ def _contains_all(text: str, needles: Iterable[str]) -> bool:
     return all(n in text for n in needles)
 
 
+def _bundled_seed_pack_count() -> int:
+    """Expected pack count for a clean public install's bundled registry."""
+    packs_dir = ROOT / "borg" / "seeds_data" / "packs"
+    names: set[str] = set()
+    for pack_file in list(packs_dir.glob("*.yaml")) + list(packs_dir.glob("*.yml")):
+        name = pack_file.name
+        if name.endswith(".workflow.yaml"):
+            names.add(name[: -len(".workflow.yaml")])
+        elif name.endswith(".yaml"):
+            names.add(name[: -len(".yaml")])
+        elif name.endswith(".yml"):
+            names.add(name[: -len(".yml")])
+    return len(names)
+
+
+def _openclaw_converted_count(text: str) -> int | None:
+    match = re.search(r"Converted\s+(\d+)\s+packs\s+to\s+OpenClaw", text)
+    return int(match.group(1)) if match else None
+
+
 def _quality_doc(path: Path) -> tuple[bool, str]:
     if not path.exists():
         return False, "missing"
@@ -294,12 +314,24 @@ def run_gate(args: argparse.Namespace) -> int:
             ):
                 res.passed = False
                 res.detail = "rules export command returned success but did not write all expected files"
-            elif name == "borg_convert_openclaw" and not all(
-                (openclaw_dir / filename).exists()
-                for filename in ["SKILL.md", "references/pack-index.md", "references/packs/systematic-debugging.md"]
-            ):
-                res.passed = False
-                res.detail = "OpenClaw conversion returned success but did not write expected bridge files"
+            elif name == "borg_convert_openclaw":
+                expected_files_ok = all(
+                    (openclaw_dir / filename).exists()
+                    for filename in ["SKILL.md", "references/pack-index.md", "references/packs/systematic-debugging.md"]
+                )
+                converted_count = _openclaw_converted_count(text)
+                expected_count = _bundled_seed_pack_count()
+                if not expected_files_ok:
+                    res.passed = False
+                    res.detail = "OpenClaw conversion returned success but did not write expected bridge files"
+                elif converted_count != expected_count:
+                    res.passed = False
+                    res.detail = (
+                        f"OpenClaw conversion used {converted_count!r} packs; expected {expected_count} bundled seed packs. "
+                        "Public first-user gates must not pass by reading maintainer-only external pack paths."
+                    )
+                else:
+                    res.detail = "public command returned expected value signal"
             else:
                 res.detail = "public command returned expected value signal"
             results.append(res)

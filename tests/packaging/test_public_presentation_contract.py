@@ -71,7 +71,7 @@ def test_readme_leads_with_concrete_value_before_install_matrix() -> None:
     assert 'borg rescue "ModuleNotFoundError: No module named flask" --short' in top
     assert "BORG RESCUE" in top and "status: matched" in top
     assert "Canonical/no-loss policy" not in top
-    assert top.index("## Try Borg in 60 seconds") < text.index("## 1. Install `agent-borg`")
+    assert top.index("## Try Borg in 60 seconds") < text.index("## 1. Install path")
 
 
 def test_release_governance_docs_use_exact_check_contexts_and_valid_codeowner() -> None:
@@ -263,9 +263,12 @@ def test_channel_matrix_documents_all_first_user_mix_paths() -> None:
     docs_index = read("docs/README.md")
 
     assert f"agent-borg=={current_version}" in matrix
+    source_snapshot = json.loads(read("eval/github_source_install_snapshot.json"))
+    source_commit = source_snapshot["source_resolution"]["resolved_commit"]
+    exact_source_command = f"python -m pip install 'git+https://github.com/borg-farther/Borg-Directory.git@{source_commit}'"
     for phrase in [
         "pipx install agent-borg==",
-        "python -m pip install 'git+https://github.com/borg-farther/Borg-Directory.git@4d829c50b82179bd0afca6f0f7cc03bb79fa983f'",
+        exact_source_command,
         "borg generate systematic-debugging --format all --output",
         "borg convert . --format openclaw --all --output",
         "import borg, json",

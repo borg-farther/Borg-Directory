@@ -63,7 +63,7 @@ They are retained for provenance, but they are not current product claims or fir
 
 ## Current truth
 
-- GitHub source exact-commit install: GO for source commit `4d829c50b82179bd0afca6f0f7cc03bb79fa983f` with CLI, Python API, rescue/doctor, and local stdio MCP canaries green.
+- GitHub source exact-commit install: GO when `eval/github_source_install_snapshot.json` is green; clean VCS install from canonical GitHub passes CLI, Python API, rescue/doctor, and local stdio MCP canaries.
 - Controlled first-10 public-package beta: NO-GO right now / cap 0. `agent-borg==3.3.18` remains the published metadata-correct package, but current-source PyPI/package proof is NO-GO until a new immutable package release includes the bundled-pack clean-install fix and the PyPI fresh-install/OpenClaw canary is green. GitHub `main` release governance is enforced.
 - Public self-serve launch: not yet; requires real external-user evidence.
 - Agent-level success lift at statistical confidence: not yet proven.

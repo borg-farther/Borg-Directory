@@ -1,0 +1,64 @@
+name: Source-channel smoke feedback
+description: Report results from the current GitHub source self-serve smoke path.
+title: "[source-smoke]: "
+labels: ["source-smoke", "needs-triage"]
+body:
+  - type: markdown
+    attributes:
+      value: |
+        Use this after trying the current GitHub source install path. This is not first-10 launch evidence unless a maintainer later validates it as a consented external row. Redact secrets, private repo names, tokens, credentials, and personal data.
+  - type: input
+    id: install-command
+    attributes:
+      label: install-command
+      placeholder: "python -m pip install git+https://github.com/borg-farther/Borg-Directory.git@main"
+    validations:
+      required: true
+  - type: input
+    id: operating-system
+    attributes:
+      label: operating-system
+      placeholder: "macOS 14, Ubuntu 24.04, Windows 11"
+    validations:
+      required: true
+  - type: input
+    id: python-version
+    attributes:
+      label: python-version
+      placeholder: "Python 3.11.9"
+    validations:
+      required: true
+  - type: dropdown
+    id: install-success
+    attributes:
+      label: install-success
+      options: ["true", "false"]
+    validations:
+      required: true
+  - type: textarea
+    id: first-command-output-redacted
+    attributes:
+      label: first-command-output-redacted
+      description: |
+        Paste redacted output from `borg rescue "ModuleNotFoundError: No module named flask" --short` or the first failing command.
+    validations:
+      required: true
+  - type: dropdown
+    id: action-stop-verify-visible
+    attributes:
+      label: action-stop-verify-visible
+      options: ["true", "false", "not-run"]
+    validations:
+      required: true
+  - type: textarea
+    id: blocker-notes-redacted
+    attributes:
+      label: blocker-notes-redacted
+      description: Redacted notes only. Include exact failing command and stderr if install/MCP failed.
+  - type: checkboxes
+    id: privacy-confirmation
+    attributes:
+      label: privacy-confirmation
+      options:
+        - label: I redacted secrets, credentials, private repo URLs, and personal data.
+          required: true

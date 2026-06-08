@@ -6,9 +6,11 @@
 
 ## Executive truth
 
-A GitHub-source visitor has a narrow **GO** path today: clean VCS install from canonical GitHub at source commit `4d829c50b82179bd0afca6f0f7cc03bb79fa983f` passed CLI, Python API, rescue/doctor, and local stdio MCP canaries. A PyPI visitor can still install the published metadata-correct `agent-borg==3.3.18`, but current-source PyPI/package proof is **NO-GO** until a new immutable package release includes the bundled-pack clean-install fix and the PyPI fresh-install/OpenClaw canary is green. Controlled first-10 beta is **NO-GO / cap 0** until source/package/release/ops/docs gates and first-10 evidence are green. The source-channel GO command is:
+A GitHub-source visitor has a narrow **GO** path when the committed canary snapshot is green: clean VCS install from canonical GitHub passes CLI, Python API, rescue/doctor, and local stdio MCP canaries. A PyPI visitor can still install the published `agent-borg==3.3.18`, but current-source PyPI/package proof is **NO-GO** until a new immutable package release includes the bundled-pack clean-install fix and the PyPI fresh-install/OpenClaw canary is green. Controlled first-10 beta is **NO-GO / cap 0** until source/package/release/ops/docs gates and first-10 evidence are green. The source-channel smoke command is:
 
-1. `python -m pip install 'git+https://github.com/borg-farther/Borg-Directory.git@4d829c50b82179bd0afca6f0f7cc03bb79fa983f'`
+Exact committed canary command recorded by `eval/github_source_install_snapshot.json`: `python -m pip install 'git+https://github.com/borg-farther/Borg-Directory.git@36688c1c3dfbfd0083f14399d14a5135c9a892a6'`.
+
+1. `python -m pip install 'git+https://github.com/borg-farther/Borg-Directory.git@main'`
 2. `borg rescue "ModuleNotFoundError: No module named flask" --short`
 3. for MCP clients, configure local stdio command `borg-mcp`
 
@@ -18,7 +20,7 @@ Do not invite controlled first-10 users until current-source PyPI fresh-install/
 
 | Channel / mix | User command or config | Gate | Current claim |
 |---|---|---:|---|
-| GitHub direct install | `python -m pip install 'git+https://github.com/borg-farther/Borg-Directory.git@4d829c50b82179bd0afca6f0f7cc03bb79fa983f'` | GitHub source exact-commit canary | **GO for source-channel smoke** at the exact commit: CLI, Python API, rescue/doctor, and local stdio MCP canaries pass. Not a PyPI/current-package or public beta GO |
+| GitHub direct install | `python -m pip install 'git+https://github.com/borg-farther/Borg-Directory.git@main'` | GitHub source exact-commit canary | **GO for source-channel smoke** when `eval/github_source_install_snapshot.json` is green: CLI, Python API, rescue/doctor, and local stdio MCP canaries pass. Not a PyPI/current-package or public beta GO |
 | PyPI CLI via pipx | `pipx install agent-borg==3.3.18`; `borg rescue ...` | `eval/run_pypi_fresh_install_canary.py --version 3.3.18` | Published package exists and is metadata-correct, but current-source PyPI proof is **NO-GO** until the next immutable release includes the bundled-pack clean-install fix and OpenClaw canary passes |
 | PyPI in active Python env | `python -m pip install agent-borg==3.3.18` | same PyPI canary plus `borg-doctor --json` | Runtime path remains usable, but current-source package proof is blocked until the next release/canary |
 | Local clone/editable | `git clone ...`; `python -m pip install -e .` | `eval/run_first_user_release_gate.py` and targeted first-user tests | GO for contributors/dev verification, not normal users |

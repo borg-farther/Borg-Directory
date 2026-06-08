@@ -1,7 +1,7 @@
 # borg value communication dashboard
 
 ## operator benefits (validated internally)
-- first visible source-channel value path: `python -m pip install 'git+https://github.com/borg-farther/Borg-Directory.git@4d829c50b82179bd0afca6f0f7cc03bb79fa983f'` -> `borg rescue "<redacted error>"` -> ACTION / STOP / VERIFY
+- first visible source-channel value path: `python -m pip install 'git+https://github.com/borg-farther/Borg-Directory.git@main'` -> `borg rescue "<redacted error>"` -> ACTION / STOP / VERIFY
 - controlled package beta path: **NO-GO right now / cap 0** — GitHub source exact-commit install is GO, but current-source PyPI/package proof remains NO-GO until a new immutable package release includes the bundled-pack clean-install fix and the PyPI fresh-install/OpenClaw canary is green
 - local/synthetic gate status: first-user release gate and logical load gates are green in current artifacts; synthetic users are not external-user evidence
 - external-user proof status: **not proven yet**; verified external users remain `0`

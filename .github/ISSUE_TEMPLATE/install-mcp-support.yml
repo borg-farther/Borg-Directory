@@ -1,7 +1,7 @@
-name: Install or MCP support
-description: Report a controlled-beta install, CLI, or MCP stdio setup blocker.
+name: Install, CLI, or MCP support
+description: Report a source-smoke, package install, CLI, or MCP stdio setup blocker.
 title: "[install-mcp]: "
-labels: ["install-mcp", "controlled-beta", "needs-triage"]
+labels: ["install-mcp", "needs-triage"]
 body:
   - type: markdown
     attributes:
@@ -11,14 +11,14 @@ body:
     id: borg-version
     attributes:
       label: borg-version
-      placeholder: "borg 3.3.14"
+      placeholder: "borg <version from borg version>"
     validations:
       required: true
   - type: input
     id: install-method
     attributes:
       label: install-method
-      placeholder: "pipx install agent-borg==3.3.14"
+      placeholder: "source: python -m pip install git+https://github.com/borg-farther/Borg-Directory.git@main; package: pipx install agent-borg==<version>"
     validations:
       required: true
   - type: input

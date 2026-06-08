@@ -6,6 +6,17 @@ This is the detailed first-user setup guide. The shortest path is in [`QUICKSTAR
 
 Borg requires Python 3.10+.
 
+Current source-smoke path while current-source PyPI proof is red:
+
+```bash
+python3 -m venv /tmp/borg-source-smoke
+. /tmp/borg-source-smoke/bin/activate
+python -m pip install --upgrade pip
+python -m pip install 'git+https://github.com/borg-farther/Borg-Directory.git@main'
+```
+
+The package-install commands below return after the next immutable PyPI release passes fresh-install/stdio MCP/generated-rules/OpenClaw canaries.
+
 Borg is the product name. The package you install is `agent-borg`; that package gives you the `borg` CLI, `borg-mcp` MCP server command, and `borg-doctor` diagnostic command.
 
 Do **not** install these for Borg:
@@ -199,4 +210,4 @@ Before attempting technical fixes for errors, bugs, installs, configs, deploymen
 
 ## 7. Readiness boundary
 
-Borg has a narrow GitHub source-channel **GO**: clean VCS install from canonical GitHub resolved source commit `4d829c50b82179bd0afca6f0f7cc03bb79fa983f` and passed CLI, Python API, rescue/doctor, and local stdio MCP canaries. PyPI `agent-borg==3.3.18` remains the published metadata-correct package, but current-source PyPI/package proof is NO-GO until a new immutable package release includes the bundled-pack clean-install fix and the PyPI fresh-install/OpenClaw canary is green. Controlled first-10 beta, public self-serve launch readiness, and agent-level success lift at statistical confidence remain NO-GO. See [`READINESS.md`](READINESS.md).
+Borg has a narrow GitHub source-channel **GO** when the committed canary snapshot is green: clean VCS install from canonical GitHub passes CLI, Python API, rescue/doctor, and local stdio MCP canaries. PyPI `agent-borg==3.3.18` remains the published package, but current-source PyPI/package proof is NO-GO until a new immutable package release includes the bundled-pack clean-install fix and the PyPI fresh-install/OpenClaw canary is green. Controlled first-10 and broad public self-serve remain NO-GO until their separate evidence gates pass.

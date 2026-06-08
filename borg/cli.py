@@ -76,13 +76,24 @@ def _load_builtin_packs() -> list:
     def _add_pack(pack_data) -> None:
         if not isinstance(pack_data, dict):
             return
-        pack_id = str(pack_data.get("id") or "")
+        pack_id = str(pack_data.get("id") or pack_data.get("name") or "")
         if not pack_id or pack_id in seen_ids:
             return
+        if not pack_data.get("id") and pack_data.get("name"):
+            pack_data = dict(pack_data)
+            pack_data["id"] = f"borg://hermes/{pack_id}"
         seen_ids.add(pack_id)
         packs.append(pack_data)
 
-    pack_dirs = [pathlib.Path(__file__).resolve().parent / "seeds_data" / "packs"]
+    module_path = pathlib.Path(__file__).resolve()
+    package_root = module_path.parent
+    # Entry points import borg.cli as the package at borg/cli/__init__.py, which
+    # execs this legacy module. In that mode __file__ points at borg/cli/__init__.py,
+    # not borg/cli.py. Resolve back to the distribution package root before looking
+    # for bundled seed packs, otherwise fresh public installs cannot find them.
+    if module_path.name == "__init__.py" and module_path.parent.name == "cli":
+        package_root = module_path.parents[1]
+    pack_dirs = [package_root / "seeds_data" / "packs"]
     env_packs_dir = os.environ.get("BORG_TEST_PACKS_DIR")
     if env_packs_dir:
         pack_dirs.append(pathlib.Path(env_packs_dir))
@@ -720,8 +731,11 @@ def _cmd_convert(args: argparse.Namespace) -> int:
             def _add_pack(pack_data):
                 """Add pack if not duplicate."""
                 if isinstance(pack_data, dict):
-                    pack_id = pack_data.get("id", "")
+                    pack_id = str(pack_data.get("id") or pack_data.get("name") or "")
                     if pack_id and pack_id not in seen_ids:
+                        if not pack_data.get("id") and pack_data.get("name"):
+                            pack_data = dict(pack_data)
+                            pack_data["id"] = f"borg://hermes/{pack_id}"
                         seen_ids.add(pack_id)
                         packs.append(pack_data)
             

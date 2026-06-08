@@ -11,6 +11,7 @@ import json
 from pathlib import Path
 
 from eval import first_10_evidence as evidence
+from eval import first_10_issue_import
 from borg.core.first_user_readiness import (
     FIRST_10_GATES,
     PRIMING_PARAGRAPH,
@@ -290,3 +291,110 @@ def test_first_10_scoreboard_rejects_forged_or_inconsistent_savings_fields():
         for item in result["invalid_rows"]
         for reason in item["reasons"]
     )
+
+
+def test_first_10_issue_import_uses_issue_url_and_validates_candidate_row():
+    body = """
+### user-id-pseudonym
+external-user-alpha
+
+### external-user-evidence-uri
+_No response_
+
+### consent-confirmed
+- [x] The tester consented to a redacted evidence row being used for first-10 readiness.
+
+### install-method
+pipx install agent-borg==3.3.19
+
+### install-success
+true
+
+### time-to-first-rescue-minutes
+4
+
+### rescue-input-redacted
+ModuleNotFoundError: No module named flask
+
+### rescue-returned-action-stop-verify
+true
+
+### rescue-useful
+true
+
+### mcp-setup-attempted
+false
+
+### mcp-setup-success
+not-attempted
+
+### no-confident-match-when-unknown
+true
+
+### blocker-category
+none
+
+### blocker-notes-redacted
+none
+
+### privacy-security-incident
+false
+
+### repeat-use-within-7-days
+unknown
+
+### outcome-recorded
+true
+
+### savings-counterfactual-basis
+not-measured
+
+### dead-end-avoided-confirmed
+unknown
+
+### user-confirmed-value
+true
+
+### privacy-confirmation
+- [x] I redacted secrets, private repo names, tokens, credentials, and personal data.
+- [x] I understand maintainers may reject this row if redaction or evidence is incomplete.
+"""
+    issue_url = "https://github.com/borg-farther/Borg-Directory/issues/123"
+
+    row = first_10_issue_import.row_from_issue_body(
+        body,
+        issue_url=issue_url,
+        github_actor="external-contributor",
+        internal_actors={"bensargotest-sys"},
+    )
+    result = first_10_issue_import.validate_single_row(row)
+
+    assert row["external_user_evidence_uri"] == issue_url
+    assert row["consent_confirmed"] is True
+    assert row["install_success"] is True
+    assert result["schema_valid"] is True
+    assert result["derived_counts"]["verified_external_users"] == 1
+    assert result["thresholds_passed"] is False
+
+
+def test_first_10_issue_import_rejects_bots_and_internal_actors():
+    body = """
+### user-id-pseudonym
+external-user-alpha
+
+### external-user-evidence-uri
+https://github.com/borg-farther/Borg-Directory/issues/123
+"""
+
+    for actor in ["dependabot[bot]", "bensargotest-sys"]:
+        try:
+            first_10_issue_import.row_from_issue_body(
+                body,
+                issue_url="https://github.com/borg-farther/Borg-Directory/issues/123",
+                github_actor=actor,
+                internal_actors={"bensargotest-sys"},
+            )
+        except ValueError as exc:
+            assert "not eligible external evidence" in str(exc)
+        else:
+            raise AssertionError(f"actor should have been rejected: {actor}")

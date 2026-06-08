@@ -13,14 +13,19 @@ Give Borg an error, traceback, failed test, install problem, config failure, or 
 - **MCP server command:** `borg-mcp`
 - **Canonical repo:** https://github.com/borg-farther/Borg-Directory
 
-**Status:** GitHub source exact-commit install is **GO** for the current PR source path: clean VCS install from canonical GitHub resolved source commit `4d829c50b82179bd0afca6f0f7cc03bb79fa983f` and passed CLI, Python API, rescue/doctor, and local stdio MCP canaries. PyPI `agent-borg==3.3.18` remains the published metadata-correct package, but current-source PyPI/package proof is **NO-GO** until a new immutable package release includes the clean bundled-pack path and the PyPI fresh-install/OpenClaw canary is green. Controlled first-10 beta remains **NO-GO / cap 0** until source/package/release/ops/docs gates and first-10 evidence are green. Broad public self-serve launch, 100-user rollout, served/remote MCP, and measured external lift are **not claimed** until row-derived external-user evidence passes.
+**Status:** GitHub source exact-commit install is **GO** for the source commit recorded in `eval/github_source_install_snapshot.json` when that committed canary snapshot is green: clean VCS install from canonical GitHub passed CLI, Python API, rescue/doctor, and local stdio MCP canaries. PyPI `agent-borg==3.3.18` remains the published package, but current-source PyPI/package proof is **NO-GO** until a new immutable package release includes the clean bundled-pack path and the PyPI fresh-install/OpenClaw canary is green. Controlled first-10 beta remains **NO-GO / cap 0** until source/package/release/ops/docs gates and first-10 evidence are green. Broad public self-serve launch, 100-user rollout, served/remote MCP, and measured external lift are **not claimed** until row-derived external-user evidence passes.
 
 ## Try Borg in 60 seconds
 
 ```bash
-pipx install agent-borg
+python3 -m venv /tmp/borg-source-smoke
+. /tmp/borg-source-smoke/bin/activate
+python -m pip install --upgrade pip
+python -m pip install 'git+https://github.com/borg-farther/Borg-Directory.git@main'
 borg rescue "ModuleNotFoundError: No module named flask" --short
 ```
+
+Use the GitHub source path above until the next immutable PyPI release passes the fresh-install/OpenClaw canary. `agent-borg==3.3.18` exists on PyPI, but it is not current-source package proof.
 
 Expected abbreviated shape:
 
@@ -39,9 +44,9 @@ VERIFY
   - ...
 ```
 
-> **Install-name note:** Borg is the product name, and `borg` is the command after install. The Python package to install is **`agent-borg`**.
+> **Install-name note:** Borg is the product name, and `borg` is the command after install. The Python package name is **`agent-borg`**.
 >
-> Use `pipx install agent-borg` or `python3 -m pip install agent-borg`. Do **not** use `pip install borg`, `brew install borgbackup`, `apt install borgbackup`, `apt-get install borgbackup`, `dnf install borgbackup`, or `pacman -S borg`; those install unrelated Borg/BorgBackup software and will not provide Borg's AI-agent MCP tools.
+> Today, the public source-smoke path is `python -m pip install 'git+https://github.com/borg-farther/Borg-Directory.git@main'` from a fresh virtualenv. Use `pipx install agent-borg` or `python3 -m pip install agent-borg` only after the next immutable PyPI release is canaried. Do **not** use `pip install borg`, `brew install borgbackup`, `apt install borgbackup`, `apt-get install borgbackup`, `dnf install borgbackup`, or `pacman -S borg`; those install unrelated Borg/BorgBackup software and will not provide Borg's AI-agent MCP tools.
 
 ## For people running AI agents
 
@@ -52,7 +57,7 @@ Why: the agent can check prior fixes and dead ends before burning tool calls. It
 
 How:
 
-1. Install `agent-borg` and verify `borg-mcp`.
+1. Install from the current source-smoke path above and verify `borg-mcp`; package installs resume only after the next immutable PyPI release is canaried.
 2. Connect your agent host:
    - Claude Code: `borg setup-claude --scope user --verify --fix`
    - Hermes Agent, including Hermes with Claude/GPT models: add `mcp_servers.borg` in `~/.hermes/config.yaml`
@@ -63,9 +68,11 @@ Details: [`docs/MCP_SETUP.md`](https://github.com/borg-farther/Borg-Directory/bl
 
 ---
 
-## 1. Install `agent-borg`
+## 1. Install path
 
-Requires Python 3.10+. For normal users, prefer `pipx`: it installs the CLI cleanly without polluting your system Python.
+Current source-smoke path: use the GitHub source command in the 60-second quickstart above until the next immutable PyPI release is canaried. The OS-specific PyPI commands below are retained as the package-install path, but they are not current-source package proof while PyPI fresh-install/OpenClaw remains red.
+
+Requires Python 3.10+. For normal package users, prefer `pipx`: it installs the CLI cleanly without polluting your system Python.
 
 ### macOS
 
@@ -324,9 +331,9 @@ Why: agents often do not discover optional tools unless explicitly primed.
 
 ## 5. What is ready now
 
-GitHub source exact-commit install is GO for the current PR source path: clean VCS install from canonical GitHub resolved `4d829c50b82179bd0afca6f0f7cc03bb79fa983f` and passed CLI, Python API, rescue/doctor, and local stdio MCP canaries. PyPI `agent-borg==3.3.18` is still the published metadata-correct package, but current-source PyPI/package proof is blocked until a new immutable release includes the bundled-pack clean-install fix. Release governance is enforced on GitHub `main`; first-10 external-user evidence remains a separate blocker.
+GitHub source exact-commit install is **GO** for the source commit recorded in `eval/github_source_install_snapshot.json` when the committed source canary snapshot is green: clean VCS install from canonical GitHub passed CLI, Python API, rescue/doctor, and local stdio MCP canaries. PyPI `agent-borg==3.3.18` is still the published package, but current-source PyPI/package proof is blocked until a new immutable release includes the bundled-pack clean-install fix. Release governance is enforced on GitHub `main`; first-10 external-user evidence remains `0/10`, so broad public self-serve stays NO-GO.
 
-- GitHub source install, CLI, Python API, rescue/doctor, and stdio MCP are freshly canaried from canonical GitHub for source commit `4d829c50b82179bd0afca6f0f7cc03bb79fa983f`.
+- GitHub source install, CLI, Python API, rescue/doctor, and stdio MCP are canaried from canonical GitHub in `eval/github_source_install_snapshot.json`.
 - PyPI install, CLI, Python API, generated-rules/OpenClaw export, and stdio MCP entrypoints exist for `agent-borg==3.3.18`, but current-source PyPI proof is not green until the next immutable release is published and canaried.
 - First-user rescue path returns ACTION / STOP / VERIFY or `NO_CONFIDENT_MATCH`.
 - Security/privacy/prompt-injection surface: PASS in CI/local gates.
@@ -373,7 +380,7 @@ Use the package name `agent-borg`; the CLI command after install is `borg`. Do n
 python3 -m venv /tmp/borg-smoke
 . /tmp/borg-smoke/bin/activate
 python -m pip install --upgrade pip
-python -m pip install agent-borg
+python -m pip install 'git+https://github.com/borg-farther/Borg-Directory.git@main'
 borg version
 borg-doctor --json
 borg rescue "ModuleNotFoundError: No module named flask" --json
