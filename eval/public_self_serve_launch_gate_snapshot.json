@@ -10,7 +10,7 @@
       "exists": true,
       "failed_count": 0,
       "failures": [],
-      "generated_at_utc": "2026-06-08T19:43:31.777794+00:00",
+      "generated_at_utc": "2026-06-08T19:51:10.889107+00:00",
       "has_bad_answer_feedback_path": true,
       "missing_required_checks": [],
       "observed_check_count": 7,
@@ -118,12 +118,12 @@
       "failed_count": 0,
       "failures": [],
       "freshness": {
-        "age_hours": 0.07093803055555556,
+        "age_hours": 0.01719481861111111,
         "failure_kind": null,
         "max_age_hours": 24.0,
         "passed": true
       },
-      "generated_at_utc": "2026-06-08T19:42:49Z",
+      "generated_at_utc": "2026-06-08T19:50:33Z",
       "mcp_stdio_canary_passed": true,
       "missing_results": [],
       "passed": true,
@@ -131,7 +131,7 @@
       "python_distribution_probe_passed": true,
       "source_alignment": {
         "changed_paths_since_install_count": 0,
-        "current_revision": "341a0df821117b7c85a7da04f15b561f2e0ede48",
+        "current_revision": "30582816c303ba9aa3978941de602fa8a80699f5",
         "detail": "installed commit equals current HEAD",
         "dirty_package_paths": [],
         "package_changed_paths_since_install": [],
@@ -140,17 +140,17 @@
       "source_resolution": {
         "canonical_public_repo": true,
         "commit_matches_expected": true,
-        "expected_commit": "341a0df821117b7c85a7da04f15b561f2e0ede48",
+        "expected_commit": "30582816c303ba9aa3978941de602fa8a80699f5",
         "repo_url": "https://github.com/borg-farther/Borg-Directory.git",
-        "requested_ref": "341a0df821117b7c85a7da04f15b561f2e0ede48",
-        "resolved_commit": "341a0df821117b7c85a7da04f15b561f2e0ede48",
+        "requested_ref": "30582816c303ba9aa3978941de602fa8a80699f5",
+        "resolved_commit": "30582816c303ba9aa3978941de602fa8a80699f5",
         "url_matches_expected": true
       },
       "version": "3.3.18"
     },
     "ops_readiness_watchdog": {
       "blockers": [],
-      "generated_at_utc": "2026-06-08T19:47:04.260931+00:00",
+      "generated_at_utc": "2026-06-08T19:51:34.793206+00:00",
       "passed": true,
       "snapshot": "eval/ops_readiness_watchdog_snapshot.json",
       "truth_policy": "Watchdog passing means controlled first-10 ops proof is fresh and internally consistent. Broad public self-serve still requires row-derived first-10 external-user evidence."
@@ -168,12 +168,12 @@
         "borg_convert_openclaw_registry"
       ],
       "freshness": {
-        "age_hours": 0.06458462527777778,
+        "age_hours": 0.012230475277777778,
         "failure_kind": null,
         "max_age_hours": 24.0,
         "passed": true
       },
-      "generated_at_utc": "2026-06-08T19:43:12Z",
+      "generated_at_utc": "2026-06-08T19:50:51Z",
       "mcp_server_info": {
         "name": "borg-mcp-server",
         "version": "3.3.18"
@@ -231,7 +231,7 @@
       ],
       "source_upload_alignment": {
         "alignment_basis": "package_reference",
-        "current_source_commit_time_utc": "2026-06-08T19:42:23+00:00",
+        "current_source_commit_time_utc": "2026-06-08T19:49:31+00:00",
         "detail": "Package-impacting source or metadata changed after the package reference tag; publish a new immutable version before claiming package proof is current.",
         "dirty_source": true,
         "failure_kind": "package_source_changed_after_reference",
@@ -340,7 +340,6 @@
           "docs/status.json",
           "eval/borg_proof_dashboard.json",
           "eval/cold_start_trust_gate_snapshot.json",
-          "eval/first_user_release_gate_snapshot.json",
           "eval/github_source_install_snapshot.json",
           "eval/ops_readiness_watchdog_post_dashboard_check.json",
           "eval/ops_readiness_watchdog_snapshot.json",
@@ -366,7 +365,7 @@
         "passed": false,
         "release_file_count": 2,
         "source_commit_time_utc": "2026-06-03T20:14:10+00:00",
-        "source_revision": "341a0df821117b7c85a7da04f15b561f2e0ede48+dirty",
+        "source_revision": "30582816c303ba9aa3978941de602fa8a80699f5+dirty",
         "stale_release_files": [],
         "worktree_dirty": true
       },
@@ -420,7 +419,7 @@
     },
     "self_service_ops_readiness": {
       "blockers": [],
-      "generated_at_utc": "2026-06-08T19:47:05.588895+00:00",
+      "generated_at_utc": "2026-06-08T19:51:36.081651+00:00",
       "passed": true,
       "report": "docs/SELF_SERVICE_OPS_READINESS_REPORT.md",
       "rollout_policy": "Ops readiness is necessary but not sufficient for controlled first-10; package provenance, served-runtime freshness, release governance, ops/watchdog freshness, and first-10 guardrails must also pass. broad public self-serve still requires row-derived first-10 external evidence.",
@@ -442,7 +441,7 @@
       }
     }
   },
-  "generated_at_utc": "2026-06-08T19:47:05.704162+00:00",
+  "generated_at_utc": "2026-06-08T19:51:36.187789+00:00",
   "max_recommended_real_users_now": 0,
   "ready_for_controlled_first_10_beta": false,
   "ready_for_public_self_serve_launch": false,
