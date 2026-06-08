@@ -1,8 +1,8 @@
 # Borg Proof Dashboard
 
-Generated: `2026-06-08T20:01:11Z`
+Generated: `2026-06-08T20:27:47Z`
 Repo: `https://github.com/borg-farther/Borg-Directory`
-Source snapshot: `29dd6b2f5534857446f3e4f2f999e75b0f1930ad+dirty`
+Source snapshot: `51424e9d3ef44116b878b975e1f32cfb486a0fae+dirty`
 
 ## Big top verdict
 
@@ -30,7 +30,7 @@ Source snapshot: `29dd6b2f5534857446f3e4f2f999e75b0f1930ad+dirty`
 | real_user_100_rollout_gate | FAIL | REAL_EXTERNAL_USERS | eval/real_user_rollout_gate_snapshot.json |
 | max_recommended_real_users_now | 0 | REAL_EXTERNAL_USERS | eval/real_user_rollout_gate_snapshot.json |
 | public_self_serve_launch_gate | FAIL | PUBLIC_LAUNCH_GATE | eval/public_self_serve_launch_gate_snapshot.json |
-| github_source_install_canary | PASS | GITHUB_SOURCE_INSTALL_EXACT_COMMIT | eval/github_source_install_snapshot.json resolved=29dd6b2f5534857446f3e4f2f999e75b0f1930ad expected=29dd6b2f5534857446f3e4f2f999e75b0f1930ad |
+| github_source_install_canary | PASS | GITHUB_SOURCE_INSTALL_EXACT_COMMIT | eval/github_source_install_snapshot.json resolved=51424e9d3ef44116b878b975e1f32cfb486a0fae expected=51424e9d3ef44116b878b975e1f32cfb486a0fae |
 | cold_start_trust_hardening_gate | PASS | FIRST_ANSWER_TRUST_GATE | eval/cold_start_trust_gate_snapshot.json |
 | served_runtime_freshness_gate | PASS | SERVED_RUNTIME_FINGERPRINT_GATE | eval/served_runtime_fingerprint_snapshot.json |
 | release_governance_gate | PASS | RELEASE_GOVERNANCE_BRANCH_PROTECTION_GATE | eval/release_governance_snapshot.json |
@@ -52,14 +52,14 @@ Source snapshot: `29dd6b2f5534857446f3e4f2f999e75b0f1930ad+dirty`
 | eval/first_user_release_gate_snapshot.json | True | 22e831d459b339c25821008ca20f29e6587334c175e0b1553b5802d1c11529a0 | 2026-06-08T19:37:20Z | first-user release gate all_pass=True |
 | eval/uat_scoreboard_snapshot.json | True | 74916ab2c869fd9a7a08dedb8689c1506f571e2d2e9c07560246c520ce420e11 | 2026-06-07T20:15:40.778723+00:00 | UAT synthetic_load_all_pass=True; real_user_100_all_pass=False; ready_for_10_logical_load=True; ready_for_1000_logical_load=True; not_real_user_or_public_beta_evidence=True |
 | eval/gate_run_snapshot.json | True | 92fce969983f454dced78eac67e8634962284e7eef2e9aca5fef291b2d1e7094 | 2026-06-07T20:15:40.737235+00:00 | gate run synthetic_load_all_pass=True; overall_100_real_user_pass=False; ready_for_10_logical_load=True; ready_for_1000_logical_load=True; not_real_user_or_public_beta_evidence=True |
-| eval/real_user_rollout_gate_snapshot.json | True | d433051f87dc027f04d38203384821dd9a21c5220713e548e3c6d9afc1557dd2 | 2026-06-08T20:01:11.156373+00:00 | 100-real-user gate=False; max_recommended_real_users=0; blockers=['PyPI latest/fresh-install package evidence is not green: latest metadata does not match source version', 'PyPI latest/fresh-install package evidence is not green: fresh install + MCP stdio canary is not green', 'first-10 external-user evidence has not passed: verified=0/10, real_users=0/10, installs=0/8, useful=0/6, critical_incidents=0/0'] |
+| eval/real_user_rollout_gate_snapshot.json | True | 8c8dd9b41faa75344ad7abe2c66ca3eb25aafbbf84f38762849573d28b59a527 | 2026-06-08T20:27:44.146135+00:00 | 100-real-user gate=False; max_recommended_real_users=0; blockers=['PyPI latest/fresh-install package evidence is not green: latest metadata does not match source version', 'PyPI latest/fresh-install package evidence is not green: fresh install + MCP stdio canary is not green', 'first-10 external-user evidence has not passed: verified=0/10, real_users=0/10, installs=0/8, useful=0/6, critical_incidents=0/0'] |
 | eval/first_10_user_scoreboard.json | True | 232585546e34fc07459365e00123aa512098f215f7bcd6307d0bde9bb20813f0 | 2026-05-25T23:32:37Z | first-10 row evidence users=0; measured_savings={'rows_with_measured_value': 0, 'dead_ends_avoided_confirmed': 0, 'net_minutes_saved': 0.0, 'positive_minutes_saved': 0.0, 'negative_minutes_cost': 0.0, 'net_tokens_saved': 0, 'positive_tokens_saved': 0, 'negative_tokens_cost': 0, 'counterfactual_basis_counts': {}}; gate=BLOCKED |
-| eval/public_self_serve_launch_gate_snapshot.json | True | 1084b1cf5cc29f07a6b2b55d5f4e24a4df9a619b5c9dea0d24b4787b57527493 | 2026-06-08T20:01:09.710539+00:00 | public self-serve gate=False; max_recommended_real_users=0; blockers=['package-impacting source/metadata changed after the immutable package reference tag', 'PyPI fresh-install + MCP stdio canary snapshot is missing or failing', 'first-10 external-user evidence has not passed: verified=0/10, real_users=0/10, installs=0/8, useful=0/6, critical_incidents=0/0'] |
-| eval/cold_start_trust_gate_snapshot.json | True | 4bfbb5eda03af7432f46b06d078655008d8ecf3725bbd79eb46a97b3ea0b2575 | 2026-06-08T20:01:03.044641+00:00 | cold-start trust gate=True; blockers=[] |
-| eval/self_service_ops_gate_snapshot.json | True | 169ad7b110895cfa91d598bed8912a82837552715d2fc948769d84f1c366cac6 | 2026-06-08T20:01:11.318915+00:00 | self-service ops gate=True; blockers=[] |
-| eval/ops_readiness_watchdog_snapshot.json | True | 33012d7b42f4fb5f5bd1ea0cd3a416fd32d1b926e57ddd2bd42911fe88e29e7c | 2026-06-08T20:01:07.967541+00:00 | ops readiness watchdog=True; blocker details live in eval/ops_readiness_watchdog_snapshot.json |
-| eval/rollback_comms_drill_snapshot.json | True | 49846af3d304cc19959b8e722c2739477bcb95d96ad0542bb8df95f0e52ae43b | 2026-06-08T20:01:04.586777+00:00 | rollback/comms drill=True; dry_run_only=True |
-| eval/pypi_fresh_install_snapshot.json | True | 047ce0c9a88b00f40b3f7b4fca19934c753fc8328d386c3303ee37f54334d65d | 2026-06-08T20:00:42Z | PyPI fresh-install canary success=False; version=3.3.18 |
+| eval/public_self_serve_launch_gate_snapshot.json | True | 98270b98804fa7a128eb9b151bfd60ea2c90a5a7e910fbc37a5b69b47767df43 | 2026-06-08T20:27:42.798763+00:00 | public self-serve gate=False; max_recommended_real_users=0; blockers=['package-impacting source/metadata changed after the immutable package reference tag', 'PyPI fresh-install + MCP stdio canary snapshot is missing or failing', 'first-10 external-user evidence has not passed: verified=0/10, real_users=0/10, installs=0/8, useful=0/6, critical_incidents=0/0'] |
+| eval/cold_start_trust_gate_snapshot.json | True | ff9d194827e633780ba3e58218306bb945f4d124310e77d83bad69805401d328 | 2026-06-08T20:27:38.744540+00:00 | cold-start trust gate=True; blockers=[] |
+| eval/self_service_ops_gate_snapshot.json | True | aeb3ad7d6c27e642c7529c25cfd96cca0e3bce14b51e82d774bc620cf9684282 | 2026-06-08T20:27:47.318706+00:00 | self-service ops gate=True; blockers=[] |
+| eval/ops_readiness_watchdog_snapshot.json | True | 80f459f0972dd551731bc6bbc5d926a09c052e5729e31ef70f10e0cc59c9b8d3 | 2026-06-08T20:27:47.180730+00:00 | ops readiness watchdog=True; blocker details live in eval/ops_readiness_watchdog_snapshot.json |
+| eval/rollback_comms_drill_snapshot.json | True | 4993f1d571fd0c8e4f872b1c6b347e24dea9fe1a601faf956a21e566976eb072 | 2026-06-08T20:27:40.084288+00:00 | rollback/comms drill=True; dry_run_only=True |
+| eval/pypi_fresh_install_snapshot.json | True | 218442c43d6d486de66a517993121c402bbaee83336dc71f47e15a734560db01 | 2026-06-08T20:27:20Z | PyPI fresh-install canary success=False; version=3.3.18 |
 | eval/load_10_snapshot.json | True | 399cdc975b7fda8ec44386362d48b80ced66cf2c2ee0664278217405c8da0aaa | 2026-06-07T20:14:38.570812+00:00 | logical load 10: passed=True; total_requests=55999; success_rate=1.0; p95_ms=0.7014390866970643; model=asyncio_logical_users |
 | eval/load_100_snapshot.json | True | 554799f1bd185d72f7ac64326704be22e776b0a92bbd4f6c7d188d1c9a31a484 | 2026-06-07T20:15:08.685576+00:00 | logical load 100: passed=True; total_requests=50923; success_rate=1.0; p95_ms=0.7358029950410123; model=asyncio_logical_users |
 | eval/load_1000_snapshot.json | True | 02cc4cd8f04392c110b85fcec8bd76b8c605ac92d4329ae3ddb1db31d25fdf8e | 2026-06-07T20:15:38.851782+00:00 | logical load 1000: passed=True; total_requests=51969; success_rate=1.0; p95_ms=0.7105699914973229; model=asyncio_logical_users |
