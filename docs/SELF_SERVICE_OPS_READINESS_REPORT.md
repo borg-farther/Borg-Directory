@@ -1,6 +1,6 @@
 # Borg self-service operations readiness
 
-Generated: `2026-06-08T11:24:54.143266+00:00`
+Generated: `2026-06-08T19:43:33.142207+00:00`
 Verdict: **PASS**
 
 ## Scope
@@ -30,6 +30,8 @@ None.
 
 - `bad_answer`: `PASS` — `.github/ISSUE_TEMPLATE/bad-answer.yml`
 - `first_10_evidence`: `PASS` — `.github/ISSUE_TEMPLATE/first-10-evidence.yml`
+- `source_smoke_feedback`: `PASS` — `.github/ISSUE_TEMPLATE/source-smoke-feedback.yml`
+- `first_10_request`: `PASS` — `.github/ISSUE_TEMPLATE/first-10-request.yml`
 - `install_mcp_support`: `PASS` — `.github/ISSUE_TEMPLATE/install-mcp-support.yml`
 - `issue_config`: `PASS` — `.github/ISSUE_TEMPLATE/config.yml`
 
@@ -37,6 +39,8 @@ None.
 
 - `codeowners`: `PASS` — `.github/CODEOWNERS`
 - `watchdog_workflow`: `PASS` — `.github/workflows/self-service-watchdog.yml`
+- `first_10_issue_importer`: `PASS` — `eval/first_10_issue_import.py`
+- `first_10_candidate_queue_workflow`: `PASS` — `.github/workflows/first-10-evidence-candidate.yml`
 - `rollback_drill_snapshot`: `PASS` — `eval/rollback_comms_drill_snapshot.json`
 
 ### bad_answer_feedback_path
