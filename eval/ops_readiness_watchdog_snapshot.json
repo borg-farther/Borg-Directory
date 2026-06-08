@@ -8,6 +8,8 @@
     "public_blockers_allowed": {
       "allow_public_blocker": "release_controls_or_first_10_evidence",
       "blockers": [
+        "package-impacting source/metadata changed after the immutable package reference tag",
+        "PyPI fresh-install + MCP stdio canary snapshot is missing or failing",
         "first-10 external-user evidence has not passed: verified=0/10, real_users=0/10, installs=0/8, useful=0/6, critical_incidents=0/0"
       ],
       "passed": true
@@ -15,64 +17,70 @@
     "public_gate_live_matches_snapshot": {
       "live": {
         "blockers": [
+          "package-impacting source/metadata changed after the immutable package reference tag",
+          "PyPI fresh-install + MCP stdio canary snapshot is missing or failing",
           "first-10 external-user evidence has not passed: verified=0/10, real_users=0/10, installs=0/8, useful=0/6, critical_incidents=0/0"
         ],
-        "max_recommended_real_users_now": 10,
-        "ready_for_controlled_first_10_beta": true,
+        "max_recommended_real_users_now": 0,
+        "ready_for_controlled_first_10_beta": false,
         "ready_for_public_self_serve_launch": false,
         "source_version": "3.3.18"
       },
       "passed": true,
       "snapshot": {
         "blockers": [
+          "package-impacting source/metadata changed after the immutable package reference tag",
+          "PyPI fresh-install + MCP stdio canary snapshot is missing or failing",
           "first-10 external-user evidence has not passed: verified=0/10, real_users=0/10, installs=0/8, useful=0/6, critical_incidents=0/0"
         ],
-        "max_recommended_real_users_now": 10,
-        "ready_for_controlled_first_10_beta": true,
+        "max_recommended_real_users_now": 0,
+        "ready_for_controlled_first_10_beta": false,
         "ready_for_public_self_serve_launch": false,
         "source_version": "3.3.18"
       }
     },
     "public_json_dashboard_consistency": {
-      "dashboard_generated_at_utc": "2026-06-08T11:24:57Z",
-      "dashboard_source_revision": "0a8b0c8c6918811574e93993ab139b9882822fc3+dirty",
+      "dashboard_generated_at_utc": "2026-06-08T13:28:50Z",
+      "dashboard_source_revision": "4d829c50b82179bd0afca6f0f7cc03bb79fa983f+dirty",
       "passed": true,
-      "status_source_revision": "0a8b0c8c6918811574e93993ab139b9882822fc3+dirty",
-      "status_updated_at": "2026-06-08T11:24:57Z"
+      "status_source_revision": "4d829c50b82179bd0afca6f0f7cc03bb79fa983f+dirty",
+      "status_updated_at": "2026-06-08T13:28:50Z"
     },
     "public_status_consistency": {
-      "controlled_status_ok": true,
-      "controlled_verdict": "CONDITIONAL",
-      "max_recommended_real_users_now": 10,
+      "controlled_status_ok": false,
+      "controlled_verdict": "NO-GO",
+      "max_recommended_real_users_now": 0,
       "passed": true,
-      "pre_package_status_ok": false,
+      "pre_package_status_ok": true,
       "release_control_blocked_status_ok": false,
       "release_control_detail_failed": false,
       "release_controls_gate": "PASS",
-      "status_state": "NO-GO public self-serve; controlled first-10 beta CONDITIONAL GO while gates remain green",
+      "status_state": "NO-GO public self-serve; source/local release-candidate only",
       "verified_external_users": 0
     },
     "pypi_fresh_current": {
       "expected_version": "3.3.18",
-      "generated_at_utc": "2026-06-08T11:24:32Z",
+      "generated_at_utc": "2026-06-08T13:28:24Z",
       "passed": true,
-      "pre_package_release_stage": false,
-      "pypi_current": true,
+      "pre_package_release_stage": true,
+      "pypi_current": false,
       "version": "3.3.18"
     },
     "real_user_rollout_consistency": {
-      "controlled_package_stage": true,
+      "controlled_package_stage": false,
       "live": {
         "blockers": [
+          "PyPI latest/fresh-install package evidence is not green: latest metadata does not match source version",
+          "PyPI latest/fresh-install package evidence is not green: fresh install + MCP stdio canary is not green",
           "first-10 external-user evidence has not passed: verified=0/10, real_users=0/10, installs=0/8, useful=0/6, critical_incidents=0/0"
         ],
-        "infrastructure_ready_for_100": true,
-        "max_recommended_real_users_now": 10,
+        "infrastructure_ready_for_100": false,
+        "max_recommended_real_users_now": 0,
         "ready_for_100_real_users": false,
-        "ready_for_10_controlled_beta": true
+        "ready_for_10_controlled_beta": false
       },
       "passed": true,
-      "pre_package_release_stage": false,
+      "pre_package_release_stage": true,
       "release_control_blocked_stage": false
     },
     "self_service_ops_gate": {
@@ -82,73 +90,73 @@
     "snapshot_freshness": {
       "items": {
         "borg_proof_dashboard": {
-          "age_hours": 0.002864698611111111,
+          "age_hours": 0.002697680277777778,
           "allowed_stale_reason": null,
           "passed": true,
           "raw_freshness_passed": true
         },
         "cold_start_trust_gate_snapshot": {
-          "age_hours": 0.004368458611111112,
+          "age_hours": 2.0689236625,
           "allowed_stale_reason": null,
           "passed": true,
           "raw_freshness_passed": true
         },
         "github_source_install_snapshot": {
-          "age_hours": 0.011753585555555555,
+          "age_hours": 0.014919900833333334,
           "allowed_stale_reason": null,
           "passed": true,
           "raw_freshness_passed": true
         },
         "public_impact_json": {
-          "age_hours": 0.002864706111111111,
+          "age_hours": 0.0026976841666666667,
           "allowed_stale_reason": null,
           "passed": true,
           "raw_freshness_passed": true
         },
         "public_self_serve_launch_gate_snapshot": {
-          "age_hours": 0.0013269708333333333,
+          "age_hours": 0.0012292927777777778,
           "allowed_stale_reason": null,
           "passed": true,
           "raw_freshness_passed": true
         },
         "public_status_json": {
-          "age_hours": 0.0028646994444444444,
+          "age_hours": 0.002697681111111111,
           "allowed_stale_reason": null,
           "passed": true,
           "raw_freshness_passed": true
         },
         "public_value_json": {
-          "age_hours": 0.0028647,
+          "age_hours": 0.002697681388888889,
           "allowed_stale_reason": null,
           "passed": true,
           "raw_freshness_passed": true
         },
         "pypi_fresh_install_snapshot": {
-          "age_hours": 0.009809141944444445,
+          "age_hours": 0.009919901388888888,
           "allowed_stale_reason": null,
           "passed": true,
           "raw_freshness_passed": true
         },
         "real_user_rollout_gate_snapshot": {
-          "age_hours": 0.0008233669444444445,
+          "age_hours": 0.0008106925,
           "allowed_stale_reason": null,
           "passed": true,
           "raw_freshness_passed": true
         },
         "release_governance_snapshot": {
-          "age_hours": 0.003695901666666667,
+          "age_hours": 2.0682511016666667,
           "allowed_stale_reason": null,
           "passed": true,
           "raw_freshness_passed": true
         },
         "rollback_comms_drill_snapshot": {
-          "age_hours": 0.0036801091666666666,
+          "age_hours": 2.0682353091666665,
           "allowed_stale_reason": null,
           "passed": true,
           "raw_freshness_passed": true
         },
         "self_service_ops_gate_snapshot": {
-          "age_hours": 0.0036582452777777774,
+          "age_hours": 2.068213445277778,
           "allowed_stale_reason": null,
           "passed": true,
           "raw_freshness_passed": true
@@ -158,10 +166,10 @@
     },
     "source_revision_honesty": {
       "git_clean": false,
-      "head": "0a8b0c8c6918811574e93993ab139b9882822fc3",
+      "head": "4d829c50b82179bd0afca6f0f7cc03bb79fa983f",
       "passed": true,
       "policy": "Committed dashboards may be generated from a dirty tree and must mark +dirty; clean-tree status endpoints should match HEAD or a dirty ancestor used to generate committed proof artifacts.",
-      "source_revision": "0a8b0c8c6918811574e93993ab139b9882822fc3+dirty"
+      "source_revision": "4d829c50b82179bd0afca6f0f7cc03bb79fa983f+dirty"
     },
     "watchdog_workflow": {
       "exists": true,
@@ -300,10 +308,10 @@
     }
   },
   "gate_type": "ops_readiness_watchdog",
-  "generated_at_utc": "2026-06-08T11:25:07.340453+00:00",
-  "max_recommended_real_users_now": 10,
+  "generated_at_utc": "2026-06-08T13:28:59.732188+00:00",
+  "max_recommended_real_users_now": 0,
   "passed": true,
-  "ready_for_controlled_first_10_beta": true,
+  "ready_for_controlled_first_10_beta": false,
   "ready_for_public_self_serve_launch": false,
   "schema_version": 1,
   "source_version": "3.3.18",

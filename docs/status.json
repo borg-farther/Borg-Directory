@@ -4,7 +4,7 @@
       "No Borg analytics export proving active contributors or consumers was found.",
       "No first-10-user scoreboard with real outcomes exists yet.",
       "Ops readiness/watchdog plus served-runtime and release-governance gates must stay green; any P0/P1 bad-answer, privacy, support, stale-proof, stale-runtime, or branch-protection failure pauses controlled beta invites.",
-      "100-real-user gate remains blocked: ['first-10 external-user evidence has not passed: verified=0/10, real_users=0/10, installs=0/8, useful=0/6, critical_incidents=0/0']",
+      "100-real-user gate remains blocked: ['PyPI latest/fresh-install package evidence is not green: latest metadata does not match source version', 'PyPI latest/fresh-install package evidence is not green: fresh install + MCP stdio canary is not green', 'first-10 external-user evidence has not passed: verified=0/10, real_users=0/10, installs=0/8, useful=0/6, critical_incidents=0/0']",
       "Served/runtime freshness must be proven from eval/served_runtime_fingerprint_snapshot.json; source/fresh-process green is not live cutover proof.",
       "Release governance must be proven from eval/release_governance_snapshot.json; missing/unprotected branch details block release readiness."
     ],
@@ -23,7 +23,7 @@
     "user_affecting": [
       "No real external first-user install/rescue outcome has been recorded yet.",
       "GitHub source-install canary is green: canonical public GitHub VCS install resolved the expected commit and CLI/MCP first-value commands passed.",
-      "PyPI latest metadata and fresh-install canary are green for the current source revision.",
+      "PyPI package gate is not green for the current source revision yet.",
       "Cold-start trust gate is green: meta/readiness prompts fail closed before random framework guidance reaches first users.",
       "Served runtime freshness gate is green: live MCP fingerprint matches source and behavior canaries.",
       "Release governance gate is green: main branch protection, required checks, and CODEOWNERS review are proven.",
@@ -34,15 +34,15 @@
   },
   "broad_public_launch": {
     "verdict": "NO-GO",
-    "why": "Public self-serve gate is blocked only by row-derived first-10 external-user evidence; GitHub source install/PyPI/latest/fresh-install/MCP/docs/cold-start-trust/served-runtime/release-governance/self-service-ops/ops-watchdog gates are green."
+    "why": "Public self-serve gate is blocked until GitHub source install, PyPI latest/fresh-install/MCP/docs/cold-start-trust/served-runtime/release-governance/self-service-ops/ops-watchdog gates pass and first-10 external evidence exists."
   },
   "cold_start_trust_hardening_gate": "PASS",
   "controlled_first_10_beta": {
-    "verdict": "CONDITIONAL",
-    "why": "The 10-tester infrastructure, served-runtime freshness, release governance, and ops guardrails are green; broad launch remains NO-GO pending row-derived external-user evidence."
+    "verdict": "NO-GO",
+    "why": "Controlled first-10 beta is blocked until these failed gates are green: PyPI latest/fresh-install/stdio MCP package path"
   },
   "decision": "NO-GO",
-  "distribution_gate": "CONDITIONAL",
+  "distribution_gate": "NO-GO",
   "evidence": [
     "eval/first_user_release_gate_snapshot.json",
     "eval/public_self_serve_launch_gate_snapshot.json",
@@ -55,12 +55,12 @@
     "eval/pypi_fresh_install_snapshot.json",
     "eval/real_user_rollout_gate_snapshot.json"
   ],
-  "go_no_go": "Public self-serve gate is blocked only by row-derived first-10 external-user evidence; GitHub source install/PyPI/latest/fresh-install/MCP/docs/cold-start-trust/served-runtime/release-governance/self-service-ops/ops-watchdog gates are green.",
+  "go_no_go": "Public self-serve gate is blocked until GitHub source install, PyPI latest/fresh-install/MCP/docs/cold-start-trust/served-runtime/release-governance/self-service-ops/ops-watchdog gates pass and first-10 external evidence exists.",
   "local_release_candidate": {
     "verdict": "CONDITIONAL",
     "why": "Local source/wheel gates pass; package/public rollout still depends on current PyPI proof, served runtime, release governance, and row-derived external-user evidence."
   },
-  "max_recommended_real_users_now": 10,
+  "max_recommended_real_users_now": 0,
   "ops_readiness_watchdog": "PASS",
   "readiness": "NO-GO",
   "release_controls_gate": "PASS",
@@ -71,10 +71,10 @@
   "self_service_ops_gate": "PASS",
   "served_runtime_freshness_gate": "PASS",
   "source": "docs/public/status.json",
-  "source_revision": "0a8b0c8c6918811574e93993ab139b9882822fc3+dirty",
+  "source_revision": "4d829c50b82179bd0afca6f0f7cc03bb79fa983f+dirty",
   "source_version_consistency": "pyproject=3.3.18 runtime=3.3.18",
-  "state": "NO-GO public self-serve; controlled first-10 beta CONDITIONAL GO while gates remain green",
+  "state": "NO-GO public self-serve; source/local release-candidate only",
   "status": "NO-GO",
-  "updated_at": "2026-06-08T11:25:07Z",
+  "updated_at": "2026-06-08T13:29:00Z",
   "verified_external_users": 0
 }

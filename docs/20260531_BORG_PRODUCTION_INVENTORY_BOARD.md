@@ -1,8 +1,8 @@
 # Borg production inventory board
 
-Generated: `2026-06-08T11:05:18Z`
+Generated: `2026-06-08T13:29:00Z`
 Repo: `https://github.com/borg-farther/Borg-Directory`
-Branch/head: `ab/public-selfserve-closeout-20260607` / `272c23061352098dc308185371338e6373344daa`
+Branch/head: `ab/public-selfserve-closeout-20260607` / `4d829c50b82179bd0afca6f0f7cc03bb79fa983f`
 Working tree dirty: `True`
 Version: pyproject `3.3.18` / borg `__version__` `3.3.18`
 
@@ -16,11 +16,11 @@ Version: pyproject `3.3.18` / borg `__version__` `3.3.18`
 
 ## Bottom-line verdicts
 
-- controlled first-10 beta: `CONDITIONAL_GO`
+- controlled first-10 beta: `NO_GO`
 - broad public self-serve: `NO_GO`
 - 100 real users: `NO_GO`
 - current source/hardening branch: `IN_PROGRESS`
-- published package/local stdio: `CONDITIONAL_GO`
+- published package/local stdio: `NO_GO`
 - served runtime freshness: `GO`
 - remote MCP/marketplace distribution: `NO_GO`
 - global/federated learning protocol: `GO_PROTOCOL_ONLY`
@@ -31,8 +31,8 @@ Version: pyproject `3.3.18` / borg `__version__` `3.3.18`
 ## Evidence summary
 
 - first-10 external rows: `{'verified_external_users': 0, 'real_users': 0, 'install_successes': 0, 'useful_rescue_moments': 0, 'critical_privacy_security_failures': 0, 'repeat_use_within_7_days': 0}`
-- GitHub source exact-commit install + local stdio MCP: `True` (3dd1069ec0a8ffd1e9390a0ce1bb522e78f14a1e)
-- PyPI fresh install + stdio MCP: `True`
+- GitHub source exact-commit install + local stdio MCP: `True` (4d829c50b82179bd0afca6f0f7cc03bb79fa983f)
+- PyPI fresh install + stdio MCP: `False`
 - first-user release gate: `True`
 - cold-start trust: `True`
 - served runtime freshness: `True`
@@ -58,11 +58,13 @@ Evidence:
 - `eval/pypi_fresh_install_snapshot.json`
 Done/proven:
 - source versions match: True (3.3.18)
-- GitHub source exact-commit install/local MCP canary green: True (3dd1069ec0a8ffd1e9390a0ce1bb522e78f14a1e)
-- PyPI latest metadata/current-source gate green: True
-- PyPI fresh-install/stdout MCP canary green: True
+- GitHub source exact-commit install/local MCP canary green: True (4d829c50b82179bd0afca6f0f7cc03bb79fa983f)
+- PyPI latest metadata/current-source gate green: False
+- PyPI fresh-install/stdout MCP canary green: False
 - first-user release gate green: True
 Blockers:
+- PyPI latest metadata gate is not green for the current source revision
+- PyPI fresh-install/stdout MCP canary is not green for the current source version
 - working tree is dirty/unshipped; current hardening branch is not committed/pushed/CI-proven
 Outstanding:
 - rerun GitHub source + PyPI proof on the final branch head
@@ -168,7 +170,7 @@ Challenge:
 
 ### controlled_first_10_beta — controlled first-10 beta readiness
 
-Status: `CONDITIONAL_GO`
+Status: `NO_GO`
 
 Evidence:
 - `eval/public_self_serve_launch_gate.py --no-write`
