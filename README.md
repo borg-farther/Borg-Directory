@@ -13,7 +13,7 @@ Give Borg an error, traceback, failed test, install problem, config failure, or 
 - **MCP server command:** `borg-mcp`
 - **Canonical repo:** https://github.com/borg-farther/Borg-Directory
 
-**Status:** `agent-borg==3.3.18` is the published, metadata-correct production PyPI package for the current source line. Exact-version PyPI fresh-install, stdio MCP, generated-rules, OpenClaw, CLI, and Python API canaries pass for this immutable version. Controlled first-10 beta remains **NO-GO** until served-runtime freshness and first-10 external-user evidence gates are green; release governance and package/local proof are green. Broad public self-serve launch, 100-user rollout, served/remote MCP, and measured external lift are **not claimed** until row-derived external-user evidence passes.
+**Status:** GitHub source exact-commit install is **GO** for the current PR source path: clean VCS install from canonical GitHub resolved source commit `4d829c50b82179bd0afca6f0f7cc03bb79fa983f` and passed CLI, Python API, rescue/doctor, and local stdio MCP canaries. PyPI `agent-borg==3.3.18` remains the published metadata-correct package, but current-source PyPI/package proof is **NO-GO** until a new immutable package release includes the clean bundled-pack path and the PyPI fresh-install/OpenClaw canary is green. Controlled first-10 beta remains **NO-GO / cap 0** until source/package/release/ops/docs gates and first-10 evidence are green. Broad public self-serve launch, 100-user rollout, served/remote MCP, and measured external lift are **not claimed** until row-derived external-user evidence passes.
 
 ## Try Borg in 60 seconds
 
@@ -324,13 +324,14 @@ Why: agents often do not discover optional tools unless explicitly primed.
 
 ## 5. What is ready now
 
-`agent-borg==3.3.18` is the published, metadata-correct package for this source/package line; exact-version PyPI runtime canary proof is complete for the immutable package. Release governance is enforced on GitHub `main` with exact required checks and CODEOWNERS review. Served-runtime freshness and first-10 external-user evidence remain separate blockers.
+GitHub source exact-commit install is GO for the current PR source path: clean VCS install from canonical GitHub resolved `4d829c50b82179bd0afca6f0f7cc03bb79fa983f` and passed CLI, Python API, rescue/doctor, and local stdio MCP canaries. PyPI `agent-borg==3.3.18` is still the published metadata-correct package, but current-source PyPI/package proof is blocked until a new immutable release includes the bundled-pack clean-install fix. Release governance is enforced on GitHub `main`; first-10 external-user evidence remains a separate blocker.
 
-- Install, CLI, Python API, generated-rules/OpenClaw export, and stdio MCP entrypoints are present and freshly canaried from production PyPI `agent-borg==3.3.18`.
+- GitHub source install, CLI, Python API, rescue/doctor, and stdio MCP are freshly canaried from canonical GitHub for source commit `4d829c50b82179bd0afca6f0f7cc03bb79fa983f`.
+- PyPI install, CLI, Python API, generated-rules/OpenClaw export, and stdio MCP entrypoints exist for `agent-borg==3.3.18`, but current-source PyPI proof is not green until the next immutable release is published and canaried.
 - First-user rescue path returns ACTION / STOP / VERIFY or `NO_CONFIDENT_MATCH`.
 - Security/privacy/prompt-injection surface: PASS in CI/local gates.
-- Generated rules and OpenClaw export are covered by first-user/package gates.
-- PyPI latest/fresh-install/stdio MCP proof for `agent-borg==3.3.18` is green. Controlled first-10 testers must **not** be invited until served-runtime freshness remains green and first-10 evidence intake is ready to record real external-user rows. Current cap: 0 until the served-runtime and external-evidence gates are green; broad public self-serve remains evidence-gated after first-10.
+- Generated rules and OpenClaw export are covered by source/package gates; current-source PyPI OpenClaw proof stays red until the new package release is available.
+- PyPI latest/fresh-install/stdio MCP proof for current source is **not** green yet. Controlled first-10 testers must **not** be invited until source/package/release/ops/docs gates are green and first-10 evidence intake records real external-user rows. Current cap: 0; broad public self-serve remains evidence-gated after first-10.
 - Self-service ops guardrails are present: bad-answer intake, install/MCP support intake, first-10 evidence intake, support/SLA, rollback/comms dry-run, and watchdog workflow.
 - First-10 beta contract is published: [`docs/FIRST_10_BETA_READINESS.md`](https://github.com/borg-farther/Borg-Directory/blob/main/docs/FIRST_10_BETA_READINESS.md).
 

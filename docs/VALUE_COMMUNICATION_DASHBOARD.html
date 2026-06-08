@@ -5,8 +5,8 @@
 <h1>Borg value communication dashboard</h1>
 <h2>Operator benefits validated internally</h2>
 <ul>
-<li>First visible value path for controlled beta after release gates: <code>pipx install agent-borg==3.3.18</code> -&gt; <code>borg rescue "&lt;redacted error&gt;"</code> -&gt; ACTION / STOP / VERIFY.</li>
-<li>Controlled package beta path: <strong>NO-GO right now</strong> — <code>agent-borg==3.3.18</code> exists on PyPI and exact-version runtime/package canaries pass, but served-runtime freshness and first-10 external-user evidence are not green yet.</li>
+<li>First visible source-channel value path: <code>python -m pip install 'git+https://github.com/borg-farther/Borg-Directory.git@4d829c50b82179bd0afca6f0f7cc03bb79fa983f'</code> -&gt; <code>borg rescue "&lt;redacted error&gt;"</code> -&gt; ACTION / STOP / VERIFY.</li>
+<li>Controlled package beta path: <strong>NO-GO right now / cap 0</strong> — GitHub source exact-commit install is GO, but current-source PyPI/package proof remains NO-GO until a new immutable package release includes the bundled-pack clean-install fix and the PyPI fresh-install/OpenClaw canary is green.</li>
 <li>Local/synthetic gate status: first-user release gate and logical load gates are green in current artifacts; synthetic users are not external-user evidence.</li>
 <li>External-user proof status: <strong>not proven yet</strong>; verified external users remain <code>0</code>.</li>
 <li>Measured savings status: <strong>0 measured rows, 0.0 net minutes saved, 0 net tokens saved</strong>; savings are not claimed until consented external-user rows include before/after measurements.</li>
@@ -22,11 +22,12 @@
 </ul>
 <h2>Readiness status</h2>
 <ul>
-<li>Controlled first-10 PyPI beta: <strong>NO-GO right now</strong> — <code>agent-borg==3.3.18</code> runtime and package metadata canaries pass; invite 0 consented external users until served-runtime freshness is green and first-10 evidence intake is ready.</li>
+<li>Controlled first-10 PyPI beta: <strong>NO-GO right now / cap 0</strong> — current-source PyPI/package proof is not green; invite 0 consented external users until a new immutable package release is canaried and release/ops/docs/evidence gates are green.</li>
+<li>Supervised GitHub source first-user path: GO in current artifacts.</li>
 <li>Supervised local first-user path: GO in current artifacts.</li>
 <li>Public self-serve launch: <strong>NO-GO until first-10 row-derived external evidence passes</strong>.</li>
 <li>100 real-user rollout: <strong>NO-GO until 10 external users, &gt;=8 installs, &gt;=6 useful rescues, and 0 critical incidents</strong>.</li>
-<li>Decision: runtime canary and package-current proof for <code>agent-borg==3.3.18</code> are green; controlled first-10 beta must wait for served-runtime freshness and first-10 external-user evidence; no broad self-serve, served remote MCP, 100-user, measured-savings, or frontier-better-than claim.</li>
+<li>Decision: GitHub source exact-commit install is GO for source-channel smoke; current-source PyPI/package proof remains NO-GO until the next immutable release is canaried; controlled first-10 beta must wait for source/package/release/ops/docs and first-10 external-user evidence; no broad self-serve, served remote MCP, 100-user, measured-savings, or frontier-better-than claim.</li>
 </ul>
 <h2>Evidence</h2>
 <ul>

@@ -160,6 +160,12 @@ def test_current_docs_preserve_same_version_artifact_drift_truth() -> None:
         "CONDITIONAL GO for `agent-borg==3.3.15`",
         "PyPI latest, fresh-install, and stdio MCP canaries are green for this version",
         "PyPI latest metadata and fresh PyPI install + stdio MCP canary are green for `agent-borg==3.3.15`",
+        "exact-version fresh-install, stdio MCP, generated-rules, OpenClaw, CLI, and Python API canary proof is green",
+        "Exact-version PyPI fresh-install, stdio MCP, generated-rules, OpenClaw, CLI, and Python API canaries pass",
+        "package/local proof is green",
+        "runtime and package metadata canaries pass",
+        "runtime canary and package-current proof for `agent-borg==3.3.18` are green",
+        "Production PyPI package/runtime path works",
         "controlled first-10 beta invites may start",
         "Controlled first-10 beta infrastructure: **GO**",
         "up to 10 consented controlled testers may proceed",
@@ -174,9 +180,10 @@ def test_current_docs_preserve_same_version_artifact_drift_truth() -> None:
         for phrase in stale_or_unsupported:
             assert phrase not in text, f"{path} still contains stale/unsupported phrase: {phrase}"
 
-    assert "published, metadata-correct production PyPI package" in watched["README.md"]
-    assert "Exact-version PyPI fresh-install" in watched["README.md"]
+    assert "GitHub source exact-commit install is **GO**" in watched["README.md"]
+    assert "current-source PyPI/package proof is **NO-GO**" in watched["README.md"]
     assert "Broad public self-serve launch, 100-user rollout, served/remote MCP, and measured external lift are **not claimed**" in watched["README.md"]
+    assert "GitHub source exact-commit install: **GO**" in watched["docs/READINESS.md"]
     assert "Controlled first-10 beta: **NO-GO until source/package/release/ops/docs gates are green**" in watched["docs/READINESS.md"]
     assert "GitHub source exact-commit canary" in watched["docs/READINESS.md"]
     assert "served-runtime fingerprint" in watched["docs/READINESS.md"]
@@ -258,7 +265,7 @@ def test_channel_matrix_documents_all_first_user_mix_paths() -> None:
     assert f"agent-borg=={current_version}" in matrix
     for phrase in [
         "pipx install agent-borg==",
-        "python -m pip install git+https://github.com/borg-farther/Borg-Directory.git@main",
+        "python -m pip install 'git+https://github.com/borg-farther/Borg-Directory.git@4d829c50b82179bd0afca6f0f7cc03bb79fa983f'",
         "borg generate systematic-debugging --format all --output",
         "borg convert . --format openclaw --all --output",
         "import borg, json",
