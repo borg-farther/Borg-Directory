@@ -191,9 +191,13 @@ def test_generated_artifact_change_filter_rejects_source_or_docs_drift(monkeypat
         "_git_changed_paths",
         lambda base, head: [
             "eval/borg_proof_dashboard.json",
-            "docs/PUBLIC_SELF_SERVE_LAUNCH_GO_NO_GO.md",
+            "eval/github_source_install_snapshot.json",
+            "eval/ops_readiness_watchdog_snapshot.json",
             "eval/production_inventory_board_snapshot.json",
+            "docs/PUBLIC_SELF_SERVE_LAUNCH_GO_NO_GO.md",
             "docs/20260531_BORG_PRODUCTION_INVENTORY_BOARD.md",
+            "docs/index.html",
+            "docs/status.json",
         ],
     )
     assert watchdog._changes_since_source_are_generated_artifacts("a" * 40, "b" * 40) is True
