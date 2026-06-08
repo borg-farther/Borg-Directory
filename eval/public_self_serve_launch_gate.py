@@ -605,6 +605,131 @@ def pypi_fresh_install_check(path: Path, expected_version: str, *, max_snapshot_
     }
 
 
+def _git_ref_is_ancestor(candidate: str, head: str) -> bool:
+    if not candidate or not head:
+        return False
+    result = subprocess.run(
+        ["git", "merge-base", "--is-ancestor", candidate, head],
+        cwd=ROOT,
+        text=True,
+        stdout=subprocess.DEVNULL,
+        stderr=subprocess.DEVNULL,
+        check=False,
+    )
+    return result.returncode == 0
+
+
+def github_source_install_check(path: Path, expected_version: str, *, max_snapshot_age_hours: float = 24.0) -> dict[str, Any]:
+    """Validate the public GitHub VCS install lane from a recorded canary.
+
+    This is deliberately separate from the PyPI package gate. It proves that a
+    clean temp venv can install `agent-borg` from the canonical public GitHub
+    repository, that pip's PEP 610 direct-url metadata resolves to the expected
+    commit, and that CLI + local stdio MCP first-value commands work from the
+    installed venv rather than from the checkout.
+    """
+    data = _read_json(path)
+    rel = str(path.relative_to(ROOT)) if path.is_relative_to(ROOT) else str(path)
+    if not data:
+        return {"passed": False, "exists": False, "path": rel, "error": "missing GitHub source-install snapshot"}
+
+    results = data.get("results") or []
+    failures = [item.get("name") for item in results if isinstance(item, dict) and not item.get("passed")]
+    result_names = {str(item.get("name")) for item in results if isinstance(item, dict) and item.get("name")}
+    required_result_names = {
+        "fresh_venv_create",
+        "pip_install_github_source",
+        "pip_show_agent_borg",
+        "borg_version",
+        "borg_doctor_json",
+        "borg_rescue_json",
+    }
+    missing_results = sorted(required_result_names - result_names)
+    source = data.get("source_resolution") or {}
+    direct_url = source.get("direct_url") or {}
+    vcs_info = direct_url.get("vcs_info") or {}
+    resolved_commit = str(source.get("resolved_commit") or vcs_info.get("commit_id") or "")
+    expected_commit = str(source.get("expected_commit") or "")
+    requested_ref = str(source.get("requested_ref") or "")
+    repo_url = str(source.get("repo_url") or direct_url.get("url") or "")
+    canonical_repo = repo_url.rstrip("/") == "https://github.com/borg-farther/Borg-Directory.git"
+    commit_shape_ok = bool(re.fullmatch(r"[0-9a-f]{40}", resolved_commit))
+    expected_commit_ok = bool(source.get("commit_matches_expected")) and (not expected_commit or resolved_commit == expected_commit)
+    url_ok = bool(source.get("url_matches_expected")) and canonical_repo
+    freshness = _freshness_check(data.get("generated_at_utc"), max_snapshot_age_hours)
+    mcp = data.get("mcp_stdio_canary") or {}
+    dist_probe = data.get("python_distribution_probe") or {}
+
+    source_state = source_revision_state()
+    current_revision = str(source_state.get("revision") or "").removesuffix("+dirty")
+    dirty_package_paths = list(source_state.get("package_dirty_paths") or [])
+    changed_paths_since_install: list[str] = []
+    package_changed_paths_since_install: list[str] = []
+    source_alignment_passed = False
+    source_alignment_detail = "current git source unavailable"
+    if commit_shape_ok and current_revision:
+        if resolved_commit == current_revision:
+            source_alignment_passed = not dirty_package_paths
+            source_alignment_detail = "installed commit equals current HEAD"
+        elif _git_ref_is_ancestor(resolved_commit, current_revision):
+            try:
+                changed_paths_since_install = _git_lines(["diff", "--name-only", f"{resolved_commit}..{current_revision}"])
+            except Exception:
+                changed_paths_since_install = []
+            package_changed_paths_since_install = sorted(
+                path for path in changed_paths_since_install if _is_package_impacting_path(path)
+            )
+            source_alignment_passed = not dirty_package_paths and not package_changed_paths_since_install
+            source_alignment_detail = "installed commit is an ancestor and only non-package proof/docs/test artifacts changed"
+        else:
+            source_alignment_detail = "installed commit is not current HEAD or an ancestor of current HEAD"
+
+    passed = bool(
+        data.get("success") is True
+        and data.get("version") == expected_version
+        and not failures
+        and not missing_results
+        and mcp.get("passed") is True
+        and dist_probe.get("passed") is True
+        and freshness["passed"] is True
+        and commit_shape_ok
+        and expected_commit_ok
+        and url_ok
+        and source_alignment_passed
+    )
+    return {
+        "passed": passed,
+        "exists": True,
+        "path": rel,
+        "generated_at_utc": data.get("generated_at_utc"),
+        "version": data.get("version"),
+        "expected_version": expected_version,
+        "failed_count": len(failures),
+        "failures": failures,
+        "missing_results": missing_results,
+        "mcp_stdio_canary_passed": bool(mcp.get("passed")),
+        "python_distribution_probe_passed": bool(dist_probe.get("passed")),
+        "freshness": freshness,
+        "source_resolution": {
+            "repo_url": repo_url,
+            "requested_ref": requested_ref,
+            "resolved_commit": resolved_commit,
+            "expected_commit": expected_commit,
+            "commit_matches_expected": expected_commit_ok,
+            "url_matches_expected": url_ok,
+            "canonical_public_repo": canonical_repo,
+        },
+        "source_alignment": {
+            "passed": source_alignment_passed,
+            "detail": source_alignment_detail,
+            "current_revision": current_revision,
+            "dirty_package_paths": dirty_package_paths,
+            "package_changed_paths_since_install": package_changed_paths_since_install,
+            "changed_paths_since_install_count": len(changed_paths_since_install),
+        },
+    }
+
+
 def _line_names_post_package_blocker(line_text: str) -> bool:
     """True when docs block beta on non-package release controls.
 
@@ -1107,6 +1232,7 @@ def compile_gate(
     version = source_version()
     first_10 = first_10_evidence_check(ROOT / "eval" / "first_10_user_scoreboard.json")
     first_user = first_user_release_check(ROOT / "eval" / "first_user_release_gate_snapshot.json")
+    github_source = github_source_install_check(ROOT / "eval" / "github_source_install_snapshot.json", version)
     pypi_latest = pypi_latest_check(version, fetch_network=fetch_network, pypi_data=pypi_data)
     pypi_fresh = pypi_fresh_install_check(ROOT / "eval" / "pypi_fresh_install_snapshot.json", version)
     cold_start_trust = cold_start_trust_check(ROOT / "eval" / "cold_start_trust_gate_snapshot.json")
@@ -1135,6 +1261,7 @@ def compile_gate(
 
     infrastructure_ready = bool(
         first_user["passed"]
+        and github_source["passed"]
         and package_evidence_ready
         and cold_start_trust["passed"]
         and served_runtime["passed"]
@@ -1148,6 +1275,8 @@ def compile_gate(
     blockers: list[str] = []
     if not first_user["passed"]:
         blockers.append("first-user local release gate snapshot is missing or failing")
+    if not github_source["passed"]:
+        blockers.append("GitHub source-install + CLI/MCP canary snapshot is missing, stale, or failing")
     if not pypi_latest["passed"]:
         alignment = pypi_latest.get("source_upload_alignment") or {}
         if pypi_latest.get("description_stale_copy"):
@@ -1192,6 +1321,7 @@ def compile_gate(
         "max_recommended_real_users_now": 100 if public_self_serve_ready else 10 if infrastructure_ready else 0,
         "gates": {
             "first_user_release": first_user,
+            "github_source_install_and_mcp_stdio": github_source,
             "pypi_latest": pypi_latest,
             "pypi_fresh_install_and_mcp_stdio": pypi_fresh,
             "cold_start_trust_hardening": cold_start_trust,
@@ -1208,7 +1338,7 @@ def compile_gate(
             "first_10_external_evidence": first_10,
         },
         "blockers": blockers,
-        "truth_policy": "Public self-serve is GO only after PyPI/fresh-install/MCP/docs/cold-start-trust/served-runtime/release-governance/self-service-ops/watchdog gates pass AND row-derived first-10 external-user evidence passes. Synthetic users and aggregate-only edits never count.",
+        "truth_policy": "Public self-serve is GO only after GitHub source install, PyPI/fresh-install/MCP/docs/cold-start-trust/served-runtime/release-governance/self-service-ops/watchdog gates pass AND row-derived first-10 external-user evidence passes. Synthetic users and aggregate-only edits never count.",
     }
 
 

@@ -57,10 +57,12 @@ def test_production_inventory_preserves_split_verdicts() -> None:
     assert verdict["recursive_collective_learning_mechanism"] == "GO_INTERNAL_ONLY"
     assert verdict["recursive_pack_optimizer"] == "GO_INTERNAL_MANUAL_ONLY"
 
-    assert verdict["controlled_first_10_beta"] == "NO_GO"
+    if data["evidence_summary"].get("github_source_install_passed"):
+        assert any("GitHub source exact-commit" in item for item in package_component["done"])
+    assert verdict["controlled_first_10_beta"] == _by_id(data, "controlled_first_10_beta")["status"]
     assert verdict["public_self_serve"] == "NO_GO"
     assert verdict["hundred_real_users"] == "NO_GO"
-    assert verdict["served_runtime_freshness"] == "NO_GO"
+    assert verdict["served_runtime_freshness"] == _by_id(data, "served_runtime")["status"]
     assert verdict["remote_mcp_distribution"] == "NO_GO"
     assert verdict["served_remote_mcp"] == "NO_GO"
     assert verdict["google_tier_external_lift"] == "NO_GO"
@@ -76,10 +78,14 @@ def test_inventory_surfaces_current_release_control_blockers() -> None:
     data = compile_inventory()
 
     served = _by_id(data, "served_runtime")
-    assert served["status"] == "NO_GO"
     current_version = source_version()
-    assert any("3.3.14" in blocker and current_version in blocker for blocker in served["blockers"])
-    assert any("reload_status" in blocker for blocker in served["blockers"])
+    if served["status"] == "GO":
+        assert served["blockers"] == []
+        assert any(current_version in item for item in served["done"])
+    else:
+        assert served["status"] == "NO_GO"
+        assert any(current_version in blocker for blocker in served["blockers"])
+        assert any("reload_status" in blocker or "version_matches_source" in blocker for blocker in served["blockers"])
 
     governance = _by_id(data, "release_governance")
     if json.loads((ROOT / "eval/release_governance_snapshot.json").read_text(encoding="utf-8")).get("passed") is True:
@@ -95,14 +101,19 @@ def test_inventory_surfaces_current_release_control_blockers() -> None:
         assert any(item["item"] == "Maintain release-governance freshness" for item in data["outstanding"])
 
     controlled = _by_id(data, "controlled_first_10_beta")
-    assert controlled["status"] == "NO_GO"
-    blocker_text = "\n".join(controlled["blockers"])
-    if governance["status"] == "NO_GO":
-        assert any(blocker in blocker_text for blocker in governance["blockers"])
-    assert "served runtime" in blocker_text
-    ops = _by_id(data, "self_service_ops_watchdog")
-    if ops["status"] == "NO_GO":
-        assert any(("watchdog" in blocker or "rollback/comms" in blocker or "self-service" in blocker) for blocker in controlled["blockers"])
+    if controlled["status"] == "CONDITIONAL_GO":
+        assert controlled["blockers"] == []
+        assert _by_id(data, "first_10_external_evidence")["status"] == "NO_GO"
+    else:
+        assert controlled["status"] == "NO_GO"
+        blocker_text = "\n".join(controlled["blockers"])
+        if governance["status"] == "NO_GO":
+            assert any(blocker in blocker_text for blocker in governance["blockers"])
+        if served["status"] == "NO_GO":
+            assert "served runtime" in blocker_text
+        ops = _by_id(data, "self_service_ops_watchdog")
+        if ops["status"] == "NO_GO":
+            assert any(("watchdog" in blocker or "rollback/comms" in blocker or "self-service" in blocker) for blocker in controlled["blockers"])
 
 
 def test_inventory_accepts_evaluated_release_governance_snapshot() -> None:
@@ -205,7 +216,7 @@ def test_inventory_artifacts_are_machine_readable_and_report_is_honest() -> None
     assert "current source/hardening branch: `" in report
     assert f"published package/local stdio: `{snapshot['top_verdict']['published_package_local_stdio']}`" in report
     assert snapshot["top_verdict"]["published_package_local_stdio"] in {"NO_GO", "CONDITIONAL_GO"}
-    assert "served runtime freshness: `NO_GO`" in report
+    assert f"served runtime freshness: `{snapshot['top_verdict']['served_runtime_freshness']}`" in report
     assert "remote MCP/marketplace distribution: `NO_GO`" in report
     assert "global/federated learning protocol: `GO_PROTOCOL_ONLY`" in report
     assert "Google/God-tier measured external lift: `NO_GO`" in report

@@ -184,11 +184,13 @@ def _workflow_has_schedule() -> dict[str, Any]:
     text = path.read_text(encoding="utf-8") if path.exists() else ""
     command_text = _workflow_command_text(text)
     post_dashboard_check = "python eval/ops_readiness_watchdog.py --mode pr --json --no-write --output eval/ops_readiness_watchdog_post_dashboard_check.json --max-snapshot-age-hours 24 --allow-public-blocker release_controls_or_first_10_evidence --require-ci-schedule"
+    github_source_canary = "python eval/run_github_source_install_canary.py"
     required_triggers = [
         "schedule:",
         "workflow_dispatch:",
     ]
     required_commands = [
+        github_source_canary,
         "python eval/run_pypi_fresh_install_canary.py",
         "python eval/cold_start_trust_gate.py",
         "python eval/release_governance_gate.py --output eval/release_governance_snapshot.json",
@@ -205,6 +207,7 @@ def _workflow_has_schedule() -> dict[str, Any]:
     missing_commands = [item for item in required_commands if item not in command_text]
     missing = missing_triggers + missing_commands
     ordered = [
+        github_source_canary,
         "python eval/run_pypi_fresh_install_canary.py",
         "python eval/cold_start_trust_gate.py",
         "python eval/release_governance_gate.py --output eval/release_governance_snapshot.json",
@@ -219,6 +222,7 @@ def _workflow_has_schedule() -> dict[str, Any]:
     order_missing = [item for item, position in positions.items() if position < 0]
     order_ok = not order_missing and all(positions[left] < positions[right] for left, right in zip(ordered, ordered[1:]))
     ordered_sequence = [
+        github_source_canary,
         "python eval/run_pypi_fresh_install_canary.py",
         "python eval/cold_start_trust_gate.py",
         "python eval/release_governance_gate.py --output eval/release_governance_snapshot.json",
@@ -445,6 +449,7 @@ def compile_watchdog(*, max_snapshot_age_hours: float = 24.0, allow_public_block
     checks["snapshot_freshness"] = {"passed": True, "items": {}}
     for name, data in {
         "public_self_serve_launch_gate_snapshot": public_snapshot,
+        "github_source_install_snapshot": _read_json(ROOT / "eval" / "github_source_install_snapshot.json"),
         "pypi_fresh_install_snapshot": pypi,
         "cold_start_trust_gate_snapshot": cold,
         "borg_proof_dashboard": dashboard,

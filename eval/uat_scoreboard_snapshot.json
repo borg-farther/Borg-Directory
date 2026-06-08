@@ -14,7 +14,7 @@
     "ready_for_10": true,
     "ready_for_100": true,
     "ready_for_1000": true,
-    "timestamp": "2026-06-02T21:47:35.821086+00:00"
+    "timestamp": "2026-06-07T20:15:40.737235+00:00"
   },
   "gates": {
     "first_user_surface": true,
@@ -27,30 +27,30 @@
   "loads": {
     "10": {
       "exists": true,
-      "p95_ms": 0.7294940995052457,
-      "p99_ms": 0.8128765365108848,
+      "p95_ms": 0.7014390866970643,
+      "p99_ms": 0.7474009954603388,
       "passed": true,
       "success_rate": 1.0,
-      "timestamp": "2026-06-02T21:46:33.549678+00:00",
-      "total_requests": 48934
+      "timestamp": "2026-06-07T20:14:38.570812+00:00",
+      "total_requests": 55999
     },
     "100": {
       "exists": true,
-      "p95_ms": 0.7360600866377354,
-      "p99_ms": 0.9644317068159578,
+      "p95_ms": 0.7358029950410123,
+      "p99_ms": 1.1172219703439619,
       "passed": true,
       "success_rate": 1.0,
-      "timestamp": "2026-06-02T21:47:03.681996+00:00",
-      "total_requests": 48942
+      "timestamp": "2026-06-07T20:15:08.685576+00:00",
+      "total_requests": 50923
     },
     "1000": {
       "exists": true,
-      "p95_ms": 0.7110125618055462,
-      "p99_ms": 0.773976217024028,
+      "p95_ms": 0.7105699914973229,
+      "p99_ms": 0.744672876317054,
       "passed": true,
       "success_rate": 1.0,
-      "timestamp": "2026-06-02T21:47:33.846766+00:00",
-      "total_requests": 49978
+      "timestamp": "2026-06-07T20:15:38.851782+00:00",
+      "total_requests": 51969
     }
   },
   "ready_for_10": true,
@@ -59,18 +59,14 @@
   "real_user_100_all_pass": false,
   "real_user_rollout": {
     "blockers": [
-      "served runtime borg_version '3.3.14' != source version '3.3.16'",
-      "served runtime source_version '3.3.15' != source version '3.3.16'",
-      "served runtime version_matches_source is not true",
-      "served runtime reload_status is not loaded_code_matches_source_behavior",
       "first-10 external-user evidence has not passed: verified=0/10, real_users=0/10, installs=0/8, useful=0/6, critical_incidents=0/0"
     ],
     "exists": true,
-    "generated_at_utc": "2026-06-02T21:47:35.733503+00:00",
-    "infrastructure_ready_for_100": false,
-    "max_recommended_real_users_now": 0,
+    "generated_at_utc": "2026-06-07T20:15:40.672349+00:00",
+    "infrastructure_ready_for_100": true,
+    "max_recommended_real_users_now": 10,
     "ready_for_100_real_users": false,
-    "ready_for_10_controlled_beta": false
+    "ready_for_10_controlled_beta": true
   },
   "security_surface": {
     "missing": [],
@@ -94,10 +90,10 @@
   },
   "source": "eval/uat_scoreboard.py",
   "synthetic_load_all_pass": true,
-  "timestamp": "2026-06-02T21:47:35.869382+00:00",
+  "timestamp": "2026-06-07T20:15:40.778723+00:00",
   "version": {
     "passed": true,
-    "project_version": "3.3.16",
-    "runtime_version": "3.3.16"
+    "project_version": "3.3.18",
+    "runtime_version": "3.3.18"
   }
 }

@@ -201,6 +201,18 @@ def compile_inventory() -> dict[str, Any]:
     expected_version = str(versions.get("project_version") or "")
 
     first_user = _first_user_release_status(_read_json("eval/first_user_release_gate_snapshot.json"))
+    github_source = _read_json("eval/github_source_install_snapshot.json")
+    github_source_resolution = github_source.get("source_resolution") or {}
+    github_source_mcp = github_source.get("mcp_stdio_canary") or {}
+    github_source_dist = github_source.get("python_distribution_probe") or {}
+    github_source_pass = bool(
+        github_source.get("success") is True
+        and github_source.get("version") == expected_version
+        and github_source_resolution.get("commit_matches_expected") is True
+        and github_source_resolution.get("url_matches_expected") is True
+        and github_source_mcp.get("passed") is True
+        and github_source_dist.get("passed") is True
+    )
     pypi_fresh = _read_json("eval/pypi_fresh_install_snapshot.json")
     pypi_fresh_pass = bool(pypi_fresh.get("success") is True and pypi_fresh.get("version") == expected_version)
     cold_start = _read_json("eval/cold_start_trust_gate_snapshot.json")
@@ -226,13 +238,13 @@ def compile_inventory() -> dict[str, Any]:
     pypi_latest_gate = (public_gate.get("gates") or {}).get("pypi_latest") or {}
     pypi_latest_pass = bool(pypi_latest_gate.get("passed") is True)
     pypi_package_current = bool(pypi_latest_pass and pypi_fresh_pass)
+    package_path_green = bool(versions["source_versions_match"] and pypi_package_current and github_source_pass and first_user["passed"])
     rollout = _read_json("eval/real_user_rollout_gate_snapshot.json")
     federated = _read_json("eval/federated_learning_gate_snapshot.json")
     collective = _read_json("eval/collective_intelligence_loop_gate.json")
     optimality = _read_json("eval/federated_learning_optimality_audit.json")
     optimizer = _read_json("eval/pack_optimizer_gate_snapshot.json")
 
-    package_path_green = bool(versions["source_versions_match"] and pypi_package_current and first_user["passed"])
     governance_green = bool(release_governance.get("passed") is True)
     served_runtime_green = bool(served_runtime.get("passed") is True)
     release_controls_green = bool(served_runtime.get("passed") is True and release_governance.get("passed") is True)
@@ -266,6 +278,8 @@ def compile_inventory() -> dict[str, Any]:
             pypi_package_blockers.append("PyPI latest metadata gate is not green for the current source revision")
     if not pypi_fresh_pass:
         pypi_package_blockers.append("PyPI fresh-install/stdout MCP canary is not green for the current source version")
+    if not github_source_pass:
+        pypi_package_blockers.append("GitHub source exact-commit install + local stdio MCP canary is not green for the current source version")
     source_package_status = (
         STATUS_CONDITIONAL if package_path_green and not git["dirty"]
         else STATUS_IN_PROGRESS if git["dirty"]
@@ -275,22 +289,24 @@ def compile_inventory() -> dict[str, Any]:
     components = [
         _component(
             "source_package_cli_stdio",
-            "source, PyPI package, CLI, generated rules, and local stdio MCP",
+            "source, GitHub source install, PyPI package, CLI, generated rules, and local stdio MCP",
             source_package_status,
             evidence=[
                 "pyproject.toml and borg/__init__.py",
                 "eval/first_user_release_gate_snapshot.json",
+                "eval/github_source_install_snapshot.json",
                 "eval/pypi_fresh_install_snapshot.json",
             ],
             done=[
                 f"source versions match: {versions['source_versions_match']} ({versions.get('project_version')})",
+                f"GitHub source exact-commit install/local MCP canary green: {github_source_pass} ({github_source_resolution.get('resolved_commit')})",
                 f"PyPI latest metadata/current-source gate green: {pypi_latest_pass}",
                 f"PyPI fresh-install/stdout MCP canary green: {pypi_fresh_pass}",
                 f"first-user release gate green: {first_user['passed']}",
             ],
             blockers=pypi_package_blockers + (["working tree is dirty/unshipped; current hardening branch is not committed/pushed/CI-proven"] if git["dirty"] else []),
-            outstanding=["publish a new immutable version when source is ahead of PyPI", "rerun full proof on the final branch head", "commit/push and watch CI before claiming shipped"],
-            challenge="A clean PyPI canary proves installed package behavior, not source revisions that landed after the wheel upload or a long-lived served process.",
+            outstanding=["rerun GitHub source + PyPI proof on the final branch head", "commit/push and watch CI before claiming shipped", "publish a new immutable version only if package code/version changes"],
+            challenge="A clean GitHub source/PyPI canary proves fresh-process install behavior, not source revisions that land after the proof or a long-lived served process.",
         ),
         _component(
             "security_hardening_current_branch",
@@ -559,6 +575,8 @@ def compile_inventory() -> dict[str, Any]:
         "evidence_summary": {
             "first_10_counts": first10_counts,
             "pypi_latest_metadata_current_source_passed": pypi_latest_pass,
+            "github_source_install_passed": github_source_pass,
+            "github_source_resolved_commit": github_source_resolution.get("resolved_commit"),
             "pypi_fresh_install_passed": pypi_fresh_pass,
             "first_user_release_passed": first_user["passed"],
             "cold_start_trust_passed": cold_start_pass,
@@ -575,14 +593,17 @@ def compile_inventory() -> dict[str, Any]:
         "components": components,
         "outstanding": outstanding,
         "final_reflective_challenge_pass": final_challenge,
-        "current_blockers_ordered": [
-            "served runtime stale or not proven current",
-            "main branch protection/release governance not green",
-            "rollback/self-service ops freshness not green",
-            "current hardening branch unshipped/full-proof pending",
-            "first-10 external evidence 0/10",
-            "public self-serve, 100-user, marketplace, measured-lift claims blocked until above gates pass",
-        ],
+        "current_blockers_ordered": (
+            ([] if github_source_pass else ["GitHub source install gate not green"])
+            + ([] if served_runtime.get("passed") else ["served runtime stale or not proven current"])
+            + ([] if governance_green else ["main branch protection/release governance not green"])
+            + ([] if ops_green else ["rollback/self-service ops freshness not green"])
+            + (["current hardening branch unshipped/full-proof pending"] if git["dirty"] else [])
+            + [
+                "first-10 external evidence 0/10",
+                "public self-serve, 100-user, marketplace, measured-lift claims blocked until above gates pass",
+            ]
+        ),
     }
 
 
@@ -627,6 +648,7 @@ def render_markdown(data: dict[str, Any]) -> str:
         "## Evidence summary",
         "",
         f"- first-10 external rows: `{evidence['first_10_counts']}`",
+        f"- GitHub source exact-commit install + local stdio MCP: `{evidence['github_source_install_passed']}` ({evidence.get('github_source_resolved_commit')})",
         f"- PyPI fresh install + stdio MCP: `{evidence['pypi_fresh_install_passed']}`",
         f"- first-user release gate: `{evidence['first_user_release_passed']}`",
         f"- cold-start trust: `{evidence['cold_start_trust_passed']}`",

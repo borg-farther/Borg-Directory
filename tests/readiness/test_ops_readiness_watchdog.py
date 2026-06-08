@@ -685,6 +685,7 @@ def test_ops_watchdog_rejects_release_control_stage_with_unrelated_real_rollout_
 
 def test_workflow_public_gate_guard_requires_each_blocker_to_be_allowed() -> None:
     text = (watchdog.ROOT / ".github" / "workflows" / "self-service-watchdog.yml").read_text(encoding="utf-8")
+    assert "python eval/run_github_source_install_canary.py" in text
     assert "python eval/run_pypi_fresh_install_canary.py" in text
     assert "continuing so public/readiness gates can fail closed with the fresh snapshot" in text
     assert "allowed_public_blockers = all(" in text
@@ -703,6 +704,8 @@ def test_workflow_regenerates_mutable_evidence_before_dashboard_lint() -> None:
     assert workflow["missing"] == []
     assert workflow["order_ok"] is True
     positions = workflow["order_positions"]
+    assert positions["python eval/run_github_source_install_canary.py"] < positions["python eval/run_pypi_fresh_install_canary.py"]
+    assert positions["python eval/run_github_source_install_canary.py"] < positions["python eval/public_self_serve_launch_gate.py"]
     assert positions["python eval/run_pypi_fresh_install_canary.py"] < positions["python eval/public_self_serve_launch_gate.py"]
     assert positions["python eval/run_pypi_fresh_install_canary.py"] < positions["python eval/cold_start_trust_gate.py"]
     assert positions["python eval/cold_start_trust_gate.py"] < positions["python eval/release_governance_gate.py --output eval/release_governance_snapshot.json"]

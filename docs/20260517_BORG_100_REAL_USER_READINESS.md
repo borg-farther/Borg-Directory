@@ -1,9 +1,9 @@
 # Borg 100 real-user readiness
 
-Generated: 2026-06-03T20:33:14.420374+00:00
+Generated: 2026-06-08T10:57:16.779892+00:00
 
 100 real-user verdict: **NO-GO**
-Max recommended real users now: **0**
+Max recommended real users now: **10**
 
 ## Distinction
 
@@ -12,13 +12,13 @@ Real-user rollout requires first-10 external evidence before expanding to 100.
 
 ## Current gates
 
-- ready_for_10_controlled_beta: `False`
-- release_controls_ready: `False`
-- served_runtime_fresh: `False`
+- ready_for_10_controlled_beta: `True`
+- release_controls_ready: `True`
+- served_runtime_fresh: `True`
 - release_governance_ready: `True`
 - self_service_ops_ready: `True`
-- ops_readiness_watchdog_ready: `False`
-- infrastructure_ready_for_100: `False`
+- ops_readiness_watchdog_ready: `True`
+- infrastructure_ready_for_100: `True`
 - ready_for_100_real_users: `False`
 
 ## First-10 evidence
@@ -33,11 +33,6 @@ Real-user rollout requires first-10 external evidence before expanding to 100.
 
 ## Blockers
 
-- served runtime borg_version '3.3.14' != source version '3.3.18'
-- served runtime source_version '3.3.15' != source version '3.3.18'
-- served runtime version_matches_source is not true
-- served runtime reload_status is not loaded_code_matches_source_behavior
-- source_revision_honesty failed: {'passed': False, 'head': 'b035825711211a98693171d7963af3d26ccb859b', 'git_clean': False, 'source_revision': 'fb8192a173bc802d8d4411b2e276ebf40d4a536a+dirty', 'policy': 'Committed dashboards may be generated from a dirty tree and must mark +dirty; clean-tree status endpoints should match HEAD or a dirty ancestor used to generate committed proof artifacts.'}
 - first-10 external-user evidence has not passed: verified=0/10, real_users=0/10, installs=0/8, useful=0/6, critical_incidents=0/0
 
 ## Required action to unlock 100 real users

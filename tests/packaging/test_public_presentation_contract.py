@@ -157,7 +157,6 @@ def test_current_docs_preserve_same_version_artifact_drift_truth() -> None:
         "guild-packs 2.1.1",
         "guildpacks CLI",
         "guild_observe",
-        "conditional GO for controlled first-10 beta",
         "CONDITIONAL GO for `agent-borg==3.3.15`",
         "PyPI latest, fresh-install, and stdio MCP canaries are green for this version",
         "PyPI latest metadata and fresh PyPI install + stdio MCP canary are green for `agent-borg==3.3.15`",
@@ -178,13 +177,13 @@ def test_current_docs_preserve_same_version_artifact_drift_truth() -> None:
     assert "published, metadata-correct production PyPI package" in watched["README.md"]
     assert "Exact-version PyPI fresh-install" in watched["README.md"]
     assert "Broad public self-serve launch, 100-user rollout, served/remote MCP, and measured external lift are **not claimed**" in watched["README.md"]
-    assert "Controlled first-10 beta: **NO-GO right now**" in watched["docs/READINESS.md"]
-    assert "published metadata-correct package" in watched["docs/READINESS.md"]
-    assert "runtime canaries are green" in watched["docs/READINESS.md"]
-    assert "served runtime fingerprint is stale" in watched["docs/READINESS.md"]
+    assert "Controlled first-10 beta: **CONDITIONAL GO while gates remain green**" in watched["docs/READINESS.md"]
+    assert "GitHub source exact-commit install" in watched["docs/READINESS.md"]
+    assert "served-runtime fingerprint" in watched["docs/READINESS.md"]
     assert "GitHub `main` release governance is enforced" in watched["docs/READINESS.md"]
     assert "Public self-serve launch: **NO-GO until first-10 external-user evidence passes**" in watched["docs/READINESS.md"]
-    assert "Controlled first-10 beta infrastructure: **NO-GO**" in watched["docs/PUBLIC_SELF_SERVE_LAUNCH_GO_NO_GO.md"]
+    assert "Controlled first-10 beta infrastructure: **CONDITIONAL GO while gates remain green**" in watched["docs/PUBLIC_SELF_SERVE_LAUNCH_GO_NO_GO.md"]
+    assert "first-10 external-user evidence has not passed" in watched["docs/PUBLIC_SELF_SERVE_LAUNCH_GO_NO_GO.md"]
 
 
 def test_prioritized_production_ready_todo_locks_current_blockers_and_boundaries() -> None:

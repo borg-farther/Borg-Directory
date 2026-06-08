@@ -98,6 +98,53 @@ def _fresh_timestamp() -> str:
     return datetime.now(timezone.utc).isoformat()
 
 
+def _write_github_source_install_snapshot(
+    root: Path,
+    *,
+    version: str = "9.9.9",
+    commit: str = "abcdef1234567890abcdef1234567890abcdef12",
+    passed: bool = True,
+) -> None:
+    result_names = [
+        "fresh_venv_create",
+        "pip_install_github_source",
+        "pip_show_agent_borg",
+        "borg_version",
+        "borg_doctor_json",
+        "borg_rescue_json",
+    ]
+    (root / "eval" / "github_source_install_snapshot.json").write_text(
+        json.dumps({
+            "success": passed,
+            "version": version,
+            "generated_at_utc": _fresh_timestamp(),
+            "results": [{"name": name, "passed": passed} for name in result_names],
+            "mcp_stdio_canary": {
+                "passed": passed,
+                "server_info": {"name": "borg-mcp-server", "version": version},
+            },
+            "python_distribution_probe": {"passed": passed},
+            "source_resolution": {
+                "repo_url": "https://github.com/borg-farther/Borg-Directory.git",
+                "requested_ref": commit,
+                "expected_commit": commit,
+                "resolved_commit": commit,
+                "commit_matches_expected": passed,
+                "url_matches_expected": passed,
+                "direct_url": {
+                    "url": "https://github.com/borg-farther/Borg-Directory.git",
+                    "vcs_info": {
+                        "vcs": "git",
+                        "requested_revision": commit,
+                        "commit_id": commit,
+                    },
+                },
+            },
+        }),
+        encoding="utf-8",
+    )
+
+
 def _clean_source_revision_state() -> dict[str, object]:
     return {
         "revision": "abcdef1234567890abcdef1234567890abcdef12",
@@ -1013,6 +1060,81 @@ def test_pypi_fresh_install_check_requires_current_timestamp(tmp_path: Path, mon
     assert fresh["freshness"]["passed"] is True
 
 
+def test_github_source_install_check_passes_only_with_exact_public_commit(tmp_path: Path, monkeypatch) -> None:
+    monkeypatch.setattr(gate, "ROOT", tmp_path)
+    monkeypatch.setattr(gate, "source_revision_state", _clean_source_revision_state)
+    (tmp_path / "eval").mkdir()
+    _write_github_source_install_snapshot(tmp_path)
+
+    result = gate.github_source_install_check(tmp_path / "eval" / "github_source_install_snapshot.json", "9.9.9")
+
+    assert result["passed"] is True
+    assert result["source_resolution"]["canonical_public_repo"] is True
+    assert result["source_resolution"]["commit_matches_expected"] is True
+    assert result["source_alignment"]["detail"] == "installed commit equals current HEAD"
+
+
+def test_github_source_install_check_fails_closed_for_missing_or_stale_snapshot(tmp_path: Path, monkeypatch) -> None:
+    monkeypatch.setattr(gate, "ROOT", tmp_path)
+    (tmp_path / "eval").mkdir()
+
+    missing = gate.github_source_install_check(tmp_path / "eval" / "github_source_install_snapshot.json", "9.9.9")
+    assert missing["passed"] is False
+    assert missing["error"] == "missing GitHub source-install snapshot"
+
+    _write_github_source_install_snapshot(tmp_path)
+    monkeypatch.setattr(gate, "source_revision_state", _clean_source_revision_state)
+    monkeypatch.setattr(gate, "_age_hours", lambda value: 48.0)
+    stale = gate.github_source_install_check(tmp_path / "eval" / "github_source_install_snapshot.json", "9.9.9")
+    assert stale["passed"] is False
+    assert stale["freshness"]["failure_kind"] == "stale_timestamp"
+
+
+def test_github_source_install_check_rejects_wrong_repo_commit_and_incomplete_canary(tmp_path: Path, monkeypatch) -> None:
+    monkeypatch.setattr(gate, "ROOT", tmp_path)
+    monkeypatch.setattr(gate, "source_revision_state", _clean_source_revision_state)
+    (tmp_path / "eval").mkdir()
+    _write_github_source_install_snapshot(tmp_path)
+    path = tmp_path / "eval" / "github_source_install_snapshot.json"
+    payload = json.loads(path.read_text(encoding="utf-8"))
+    payload["source_resolution"]["repo_url"] = "https://github.com/example/Not-Borg.git"
+    payload["source_resolution"]["direct_url"]["url"] = "https://github.com/example/Not-Borg.git"
+    payload["source_resolution"]["resolved_commit"] = "b" * 40
+    payload["source_resolution"]["expected_commit"] = "a" * 40
+    payload["source_resolution"]["commit_matches_expected"] = False
+    payload["results"] = [item for item in payload["results"] if item["name"] != "borg_rescue_json"]
+    path.write_text(json.dumps(payload), encoding="utf-8")
+
+    result = gate.github_source_install_check(path, "9.9.9")
+
+    assert result["passed"] is False
+    assert result["source_resolution"]["canonical_public_repo"] is False
+    assert result["source_resolution"]["commit_matches_expected"] is False
+    assert result["missing_results"] == ["borg_rescue_json"]
+
+
+def test_github_source_install_check_rejects_package_impacting_changes_after_install(tmp_path: Path, monkeypatch) -> None:
+    monkeypatch.setattr(gate, "ROOT", tmp_path)
+    (tmp_path / "eval").mkdir()
+    _write_github_source_install_snapshot(tmp_path)
+    monkeypatch.setattr(
+        gate,
+        "source_revision_state",
+        lambda: {
+            "revision": "abcdef1234567890abcdef1234567890abcdef12+dirty",
+            "commit_time_utc": "2026-05-25T00:00:00+00:00",
+            "dirty": True,
+            "available": True,
+            "package_dirty_paths": ["borg/core/rescue.py"],
+        },
+    )
+
+    result = gate.github_source_install_check(tmp_path / "eval" / "github_source_install_snapshot.json", "9.9.9")
+
+    assert result["passed"] is False
+    assert result["source_alignment"]["dirty_package_paths"] == ["borg/core/rescue.py"]
+
+
 def test_first_10_issue_form_not_measured_basis_does_not_invalidate_unmeasured_rows() -> None:
     row = _row(1)
     row.update({
@@ -1058,6 +1180,7 @@ def test_public_gate_pauses_controlled_first_10_when_privacy_security_incident_r
     _write_cold_start_trust_snapshot(tmp_path)
     _write_ops_watchdog_snapshot(tmp_path)
     _write_release_runtime_snapshots(tmp_path)
+    _write_github_source_install_snapshot(tmp_path)
     monkeypatch.setattr(gate, "self_service_ops_check", lambda: {"passed": True, "blockers": [], "rollout_policy": "test"})
     (tmp_path / "eval" / "pypi_fresh_install_snapshot.json").write_text(
         json.dumps({
@@ -1090,6 +1213,7 @@ def test_public_self_serve_gate_passes_only_when_all_artifacts_and_real_rows_pas
     _write_cold_start_trust_snapshot(tmp_path)
     _write_ops_watchdog_snapshot(tmp_path)
     _write_release_runtime_snapshots(tmp_path)
+    _write_github_source_install_snapshot(tmp_path)
     monkeypatch.setattr(gate, "self_service_ops_check", lambda: {"passed": True, "blockers": [], "rollout_policy": "test"})
     (tmp_path / "eval" / "pypi_fresh_install_snapshot.json").write_text(
         json.dumps({
@@ -1123,6 +1247,7 @@ def test_public_self_serve_gate_blocks_empty_evidence_even_when_infra_passes(tmp
     _write_cold_start_trust_snapshot(tmp_path)
     _write_ops_watchdog_snapshot(tmp_path)
     _write_release_runtime_snapshots(tmp_path)
+    _write_github_source_install_snapshot(tmp_path)
     monkeypatch.setattr(gate, "self_service_ops_check", lambda: {"passed": True, "blockers": [], "rollout_policy": "test"})
     (tmp_path / "eval" / "pypi_fresh_install_snapshot.json").write_text(
         json.dumps({
@@ -1256,6 +1381,7 @@ def _write_public_gate_happy_fixture(root: Path, monkeypatch) -> None:  # type: 
     _write_cold_start_trust_snapshot(root)
     _write_ops_watchdog_snapshot(root)
     _write_release_runtime_snapshots(root)
+    _write_github_source_install_snapshot(root)
     monkeypatch.setattr(gate, "self_service_ops_check", lambda: {"passed": True, "blockers": [], "rollout_policy": "test"})
     (root / "eval" / "pypi_fresh_install_snapshot.json").write_text(
         json.dumps({
@@ -1383,6 +1509,7 @@ def _write_rollout_fixture(root: Path, *, watchdog_passed: bool) -> None:
     (root / "eval" / "first_user_release_gate_snapshot.json").write_text(json.dumps({"success": True, "results": [{"name": "ok", "passed": True}]}), encoding="utf-8")
     for users in [10, 100]:
         (root / "eval" / f"load_{users}_snapshot.json").write_text(json.dumps({"passed": True, "users": users}), encoding="utf-8")
+    _write_github_source_install_snapshot(root)
     (root / "eval" / "pypi_fresh_install_snapshot.json").write_text(
         json.dumps({
             "success": True,
@@ -1402,6 +1529,7 @@ def test_real_user_rollout_gate_blocks_controlled_beta_when_ops_watchdog_fails(t
     monkeypatch.setattr(rollout, "ROOT", tmp_path)
     monkeypatch.setattr(rollout.public_gate, "ROOT", tmp_path)
     monkeypatch.setattr(rollout.public_gate, "source_version", lambda: "9.9.9")
+    monkeypatch.setattr(rollout.public_gate, "source_revision_state", _clean_source_revision_state)
     monkeypatch.setattr(rollout.public_gate, "pypi_latest_check", lambda expected, fetch_network=True: {"passed": True, "version": expected})
     monkeypatch.setattr(rollout.public_gate.release_governance_gate, "fetch_live_branch_payload", lambda repo, branch: _release_governance_payload(protected=True))
     monkeypatch.setattr(rollout.public_gate.release_governance_gate, "fetch_codeowners_errors", lambda repo, ref=None: [])
@@ -1421,6 +1549,7 @@ def test_real_user_rollout_gate_allows_controlled_beta_only_when_ops_watchdog_pa
     monkeypatch.setattr(rollout, "ROOT", tmp_path)
     monkeypatch.setattr(rollout.public_gate, "ROOT", tmp_path)
     monkeypatch.setattr(rollout.public_gate, "source_version", lambda: "9.9.9")
+    monkeypatch.setattr(rollout.public_gate, "source_revision_state", _clean_source_revision_state)
     monkeypatch.setattr(rollout.public_gate, "pypi_latest_check", lambda expected, fetch_network=True: {"passed": True, "version": expected})
     monkeypatch.setattr(rollout.public_gate.release_governance_gate, "fetch_live_branch_payload", lambda repo, branch: _release_governance_payload(protected=True))
     monkeypatch.setattr(rollout.public_gate.release_governance_gate, "fetch_codeowners_errors", lambda repo, ref=None: [])
@@ -1440,6 +1569,7 @@ def test_real_user_rollout_gate_blocks_controlled_beta_when_release_controls_fai
     monkeypatch.setattr(rollout, "ROOT", tmp_path)
     monkeypatch.setattr(rollout.public_gate, "ROOT", tmp_path)
     monkeypatch.setattr(rollout.public_gate, "source_version", lambda: "9.9.9")
+    monkeypatch.setattr(rollout.public_gate, "source_revision_state", _clean_source_revision_state)
     monkeypatch.setattr(rollout.public_gate, "pypi_latest_check", lambda expected, fetch_network=True: {"passed": True, "version": expected})
     monkeypatch.setattr(rollout.public_gate.release_governance_gate, "fetch_live_branch_payload", lambda repo, branch: _release_governance_payload(protected=True))
     monkeypatch.setattr(rollout.public_gate.release_governance_gate, "fetch_codeowners_errors", lambda repo, ref=None: [])

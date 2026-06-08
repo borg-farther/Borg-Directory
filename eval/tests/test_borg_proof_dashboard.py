@@ -47,9 +47,10 @@ def test_borg_proof_dashboard_artifacts_exist_and_are_honest(tmp_path, monkeypat
     assert re.fullmatch(r"[0-9a-f]{40}(?:\+dirty)?", data["source_revision"])
     if data["metrics"]["pypi_package_current_gate"]["value"] == "PASS":
         assert data["metrics"]["pypi_package_current_gate"]["honesty_label"] == "PYPI_METADATA_PLUS_FRESH_INSTALL_CURRENT_SOURCE"
-        release_and_ops_green = all(
+        package_release_and_ops_green = all(
             data["metrics"][name]["value"] == "PASS"
             for name in [
+                "github_source_install_canary",
                 "served_runtime_freshness_gate",
                 "release_governance_gate",
                 "self_service_ops_gate",
@@ -57,7 +58,7 @@ def test_borg_proof_dashboard_artifacts_exist_and_are_honest(tmp_path, monkeypat
                 "rollback_comms_drill",
             ]
         )
-        if release_and_ops_green:
+        if package_release_and_ops_green:
             assert data["controlled_first_10_beta"]["answer"] == "CONDITIONAL GO"
             assert data["top_verdict"]["controlled_first_10_beta"]["verdict"] == "CONDITIONAL"
             assert "served-runtime freshness, release governance, and ops guardrails are green" in data["top_verdict"]["controlled_first_10_beta"]["why"]
@@ -66,6 +67,8 @@ def test_borg_proof_dashboard_artifacts_exist_and_are_honest(tmp_path, monkeypat
             assert data["top_verdict"]["controlled_first_10_beta"]["verdict"] == "NO-GO"
             why = data["top_verdict"]["controlled_first_10_beta"]["why"]
             expected_missing_terms = []
+            if data["metrics"]["github_source_install_canary"]["value"] != "PASS":
+                expected_missing_terms.append("GitHub source-install")
             if data["metrics"]["served_runtime_freshness_gate"]["value"] != "PASS":
                 expected_missing_terms.append("served-runtime freshness")
             if data["metrics"]["release_governance_gate"]["value"] != "PASS":
@@ -89,6 +92,11 @@ def test_borg_proof_dashboard_artifacts_exist_and_are_honest(tmp_path, monkeypat
     assert data["metrics"]["first_10_privacy_security_incidents"]["value"] == 0
     assert data["metrics"]["first_10_privacy_security_incidents"]["honesty_label"] == "ROW_DERIVED_EXTERNAL_USER_RISK"
     assert data["metrics"]["ops_readiness_watchdog"]["honesty_label"] == "OPS_PROOF_FRESHNESS_GATE"
+    assert data["metrics"]["github_source_install_canary"]["honesty_label"] == "GITHUB_SOURCE_INSTALL_EXACT_COMMIT"
+    if data["metrics"]["github_source_install_canary"]["value"] == "PASS":
+        assert "eval/github_source_install_snapshot.json" in data["metrics"]["github_source_install_canary"]["provenance"]
+    else:
+        assert data["metrics"]["github_source_install_canary"]["provenance"] in {"MISSING"} or "eval/github_source_install_snapshot.json" in data["metrics"]["github_source_install_canary"]["provenance"]
     assert data["metrics"]["rollback_comms_drill"]["honesty_label"] == "DRY_RUN_ROLLBACK_COMMS_DRILL"
     assert data["metrics"]["host_runtime_split_brain"]["value"] == data["metrics"]["served_runtime_freshness_gate"]["value"]
     assert data["metrics"]["host_runtime_split_brain"]["honesty_label"] == "SERVED_RUNTIME_EVIDENCE"
@@ -248,6 +256,19 @@ def _minimal_dashboard_files(pypi_snapshot: dict[str, object]) -> dict[str, dict
         "eval/ops_readiness_watchdog_snapshot.json": {"passed": True},
         "eval/rollback_comms_drill_snapshot.json": {"passed": True},
         "eval/pypi_fresh_install_snapshot.json": pypi_snapshot,
+        "eval/github_source_install_snapshot.json": {
+            "success": True,
+            "version": "9.9.9",
+            "generated_at_utc": "fresh",
+            "mcp_stdio_canary": {"passed": True},
+            "python_distribution_probe": {"passed": True},
+            "source_resolution": {
+                "resolved_commit": "a" * 40,
+                "expected_commit": "a" * 40,
+                "commit_matches_expected": True,
+                "url_matches_expected": True,
+            },
+        },
     }
 
 

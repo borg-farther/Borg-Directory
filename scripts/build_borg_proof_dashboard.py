@@ -38,6 +38,7 @@ SOURCE_PATHS = [
     "pyproject.toml",
     "borg/__init__.py",
     "eval/first_user_release_gate_snapshot.json",
+    "eval/github_source_install_snapshot.json",
     "eval/uat_scoreboard_snapshot.json",
     "eval/gate_run_snapshot.json",
     "eval/real_user_rollout_gate_snapshot.json",
@@ -180,6 +181,7 @@ def pack_count() -> int | None:
 
 def build_model() -> dict:
     first = load_json("eval/first_user_release_gate_snapshot.json")
+    github_source = load_json("eval/github_source_install_snapshot.json")
     uat = load_json("eval/uat_scoreboard_snapshot.json")
     gate = load_json("eval/gate_run_snapshot.json")
     real_user = load_json("eval/real_user_rollout_gate_snapshot.json")
@@ -260,6 +262,27 @@ def build_model() -> dict:
         and pypi_fresh_mcp_pass is True
         and pypi_fresh_age_ok
     )
+    github_source_pass = nested(github_source, ["success"])
+    github_source_version = nested(github_source, ["version"])
+    github_source_mcp_pass = nested(github_source, ["mcp_stdio_canary", "passed"])
+    github_source_dist_pass = nested(github_source, ["python_distribution_probe", "passed"])
+    github_source_generated_at = nested(github_source, ["generated_at_utc"])
+    github_source_age = age_hours(github_source_generated_at if isinstance(github_source_generated_at, str) else None)
+    github_source_age_ok = freshness_passed(github_source_age, 24.0)
+    github_source_resolved_commit = nested(github_source, ["source_resolution", "resolved_commit"])
+    github_source_expected_commit = nested(github_source, ["source_resolution", "expected_commit"])
+    github_source_current = bool(
+        github_source_pass is True
+        and github_source_version == pv
+        and github_source_mcp_pass is True
+        and github_source_dist_pass is True
+        and github_source_age_ok
+        and nested(github_source, ["source_resolution", "commit_matches_expected"]) is True
+        and nested(github_source, ["source_resolution", "url_matches_expected"]) is True
+    )
+    github_source_gate = nested(public_gate, ["gates", "github_source_install_and_mcp_stdio"], {}) if isinstance(public_gate, dict) else {}
+    if isinstance(github_source_gate, dict) and github_source_gate:
+        github_source_current = bool(github_source_current and github_source_gate.get("passed") is True)
     pypi_latest_gate = nested(public_gate, ["gates", "pypi_latest"], {}) if isinstance(public_gate, dict) else {}
     pypi_latest_current = nested(pypi_latest_gate, ["passed"])
     pypi_description_stale = bool(nested(pypi_latest_gate, ["description_stale_copy"], []))
@@ -328,7 +351,8 @@ def build_model() -> dict:
 
     local_release_candidate_ready = bool(version_consistent and (first_gate_pass is True) and (uat_pass is True) and (gate_pass is True))
     controlled_beta_ready = bool(
-        pypi_package_current
+        github_source_current
+        and pypi_package_current
         and cold_start_trust_pass is True
         and served_runtime_pass is True
         and release_governance_pass is True
@@ -338,6 +362,8 @@ def build_model() -> dict:
         and first10_privacy_security_incidents == 0
     )
     controlled_beta_missing = []
+    if not github_source_current:
+        controlled_beta_missing.append("GitHub source-install/stdio MCP exact-commit canary")
     if not pypi_package_current:
         if pypi_description_stale:
             controlled_beta_missing.append("PyPI latest project description/long-description copy")
@@ -377,6 +403,10 @@ def build_model() -> dict:
             "verdict": "CONDITIONAL" if local_release_candidate_ready else "NO-GO",
             "why": "Local source/wheel gates pass; package/public rollout still depends on current PyPI proof, served runtime, release governance, and row-derived external-user evidence." if local_release_candidate_ready else "Required local first-user/readiness gates are not all passing or are missing.",
         },
+        "github_source_install": {
+            "verdict": "CONDITIONAL" if github_source_current else "NO-GO",
+            "why": "Clean temp-venv install from canonical public GitHub resolved to the expected commit, then CLI and local stdio MCP first-value canaries passed." if github_source_current else "GitHub source install is blocked until eval/github_source_install_snapshot.json proves canonical public GitHub VCS install, exact resolved commit, CLI, import metadata, and local stdio MCP canaries.",
+        },
         "unattended_git_onboarding": {
             "verdict": "NO-GO",
             "why": "No verified external install/onboarding evidence yet; Git-only flow should not be treated as self-serve until at least the first-10 scoreboard has real outcomes.",
@@ -384,15 +414,16 @@ def build_model() -> dict:
         "broad_public_launch": {
             "verdict": "NO-GO" if public_self_serve_pass is not True else "GO",
             "why": (
-                "Public self-serve gate is blocked only by row-derived first-10 external-user evidence; PyPI/latest/fresh-install/MCP/docs/cold-start-trust/served-runtime/release-governance/self-service-ops/ops-watchdog gates are green."
-                if pypi_package_current
+                "Public self-serve gate is blocked only by row-derived first-10 external-user evidence; GitHub source install/PyPI/latest/fresh-install/MCP/docs/cold-start-trust/served-runtime/release-governance/self-service-ops/ops-watchdog gates are green."
+                if github_source_current
+                and pypi_package_current
                 and cold_start_trust_pass is True
                 and served_runtime_pass is True
                 and release_governance_pass is True
                 and self_service_ops_pass is True
                 and ops_watchdog_pass is True
                 and public_self_serve_pass is not True
-                else "Public self-serve gate is blocked until PyPI latest/fresh-install/MCP/docs/cold-start-trust/served-runtime/release-governance/self-service-ops/ops-watchdog gates pass and first-10 external evidence exists."
+                else "Public self-serve gate is blocked until GitHub source install, PyPI latest/fresh-install/MCP/docs/cold-start-trust/served-runtime/release-governance/self-service-ops/ops-watchdog gates pass and first-10 external evidence exists."
             ) if public_self_serve_pass is not True else "Public self-serve gate has passed with row-derived external evidence.",
         },
     }
@@ -408,6 +439,7 @@ def build_model() -> dict:
         "real_user_100_rollout_gate": {"value": status_bool(real_user_100_pass), "honesty_label": "REAL_EXTERNAL_USERS", "provenance": "eval/real_user_rollout_gate_snapshot.json" if real_user else "MISSING"},
         "max_recommended_real_users_now": {"value": max_recommended_real_users, "honesty_label": "REAL_EXTERNAL_USERS", "provenance": "eval/real_user_rollout_gate_snapshot.json" if real_user else "MISSING"},
         "public_self_serve_launch_gate": {"value": status_bool(public_self_serve_pass), "honesty_label": "PUBLIC_LAUNCH_GATE", "provenance": "eval/public_self_serve_launch_gate_snapshot.json" if public_gate else "MISSING"},
+        "github_source_install_canary": {"value": status_bool(github_source_current), "honesty_label": "GITHUB_SOURCE_INSTALL_EXACT_COMMIT", "provenance": f"eval/github_source_install_snapshot.json resolved={github_source_resolved_commit or 'UNKNOWN'} expected={github_source_expected_commit or 'UNKNOWN'}" if github_source else "MISSING"},
         "cold_start_trust_hardening_gate": {"value": status_bool(cold_start_trust_pass), "honesty_label": "FIRST_ANSWER_TRUST_GATE", "provenance": "eval/cold_start_trust_gate_snapshot.json" if cold_start_trust else "MISSING"},
         "served_runtime_freshness_gate": {"value": status_bool(served_runtime_pass), "honesty_label": "SERVED_RUNTIME_FINGERPRINT_GATE", "provenance": "eval/served_runtime_fingerprint_snapshot.json" if served_runtime_snapshot else "MISSING"},
         "release_governance_gate": {"value": status_bool(release_governance_pass), "honesty_label": "RELEASE_GOVERNANCE_BRANCH_PROTECTION_GATE", "provenance": "eval/release_governance_snapshot.json" if release_governance_snapshot else "MISSING"},
@@ -426,6 +458,7 @@ def build_model() -> dict:
     blockers = {
         "user_affecting": [
             "No real external first-user install/rescue outcome has been recorded yet.",
+            "GitHub source-install exact-commit canary is not green yet." if not github_source_current else "GitHub source-install canary is green: canonical public GitHub VCS install resolved the expected commit and CLI/MCP first-value commands passed.",
             "PyPI package gate is not green for the current source revision yet." if not pypi_package_current else "PyPI latest metadata and fresh-install canary are green for the current source revision.",
             "Cold-start trust gate is not green yet." if cold_start_trust_pass is not True else "Cold-start trust gate is green: meta/readiness prompts fail closed before random framework guidance reaches first users.",
             "Served runtime freshness gate is not green yet." if served_runtime_pass is not True else "Served runtime freshness gate is green: live MCP fingerprint matches source and behavior canaries.",

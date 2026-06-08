@@ -34,6 +34,14 @@ jobs:
 
       - name: Refresh mutable readiness evidence
         run: |
+          if [ "${{ github.event_name }}" = "pull_request" ]; then
+            source_repo="https://github.com/${{ github.event.pull_request.head.repo.full_name }}.git"
+            source_ref="${{ github.event.pull_request.head.sha }}"
+          else
+            source_repo="https://github.com/${{ github.repository }}.git"
+            source_ref="${GITHUB_SHA}"
+          fi
+          python eval/run_github_source_install_canary.py --repo-url "$source_repo" --ref "$source_ref" --expected-commit "$source_ref"
           set +e
           python eval/run_pypi_fresh_install_canary.py
           rc_pypi=$?
