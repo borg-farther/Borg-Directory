@@ -365,7 +365,7 @@ true
         body,
         issue_url=issue_url,
         github_actor="external-contributor",
-        internal_actors={"bensargotest-sys"},
+        internal_actors={"internal-maintainer"},
     )
     result = first_10_issue_import.validate_single_row(row)
 
@@ -386,13 +386,13 @@ external-user-alpha
 https://github.com/borg-farther/Borg-Directory/issues/123
 """
 
-    for actor in ["dependabot[bot]", "bensargotest-sys"]:
+    for actor in ["dependabot[bot]", "internal-maintainer"]:
         try:
             first_10_issue_import.row_from_issue_body(
                 body,
                 issue_url="https://github.com/borg-farther/Borg-Directory/issues/123",
                 github_actor=actor,
-                internal_actors={"bensargotest-sys"},
+                internal_actors={"internal-maintainer"},
             )
         except ValueError as exc:
             assert "not eligible external evidence" in str(exc)

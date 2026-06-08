@@ -43,7 +43,7 @@ jobs:
           CANDIDATE_ROW_PATH: ${{ runner.temp }}/first-10-candidate-row.json
           ISSUE_URL: ${{ github.event.issue.html_url }}
           ISSUE_ACTOR: ${{ github.event.issue.user.login }}
-          INTERNAL_ACTORS: ${{ vars.BORG_INTERNAL_ACTORS || 'borg-farther,bensargotest-sys,github-actions[bot]' }}
+          INTERNAL_ACTORS: ${{ vars.BORG_INTERNAL_ACTORS || 'borg-farther,github-actions[bot]' }}
         run: |
           python eval/first_10_issue_import.py \
             --issue-body "$ISSUE_BODY_PATH" \
