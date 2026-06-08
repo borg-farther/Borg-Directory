@@ -18,7 +18,7 @@
   "primary_metric_scope": "local/source first-user release gate; not external adoption or public-package beta proof",
   "schema_version": 1,
   "summary": "Borg gives coding agents a concrete next action, a dead end to avoid, and a verification step for known failure classes.",
-  "updated_at": "2026-06-08T13:29:00Z",
+  "updated_at": "2026-06-08T14:33:43Z",
   "value_honesty_label": "ROW_DERIVED_EXTERNAL_USER_SAVINGS_REQUIRED",
   "verified_external_users": 0
 }

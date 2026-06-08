@@ -10,7 +10,7 @@
       ],
       "done": [
         "source versions match: True (3.3.18)",
-        "GitHub source exact-commit install/local MCP canary green: True (4d829c50b82179bd0afca6f0f7cc03bb79fa983f)",
+        "GitHub source exact-commit install/local MCP canary green: True (36688c1c3dfbfd0083f14399d14a5135c9a892a6)",
         "PyPI latest metadata/current-source gate green: False",
         "PyPI fresh-install/stdout MCP canary green: False",
         "first-user release gate green: True"
@@ -336,7 +336,7 @@
     },
     "first_user_release_passed": true,
     "github_source_install_passed": true,
-    "github_source_resolved_commit": "4d829c50b82179bd0afca6f0f7cc03bb79fa983f",
+    "github_source_resolved_commit": "36688c1c3dfbfd0083f14399d14a5135c9a892a6",
     "overall_optimality_ceiling": 2.0,
     "pack_optimizer_manual_go": true,
     "pypi_fresh_install_passed": false,
@@ -354,7 +354,7 @@
     "Could synthetic load tests stand in for users? No: first-10 row-derived evidence is 0/10 and explicitly blocks public/100-user claims.",
     "Could a dashboard hide these blockers? It must not; stale generated artifacts are themselves blockers until rebuilt from current gates."
   ],
-  "generated_at_utc": "2026-06-08T13:29:00Z",
+  "generated_at_utc": "2026-06-08T14:33:43Z",
   "outstanding": [
     {
       "acceptance": [
@@ -474,7 +474,7 @@
   "source": {
     "git": {
       "branch": "ab/public-selfserve-closeout-20260607",
-      "commit": "4d829c50b82179bd0afca6f0f7cc03bb79fa983f",
+      "commit": "36688c1c3dfbfd0083f14399d14a5135c9a892a6",
       "dirty": true,
       "dirty_files": [
         "M docs/20260517_BORG_100_REAL_USER_READINESS.md",

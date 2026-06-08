@@ -1,8 +1,8 @@
 # Borg production inventory board
 
-Generated: `2026-06-08T13:29:00Z`
+Generated: `2026-06-08T14:33:43Z`
 Repo: `https://github.com/borg-farther/Borg-Directory`
-Branch/head: `ab/public-selfserve-closeout-20260607` / `4d829c50b82179bd0afca6f0f7cc03bb79fa983f`
+Branch/head: `ab/public-selfserve-closeout-20260607` / `36688c1c3dfbfd0083f14399d14a5135c9a892a6`
 Working tree dirty: `True`
 Version: pyproject `3.3.18` / borg `__version__` `3.3.18`
 
@@ -31,7 +31,7 @@ Version: pyproject `3.3.18` / borg `__version__` `3.3.18`
 ## Evidence summary
 
 - first-10 external rows: `{'verified_external_users': 0, 'real_users': 0, 'install_successes': 0, 'useful_rescue_moments': 0, 'critical_privacy_security_failures': 0, 'repeat_use_within_7_days': 0}`
-- GitHub source exact-commit install + local stdio MCP: `True` (4d829c50b82179bd0afca6f0f7cc03bb79fa983f)
+- GitHub source exact-commit install + local stdio MCP: `True` (36688c1c3dfbfd0083f14399d14a5135c9a892a6)
 - PyPI fresh install + stdio MCP: `False`
 - first-user release gate: `True`
 - cold-start trust: `True`
@@ -58,7 +58,7 @@ Evidence:
 - `eval/pypi_fresh_install_snapshot.json`
 Done/proven:
 - source versions match: True (3.3.18)
-- GitHub source exact-commit install/local MCP canary green: True (4d829c50b82179bd0afca6f0f7cc03bb79fa983f)
+- GitHub source exact-commit install/local MCP canary green: True (36688c1c3dfbfd0083f14399d14a5135c9a892a6)
 - PyPI latest metadata/current-source gate green: False
 - PyPI fresh-install/stdout MCP canary green: False
 - first-user release gate green: True
