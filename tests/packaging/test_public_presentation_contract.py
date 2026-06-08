@@ -263,12 +263,11 @@ def test_channel_matrix_documents_all_first_user_mix_paths() -> None:
     docs_index = read("docs/README.md")
 
     assert f"agent-borg=={current_version}" in matrix
-    source_snapshot = json.loads(read("eval/github_source_install_snapshot.json"))
-    source_commit = source_snapshot["source_resolution"]["resolved_commit"]
-    exact_source_command = f"python -m pip install 'git+https://github.com/borg-farther/Borg-Directory.git@{source_commit}'"
     for phrase in [
         "pipx install agent-borg==",
-        exact_source_command,
+        "python -m pip install 'git+https://github.com/borg-farther/Borg-Directory.git@main'",
+        "eval/github_source_install_snapshot.json",
+        "GitHub source exact-commit canary",
         "borg generate systematic-debugging --format all --output",
         "borg convert . --format openclaw --all --output",
         "import borg, json",
