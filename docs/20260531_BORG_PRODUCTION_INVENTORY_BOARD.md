@@ -1,10 +1,10 @@
 # Borg production inventory board
 
-Generated: `2026-06-03T15:35:44Z`
+Generated: `2026-06-10T13:24:31Z`
 Repo: `https://github.com/borg-farther/Borg-Directory`
-Branch/head: `post-release-proof-3.3.17` / `aaeaa5da023371bb64beae786ae3d93470162b13`
+Branch/head: `ab/prod-self-service-green-20260610` / `966889e89878e1a7172229ed8aa71211c2ef2564`
 Working tree dirty: `True`
-Version: pyproject `3.3.17` / borg `__version__` `3.3.17`
+Version: pyproject `3.3.19` / borg `__version__` `3.3.19`
 
 ## Task outline / decomposition
 
@@ -20,7 +20,7 @@ Version: pyproject `3.3.17` / borg `__version__` `3.3.17`
 - broad public self-serve: `NO_GO`
 - 100 real users: `NO_GO`
 - current source/hardening branch: `IN_PROGRESS`
-- published package/local stdio: `CONDITIONAL_GO`
+- published package/local stdio: `NO_GO`
 - served runtime freshness: `NO_GO`
 - remote MCP/marketplace distribution: `NO_GO`
 - global/federated learning protocol: `GO_PROTOCOL_ONLY`
@@ -31,7 +31,7 @@ Version: pyproject `3.3.17` / borg `__version__` `3.3.17`
 ## Evidence summary
 
 - first-10 external rows: `{'verified_external_users': 0, 'real_users': 0, 'install_successes': 0, 'useful_rescue_moments': 0, 'critical_privacy_security_failures': 0, 'repeat_use_within_7_days': 0}`
-- PyPI fresh install + stdio MCP: `True`
+- PyPI fresh install + stdio MCP: `False`
 - first-user release gate: `True`
 - cold-start trust: `True`
 - served runtime freshness: `False`
@@ -55,11 +55,13 @@ Evidence:
 - `eval/first_user_release_gate_snapshot.json`
 - `eval/pypi_fresh_install_snapshot.json`
 Done/proven:
-- source versions match: True (3.3.17)
-- PyPI latest metadata/current-source gate green: True
-- PyPI fresh-install/stdout MCP canary green: True
+- source versions match: True (3.3.19)
+- PyPI latest metadata/current-source gate green: False
+- PyPI fresh-install/stdout MCP canary green: False
 - first-user release gate green: True
 Blockers:
+- PyPI same-version release upload predates current source revision
+- PyPI fresh-install/stdout MCP canary is not green for the current source version
 - working tree is dirty/unshipped; current hardening branch is not committed/pushed/CI-proven
 Outstanding:
 - publish a new immutable version when source is ahead of PyPI
@@ -102,12 +104,10 @@ Evidence:
 - `eval/served_runtime_fingerprint_snapshot.json`
 - `borg_runtime_fingerprint MCP canary`
 Done/proven:
-- snapshot captured: borg_version=3.3.14, source_version=3.3.15
+- snapshot captured: borg_version=3.3.18, source_version=3.3.18
 Blockers:
-- served runtime borg_version '3.3.14' != source version '3.3.17'
-- served runtime source_version '3.3.15' != source version '3.3.17'
-- served runtime version_matches_source is not true
-- served runtime reload_status is not loaded_code_matches_source_behavior
+- served runtime borg_version '3.3.18' != source version '3.3.19'
+- served runtime source_version '3.3.18' != source version '3.3.19'
 Outstanding:
 - operator-approved reload/cutover
 - recapture fingerprint through the exact served channel
@@ -176,10 +176,8 @@ Evidence:
 - `eval/public_self_serve_launch_gate.py --no-write`
 - `eval/real_user_rollout_gate.py --no-write`
 Blockers:
-- served runtime borg_version '3.3.14' != source version '3.3.17'
-- served runtime source_version '3.3.15' != source version '3.3.17'
-- served runtime version_matches_source is not true
-- served runtime reload_status is not loaded_code_matches_source_behavior
+- served runtime borg_version '3.3.18' != source version '3.3.19'
+- served runtime source_version '3.3.18' != source version '3.3.19'
 Outstanding:
 - served runtime fresh
 - branch protection/release governance green
@@ -198,10 +196,8 @@ Evidence:
 - `eval/first_10_user_scoreboard.json`
 Blockers:
 - first-10 evidence not passed: verified=0/10, real_users=0/10, installs=0/8, useful=0/6, critical_incidents=0/0
-- served runtime borg_version '3.3.14' != source version '3.3.17'
-- served runtime source_version '3.3.15' != source version '3.3.17'
-- served runtime version_matches_source is not true
-- served runtime reload_status is not loaded_code_matches_source_behavior
+- served runtime borg_version '3.3.18' != source version '3.3.19'
+- served runtime source_version '3.3.18' != source version '3.3.19'
 Outstanding:
 - pass first-10 row-derived evidence
 - keep package/served-runtime/governance/ops/docs gates green
@@ -344,7 +340,7 @@ Acceptance:
 
 ### P0 — Refresh served runtime through operator-approved cutover
 
-Why: Current served fingerprint says 3.3.14 while source targets 3.3.17.
+Why: Current served fingerprint says 3.3.18 while source targets 3.3.19.
 
 Acceptance:
 - served borg_version == source_version == PyPI latest

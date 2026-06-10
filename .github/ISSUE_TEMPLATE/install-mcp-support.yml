@@ -11,14 +11,14 @@ body:
     id: borg-version
     attributes:
       label: borg-version
-      placeholder: "borg 3.3.14"
+      placeholder: "borg 3.3.19"
     validations:
       required: true
   - type: input
     id: install-method
     attributes:
       label: install-method
-      placeholder: "pipx install agent-borg==3.3.14"
+      placeholder: "pipx install agent-borg==3.3.19"
     validations:
       required: true
   - type: input

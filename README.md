@@ -13,7 +13,7 @@ Give Borg an error, traceback, failed test, install problem, config failure, or 
 - **MCP server command:** `borg-mcp`
 - **Canonical repo:** https://github.com/borg-farther/Borg-Directory
 
-**Status:** `agent-borg==3.3.18` is the published, metadata-correct production PyPI package for the current source line. Exact-version PyPI fresh-install, stdio MCP, generated-rules, OpenClaw, CLI, and Python API canaries pass for this immutable version. Controlled first-10 beta remains **NO-GO** until served-runtime freshness and first-10 external-user evidence gates are green; release governance and package/local proof are green. Broad public self-serve launch, 100-user rollout, served/remote MCP, and measured external lift are **not claimed** until row-derived external-user evidence passes.
+**Status:** `agent-borg==3.3.19` is the target source/local release candidate for the current source line. Production PyPI latest remains 3.3.18 until this branch is merged, tagged, CI-green, and uploaded; exact-version PyPI fresh-install/stdio MCP proof for 3.3.19 is not green yet. Controlled first-10 beta remains **NO-GO** until package/source provenance, served-runtime freshness, release-governance, ops/watchdog, docs-claim, and evidence-intake guardrails are green. Broad public self-serve launch, 100-user rollout, served/remote MCP, and measured external lift are **not claimed** until row-derived external-user evidence passes.
 
 ## Try Borg in 60 seconds
 
@@ -324,13 +324,13 @@ Why: agents often do not discover optional tools unless explicitly primed.
 
 ## 5. What is ready now
 
-`agent-borg==3.3.18` is the published, metadata-correct package for this source/package line; exact-version PyPI runtime canary proof is complete for the immutable package. Release governance is enforced on GitHub `main` with exact required checks and CODEOWNERS review. Served-runtime freshness and first-10 external-user evidence remain separate blockers.
+`agent-borg==3.3.19` is the target source/package line; production PyPI latest remains 3.3.18 until merge/tag/CI and upload, so exact-version PyPI runtime proof is not current yet. Release governance is enforced on GitHub `main` with exact required checks and CODEOWNERS review. Served-runtime freshness and first-10 external-user evidence remain separate blockers.
 
-- Install, CLI, Python API, generated-rules/OpenClaw export, and stdio MCP entrypoints are present and freshly canaried from production PyPI `agent-borg==3.3.18`.
+- Install, CLI, Python API, generated-rules/OpenClaw export, and stdio MCP entrypoints pass from the local/source release-candidate path; production PyPI proof for `agent-borg==3.3.19` is pending upload.
 - First-user rescue path returns ACTION / STOP / VERIFY or `NO_CONFIDENT_MATCH`.
 - Security/privacy/prompt-injection surface: PASS in CI/local gates.
 - Generated rules and OpenClaw export are covered by first-user/package gates.
-- PyPI latest/fresh-install/stdio MCP proof for `agent-borg==3.3.18` is green. Controlled first-10 testers must **not** be invited until served-runtime freshness remains green and first-10 evidence intake is ready to record real external-user rows. Current cap: 0 until the served-runtime and external-evidence gates are green; broad public self-serve remains evidence-gated after first-10.
+- PyPI latest/fresh-install/stdio MCP proof for `agent-borg==3.3.19` is not green yet because the immutable package has not been uploaded. Controlled first-10 testers must **not** be invited until package proof, served-runtime freshness, ops/watchdog, docs-claim, and evidence intake are green. Current cap: 0; broad public self-serve remains evidence-gated after first-10.
 - Self-service ops guardrails are present: bad-answer intake, install/MCP support intake, first-10 evidence intake, support/SLA, rollback/comms dry-run, and watchdog workflow.
 - First-10 beta contract is published: [`docs/FIRST_10_BETA_READINESS.md`](https://github.com/borg-farther/Borg-Directory/blob/main/docs/FIRST_10_BETA_READINESS.md).
 

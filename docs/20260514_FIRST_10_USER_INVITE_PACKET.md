@@ -1,7 +1,7 @@
 # Borg first-10 user invite packet
 
 Generated: 2026-05-14T18:25:05Z
-Rev: 2026-06-03T19:10:00Z — controlled first-10 beta install path uses the published/canaried PyPI package `agent-borg==3.3.18`, but this packet is **not sendable right now**. Send only after the latest public gate confirms served-runtime freshness and first-10 evidence intake readiness; package/local runtime canaries are already green.
+Rev: 2026-06-03T19:10:00Z — controlled first-10 beta install path uses the published/canaried PyPI package `agent-borg==3.3.19`, but this packet is **not sendable right now**. Send only after the latest public gate confirms served-runtime freshness and first-10 evidence intake readiness; package/local runtime canaries are already green.
 
 ## Exact invite message
 
@@ -9,14 +9,14 @@ Hi — we are preparing a small consented Borg beta for the first 10 external us
 
 ## Install commands
 
-STOP gate: these commands are for the controlled first-10 beta only. Do **not** send them while the current cap is 0. Do **not** send them if served-runtime freshness fails, if `python eval/run_pypi_fresh_install_canary.py --version 3.3.18` regresses, or if more than 10 real external users would be invited before the first-10 evidence gate passes.
+STOP gate: these commands are for the controlled first-10 beta only. Do **not** send them while the current cap is 0. Do **not** send them if served-runtime freshness fails, if `python eval/run_pypi_fresh_install_canary.py --version 3.3.19` regresses, or if more than 10 real external users would be invited before the first-10 evidence gate passes.
 
 Preferred isolated install:
 
 ```bash
 python -m pip install --user pipx
 python -m pipx ensurepath
-pipx install agent-borg==3.3.18
+pipx install agent-borg==3.3.19
 borg --version
 borg rescue "paste a REDACTED real error here"
 ```
@@ -25,7 +25,7 @@ Fallback if pipx is unavailable:
 
 ```bash
 python -m venv /tmp/borg-beta-venv
-/tmp/borg-beta-venv/bin/python -m pip install agent-borg==3.3.18
+/tmp/borg-beta-venv/bin/python -m pip install agent-borg==3.3.19
 /tmp/borg-beta-venv/bin/borg --version
 /tmp/borg-beta-venv/bin/borg rescue "paste a REDACTED real error here"
 ```

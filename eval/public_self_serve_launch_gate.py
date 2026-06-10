@@ -747,6 +747,29 @@ def docs_claim_guard(
                         continue
                     violations.append({"path": str(rel), "line": line, "kind": label, "detail": match.group(0)[:180]})
 
+            for line_number, line_text in enumerate(text.splitlines(), start=1):
+                lower = line_text.lower()
+                gates_controlled_beta_on_completed_first_10 = (
+                    "controlled first-10" in lower
+                    and re.search(r"(?i)\b(no-go|blocked|not ready|cap is 0|capped at 0)\b", line_text)
+                    and re.search(r"(?i)\b(until|pending|only after|before)\b", line_text)
+                    and (
+                        "first-10 external-user evidence" in lower
+                        or "first-10 external user evidence" in lower
+                        or "first-10 row-derived" in lower
+                        or "row-derived first-10" in lower
+                        or "external-user evidence gates are green" in lower
+                        or "external evidence gates are green" in lower
+                    )
+                )
+                if gates_controlled_beta_on_completed_first_10:
+                    violations.append({
+                        "path": str(rel),
+                        "line": line_number,
+                        "kind": "controlled beta incorrectly gated on completed first-10 evidence",
+                        "detail": line_text[:180],
+                    })
+
         if not package_evidence_ready:
             blocked_package_claims = [
                 (r"(?i)Package infrastructure is green for \*\*controlled first-10 public-package beta\*\*", "controlled beta package infrastructure green before PyPI canary"),
@@ -759,7 +782,13 @@ def docs_claim_guard(
                 (r"(?i)\bPackage path proof green\b", "package path proof green before current PyPI canary"),
                 (r"(?i)\bpackage/local stdio proof\b", "package/local stdio proof before current PyPI canary"),
                 (r"(?i)fresh-install/MCP/generate/OpenClaw canaries pass for controlled first-10 beta", "package canaries pass before current PyPI canary"),
-                (r"(?i)published package metadata, PyPI latest, and proof artifacts agree on `?agent-borg==", "published package metadata agreement before current PyPI canary"),
+                (r"(?i)published metadata-correct package", "published metadata-correct package claim before current PyPI canary"),
+                (r"(?i)published, metadata-correct production PyPI package", "published production PyPI package claim before current PyPI canary"),
+                (r"(?i)published metadata-correct immutable package", "published immutable package claim before current PyPI canary"),
+                (r"(?i)published PyPI latest is `?agent-borg==" + re.escape(expected_version), "published latest-version claim before current PyPI canary"),
+                (r"(?i)exact-version (?:PyPI )?fresh-install[^\n]{0,120}(?:proof is green|canar(?:y|ies) (?:are )?green|runtime canar(?:y|ies) (?:are )?green)", "fresh PyPI canary green claim before current PyPI canary"),
+                (r"(?i)runtime canar(?:y|ies) (?:are )?green", "runtime canary green claim before current PyPI canary"),
+                (r"(?i)package-current proof[^\n]{0,80}(?:green|pass)", "package-current proof green before current PyPI canary"),
                 (r"(?i)\bpackage proof is\s+(?:\*\*)?current(?:\*\*)?\b", "package-current proof claim before metadata-correct package"),
                 (r"(?i)published `?agent-borg==" + re.escape(expected_version) + r"`? package is current for this source/package line", "package-current proof claim before metadata-correct package"),
                 (r"(?i)send only while .*fresh-install/MCP canary pass", "invite packet condition omits metadata/runtime/ops blockers"),

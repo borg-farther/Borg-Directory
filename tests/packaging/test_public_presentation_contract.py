@@ -175,12 +175,12 @@ def test_current_docs_preserve_same_version_artifact_drift_truth() -> None:
         for phrase in stale_or_unsupported:
             assert phrase not in text, f"{path} still contains stale/unsupported phrase: {phrase}"
 
-    assert "published, metadata-correct production PyPI package" in watched["README.md"]
-    assert "Exact-version PyPI fresh-install" in watched["README.md"]
+    assert "target source/local release candidate" in watched["README.md"]
+    assert "exact-version PyPI fresh-install/stdio MCP proof for 3.3.19 is not green yet" in watched["README.md"]
     assert "Broad public self-serve launch, 100-user rollout, served/remote MCP, and measured external lift are **not claimed**" in watched["README.md"]
     assert "Controlled first-10 beta: **NO-GO right now**" in watched["docs/READINESS.md"]
-    assert "published metadata-correct package" in watched["docs/READINESS.md"]
-    assert "runtime canaries are green" in watched["docs/READINESS.md"]
+    assert "target source/local release candidate" in watched["docs/READINESS.md"]
+    assert "exact-version PyPI fresh-install/stdio MCP proof is not green yet" in watched["docs/READINESS.md"]
     assert "served runtime fingerprint is stale" in watched["docs/READINESS.md"]
     assert "GitHub `main` release governance is enforced" in watched["docs/READINESS.md"]
     assert "Public self-serve launch: **NO-GO until first-10 external-user evidence passes**" in watched["docs/READINESS.md"]
@@ -345,6 +345,19 @@ def test_bad_answer_feedback_path_is_public_and_redaction_first() -> None:
     assert "borg_rate" not in cold
 
 
+def test_issue_template_version_placeholders_match_current_package() -> None:
+    version = tomllib.loads((ROOT / "pyproject.toml").read_text(encoding="utf-8"))["project"]["version"]
+
+    for relative in [
+        ".github/ISSUE_TEMPLATE/bad-answer.yml",
+        ".github/ISSUE_TEMPLATE/first-10-evidence.yml",
+        ".github/ISSUE_TEMPLATE/install-mcp-support.yml",
+    ]:
+        text = read(relative)
+        assert f"3.3.14" not in text
+        assert version in text
+
+
 def test_non_current_public_docs_are_bannered_or_operator_scoped() -> None:
     current = {
         "README.md",
@@ -446,6 +459,11 @@ def test_public_live_dashboard_json_endpoints_exist_and_no_go_is_badge_red() -> 
             }
             assert "package gates" not in value["headline"].lower()
     assert status["verified_external_users"] == 0
+    if status["served_runtime_freshness_gate"] == "FAIL" or status["release_governance_gate"] == "FAIL":
+        assert status["release_controls_gate"] == "FAIL"
+    if status["release_controls_gate"] == "PASS":
+        assert status["served_runtime_freshness_gate"] == "PASS"
+        assert status["release_governance_gate"] == "PASS"
 
     html = read("docs/public/borg-live-dashboard.html")
     bad_idx = html.index("/(fail|red|block|no-go)/")

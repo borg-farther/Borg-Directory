@@ -53,6 +53,27 @@ def test_borg_install_entrypoint_is_safe_alias() -> None:
     assert '"serve"' not in install_py
 
 
+def test_borg_install_help_is_side_effect_safe(monkeypatch, capsys) -> None:
+    """`borg-install --help` must print help instead of mutating Claude config."""
+    from borg.cli import install
+
+    def fail_if_setup_runs(_args):  # pragma: no cover - exercised only on regression
+        raise AssertionError("--help must not run setup-claude")
+
+    monkeypatch.setattr(install, "_cmd_setup_claude", fail_if_setup_runs)
+
+    try:
+        install.main(["--help"])
+    except SystemExit as exc:
+        assert exc.code == 0
+    else:  # pragma: no cover - argparse normally exits on --help
+        raise AssertionError("--help should exit after printing help")
+
+    out = capsys.readouterr().out
+    assert "borg-install" in out
+    assert "borg setup-claude --scope user --verify --fix" in out
+
+
 def test_base_install_keeps_sentence_transformers_optional() -> None:
     """Day-one install must not require the heavy embedding stack unless opted in."""
     data = tomllib.loads((_repo_root() / "pyproject.toml").read_text(encoding="utf-8"))

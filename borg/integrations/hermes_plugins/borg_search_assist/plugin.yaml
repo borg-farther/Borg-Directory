@@ -1,0 +1,6 @@
+name: borg_search_assist
+version: 0.1.0
+description: Pre-LLM search of the Borg failure-trace federation; post-action feedback closes the causal loop.
+hooks:
+  - pre_llm_call
+  - post_tool_call

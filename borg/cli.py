@@ -295,8 +295,12 @@ def _cmd_apply(args: argparse.Namespace) -> int:
         print(f"Phases ({len(phases)}): {phase_names}")
         print()
         print("Session started. In your agent (MCP), use:")
-        print(f"  borg_apply(action='checkpoint', session_id='{session_id}', phase_result='done')")
-        print("to advance through each phase. Or use borg_search to find the pack first.")
+        print(f"  borg_apply(action='checkpoint', session_id='{session_id}', phase_name='__approval__', status='passed')")
+        if phases:
+            first_phase = phases[0].get("name", "<phase_name>")
+            print("Then, after each phase, checkpoint with:")
+            print(f"  borg_apply(action='checkpoint', session_id='{session_id}', phase_name='{first_phase}', status='passed', evidence='<what verified>')")
+        print("Use borg_search to find packs before applying when needed.")
 
         # TASK 1: autonomous outcome inference — record success when apply completes cleanly
         try:

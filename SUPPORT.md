@@ -1,10 +1,10 @@
 # Borg support policy
 
-Borg uses `agent-borg==3.3.18` as the published metadata-correct immutable package; exact-version fresh-install, stdio MCP, generated-rules, OpenClaw, CLI, and Python API canary proof is green. Controlled first-10 beta is currently **NO-GO** until served-runtime freshness and first-10 external-user evidence gates are green. GitHub `main` release governance is enforced; package/local proof is green; served runtime freshness and first-10 external-user evidence remain separate blockers. Broad public self-serve, 100-user rollout, served remote MCP, and measured lift are not claimed.
+Borg targets `agent-borg==3.3.19` as the next immutable package; production PyPI latest remains 3.3.18, so exact-version PyPI fresh-install/stdio MCP proof for 3.3.19 is not green yet. Controlled first-10 beta is currently **NO-GO** until package/source provenance, served-runtime freshness, release-governance, ops/watchdog, docs-claim, and evidence-intake guardrails are green. GitHub `main` release governance is enforced. Broad public self-serve, 100-user rollout, served remote MCP, and measured lift are not claimed until row-derived external evidence passes.
 
 ## Supported path
 
-- Supported package path: `agent-borg==3.3.18` from PyPI; first-10 invites remain paused for served-runtime freshness and external-evidence reasons, not because the package upload/canary is pending.
+- Target package path: `agent-borg==3.3.19` from PyPI after merge/tag/CI and upload; first-10 invites remain paused until package proof, served-runtime freshness, and external-evidence guardrails are green.
 - First command: `borg rescue "<redacted real error>" --short`.
 - MCP path: `borg-mcp` over stdio from a local client.
 - Evidence intake: `.github/ISSUE_TEMPLATE/first-10-evidence.yml`.
@@ -48,4 +48,5 @@ A first-10 row counts as self-service only when the tester can complete install,
 
 ## Current boundary
 
-Controlled first-10 beta can run only after the current immutable package metadata, trust, ops, and watchdog gates are green for the same version. Broad public self-serve remains NO-GO until row-derived first-10 external-user evidence passes: 10 verified external users, at least 8 installs, at least 6 useful rescues, and 0 critical privacy/security incidents.
+Controlled first-10 beta can run only after the current immutable package metadata, trust, ops, and watchdog gates are green for the same version.
+Broad public self-serve remains NO-GO until row-derived first-10 external-user evidence passes: 10 verified external users, at least 8 installs, at least 6 useful rescues, and 0 critical privacy/security incidents.

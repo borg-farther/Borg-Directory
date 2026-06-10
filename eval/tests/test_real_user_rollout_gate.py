@@ -185,6 +185,37 @@ def test_real_user_rollout_gate_blocks_controlled_beta_when_ops_readiness_fails(
     assert "support SLA missing" in snapshot["blockers"]
 
 
+def test_controlled_beta_can_open_with_empty_first_10_rows_when_infrastructure_is_green(monkeypatch) -> None:
+    monkeypatch.setattr(rollout_gate, "_version_consistent", lambda: {"passed": True})
+    monkeypatch.setattr(rollout_gate, "_security_ready", lambda: {"passed": True, "missing": []})
+    monkeypatch.setattr(rollout_gate, "_first_user_release_ready", lambda: {"passed": True})
+    monkeypatch.setattr(rollout_gate, "_load_ready", lambda users: {"passed": True, "users": users})
+    monkeypatch.setattr(rollout_gate, "_public_package_ready", lambda: {"passed": True, "blockers": []})
+    monkeypatch.setattr(rollout_gate, "_release_controls_ready", lambda: {"passed": True, "blockers": []})
+    monkeypatch.setattr(rollout_gate, "_ops_ready", lambda **_: {"passed": True, "blockers": [], "rollout_policy": "test"})
+    monkeypatch.setattr(rollout_gate, "_first_10_evidence", lambda: {
+        "passed": False,
+        "verified_external_users": 0,
+        "real_users": 0,
+        "install_successes": 0,
+        "useful_rescue_moments": 0,
+        "critical_privacy_security_failures": 0,
+        "required_total_real_users": 10,
+        "required_install_successes": 8,
+        "required_useful_rescue_moments": 6,
+        "max_critical_privacy_security_failures": 0,
+        "row_level_blockers": [],
+    })
+
+    snapshot = rollout_gate.compile_rollout_gate()
+
+    assert snapshot["ready_for_10_controlled_beta"] is True
+    assert snapshot["infrastructure_ready_for_100"] is True
+    assert snapshot["ready_for_100_real_users"] is False
+    assert snapshot["max_recommended_real_users_now"] == 10
+    assert any("first-10 external-user evidence" in blocker for blocker in snapshot["blockers"])
+
+
 def test_real_user_rollout_gate_pauses_controlled_beta_when_first_10_privacy_incident_reported(monkeypatch) -> None:
     monkeypatch.setattr(rollout_gate, "_version_consistent", lambda: {"passed": True})
     monkeypatch.setattr(rollout_gate, "_security_ready", lambda: {"passed": True, "missing": []})

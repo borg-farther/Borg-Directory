@@ -4,12 +4,14 @@
     {
       "assumption_challenge": "A clean PyPI canary proves installed package behavior, not source revisions that landed after the wheel upload or a long-lived served process.",
       "blockers": [
+        "PyPI same-version release upload predates current source revision",
+        "PyPI fresh-install/stdout MCP canary is not green for the current source version",
         "working tree is dirty/unshipped; current hardening branch is not committed/pushed/CI-proven"
       ],
       "done": [
-        "source versions match: True (3.3.17)",
-        "PyPI latest metadata/current-source gate green: True",
-        "PyPI fresh-install/stdout MCP canary green: True",
+        "source versions match: True (3.3.19)",
+        "PyPI latest metadata/current-source gate green: False",
+        "PyPI fresh-install/stdout MCP canary green: False",
         "first-user release gate green: True"
       ],
       "evidence": [
@@ -58,13 +60,11 @@
     {
       "assumption_challenge": "Local source, PyPI, and fresh stdio MCP can all be green while a long-lived served process is stale.",
       "blockers": [
-        "served runtime borg_version '3.3.14' != source version '3.3.17'",
-        "served runtime source_version '3.3.15' != source version '3.3.17'",
-        "served runtime version_matches_source is not true",
-        "served runtime reload_status is not loaded_code_matches_source_behavior"
+        "served runtime borg_version '3.3.18' != source version '3.3.19'",
+        "served runtime source_version '3.3.18' != source version '3.3.19'"
       ],
       "done": [
-        "snapshot captured: borg_version=3.3.14, source_version=3.3.15"
+        "snapshot captured: borg_version=3.3.18, source_version=3.3.18"
       ],
       "evidence": [
         "eval/served_runtime_fingerprint_snapshot.json",
@@ -144,10 +144,8 @@
     {
       "assumption_challenge": "Earlier conditional GO is revoked when release controls or ops freshness fail.",
       "blockers": [
-        "served runtime borg_version '3.3.14' != source version '3.3.17'",
-        "served runtime source_version '3.3.15' != source version '3.3.17'",
-        "served runtime version_matches_source is not true",
-        "served runtime reload_status is not loaded_code_matches_source_behavior"
+        "served runtime borg_version '3.3.18' != source version '3.3.19'",
+        "served runtime source_version '3.3.18' != source version '3.3.19'"
       ],
       "done": [],
       "evidence": [
@@ -168,10 +166,8 @@
       "assumption_challenge": "A polished dashboard is dangerous if it hides the first-10 or served-runtime blockers.",
       "blockers": [
         "first-10 evidence not passed: verified=0/10, real_users=0/10, installs=0/8, useful=0/6, critical_incidents=0/0",
-        "served runtime borg_version '3.3.14' != source version '3.3.17'",
-        "served runtime source_version '3.3.15' != source version '3.3.17'",
-        "served runtime version_matches_source is not true",
-        "served runtime reload_status is not loaded_code_matches_source_behavior"
+        "served runtime borg_version '3.3.18' != source version '3.3.19'",
+        "served runtime source_version '3.3.18' != source version '3.3.19'"
       ],
       "done": [],
       "evidence": [
@@ -351,8 +347,8 @@
     "first_user_release_passed": true,
     "overall_optimality_ceiling": 2.0,
     "pack_optimizer_manual_go": true,
-    "pypi_fresh_install_passed": true,
-    "pypi_latest_metadata_current_source_passed": true,
+    "pypi_fresh_install_passed": false,
+    "pypi_latest_metadata_current_source_passed": false,
     "release_governance_passed": true,
     "rollback_drill_passed": true,
     "self_service_ops_passed": true,
@@ -366,7 +362,7 @@
     "Could synthetic load tests stand in for users? No: first-10 row-derived evidence is 0/10 and explicitly blocks public/100-user claims.",
     "Could a dashboard hide these blockers? It must not; stale generated artifacts are themselves blockers until rebuilt from current gates."
   ],
-  "generated_at_utc": "2026-06-03T15:35:44Z",
+  "generated_at_utc": "2026-06-10T13:24:31Z",
   "outstanding": [
     {
       "acceptance": [
@@ -387,7 +383,7 @@
       ],
       "item": "Refresh served runtime through operator-approved cutover",
       "priority": "P0",
-      "why": "Current served fingerprint says 3.3.14 while source targets 3.3.17."
+      "why": "Current served fingerprint says 3.3.18 while source targets 3.3.19."
     },
     {
       "acceptance": [
@@ -485,31 +481,77 @@
   "schema_version": 1,
   "source": {
     "git": {
-      "branch": "post-release-proof-3.3.17",
-      "commit": "aaeaa5da023371bb64beae786ae3d93470162b13",
+      "branch": "ab/prod-self-service-green-20260610",
+      "commit": "966889e89878e1a7172229ed8aa71211c2ef2564",
       "dirty": true,
       "dirty_files": [
-        "M docs/20260517_BORG_100_REAL_USER_READINESS.md",
-        " M docs/20260531_BORG_PRODUCTION_INVENTORY_BOARD.md",
+        "M .github/ISSUE_TEMPLATE/bad-answer.yml",
+        " M .github/ISSUE_TEMPLATE/first-10-evidence.yml",
+        " M .github/ISSUE_TEMPLATE/install-mcp-support.yml",
+        " M AGENTS.md",
+        " M README.md",
+        " M SUPPORT.md",
+        " M borg/__init__.py",
+        " M borg/cli.py",
+        " M borg/cli/install.py",
+        " M deploy/docker/Dockerfile.borg",
+        " M deploy/smithery/smithery.yaml",
+        " M docs/20260514_FIRST_10_USER_INVITE_PACKET.md",
+        " M docs/20260514_PUBLIC_SELF_SERVE_LAUNCH_CLOSURE_PLAN.md",
+        " M docs/20260517_BORG_100_REAL_USER_READINESS.md",
+        " M docs/20260522_BORG_PRODUCTION_DAY_ONE_HARDENING_PLAN.md",
+        " M docs/20260526_7_USER_CONTROLLED_LAUNCH_AND_100_USER_STAGE_GATES.md",
         " M docs/BORG_PROOF_DASHBOARD.html",
         " M docs/BORG_PROOF_DASHBOARD.md",
+        " M docs/CHANNELS_AND_INSTALL_METHODS.md",
         " M docs/COLD_START_TRUST_HARDENING.md",
+        " M docs/FIRST_10_BETA_READINESS.md",
+        " M docs/FIRST_10_EVIDENCE_INTAKE.md",
+        " M docs/LIVE_MCP_SELF_SERVE_CANARY.md",
         " M docs/PUBLIC_SELF_SERVE_LAUNCH_GO_NO_GO.md",
+        " M docs/READINESS.md",
+        " M docs/README.md",
+        " M docs/ROADMAP.md",
         " M docs/SELF_SERVICE_OPS_READINESS_REPORT.md",
+        " M docs/TRYING_BORG.md",
+        " M docs/VALUE_COMMUNICATION_DASHBOARD.html",
+        " M docs/VALUE_COMMUNICATION_DASHBOARD.md",
+        " M docs/index.html",
+        " M docs/landing-page/index.html",
         " M docs/public/impact/impact.json",
         " M docs/public/proof-dashboard/index.html",
         " M docs/public/status.json",
         " M docs/public/value.json",
+        " M docs/status.json",
         " M eval/borg_proof_dashboard.json",
         " M eval/cold_start_trust_gate_snapshot.json",
+        " M eval/first_user_release_gate_snapshot.json",
+        " M eval/gate_run_snapshot.json",
+        " M eval/load_1000_snapshot.json",
+        " M eval/load_100_snapshot.json",
+        " M eval/load_10_snapshot.json",
+        " M eval/ops_readiness_watchdog_post_dashboard_check.json",
         " M eval/ops_readiness_watchdog_snapshot.json",
-        " M eval/production_inventory_board_snapshot.json",
+        " M eval/public_self_serve_launch_gate.py",
         " M eval/public_self_serve_launch_gate_snapshot.json",
         " M eval/pypi_fresh_install_snapshot.json",
         " M eval/real_user_rollout_gate_snapshot.json",
         " M eval/release_governance_snapshot.json",
         " M eval/rollback_comms_drill_snapshot.json",
-        " M eval/self_service_ops_gate_snapshot.json"
+        " M eval/self_service_ops_gate_snapshot.json",
+        " M eval/served_runtime_fingerprint_snapshot.json",
+        " M eval/tests/test_borg_proof_dashboard.py",
+        " M eval/tests/test_production_inventory_board.py",
+        " M eval/tests/test_real_user_rollout_gate.py",
+        " M eval/uat_scoreboard_snapshot.json",
+        " M llms.txt",
+        " M pyproject.toml",
+        " M scripts/borg_proof_dashboard_lint.py",
+        " M scripts/build_borg_proof_dashboard.py",
+        " M tests/cli/test_cli.py",
+        " M tests/packaging/test_distribution_readiness.py",
+        " M tests/packaging/test_public_presentation_contract.py",
+        " M tests/readiness/test_public_self_serve_launch_gate.py"
       ],
       "remote": [
         "origin\thttps://github.com/borg-farther/Borg-Directory.git (fetch)",
@@ -519,8 +561,8 @@
     "repo": "https://github.com/borg-farther/Borg-Directory",
     "root": "/root/hermes-workspace/borg",
     "versions": {
-      "project_version": "3.3.17",
-      "runtime_version": "3.3.17",
+      "project_version": "3.3.19",
+      "runtime_version": "3.3.19",
       "source_versions_match": true
     }
   },
@@ -545,12 +587,12 @@
     "google_tier_external_lift": "NO_GO",
     "hundred_real_users": "NO_GO",
     "public_self_serve": "NO_GO",
-    "published_package_local_stdio": "CONDITIONAL_GO",
+    "published_package_local_stdio": "NO_GO",
     "recursive_collective_learning_mechanism": "GO_INTERNAL_ONLY",
     "recursive_pack_optimizer": "GO_INTERNAL_MANUAL_ONLY",
     "remote_mcp_distribution": "NO_GO",
     "served_remote_mcp": "NO_GO",
     "served_runtime_freshness": "NO_GO",
-    "source_package_local_stdio": "IN_PROGRESS"
+    "source_package_local_stdio": "NO_GO"
   }
 }

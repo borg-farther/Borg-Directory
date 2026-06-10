@@ -24,7 +24,7 @@ RUN curl -fsSL https://cli.github.com/packages/githubcli-archive-keyring.gpg \
 
 # Draft served-container path pins the release target. Build/publish this image only after
 # the matching PyPI release has passed freshness gates.
-ARG BORG_VERSION=3.3.18
+ARG BORG_VERSION=3.3.19
 RUN pip install --no-cache-dir "agent-borg==${BORG_VERSION}"
 
 # Health check — verifies core tools are functional and the container runtime is the pinned version.
