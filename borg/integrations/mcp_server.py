@@ -2130,6 +2130,14 @@ def borg_rescue(input: str = "", source: str = "mcp", show_guidance: bool = True
 
         result = rescue(input, source=source or "mcp", show_guidance=bool(show_guidance))
         payload = result.to_dict()
+        # Local, privacy-safe value receipt so `borg status` shows a running tally
+        # across CLI and MCP alike. Best-effort: never break the rescue response.
+        try:
+            from borg.core.value_receipts import record_rescue_receipt
+
+            record_rescue_receipt(result, source=source or "mcp", session_id=session_id)
+        except Exception:
+            pass
         sid = _human_session_key(explicit=session_id)
         source_refs = []
         problem_class = str(payload.get("problem_class") or "")

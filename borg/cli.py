@@ -545,6 +545,14 @@ def _cmd_rescue(args: argparse.Namespace) -> int:
         text = _read_single_line_from_stdin("> ")
 
     result = rescue(text, source="cli", show_guidance=not args.short)
+    # Persist a privacy-safe value receipt so `borg status` can prove Borg fired
+    # and (honestly) whether it matched. Best-effort: never block the rescue.
+    try:
+        from borg.core.value_receipts import record_rescue_receipt
+
+        record_rescue_receipt(result, source="cli")
+    except Exception:
+        pass
     if args.json:
         print(json.dumps(result.to_dict(), indent=2, ensure_ascii=False))
     else:
@@ -2040,6 +2048,13 @@ def _cmd_status(args: argparse.Namespace) -> int:
         "public_lift_claim": False,
     }
 
+    try:
+        from borg.core.value_receipts import value_summary
+
+        payload["value"] = value_summary()
+    except Exception:
+        payload["value"] = {}
+
     if getattr(args, "json", False):
         print(json.dumps(payload, indent=2, sort_keys=True, ensure_ascii=False))
         return 0
@@ -2051,6 +2066,23 @@ def _cmd_status(args: argparse.Namespace) -> int:
     print(f"  Packs in Store:       {pack_count}")
     print(f"  Active Sessions:      {payload['active_sessions']}")
     print(f"  Agent Count:          {agent_count}")
+    print()
+    val = payload.get("value") or {}
+    fired = val.get("rescues_fired", 0)
+    print("  Value on this machine (local rescue tally):")
+    if fired:
+        print(f"    Borg fired:          {fired} time(s) — matched {val.get('rescues_matched', 0)}, "
+              f"no-confident-match {val.get('no_confident_match', 0)}")
+        if val.get("matched_by_confidence"):
+            tiers = ", ".join(f"{k}={v}" for k, v in sorted(val["matched_by_confidence"].items()))
+            print(f"    matched by tier:     {tiers}")
+        if val.get("matched_by_provenance"):
+            prov = ", ".join(f"{k}={v}" for k, v in sorted(val["matched_by_provenance"].items()))
+            print(f"    matched by source:   {prov}")
+        print(f"    distinct problems:   {val.get('distinct_problem_classes', 0)}")
+        print(f"    note: {val.get('savings_note', '')}")
+    else:
+        print("    Borg hasn't fired yet on this machine — try `borg rescue \"<your error>\"`.")
     print()
     print("  Data Notice:")
     print(f"    storage default:     {payload['data_notice']['storage_default']}")

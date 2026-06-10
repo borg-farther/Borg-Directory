@@ -234,7 +234,13 @@ borg search "django migration table already exists"
 borg try systematic-debugging
 borg apply systematic-debugging --task "Fix Django migration table already exists error"
 borg first-10 --json
+borg status                # running tally: how often Borg fired and matched (by tier + source)
 ```
+
+`borg status` keeps a local, privacy-safe record of every rescue so you can see whether
+Borg is actually helping — e.g. `Borg fired 12 time(s) — matched 9 ... matched by source:
+seed_corpus=9`. It counts firings and matches only; time/token savings are never claimed
+without a recorded outcome, and seed-corpus matches are labelled as cold-start knowledge.
 
 Python API:
 
