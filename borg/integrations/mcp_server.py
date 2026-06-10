@@ -2,16 +2,16 @@
 Borg MCP Server (T1.11) — AI Guild tools via Model Context Protocol (JSON-RPC 2.0 over stdio).
 
 Exposed tools:
-  - guild_search:  Search for borg workflow packs by keyword
-  - guild_pull:     Fetch, validate, and store a pack locally
-  - guild_try:     Preview a pack without saving
-  - guild_init:     Initialise a new pack scaffold
-  - guild_apply:    Execute a pack (start / checkpoint / complete)
-  - guild_publish:  Publish a pack or feedback artifact
-  - guild_feedback: Generate feedback draft after pack execution
-  - guild_suggest:  Auto-suggest pack based on frustration signals
-  - guild_observe:  Silent observation: structural guidance at task start
-  - guild_convert:  Convert SKILL.md / CLAUDE.md / .cursorrules to pack
+  - borg_search:   Search for borg workflow packs by keyword
+  - borg_pull:     Fetch, validate, and store a pack locally
+  - borg_try:      Preview a pack without saving
+  - borg_init:     Initialise a new pack scaffold
+  - borg_apply:    Execute a pack (start / checkpoint / complete)
+  - borg_publish:  Publish a pack or feedback artifact
+  - borg_feedback: Generate feedback draft after pack execution
+  - borg_suggest:  Auto-suggest pack based on frustration signals
+  - borg_observe:  Silent observation: structural guidance at task start
+  - borg_convert:  Convert SKILL.md / CLAUDE.md / .cursorrules to pack
 
 Zero imports from tools.* or guild_mcp.* — uses only borg.core.* and borg.integrations.*
 """
@@ -480,7 +480,7 @@ TOOLS: List[Dict[str, Any]] = [
         "name": "borg_try",
         "description": (
             "Preview a borg workflow pack without saving it. Shows pack metadata, phases, proof gates, "
-            "safety scan results, and trust tier. Use before guild_pull to check if a pack is worth adopting."
+            "safety scan results, and trust tier. Use before borg_pull to check if a pack is worth adopting."
         ),
         "inputSchema": {
             "type": "object",
@@ -546,7 +546,7 @@ TOOLS: List[Dict[str, Any]] = [
                 },
                 "session_id": {
                     "type": "string",
-                    "description": "Active session ID from guild_apply_start (for checkpoint/complete)",
+                    "description": "Active session ID from borg_apply start action (for checkpoint/complete)",
                 },
                 "ab_test": {
                     "type": "object",
@@ -583,7 +583,7 @@ TOOLS: List[Dict[str, Any]] = [
     {
         "name": "borg_publish",
         "description": (
-            "Publish a guild artifact (workflow pack or feedback) for validation and publishing. "
+            "Publish a Borg artifact (workflow pack or feedback) for validation and publishing. "
             "Validates proof gates and safety, then creates a GitHub PR. "
             "Falls back to local outbox if gh CLI is unavailable."
         ),
@@ -1054,7 +1054,7 @@ TOOLS: List[Dict[str, Any]] = [
         "description": (
             "Query agent reputation and trust information from the ReputationEngine. "
             "Provides access to contribution scores, access tiers, free-rider status, and pack trust. "
-            "Use this to understand an agent's standing in the guild before consuming their packs."
+            "Use this to understand an agent's standing in the Borg collective before consuming their packs."
         ),
         "inputSchema": {
             "type": "object",
@@ -1081,7 +1081,7 @@ TOOLS: List[Dict[str, Any]] = [
         "description": (
             "Query ecosystem health metrics and analytics from the AnalyticsEngine. "
             "Returns ecosystem-wide health, pack usage statistics, adoption metrics, and time-series data. "
-            "Use this to understand the overall state of the guild ecosystem."
+            "Use this to understand the overall state of the Borg collective."
         ),
         "inputSchema": {
             "type": "object",
@@ -1516,7 +1516,7 @@ def borg_apply(
             BORG_DIR = get_borg_dir()
             pack_file = BORG_DIR / pack_name / "pack.yaml"
             if not pack_file.exists():
-                return json.dumps({"success": False, "error": f"Pack not found: {pack_name}. Run guild_pull first."})
+                return json.dumps({"success": False, "error": f"Pack not found: {pack_name}. Run borg_pull first."})
 
             import yaml
             pack_data = yaml.safe_load(pack_file.read_text(encoding="utf-8"))
@@ -1651,7 +1651,7 @@ def borg_apply(
                 "status": "complete",
                 "outcome": outcome,
                 "phase_results": session.get("phase_results", []),
-                "hint": "Use guild_feedback(session_id=...) to generate feedback",
+                "hint": "Use borg_feedback(session_id=...) to generate feedback",
             })
 
         else:
@@ -1910,7 +1910,7 @@ def borg_feedback(
             "stats": feedback["stats"],
             "published": publish if publish else None,
             "publish_result": publish_result,
-            "hint": "Review the feedback draft above. Use guild_publish to refine and submit.",
+            "hint": "Review the feedback draft above. Use borg_publish to refine and submit.",
         })
 
     except (KeyboardInterrupt, SystemExit):
