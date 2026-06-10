@@ -202,4 +202,3 @@ def test_repo_canonical_shim_imports_repo_plugin_module() -> None:
 
     assert shim.detect_error_class(EXACT_PSYCOPG2_MESSAGE) == "python-package-build-error"
     assert callable(shim.register)
-
