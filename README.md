@@ -246,6 +246,20 @@ for hit in hits:
     print(hit.get("name"), hit.get("tier"))
 ```
 
+`borg.check()` returns confidence-gated pack matches; an empty list means no
+confident match — never a confident-but-irrelevant hit. For a full rescue packet
+(ACTION / STOP / VERIFY, confidence, and an explicit `NO_CONFIDENT_MATCH`) from
+your own Python code, call the rescue engine directly:
+
+```python
+from borg.core.rescue import rescue
+
+packet = rescue("ModuleNotFoundError: No module named 'requests'", source="my-agent")
+print(packet.status, packet.problem_class, packet.confidence)  # matched missing_dependency tested
+if packet.success:
+    print(packet.action[0])  # install the distribution for import `requests` ...
+```
+
 ---
 
 ## 3. Connect an agent with MCP

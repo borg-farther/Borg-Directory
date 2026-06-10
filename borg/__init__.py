@@ -50,9 +50,16 @@ def check(context: str, constraints: dict | None = None, top_k: int = 3) -> list
         top_k: Maximum number of results to return.
 
     Returns:
-        A list of result dictionaries from ``borg.core.search.borg_search``.
-        Empty means no confident match or search unavailable; it no longer means
-        "API not implemented".
+        A list of result dictionaries from ``borg.core.search.borg_search``,
+        filtered to confident (lexically-grounded) matches only via the same
+        gate the CLI/MCP rescue path uses. An empty list means no confident
+        match or search unavailable -- it is never a confident-but-irrelevant
+        hit, and it no longer means "API not implemented".
+
+        For a structured rescue packet (ACTION/STOP/VERIFY, confidence, and an
+        explicit NO_CONFIDENT_MATCH signal) prefer the ``borg_rescue`` MCP tool
+        or ``borg.core.rescue.rescue(...)``; ``check`` is a confidence-gated
+        pack lookup, not the full rescue engine.
     """
     if not context or not str(context).strip():
         return []
@@ -60,6 +67,7 @@ def check(context: str, constraints: dict | None = None, top_k: int = 3) -> list
     mode = str(hints.get("mode", "hybrid"))
     agent_id = hints.get("agent_id")
     try:
+        from borg.core.confidence_gate import pack_match_is_confident
         from borg.core.search import borg_search
 
         raw = borg_search(str(context), mode=mode, requesting_agent_id=agent_id)
@@ -69,6 +77,16 @@ def check(context: str, constraints: dict | None = None, top_k: int = 3) -> list
         matches = payload.get("matches", [])
         if not isinstance(matches, list):
             return []
-        return [m for m in matches[: max(0, int(top_k))] if isinstance(m, dict)]
+        # Gate out confident-but-irrelevant hits: borg_search ranks packs by
+        # weak lexical/semantic similarity and will surface unrelated seed packs
+        # for verbatim stderr (e.g. a ModuleNotFoundError returning Django/Docker
+        # packs). Require the same lexical grounding the rescue path requires so
+        # the documented Python API never returns a confident wrong answer.
+        confident = [
+            m
+            for m in matches
+            if isinstance(m, dict) and pack_match_is_confident(str(context), m)
+        ]
+        return confident[: max(0, int(top_k))]
     except Exception:
         return []
