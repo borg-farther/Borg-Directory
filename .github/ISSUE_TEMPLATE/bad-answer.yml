@@ -12,7 +12,7 @@ body:
     attributes:
       label: Borg version
       description: Output of `borg --version` or MCP serverInfo version.
-      placeholder: "borg 3.3.14"
+      placeholder: "borg 3.3.19"
     validations:
       required: true
   - type: dropdown

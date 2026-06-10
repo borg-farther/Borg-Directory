@@ -1,14 +1,14 @@
 # Borg channels and install methods
 
-**Version target:** `agent-borg==3.3.18`
+**Version target:** `agent-borg==3.3.19`
 **Last updated:** 2026-06-02
 **Scope:** what a GitHub/PyPI visitor can use today, what is only a local/dev path, and what must stay blocked until separate evidence exists.
 
 ## Executive truth
 
-A user arriving from GitHub/PyPI can use the production package runtime path, but controlled first-10 beta is **NO-GO** right now. `agent-borg==3.3.18` is published with metadata-correct PyPI long-description and exact-version fresh-install/stdio MCP/generated-rules/OpenClaw runtime canary proof green; served-runtime freshness and first-10 evidence are still red and keep the real-user cap at 0. The target path after served-runtime and first-10 evidence gates are green is:
+A user arriving from GitHub/PyPI can use the production package runtime path, but controlled first-10 beta is **NO-GO** right now. `agent-borg==3.3.19` is published with metadata-correct PyPI long-description and exact-version fresh-install/stdio MCP/generated-rules/OpenClaw runtime canary proof green; served-runtime freshness and first-10 evidence are still red and keep the real-user cap at 0. The target path after served-runtime and first-10 evidence gates are green is:
 
-1. `pipx install agent-borg==3.3.18`
+1. `pipx install agent-borg==3.3.19`
 2. `borg rescue "ModuleNotFoundError: No module named flask" --short`
 3. for MCP clients, configure local stdio command `borg-mcp`
 
@@ -18,18 +18,18 @@ Do not invite controlled first-10 users until PyPI fresh-install/MCP/generate/Op
 
 | Channel / mix | User command or config | Gate | Current claim |
 |---|---|---:|---|
-| PyPI CLI via pipx | `pipx install agent-borg==3.3.18`; `borg rescue ...` | `eval/run_pypi_fresh_install_canary.py --version 3.3.18` | PyPI latest metadata, fresh install, CLI, API, local stdio MCP, rules export, and OpenClaw canaries pass for `3.3.18`. Controlled first-10 beta remains blocked until served-runtime freshness, ops/watchdog, proof-dashboard, and first-10 evidence gates pass; public self-serve remains NO-GO |
-| PyPI in active Python env | `python -m pip install agent-borg==3.3.18` | same PyPI canary plus `borg-doctor --json` | Runtime and package-metadata canaries pass for `3.3.18`; controlled beta is still blocked until served-runtime freshness, ops/watchdog, and first-10 evidence are green |
+| PyPI CLI via pipx | `pipx install agent-borg==3.3.19`; `borg rescue ...` | `eval/run_pypi_fresh_install_canary.py --version 3.3.19` | PyPI latest metadata, fresh install, CLI, API, local stdio MCP, rules export, and OpenClaw canaries pass for `3.3.19`. Controlled first-10 beta remains blocked until served-runtime freshness, ops/watchdog, proof-dashboard, and first-10 evidence gates pass; public self-serve remains NO-GO |
+| PyPI in active Python env | `python -m pip install agent-borg==3.3.19` | same PyPI canary plus `borg-doctor --json` | Runtime and package-metadata canaries pass for `3.3.19`; controlled beta is still blocked until served-runtime freshness, ops/watchdog, and first-10 evidence are green |
 | GitHub direct install | `python -m pip install git+https://github.com/borg-farther/Borg-Directory.git@main` | channel smoke / source local gate | GO only after `origin/main` has the release commit and CI is green |
 | Local clone/editable | `git clone ...`; `python -m pip install -e .` | `eval/run_first_user_release_gate.py` and targeted first-user tests | GO for contributors/dev verification, not normal users |
-| CLI rescue/search/try | `borg rescue`, `borg search`, `borg try` | first-user release gate + PyPI canary | Production PyPI package/runtime path works for `3.3.18`; external beta still waits on served-runtime freshness, ops/watchdog, and first-10 evidence gates |
-| Platform rules export | `borg generate systematic-debugging --format all --output ./rules` | first-user release gate + PyPI canary file-output checks | Production PyPI package/runtime path works for `3.3.18`; external beta still waits on served-runtime freshness, ops/watchdog, and first-10 evidence gates |
-| OpenClaw export | `borg convert . --format openclaw --all --output ./openclaw-skills` | first-user release gate + PyPI canary file-output checks | Production PyPI package/runtime path works for `3.3.18`; external beta still waits on served-runtime freshness, ops/watchdog, and first-10 evidence gates |
-| Python API | `import borg; borg.check(...)` | first-user release gate + PyPI canary | Production PyPI package/runtime path works for `3.3.18`; external beta still waits on served-runtime freshness, ops/watchdog, and first-10 evidence gates |
-| Generic stdio MCP | MCP config command `borg-mcp` | PyPI canary JSON-RPC initialize/tools/call/fingerprint | Local stdio path is canaried from `3.3.18`; served Hermes/remote MCP remains NO-GO until runtime freshness passes |
+| CLI rescue/search/try | `borg rescue`, `borg search`, `borg try` | first-user release gate + PyPI canary | Production PyPI package/runtime path works for `3.3.19`; external beta still waits on served-runtime freshness, ops/watchdog, and first-10 evidence gates |
+| Platform rules export | `borg generate systematic-debugging --format all --output ./rules` | first-user release gate + PyPI canary file-output checks | Production PyPI package/runtime path works for `3.3.19`; external beta still waits on served-runtime freshness, ops/watchdog, and first-10 evidence gates |
+| OpenClaw export | `borg convert . --format openclaw --all --output ./openclaw-skills` | first-user release gate + PyPI canary file-output checks | Production PyPI package/runtime path works for `3.3.19`; external beta still waits on served-runtime freshness, ops/watchdog, and first-10 evidence gates |
+| Python API | `import borg; borg.check(...)` | first-user release gate + PyPI canary | Production PyPI package/runtime path works for `3.3.19`; external beta still waits on served-runtime freshness, ops/watchdog, and first-10 evidence gates |
+| Generic stdio MCP | MCP config command `borg-mcp` | PyPI canary JSON-RPC initialize/tools/call/fingerprint | Local stdio path is canaried from `3.3.19`; served Hermes/remote MCP remains NO-GO until runtime freshness passes |
 | Claude Code | `borg setup-claude --scope user --verify --fix` | first-user release gate + setup verification | External beta blocked until runtime freshness and ops/watchdog proof pass |
 | Hermes Agent | add `mcp_servers.borg` pointing at `borg-mcp` | docs + manual host verification | Local stdio MCP runtime canary passes from PyPI; served Hermes runtime remains NO-GO until operator cutover proof |
-| Cursor / Cline / Windsurf rules | generated `.cursorrules`, `.clinerules`, `CLAUDE.md`, `.windsurfrules` | generator tests + first-user gate | Production PyPI package/runtime path works for `3.3.18`; external beta still waits on served-runtime freshness, ops/watchdog, and first-10 evidence gates |
+| Cursor / Cline / Windsurf rules | generated `.cursorrules`, `.clinerules`, `CLAUDE.md`, `.windsurfrules` | generator tests + first-user gate | Production PyPI package/runtime path works for `3.3.19`; external beta still waits on served-runtime freshness, ops/watchdog, and first-10 evidence gates |
 | Docker draft | `deploy/docker/Dockerfile.borg` | presentation contract only | Draft; not the primary first-user path |
 | Smithery listing | `deploy/smithery/smithery.yaml` | presentation contract only | Draft/local stdio metadata; remote/HTTP listing remains NO-GO |
 | Served/remote MCP | HTTP/remote service endpoint | live runtime fingerprint/cutover proof | NO-GO until actual served process is fingerprinted at current version |

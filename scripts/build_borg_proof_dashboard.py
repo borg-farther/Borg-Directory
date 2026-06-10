@@ -392,7 +392,7 @@ def build_model() -> dict:
                 and self_service_ops_pass is True
                 and ops_watchdog_pass is True
                 and public_self_serve_pass is not True
-                else "Public self-serve gate is blocked until PyPI latest/fresh-install/MCP/docs/cold-start-trust/served-runtime/release-governance/self-service-ops/ops-watchdog gates pass and first-10 external evidence exists."
+                else "Public self-serve gate is blocked until PyPI latest/fresh-install/MCP/docs/cold-start-trust/served-runtime/release-governance/self-service-ops/ops-watchdog gates pass and row-derived first-10 external evidence passes."
             ) if public_self_serve_pass is not True else "Public self-serve gate has passed with row-derived external evidence.",
         },
     }
@@ -561,7 +561,7 @@ def build_model() -> dict:
             "conditions": [
                 "Controlled testers only while package, served-runtime, release-governance, ops, watchdog, rollback, and docs gates remain green." if controlled_beta_ready else "Do not invite controlled beta users until these failed gates are green: " + "; ".join(controlled_beta_missing or ["unknown readiness gate"]),
                 "Do not present as unattended public launch ready.",
-                "Capture real first-user outcome evidence immediately." if controlled_beta_ready else "Keep first-10 evidence capture prepared, but blocked until package/release-control/ops evidence is green.",
+                "Capture real first-user outcome evidence immediately." if controlled_beta_ready else "Keep tester-intake forms prepared, but blocked until package/release-control/ops evidence is green.",
             ],
         },
         "metrics": metrics,
@@ -642,7 +642,7 @@ def render_html(model: dict, md: str) -> str:
 body{font-family:system-ui,-apple-system,Segoe UI,sans-serif;max-width:1180px;margin:2rem auto;padding:0 1rem;line-height:1.45;color:#16202a}table{border-collapse:collapse;width:100%;margin:1rem 0}th,td{border:1px solid #d7dee8;padding:.5rem;vertical-align:top}th{background:#edf2f7}.verdict{font-size:1.25rem;font-weight:700}.conditional{color:#9a5b00}.nogo{color:#9b1c1c}.go{color:#126b33}.note{background:#fff7db;border:1px solid #f0ce73;padding:1rem;border-radius:8px}.mono{font-family:ui-monospace,SFMono-Regular,Menlo,monospace;font-size:.9em;word-break:break-all}pre{white-space:pre-wrap;background:#f7fafc;border:1px solid #d7dee8;padding:1rem;border-radius:8px}
 """
     def esc(x): return html.escape(str(x))
-    verdict_html = "".join(f"<tr><td>{esc(k.replace('_',' '))}</td><td class='verdict {esc(v['verdict'].lower().replace('-',''))}'>{esc(v['verdict'])}</td><td>{esc(v['why'])}</td></tr>" for k,v in model["top_verdict"].items())
+    verdict_html = "\n".join(f"<tr><td>{esc(k.replace('_',' '))}</td><td class='verdict {esc(v['verdict'].lower().replace('-',''))}'>{esc(v['verdict'])}</td><td>{esc(v['why'])}</td></tr>" for k,v in model["top_verdict"].items())
     metric_html = "".join(f"<tr><td>{esc(k)}</td><td class='mono'>{esc(json.dumps(v['value'], sort_keys=True) if isinstance(v['value'], (dict,list)) else v['value'])}</td><td>{esc(v['honesty_label'])}</td><td>{esc(v['provenance'])}</td></tr>" for k,v in model["metrics"].items())
     evidence_html = "".join(f"<tr><td class='mono'>{esc(e['path'])}</td><td>{esc(e['exists'])}</td><td class='mono'>{esc(e['sha256'] or 'MISSING')}</td><td>{esc(e['freshness_timestamp'] or 'UNKNOWN')}</td><td>{esc(e['claim_derived'])}</td></tr>" for e in model["evidence"])
     blockers_html = "".join(f"<tr><td>{esc(k.replace('_',' '))}</td><td><ul>{''.join('<li>'+esc(i)+'</li>' for i in v)}</ul></td></tr>" for k,v in model["blockers"].items())

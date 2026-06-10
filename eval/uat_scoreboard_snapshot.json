@@ -14,7 +14,7 @@
     "ready_for_10": true,
     "ready_for_100": true,
     "ready_for_1000": true,
-    "timestamp": "2026-06-02T21:47:35.821086+00:00"
+    "timestamp": "2026-06-09T17:34:07.643844+00:00"
   },
   "gates": {
     "first_user_surface": true,
@@ -27,30 +27,30 @@
   "loads": {
     "10": {
       "exists": true,
-      "p95_ms": 0.7294940995052457,
-      "p99_ms": 0.8128765365108848,
+      "p95_ms": 0.7257168937940149,
+      "p99_ms": 0.8770521578844632,
       "passed": true,
       "success_rate": 1.0,
-      "timestamp": "2026-06-02T21:46:33.549678+00:00",
-      "total_requests": 48934
+      "timestamp": "2026-06-09T17:33:04.587187+00:00",
+      "total_requests": 51719
     },
     "100": {
       "exists": true,
-      "p95_ms": 0.7360600866377354,
-      "p99_ms": 0.9644317068159578,
+      "p95_ms": 0.6964495056308806,
+      "p99_ms": 0.7314639177639038,
       "passed": true,
       "success_rate": 1.0,
-      "timestamp": "2026-06-02T21:47:03.681996+00:00",
-      "total_requests": 48942
+      "timestamp": "2026-06-09T17:33:34.709090+00:00",
+      "total_requests": 52422
     },
     "1000": {
       "exists": true,
-      "p95_ms": 0.7110125618055462,
-      "p99_ms": 0.773976217024028,
+      "p95_ms": 0.7386569748632609,
+      "p99_ms": 0.9478506701998413,
       "passed": true,
       "success_rate": 1.0,
-      "timestamp": "2026-06-02T21:47:33.846766+00:00",
-      "total_requests": 49978
+      "timestamp": "2026-06-09T17:34:04.881828+00:00",
+      "total_requests": 48637
     }
   },
   "ready_for_10": true,
@@ -59,14 +59,16 @@
   "real_user_100_all_pass": false,
   "real_user_rollout": {
     "blockers": [
-      "served runtime borg_version '3.3.14' != source version '3.3.16'",
-      "served runtime source_version '3.3.15' != source version '3.3.16'",
-      "served runtime version_matches_source is not true",
-      "served runtime reload_status is not loaded_code_matches_source_behavior",
+      "PyPI latest/fresh-install package evidence is not green: latest metadata does not match source version",
+      "PyPI latest/fresh-install package evidence is not green: fresh install + MCP stdio canary is not green",
+      "static_files.rollback_drill_snapshot is not ready: {'path': 'eval/rollback_comms_drill_snapshot.json', 'exists': True, 'generated_at_utc': '2026-06-07T20:01:19.709480+00:00', 'age_hours': 45.54662731194444, 'max_age_hours': 24.0, 'passed': False, 'missing_steps': [], 'failed_steps': [], 'dry_run_only': True, 'fresh': False}",
+      "snapshot_freshness failed: {'passed': False, 'items': {'public_self_serve_launch_gate_snapshot': {'age_hours': 95.5017057375, 'passed': False, 'raw_freshness_passed': False, 'allowed_stale_reason': None}, 'pypi_fresh_install_snapshot': {'age_hours': 0.04332701722222222, 'passed': True, 'raw_freshness_passed': True, 'allowed_stale_reason': None}, 'cold_start_trust_gate_snapshot': {'age_hours': 0.02680268861111111, 'passed': True, 'raw_freshness_passed': True, 'allowed_stale_reason': None}, 'borg_proof_dashboard': {'age_hours': 0.0008270188888888889, 'passed': True, 'raw_freshness_passed': True, 'allowed_stale_reason': None}, 'public_status_json': {'age_hours': 0.0008270197222222223, 'passed': True, 'raw_freshness_passed': True, 'allowed_stale_reason': None}, 'public_value_json': {'age_hours': 0.0008270205555555556, 'passed': True, 'raw_freshness_passed': True, 'allowed_stale_reason': None}, 'public_impact_json': {'age_hours': 0.000827021111111111, 'passed': True, 'raw_freshness_passed': True, 'allowed_stale_reason': None}, 'real_user_rollout_gate_snapshot': {'age_hours': 0.00079957, 'passed': True, 'raw_freshness_passed': True, 'allowed_stale_reason': None}, 'release_governance_snapshot': {'age_hours': 0.045177387222222226, 'passed': True, 'raw_freshness_passed': True, 'allowed_stale_reason': None}, 'self_service_ops_gate_snapshot': {'age_hours': 0.03310661638888889, 'passed': True, 'raw_freshness_passed': True, 'allowed_stale_reason': None}, 'rollback_comms_drill_snapshot': {'age_hours': 0.03312994833333333, 'passed': True, 'raw_freshness_passed': True, 'allowed_stale_reason': None}}}",
+      "public_gate_live_matches_snapshot failed: {'passed': False, 'snapshot': {'source_version': '3.3.18', 'ready_for_controlled_first_10_beta': False, 'ready_for_public_self_serve_launch': False, 'max_recommended_real_users_now': 0, 'blockers': [\"served runtime borg_version '3.3.14' != source version '3.3.18'\", \"served runtime source_version '3.3.15' != source version '3.3.18'\", 'served runtime version_matches_source is not true', 'served runtime reload_status is not loaded_code_matches_source_behavior', 'first-10 external-user evidence has not passed: verified=0/10, real_users=0/10, installs=0/8, useful=0/6, critical_incidents=0/0']}, 'live': {'source_version': '3.3.18', 'ready_for_controlled_first_10_beta': False, 'ready_for_public_self_serve_launch': False, 'max_recommended_real_users_now': 0, 'blockers': ['package-impacting source/metadata changed after the immutable package reference tag', 'first-10 external-user evidence has not passed: verified=0/10, real_users=0/10, installs=0/8, useful=0/6, critical_incidents=0/0']}}",
+      "public_status_consistency failed: {'passed': False, 'status_state': 'NO-GO public self-serve; public package proof green, release controls blocked', 'controlled_verdict': 'NO-GO', 'max_recommended_real_users_now': 0, 'verified_external_users': 0, 'release_controls_gate': 'PASS', 'release_control_detail_failed': True, 'controlled_status_ok': False, 'pre_package_status_ok': False, 'release_control_blocked_status_ok': False}",
       "first-10 external-user evidence has not passed: verified=0/10, real_users=0/10, installs=0/8, useful=0/6, critical_incidents=0/0"
     ],
     "exists": true,
-    "generated_at_utc": "2026-06-02T21:47:35.733503+00:00",
+    "generated_at_utc": "2026-06-09T17:34:07.569320+00:00",
     "infrastructure_ready_for_100": false,
     "max_recommended_real_users_now": 0,
     "ready_for_100_real_users": false,
@@ -94,10 +96,10 @@
   },
   "source": "eval/uat_scoreboard.py",
   "synthetic_load_all_pass": true,
-  "timestamp": "2026-06-02T21:47:35.869382+00:00",
+  "timestamp": "2026-06-09T17:34:07.692854+00:00",
   "version": {
     "passed": true,
-    "project_version": "3.3.16",
-    "runtime_version": "3.3.16"
+    "project_version": "3.3.18",
+    "runtime_version": "3.3.18"
   }
 }

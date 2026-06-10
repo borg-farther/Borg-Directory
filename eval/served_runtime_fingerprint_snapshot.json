@@ -1,7 +1,7 @@
 {
   "borg_dir": "/root/.borg/guild",
   "borg_home": "/root/.borg",
-  "borg_version": "3.3.14",
+  "borg_version": "3.3.18",
   "confidence_gate_canary": {
     "passed": true,
     "real_permission_positive_control_safe": true,
@@ -24,27 +24,27 @@
     "borg.integrations.mcp_server._detect_technology": {
       "argcount": 2,
       "exists": true,
-      "firstlineno": 2479,
+      "firstlineno": 2553,
       "function": "_detect_technology",
       "module": "borg.integrations.mcp_server",
-      "sha256": "65682f6c199fba4081a2883f7db922fe21865d579156434821807c48b073b5cb"
+      "sha256": "9af4b3f02ccc401c08e60b2b4d6b07b57d3016b599ea983f3e664443e2114ff7"
     },
     "borg.integrations.mcp_server.borg_observe": {
       "argcount": 5,
       "exists": true,
-      "firstlineno": 3818,
+      "firstlineno": 3934,
       "function": "borg_observe",
       "module": "borg.integrations.mcp_server",
-      "sha256": "4e894045db9a0ee073cc12453e96f247b602d6969ed60ee5f303572c2c7bce7e"
+      "sha256": "fd0a36e77116a48e6f6d2c49999c376e9d9d9c27b1e631496b5814d2bb0ff26f"
     }
   },
   "modules": {
     "borg": {
       "exists": true,
-      "mtime": 1779990226.1803412,
-      "mtime_iso_utc": "2026-05-28T17:43:46Z",
+      "mtime": 1780517655.2378592,
+      "mtime_iso_utc": "2026-06-03T20:14:15Z",
       "path": "/root/hermes-workspace/borg/borg/__init__.py",
-      "sha256": "2a40b7e278285891a085a945b3a58251ab65ccf2df9de1a4099578df9012a911",
+      "sha256": "cb5bcde2504e5803603db8df7807887df9cfdd101ddeab7c8cb65a80a5a5a4d5",
       "size": 2796
     },
     "borg.core.confidence_gate": {
@@ -65,8 +65,8 @@
     },
     "borg.integrations.mcp_server": {
       "exists": true,
-      "mtime": 1780182525.9173684,
-      "mtime_iso_utc": "2026-05-30T23:08:45Z",
+      "mtime": 1780223229.08892,
+      "mtime_iso_utc": "2026-05-31T10:27:09Z",
       "path": "/root/hermes-workspace/borg/borg/integrations/mcp_server.py",
       "sha256": "e3f38bd1fa9b2c2df796b871ea1a5386e5628e2d61fdfeea2c907d925887cb2a",
       "size": 168487
@@ -96,11 +96,11 @@
     "trace_db_path": "/root/.borg/traces.db",
     "v3_db_path": "/root/.borg/borg_v3.db"
   },
-  "pid": 697109,
+  "pid": 21656,
   "python": "3.11.15",
-  "reload_status": "reload_or_patch_required",
+  "reload_status": "loaded_code_matches_source_behavior",
   "schema_version": 1,
-  "source_version": "3.3.15",
+  "source_version": "3.3.18",
   "success": true,
   "sys_path_head": [
     "/root/.hermes/hermes-agent",
@@ -113,5 +113,5 @@
     "/root/.hermes/hermes-agent/mini-swe-agent/src"
   ],
   "tool": "borg_runtime_fingerprint",
-  "version_matches_source": false
+  "version_matches_source": true
 }

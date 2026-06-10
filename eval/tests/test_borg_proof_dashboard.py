@@ -94,6 +94,9 @@ def test_borg_proof_dashboard_artifacts_exist_and_are_honest(tmp_path, monkeypat
     assert data["metrics"]["host_runtime_split_brain"]["honesty_label"] == "SERVED_RUNTIME_EVIDENCE"
     assert "eval/served_runtime_fingerprint_snapshot.json" in data["metrics"]["host_runtime_split_brain"]["provenance"]
     assert data["top_verdict"]["broad_public_launch"]["verdict"] == "NO-GO"
+    broad_why = data["top_verdict"]["broad_public_launch"]["why"]
+    assert "first-10 external evidence exists" not in broad_why
+    assert "row-derived first-10 external evidence passes" in broad_why or "row-derived first-10 external-user evidence" in broad_why
     assert data["top_verdict"]["unattended_git_onboarding"]["verdict"] == "NO-GO"
     assert data["anti_hype"]["simulated_users_are_not_real_users"] is True
     assert "Simulated/logical users are not real users" in data["anti_hype"]["text"]

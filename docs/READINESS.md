@@ -2,8 +2,8 @@
 
 ## Current verdict
 
-- Controlled first-10 beta: **NO-GO right now**. `agent-borg==3.3.18` is the published metadata-correct package; exact-version fresh-install/stdio MCP/generated-rules/OpenClaw runtime canaries are green. GitHub `main` release governance is enforced; the served runtime fingerprint is stale and remains a separate release-control blocker, and first-10 external-user evidence is still zero.
-- Public waitlist / narrow beta: **0 testers may proceed** until served-runtime freshness is green and first-10 evidence intake is ready to capture consented external-user rows; then the first-10 evidence contract caps the cohort at 10.
+- Controlled first-10 beta: **NO-GO right now**. `agent-borg==3.3.19` is the target source/local release candidate; production PyPI latest remains 3.3.18 until merge/tag/CI and upload, so exact-version PyPI fresh-install/stdio MCP proof is not green yet. GitHub `main` release governance is enforced. Package/source provenance, served-runtime freshness, ops/watchdog proof, docs-claim, and evidence-intake guardrails must all be green before inviting controlled testers. The served runtime fingerprint is stale for this source version until the long-lived MCP runtime is cut over and canaried. External first-10 row count is still zero.
+- Public waitlist / narrow beta: **0 testers may proceed** until those controlled-beta infrastructure and guardrail gates are green; then the first-10 evidence contract caps the cohort at 10.
 - Public self-serve launch: **NO-GO until first-10 external-user evidence passes** (10 verified external users, >=8 installs, >=6 useful rescues, 0 critical incidents).
 
 ## What passed for source/local package infrastructure
@@ -14,7 +14,7 @@
 - First-10 contract exists: [`FIRST_10_BETA_READINESS.md`](FIRST_10_BETA_READINESS.md).
 - Security/privacy/prompt-injection surface has a baseline and CI gates.
 - GitHub CI/security gates are part of the release proof chain. PR branches still need their own green checks and post-merge `main` proof refresh before branch-specific source changes are claimed on `main`.
-- Local first-user gate and production PyPI package canaries are current for `agent-borg==3.3.18`, including generated rules, OpenClaw export, stdio MCP, CLI, and Python API. Served-runtime freshness and first-10 external-user evidence remain the current release-control blockers.
+- Local first-user gate is current for `agent-borg==3.3.19`, including generated rules, OpenClaw export, stdio MCP, CLI, and Python API; production PyPI package canaries are pending upload. Served-runtime freshness and first-10 external-user evidence remain the current release-control blockers.
 
 ## What is not proven
 

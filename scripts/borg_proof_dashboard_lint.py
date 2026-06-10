@@ -126,6 +126,13 @@ def main() -> int:
         return fail("docs/public/status.json max_recommended_real_users_now does not match dashboard metric")
     if public_status.get("verified_external_users") != metrics.get("verified_external_users", {}).get("value", 0):
         return fail("docs/public/status.json verified_external_users does not match dashboard metric")
+    served_runtime_status = public_status.get("served_runtime_freshness_gate")
+    release_governance_status = public_status.get("release_governance_gate")
+    release_controls_status = public_status.get("release_controls_gate")
+    if release_controls_status == "PASS" and (served_runtime_status != "PASS" or release_governance_status != "PASS"):
+        return fail("docs/public/status.json release_controls_gate PASS while served/runtime or governance subgate is not PASS")
+    if (served_runtime_status == "FAIL" or release_governance_status == "FAIL") and release_controls_status == "PASS":
+        return fail("docs/public/status.json release_controls_gate overclaims PASS despite failing subgate")
     measured = (metrics.get("measured_savings", {}) or {}).get("value", {}) or {}
     if public_value.get("measured_savings") != {
         "rows_with_measured_value": int(measured.get("rows_with_measured_value") or 0),

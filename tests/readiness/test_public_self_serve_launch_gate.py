@@ -408,6 +408,27 @@ def test_docs_claim_guard_blocks_markdown_stale_package_no_go_after_canary(tmp_p
     assert any(v["kind"] == "stale package NO-GO after PyPI canary" for v in result["violations"])
 
 
+def test_docs_claim_guard_rejects_controlled_beta_gated_on_completed_first_10_rows(tmp_path: Path, monkeypatch) -> None:
+    monkeypatch.setattr(gate, "ROOT", tmp_path)
+    doc = tmp_path / "README.md"
+    doc.write_text(
+        "Controlled first-10 beta remains NO-GO until served-runtime freshness "
+        "and first-10 external-user evidence gates are green. "
+        "Public self-serve launch remains NO-GO until row-derived evidence passes.\n",
+        encoding="utf-8",
+    )
+
+    result = gate.docs_claim_guard(
+        [Path("README.md")],
+        "9.9.9",
+        public_evidence_ready=False,
+        package_evidence_ready=True,
+    )
+
+    assert result["passed"] is False
+    assert any(v["kind"] == "controlled beta incorrectly gated on completed first-10 evidence" for v in result["violations"])
+
+
 def test_docs_claim_guard_blocks_broader_stale_package_blockers_after_canary(tmp_path: Path, monkeypatch) -> None:
     monkeypatch.setattr(gate, "ROOT", tmp_path)
     doc = tmp_path / "docs" / "README.md"

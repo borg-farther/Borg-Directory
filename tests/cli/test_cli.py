@@ -117,6 +117,23 @@ def test_apply_dispatches_to_apply_handler(mock_apply):
     assert mock_apply.call_args[1]["task"] == "do the thing"
 
 
+@patch("borg.core.apply.apply_handler")
+def test_apply_prints_valid_mcp_checkpoint_arguments(mock_apply):
+    """CLI apply instructions must match borg_apply MCP schema."""
+    mock_apply.return_value = json.dumps({
+        "success": True,
+        "session_id": "sess-123",
+        "phases": [{"name": "reproduce", "checkpoint": "evidence", "status": "pending"}],
+    })
+
+    code, out, err = capture_main(["apply", "mypack", "--task", "do the thing"])
+
+    assert code == 0
+    assert "phase_name='__approval__'" in out
+    assert "status='passed'" in out
+    assert "phase_result" not in out
+
+
 @patch("borg.core.publish.action_publish")
 def test_publish_dispatches_to_action_publish(mock_publish):
     mock_publish.return_value = json.dumps({"success": True})

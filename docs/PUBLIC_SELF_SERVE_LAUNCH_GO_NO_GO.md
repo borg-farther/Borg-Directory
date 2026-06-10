@@ -1,7 +1,7 @@
 # Borg public self-serve launch go/no-go
 
-Generated: 2026-06-03T20:33:12.836597+00:00
-Source version: `3.3.18`
+Generated: 2026-06-10T13:19:54.285718+00:00
+Source version: `3.3.19`
 
 Public self-serve launch: **NO-GO**
 Controlled first-10 beta infrastructure: **NO-GO**
@@ -14,24 +14,23 @@ Public self-serve is GO only after PyPI/fresh-install/MCP/docs/cold-start-trust/
 ## Gate results
 
 - `first_user_release`: `PASS`
-- `pypi_latest`: `PASS`
-- `pypi_fresh_install_and_mcp_stdio`: `PASS`
+- `pypi_latest`: `FAIL`
+- `pypi_fresh_install_and_mcp_stdio`: `FAIL`
 - `cold_start_trust_hardening`: `PASS`
 - `served_runtime_freshness`: `FAIL`
 - `release_governance`: `PASS`
 - `self_service_ops_readiness`: `PASS`
-- `ops_readiness_watchdog`: `FAIL`
+- `ops_readiness_watchdog`: `PASS`
 - `docs_claim_guard`: `PASS`
 - `privacy_security_incident_pause`: `PASS`
 - `first_10_external_evidence`: `FAIL`
 
 ## Blockers
 
-- served runtime borg_version '3.3.14' != source version '3.3.18'
-- served runtime source_version '3.3.15' != source version '3.3.18'
-- served runtime version_matches_source is not true
-- served runtime reload_status is not loaded_code_matches_source_behavior
-- source_revision_honesty failed: {'passed': False, 'head': 'b035825711211a98693171d7963af3d26ccb859b', 'git_clean': False, 'source_revision': 'fb8192a173bc802d8d4411b2e276ebf40d4a536a+dirty', 'policy': 'Committed dashboards may be generated from a dirty tree and must mark +dirty; clean-tree status endpoints should match HEAD or a dirty ancestor used to generate committed proof artifacts.'}
+- PyPI latest metadata is stale: same-version release upload predates current source revision
+- PyPI fresh-install + MCP stdio canary snapshot is missing or failing
+- served runtime borg_version '3.3.18' != source version '3.3.19'
+- served runtime source_version '3.3.18' != source version '3.3.19'
 - first-10 external-user evidence has not passed: verified=0/10, real_users=0/10, installs=0/8, useful=0/6, critical_incidents=0/0
 
 ## Evidence artifacts
