@@ -1436,7 +1436,7 @@ borg feedback <session-id>
 
 ### MCP Tools (for Claude Code agent)
 
-If Claude Code has the guild MCP server configured, these tools are available:
+If Claude Code has the Borg MCP server configured, these tools are available:
 
 - `borg_observe` — call at task start for structural guidance
 - `borg_search` — search for relevant packs by keyword
@@ -1444,7 +1444,7 @@ If Claude Code has the guild MCP server configured, these tools are available:
 
 ### Setup
 
-If the guild MCP server isn't configured yet, run:
+If the Borg MCP server isn't configured yet, run:
 ```bash
 borg setup-claude --scope user --verify --fix
 ```
@@ -1480,7 +1480,7 @@ borg feedback <session-id>
 
 ### MCP Tools (for Cursor agent)
 
-If Cursor has the guild MCP server configured, these tools are available:
+If Cursor has the Borg MCP server configured, these tools are available:
 
 - `borg_observe` — call at task start for structural guidance
 - `borg_search` — search for relevant packs by keyword
@@ -1488,7 +1488,7 @@ If Cursor has the guild MCP server configured, these tools are available:
 
 ### Setup
 
-If the guild MCP server isn't configured yet, run:
+If the Borg MCP server isn't configured yet, run:
 ```bash
 borg setup-cursor
 ```
@@ -1496,7 +1496,7 @@ borg setup-cursor
 
 
 # ---------------------------------------------------------------------------
-# setup-claude: configure guild MCP for Claude Code
+# setup-claude: configure Borg MCP forClaude Code
 # ---------------------------------------------------------------------------
 
 def _cmd_setup_claude(args: argparse.Namespace) -> int:
@@ -1615,7 +1615,7 @@ def _cmd_setup_claude(args: argparse.Namespace) -> int:
 
 
 # ---------------------------------------------------------------------------
-# setup-cursor: configure guild MCP for Cursor
+# setup-cursor: configure Borg MCP forCursor
 # ---------------------------------------------------------------------------
 
 def _cmd_setup_cursor(args: argparse.Namespace) -> int:
@@ -1834,21 +1834,22 @@ def _cmd_autopilot(args: argparse.Namespace) -> int:
         config = {}
 
     mcp_command, mcp_args = _resolve_borg_mcp_command()
+    borg_home = str((Path.home() / ".borg").expanduser())
     mcp_entry = {
         "enabled": True,
         "command": mcp_command,
         "args": mcp_args,
-        "env": {"PYTHONPATH": python_path},
+        "env": {"PYTHONPATH": python_path, "BORG_HOME": borg_home},
     }
 
     mcp_servers = config.get("mcp_servers", {})
-    guild_entry = mcp_servers.get("guild", {})
+    borg_entry = mcp_servers.get("borg", {})
 
     # Only update if different
-    if guild_entry == mcp_entry:
+    if borg_entry == mcp_entry:
         print("[autopilot] MCP server already configured — skipping config.yaml")
     else:
-        mcp_servers["guild"] = mcp_entry
+        mcp_servers["borg"] = mcp_entry
         config["mcp_servers"] = mcp_servers
 
         # Preserve existing content structure as much as possible
@@ -1860,11 +1861,11 @@ def _cmd_autopilot(args: argparse.Namespace) -> int:
             # Fall back: just rewrite entirely
             fallback_cfg = {
                 "mcp_servers": {
-                    "guild": {
+                    "borg": {
                         "enabled": True,
                         "command": mcp_command,
                         "args": mcp_args,
-                        "env": {"PYTHONPATH": python_path},
+                        "env": {"PYTHONPATH": python_path, "BORG_HOME": borg_home},
                     }
                 }
             }
@@ -1882,7 +1883,7 @@ def _cmd_autopilot(args: argparse.Namespace) -> int:
         print(c)
     print()
     print("Hermes will now:")
-    print("  1. Auto-detect debug/test/review tasks and suggest guild packs")
+    print("  1. Auto-detect debug/test/review tasks and suggest borg packs")
     print("  2. Suggest packs after 2+ consecutive failures")
     print("  3. Apply packs phase-by-phase with feedback on completion")
     print()
@@ -2567,7 +2568,7 @@ Examples:
     p.set_defaults(func=_cmd_setup_claude)
 
     # guild setup-cursor
-    p = sub.add_parser("setup-cursor", help="Configure guild MCP server for Cursor",
+    p = sub.add_parser("setup-cursor", help="Configure Borg MCP server for Cursor",
         formatter_class=argparse.RawDescriptionHelpFormatter,
         epilog="""Examples:
   borg setup-cursor""")

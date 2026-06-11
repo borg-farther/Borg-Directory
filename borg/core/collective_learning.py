@@ -97,7 +97,14 @@ def _redact_json_value(value: Any, *, max_text_chars: int = 1200, depth: int = 0
 
 
 def _privacy_prompt_summary(value: Any) -> Dict[str, Any]:
-    text = _canonical_json(_redact_json_value(value, max_text_chars=1600))
+    # Measure privacy/injection signal on the RAW payload. Scanning an
+    # already-redacted copy always reports zero redactions even when PII was
+    # present (the privacy_redaction_count under-count bug). The scanned text is
+    # never stored here -- only the count/score are returned -- so scanning the
+    # raw value is privacy-safe.
+    text = _canonical_json(value)
+    if len(text) > 200_000:
+        text = text[:200_000]
     try:
         privacy = privacy_scan_structured(text)
         redaction_count = len(privacy.findings)
@@ -518,7 +525,9 @@ class CollectiveLearningStore:
         """
         created_at = _utc_now()
         redacted_payload = _redact_json_value(payload or {})
-        summary = _privacy_prompt_summary(redacted_payload)
+        # Count/scan on the RAW payload so privacy_redaction_count reflects PII
+        # actually present; the stored payload remains the redacted copy below.
+        summary = _privacy_prompt_summary(payload or {})
         tenant_id = _normalize_tenant_pseudonym(tenant_pseudonym)
         safe_event_type = _safe_text(event_type or "unknown", max_chars=120) or "unknown"
         safe_stage = _safe_text(collective_stage or "observed", max_chars=120) or "observed"
