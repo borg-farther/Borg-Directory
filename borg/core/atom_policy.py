@@ -40,13 +40,12 @@ def classify_atom_policy(
     """Classify an atom using fail-closed privacy, injection, signature, and quorum gates."""
     reasons: List[str] = []
     privacy = privacy_risk_score(atom)
-    learning = atom.get("learning") or {}
-    injection_text = " ".join([
-        str(learning.get("worked", "")),
-        " ".join(str(v) for v in (learning.get("avoid") or [])),
-        str(learning.get("why", "")),
-    ])
-    injection = scan_prompt_injection(injection_text)
+    # Ingest-side injection scoring (S0/B6) covers EVERY string in the payload,
+    # not just learning.worked/avoid/why — a crafted atom can carry injection in
+    # task.error_pattern, technology, applicability, embedding_ref, ...
+    from borg.core.privacy import collect_strings
+
+    injection = scan_prompt_injection(" ".join(collect_strings(atom)))
 
     if injection.blocked:
         return AtomPolicyResult(AtomDecision.REJECT_PROMPT_INJECTION, ["prompt injection risk"], privacy, injection)
