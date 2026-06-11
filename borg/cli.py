@@ -976,10 +976,9 @@ def _cmd_receipts(args: argparse.Namespace) -> int:
         print(f"About to export {len(receipts)} redacted receipt(s). This is the FULL content:")
         print(json.dumps(export, indent=2))
         if not args.yes:
-            try:
-                answer = input(f"Write these {len(receipts)} receipt(s) to {args.out}? [y/N] ")
-            except EOFError:
-                answer = ""
+            answer = _read_single_line_from_stdin(
+                f"Write these {len(receipts)} receipt(s) to {args.out}? [y/N] "
+            )
             if answer.strip().lower() not in ("y", "yes"):
                 print("Aborted. Nothing was written or shared.")
                 return 1
@@ -1005,10 +1004,7 @@ def _cmd_receipts(args: argparse.Namespace) -> int:
             return 1
         target = "ALL receipts" if args.all else f"receipt #{args.id}"
         if not args.yes:
-            try:
-                answer = input(f"Permanently delete {target}? [y/N] ")
-            except EOFError:
-                answer = ""
+            answer = _read_single_line_from_stdin(f"Permanently delete {target}? [y/N] ")
             if answer.strip().lower() not in ("y", "yes"):
                 print("Aborted. Nothing deleted.")
                 return 1

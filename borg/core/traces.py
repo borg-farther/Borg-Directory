@@ -326,7 +326,9 @@ def find_traces_for_error(
     query_tokens = {
         w for w in re.findall(r"\w+", error_message.lower()) if len(w) >= 4
     }
-    if not query_tokens:
+    # Fewer than 3 meaningful tokens ("unknown error") is too generic to match
+    # against safely — better an honest miss than a coincidental hit.
+    if len(query_tokens) < 3:
         return []
     try:
         db = _get_db(db_path)
@@ -346,7 +348,10 @@ def find_traces_for_error(
         ).lower()
         trace_tokens = set(re.findall(r"\w+", haystack))
         overlap = len(query_tokens & trace_tokens)
-        if overlap >= max(2, len(query_tokens) // 3):
+        # 60% of the query's tokens must appear in the trace: low enough to
+        # survive formatting drift, high enough that generic phrasing cannot
+        # coincidentally match unrelated traces.
+        if overlap >= max(2, -(-len(query_tokens) * 3 // 5)):
             scored.append((overlap, record))
     # Stable sort by overlap only: trace ids are hex strings, and the query
     # already returns newest-first, so ties keep recency order.

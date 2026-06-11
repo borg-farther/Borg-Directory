@@ -2768,11 +2768,15 @@ def borg_recall(error_message: str = "", agent_id: str = "default") -> str:
         if not error_message:
             return json.dumps({"success": False, "error": "error_message is required"})
 
-        fm = FailureMemory(agent_id=agent_id)
+        fm = FailureMemory()
         # observe->recall fix: requested namespace first, then every namespace
         # (CLI observes as 'cli', MCP as 'default'), then traces.db so
         # observations recorded before the bridge still surface.
-        result = fm.recall(error_message, agent_id=agent_id) or fm.recall_across_agents(error_message)
+        result = fm.recall(error_message, agent_id=agent_id)
+        if not isinstance(result, dict):
+            result = fm.recall_across_agents(error_message)
+        if not isinstance(result, dict):
+            result = None
 
         if result is None:
             from borg.core.traces import find_traces_for_error

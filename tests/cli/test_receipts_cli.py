@@ -49,7 +49,7 @@ def test_receipts_list_shows_ids_and_outcomes(tmp_path, monkeypatch, capsys):
 def test_receipts_export_shows_content_and_respects_abort(tmp_path, monkeypatch, capsys):
     _seed(tmp_path)
     target = tmp_path / "export.json"
-    monkeypatch.setattr("builtins.input", lambda _prompt: "n")
+    monkeypatch.setattr("borg.cli._read_single_line_from_stdin", lambda _prompt: "n")
     assert _run(["receipts", "export", "--out", str(target)], tmp_path, monkeypatch) == 1
     out = capsys.readouterr().out
     assert "This is the FULL content" in out  # user sees exactly what is shared
@@ -61,7 +61,7 @@ def test_receipts_export_shows_content_and_respects_abort(tmp_path, monkeypatch,
 def test_receipts_export_confirmed_round_trips_into_replay_tool(tmp_path, monkeypatch, capsys):
     _seed(tmp_path, n=3)
     target = tmp_path / "export.json"
-    monkeypatch.setattr("builtins.input", lambda _prompt: "y")
+    monkeypatch.setattr("borg.cli._read_single_line_from_stdin", lambda _prompt: "y")
     assert _run(["receipts", "export", "--out", str(target)], tmp_path, monkeypatch) == 0
     capsys.readouterr()
 
@@ -88,7 +88,7 @@ def test_receipts_export_yes_flag_skips_prompt(tmp_path, monkeypatch, capsys):
     _seed(tmp_path, n=1)
     target = tmp_path / "export.json"
     monkeypatch.setattr(
-        "builtins.input",
+        "borg.cli._read_single_line_from_stdin",
         lambda _prompt: (_ for _ in ()).throw(AssertionError("must not prompt with --yes")),
     )
     assert _run(["receipts", "export", "--out", str(target), "--yes"], tmp_path, monkeypatch) == 0
@@ -131,6 +131,6 @@ def test_receipts_delete_by_id_and_all(tmp_path, monkeypatch, capsys):
 
 def test_receipts_delete_confirm_abort_keeps_rows(tmp_path, monkeypatch, capsys):
     _seed(tmp_path, n=2)
-    monkeypatch.setattr("builtins.input", lambda _prompt: "n")
+    monkeypatch.setattr("borg.cli._read_single_line_from_stdin", lambda _prompt: "n")
     assert _run(["receipts", "delete", "--all"], tmp_path, monkeypatch) == 1
     assert value_summary(borg_home=tmp_path)["rescues_fired"] == 2
