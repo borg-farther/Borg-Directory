@@ -336,6 +336,13 @@ def _cmd_apply(args: argparse.Namespace) -> int:
 def _cmd_publish(args: argparse.Namespace) -> int:
     """Publish a pack to GitHub."""
     from borg.core.publish import action_publish
+    from borg.core.sharing import SharingDisabledError, assert_sharing_allowed
+
+    try:
+        assert_sharing_allowed("borg publish")
+    except SharingDisabledError as exc:
+        print(json.dumps({"success": False, "error": str(exc), "killswitch": "sharing_disabled"}, indent=2))
+        return 1
 
     raw = action_publish(path=args.path)
     if _require_success(raw, ctx=" (publish failed)"):
@@ -933,6 +940,13 @@ def _cmd_atom(args: argparse.Namespace) -> int:
         return 0
 
     if args.atom_action == "distill":
+        from borg.core.sharing import SharingDisabledError, assert_sharing_allowed
+        if getattr(args, "scope", "local") != "local":
+            try:
+                assert_sharing_allowed(f"atom distill --scope {args.scope}")
+            except SharingDisabledError as exc:
+                print(f"Error: {exc}", file=sys.stderr)
+                return 1
         from borg.core.traces import _get_db
         from borg.core.learning_atoms import distill_trace_to_atom, sign_learning_atom
         from borg.core.crypto import load_signing_key
@@ -960,6 +974,12 @@ def _cmd_atom(args: argparse.Namespace) -> int:
         return 0
 
     if args.atom_action == "publish":
+        from borg.core.sharing import SharingDisabledError, assert_sharing_allowed
+        try:
+            assert_sharing_allowed("atom publish")
+        except SharingDisabledError as exc:
+            print(json.dumps({"success": False, "error": str(exc), "killswitch": "sharing_disabled"}, indent=2))
+            return 1
         from borg.core.publish import action_publish
         raw = action_publish(path=args.path)
         _print_json(raw)
@@ -1919,6 +1939,59 @@ def _cmd_reputation(args: argparse.Namespace) -> int:
 
 
 # ---------------------------------------------------------------------------
+# sharing: federation kill-switch (gate #27)
+# ---------------------------------------------------------------------------
+
+def _cmd_sharing(args: argparse.Namespace) -> int:
+    """Federation kill-switch: globally enable/disable all learning-atom egress.
+
+    This is a panic button layered on top of the opt-in ``local_only`` default —
+    ``borg sharing off`` blocks every egress path (borg publish, atom publish,
+    non-local atom distill, the borg_publish MCP tool) and fails closed.
+    """
+    from borg.core import sharing as _sharing
+
+    action = getattr(args, "sharing_action", None) or "status"
+    as_json = getattr(args, "json", False)
+
+    if action == "off":
+        record = _sharing.disable_sharing(reason=getattr(args, "reason", "") or "")
+        if as_json:
+            print(json.dumps({"success": True, **record}, indent=2))
+        else:
+            print("[sharing] 🔒 Federation sharing DISABLED — kill-switch engaged.")
+            print(f"          Reason: {record['reason']}")
+            print("          No learning atoms will leave this machine.")
+            print("          Re-enable with: borg sharing on")
+        return 0
+
+    if action == "on":
+        record = _sharing.enable_sharing()
+        if as_json:
+            print(json.dumps({"success": True, **record}, indent=2))
+        elif record["was_disabled"]:
+            print("[sharing] 🔓 Federation sharing RE-ENABLED — opt-in atom egress is allowed again.")
+        else:
+            print("[sharing] 🔓 Federation sharing was already enabled.")
+        return 0
+
+    # status (default)
+    status = _sharing.sharing_status()
+    if as_json:
+        print(json.dumps({"success": True, **status}, indent=2))
+    elif status["disabled"]:
+        print("[sharing] 🔒 Federation sharing: DISABLED (kill-switch engaged)")
+        print(f"          Reason:   {status.get('reason', 'n/a')}")
+        print(f"          Since:    {status.get('disabled_at', 'n/a')}")
+        print(f"          Sentinel: {status['sentinel']}")
+        print("          Re-enable with: borg sharing on")
+    else:
+        print("[sharing] 🔓 Federation sharing: ENABLED (opt-in; default mode is local_only)")
+        print("          Disable ALL atom egress instantly with: borg sharing off")
+    return 0
+
+
+# ---------------------------------------------------------------------------
 # first-10: print the first-user beta readiness contract
 # ---------------------------------------------------------------------------
 
@@ -2526,6 +2599,30 @@ Examples:
   borg reputation agent-42""")
     p.add_argument("agent_id", help="Agent ID")
     p.set_defaults(func=_cmd_reputation)
+
+    # sharing: federation kill-switch (gate #27)
+    p = sub.add_parser(
+        "sharing",
+        help="Federation kill-switch: enable/disable ALL learning-atom egress",
+        formatter_class=argparse.RawDescriptionHelpFormatter,
+        epilog="""Examples:
+  borg sharing status         show whether the kill-switch is engaged
+  borg sharing off            block ALL atom egress now (panic button)
+  borg sharing off --reason "incident #42"
+  borg sharing on             re-allow opt-in atom egress""",
+    )
+    sharing_sub = p.add_subparsers(dest="sharing_action", required=False)
+    _sp = sharing_sub.add_parser("status", help="Show whether the federation kill-switch is engaged")
+    _sp.add_argument("--json", action="store_true")
+    _sp.set_defaults(func=_cmd_sharing)
+    _sp = sharing_sub.add_parser("off", help="Engage the kill-switch: block ALL atom egress now")
+    _sp.add_argument("--reason", default="", help="Optional reason recorded in the sentinel")
+    _sp.add_argument("--json", action="store_true")
+    _sp.set_defaults(func=_cmd_sharing)
+    _sp = sharing_sub.add_parser("on", help="Disengage the kill-switch: re-allow opt-in atom egress")
+    _sp.add_argument("--json", action="store_true")
+    _sp.set_defaults(func=_cmd_sharing)
+    p.set_defaults(func=_cmd_sharing, sharing_action="status")
 
     # guild status
     p = sub.add_parser("status", help="Show local Borg runtime status",

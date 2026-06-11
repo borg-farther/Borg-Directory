@@ -1678,6 +1678,12 @@ def borg_publish(
             return publish_module.action_list()
 
         elif action == "publish":
+            from borg.core.sharing import SharingDisabledError, assert_sharing_allowed
+
+            try:
+                assert_sharing_allowed("borg_publish")
+            except SharingDisabledError as exc:
+                return json.dumps({"success": False, "error": str(exc), "killswitch": "sharing_disabled"})
             return publish_module.action_publish(
                 path=path,
                 pack_name=pack_name,
