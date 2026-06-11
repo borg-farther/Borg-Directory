@@ -28,6 +28,7 @@ ALLOWED_ROOT_FILES = {
     "SECURITY.md",
     "SUPPORT.md",
     "pyproject.toml",
+    "requirements-lock.txt",
 }
 
 ALLOWED_ROOT_DIRS = {
@@ -39,6 +40,7 @@ ALLOWED_ROOT_DIRS = {
     "docs",
     "eval",
     "examples",
+    "sbom",
     "scripts",
     "tests",
 }
