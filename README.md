@@ -13,7 +13,7 @@ Give Borg an error, traceback, failed test, install problem, config failure, or 
 - **MCP server command:** `borg-mcp`
 - **Canonical repo:** https://github.com/borg-farther/Borg-Directory
 
-**Status:** `agent-borg==3.3.19` is the target source/local release candidate for the current source line. A `3.3.19` wheel is now the latest on PyPI (published 2026-06-10), superseding 3.3.18; exact-version PyPI fresh-install/stdio MCP proof for 3.3.19 is not green yet. Controlled first-10 beta remains **NO-GO** until package/source provenance, served-runtime freshness, release-governance, ops/watchdog, docs-claim, and evidence-intake guardrails are green. Broad public self-serve launch, 100-user rollout, served/remote MCP, and measured external lift are **not claimed** until row-derived external-user evidence passes.
+**Status:** `agent-borg==3.3.20` is the target source/local release candidate for the current source line. A `3.3.19` wheel is the latest on PyPI (published 2026-06-10); exact-version PyPI fresh-install/stdio MCP proof for 3.3.20 is not green yet. Controlled first-10 beta remains **NO-GO** until package/source provenance, served-runtime freshness, release-governance, ops/watchdog, docs-claim, and evidence-intake guardrails are green. Broad public self-serve launch, 100-user rollout, served/remote MCP, and measured external lift are **not claimed** until row-derived external-user evidence passes.
 
 ## Try Borg in 60 seconds
 

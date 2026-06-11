@@ -14,7 +14,7 @@ Day-one value path:
 3. Expect ACTION / STOP / VERIFY / CONFIDENCE, or NO_CONFIDENT_MATCH.
 
 Current rollout boundary:
-- Controlled first-10 public-package beta is closed right now. agent-borg==3.3.19 is the target source/local release candidate; production PyPI latest remains 3.3.18 until merge/tag/CI and upload, so exact-version PyPI proof is not green yet. Cap is 0 until package/source provenance, served-runtime freshness, release-governance, ops/watchdog, docs-claim, and evidence-intake guardrails are green.
+- Controlled first-10 public-package beta is closed right now. agent-borg==3.3.20 is the target source/local release candidate; production PyPI latest is 3.3.19 until the 3.3.20 tag/CI and upload complete, so exact-version PyPI proof is not green yet. Cap is 0 until package/source provenance, served-runtime freshness, release-governance, ops/watchdog, docs-claim, and evidence-intake guardrails are green.
 - Do not claim public self-serve launch, 100 real users, served remote MCP, or measured external lift until row-derived external-user evidence passes.
 
 Useful docs:

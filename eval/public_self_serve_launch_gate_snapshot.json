@@ -2,8 +2,9 @@
   "blockers": [
     "PyPI latest metadata is stale: same-version release upload predates current source revision",
     "PyPI fresh-install + MCP stdio canary snapshot is missing or failing",
-    "served runtime borg_version '3.3.18' != source version '3.3.19'",
-    "served runtime source_version '3.3.18' != source version '3.3.19'",
+    "served runtime borg_version '3.3.18' != source version '3.3.20'",
+    "served runtime source_version '3.3.18' != source version '3.3.20'",
+    "public docs/claim guard found stale install pins or unsupported launch/value claims",
     "first-10 external-user evidence has not passed: verified=0/10, real_users=0/10, installs=0/8, useful=0/6, critical_incidents=0/0"
   ],
   "gate_type": "public_self_serve_launch",
@@ -28,9 +29,6 @@
         "llms.txt",
         "SUPPORT.md",
         "SECURITY.md",
-        "PROJECT_STATUS.md",
-        "GO_NO_GO_DECISION.md",
-        "UAT_RESULTS.md",
         "docs/README.md",
         "docs/READINESS.md",
         "docs/INSTALL.md",
@@ -72,8 +70,229 @@
         "deploy/smithery/smithery.yaml",
         "eval/borg_proof_dashboard.json"
       ],
-      "passed": true,
-      "violations": []
+      "passed": false,
+      "violations": [
+        {
+          "detail": "found agent-borg==3.3.19 expected agent-borg==3.3.20",
+          "kind": "stale agent-borg pin",
+          "path": "README.md"
+        },
+        {
+          "detail": "found agent-borg==3.3.19 expected agent-borg==3.3.20",
+          "kind": "stale agent-borg pin",
+          "path": "README.md"
+        },
+        {
+          "detail": "found agent-borg==3.3.19 expected agent-borg==3.3.20",
+          "kind": "stale agent-borg pin",
+          "path": "README.md"
+        },
+        {
+          "detail": "found agent-borg==3.3.19 expected agent-borg==3.3.20",
+          "kind": "stale agent-borg pin",
+          "path": "AGENTS.md"
+        },
+        {
+          "detail": "found agent-borg==3.3.19 expected agent-borg==3.3.20",
+          "kind": "stale agent-borg pin",
+          "path": "SUPPORT.md"
+        },
+        {
+          "detail": "found agent-borg==3.3.19 expected agent-borg==3.3.20",
+          "kind": "stale agent-borg pin",
+          "path": "SUPPORT.md"
+        },
+        {
+          "detail": "found agent-borg==3.3.19 expected agent-borg==3.3.20",
+          "kind": "stale agent-borg pin",
+          "path": "docs/README.md"
+        },
+        {
+          "detail": "found agent-borg==3.3.19 expected agent-borg==3.3.20",
+          "kind": "stale agent-borg pin",
+          "path": "docs/READINESS.md"
+        },
+        {
+          "detail": "found agent-borg==3.3.19 expected agent-borg==3.3.20",
+          "kind": "stale agent-borg pin",
+          "path": "docs/TRYING_BORG.md"
+        },
+        {
+          "detail": "found agent-borg==3.3.19 expected agent-borg==3.3.20",
+          "kind": "stale agent-borg pin",
+          "path": "docs/FIRST_10_BETA_READINESS.md"
+        },
+        {
+          "detail": "found agent-borg==3.3.19 expected agent-borg==3.3.20",
+          "kind": "stale agent-borg pin",
+          "path": "docs/20260514_FIRST_10_USER_INVITE_PACKET.md"
+        },
+        {
+          "detail": "found agent-borg==3.3.19 expected agent-borg==3.3.20",
+          "kind": "stale agent-borg pin",
+          "path": "docs/20260514_FIRST_10_USER_INVITE_PACKET.md"
+        },
+        {
+          "detail": "found agent-borg==3.3.19 expected agent-borg==3.3.20",
+          "kind": "stale agent-borg pin",
+          "path": "docs/20260514_FIRST_10_USER_INVITE_PACKET.md"
+        },
+        {
+          "detail": "found agent-borg==3.3.19 expected agent-borg==3.3.20",
+          "kind": "stale agent-borg pin",
+          "path": "docs/20260514_PUBLIC_SELF_SERVE_LAUNCH_CLOSURE_PLAN.md"
+        },
+        {
+          "detail": "found agent-borg==3.3.19 expected agent-borg==3.3.20",
+          "kind": "stale agent-borg pin",
+          "path": "docs/20260514_PUBLIC_SELF_SERVE_LAUNCH_CLOSURE_PLAN.md"
+        },
+        {
+          "detail": "found agent-borg==3.3.19 expected agent-borg==3.3.20",
+          "kind": "stale agent-borg pin",
+          "path": "docs/20260514_PUBLIC_SELF_SERVE_LAUNCH_CLOSURE_PLAN.md"
+        },
+        {
+          "detail": "found agent-borg==3.3.19 expected agent-borg==3.3.20",
+          "kind": "stale agent-borg pin",
+          "path": "docs/20260514_PUBLIC_SELF_SERVE_LAUNCH_CLOSURE_PLAN.md"
+        },
+        {
+          "detail": "found agent-borg==3.3.19 expected agent-borg==3.3.20",
+          "kind": "stale agent-borg pin",
+          "path": "docs/20260514_PUBLIC_SELF_SERVE_LAUNCH_CLOSURE_PLAN.md"
+        },
+        {
+          "detail": "found agent-borg==3.3.19 expected agent-borg==3.3.20",
+          "kind": "stale agent-borg pin",
+          "path": "docs/20260514_PUBLIC_SELF_SERVE_LAUNCH_CLOSURE_PLAN.md"
+        },
+        {
+          "detail": "found agent-borg==3.3.19 expected agent-borg==3.3.20",
+          "kind": "stale agent-borg pin",
+          "path": "docs/20260514_PUBLIC_SELF_SERVE_LAUNCH_CLOSURE_PLAN.md"
+        },
+        {
+          "detail": "found agent-borg==3.3.19 expected agent-borg==3.3.20",
+          "kind": "stale agent-borg pin",
+          "path": "docs/ROADMAP.md"
+        },
+        {
+          "detail": "found agent-borg==3.3.19 expected agent-borg==3.3.20",
+          "kind": "stale agent-borg pin",
+          "path": "docs/ROADMAP.md"
+        },
+        {
+          "detail": "found agent-borg==3.3.19 expected agent-borg==3.3.20",
+          "kind": "stale agent-borg pin",
+          "path": "docs/20260522_BORG_PRODUCTION_DAY_ONE_HARDENING_PLAN.md"
+        },
+        {
+          "detail": "found agent-borg==3.3.19 expected agent-borg==3.3.20",
+          "kind": "stale agent-borg pin",
+          "path": "docs/VALUE_COMMUNICATION_DASHBOARD.md"
+        },
+        {
+          "detail": "found agent-borg==3.3.19 expected agent-borg==3.3.20",
+          "kind": "stale agent-borg pin",
+          "path": "docs/VALUE_COMMUNICATION_DASHBOARD.md"
+        },
+        {
+          "detail": "found agent-borg==3.3.19 expected agent-borg==3.3.20",
+          "kind": "stale agent-borg pin",
+          "path": "docs/VALUE_COMMUNICATION_DASHBOARD.md"
+        },
+        {
+          "detail": "found agent-borg==3.3.19 expected agent-borg==3.3.20",
+          "kind": "stale agent-borg pin",
+          "path": "docs/VALUE_COMMUNICATION_DASHBOARD.md"
+        },
+        {
+          "detail": "found agent-borg==3.3.19 expected agent-borg==3.3.20",
+          "kind": "stale agent-borg pin",
+          "path": "docs/VALUE_COMMUNICATION_DASHBOARD.html"
+        },
+        {
+          "detail": "found agent-borg==3.3.19 expected agent-borg==3.3.20",
+          "kind": "stale agent-borg pin",
+          "path": "docs/VALUE_COMMUNICATION_DASHBOARD.html"
+        },
+        {
+          "detail": "found agent-borg==3.3.19 expected agent-borg==3.3.20",
+          "kind": "stale agent-borg pin",
+          "path": "docs/VALUE_COMMUNICATION_DASHBOARD.html"
+        },
+        {
+          "detail": "found agent-borg==3.3.19 expected agent-borg==3.3.20",
+          "kind": "stale agent-borg pin",
+          "path": "docs/VALUE_COMMUNICATION_DASHBOARD.html"
+        },
+        {
+          "detail": "found agent-borg==3.3.19 expected agent-borg==3.3.20",
+          "kind": "stale agent-borg pin",
+          "path": "docs/FIRST_10_EVIDENCE_INTAKE.md"
+        },
+        {
+          "detail": "found agent-borg==3.3.19 expected agent-borg==3.3.20",
+          "kind": "stale agent-borg pin",
+          "path": "docs/LIVE_MCP_SELF_SERVE_CANARY.md"
+        },
+        {
+          "detail": "found agent-borg==3.3.19 expected agent-borg==3.3.20",
+          "kind": "stale agent-borg pin",
+          "path": "docs/20260526_7_USER_CONTROLLED_LAUNCH_AND_100_USER_STAGE_GATES.md"
+        },
+        {
+          "detail": "found agent-borg==3.3.19 expected agent-borg==3.3.20",
+          "kind": "stale agent-borg pin",
+          "path": "docs/20260526_7_USER_CONTROLLED_LAUNCH_AND_100_USER_STAGE_GATES.md"
+        },
+        {
+          "detail": "found agent-borg==3.3.19 expected agent-borg==3.3.20",
+          "kind": "stale agent-borg pin",
+          "path": "docs/20260526_7_USER_CONTROLLED_LAUNCH_AND_100_USER_STAGE_GATES.md"
+        },
+        {
+          "detail": "found agent-borg==3.3.19 expected agent-borg==3.3.20",
+          "kind": "stale agent-borg pin",
+          "path": "docs/20260526_7_USER_CONTROLLED_LAUNCH_AND_100_USER_STAGE_GATES.md"
+        },
+        {
+          "detail": "found agent-borg==3.3.19 expected agent-borg==3.3.20",
+          "kind": "stale agent-borg pin",
+          "path": "docs/20260526_7_USER_CONTROLLED_LAUNCH_AND_100_USER_STAGE_GATES.md"
+        },
+        {
+          "detail": "found agent-borg==3.3.19 expected agent-borg==3.3.20",
+          "kind": "stale agent-borg pin",
+          "path": "docs/BORG_PROOF_DASHBOARD.md"
+        },
+        {
+          "detail": "found agent-borg==3.3.19 expected agent-borg==3.3.20",
+          "kind": "stale agent-borg pin",
+          "path": "docs/BORG_PROOF_DASHBOARD.html"
+        },
+        {
+          "detail": "found agent-borg==3.3.19 expected agent-borg==3.3.20",
+          "kind": "stale agent-borg pin",
+          "path": "docs/BORG_PROOF_DASHBOARD.html"
+        },
+        {
+          "detail": "found agent-borg==3.3.19 expected agent-borg==3.3.20",
+          "kind": "stale agent-borg pin",
+          "path": "docs/public/proof-dashboard/index.html"
+        },
+        {
+          "detail": "found agent-borg==3.3.19 expected agent-borg==3.3.20",
+          "kind": "stale agent-borg pin",
+          "path": "docs/public/proof-dashboard/index.html"
+        },
+        {
+          "detail": "found agent-borg==3.3.19 expected agent-borg==3.3.20",
+          "kind": "stale agent-borg pin",
+          "path": "eval/borg_proof_dashboard.json"
+        }
+      ]
     },
     "first_10_external_evidence": {
       "blockers": [
@@ -116,7 +335,7 @@
     },
     "ops_readiness_watchdog": {
       "blockers": [],
-      "generated_at_utc": "2026-06-10T13:19:52.704158+00:00",
+      "generated_at_utc": "2026-06-10T13:19:58.796841+00:00",
       "passed": true,
       "snapshot": "eval/ops_readiness_watchdog_snapshot.json",
       "truth_policy": "Watchdog passing means controlled first-10 ops proof is fresh and internally consistent. Broad public self-serve still requires row-derived first-10 external-user evidence."
@@ -128,16 +347,16 @@
     },
     "pypi_fresh_install_and_mcp_stdio": {
       "exists": true,
-      "expected_version": "3.3.19",
+      "expected_version": "3.3.20",
       "failed_count": 1,
       "failures": [
         "pip_install_agent_borg"
       ],
       "freshness": {
-        "age_hours": 0.16996842694444445,
-        "failure_kind": null,
+        "age_hours": 30.79198438027778,
+        "failure_kind": "stale_timestamp",
         "max_age_hours": 24.0,
-        "passed": true
+        "passed": false
       },
       "generated_at_utc": "2026-06-10T13:09:41Z",
       "mcp_server_info": null,
@@ -149,10 +368,10 @@
     "pypi_latest": {
       "banned_keywords_present": [],
       "description_content_type": "text/markdown",
-      "description_length": 15626,
+      "description_length": 15696,
       "description_stale_copy": [],
       "expected_summary": "Failure memory CLI and MCP server for AI coding agents",
-      "expected_version": "3.3.19",
+      "expected_version": "3.3.20",
       "keyword_missing": false,
       "keywords": [
         "agent-tools",
@@ -161,7 +380,7 @@
         "failure-memory",
         "mcp"
       ],
-      "latest_version": "3.3.18",
+      "latest_version": "3.3.19",
       "package": "agent-borg",
       "passed": false,
       "project_urls": {
@@ -194,99 +413,49 @@
       ],
       "source_upload_alignment": {
         "alignment_basis": "current_source_revision",
-        "current_source_commit_time_utc": "2026-06-05T22:53:58+00:00",
+        "current_source_commit_time_utc": "2026-06-11T16:13:36+01:00",
         "detail": "PyPI release upload predates current source revision or package reference for at least one release file; publish a new immutable version before claiming package proof is current.",
         "dirty_source": true,
         "failure_kind": "same_version_pypi_upload_predates_source_revision",
-        "latest_release_upload_time_utc": "2026-06-03T20:19:08.726312+00:00",
+        "latest_release_upload_time_utc": "2026-06-10T14:03:03.942671+00:00",
         "non_package_changed_paths_since_reference": [],
         "non_package_dirty_paths": [
           ".github/ISSUE_TEMPLATE/bad-answer.yml",
           ".github/ISSUE_TEMPLATE/first-10-evidence.yml",
           ".github/ISSUE_TEMPLATE/install-mcp-support.yml",
-          "AGENTS.md",
-          "SUPPORT.md",
+          "CHANGELOG.md",
           "deploy/docker/Dockerfile.borg",
           "deploy/smithery/smithery.yaml",
-          "docs/20260514_FIRST_10_USER_INVITE_PACKET.md",
-          "docs/20260514_PUBLIC_SELF_SERVE_LAUNCH_CLOSURE_PLAN.md",
-          "docs/20260517_BORG_100_REAL_USER_READINESS.md",
-          "docs/20260522_BORG_PRODUCTION_DAY_ONE_HARDENING_PLAN.md",
-          "docs/20260526_7_USER_CONTROLLED_LAUNCH_AND_100_USER_STAGE_GATES.md",
-          "docs/BORG_PROOF_DASHBOARD.html",
-          "docs/BORG_PROOF_DASHBOARD.md",
           "docs/CHANNELS_AND_INSTALL_METHODS.md",
-          "docs/COLD_START_TRUST_HARDENING.md",
-          "docs/FIRST_10_BETA_READINESS.md",
-          "docs/FIRST_10_EVIDENCE_INTAKE.md",
-          "docs/LIVE_MCP_SELF_SERVE_CANARY.md",
-          "docs/PUBLIC_SELF_SERVE_LAUNCH_GO_NO_GO.md",
           "docs/READINESS.md",
-          "docs/README.md",
-          "docs/ROADMAP.md",
           "docs/SELF_SERVICE_OPS_READINESS_REPORT.md",
-          "docs/TRYING_BORG.md",
-          "docs/VALUE_COMMUNICATION_DASHBOARD.html",
-          "docs/VALUE_COMMUNICATION_DASHBOARD.md",
-          "docs/index.html",
-          "docs/landing-page/index.html",
-          "docs/public/impact/impact.json",
-          "docs/public/proof-dashboard/index.html",
-          "docs/public/status.json",
-          "docs/public/value.json",
-          "docs/status.json",
-          "eval/borg_proof_dashboard.json",
-          "eval/cold_start_trust_gate_snapshot.json",
-          "eval/first_user_release_gate_snapshot.json",
-          "eval/gate_run_snapshot.json",
-          "eval/load_1000_snapshot.json",
-          "eval/load_100_snapshot.json",
-          "eval/load_10_snapshot.json",
-          "eval/ops_readiness_watchdog_post_dashboard_check.json",
-          "eval/ops_readiness_watchdog_snapshot.json",
-          "eval/public_self_serve_launch_gate.py",
-          "eval/public_self_serve_launch_gate_snapshot.json",
-          "eval/pypi_fresh_install_snapshot.json",
-          "eval/real_user_rollout_gate_snapshot.json",
-          "eval/release_governance_snapshot.json",
           "eval/rollback_comms_drill_snapshot.json",
           "eval/self_service_ops_gate_snapshot.json",
-          "eval/served_runtime_fingerprint_snapshot.json",
-          "eval/tests/test_borg_proof_dashboard.py",
-          "eval/tests/test_production_inventory_board.py",
-          "eval/tests/test_real_user_rollout_gate.py",
-          "eval/uat_scoreboard_snapshot.json",
           "llms.txt",
-          "scripts/borg_proof_dashboard_lint.py",
-          "scripts/build_borg_proof_dashboard.py",
-          "tests/cli/test_cli.py",
-          "tests/packaging/test_distribution_readiness.py",
-          "tests/packaging/test_public_presentation_contract.py",
-          "tests/readiness/test_public_self_serve_launch_gate.py"
+          "scripts/cold_smoke_pypi.sh",
+          "tests/packaging/test_public_presentation_contract.py"
         ],
-        "oldest_release_upload_time_utc": "2026-06-03T20:19:07.209583+00:00",
+        "oldest_release_upload_time_utc": "2026-06-10T14:03:02.266418+00:00",
         "package_changed_paths_since_reference": [],
         "package_dirty": true,
         "package_dirty_paths": [
           "README.md",
           "borg/__init__.py",
-          "borg/cli.py",
-          "borg/cli/install.py",
           "pyproject.toml"
         ],
-        "package_reference": "v3.3.19",
+        "package_reference": "v3.3.20",
         "package_reference_ancestor_of_head": null,
         "package_reference_available": false,
         "package_reference_commit_time_utc": null,
-        "package_reference_error": "Command '['git', 'rev-parse', '--verify', 'refs/tags/v3.3.19^{commit}']' returned non-zero exit status 128.",
+        "package_reference_error": "Command '['git', 'rev-parse', '--verify', 'refs/tags/v3.3.20^{commit}']' returned non-zero exit status 128.",
         "package_reference_revision": null,
         "passed": false,
         "release_file_count": 2,
-        "source_commit_time_utc": "2026-06-05T22:53:58+00:00",
-        "source_revision": "966889e89878e1a7172229ed8aa71211c2ef2564+dirty",
+        "source_commit_time_utc": "2026-06-11T15:13:36+00:00",
+        "source_revision": "dcf296f877b403c0576d757b1ecf6e1146a5de8d+dirty",
         "stale_release_files": [
-          "agent_borg-3.3.18-py3-none-any.whl",
-          "agent_borg-3.3.18.tar.gz"
+          "agent_borg-3.3.19-py3-none-any.whl",
+          "agent_borg-3.3.19.tar.gz"
         ],
         "worktree_dirty": true
       },
@@ -340,7 +509,7 @@
     },
     "self_service_ops_readiness": {
       "blockers": [],
-      "generated_at_utc": "2026-06-10T13:19:54.142891+00:00",
+      "generated_at_utc": "2026-06-11T19:57:13.337148+00:00",
       "passed": true,
       "report": "docs/SELF_SERVICE_OPS_READINESS_REPORT.md",
       "rollout_policy": "Ops readiness is necessary but not sufficient for controlled first-10; package provenance, served-runtime freshness, release governance, ops/watchdog freshness, and first-10 guardrails must also pass. broad public self-serve still requires row-derived first-10 external evidence.",
@@ -348,10 +517,10 @@
     },
     "served_runtime_freshness": {
       "blockers": [
-        "served runtime borg_version '3.3.18' != source version '3.3.19'",
-        "served runtime source_version '3.3.18' != source version '3.3.19'"
+        "served runtime borg_version '3.3.18' != source version '3.3.20'",
+        "served runtime source_version '3.3.18' != source version '3.3.20'"
       ],
-      "expected_version": "3.3.19",
+      "expected_version": "3.3.20",
       "passed": false,
       "schema_version": 1,
       "snapshot": "eval/served_runtime_fingerprint_snapshot.json",
@@ -365,11 +534,11 @@
       }
     }
   },
-  "generated_at_utc": "2026-06-10T13:19:54.285718+00:00",
+  "generated_at_utc": "2026-06-11T19:57:13.499754+00:00",
   "max_recommended_real_users_now": 0,
   "ready_for_controlled_first_10_beta": false,
   "ready_for_public_self_serve_launch": false,
   "schema_version": 1,
-  "source_version": "3.3.19",
+  "source_version": "3.3.20",
   "truth_policy": "Public self-serve is GO only after PyPI/fresh-install/MCP/docs/cold-start-trust/served-runtime/release-governance/self-service-ops/watchdog gates pass AND row-derived first-10 external-user evidence passes. Synthetic users and aggregate-only edits never count."
 }

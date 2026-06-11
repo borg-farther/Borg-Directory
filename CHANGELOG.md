@@ -1,5 +1,14 @@
 # Changelog
 
+## 3.3.20 — unreleased (pilot release candidate)
+
+- Value measurement: rescue receipts schema v2 — `trigger`/`after_n_failures` signal, `coverage_class`, redacted `replay_context`; `borg status` headlines "Caught after your agent was stuck: N"; MCP `borg_rescue` takes `failure_count`/`trigger`; `borg_suggest`'s 2+-failures path records a receipt (#68).
+- Counterfactual measurement: `scripts/counterfactual_replay.py` (pinned model+prompts, consent-gated, offline mock mode) and the pre-registered pilot decision rule `docs/PILOT_DECISION_PROTOCOL.md` (#70).
+- Honesty: `borg.check()` is confidence-gated and never returns confident-wrong hits (#65); README/READINESS truth-synced (#64).
+- Safety: federation kill-switch `borg sharing off/on/status`, fail-closed (#67); privacy scanner now redacts name-driven credential assignments (compound env-var names) (#68).
+- Federation S0 hardening (still dark): root-key separation + key directory + revocation (`docs/KEY_MANAGEMENT.md`), atom-schema future-proof fields, full-payload ingest injection scoring, `docs/FEDERATION_DESIGN.md` (#71).
+- Ops: one-command readiness harness gating CI (#69); governance live-check retries transient GitHub 403/429/5xx so the watchdog stops flaking (#72); autopilot key/BORG_HOME, redaction count, branding fixes (#66).
+
 ## 3.3.16 — 2026-06-02
 
 - Release-governance and public-proof hardening release: CODEOWNERS now validates against the user-owned repo, branch protection uses exact check-run contexts, and bypass/extra-context/snapshot-forgery cases fail closed.
