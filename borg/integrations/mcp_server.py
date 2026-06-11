@@ -3389,9 +3389,12 @@ def borg_convert(path: str = "", format: str = "auto", output_dir: str = "") -> 
                     except Exception:
                         continue
 
-            # Also try to load from the guild-packs directory
+            # Also try to load from the guild-packs directory. Guarded: probing
+            # under /root raises EACCES for non-root users on py3.12 (D-018).
+            from borg.core.dirs import safe_dir_exists
+
             guild_packs_dir = pathlib.Path("/root/hermes-workspace/guild-packs/packs")
-            if guild_packs_dir.exists():
+            if safe_dir_exists(guild_packs_dir):
                 for pack_file in guild_packs_dir.glob("*.yaml"):
                     try:
                         pack_data = yaml.safe_load(pack_file.read_text(encoding="utf-8"))
