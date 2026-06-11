@@ -1,0 +1,88 @@
+{
+  "_comment": "Synthetic receipts for CI replay of scripts/counterfactual_replay.py. Shape matches borg.core.value_receipts.replayable_receipts() output (schema v2). 'mock' pins the offline judge verdict so the expected counterfactual_rate is exact: 2 stuck / 5 judged = 40%. One receipt has no replay_context (skipped).",
+  "receipts": [
+    {
+      "id": 1,
+      "problem_class": "missing_dependency",
+      "coverage_class": "python_dependency",
+      "trigger": "manual",
+      "trigger_n": 0,
+      "replay_context": {
+        "error_redacted": "ModuleNotFoundError: No module named 'requests'",
+        "env_fingerprint": "Linux/py3.12.3/borg3.3.19",
+        "matched_id": "missing_dependency",
+        "fix_surfaced": "pip install requests",
+        "outcome": "unknown"
+      },
+      "mock": {"judge": "WOULD_HAVE_SOLVED"}
+    },
+    {
+      "id": 2,
+      "problem_class": "migration_state_desync",
+      "coverage_class": "django_db",
+      "trigger": "after_n_failures",
+      "trigger_n": 3,
+      "replay_context": {
+        "error_redacted": "django.db.migrations.exceptions.InconsistentMigrationHistory: Migration app.0007 is applied before its dependency app.0006",
+        "env_fingerprint": "Linux/py3.12.3/borg3.3.19",
+        "matched_id": "migration_state_desync",
+        "fix_surfaced": "python manage.py migrate app 0005 --fake, then re-apply 0006..0007 in order",
+        "outcome": "unknown"
+      },
+      "mock": {"judge": "WOULD_HAVE_BEEN_STUCK"}
+    },
+    {
+      "id": 3,
+      "problem_class": "permission_denied",
+      "coverage_class": "permission",
+      "trigger": "after_n_failures",
+      "trigger_n": 2,
+      "replay_context": {
+        "error_redacted": "PermissionError: [Errno 13] Permission denied: '[REDACTED:local_path]'",
+        "env_fingerprint": "Linux/py3.12.3/borg3.3.19",
+        "matched_id": "permission_denied",
+        "fix_surfaced": "the agent was writing into the container-mounted read-only volume; write to the scratch dir instead",
+        "outcome": "unknown"
+      },
+      "mock": {"judge": "WOULD_HAVE_BEEN_STUCK"}
+    },
+    {
+      "id": 4,
+      "problem_class": "type_mismatch",
+      "coverage_class": "python_type",
+      "trigger": "manual",
+      "trigger_n": 0,
+      "replay_context": {
+        "error_redacted": "TypeError: unsupported operand type(s) for +: 'int' and 'str'",
+        "env_fingerprint": "Darwin/py3.11.9/borg3.3.19",
+        "matched_id": "type_mismatch",
+        "fix_surfaced": "cast the config port to int before arithmetic",
+        "outcome": "unknown"
+      },
+      "mock": {"judge": "WOULD_HAVE_SOLVED"}
+    },
+    {
+      "id": 5,
+      "problem_class": "configuration_error",
+      "coverage_class": "config",
+      "trigger": "task_start",
+      "trigger_n": 0,
+      "replay_context": {
+        "error_redacted": "KeyError: 'DATABASE_URL' — env var set as [REDACTED:credential_assignment] in .env but compose file does not pass it through",
+        "env_fingerprint": "Linux/py3.10.14/borg3.3.19",
+        "matched_id": "configuration_error",
+        "fix_surfaced": "add the variable to the docker-compose environment block; .env alone is not forwarded to the service",
+        "outcome": "unknown"
+      },
+      "mock": {"judge": "WOULD_HAVE_SOLVED"}
+    },
+    {
+      "id": 6,
+      "problem_class": "unknown",
+      "coverage_class": "unknown",
+      "trigger": "unknown",
+      "trigger_n": 0,
+      "replay_context": {}
+    }
+  ]
+}
