@@ -44,6 +44,45 @@ def test_structured_scan_safe_text_low_risk():
     assert result.findings == []
 
 
+def test_credential_assignment_redacts_value_keeps_name():
+    # Compound env-var names defeat the \b-delimited entropy rule; the name is
+    # the signal, so the value is redacted regardless of length or entropy.
+    for text in (
+        "AWS_SECRET_ACCESS_KEY=AKIAIOSFODNN7EXAMPLEKEY99",
+        "token=shortsecret1",
+        "pwd=hunter2x",
+        "db_password: changeme123",
+        "API_TOKEN=abc-def-123",
+    ):
+        result = privacy_scan_structured(text)
+        assert any(f.kind == "credential_assignment" for f in result.findings), text
+        assert result.blocked is True, text
+        value = text.split(":", 1)[-1].split("=", 1)[-1].strip()
+        assert value not in result.sanitized, text
+        assert "[REDACTED:credential_assignment]" in result.sanitized, text
+
+
+def test_credential_assignment_leaves_code_kwargs_alone():
+    for text in (
+        "sorted(items, key=lambda x: x.name)",  # bare key= is a code kwarg
+        "tokenizer=BertTokenizer.from_pretrained",  # name does not END with token
+        "author=jane_smith_2026",  # 'auth' inside 'author' must not fire
+        "token=None",  # too short to be a secret
+    ):
+        result = privacy_scan_structured(text)
+        assert not any(f.kind == "credential_assignment" for f in result.findings), text
+        assert result.sanitized == text, text
+
+
+def test_credential_assignment_does_not_double_redact():
+    result = privacy_scan_structured("token=KJH9sdf8SDF7sdf6ASDF5sdf4ASDF3sdf2ZXCVBNMqwerty")  # gitleaks:allow — fake fixture
+    # The entropy rule owns long high-entropy values; the credential rule must
+    # skip the already-redacted placeholder rather than stacking on top of it.
+    assert any(f.kind == "high_entropy" for f in result.findings)
+    assert not any(f.kind == "credential_assignment" for f in result.findings)
+    assert result.sanitized == "token=[REDACTED:high_entropy]"
+
+
 def test_privacy_risk_score_scans_nested_objects():
     obj = {"learning": {"worked": "email bob@example.com", "avoid": ["cat ~/.ssh/id_rsa"]}}
 

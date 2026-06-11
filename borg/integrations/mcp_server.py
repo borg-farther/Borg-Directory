@@ -721,6 +721,16 @@ TOOLS: List[Dict[str, Any]] = [
                     "description": "Include full legacy guidance block (default: true).",
                     "default": True,
                 },
+                "failure_count": {
+                    "type": "integer",
+                    "description": "Consecutive failed attempts before this rescue. >= 2 records it as 'caught after the agent was stuck' for value measurement.",
+                    "default": 0,
+                },
+                "trigger": {
+                    "type": "string",
+                    "description": "Why the rescue fired: task_start | after_n_failures | manual | unknown (default derived from failure_count).",
+                    "default": "",
+                },
             },
             "required": ["input"],
         },
@@ -1985,6 +1995,26 @@ def borg_suggest(
             results = v3.search(context, task_context=task_context)
             if results:
                 top = results[0]
+                # The 2+-consecutive-failures signal: Borg caught the agent after it
+                # was stuck. Record a value receipt so this is measurable.
+                try:
+                    from borg.core.value_receipts import record_rescue_receipt
+
+                    record_rescue_receipt(
+                        {
+                            "status": "matched",
+                            "problem_class": task_type or top.get("name", "suggestion"),
+                            "confidence": "suggested",
+                            "evidence": {"source": "pack_suggestion"},
+                            "action": [top.get("name", "")],
+                        },
+                        source="mcp_suggest",
+                        trigger="after_n_failures",
+                        trigger_n=int(failure_count or 0),
+                        error_text=context,
+                    )
+                except Exception:
+                    pass
                 return json.dumps({
                     "success": True,
                     "has_suggestion": True,
@@ -2129,13 +2159,37 @@ def _guidance_is_safe_to_inject(guidance: str, task: str, context: str = "") -> 
     return _confidence_gate.guidance_is_safe_to_inject(guidance, task, context)
 
 
-def borg_rescue(input: str = "", source: str = "mcp", show_guidance: bool = True, session_id: str = "") -> str:
+def borg_rescue(
+    input: str = "",
+    source: str = "mcp",
+    show_guidance: bool = True,
+    session_id: str = "",
+    failure_count: int = 0,
+    trigger: str = "",
+) -> str:
     """Return an agent-ready day-one rescue packet as JSON."""
     try:
         from borg.core.rescue import rescue
 
         result = rescue(input, source=source or "mcp", show_guidance=bool(show_guidance))
         payload = result.to_dict()
+        # Local, privacy-safe value receipt so `borg status` shows a running tally
+        # across CLI and MCP alike. failure_count >= 2 records this as a
+        # "caught after the agent was stuck" case. Best-effort: never break the rescue.
+        try:
+            from borg.core.value_receipts import record_rescue_receipt
+
+            trig = trigger or ("after_n_failures" if int(failure_count or 0) >= 2 else "unknown")
+            record_rescue_receipt(
+                result,
+                source=source or "mcp",
+                session_id=session_id,
+                trigger=trig,
+                trigger_n=int(failure_count or 0),
+                error_text=input,
+            )
+        except Exception:
+            pass
         sid = _human_session_key(explicit=session_id)
         source_refs = []
         problem_class = str(payload.get("problem_class") or "")
@@ -3576,6 +3630,8 @@ def _call_tool_impl(name: str, arguments: Dict[str, Any]) -> str:
             source=arguments.get("source", "mcp"),
             show_guidance=arguments.get("show_guidance", True),
             session_id=_human_session_key(arguments),
+            failure_count=arguments.get("failure_count", 0),
+            trigger=arguments.get("trigger", ""),
         )
 
     elif name == "borg_first_10":
