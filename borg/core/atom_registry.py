@@ -215,6 +215,7 @@ def _write_receipt(
     decision: str,
     reason: str,
     verified_tenant_count: int | None,
+    prompt_injection_score: float | None = None,
 ) -> RegistryReceipt:
     created_at = _now()
     receipt_id = _receipt_id(atom_id, decision, created_at)
@@ -227,6 +228,9 @@ def _write_receipt(
         "verified_tenant_count": verified_tenant_count,
         "created_at": created_at,
     }
+    if prompt_injection_score is not None:
+        # S0/B6: the ingest-side injection score is part of the audit trail.
+        receipt["prompt_injection_score"] = float(prompt_injection_score)
     path = root / "receipts" / (receipt_id.replace(":", "_") + ".json")
     _write_json(path, receipt)
     return RegistryReceipt(receipt_id, atom_id, decision, reason, verified_tenant_count, str(path))
@@ -346,7 +350,14 @@ def ingest_atom_envelope(
         raise ValueError(receipt.reason)
 
     _write_json(root / "atoms" / _safe_atom_filename(atom_id), envelope)
-    receipt = _write_receipt(root, atom_id, policy.decision.value, "accepted", verified_tenant_count)
+    receipt = _write_receipt(
+        root,
+        atom_id,
+        policy.decision.value,
+        "accepted",
+        verified_tenant_count,
+        prompt_injection_score=getattr(policy.injection, "score", None),
+    )
     rebuild_manifest(root)
     return receipt
 
@@ -428,10 +439,41 @@ def sync_registry_to_store(
     return {"imported": imported, "revoked": revoked, "skipped": skipped}
 
 
+def write_signed_key_directory(
+    registry_dir: str | Path,
+    root_signing_key: Any,
+    *,
+    channel: str = "global",
+    sequence: int,
+    manifest_verify_keys: Sequence[str],
+    revoked_key_ids: Sequence[str] = (),
+    expires_in_seconds: int = 24 * 3600,
+) -> Dict[str, Any]:
+    """Write keys.signed.json — the root-signed key directory (S0/B2).
+
+    The OFFLINE root key signs which online manifest keys are trusted and which
+    key ids are revoked. Clients that pin the root key id survive manifest-key
+    rotation/compromise without reconfiguration. See docs/KEY_MANAGEMENT.md.
+    """
+    from borg.core.key_management import build_key_directory_payload, sign_key_directory
+
+    root = _ensure_registry_dirs(registry_dir)
+    payload = build_key_directory_payload(
+        channel=channel,
+        sequence=sequence,
+        manifest_verify_keys=manifest_verify_keys,
+        revoked_key_ids=revoked_key_ids,
+        expires_in_seconds=expires_in_seconds,
+    )
+    envelope = sign_key_directory(payload, root_signing_key)
+    _write_json(root / "keys.signed.json", envelope)
+    return envelope
+
+
 def _verify_registry_manifest_signature(
     signed_manifest: Dict[str, Any],
     *,
-    trusted_registry_key_id: str,
+    trusted_registry_key_ids: Sequence[str],
     channel: str,
     now_epoch: float | None = None,
 ) -> Dict[str, Any]:
@@ -451,7 +493,7 @@ def _verify_registry_manifest_signature(
     derived_key_id = learning_atom_key_id_from_verify_key(verify_key)
     if signature.get("key_id") != derived_key_id:
         raise ValueError("registry manifest signature key_id does not match verify key")
-    if trusted_registry_key_id != derived_key_id:
+    if derived_key_id not in {str(k) for k in trusted_registry_key_ids}:
         raise ValueError("registry manifest signed by untrusted registry key")
     from nacl import encoding, exceptions
 
@@ -527,7 +569,8 @@ def sync_signed_registry_to_store(
     registry_url: str | Path,
     store: AtomStore,
     *,
-    trusted_registry_key_id: str,
+    trusted_registry_key_id: str | None = None,
+    trusted_root_key_id: str | None = None,
     channel: str = "global",
     state_path: str | Path | None = None,
     max_revocation_convergence_seconds: float | None = None,
@@ -538,21 +581,76 @@ def sync_signed_registry_to_store(
     Clients trust only `manifest.signed.json`: the registry signature, monotonic
     sequence, expiry, and per-file hashes all have to pass before any atom is
     imported. Tombstones are applied first so revocation always wins.
+
+    Trust anchors (at least one is required; both may be combined):
+      * ``trusted_registry_key_id`` — legacy direct pin of the manifest key.
+      * ``trusted_root_key_id`` — root-anchored mode (S0/B2): the registry's
+        ``keys.signed.json`` key directory is fetched, verified against the
+        pinned OFFLINE root key (signature, channel, expiry, monotonic
+        sequence), and only the directory's unrevoked manifest keys may sign
+        the manifest. Atom envelopes signed by revoked submitter key ids are
+        skipped. When both anchors are given the manifest key must satisfy BOTH.
     """
     is_remote = str(registry_url).startswith(("http://", "https://"))
     if is_remote and state_path is None:
         raise ValueError("state_path is required for remote signed registry replay protection")
+    if not trusted_registry_key_id and not trusted_root_key_id:
+        raise ValueError("a trust anchor is required: trusted_registry_key_id and/or trusted_root_key_id")
+
+    state = _load_sync_state(state_path)
+    revoked_key_ids: set[str] = set()
+    key_directory_sequence: int | None = None
+    trusted_manifest_key_ids: set[str] | None = None
+    if trusted_root_key_id:
+        from borg.core.key_management import (
+            key_directory_hash,
+            resolve_trusted_manifest_key_ids,
+            verify_key_directory,
+        )
+
+        directory_bytes = _fetch_registry_bytes(registry_url, "keys.signed.json")
+        directory_envelope = json.loads(directory_bytes.decode("utf-8"))
+        directory_payload = verify_key_directory(
+            directory_envelope,
+            trusted_root_key_id=trusted_root_key_id,
+            channel=channel,
+            now_epoch=now_epoch,
+        )
+        directory_hash = key_directory_hash(directory_envelope)
+        key_directory_sequence = int(directory_payload["sequence"])
+        last_dir_sequence = int(state.get("last_key_directory_sequence", 0) or 0)
+        last_dir_hash = state.get("last_key_directory_hash")
+        if key_directory_sequence < last_dir_sequence or (
+            key_directory_sequence == last_dir_sequence and last_dir_hash and last_dir_hash != directory_hash
+        ):
+            raise ValueError("registry key directory replay detected")
+        active_ids, revoked_key_ids = resolve_trusted_manifest_key_ids(directory_payload)
+        if not active_ids:
+            raise ValueError("registry key directory lists no unrevoked manifest keys")
+        trusted_manifest_key_ids = active_ids
+        state["last_key_directory_sequence"] = key_directory_sequence
+        state["last_key_directory_hash"] = directory_hash
+
+    if trusted_registry_key_id:
+        if trusted_registry_key_id in revoked_key_ids:
+            raise ValueError("pinned registry manifest key is revoked by the key directory")
+        if trusted_manifest_key_ids is None:
+            trusted_manifest_key_ids = {trusted_registry_key_id}
+        else:
+            trusted_manifest_key_ids = trusted_manifest_key_ids & {trusted_registry_key_id}
+            if not trusted_manifest_key_ids:
+                raise ValueError("pinned registry manifest key is not trusted by the key directory")
+
     manifest_bytes = _fetch_registry_bytes(registry_url, "manifest.signed.json")
     signed_manifest = json.loads(manifest_bytes.decode("utf-8"))
     payload = _verify_registry_manifest_signature(
         signed_manifest,
-        trusted_registry_key_id=trusted_registry_key_id,
+        trusted_registry_key_ids=sorted(trusted_manifest_key_ids or ()),
         channel=channel,
         now_epoch=now_epoch,
     )
     manifest_hash = _sha256_bytes(_canonical_json_bytes(signed_manifest))
     sequence = int(payload.get("sequence", 0))
-    state = _load_sync_state(state_path)
     last_sequence = int(state.get("last_sequence", 0) or 0)
     last_hash = state.get("last_manifest_hash")
     if sequence < last_sequence or (sequence == last_sequence and last_hash and last_hash != manifest_hash):
@@ -577,10 +675,17 @@ def sync_signed_registry_to_store(
 
     imported = 0
     skipped = 0
+    skipped_revoked_key = 0
     for envelope, entry in atom_pairs:
         atom_id = envelope["payload"]["atom_id"]
         if store.is_revoked(atom_id):
             skipped += 1
+            continue
+        submitter_key_id = str((envelope.get("signature") or {}).get("key_id") or "")
+        if submitter_key_id and submitter_key_id in revoked_key_ids:
+            # Key revocation wins over atom content: a compromised submitter
+            # key cannot keep distributing atoms through old manifests.
+            skipped_revoked_key += 1
             continue
         try:
             store.add_atom(envelope, verified_tenant_count=entry.get("verified_tenant_count"))
@@ -591,21 +696,24 @@ def sync_signed_registry_to_store(
     if max_revocation_convergence_seconds is not None and max_convergence > max_revocation_convergence_seconds:
         raise ValueError("registry revocation convergence SLO exceeded")
 
-    _write_sync_state(
-        state_path,
-        {
-            "last_sequence": sequence,
-            "last_manifest_hash": manifest_hash,
-            "synced_at": _iso_from_epoch(now),
-            "channel": channel,
-        },
-    )
+    new_state = {
+        "last_sequence": sequence,
+        "last_manifest_hash": manifest_hash,
+        "synced_at": _iso_from_epoch(now),
+        "channel": channel,
+    }
+    if key_directory_sequence is not None:
+        new_state["last_key_directory_sequence"] = state.get("last_key_directory_sequence")
+        new_state["last_key_directory_hash"] = state.get("last_key_directory_hash")
+    _write_sync_state(state_path, new_state)
     return {
         "remote": is_remote,
         "manifest_sequence": sequence,
         "manifest_hash": manifest_hash,
+        "key_directory_sequence": key_directory_sequence,
         "imported": imported,
         "revoked": revoked,
         "skipped": skipped,
+        "skipped_revoked_key": skipped_revoked_key,
         "revocation_convergence_seconds": max_convergence,
     }

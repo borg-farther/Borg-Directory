@@ -390,6 +390,8 @@ def test_non_current_public_docs_are_bannered_or_operator_scoped() -> None:
         "TRUST_AND_PROMOTION.md",
         "REVOCATION_AND_DELETION.md",
         "LEARNING_ATOM_SCHEMA.md",
+        "KEY_MANAGEMENT.md",
+        "FEDERATION_DESIGN.md",
         "CANONICAL_REPO.md",
         "LIVE_MCP_SELF_SERVE_CANARY.md",
         "20260526_7_USER_CONTROLLED_LAUNCH_AND_100_USER_STAGE_GATES.md",

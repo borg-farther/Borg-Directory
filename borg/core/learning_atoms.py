@@ -19,10 +19,17 @@ from borg.core.atom_tenant import is_valid_tenant_pseudonym, tenant_pseudonym
 ALLOWED_TOP_FIELDS = {
     "schema_version", "atom_id", "scope", "task", "learning", "evidence",
     "privacy", "safety", "trust", "lifecycle",
+    # Future-proof OPTIONAL fields (S0/B4) — validated when present, absent in
+    # v1 atoms, and part of the signed canonical payload when set. Semantics in
+    # docs/FEDERATION_DESIGN.md; adding them later would have re-signed the world.
+    "applicability", "outcome", "signature_class", "embedding_ref",
 }
 ALLOWED_SCOPES = {"local", "org", "global_candidate", "global"}
 ALLOWED_TASK_TYPES = {"debug", "test", "install", "deploy", "review", "config", "other"}
 ALLOWED_STATUSES = {"draft", "quarantined", "local_safe", "org_safe", "global_candidate", "published", "revoked"}
+ALLOWED_OUTCOME_STATUSES = {"unknown", "confirmed_helpful", "confirmed_unhelpful", "mixed"}
+ALLOWED_SIGNATURE_CLASSES = {"ed25519", "ed25519_pq_hybrid_reserved"}
+_APPLICABILITY_LIST_KEYS = {"languages", "frameworks", "os", "tool_versions"}
 
 
 @dataclass(frozen=True)
@@ -87,6 +94,39 @@ def validate_learning_atom(atom: Dict[str, Any]) -> ValidationResult:
     if re.search(r"@|https?://|/|\\\\", raw_tenant):
         errors.append("trust.tenant_pseudonym cannot contain raw tenant identifiers")
 
+    # Future-proof optional fields (S0/B4): absent => v1-compatible; present =>
+    # shape-checked here so federation peers can rely on them.
+    if "applicability" in atom:
+        applicability = atom.get("applicability")
+        if not isinstance(applicability, dict):
+            errors.append("applicability must be a dict")
+        else:
+            unknown_keys = set(applicability) - _APPLICABILITY_LIST_KEYS
+            if unknown_keys:
+                errors.append(f"applicability unknown key(s): {', '.join(sorted(unknown_keys))}")
+            for key, value in applicability.items():
+                if key in _APPLICABILITY_LIST_KEYS and (
+                    not isinstance(value, list) or not all(isinstance(v, str) for v in value)
+                ):
+                    errors.append(f"applicability.{key} must be a list of strings")
+    if "outcome" in atom:
+        outcome = atom.get("outcome")
+        if not isinstance(outcome, dict):
+            errors.append("outcome must be a dict")
+        elif outcome.get("status", "unknown") not in ALLOWED_OUTCOME_STATUSES:
+            errors.append("outcome.status is invalid")
+    if "signature_class" in atom and atom.get("signature_class") not in ALLOWED_SIGNATURE_CLASSES:
+        errors.append("signature_class is invalid")
+    if "embedding_ref" in atom:
+        embedding_ref = atom.get("embedding_ref")
+        if (
+            not isinstance(embedding_ref, str)
+            or not embedding_ref
+            or len(embedding_ref) > 256
+            or any(ch.isspace() for ch in embedding_ref)
+        ):
+            errors.append("embedding_ref must be a non-empty string (max 256 chars, no whitespace)")
+
     expected_id = compute_atom_id(atom)
     if atom.get("atom_id") and atom.get("atom_id") != expected_id:
         errors.append("atom_id does not match canonical payload")
@@ -94,12 +134,11 @@ def validate_learning_atom(atom: Dict[str, Any]) -> ValidationResult:
     scan = privacy_risk_score(atom)
     if scan.blocked:
         errors.append("privacy risk blocks shared atom")
-    injection_text = " ".join(str(x) for x in [
-        (atom.get("learning") or {}).get("worked", ""),
-        " ".join((atom.get("learning") or {}).get("avoid", []) or []),
-        (atom.get("learning") or {}).get("why", ""),
-    ])
-    if scan_prompt_injection(injection_text).blocked:
+    # S0/B6: scan EVERY string in the payload, not just learning.* — crafted
+    # atoms can carry injection in task/applicability/embedding_ref fields too.
+    from borg.core.privacy import collect_strings
+
+    if scan_prompt_injection(" ".join(collect_strings(atom))).blocked:
         errors.append("prompt injection risk blocks atom")
 
     if atom.get("scope") in {"global", "global_candidate"}:

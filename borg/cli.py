@@ -1014,14 +1014,52 @@ def _cmd_atom(args: argparse.Namespace) -> int:
         print(json.dumps({"success": True, "manifest": signed, "path": str(Path(args.registry_dir) / "manifest.signed.json")}, indent=2))
         return 0
 
+    if args.atom_action == "sign-key-directory":
+        from borg.core.atom_registry import write_signed_key_directory
+        from borg.core.crypto import derive_verify_key, encode_key, load_signing_key
+        root_key = load_signing_key(args.root_agent)
+        if root_key is None:
+            print(f"Error: root signing key not found for {args.root_agent}", file=sys.stderr)
+            return 1
+        manifest_verify_keys = []
+        for agent in args.manifest_agent:
+            key = load_signing_key(agent)
+            if key is None:
+                print(f"Error: manifest signing key not found for {agent}", file=sys.stderr)
+                return 1
+            manifest_verify_keys.append(encode_key(bytes(derive_verify_key(key))))
+        envelope = write_signed_key_directory(
+            args.registry_dir,
+            root_key,
+            channel=args.channel,
+            sequence=args.sequence,
+            manifest_verify_keys=manifest_verify_keys,
+            revoked_key_ids=args.revoke_key_id,
+            expires_in_seconds=args.expires_in,
+        )
+        print(json.dumps({
+            "success": True,
+            "root_key_id": envelope["signature"]["key_id"],
+            "manifest_key_ids": [k["key_id"] for k in envelope["payload"]["manifest_keys"]],
+            "revoked_key_ids": envelope["payload"]["revoked_key_ids"],
+            "sequence": envelope["payload"]["sequence"],
+            "expires_at": envelope["payload"]["expires_at"],
+            "path": str(Path(args.registry_dir) / "keys.signed.json"),
+        }, indent=2))
+        return 0
+
     if args.atom_action == "sync-remote":
         from borg.core.atom_registry import sync_signed_registry_to_store
         from borg.core.atom_store import AtomStore
+        if not args.registry_key_id and not args.root_key_id:
+            print("Error: a trust anchor is required: --registry-key-id and/or --root-key-id", file=sys.stderr)
+            return 1
         store = AtomStore(getattr(args, "db", None))
         result = sync_signed_registry_to_store(
             args.registry_url,
             store,
             trusted_registry_key_id=args.registry_key_id,
+            trusted_root_key_id=args.root_key_id,
             channel=args.channel,
             state_path=args.state,
             max_revocation_convergence_seconds=args.revocation_slo_seconds,
@@ -2554,12 +2592,27 @@ Examples:
     ap.set_defaults(func=_cmd_atom)
 
     ap = atom_sub.add_parser(
+        "sign-key-directory",
+        help="Root-sign the registry key directory (keys.signed.json)",
+        description="Sign which online manifest keys are trusted and which key ids are revoked, using the OFFLINE root key. See docs/KEY_MANAGEMENT.md.",
+    )
+    ap.add_argument("--registry-dir", required=True, help="Filesystem registry directory")
+    ap.add_argument("--root-agent", required=True, help="Agent id whose stored Ed25519 key is the OFFLINE root key")
+    ap.add_argument("--sequence", type=int, required=True, help="Monotonic key directory sequence number")
+    ap.add_argument("--channel", default="global", help="Registry channel/scope (default: global)")
+    ap.add_argument("--manifest-agent", action="append", default=[], help="Agent id whose verify key becomes a trusted manifest key (repeatable)")
+    ap.add_argument("--revoke-key-id", action="append", default=[], help="Key id to revoke (repeatable; revocation wins over listing)")
+    ap.add_argument("--expires-in", type=int, default=24 * 3600, help="Key directory expiry window in seconds (default: 86400)")
+    ap.set_defaults(func=_cmd_atom)
+
+    ap = atom_sub.add_parser(
         "sync-remote",
         help="Sync from a signed hosted registry manifest",
         description="Sync learning atoms from a signed hosted registry manifest. Refuses unsigned/replayed/tampered manifests and applies tombstones before atoms.",
     )
     ap.add_argument("registry_url", help="Base URL or directory containing manifest.signed.json")
-    ap.add_argument("--registry-key-id", required=True, help="Trusted registry Ed25519 key id")
+    ap.add_argument("--registry-key-id", default=None, help="Trusted registry manifest Ed25519 key id (direct pin)")
+    ap.add_argument("--root-key-id", default=None, help="Trusted OFFLINE root key id: verify keys.signed.json and trust its unrevoked manifest keys (root-anchored mode)")
     ap.add_argument("--channel", default="global", help="Expected manifest channel/scope (default: global)")
     ap.add_argument("--db", default=None, help="Optional atom DB path")
     ap.add_argument("--state", default=None, help="Sync state JSON path for replay protection")
