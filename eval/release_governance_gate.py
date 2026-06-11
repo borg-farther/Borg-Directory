@@ -17,6 +17,7 @@ import json
 import os
 import shutil
 import subprocess
+import time
 import urllib.error
 import urllib.parse
 import urllib.request
@@ -236,6 +237,50 @@ def _github_cli_token_candidate() -> str | None:
     return None
 
 
+# D-017: the watchdog's live branch-protection check intermittently hits GitHub
+# rate limits (HTTP 403, occasionally 429/5xx) and turned the whole required
+# check red. These are transient: retry with backoff, honoring Retry-After /
+# x-ratelimit-reset when GitHub provides them. 401 is NOT retried — it means
+# "wrong token" and the caller's token-candidate fallthrough must run instead.
+_RETRYABLE_HTTP_CODES = {403, 429, 500, 502, 503, 504}
+_MAX_FETCH_ATTEMPTS = 4
+_MAX_RETRY_DELAY_SECONDS = 60.0
+
+
+def _retry_delay_seconds(exc: urllib.error.HTTPError, attempt: int) -> float:
+    headers = getattr(exc, "headers", None)
+    if headers is not None:
+        retry_after = str(headers.get("Retry-After") or "").strip()
+        if retry_after.isdigit():
+            return min(float(retry_after), _MAX_RETRY_DELAY_SECONDS)
+        if str(headers.get("x-ratelimit-remaining") or "").strip() == "0":
+            reset = str(headers.get("x-ratelimit-reset") or "").strip()
+            if reset.isdigit():
+                delay = float(reset) - time.time()
+                if delay > 0:
+                    return min(delay, _MAX_RETRY_DELAY_SECONDS)
+    return min(float(2**attempt), _MAX_RETRY_DELAY_SECONDS)
+
+
+def _urlopen_json_with_retry(request: urllib.request.Request) -> dict[str, Any]:
+    """GET JSON with bounded retry/backoff on transient GitHub failures."""
+    for attempt in range(1, _MAX_FETCH_ATTEMPTS + 1):
+        try:
+            with urllib.request.urlopen(request, timeout=20) as response:  # nosec B310 - fixed GitHub API host
+                return json.loads(response.read().decode("utf-8"))
+        except urllib.error.HTTPError as exc:
+            if exc.code in _RETRYABLE_HTTP_CODES and attempt < _MAX_FETCH_ATTEMPTS:
+                time.sleep(_retry_delay_seconds(exc, attempt))
+                continue
+            raise
+        except urllib.error.URLError:
+            if attempt < _MAX_FETCH_ATTEMPTS:
+                time.sleep(min(float(2**attempt), _MAX_RETRY_DELAY_SECONDS))
+                continue
+            raise
+    raise RuntimeError("unreachable: retry loop must return or raise")
+
+
 def _github_get_json(path: str) -> dict[str, Any]:
     url = f"https://api.github.com/{path.lstrip('/')}"
     base_headers = {
@@ -251,8 +296,7 @@ def _github_get_json(path: str) -> dict[str, Any]:
         attempted_tokens.add(token)
         request = urllib.request.Request(url, headers=headers)
         try:
-            with urllib.request.urlopen(request, timeout=20) as response:  # nosec B310 - fixed GitHub API host
-                return json.loads(response.read().decode("utf-8"))
+            return _urlopen_json_with_retry(request)
         except urllib.error.HTTPError as exc:
             if exc.code == 401:
                 last_unauthorized = exc
@@ -264,8 +308,7 @@ def _github_get_json(path: str) -> dict[str, Any]:
         headers["Authorization"] = f"Bearer {gh_token}"
         request = urllib.request.Request(url, headers=headers)
         try:
-            with urllib.request.urlopen(request, timeout=20) as response:  # nosec B310 - fixed GitHub API host
-                return json.loads(response.read().decode("utf-8"))
+            return _urlopen_json_with_retry(request)
         except urllib.error.HTTPError as exc:
             if exc.code == 401:
                 last_unauthorized = exc
@@ -273,8 +316,7 @@ def _github_get_json(path: str) -> dict[str, Any]:
                 raise
     request = urllib.request.Request(url, headers=dict(base_headers))
     try:
-        with urllib.request.urlopen(request, timeout=20) as response:  # nosec B310 - fixed GitHub API host
-            return json.loads(response.read().decode("utf-8"))
+        return _urlopen_json_with_retry(request)
     except urllib.error.HTTPError as exc:
         if exc.code == 401 and last_unauthorized is not None:
             raise last_unauthorized
