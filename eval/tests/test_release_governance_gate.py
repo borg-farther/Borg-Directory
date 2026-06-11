@@ -93,6 +93,97 @@ def test_github_get_json_retries_gh_token_after_stale_env_token(monkeypatch) -> 
     assert "GH_TOKEN" not in gh_env
 
 
+def _http_error(code: int, headers: dict[str, str] | None = None) -> urllib.error.HTTPError:
+    msg = Message()
+    for key, value in (headers or {}).items():
+        msg[key] = value
+    return urllib.error.HTTPError("https://api.github.com/x", code, "boom", msg, None)
+
+
+def test_github_get_json_retries_transient_403_then_succeeds(monkeypatch) -> None:
+    # D-017: the watchdog live-check went red on intermittent GitHub rate-limit
+    # 403s. A transient 403 must be retried with backoff, not fail the gate.
+    attempts = []
+    sleeps = []
+
+    def fake_urlopen(request, timeout):
+        attempts.append(request.full_url)
+        if len(attempts) < 3:
+            raise _http_error(403)
+        return _FakeGitHubResponse()
+
+    monkeypatch.setenv("GITHUB_TOKEN", "test-token")
+    monkeypatch.setattr(release_governance_gate.urllib.request, "urlopen", fake_urlopen)
+    monkeypatch.setattr(release_governance_gate.time, "sleep", sleeps.append)
+
+    assert release_governance_gate._github_get_json("repos/o/r/branches/main") == {"ok": True}
+    assert len(attempts) == 3
+    assert sleeps == [2.0, 4.0]  # exponential backoff
+
+
+def test_github_get_json_honors_retry_after_header(monkeypatch) -> None:
+    attempts = []
+    sleeps = []
+
+    def fake_urlopen(request, timeout):
+        attempts.append(1)
+        if len(attempts) == 1:
+            raise _http_error(429, {"Retry-After": "7"})
+        return _FakeGitHubResponse()
+
+    monkeypatch.setenv("GITHUB_TOKEN", "test-token")
+    monkeypatch.setattr(release_governance_gate.urllib.request, "urlopen", fake_urlopen)
+    monkeypatch.setattr(release_governance_gate.time, "sleep", sleeps.append)
+
+    assert release_governance_gate._github_get_json("repos/o/r") == {"ok": True}
+    assert sleeps == [7.0]
+
+
+def test_github_get_json_403_exhausts_retries_then_raises(monkeypatch) -> None:
+    attempts = []
+
+    def fake_urlopen(request, timeout):
+        attempts.append(1)
+        raise _http_error(403)
+
+    monkeypatch.setenv("GITHUB_TOKEN", "test-token")
+    monkeypatch.setattr(release_governance_gate.urllib.request, "urlopen", fake_urlopen)
+    monkeypatch.setattr(release_governance_gate.time, "sleep", lambda _s: None)
+
+    try:
+        release_governance_gate._github_get_json("repos/o/r")
+        raise AssertionError("expected HTTPError")
+    except urllib.error.HTTPError as exc:
+        assert exc.code == 403
+    assert len(attempts) == release_governance_gate._MAX_FETCH_ATTEMPTS
+
+
+def test_github_get_json_401_is_not_retried_token_fallthrough_preserved(monkeypatch) -> None:
+    # 401 means wrong token: the token-candidate fallthrough (env -> gh -> anon)
+    # must run instead of burning retry attempts on the same bad credential.
+    per_token_attempts: dict[str, int] = {}
+
+    def fake_urlopen(request, timeout):
+        auth = request.get_header("Authorization") or "anonymous"
+        per_token_attempts[auth] = per_token_attempts.get(auth, 0) + 1
+        if auth == "Bearer stale-env-token":
+            raise _http_error(401)
+        return _FakeGitHubResponse()
+
+    monkeypatch.setenv("GITHUB_TOKEN", "stale-env-token")
+    monkeypatch.delenv("GH_TOKEN", raising=False)
+    monkeypatch.setattr(release_governance_gate.shutil, "which", lambda name: None)
+    monkeypatch.setattr(release_governance_gate.urllib.request, "urlopen", fake_urlopen)
+    monkeypatch.setattr(
+        release_governance_gate.time, "sleep",
+        lambda _s: (_ for _ in ()).throw(AssertionError("401 must not back off")),
+    )
+
+    assert release_governance_gate._github_get_json("repos/o/r") == {"ok": True}
+    assert per_token_attempts["Bearer stale-env-token"] == 1  # single attempt, no retry
+    assert per_token_attempts["anonymous"] == 1
+
+
 def test_release_governance_gate_fails_unprotected_main() -> None:
     result = release_governance_gate.evaluate_branch_payload({"protected": False})
 
