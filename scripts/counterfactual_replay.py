@@ -13,7 +13,7 @@ the fix Borg actually surfaced:
     counterfactual value
 
 Outputs ``counterfactual_rate`` (counterfactual / replayed) with a Wilson 95%
-CI, mapped to the PILOT_DECISION_PROTOCOL.md thresholds (<5% kill, >20% build,
+CI, mapped to the docs/PILOT_DECISION_PROTOCOL.md thresholds (<5% kill, >20% build,
 5-20% extend).
 
 Honesty and privacy rules:
@@ -90,8 +90,8 @@ or
 VERDICT: WOULD_HAVE_BEEN_STUCK
 """
 
-KILL_THRESHOLD = 0.05  # PILOT_DECISION_PROTOCOL.md: below -> kill
-BUILD_THRESHOLD = 0.20  # PILOT_DECISION_PROTOCOL.md: above -> build
+KILL_THRESHOLD = 0.05  # docs/PILOT_DECISION_PROTOCOL.md: below -> kill
+BUILD_THRESHOLD = 0.20  # docs/PILOT_DECISION_PROTOCOL.md: above -> build
 
 _Z95 = 1.959963984540054
 

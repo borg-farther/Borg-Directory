@@ -382,6 +382,7 @@ def test_non_current_public_docs_are_bannered_or_operator_scoped() -> None:
         "SELF_SERVICE_OPS_READINESS_REPORT.md",
         "FIRST_10_EVIDENCE_INTAKE.md",
         "ROLLBACK_AND_COMMS_RUNBOOK.md",
+        "PILOT_DECISION_PROTOCOL.md",
         "COLD_START_TRUST_HARDENING.md",
         "SECURITY_HARDENING_BASELINE.md",
         "PRIVACY_MODEL.md",
