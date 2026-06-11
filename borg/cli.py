@@ -550,7 +550,7 @@ def _cmd_rescue(args: argparse.Namespace) -> int:
     try:
         from borg.core.value_receipts import record_rescue_receipt
 
-        record_rescue_receipt(result, source="cli")
+        record_rescue_receipt(result, source="cli", trigger="manual", error_text=text)
     except Exception:
         pass
     if args.json:
@@ -2071,8 +2071,13 @@ def _cmd_status(args: argparse.Namespace) -> int:
     fired = val.get("rescues_fired", 0)
     print("  Value on this machine (local rescue tally):")
     if fired:
+        caught = val.get("caught_after_stuck", 0)
+        print(f"    Caught after your agent was stuck: {caught}")
         print(f"    Borg fired:          {fired} time(s) — matched {val.get('rescues_matched', 0)}, "
               f"no-confident-match {val.get('no_confident_match', 0)}")
+        if val.get("matched_by_coverage_class"):
+            cov = ", ".join(f"{k}={v}" for k, v in sorted(val["matched_by_coverage_class"].items()))
+            print(f"    matched by coverage: {cov}")
         if val.get("matched_by_confidence"):
             tiers = ", ".join(f"{k}={v}" for k, v in sorted(val["matched_by_confidence"].items()))
             print(f"    matched by tier:     {tiers}")

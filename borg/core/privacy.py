@@ -94,6 +94,20 @@ _STRUCTURED_PATTERNS: List[Tuple[re.Pattern, str, str, str]] = [
 
 _SEVERITY_SCORE = {"low": 10, "medium": 35, "high": 70, "critical": 100}
 
+# Name-driven credential assignments: AWS_SECRET_ACCESS_KEY=..., db_password: ...,
+# token=shortvalue. The entropy rule below only fires on \b-delimited names (\b
+# never matches after '_', so compound env-var names slip through) with 32+-char
+# high-entropy values. When the NAME says credential, the value is secret
+# regardless of its length or entropy. Bare `key=` is excluded (too common as a
+# code kwarg); compound forms like *_key / api_key are matched. The name is kept
+# in the sanitized text for context; only the value is redacted.
+_CREDENTIAL_ASSIGNMENT = re.compile(
+    r"(?i)(?<![A-Za-z0-9])"
+    r"(?:[A-Za-z0-9_.-]*?(?:secret|passw(?:or)?d|pwd|passphrase|credential|cred|token|bearer|auth|apikey|api[_-]key)s?"
+    r"|[A-Za-z0-9_.-]+[_-]keys?)"
+    r"\s*[:=]\s*[\"']?(?!\[REDACTED)([^\s\"',;]{6,})"
+)
+
 
 def _hash_sample(value: str) -> str:
     return hashlib.sha256(value.encode("utf-8", "ignore")).hexdigest()[:16]
@@ -131,6 +145,17 @@ def privacy_scan_structured(text: str) -> PrivacyScanResult:
                 PrivacyFinding("high_entropy", "high entropy secret", "critical", match.start(1), match.end(1), _hash_sample(candidate))
             )
     sanitized = entropy_pattern.sub(lambda m: m.group(0).replace(m.group(1), "[REDACTED:high_entropy]"), sanitized)
+
+    for match in _CREDENTIAL_ASSIGNMENT.finditer(sanitized):
+        findings.append(
+            PrivacyFinding(
+                "credential_assignment", "credential assignment", "critical",
+                match.start(1), match.end(1), _hash_sample(match.group(1)),
+            )
+        )
+    sanitized = _CREDENTIAL_ASSIGNMENT.sub(
+        lambda m: m.group(0).replace(m.group(1), "[REDACTED:credential_assignment]"), sanitized
+    )
 
     risk = max((_SEVERITY_SCORE[f.severity] for f in findings), default=0)
     return PrivacyScanResult(sanitized, findings, risk, risk >= 70)
