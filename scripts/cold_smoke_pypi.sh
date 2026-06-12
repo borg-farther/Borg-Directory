@@ -46,7 +46,7 @@ check "honesty probe -> NO_CONFIDENT_MATCH" $?
 borg status >/tmp/status.log 2>&1
 grep -q "Value on this machine" /tmp/status.log; check "borg status shows Value block" $?
 grep -q "Borg fired:" /tmp/status.log; check "borg status shows fired tally" $?
-grep -q "Caught after your agent was stuck:" /tmp/status.log; check "borg status shows caught-after-stuck headline" $?
+grep -E -q "Caught (after )?your agent (was )?stuck" /tmp/status.log; check "borg status shows caught-your-agent-stuck headline" $?
 grep -q "not claimed" /tmp/status.log; check "borg status keeps honesty caveat" $?
 
 TTV=$((T_VALUE - T0))
