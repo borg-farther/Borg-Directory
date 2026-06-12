@@ -397,6 +397,20 @@ def _save_trace_if_meaningful(trace: Dict[str, Any], *, session_id: str = "") ->
         logger.warning("borg: skipped hollow trace")
         return False
     save_trace(trace)
+    # observe->recall bridge: traces with errors must also be recallable via
+    # borg_recall (failure memory), not just searchable. Best-effort.
+    try:
+        errors = json.loads(trace.get("errors_encountered") or "[]")
+        if errors:
+            from borg.core.failure_memory import FailureMemory
+
+            FailureMemory(agent_id=str(trace.get("agent_id") or "default")).record_trace_observation(
+                errors=[str(e) for e in errors[:5]],
+                approach=str(trace.get("approach_summary") or trace.get("task_description") or ""),
+                outcome="success" if trace.get("outcome") == "success" else "failure",
+            )
+    except Exception:
+        pass
     _record_human_trace_contributed(session_id or _current_session_id.get() or "__process__")
     return True
 
@@ -2842,20 +2856,40 @@ def borg_recall(error_message: str = "", agent_id: str = "default") -> str:
             return json.dumps({"success": False, "error": "error_message is required"})
 
         fm = FailureMemory()
+        # observe->recall fix: requested namespace first, then every namespace
+        # (CLI observes as 'cli', MCP as 'default'), then traces.db so
+        # observations recorded before the bridge still surface.
         result = fm.recall(error_message, agent_id=agent_id)
+        if not isinstance(result, dict):
+            result = fm.recall_across_agents(error_message)
+        if not isinstance(result, dict):
+            result = None
 
         if result is None:
+            from borg.core.traces import find_traces_for_error
+
+            traces = find_traces_for_error(error_message, limit=5)
             return json.dumps({
                 "success": True,
-                "found": False,
+                "found": bool(traces),
+                "source": "traces" if traces else "none",
                 "wrong_approaches": [],
                 "correct_approaches": [],
                 "total_sessions": 0,
+                "observed_traces": [
+                    {
+                        "task": str(t.get("task_description") or "")[:200],
+                        "outcome": t.get("outcome", "unknown"),
+                        "approach": str(t.get("approach_summary") or t.get("root_cause") or "")[:200],
+                    }
+                    for t in traces
+                ],
             })
 
         return json.dumps({
             "success": True,
             "found": True,
+            "source": "failure_memory",
             "error_pattern": result.get("error_pattern", ""),
             "agent_id": result.get("agent_id", agent_id),
             "wrong_approaches": result.get("wrong_approaches", []),
@@ -2966,7 +3000,22 @@ def borg_record_outcome(
             dead_ends_avoided=dead_ends_avoided,
             notes=notes,
         )
-        return json.dumps({"success": True, "recorded": True, "receipt": receipt}, ensure_ascii=False)
+        # Close the loop on the value receipt too: the counterfactual replay
+        # distinguishes fixes that worked from ones merely surfaced. Best-effort.
+        value_receipt_id = None
+        try:
+            from borg.core.value_receipts import record_latest_receipt_outcome
+
+            value_receipt_id = record_latest_receipt_outcome(
+                "worked" if helpful else "did_not_work"
+            )
+        except Exception:
+            pass
+        return json.dumps(
+            {"success": True, "recorded": True, "receipt": receipt,
+             "value_receipt_outcome_id": value_receipt_id},
+            ensure_ascii=False,
+        )
     except (KeyboardInterrupt, SystemExit):
         raise
     except (ValueError, KeyError, OSError, json.JSONDecodeError) as e:

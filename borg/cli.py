@@ -441,9 +441,24 @@ def _cmd_recall(args: argparse.Namespace) -> int:
     try:
         from borg.core.failure_memory import FailureMemory
         fm = FailureMemory()
-        result = fm.recall(error_message)
+        # observe->recall fix: own namespace first, then every agent namespace
+        # (CLI observe records as 'cli', MCP as 'default' — a local human asking
+        # recall should not miss either), then fall back to traces.db so
+        # observations recorded before the bridge still surface.
+        result = fm.recall(error_message) or fm.recall_across_agents(error_message)
 
         if not result:
+            from borg.core.traces import find_traces_for_error
+
+            traces = find_traces_for_error(error_message, limit=5)
+            if traces:
+                print(f"No failure-memory entry, but {len(traces)} prior observed trace(s) match:")
+                for trace in traces:
+                    print(f"  • [{trace.get('outcome', '?')}] {str(trace.get('task_description') or '')[:90]}")
+                    approach = str(trace.get("approach_summary") or trace.get("root_cause") or "").strip()
+                    if approach:
+                        print(f"      approach: {approach[:100]}")
+                return 0
             print(f"No prior failures recorded for: {error_message}")
             return 0
 
@@ -923,6 +938,19 @@ def _cmd_observe(args: argparse.Namespace) -> int:
         )
         trace["source"] = "observe-cli"
         trace_id = save_trace(trace)
+        # observe->recall bridge: a trace with an error must also be recallable,
+        # not just searchable. Best-effort: never fail the observation.
+        if error:
+            try:
+                from borg.core.failure_memory import FailureMemory
+
+                FailureMemory(agent_id=agent_id or "cli").record_trace_observation(
+                    errors=[error],
+                    approach=context or task,
+                    outcome="failure",
+                )
+            except Exception:
+                pass
         print(f"Recorded trace {trace_id} for task: {task[:80]}")
         if args.json:
             print(json.dumps({
@@ -935,6 +963,88 @@ def _cmd_observe(args: argparse.Namespace) -> int:
     except Exception as e:
         print(f"Error recording observation: {e}", file=sys.stderr)
         return 1
+
+
+def _cmd_receipts(args: argparse.Namespace) -> int:
+    """Local receipt data rights: list, consented export, outcome, delete."""
+    from borg.core.value_receipts import (
+        VALID_OUTCOMES,
+        delete_receipts,
+        export_receipts,
+        record_receipt_outcome,
+        replayable_receipts,
+    )
+
+    if args.receipts_action == "list":
+        rows = replayable_receipts(limit=args.limit, matched_only=False)
+        if args.json:
+            print(json.dumps({"success": True, "receipts": rows, "total": len(rows)}, indent=2))
+            return 0
+        if not rows:
+            print("No receipts recorded.")
+            return 0
+        print(f"{len(rows)} receipt(s) (newest first):")
+        for receipt in rows:
+            context = receipt.get("replay_context") or {}
+            print(
+                f"  #{receipt['id']}  {receipt['created_at']}  {receipt['problem_class']}"
+                f"  trigger={receipt['trigger']}  outcome={context.get('outcome', 'unknown')}"
+            )
+            redacted = context.get("error_redacted") or ""
+            if redacted:
+                print(f"        {redacted[:110]}")
+        return 0
+
+    if args.receipts_action == "export":
+        export = export_receipts(matched_only=args.matched_only)
+        receipts = export["receipts"]
+        if not receipts:
+            print("No receipts to export.", file=sys.stderr)
+            return 1
+        # Consent surface: show EXACTLY what will be shared, byte for byte.
+        print(f"About to export {len(receipts)} redacted receipt(s). This is the FULL content:")
+        print(json.dumps(export, indent=2))
+        if not args.yes:
+            answer = _read_single_line_from_stdin(
+                f"Write these {len(receipts)} receipt(s) to {args.out}? [y/N] "
+            )
+            if answer.strip().lower() not in ("y", "yes"):
+                print("Aborted. Nothing was written or shared.")
+                return 1
+        Path(args.out).write_text(json.dumps(export, indent=2) + "\n", encoding="utf-8")
+        print(f"Wrote {len(receipts)} receipt(s) to {args.out}. Nothing leaves this machine "
+              "until you hand that file over; you can delete receipts at any time with "
+              "`borg receipts delete`.")
+        return 0
+
+    if args.receipts_action == "outcome":
+        if args.outcome not in VALID_OUTCOMES:
+            print(f"Error: --outcome must be one of {sorted(VALID_OUTCOMES)}", file=sys.stderr)
+            return 1
+        if record_receipt_outcome(args.id, args.outcome):
+            print(f"Receipt #{args.id} outcome set to {args.outcome}.")
+            return 0
+        print(f"Error: receipt #{args.id} not found.", file=sys.stderr)
+        return 1
+
+    if args.receipts_action == "delete":
+        if not args.all and args.id is None:
+            print("Error: pass --all or --id N", file=sys.stderr)
+            return 1
+        target = "ALL receipts" if args.all else f"receipt #{args.id}"
+        if not args.yes:
+            answer = _read_single_line_from_stdin(f"Permanently delete {target}? [y/N] ")
+            if answer.strip().lower() not in ("y", "yes"):
+                print("Aborted. Nothing deleted.")
+                return 1
+        deleted = delete_receipts(
+            ids=None if args.all else [args.id], delete_all=args.all
+        )
+        print(f"Deleted {deleted} receipt(s).")
+        return 0
+
+    print("Error: unknown receipts action", file=sys.stderr)
+    return 1
 
 
 def _cmd_atom(args: argparse.Namespace) -> int:
@@ -2571,6 +2681,43 @@ in v3.2.4 to fix the observe→search roundtrip bug from the P1.1 experiment."""
     p.add_argument("--agent", default="cli", help="Agent id for provenance (default: cli)")
     p.add_argument("--json", action="store_true", help="Output raw JSON")
     p.set_defaults(func=_cmd_observe)
+
+    # borg receipts — local value-receipt data rights (list/export/outcome/delete)
+    p = sub.add_parser(
+        "receipts",
+        help="Inspect, export (consented), close out, or delete your local rescue receipts",
+        description="Your rescue receipts are local-only and redacted at write time. "
+        "Export shows the exact content before anything is written; delete is permanent.",
+    )
+    receipts_sub = p.add_subparsers(dest="receipts_action", required=True)
+
+    rp = receipts_sub.add_parser("list", help="List receipts (id, class, trigger, outcome)")
+    rp.add_argument("--limit", type=int, default=50)
+    rp.add_argument("--json", action="store_true")
+    rp.set_defaults(func=_cmd_receipts)
+
+    rp = receipts_sub.add_parser(
+        "export",
+        help="Export redacted receipts for the consented counterfactual replay",
+        description="Shows the FULL export content and asks for confirmation before writing. "
+        "The output file is the exact input format of scripts/counterfactual_replay.py.",
+    )
+    rp.add_argument("--out", required=True, help="Output JSON file path")
+    rp.add_argument("--matched-only", action="store_true", help="Export only matched receipts")
+    rp.add_argument("--yes", action="store_true", help="Skip the interactive confirmation")
+    rp.set_defaults(func=_cmd_receipts)
+
+    rp = receipts_sub.add_parser("outcome", help="Record whether a surfaced fix actually worked")
+    rp.add_argument("--id", type=int, required=True, help="Receipt id (see `borg receipts list`)")
+    rp.add_argument("--outcome", required=True, help="worked | did_not_work | unknown")
+    rp.set_defaults(func=_cmd_receipts)
+
+    rp = receipts_sub.add_parser("delete", help="Permanently delete receipts")
+    group = rp.add_mutually_exclusive_group()
+    group.add_argument("--all", action="store_true", help="Delete every receipt")
+    group.add_argument("--id", type=int, default=None, help="Delete one receipt by id")
+    rp.add_argument("--yes", action="store_true", help="Skip the interactive confirmation")
+    rp.set_defaults(func=_cmd_receipts)
 
     # borg atom — privacy-safe learning atom utilities
     p = sub.add_parser("atom", help="Manage signed, sanitized, revocable learning atoms",
