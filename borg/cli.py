@@ -2320,21 +2320,31 @@ def _cmd_status(args: argparse.Namespace) -> int:
     print()
     val = payload.get("value") or {}
     fired = val.get("rescues_fired", 0)
+    # Reads as a receipt (firing visibility): the two value lines first, in
+    # human vocabulary; internals after; honesty note last. --json unchanged.
     print("  Value on this machine (local rescue tally):")
     if fired:
+        from borg.core.human_language import humanize_confidence, humanize_provenance
+
         caught = val.get("caught_after_stuck", 0)
-        print(f"    Caught after your agent was stuck: {caught}")
-        print(f"    Borg fired:          {fired} time(s) — matched {val.get('rescues_matched', 0)}, "
-              f"no-confident-match {val.get('no_confident_match', 0)}")
+        matched = val.get("rescues_matched", 0)
+        print(f"    🛟 Caught your agent stuck: {caught}")
+        print(f"    Found known fixes: {matched} of {fired} errors")
+        if val.get("matched_by_provenance"):
+            prov = ", ".join(
+                f"{humanize_provenance(k) or k}={v}"
+                for k, v in sorted(val["matched_by_provenance"].items())
+            )
+            print(f"    sources:             {prov}")
+        if val.get("matched_by_confidence"):
+            tiers = ", ".join(
+                f"{humanize_confidence(k)}={v}"
+                for k, v in sorted(val["matched_by_confidence"].items())
+            )
+            print(f"    trust basis:         {tiers}")
         if val.get("matched_by_coverage_class"):
             cov = ", ".join(f"{k}={v}" for k, v in sorted(val["matched_by_coverage_class"].items()))
             print(f"    matched by coverage: {cov}")
-        if val.get("matched_by_confidence"):
-            tiers = ", ".join(f"{k}={v}" for k, v in sorted(val["matched_by_confidence"].items()))
-            print(f"    matched by tier:     {tiers}")
-        if val.get("matched_by_provenance"):
-            prov = ", ".join(f"{k}={v}" for k, v in sorted(val["matched_by_provenance"].items()))
-            print(f"    matched by source:   {prov}")
         print(f"    distinct problems:   {val.get('distinct_problem_classes', 0)}")
         print(f"    note: {val.get('savings_note', '')}")
     else:
