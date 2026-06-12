@@ -317,9 +317,12 @@ def _get_skills_dir() -> Path:
     if skills_dir.is_dir():
         return skills_dir
 
-    # 3. Absolute dev fallback
+    # 3. Absolute dev fallback. Guarded: probing under /root raises EACCES for
+    # non-root users on Python 3.12 (D-018) — unreadable means "not there".
+    from borg.core.dirs import safe_dir_exists
+
     dev_path = Path("/root/hermes-workspace/borg/examples/skills")
-    if dev_path.is_dir():
+    if safe_dir_exists(dev_path) and dev_path.is_dir():
         return dev_path
 
     # 4. Not found — return None instead of crashing
