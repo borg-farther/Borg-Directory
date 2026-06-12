@@ -53,18 +53,25 @@ def _print_json(raw: str) -> None:
         print(raw)
 
 
+def _safe_dir_exists(path) -> bool:
+    """Existence probe that treats unreadable as absent (D-018, see core.dirs)."""
+    from borg.core.dirs import safe_dir_exists
+
+    return safe_dir_exists(path)
+
+
 def _load_builtin_packs() -> list:
     """Load packs from the built-in guild-packs directory.
-    
+
     This provides a fallback when no local packs are available.
     """
     import pathlib
     import yaml
-    
+
     packs = []
     guild_packs_dir = pathlib.Path("/root/hermes-workspace/guild-packs/packs")
-    
-    if guild_packs_dir.exists():
+
+    if _safe_dir_exists(guild_packs_dir):
         for pack_file in guild_packs_dir.glob("*.yaml"):
             try:
                 pack_data = yaml.safe_load(pack_file.read_text(encoding="utf-8"))
@@ -748,16 +755,38 @@ def _cmd_convert(args: argparse.Namespace) -> int:
                         except Exception:
                             continue
                 
+                # Bundled seed packs ship with the wheel — the only source
+                # guaranteed present on a clean user install (D-018: the
+                # maintainer-path fallback below does not exist off this VPS,
+                # so without this, `convert --all` found ZERO packs on every
+                # real user machine).
+                # Anchor on the borg package, NOT __file__: borg/cli is a
+                # package that execs cli.py, so __file__ points at borg/cli/.
+                import borg as _borg_pkg
+
+                bundled_packs_dir = pathlib.Path(_borg_pkg.__file__).resolve().parent / "seeds_data" / "packs"
+                if _safe_dir_exists(bundled_packs_dir):
+                    for pack_file in sorted(bundled_packs_dir.glob("*.yaml")):
+                        try:
+                            pack_data = yaml.safe_load(pack_file.read_text(encoding="utf-8"))
+                            if isinstance(pack_data, dict):
+                                # Seed packs carry `name`, not `id` — without
+                                # this they were silently dropped by _add_pack.
+                                pack_data.setdefault("id", str(pack_data.get("name") or pack_file.stem))
+                                _add_pack(pack_data)
+                        except Exception:
+                            continue
+
                 # Also load ALL packs from the guild-packs directory
                 guild_packs_dir = pathlib.Path("/root/hermes-workspace/guild-packs/packs")
-                if guild_packs_dir.exists():
+                if _safe_dir_exists(guild_packs_dir):
                     for pack_file in guild_packs_dir.glob("*.yaml"):
                         try:
                             pack_data = yaml.safe_load(pack_file.read_text(encoding="utf-8"))
                             _add_pack(pack_data)
                         except Exception:
                             continue
-                
+
                 # Fallback: use the borg core registry if no packs found
                 if not packs:
                     packs = _load_builtin_packs()

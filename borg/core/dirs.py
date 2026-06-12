@@ -97,6 +97,22 @@ def get_failure_memory_dir() -> Path:
     return get_borg_home() / "failures"
 
 
+def safe_dir_exists(path: Path) -> bool:
+    """Existence probe that treats unreadable as absent (D-018).
+
+    On Python 3.12 ``Path.exists()``/``is_dir()`` RAISE PermissionError for
+    paths under an untraversable directory (EACCES is not in pathlib's
+    ignored-errno set). Maintainer-checkout fallback paths live under /root,
+    which is 0700 on every normal machine — probing them crashed
+    ``borg convert --all`` for every non-root user of the published wheel.
+    An unreadable fallback dir must mean "not there", never a crash.
+    """
+    try:
+        return path.exists()
+    except OSError:
+        return False
+
+
 def get_feedback_db_path() -> Path:
     """Feedback signals share the trace DB for backwards-compatible schema use."""
     return get_trace_db_path()
