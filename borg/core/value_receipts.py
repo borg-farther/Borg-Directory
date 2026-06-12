@@ -346,3 +346,122 @@ def recent_receipts(limit: int = 10, *, borg_home: Optional[Path | str] = None) 
             return [dict(r) for r in rows]
     except Exception:
         return []
+
+
+# ------------------------------------------------------------- user data rights
+
+EXPORT_SCHEMA = "borg-receipts-export/1"
+VALID_OUTCOMES = {"worked", "did_not_work", "unknown"}
+
+
+def export_receipts(
+    *, matched_only: bool = False, limit: int = 100000, borg_home: Optional[Path | str] = None
+) -> Dict[str, Any]:
+    """Build the user-run, consent-time export of redacted receipts.
+
+    The output shape is exactly what scripts/counterfactual_replay.py consumes
+    via --receipts-file ({"receipts": [...]}). Receipts were redacted at write
+    time; export adds nothing and removes nothing — what the user sees here is
+    byte-for-byte what the operator receives.
+    """
+    return {
+        "schema": EXPORT_SCHEMA,
+        "exported_at": _utc_now(),
+        "note": (
+            "Redacted local rescue receipts, exported by the user for consented "
+            "offline counterfactual replay (docs/PILOT_CONSENT_FORM.md). Contains "
+            "no raw error text, secrets, code, or PII — only post-redaction text "
+            "and class labels. Deletable on request."
+        ),
+        "receipts": replayable_receipts(limit, matched_only=matched_only, borg_home=borg_home),
+    }
+
+
+def delete_receipts(
+    *, ids: Optional[List[int]] = None, delete_all: bool = False, borg_home: Optional[Path | str] = None
+) -> int:
+    """Delete receipts by id or all of them. Returns the number deleted."""
+    if not delete_all and not ids:
+        return 0
+    if not _db_path(borg_home).exists():
+        return 0
+    try:
+        with _connect(borg_home) as conn:
+            if delete_all:
+                cursor = conn.execute("DELETE FROM rescue_receipts")
+            else:
+                marks = ",".join("?" for _ in ids)
+                cursor = conn.execute(
+                    f"DELETE FROM rescue_receipts WHERE id IN ({marks})",
+                    [int(i) for i in ids],
+                )
+            conn.commit()
+            return int(cursor.rowcount or 0)
+    except Exception:
+        return 0
+
+
+def record_receipt_outcome(
+    receipt_id: int, outcome: str, *, borg_home: Optional[Path | str] = None
+) -> bool:
+    """Set a receipt's replay_context.outcome (worked / did_not_work / unknown).
+
+    This is the CLI/Python counterpart of the MCP outcome-recording path: it
+    closes the loop on a rescue so the counterfactual replay can distinguish
+    fixes that actually worked from ones merely surfaced.
+    """
+    if outcome not in VALID_OUTCOMES:
+        raise ValueError(f"outcome must be one of {sorted(VALID_OUTCOMES)}, got {outcome!r}")
+    if not _db_path(borg_home).exists():
+        return False
+    try:
+        with _connect(borg_home) as conn:
+            row = conn.execute(
+                "SELECT replay_context FROM rescue_receipts WHERE id = ?", (int(receipt_id),)
+            ).fetchone()
+            if row is None:
+                return False
+            try:
+                context = json.loads(row["replay_context"] or "{}")
+            except json.JSONDecodeError:
+                context = {}
+            context["outcome"] = outcome
+            conn.execute(
+                "UPDATE rescue_receipts SET replay_context = ? WHERE id = ?",
+                (json.dumps(context, sort_keys=True), int(receipt_id)),
+            )
+            conn.commit()
+            return True
+    except Exception:
+        return False
+
+
+def record_latest_receipt_outcome(
+    outcome: str, *, borg_home: Optional[Path | str] = None
+) -> Optional[int]:
+    """Set the outcome on the most recent matched receipt still 'unknown'.
+
+    Best-effort bridge for agent flows (MCP record-outcome) where no receipt id
+    is in hand: the rescue that just happened is the latest unknown one.
+    Returns the receipt id updated, or None.
+    """
+    if outcome not in VALID_OUTCOMES:
+        return None
+    if not _db_path(borg_home).exists():
+        return None
+    try:
+        with _connect(borg_home) as conn:
+            rows = conn.execute(
+                "SELECT id, replay_context FROM rescue_receipts "
+                "WHERE matched = 1 ORDER BY id DESC LIMIT 20"
+            ).fetchall()
+    except Exception:
+        return None
+    for row in rows:
+        try:
+            context = json.loads(row["replay_context"] or "{}")
+        except json.JSONDecodeError:
+            continue
+        if context.get("outcome", "unknown") == "unknown":
+            return int(row["id"]) if record_receipt_outcome(row["id"], outcome, borg_home=borg_home) else None
+    return None

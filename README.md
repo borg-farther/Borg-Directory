@@ -22,15 +22,16 @@ pipx install agent-borg
 borg rescue "ModuleNotFoundError: No module named flask" --short
 ```
 
-Expected abbreviated shape:
+Real output (abbreviated) — the first line is the moment you know Borg fired:
 
 ```text
+🛟 Borg: found a known fix for this missing dependency error — tested, from Borg's starter library.
 BORG RESCUE
 status: matched
 match: missing_dependency [tested]
 
 ACTION
-  - ...
+  - install the distribution for import `flask` — run/check: pip install flask
 
 STOP
   - ...
@@ -38,6 +39,10 @@ STOP
 VERIFY
   - ...
 ```
+
+When your agent uses Borg over MCP, it is instructed to relay that same
+`human_summary` line to you verbatim — including, after repeated failures,
+`🛟 Borg: your agent was stuck (2 failed attempts) — found a known, tested fix …`.
 
 > **Install-name note:** Borg is the product name, and `borg` is the command after install. The Python package to install is **`agent-borg`**.
 >

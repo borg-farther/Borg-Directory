@@ -86,6 +86,23 @@ def borg_on_failure(
             why=first.get("why_relevant", ""),
         )
 
+    if suggestion_text:
+        # Firing visibility (E-014 channel e): the hook used to return its
+        # suggestion to the calling framework only — a log. Push the one-line
+        # caught-after-stuck summary to the human (opt-in Telegram; misses are
+        # never pushed — this branch only runs on a hit).
+        try:
+            from borg.core.human_language import suggestion_human_summary
+            from borg.integrations.notify import push_human_summary
+
+            pack_name = (
+                (suggestions_list[0].get("pack_name") if suggestions_list else "")
+                or "a known workflow"
+            )
+            push_human_summary(suggestion_human_summary(pack_name, failure_count))
+        except Exception:
+            logger.debug("borg hook: notify push skipped")
+
     return suggestion_text if suggestion_text else None
 
 

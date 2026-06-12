@@ -311,6 +311,54 @@ def _normalize_errors(errors: List[str]) -> str:
     return " ".join(sorted(types))
 
 
+def find_traces_for_error(
+    error_message: str, limit: int = 5, db_path: str = None
+) -> List[Dict[str, Any]]:
+    """Find recent traces relevant to an error message (recall fallback).
+
+    `borg recall` reads failure memory, which observations recorded before the
+    observe->recall bridge never populated. This token-overlap search over
+    traces.db lets recall still surface those prior observations instead of
+    claiming "No prior failures recorded" while `borg search` finds the trace.
+    """
+    if not error_message:
+        return []
+    query_tokens = {
+        w for w in re.findall(r"\w+", error_message.lower()) if len(w) >= 4
+    }
+    # Fewer than 3 meaningful tokens ("unknown error") is too generic to match
+    # against safely — better an honest miss than a coincidental hit.
+    if len(query_tokens) < 3:
+        return []
+    try:
+        db = _get_db(db_path)
+        rows = db.execute(
+            "SELECT id, task_description, approach_summary, root_cause, outcome, "
+            "errors_encountered, created_at FROM traces ORDER BY rowid DESC LIMIT 200"
+        ).fetchall()
+        db.close()
+    except sqlite3.Error:
+        return []
+    scored = []
+    for row in rows:
+        record = dict(row)
+        haystack = " ".join(
+            str(record.get(field) or "")
+            for field in ("task_description", "approach_summary", "root_cause", "errors_encountered")
+        ).lower()
+        trace_tokens = set(re.findall(r"\w+", haystack))
+        overlap = len(query_tokens & trace_tokens)
+        # 60% of the query's tokens must appear in the trace: low enough to
+        # survive formatting drift, high enough that generic phrasing cannot
+        # coincidentally match unrelated traces.
+        if overlap >= max(2, -(-len(query_tokens) * 3 // 5)):
+            scored.append((overlap, record))
+    # Stable sort by overlap only: trace ids are hex strings, and the query
+    # already returns newest-first, so ties keep recency order.
+    scored.sort(key=lambda pair: -pair[0])
+    return [record for _overlap, record in scored[: max(1, limit)]]
+
+
 def _normalize_error_type_for_index(error_type: str) -> str:
     """Normalize common Python/JS error class names to Borg error-class slugs."""
     if not error_type:
