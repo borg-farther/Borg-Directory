@@ -105,7 +105,7 @@ requiresAuth: false
 serverInfo: |
   {
     "name": "borg-mcp-server",
-    "version": "3.3.19"
+    "version": "3.3.20"
   }
 
 # Tools exposed by this MCP server (27 total; authoritative list is discovered from borg-mcp tools/list):

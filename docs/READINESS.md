@@ -2,7 +2,7 @@
 
 ## Current verdict
 
-- Controlled first-10 beta: **NO-GO right now**. `agent-borg==3.3.19` is the target source/local release candidate; production PyPI latest remains 3.3.18 until merge/tag/CI and upload, so exact-version PyPI fresh-install/stdio MCP proof is not green yet. GitHub `main` release governance is enforced. Package/source provenance, served-runtime freshness, ops/watchdog proof, docs-claim, and evidence-intake guardrails must all be green before inviting controlled testers. The served runtime fingerprint is stale for this source version until the long-lived MCP runtime is cut over and canaried. External first-10 row count is still zero.
+- Controlled first-10 beta: **NO-GO right now**. `agent-borg==3.3.20` is the target source/local release candidate; production PyPI latest is 3.3.19 until the 3.3.20 tag/CI and upload complete, so exact-version PyPI fresh-install/stdio MCP proof is not green yet. GitHub `main` release governance is enforced. Package/source provenance, served-runtime freshness, ops/watchdog proof, docs-claim, and evidence-intake guardrails must all be green before inviting controlled testers. The served runtime fingerprint is stale for this source version until the long-lived MCP runtime is cut over and canaried. External first-10 row count is still zero.
 - Public waitlist / narrow beta: **0 testers may proceed** until those controlled-beta infrastructure and guardrail gates are green; then the first-10 evidence contract caps the cohort at 10.
 - Public self-serve launch: **NO-GO until first-10 external-user evidence passes** (10 verified external users, >=8 installs, >=6 useful rescues, 0 critical incidents).
 

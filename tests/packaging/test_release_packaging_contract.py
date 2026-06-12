@@ -14,7 +14,7 @@ ROOT = Path(__file__).resolve().parents[2]
 def test_core_dependencies_are_minimal_and_ml_is_optional():
     data = tomllib.loads((ROOT / 'pyproject.toml').read_text())
     deps = data['project'].get('dependencies', [])
-    assert deps == ['pyyaml>=6.0']
+    assert deps == ['pyyaml>=6.0,<7']  # bounded pin: gate #24 supply-chain hygiene
     optional = data['project'].get('optional-dependencies', {})
     assert any('sentence-transformers' in dep for dep in optional['embeddings'])
     assert all('sentence-transformers' not in dep for dep in deps)

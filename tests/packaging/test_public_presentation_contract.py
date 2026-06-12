@@ -175,8 +175,12 @@ def test_current_docs_preserve_same_version_artifact_drift_truth() -> None:
         for phrase in stale_or_unsupported:
             assert phrase not in text, f"{path} still contains stale/unsupported phrase: {phrase}"
 
+    current_version = tomllib.loads(read("pyproject.toml"))["project"]["version"]
     assert "target source/local release candidate" in watched["README.md"]
-    assert "exact-version PyPI fresh-install/stdio MCP proof for 3.3.19 is not green yet" in watched["README.md"]
+    assert (
+        f"exact-version PyPI fresh-install/stdio MCP proof for {current_version} is not green yet"
+        in watched["README.md"]
+    ), "README drift-truth sentence must track the pyproject version"
     assert "Broad public self-serve launch, 100-user rollout, served/remote MCP, and measured external lift are **not claimed**" in watched["README.md"]
     assert "Controlled first-10 beta: **NO-GO right now**" in watched["docs/READINESS.md"]
     assert "target source/local release candidate" in watched["docs/READINESS.md"]

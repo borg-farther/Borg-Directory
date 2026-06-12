@@ -4,7 +4,7 @@ build-backend = "setuptools.build_meta"
 
 [project]
 name = "agent-borg"
-version = "3.3.19"
+version = "3.3.20"
 description = "Failure memory CLI and MCP server for AI coding agents"
 readme = "README.md"
 requires-python = ">=3.10"
@@ -23,7 +23,7 @@ classifiers = [
   "Topic :: Software Development :: Debuggers",
 ]
 dependencies = [
-  "pyyaml>=6.0"
+  "pyyaml>=6.0,<7"
 ]
 
 [project.urls]
