@@ -38,7 +38,7 @@ def test_status_human_output_shows_value_section(tmp_path, monkeypatch, capsys) 
     _run(["status"], tmp_path, monkeypatch)
     out = capsys.readouterr().out
     assert "Value on this machine" in out
-    assert "Borg fired:" in out
+    assert "Found known fixes:" in out
     # Honesty caveat must be present.
     assert "not claimed" in out
 
@@ -72,7 +72,8 @@ def test_status_headlines_caught_after_stuck(tmp_path, monkeypatch, capsys) -> N
     )
     _run(["status"], tmp_path, monkeypatch)
     out = capsys.readouterr().out
-    assert "Caught after your agent was stuck: 1" in out
+    assert "🛟 Caught your agent stuck: 1" in out
+    assert "Found known fixes: 1 of 1 errors" in out
     assert "matched by coverage:" in out
     assert "python_dependency=1" in out
 

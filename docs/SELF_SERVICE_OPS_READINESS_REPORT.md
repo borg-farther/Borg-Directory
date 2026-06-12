@@ -1,6 +1,6 @@
 # Borg self-service operations readiness
 
-Generated: `2026-06-10T13:10:20.866392+00:00`
+Generated: `2026-06-12T09:09:12.708815+00:00`
 Verdict: **PASS**
 
 ## Scope

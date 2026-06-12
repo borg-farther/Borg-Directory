@@ -404,7 +404,14 @@ class TestMCPV3Suggest:
     def test_borg_suggest_with_frustration_uses_v3(self):
         """failure_count >= 2 triggers V3 suggestion path."""
         fake_v3 = MagicMock()
-        fake_v3.search.return_value = [{"pack_id": "smart-pack", "name": "smart-pack", "score": 0.95}]
+        # D-019: suggestions are relevance-gated — the fake pack must be
+        # lexically relevant to the context or it is (correctly) refused.
+        fake_v3.search.return_value = [{
+            "pack_id": "deployment-failure",
+            "name": "deployment-failure",
+            "description": "deployment keeps failing with the same error",
+            "score": 0.95,
+        }]
 
         with patch.object(mcp_module, "_get_borg_v3", return_value=fake_v3):
             result = mcp_module.borg_suggest(
@@ -414,6 +421,8 @@ class TestMCPV3Suggest:
         parsed = json.loads(result)
         assert parsed["success"] is True
         assert parsed["has_suggestion"] is True
+        assert parsed["caught_after_stuck"] is True
+        assert parsed["human_summary"].startswith("🛟 Borg: your agent was stuck")
         assert parsed["contextual"] is True
 
     def test_borg_suggest_without_frustration_uses_v2(self):

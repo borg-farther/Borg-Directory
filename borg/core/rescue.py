@@ -18,6 +18,7 @@ from dataclasses import dataclass, asdict
 import re
 from typing import Any, Dict, List, Optional
 
+from borg.core.human_language import RELAY_INSTRUCTION, rescue_human_summary
 from borg.core.pack_taxonomy import (
     classify_error,
     debug_error,
@@ -44,6 +45,10 @@ class RescueResult:
     evidence: Dict[str, Any]
     value_receipt: Dict[str, Any]
     fallback_states: List[Dict[str, Any]]
+    # The one deterministic, human-vocabulary line a person must see when Borg
+    # fires (firing visibility, E-014). Agents are instructed to relay it
+    # verbatim; the CLI prints it first. <=140 chars, no internal terms.
+    human_summary: str = ""
 
     def to_dict(self) -> Dict[str, Any]:
         return asdict(self)
@@ -345,6 +350,7 @@ def rescue(task_or_error: str, *, source: str = "cli", show_guidance: bool = Tru
             next_command="borg rescue '<paste exact failure>'",
             agent_instruction="NO_MATCH: ask for the exact error or failing command before changing code.",
             human_receipt="Borg needs exact failure text before it can check the cache.",
+            human_summary=rescue_human_summary("empty_input"),
             guidance="",
             automation_policy=automation_policy,
             evidence={"success_count": 0, "failure_count": 0, "uses": 0, "source": "none"},
@@ -383,6 +389,7 @@ def rescue(task_or_error: str, *, source: str = "cli", show_guidance: bool = Tru
                 "Do not blend weak retrieval into the answer. Ask for more evidence or proceed with ordinary debugging."
             ),
             human_receipt="Borg had no prior memory for this one.",
+            human_summary=rescue_human_summary("no_confident_match"),
             guidance=guidance,
             automation_policy=automation_policy,
             evidence=_evidence(None),
@@ -426,11 +433,16 @@ def rescue(task_or_error: str, *, source: str = "cli", show_guidance: bool = Tru
             "The agent now has a next move, STOP items to check, and a verification step."
         )
 
+    human_summary = rescue_human_summary(
+        "matched", problem_class, confidence, ev.get("source", ""),
+    )
+
     return RescueResult(
         success=True,
         status="matched",
         problem_class=problem_class,
         confidence=confidence,
+        human_summary=human_summary,
         action=actions,
         stop=stops,
         verify=verify,
@@ -439,7 +451,8 @@ def rescue(task_or_error: str, *, source: str = "cli", show_guidance: bool = Tru
             f"ACTION: {action_line}\n"
             f"STOP: avoid {stop_line}\n"
             f"VERIFY: {verify_line}\n"
-            "SHOW HUMAN: only surface Borg when this rescue path changes the plan."
+            f"SHOW HUMAN: {RELAY_INSTRUCTION}\n"
+            f'human_summary: "{human_summary}"'
         ),
         human_receipt=human_receipt,
         guidance=guidance,
@@ -463,6 +476,9 @@ def rescue(task_or_error: str, *, source: str = "cli", show_guidance: bool = Tru
 def render_rescue_text(result: RescueResult) -> str:
     """Render a RescueResult into concise CLI text."""
     lines: List[str] = []
+    # Firing visibility: the human-vocabulary moment-line comes FIRST.
+    if result.human_summary:
+        lines.append(result.human_summary)
     lines.append("BORG RESCUE")
     lines.append("=" * 60)
     lines.append(f"status: {result.status}")
