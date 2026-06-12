@@ -1,7 +1,7 @@
 {
   "dry_run_only": true,
   "gate_type": "rollback_comms_drill",
-  "generated_at_utc": "2026-06-12T09:55:51.393506+00:00",
+  "generated_at_utc": "2026-06-12T10:14:07.923403+00:00",
   "missing_runbook_phrases": [],
   "operator_boundary": "Agents must not restart/kill/reload the Hermes gateway; served runtime rollback is operator-supervised.",
   "passed": true,

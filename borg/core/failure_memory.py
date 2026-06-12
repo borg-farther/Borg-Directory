@@ -80,7 +80,10 @@ class FailureMemory:
                         directory subtree is used for reads and writes.
                         Defaults to "default" for backward compatibility.
         """
-        self.memory_dir = Path(memory_dir) if memory_dir else self.DEFAULT_MEMORY_DIR
+        # Resolve the default at construction time, not class-definition time:
+        # the class attribute froze BORG_HOME at import, so any later override
+        # (tests, late env setup) silently wrote to the wrong home.
+        self.memory_dir = Path(memory_dir) if memory_dir else get_failure_memory_dir()
         self.agent_id = agent_id
 
     # --------------------------------------------------------------------------
@@ -347,6 +350,64 @@ class FailureMemory:
                     continue
 
         return None
+
+    def recall_across_agents(self, error_message: str) -> Optional[Dict[str, Any]]:
+        """Recall an error across ALL agent namespaces (read-only union).
+
+        Writes stay namespaced by agent_id, but a local human asking
+        `borg recall` should not miss a hit just because the observation was
+        recorded under a different agent name (CLI default 'cli' vs MCP
+        'default' was exactly the observe->recall mismatch). The caller's own
+        namespace is tried first, then the rest alphabetically.
+        """
+        if not error_message or not self.memory_dir.exists():
+            return None
+        namespaces = sorted(
+            d.name for d in self.memory_dir.iterdir() if d.is_dir()
+        )
+        own = getattr(self, "agent_id", "default")
+        ordered = ([own] if own in namespaces else []) + [n for n in namespaces if n != own]
+        for namespace in ordered:
+            result = self.recall(error_message, agent_id=namespace)
+            if result is not None:
+                return result
+        return None
+
+    def record_trace_observation(
+        self,
+        *,
+        errors: List[str],
+        approach: str,
+        outcome: str = "failure",
+        pack_id: str = "observed",
+        phase: str = "observe",
+        agent_id: Optional[str] = None,
+    ) -> int:
+        """Bridge an observed trace into failure memory (observe->recall fix).
+
+        `borg observe` / MCP trace capture stored traces only in traces.db,
+        while `recall` read only this YAML store — so an observed failure was
+        never recallable. Each non-empty error in the trace is recorded here.
+        Returns how many entries were recorded; never raises (best-effort).
+        """
+        recorded = 0
+        for error in errors:
+            error_text = str(error).strip()
+            if not error_text:
+                continue
+            try:
+                self.record_failure(
+                    error_pattern=error_text,
+                    pack_id=pack_id,
+                    phase=phase,
+                    approach=(approach or "unrecorded approach")[:300],
+                    outcome=outcome if outcome in ("success", "failure") else "failure",
+                    agent_id=agent_id,
+                )
+                recorded += 1
+            except (ValueError, OSError):
+                continue
+        return recorded
 
     # ---------------------------------------------------------------------------
     # TASK 4 — Delete
