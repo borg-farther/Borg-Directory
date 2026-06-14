@@ -388,6 +388,7 @@ def test_non_current_public_docs_are_bannered_or_operator_scoped() -> None:
         "ROLLBACK_AND_COMMS_RUNBOOK.md",
         "PILOT_DECISION_PROTOCOL.md",
         "PILOT_CONSENT_FORM.md",
+        "SEMANTIC_RETRIEVAL_DECISION.md",
         "COLD_START_TRUST_HARDENING.md",
         "SECURITY_HARDENING_BASELINE.md",
         "PRIVACY_MODEL.md",

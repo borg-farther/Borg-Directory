@@ -1,0 +1,340 @@
+{
+  "by_lang": {
+    "de": {
+      "fn": 0,
+      "fp": 0,
+      "precision": 1.0,
+      "recall": 1.0,
+      "tn": 0,
+      "tp": 1
+    },
+    "en": {
+      "fn": 11,
+      "fp": 0,
+      "precision": 1.0,
+      "recall": 0.5,
+      "tn": 7,
+      "tp": 11
+    },
+    "es": {
+      "fn": 1,
+      "fp": 0,
+      "precision": null,
+      "recall": 0.0,
+      "tn": 0,
+      "tp": 0
+    },
+    "fr": {
+      "fn": 1,
+      "fp": 0,
+      "precision": null,
+      "recall": 0.0,
+      "tn": 0,
+      "tp": 0
+    },
+    "zh": {
+      "fn": 1,
+      "fp": 0,
+      "precision": null,
+      "recall": 0.0,
+      "tn": 0,
+      "tp": 0
+    }
+  },
+  "by_phrasing": {
+    "conversational": {
+      "fn": 12,
+      "fp": 0,
+      "precision": 1.0,
+      "recall": 0.1429,
+      "tn": 4,
+      "tp": 2
+    },
+    "literal": {
+      "fn": 2,
+      "fp": 0,
+      "precision": 1.0,
+      "recall": 0.8333,
+      "tn": 3,
+      "tp": 10
+    }
+  },
+  "case_count": 33,
+  "control_count": 7,
+  "details": [
+    {
+      "expected": "missing_dependency",
+      "id": "dep-lit-1",
+      "lang": "en",
+      "outcome": "tp",
+      "phrasing": "literal",
+      "predicted": "missing_dependency"
+    },
+    {
+      "expected": "missing_dependency",
+      "id": "dep-lit-2",
+      "lang": "en",
+      "outcome": "tp",
+      "phrasing": "literal",
+      "predicted": "missing_dependency"
+    },
+    {
+      "expected": "missing_dependency",
+      "id": "dep-lit-3",
+      "lang": "en",
+      "outcome": "tp",
+      "phrasing": "literal",
+      "predicted": "missing_dependency"
+    },
+    {
+      "expected": "missing_dependency",
+      "id": "dep-conv-1",
+      "lang": "en",
+      "outcome": "fn",
+      "phrasing": "conversational",
+      "predicted": null
+    },
+    {
+      "expected": "missing_dependency",
+      "id": "dep-conv-2",
+      "lang": "en",
+      "outcome": "fn",
+      "phrasing": "conversational",
+      "predicted": null
+    },
+    {
+      "expected": "missing_dependency",
+      "id": "dep-conv-3",
+      "lang": "en",
+      "outcome": "fn",
+      "phrasing": "conversational",
+      "predicted": null
+    },
+    {
+      "expected": "import_cycle",
+      "id": "cyc-lit-1",
+      "lang": "en",
+      "outcome": "tp",
+      "phrasing": "literal",
+      "predicted": "import_cycle"
+    },
+    {
+      "expected": "import_cycle",
+      "id": "cyc-conv-1",
+      "lang": "en",
+      "outcome": "tp",
+      "phrasing": "conversational",
+      "predicted": "circular_dependency"
+    },
+    {
+      "expected": "migration_state_desync",
+      "id": "mig-lit-1",
+      "lang": "en",
+      "outcome": "fn",
+      "phrasing": "literal",
+      "predicted": null
+    },
+    {
+      "expected": "migration_state_desync",
+      "id": "mig-conv-1",
+      "lang": "en",
+      "outcome": "fn",
+      "phrasing": "conversational",
+      "predicted": null
+    },
+    {
+      "expected": "schema_drift",
+      "id": "sch-lit-1",
+      "lang": "en",
+      "outcome": "fn",
+      "phrasing": "literal",
+      "predicted": null
+    },
+    {
+      "expected": "schema_drift",
+      "id": "sch-conv-1",
+      "lang": "en",
+      "outcome": "fn",
+      "phrasing": "conversational",
+      "predicted": null
+    },
+    {
+      "expected": "type_mismatch",
+      "id": "typ-lit-1",
+      "lang": "en",
+      "outcome": "tp",
+      "phrasing": "literal",
+      "predicted": "type_mismatch"
+    },
+    {
+      "expected": "type_mismatch",
+      "id": "typ-conv-1",
+      "lang": "en",
+      "outcome": "fn",
+      "phrasing": "conversational",
+      "predicted": null
+    },
+    {
+      "expected": "null_pointer_chain",
+      "id": "null-lit-1",
+      "lang": "en",
+      "outcome": "tp",
+      "phrasing": "literal",
+      "predicted": "null_pointer_chain"
+    },
+    {
+      "expected": "null_pointer_chain",
+      "id": "null-conv-1",
+      "lang": "en",
+      "outcome": "fn",
+      "phrasing": "conversational",
+      "predicted": null
+    },
+    {
+      "expected": "configuration_error",
+      "id": "cfg-lit-1",
+      "lang": "en",
+      "outcome": "tp",
+      "phrasing": "literal",
+      "predicted": "configuration_error"
+    },
+    {
+      "expected": "configuration_error",
+      "id": "cfg-conv-1",
+      "lang": "en",
+      "outcome": "fn",
+      "phrasing": "conversational",
+      "predicted": null
+    },
+    {
+      "expected": "permission_denied",
+      "id": "perm-lit-1",
+      "lang": "en",
+      "outcome": "tp",
+      "phrasing": "literal",
+      "predicted": "permission_denied"
+    },
+    {
+      "expected": "permission_denied",
+      "id": "perm-conv-1",
+      "lang": "en",
+      "outcome": "tp",
+      "phrasing": "conversational",
+      "predicted": "permission_denied"
+    },
+    {
+      "expected": "timeout_hang",
+      "id": "to-lit-1",
+      "lang": "en",
+      "outcome": "tp",
+      "phrasing": "literal",
+      "predicted": "timeout_hang"
+    },
+    {
+      "expected": "timeout_hang",
+      "id": "to-conv-1",
+      "lang": "en",
+      "outcome": "fn",
+      "phrasing": "conversational",
+      "predicted": null
+    },
+    {
+      "expected": "missing_dependency",
+      "id": "es-conv-1",
+      "lang": "es",
+      "outcome": "fn",
+      "phrasing": "conversational",
+      "predicted": null
+    },
+    {
+      "expected": "missing_dependency",
+      "id": "de-lit-1",
+      "lang": "de",
+      "outcome": "tp",
+      "phrasing": "literal",
+      "predicted": "missing_dependency"
+    },
+    {
+      "expected": "missing_dependency",
+      "id": "fr-conv-1",
+      "lang": "fr",
+      "outcome": "fn",
+      "phrasing": "conversational",
+      "predicted": null
+    },
+    {
+      "expected": "missing_dependency",
+      "id": "zh-conv-1",
+      "lang": "zh",
+      "outcome": "fn",
+      "phrasing": "conversational",
+      "predicted": null
+    },
+    {
+      "expected": null,
+      "id": "ctl-1",
+      "lang": "en",
+      "outcome": "tn",
+      "phrasing": "conversational",
+      "predicted": null
+    },
+    {
+      "expected": null,
+      "id": "ctl-2",
+      "lang": "en",
+      "outcome": "tn",
+      "phrasing": "literal",
+      "predicted": null
+    },
+    {
+      "expected": null,
+      "id": "ctl-3",
+      "lang": "en",
+      "outcome": "tn",
+      "phrasing": "conversational",
+      "predicted": null
+    },
+    {
+      "expected": null,
+      "id": "ctl-4",
+      "lang": "en",
+      "outcome": "tn",
+      "phrasing": "conversational",
+      "predicted": null
+    },
+    {
+      "expected": null,
+      "id": "ctl-5",
+      "lang": "en",
+      "outcome": "tn",
+      "phrasing": "conversational",
+      "predicted": null
+    },
+    {
+      "expected": null,
+      "id": "ctl-docker-1",
+      "lang": "en",
+      "outcome": "tn",
+      "phrasing": "literal",
+      "predicted": null
+    },
+    {
+      "expected": null,
+      "id": "ctl-js-1",
+      "lang": "en",
+      "outcome": "tn",
+      "phrasing": "literal",
+      "predicted": null
+    }
+  ],
+  "overall": {
+    "fn": 14,
+    "fp": 0,
+    "precision": 1.0,
+    "recall": 0.4615,
+    "tn": 7,
+    "tp": 12
+  },
+  "schema_version": 1,
+  "should_match_count": 26
+}
