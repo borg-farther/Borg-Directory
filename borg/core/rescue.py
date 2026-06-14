@@ -109,6 +109,113 @@ def _specialize_missing_dependency_actions(error_text: str, actions: List[str], 
     return specialized
 
 
+# --- conversational-miss detection (issue #9 mitigation) --------------------
+# The matcher keys on the literal error signature (classify_error is a
+# substring/keyword classifier). A user who *describes* the problem in prose
+# ("my server won't start, can't find a module called django") therefore misses
+# even when the underlying error is squarely in coverage. Default semantic
+# retrieval is not viable for the pilot (the [semantic] extra is ~2.7 GB to
+# download / ~5.1 GB installed / needs a network model download — see
+# docs/SEMANTIC_RETRIEVAL_DECISION.md), so instead of leaving these as a SILENT
+# zero, detect the likely-conversational miss and tell the user exactly how to
+# get a match: paste the literal error text (and, when we can name the module
+# from the prose, hand them the exact command that will match).
+
+_ERROR_SIGNATURE_RES = [
+    re.compile(r"\b[A-Z][A-Za-z0-9]*(?:Error|Exception|Warning|Fault)\b"),  # CamelCase error class
+    re.compile(r"Traceback \(most recent call last\)", re.IGNORECASE),
+    re.compile(r"\bno module named\b", re.IGNORECASE),
+    re.compile(r"\bline\s+\d+\b", re.IGNORECASE),
+    re.compile(r"\bErrno\s+\d+\b", re.IGNORECASE),
+    re.compile(r"^\s*(?:error|fatal|panic)\b[:\s]", re.IGNORECASE | re.MULTILINE),
+    re.compile(r"\bat\s+.+\(.+:\d+:\d+\)"),   # JS stack frame
+    re.compile(r"\b[ET]\d{3,4}\b"),           # Rust E0xxx / TS TSxxxx
+    re.compile(r":\d+:\d+\b"),                # file:line:col
+]
+
+_CONVERSATIONAL_MARKER_RE = re.compile(
+    r"\b(i|i'm|i've|im|my|we|our|you|your|can't|cannot|can\s*not|won't|wont|"
+    r"doesn't|isn't|keeps?|trying|how|why|what|something|somehow|weird|broken|"
+    r"stuck|help|please|seem|seems)\b",
+    re.IGNORECASE,
+)
+
+_MODULE_IN_PROSE_RE = re.compile(
+    r"\b(?:module|package|library|import|lib)\b\s+"
+    r"(?:called|named|like|for|of)?\s*['\"]?([A-Za-z_][\w\-]+)",
+    re.IGNORECASE,
+)
+
+# words that are not a real package name even if they follow "module/import"
+_NOT_A_MODULE = {"called", "named", "the", "a", "an", "some", "that", "this", "it", "my"}
+
+
+def _has_error_signature(text: str) -> bool:
+    return any(rx.search(text) for rx in _ERROR_SIGNATURE_RES)
+
+
+def _looks_conversational(text: str) -> bool:
+    """True when the input reads as a prose description rather than a literal error.
+
+    Conservative: requires NO literal error signature AND a conversational marker,
+    so bare tokens like ``ECONNREFUSED`` are never misread as conversational.
+    """
+    t = (text or "").strip()
+    if len(t.split()) < 3:
+        return False
+    if _has_error_signature(t):
+        return False
+    return bool(_CONVERSATIONAL_MARKER_RE.search(t))
+
+
+def _module_from_prose(text: str) -> Optional[str]:
+    """Best-effort: pull a likely module/package name out of prose, or None."""
+    match = _MODULE_IN_PROSE_RE.search(text or "")
+    if not match:
+        return None
+    candidate = match.group(1).strip().lower()
+    if candidate in _NOT_A_MODULE or len(candidate) < 2:
+        return None
+    return candidate
+
+
+def _conversational_miss_extras(text: str) -> Optional[Dict[str, Any]]:
+    """Return tailored miss guidance for a likely-conversational input, or None.
+
+    Keeps status=no_confident_match (honest — no fabricated match); only changes
+    what the user is told to do next so the miss is never a silent zero.
+    """
+    if not _looks_conversational(text):
+        return None
+    module = _module_from_prose(text)
+    if module:
+        literal = f"ModuleNotFoundError: No module named '{module}'"
+        action = (
+            f"this reads like a description, not the literal error — Borg matches the "
+            f"exact error text. Re-run with the literal form, e.g.: "
+            f"borg rescue \"{literal}\""
+        )
+        next_command = f'borg rescue "{literal}"'
+    else:
+        action = (
+            "if this is about an error, paste the exact error text/traceback rather than a "
+            "description — Borg matches the literal error signature (the ExceptionName and "
+            "message), not a paraphrase — then re-run."
+        )
+        next_command = "borg rescue '<paste the exact error line or full traceback>'"
+    return {
+        "module": module,
+        "action": action,
+        "next_command": next_command,
+        "fallback_state": _fallback_state(
+            "CONVERSATIONAL_INPUT_LIKELY",
+            "This looks like a description of the problem rather than the literal error text.",
+            severity="info",
+            next_step=next_command,
+        ),
+    }
+
+
 def _extract_actions(pack: Dict[str, Any], limit: int = 3) -> List[str]:
     """Extract the highest-signal next actions from a seed pack."""
     actions: List[str] = []
@@ -372,22 +479,40 @@ def rescue(task_or_error: str, *, source: str = "cli", show_guidance: bool = Tru
 
     if not pack:
         guidance = debug_error(text, show_evidence=show_guidance) if show_guidance else ""
+        extras = _conversational_miss_extras(text)
+        actions = [
+            "capture more context: exact command, full traceback/log, OS/runtime, and last changed file",
+            "use normal debugging; do not attribute the next fix to Borg unless a match appears",
+        ]
+        next_command = "borg rescue '<full traceback or failing command output>'"
+        fallback_states = _visible_fallback_states(
+            status="no_confident_match", matched=False, evidence=_evidence(None)
+        )
+        agent_instruction = (
+            "NO_MATCH: Borg had no prior memory for this input. "
+            "Do not blend weak retrieval into the answer. Ask for more evidence or proceed with ordinary debugging."
+        )
+        if extras is not None:
+            # Likely-conversational miss: convert a silent zero into actionable
+            # guidance (issue #9). Still no_confident_match — never fabricate.
+            actions = [extras["action"], *actions]
+            next_command = extras["next_command"]
+            fallback_states = [extras["fallback_state"], *fallback_states]
+            agent_instruction = (
+                "NO_MATCH (input looks conversational): Borg matches the literal error "
+                "signature, not a description. Do NOT fabricate a fix; ask the user to "
+                f"paste the exact error text. Suggested retry: {extras['next_command']}"
+            )
         return RescueResult(
             success=False,
             status="no_confident_match",
             problem_class="unknown",
             confidence="unknown",
-            action=[
-                "capture more context: exact command, full traceback/log, OS/runtime, and last changed file",
-                "use normal debugging; do not attribute the next fix to Borg unless a match appears",
-            ],
+            action=actions,
             stop=["do not force a Python/Django pack onto an unknown or non-Python error"],
             verify=["rerun borg rescue after adding the full failure text"],
-            next_command="borg rescue '<full traceback or failing command output>'",
-            agent_instruction=(
-                "NO_MATCH: Borg had no prior memory for this input. "
-                "Do not blend weak retrieval into the answer. Ask for more evidence or proceed with ordinary debugging."
-            ),
+            next_command=next_command,
+            agent_instruction=agent_instruction,
             human_receipt="Borg had no prior memory for this one.",
             human_summary=rescue_human_summary("no_confident_match"),
             guidance=guidance,
@@ -399,11 +524,7 @@ def rescue(task_or_error: str, *, source: str = "cli", show_guidance: bool = Tru
                 confidence="unknown",
                 evidence=_evidence(None),
             ),
-            fallback_states=_visible_fallback_states(
-                status="no_confident_match",
-                matched=False,
-                evidence=_evidence(None),
-            ),
+            fallback_states=fallback_states,
         )
 
     actions = _extract_actions(pack)
