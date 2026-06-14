@@ -51,6 +51,43 @@ in the replay report implements exactly this.)
 receipts across ≥ 5 distinct users. Below that, the answer is EXTEND
 regardless of the rate.
 
+## 2a. Diagnose before deciding — separate the signals (anti-false-negative)
+
+The activation/retention success bar (`§3` secondary metrics, and the first-10
+readiness bar) is **hit-rate-sensitive**: a user who mostly sees honest
+`no_confident_match` never activates, and a user whose client never surfaces the
+moment-line never *perceives* a hit — both look identical to "no value" in
+activation/retention, even when Borg's mechanism is sound. The default matcher
+is lexical (issue #9, `eval/recall_harness.py`: conversational recall ~0.14), so
+this is a live risk, not a hypothetical.
+
+**Therefore, before any low activation / retention / `counterfactual_rate` is
+read as a value verdict, the operator MUST first read these separable signals
+(all on disk, per user, from `borg status` / the receipt export):**
+
+1. **hit-rate / miss-rate** (`value.hit_rate` / `value.miss_rate`). If hit-rate
+   is low (Borg fired but mostly missed), low activation is a **recall**
+   artifact, not a value verdict.
+2. **per-client fires** (`value.fires_by_client` / `value.matched_by_client`).
+   If a client (e.g. `cursor`) shows fires but the user reports not seeing the
+   `🛟 Borg:` line, that is a **per-client visibility** artifact, not a value
+   verdict. Reproduce what a given client receives with
+   `python scripts/capture_client_visibility.py --client Cursor` (it shows
+   whether the moment-line is in the model-visible tool result vs. only in
+   `structuredContent`).
+
+**Decision adjustment (binding):**
+
+| Diagnosis | What it means | Decision |
+|---|---|---|
+| hit-rate low (e.g. < ~0.3 across users) | recall gap (issue #9) starved the funnel; activation reflects the matcher, not the product | **EXTEND** with a recall-remediation note — **never KILL** on this window |
+| per-client fires present but user didn't perceive firing | relay/visibility gap on that client, not a value gap | **EXTEND** with a visibility-remediation note; fix the relay or the DAY1 note for that client |
+| hit-rate adequate **and** moment-line demonstrably surfaced per client **and** `counterfactual_rate` interval is decisive | the signal is real | apply the `§2` rule (KILL / BUILD / EXTEND) |
+
+A KILL is only valid when low value persists **with** an adequate hit-rate and
+**with** confirmed per-client firing visibility. Killing on a starved funnel is
+the exact false negative this protocol exists to prevent.
+
 ## 3. Pilot design
 
 - **N = 10 users** (recruit spec below), each on their own machine, local-only
@@ -65,6 +102,10 @@ regardless of the rate.
 - **Day 15: decide.** Users who consent export receipts; operator runs the
   pinned replay; the interval rule above produces KILL / EXTEND / BUILD.
   The decision and the full report are written to the pilot log the same day.
+
+**Diagnostic gates** (read FIRST, per `§2a` — these can turn a would-be KILL into
+EXTEND): `value.hit_rate` / `value.miss_rate`, and `value.fires_by_client` /
+`value.matched_by_client` (per-client firing visibility).
 
 **Secondary metrics** (reported, never deciding): `caught_after_stuck` count,
 matched-by-coverage-class breadth, time-to-value at install, and per-user

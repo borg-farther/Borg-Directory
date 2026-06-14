@@ -46,6 +46,10 @@ from borg.core.dirs import get_trace_db_path
 # Thread-safe session tracking via contextvars
 _current_session_id: contextvars.ContextVar[str] = contextvars.ContextVar('session_id', default='')
 _current_agent_id: contextvars.ContextVar[str] = contextvars.ContextVar('agent_id', default='unknown')
+# The MCP client that connected (from initialize params.clientInfo.name), so
+# every rescue/suggest receipt records WHICH client fired it — claude-code |
+# cursor | … — enabling per-client firing visibility in the pilot.
+_current_client: contextvars.ContextVar[str] = contextvars.ContextVar('client', default='unknown')
 _last_shown_trace_id: contextvars.ContextVar[Optional[str]] = contextvars.ContextVar(
     '_last_shown_trace_id', default=None
 )
@@ -2081,6 +2085,7 @@ def borg_suggest(
                         trigger="after_n_failures",
                         trigger_n=int(failure_count or 0),
                         error_text=context,
+                        client=_current_client.get(),
                     )
                 except Exception:
                     pass
@@ -2288,6 +2293,7 @@ def borg_rescue(
                 trigger=trig,
                 trigger_n=int(failure_count or 0),
                 error_text=input,
+                client=_current_client.get(),
             )
         except Exception:
             pass
@@ -4064,6 +4070,11 @@ def handle_request(request: Dict[str, Any]) -> Optional[Dict[str, Any]]:
         # Extract agent_id from params if provided
         agent_id = params.get("agent_id", "unknown")
         _current_agent_id.set(agent_id)
+        # Capture the MCP-standard clientInfo.name (e.g. "Claude Code", "Cursor")
+        # so receipts can be tallied per client for firing-visibility separation.
+        client_info = params.get("clientInfo") or {}
+        client_name = client_info.get("name") if isinstance(client_info, dict) else None
+        _current_client.set(client_name or "unknown")
         return make_response(req_id, {
             "protocolVersion": "2024-11-05",
             "serverInfo": SERVER_INFO,

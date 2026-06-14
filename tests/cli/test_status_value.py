@@ -88,8 +88,11 @@ def test_status_json_exposes_v2_value_fields(tmp_path, monkeypatch, capsys) -> N
     )
     _run(["status", "--json"], tmp_path, monkeypatch)
     val = json.loads(capsys.readouterr().out)["value"]
-    assert val["schema_version"] == 2
+    assert val["schema_version"] == 3
     assert val["caught_after_stuck"] == 1
     assert val["by_trigger"] == {"after_n_failures": 1}
     assert val["matched_by_coverage_class"] == {"python_dependency": 1}
     assert val["replayable_receipts"] == 1
+    # v3: per-client + hit-rate signals exposed for the pilot day-15 diagnosis
+    assert val["hit_rate"] == 1.0
+    assert val["fires_by_client"] == {"unknown": 1}

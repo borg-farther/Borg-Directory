@@ -2330,6 +2330,19 @@ def _cmd_status(args: argparse.Namespace) -> int:
         matched = val.get("rescues_matched", 0)
         print(f"    🛟 Caught your agent stuck: {caught}")
         print(f"    Found known fixes: {matched} of {fired} errors")
+        hr = val.get("hit_rate")
+        if hr is not None:
+            print(f"    hit rate:            {hr} (matched/fired)  miss rate: {val.get('miss_rate')}")
+        if val.get("fires_by_client"):
+            # Per-client firing visibility: did Borg fire (and match) under each
+            # client? A client that fires but never matches, or never fires, is a
+            # recall/integration signal — not a value verdict.
+            mbc = val.get("matched_by_client", {})
+            parts = [
+                f"{client}={mbc.get(client, 0)}/{fires}"
+                for client, fires in sorted(val["fires_by_client"].items())
+            ]
+            print(f"    fired by client:     {', '.join(parts)} (matched/fired)")
         if val.get("matched_by_provenance"):
             prov = ", ".join(
                 f"{humanize_provenance(k) or k}={v}"

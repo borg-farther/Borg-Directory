@@ -133,7 +133,7 @@ def test_v1_to_v2_migration_preserves_rows_and_defaults_new_columns(tmp_path) ->
     _make_v1_db(tmp_path, rows=2)
 
     summary = value_summary(borg_home=tmp_path)  # first open migrates
-    assert summary["schema_version"] == SCHEMA_VERSION == 2
+    assert summary["schema_version"] == SCHEMA_VERSION == 3
     assert summary["rescues_fired"] == 2
     assert summary["rescues_matched"] == 2
 
@@ -143,12 +143,13 @@ def test_v1_to_v2_migration_preserves_rows_and_defaults_new_columns(tmp_path) ->
     user_version = conn.execute("PRAGMA user_version").fetchone()[0]
     conn.close()
 
-    assert user_version == 2
+    assert user_version == 3
     for row in rows:
         assert row["trigger"] == "unknown"
         assert row["trigger_n"] == 0
         assert row["coverage_class"] == "unknown"
         assert row["replay_context"] == "{}"
+        assert row["client"] == "unknown"  # v2 -> v3 adds client, defaulted
 
 
 def test_v1_to_v2_migration_accepts_new_writes_alongside_old_rows(tmp_path) -> None:
