@@ -35,7 +35,7 @@ from typing import Any, Dict, List, Optional, Tuple
 
 from borg.core.dirs import get_borg_home
 
-SCHEMA_VERSION = 2
+SCHEMA_VERSION = 3
 
 _SCHEMA = """
 CREATE TABLE IF NOT EXISTS rescue_receipts (
@@ -51,17 +51,23 @@ CREATE TABLE IF NOT EXISTS rescue_receipts (
     trigger        TEXT NOT NULL DEFAULT 'unknown',
     trigger_n      INTEGER NOT NULL DEFAULT 0,
     coverage_class TEXT NOT NULL DEFAULT 'unknown',
-    replay_context TEXT NOT NULL DEFAULT '{}'
+    replay_context TEXT NOT NULL DEFAULT '{}',
+    client         TEXT NOT NULL DEFAULT 'unknown'
 );
 """
 
-# v1 -> v2: columns added after the original 9. ADD COLUMN is a cheap migration in
-# SQLite, so existing receipts are preserved with sensible defaults.
-_V2_COLUMNS = {
+# Columns added after the original 9. ADD COLUMN is a cheap migration in SQLite,
+# so existing receipts are preserved with sensible defaults.
+#   v1 -> v2: trigger / trigger_n / coverage_class / replay_context
+#   v2 -> v3: client (the MCP client that fired the rescue — claude-code | cursor
+#             | ... — so per-client firing visibility is measurable separately
+#             from counterfactual_rate; see docs/PILOT_DECISION_PROTOCOL.md).
+_ADDED_COLUMNS = {
     "trigger": "TEXT NOT NULL DEFAULT 'unknown'",
     "trigger_n": "INTEGER NOT NULL DEFAULT 0",
     "coverage_class": "TEXT NOT NULL DEFAULT 'unknown'",
     "replay_context": "TEXT NOT NULL DEFAULT '{}'",
+    "client": "TEXT NOT NULL DEFAULT 'unknown'",
 }
 
 VALID_TRIGGERS = {"task_start", "after_n_failures", "manual", "unknown"}
@@ -96,7 +102,7 @@ def _db_path(borg_home: Optional[Path | str] = None) -> Path:
 
 def _migrate(conn: sqlite3.Connection) -> None:
     existing = {row["name"] for row in conn.execute("PRAGMA table_info(rescue_receipts)")}
-    for col, decl in _V2_COLUMNS.items():
+    for col, decl in _ADDED_COLUMNS.items():
         if col not in existing:
             conn.execute(f"ALTER TABLE rescue_receipts ADD COLUMN {col} {decl}")
     conn.execute(f"PRAGMA user_version = {SCHEMA_VERSION}")
@@ -170,6 +176,16 @@ def _first_action(data: Dict[str, Any]) -> str:
     return ""
 
 
+def normalize_client(name: str) -> str:
+    """Normalize an MCP client name to a stable slug for per-client tallies.
+
+    "Claude Code" -> "claude-code", "Cursor" -> "cursor", "" -> "unknown".
+    Kept liberal: an unrecognized client keeps its slug rather than being lost.
+    """
+    slug = "-".join((name or "").strip().lower().split())
+    return slug or "unknown"
+
+
 def _normalize_trigger(trigger: str, trigger_n: int) -> Tuple[str, int]:
     t = (trigger or "unknown").strip().lower()
     if t not in VALID_TRIGGERS:
@@ -191,12 +207,15 @@ def record_rescue_receipt(
     trigger_n: int = 0,
     error_text: str = "",
     outcome: str = "unknown",
+    client: str = "unknown",
     borg_home: Optional[Path | str] = None,
 ) -> Dict[str, Any]:
-    """Append a privacy-safe receipt for one rescue/suggestion (schema v2).
+    """Append a privacy-safe receipt for one rescue/suggestion (schema v3).
 
     Accepts a ``RescueResult`` or a plain dict. Best-effort: never raises into the
     rescue path. ``error_text`` is redacted before it is stored in replay_context.
+    ``client`` is the MCP client that fired the rescue (claude-code | cursor | …),
+    captured from the MCP initialize handshake, for per-client firing visibility.
     """
     try:
         data = result.to_dict() if hasattr(result, "to_dict") else dict(result)
@@ -226,15 +245,16 @@ def record_rescue_receipt(
         "trigger_n": trig_n,
         "coverage_class": _coverage_class(problem_class, matched),
         "replay_context": json.dumps(replay_context, sort_keys=True),
+        "client": normalize_client(client),
     }
     try:
         with _connect(borg_home) as conn:
             conn.execute(
                 "INSERT INTO rescue_receipts "
                 "(created_at, status, problem_class, confidence, provenance, matched, source, "
-                " session_id, trigger, trigger_n, coverage_class, replay_context) "
+                " session_id, trigger, trigger_n, coverage_class, replay_context, client) "
                 "VALUES (:created_at, :status, :problem_class, :confidence, :provenance, :matched, "
-                ":source, :session_id, :trigger, :trigger_n, :coverage_class, :replay_context)",
+                ":source, :session_id, :trigger, :trigger_n, :coverage_class, :replay_context, :client)",
                 row,
             )
             conn.commit()
@@ -251,10 +271,22 @@ def value_summary(*, borg_home: Optional[Path | str] = None) -> Dict[str, Any]:
         "rescues_matched": 0,
         "no_confident_match": 0,
         "caught_after_stuck": 0,
+        # Hit-rate / miss-rate are the pilot's separable activity signal: a low
+        # hit_rate (few matches per fire) is a recall problem, not a value
+        # verdict — the day-15 reading must diagnose this BEFORE concluding
+        # anything from activation/retention (docs/PILOT_DECISION_PROTOCOL.md §2a).
+        "hit_rate": None,
+        "miss_rate": None,
         "matched_by_confidence": {},
         "matched_by_provenance": {},
         "matched_by_coverage_class": {},
         "by_trigger": {},
+        # Per-client firing visibility: fires and matches grouped by the MCP
+        # client that produced them (claude-code | cursor | …). Lets the operator
+        # see whether a client (e.g. Cursor) under-fires or under-surfaces,
+        # separately from whether Borg's catches are valuable.
+        "fires_by_client": {},
+        "matched_by_client": {},
         "distinct_problem_classes": 0,
         "replayable_receipts": 0,
         "first_rescue_at": None,
@@ -282,22 +314,33 @@ def value_summary(*, borg_home: Optional[Path | str] = None) -> Dict[str, Any]:
                 "SELECT coverage_class AS k, COUNT(*) AS n FROM rescue_receipts WHERE matched = 1 GROUP BY coverage_class")}
             by_trig = {str(r["k"]): int(r["n"]) for r in conn.execute(
                 "SELECT trigger AS k, COUNT(*) AS n FROM rescue_receipts GROUP BY trigger")}
+            fires_by_client = {str(r["k"]): int(r["n"]) for r in conn.execute(
+                "SELECT client AS k, COUNT(*) AS n FROM rescue_receipts GROUP BY client")}
+            matched_by_client = {str(r["k"]): int(r["n"]) for r in conn.execute(
+                "SELECT client AS k, COUNT(*) AS n FROM rescue_receipts WHERE matched = 1 GROUP BY client")}
             distinct = conn.execute(
                 "SELECT COUNT(DISTINCT problem_class) FROM rescue_receipts "
                 "WHERE matched = 1 AND problem_class != 'unknown'").fetchone()[0] or 0
             span = conn.execute("SELECT MIN(created_at) AS f, MAX(created_at) AS l FROM rescue_receipts").fetchone()
     except Exception:
         return empty
+    total_i, matched_i = int(total), int(matched)
+    hit_rate = round(matched_i / total_i, 4) if total_i else None
+    miss_rate = round((total_i - matched_i) / total_i, 4) if total_i else None
     return {
         "schema_version": SCHEMA_VERSION,
-        "rescues_fired": int(total),
-        "rescues_matched": int(matched),
-        "no_confident_match": int(total) - int(matched),
+        "rescues_fired": total_i,
+        "rescues_matched": matched_i,
+        "no_confident_match": total_i - matched_i,
         "caught_after_stuck": int(caught),
+        "hit_rate": hit_rate,
+        "miss_rate": miss_rate,
         "matched_by_confidence": by_conf,
         "matched_by_provenance": by_prov,
         "matched_by_coverage_class": by_cov,
         "by_trigger": by_trig,
+        "fires_by_client": fires_by_client,
+        "matched_by_client": matched_by_client,
         "distinct_problem_classes": int(distinct),
         "replayable_receipts": int(replayable),
         "first_rescue_at": span["f"] if span else None,
