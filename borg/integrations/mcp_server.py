@@ -4108,12 +4108,20 @@ def handle_request(request: Dict[str, Any]) -> Optional[Dict[str, Any]]:
 
 def main() -> None:
     """Run the MCP server on stdio. Supports MCP framed and newline JSON-RPC."""
-    # Cold start — runs once on first install
+    # Cold start — runs once on first install. A seedless install is FATAL here:
+    # borg-mcp cannot serve rescues from an empty corpus, so fail loudly rather
+    # than silently answer every lookup with no_confident_match. Other cold-start
+    # hiccups never block startup.
+    from borg.core.cold_start import run_if_needed, ColdStartSeedError
     try:
-        from borg.core.cold_start import run_if_needed
         run_if_needed()
+    except ColdStartSeedError as e:
+        print(f"FATAL: {e}", file=sys.stderr, flush=True)
+        print("borg-mcp will not start with an empty seed corpus — reinstall agent-borg.",
+              file=sys.stderr, flush=True)
+        raise SystemExit(1)
     except Exception:
-        pass  # never block startup
+        pass  # other cold-start hiccups never block startup
 
     from borg import __version__
     print(f"borg-mcp-server v{__version__} ready (stdio transport)", file=sys.stderr, flush=True)

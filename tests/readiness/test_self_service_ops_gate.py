@@ -3,12 +3,34 @@ from __future__ import annotations
 import json
 from pathlib import Path
 
+from eval import rollback_comms_drill
 from eval import self_service_ops_gate as gate
 
 ROOT = Path(__file__).resolve().parents[2]
 
 
-def test_self_service_ops_gate_script_and_artifacts_are_present() -> None:
+def _use_fresh_drill_snapshot(monkeypatch, tmp_path) -> None:
+    """Regenerate the time-sensitive rollback-drill snapshot fresh and point the
+    gate at it, so the gate's <=24h freshness check is HERMETIC rather than
+    dependent on the wall-clock age of the committed snapshot.
+
+    Without this, these tests fail on any branch whose committed
+    rollback_comms_drill_snapshot.json is >24h old — the documented footgun in
+    OPERATOR_ACTIONS.md ("committed drill/ops-gate snapshots age out after 24h,
+    so ANY PR branch older than a day fails the test matrix"). run_drill() is
+    offline and side-effect-free, so this is the prescribed "regenerate in CI"
+    fix applied at test time.
+    """
+    snap = rollback_comms_drill.run_drill()
+    fresh = tmp_path / "rollback_comms_drill_snapshot.json"
+    fresh.write_text(json.dumps(snap, indent=2, sort_keys=True) + "\n", encoding="utf-8")
+    files = dict(gate.REQUIRED_STATIC_FILES)
+    files["rollback_drill_snapshot"] = fresh  # absolute path overrides ROOT / value
+    monkeypatch.setattr(gate, "REQUIRED_STATIC_FILES", files)
+
+
+def test_self_service_ops_gate_script_and_artifacts_are_present(monkeypatch, tmp_path) -> None:
+    _use_fresh_drill_snapshot(monkeypatch, tmp_path)
     snapshot = gate.compile_gate()
 
     assert snapshot["gate_type"] == "self_service_ops_readiness"
@@ -100,6 +122,7 @@ def test_issue_templates_capture_recovery_critical_fields() -> None:
 
 
 def test_self_service_ops_gate_cli_writes_machine_snapshot(tmp_path, monkeypatch, capsys) -> None:
+    _use_fresh_drill_snapshot(monkeypatch, tmp_path)
     snapshot_path = tmp_path / "self_service_ops_gate_snapshot.json"
     report_path = tmp_path / "SELF_SERVICE_OPS_READINESS_REPORT.md"
     monkeypatch.setattr(gate, "SNAPSHOT", snapshot_path)

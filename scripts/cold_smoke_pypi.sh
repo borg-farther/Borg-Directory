@@ -45,7 +45,7 @@ check "honesty probe -> NO_CONFIDENT_MATCH" $?
 # Minute 8-10: the proof command (kit, verbatim)
 borg status >/tmp/status.log 2>&1
 grep -q "Value on this machine" /tmp/status.log; check "borg status shows Value block" $?
-grep -q "Borg fired:" /tmp/status.log; check "borg status shows fired tally" $?
+grep -q "Found known fixes:" /tmp/status.log; check "borg status shows fired tally (found known fixes)" $?
 grep -E -q "Caught (after )?your agent (was )?stuck" /tmp/status.log; check "borg status shows caught-your-agent-stuck headline" $?
 grep -q "not claimed" /tmp/status.log; check "borg status keeps honesty caveat" $?
 
