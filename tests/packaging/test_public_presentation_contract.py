@@ -176,19 +176,43 @@ def test_current_docs_preserve_same_version_artifact_drift_truth() -> None:
             assert phrase not in text, f"{path} still contains stale/unsupported phrase: {phrase}"
 
     current_version = tomllib.loads(read("pyproject.toml"))["project"]["version"]
-    assert "target source/local release candidate" in watched["README.md"]
+    # Post-publish truth: agent-borg==<current> is published and latest on PyPI, and the served
+    # runtime is current at that version. The pre-publish "release candidate / proof not green yet /
+    # fingerprint stale" framing is now false and must be gone.
     assert (
-        f"exact-version PyPI fresh-install/stdio MCP proof for {current_version} is not green yet"
+        f"`agent-borg=={current_version}` is published and is the latest release on PyPI"
         in watched["README.md"]
-    ), "README drift-truth sentence must track the pyproject version"
+    ), "README must state the published/latest PyPI release at the pyproject version"
+    assert f"the served runtime is current at {current_version}" in watched["README.md"]
     assert "Broad public self-serve launch, 100-user rollout, served/remote MCP, and measured external lift are **not claimed**" in watched["README.md"]
+    for stale in (
+        "source/local release candidate",
+        "is not green yet",
+        "production PyPI latest remains",
+        "production PyPI latest is",
+    ):
+        assert stale not in watched["README.md"], f"README still carries pre-publish wording: {stale}"
+
+    # READINESS keeps the still-true NO-GO posture (controlled beta + public self-serve) but drops the
+    # pre-publish package/runtime claims now that 3.3.20 is published and the served runtime is current.
     assert "Controlled first-10 beta: **NO-GO right now**" in watched["docs/READINESS.md"]
-    assert "target source/local release candidate" in watched["docs/READINESS.md"]
-    assert "exact-version PyPI fresh-install/stdio MCP proof is not green yet" in watched["docs/READINESS.md"]
-    assert "served runtime fingerprint is stale" in watched["docs/READINESS.md"]
+    assert (
+        f"`agent-borg=={current_version}` is published and is the latest release on PyPI"
+        in watched["docs/READINESS.md"]
+    )
+    assert f"the served runtime is current at {current_version}" in watched["docs/READINESS.md"]
     assert "GitHub `main` release governance is enforced" in watched["docs/READINESS.md"]
     assert "Public self-serve launch: **NO-GO until first-10 external-user evidence passes**" in watched["docs/READINESS.md"]
-    assert "Controlled first-10 beta infrastructure: **NO-GO**" in watched["docs/PUBLIC_SELF_SERVE_LAUNCH_GO_NO_GO.md"]
+    for stale in (
+        "source/local release candidate",
+        "is not green yet",
+        "served runtime fingerprint is stale",
+    ):
+        assert stale not in watched["docs/READINESS.md"], f"READINESS still carries pre-publish wording: {stale}"
+
+    # The generated go/no-go report keeps public self-serve NO-GO (zero external users); this holds
+    # regardless of the operator's category-C gate-snapshot re-capture.
+    assert "Public self-serve launch: **NO-GO**" in watched["docs/PUBLIC_SELF_SERVE_LAUNCH_GO_NO_GO.md"]
 
 
 def test_prioritized_production_ready_todo_locks_current_blockers_and_boundaries() -> None:

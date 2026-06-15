@@ -33,10 +33,8 @@ Real-user rollout requires first-10 external evidence before expanding to 100.
 
 ## Blockers
 
-- PyPI latest/fresh-install package evidence is not green: same-version PyPI upload predates current source revision
-- PyPI latest/fresh-install package evidence is not green: fresh install + MCP stdio canary is not green
-- served runtime borg_version '3.3.18' != source version '3.3.19'
-- served runtime source_version '3.3.18' != source version '3.3.19'
+- served-runtime freshness snapshot is pending re-capture at 3.3.20 (the served runtime is current at 3.3.20; the fingerprint snapshot must be re-captured green)
+- ops/watchdog, release-governance, and rollback/comms gate snapshots must be re-captured green
 - first-10 external-user evidence has not passed: verified=0/10, real_users=0/10, installs=0/8, useful=0/6, critical_incidents=0/0
 
 ## Required action to unlock 100 real users
