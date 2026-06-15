@@ -34,17 +34,34 @@ def test_convert_all_survives_forbidden_fallback_dir(tmp_path, monkeypatch, caps
     # non-root user). convert --all must still succeed from bundled seeds.
     import pathlib as _pathlib
 
-    real_path_cls = _pathlib.Path
+    # Patch the existence PROBES, not the Path constructor. Replacing the
+    # `pathlib.Path` module global with a plain function breaks pathlib's
+    # internal `cls is Path` identity check inside Path.__new__ on py3.10/3.11:
+    # any later Path(...) construction skips the redirect to PosixPath, hits the
+    # bare Path class (which has no `_flavour`), and raises AttributeError. That
+    # corrupted construction fires inside pytest's own report/teardown/atexit
+    # machinery and crashed the whole session (cacheprovider Path._flavour
+    # teardown crash). Patching the bound methods keeps Path a real class, so
+    # monkeypatch restores it cleanly and unrelated Path() calls stay intact.
+    forbidden_prefix = "/root/hermes-workspace"
+    real_exists = _pathlib.Path.exists
+    real_is_dir = _pathlib.Path.is_dir
 
-    def fake_path(*args, **kwargs):
-        if args and str(args[0]).startswith("/root/hermes-workspace"):
-            return _ForbiddenPath()
-        return real_path_cls(*args, **kwargs)
+    def fake_exists(self, *args, **kwargs):
+        if str(self).startswith(forbidden_prefix):
+            raise PermissionError(13, "Permission denied")
+        return real_exists(self, *args, **kwargs)
+
+    def fake_is_dir(self, *args, **kwargs):
+        if str(self).startswith(forbidden_prefix):
+            raise PermissionError(13, "Permission denied")
+        return real_is_dir(self, *args, **kwargs)
 
     monkeypatch.setenv("BORG_HOME", str(tmp_path / "home"))
-    # borg.cli does `import pathlib` at function scope, so patch the module
-    # global; the fake delegates everything except the forbidden prefix.
-    monkeypatch.setattr(_pathlib, "Path", fake_path)
+    # borg.cli probes the hardcoded /root/... fallback via Path.exists(); make
+    # exactly that probe raise EACCES, the way an untraversable dir does.
+    monkeypatch.setattr(_pathlib.Path, "exists", fake_exists)
+    monkeypatch.setattr(_pathlib.Path, "is_dir", fake_is_dir)
     monkeypatch.setattr(sys, "argv", [
         "borg", "convert", ".", "--format", "openclaw", "--all",
         "--output", str(tmp_path / "openclaw"),
