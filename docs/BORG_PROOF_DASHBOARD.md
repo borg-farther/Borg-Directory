@@ -1,19 +1,19 @@
 # Borg Proof Dashboard
 
-Generated: `2026-06-10T13:24:31Z`
+Generated: `2026-06-15T20:40:47Z`
 Repo: `https://github.com/borg-farther/Borg-Directory`
-Source snapshot: `966889e89878e1a7172229ed8aa71211c2ef2564+dirty`
+Source snapshot: `84a35c069d28e118431665b163c8307db43c2c72+dirty`
 
 ## Big top verdict
 
 | Scope | Verdict | Why |
 | --- | --- | --- |
-| controlled first 10 beta | NO-GO | Controlled first-10 beta is blocked until these failed gates are green: PyPI latest/fresh-install/stdio MCP package path; served-runtime freshness |
+| controlled first 10 beta | NO-GO | Controlled first-10 beta is blocked until these failed gates are green: PyPI latest/fresh-install/stdio MCP package path; served-runtime freshness; self-service ops gate; rollback/comms drill freshness |
 | local release candidate | CONDITIONAL | Local source/wheel gates pass; package/public rollout still depends on current PyPI proof, served runtime, release governance, and row-derived external-user evidence. |
 | unattended git onboarding | NO-GO | No verified external install/onboarding evidence yet; Git-only flow should not be treated as self-serve until at least the first-10 scoreboard has real outcomes. |
 | broad public launch | NO-GO | Public self-serve gate is blocked until PyPI latest/fresh-install/MCP/docs/cold-start-trust/served-runtime/release-governance/self-service-ops/ops-watchdog gates pass and row-derived first-10 external evidence passes. |
 
-**Controlled first-10 beta only?** NO-GO — Do not invite controlled beta users until these failed gates are green: PyPI latest/fresh-install/stdio MCP package path; served-runtime freshness; Do not present as unattended public launch ready.; Keep tester-intake forms prepared, but blocked until package/release-control/ops evidence is green.
+**Controlled first-10 beta only?** NO-GO — Do not invite controlled beta users until these failed gates are green: PyPI latest/fresh-install/stdio MCP package path; served-runtime freshness; self-service ops gate; rollback/comms drill freshness; Do not present as unattended public launch ready.; Keep tester-intake forms prepared, but blocked until package/release-control/ops evidence is green.
 
 ## Metrics with provenance and honesty labels
 
@@ -33,13 +33,13 @@ Source snapshot: `966889e89878e1a7172229ed8aa71211c2ef2564+dirty`
 | served_runtime_freshness_gate | FAIL | SERVED_RUNTIME_FINGERPRINT_GATE | eval/served_runtime_fingerprint_snapshot.json |
 | release_governance_gate | PASS | RELEASE_GOVERNANCE_BRANCH_PROTECTION_GATE | eval/release_governance_snapshot.json |
 | release_controls_gate | FAIL | SERVED_RUNTIME_PLUS_RELEASE_GOVERNANCE | eval/real_user_rollout_gate_snapshot.json |
-| self_service_ops_gate | PASS | SELF_SERVICE_OPS_GATE | eval/self_service_ops_gate_snapshot.json |
+| self_service_ops_gate | FAIL | SELF_SERVICE_OPS_GATE | eval/self_service_ops_gate_snapshot.json |
 | first_10_privacy_security_incidents | 0 | ROW_DERIVED_EXTERNAL_USER_RISK | eval/first_10_user_scoreboard.json row-derived external-user evidence |
 | ops_readiness_watchdog | PASS | OPS_PROOF_FRESHNESS_GATE | eval/ops_readiness_watchdog_snapshot.json |
-| rollback_comms_drill | PASS | DRY_RUN_ROLLBACK_COMMS_DRILL | eval/rollback_comms_drill_snapshot.json |
+| rollback_comms_drill | FAIL | DRY_RUN_ROLLBACK_COMMS_DRILL | eval/rollback_comms_drill_snapshot.json |
 | pypi_fresh_install_canary | FAIL | PYPI_FRESH_INSTALL_CURRENT_VERSION | eval/pypi_fresh_install_snapshot.json |
 | pypi_package_current_gate | FAIL | PYPI_METADATA_PLUS_FRESH_INSTALL_CURRENT_SOURCE | eval/public_self_serve_launch_gate_snapshot.json gates.pypi_latest + eval/pypi_fresh_install_snapshot.json |
-| source_version_consistency | pyproject=3.3.19 runtime=3.3.19 | REPO_SOURCE | pyproject.toml; borg/__init__.py |
+| source_version_consistency | pyproject=3.3.20 runtime=3.3.20 | REPO_SOURCE | pyproject.toml; borg/__init__.py |
 | host_runtime_split_brain | FAIL | SERVED_RUNTIME_EVIDENCE | Dashboard reads eval/served_runtime_fingerprint_snapshot.json; it does not restart or mutate long-lived Hermes/MCP runtimes. Served runtime GO requires borg_runtime_fingerprint with version_matches_source=true, reload_status=loaded_code_matches_source_behavior, and observe_behavior_canary.passed=true. |
 | load_gates | `{"10": {"concurrency_model": "asyncio_logical_users", "exists": true, "p95_ms": 0.7257168937940149, "p99_ms": 0.8770521578844632, "passed": true, "success_rate": 1.0, "timestamp": "2026-06-09T17:33:04.587187+00:00", "total_requests": 51719, "users_label": 10}, "100": {"concurrency_model": "asyncio_logical_users", "exists": true, "p95_ms": 0.6964495056308806, "p99_ms": 0.7314639177639038, "passed": true, "success_rate": 1.0, "timestamp": "2026-06-09T17:33:34.709090+00:00", "total_requests": 52422, "users_label": 100}, "1000": {"concurrency_model": "asyncio_logical_users", "exists": true, "p95_ms": 0.7386569748632609, "p99_ms": 0.9478506701998413, "passed": true, "success_rate": 1.0, "timestamp": "2026-06-09T17:34:04.881828+00:00", "total_requests": 48637, "users_label": 1000}}` | LOGICAL_USERS_NOT_REAL_USERS | eval/load_*_snapshot.json and eval/uat_scoreboard_snapshot.json |
 
@@ -52,23 +52,23 @@ Source snapshot: `966889e89878e1a7172229ed8aa71211c2ef2564+dirty`
 | eval/gate_run_snapshot.json | True | ec11fc0493e8c0d63a82c08e160c4d1bb982c89a1c56e0efdb72d2d0d7a3f778 | 2026-06-09T17:34:07.643844+00:00 | gate run synthetic_load_all_pass=True; overall_100_real_user_pass=False; ready_for_10_logical_load=True; ready_for_1000_logical_load=True; not_real_user_or_public_beta_evidence=True |
 | eval/real_user_rollout_gate_snapshot.json | True | d16ddb79f91ac09f23c19a7730559bf3ecfe8da1d107b73e7a3e08e0bbec2634 | 2026-06-10T13:19:55.705877+00:00 | 100-real-user gate=False; max_recommended_real_users=0; blockers=['PyPI latest/fresh-install package evidence is not green: same-version PyPI upload predates current source revision', 'PyPI latest/fresh-install package evidence is not green: fresh install + MCP stdio canary is not green', "served runtime borg_version '3.3.18' != source version '3.3.19'", "served runtime source_version '3.3.18' != source version '3.3.19'", 'first-10 external-user evidence has not passed: verified=0/10, real_users=0/10, installs=0/8, useful=0/6, critical_incidents=0/0'] |
 | eval/first_10_user_scoreboard.json | True | 232585546e34fc07459365e00123aa512098f215f7bcd6307d0bde9bb20813f0 | 2026-05-25T23:32:37Z | first-10 row evidence users=0; measured_savings={'rows_with_measured_value': 0, 'dead_ends_avoided_confirmed': 0, 'net_minutes_saved': 0.0, 'positive_minutes_saved': 0.0, 'negative_minutes_cost': 0.0, 'net_tokens_saved': 0, 'positive_tokens_saved': 0, 'negative_tokens_cost': 0, 'counterfactual_basis_counts': {}}; gate=BLOCKED |
-| eval/public_self_serve_launch_gate_snapshot.json | True | 21c697f0a7a0d9fd1ffd7f84261b68a234187fa6d8ea6e71883cbb25e6279d28 | 2026-06-10T13:19:54.285718+00:00 | public self-serve gate=False; max_recommended_real_users=0; blockers=['PyPI latest metadata is stale: same-version release upload predates current source revision', 'PyPI fresh-install + MCP stdio canary snapshot is missing or failing', "served runtime borg_version '3.3.18' != source version '3.3.19'", "served runtime source_version '3.3.18' != source version '3.3.19'", 'first-10 external-user evidence has not passed: verified=0/10, real_users=0/10, installs=0/8, useful=0/6, critical_incidents=0/0'] |
+| eval/public_self_serve_launch_gate_snapshot.json | True | 0fde6775e0c06d7b57245dfaf778e7d50dd2e0a179c7c37f21edd3f49cc33bd3 | 2026-06-11T19:57:13.499754+00:00 | public self-serve gate=False; max_recommended_real_users=0; blockers=['PyPI latest metadata is stale: same-version release upload predates current source revision', 'PyPI fresh-install + MCP stdio canary snapshot is missing or failing', "served runtime borg_version '3.3.18' != source version '3.3.20'", "served runtime source_version '3.3.18' != source version '3.3.20'", 'public docs/claim guard found stale install pins or unsupported launch/value claims', 'first-10 external-user evidence has not passed: verified=0/10, real_users=0/10, installs=0/8, useful=0/6, critical_incidents=0/0'] |
 | eval/cold_start_trust_gate_snapshot.json | True | 42e055100bd182898a60b8b9fed26ae53734e6729e52f80329ee262a247e208e | 2026-06-10T13:10:02.983048+00:00 | cold-start trust gate=True; blockers=[] |
-| eval/self_service_ops_gate_snapshot.json | True | 48370e72e1ba59c38d127a4de68a6c8c1e3d6e6a6637421c0cc318248235ef47 | 2026-06-10T13:24:31.625258+00:00 | self-service ops gate=True; blockers=[] |
+| eval/self_service_ops_gate_snapshot.json | True | 34fea7e57089b58cc1a4a0c6e54a0852a8d7a6c06d988b2cd0ff34ba69a24c1b | 2026-06-15T20:40:47.120674+00:00 | self-service ops gate=False; blockers=["static_files.rollback_drill_snapshot is not ready: {'path': 'eval/rollback_comms_drill_snapshot.json', 'exists': True, 'generated_at_utc': '2026-06-12T10:31:42.115976+00:00', 'age_hours': 82.15139009361111, 'max_age_hours': 24.0, 'passed': False, 'missing_steps': [], 'failed_steps': [], 'dry_run_only': True, 'fresh': False}"] |
 | eval/ops_readiness_watchdog_snapshot.json | True | fc2be9939d491df0db7080db54db46cda0c59cd2441f6964f2f19a289c53637e | 2026-06-10T13:19:58.796841+00:00 | ops readiness watchdog=True; blocker details live in eval/ops_readiness_watchdog_snapshot.json |
-| eval/rollback_comms_drill_snapshot.json | True | 47f681a15c905720ac8ca9afa5d9c29d83d6cdc792f23fa7729671259b30fea3 | 2026-06-10T13:10:20.920878+00:00 | rollback/comms drill=True; dry_run_only=True |
+| eval/rollback_comms_drill_snapshot.json | True | c1e7a7843747dcc787bddd128cab10f5b887e471ed00435780638de838986c26 | 2026-06-12T10:31:42.115976+00:00 | rollback/comms drill=False; dry_run_only=True |
 | eval/pypi_fresh_install_snapshot.json | True | ddd163001158b011c87086cb7a677092e2c6552d797408fcb9cdc6f126f9185b | 2026-06-10T13:09:41Z | PyPI fresh-install canary success=False; version=3.3.19 |
 | eval/load_10_snapshot.json | True | 0156d025ec600b9394dabee3f57f7fcb068395a9a0fe9b68c08966990832d595 | 2026-06-09T17:33:04.587187+00:00 | logical load 10: passed=True; total_requests=51719; success_rate=1.0; p95_ms=0.7257168937940149; model=asyncio_logical_users |
 | eval/load_100_snapshot.json | True | 070938f18670046e4d1f6a60970a5daffec3c1ae48a318efcc8f9094d5b63108 | 2026-06-09T17:33:34.709090+00:00 | logical load 100: passed=True; total_requests=52422; success_rate=1.0; p95_ms=0.6964495056308806; model=asyncio_logical_users |
 | eval/load_1000_snapshot.json | True | 9a67905af57c1f5b7e0c5390bffb541b69623c2ad1dab98e87078f9957fd1dec | 2026-06-09T17:34:04.881828+00:00 | logical load 1000: passed=True; total_requests=48637; success_rate=1.0; p95_ms=0.7386569748632609; model=asyncio_logical_users |
-| pyproject.toml | True | 01e61348a73040386bd6f092d4d74aaf22f7f16eeb66bfbb4ac8195b638c6ab5 | 2026-06-10T12:44:42Z | package version=3.3.19; scripts declared in project metadata |
-| borg/__init__.py | True | 6324f21e9f1f904d571739ff971d701085a23d85c81cd9f515fab5b45a829dc5 | 2026-06-10T12:44:42Z | runtime __version__=3.3.19; top-level check() delegates to search |
+| pyproject.toml | True | 12d306c198a25fe63317883b950d923506fe6318835bf74ee85175a7a0235874 | 2026-06-12T11:31:02Z | package version=3.3.20; scripts declared in project metadata |
+| borg/__init__.py | True | 84be39ed650c3d769296b4e4e83be6c4ad73379c808eff1ed850a00231d6446d | 2026-06-12T11:31:02Z | runtime __version__=3.3.20; top-level check() delegates to search |
 
 ## Blockers
 
 | Category | Blockers |
 | --- | --- |
-| user affecting | No real external first-user install/rescue outcome has been recorded yet.<br>PyPI package gate is not green for the current source revision yet.<br>Cold-start trust gate is green: meta/readiness prompts fail closed before random framework guidance reaches first users.<br>Served runtime freshness gate is not green yet.<br>Release governance gate is green: main branch protection, required checks, and CODEOWNERS review are proven.<br>Self-service ops gate is green: bad-answer intake, first-10 evidence intake, support/SLA, rollback/comms, and watchdog workflow exist.<br>Ops watchdog is green: proof snapshots and public status are internally consistent.<br>Unattended Git-only onboarding remains unproven until external user can install, configure MCP, and receive a useful rescue without maintainer intervention. |
+| user affecting | No real external first-user install/rescue outcome has been recorded yet.<br>PyPI package gate is not green for the current source revision yet.<br>Cold-start trust gate is green: meta/readiness prompts fail closed before random framework guidance reaches first users.<br>Served runtime freshness gate is not green yet.<br>Release governance gate is green: main branch protection, required checks, and CODEOWNERS review are proven.<br>Self-service ops gate is not green yet.<br>Ops watchdog is green: proof snapshots and public status are internally consistent.<br>Unattended Git-only onboarding remains unproven until external user can install, configure MCP, and receive a useful rescue without maintainer intervention. |
 | investor affecting | Verified external users: 0 based on available hard evidence.<br>Local/logical load gates prove engineering readiness, not market adoption or retention. |
 | security privacy | Security surface artifacts/gates exist in local snapshots, but no third-party audit or live adversarial user evidence is present.<br>Do not collect/share user traces until consent, redaction, revocation, and privacy policy are explicitly confirmed in the onboarding script. |
 | release hygiene | Do not change repo visibility from this proof build.<br>Need one supervised dry run from a clean PyPI install by a non-author before claiming self-serve readiness. |
@@ -97,7 +97,7 @@ Simulated/logical users are not real users. Internal sessions, tool calls, local
 
 | # | Action |
 | --- | --- |
-| 1 | Do not invite controlled first-10 testers yet: publish immutable `agent-borg==3.3.19`, then require PyPI latest metadata, fresh-install, stdio MCP, served-runtime, release-governance, ops, and watchdog gates to pass before using that exact version with testers. |
+| 1 | Do not invite controlled first-10 testers yet: publish immutable `agent-borg==3.3.20`, then require PyPI latest metadata, fresh-install, stdio MCP, served-runtime, release-governance, ops, and watchdog gates to pass before using that exact version with testers. |
 | 2 | Create a fresh-PyPI runbook: install package, run borg --version, configure MCP, run one rescue, capture exact timestamps and blockers. |
 | 3 | Keep the self-service ops gate and watchdog green before each tester invite; pause if bad-answer/support/privacy intake fails. |
 | 4 | Record first user in the first-10 scoreboard template using a pseudonym and consented outcome fields. |

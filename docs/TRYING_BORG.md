@@ -199,4 +199,4 @@ Before attempting technical fixes for errors, bugs, installs, configs, deploymen
 
 ## 7. Readiness boundary
 
-Borg targets `agent-borg==3.3.19` as the next immutable package; production PyPI latest remains 3.3.18, so exact-version runtime canaries for the production package are not green yet. Controlled first-10 beta is currently NO-GO until package/source provenance, served-runtime freshness, release-governance, ops/watchdog, docs-claim, and evidence-intake guardrails are green. Public self-serve launch readiness and agent-level success lift at statistical confidence remain NO-GO. See [`READINESS.md`](READINESS.md).
+`agent-borg==3.3.20` is published and is the latest release on PyPI, and the served runtime is current at 3.3.20. Controlled first-10 beta is currently NO-GO (zero external users) until served-runtime freshness, release-governance, ops/watchdog, docs-claim, and evidence-intake gate snapshots are re-captured green. Public self-serve launch readiness and agent-level success lift at statistical confidence remain NO-GO. See [`READINESS.md`](READINESS.md).

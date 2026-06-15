@@ -1,10 +1,10 @@
 # Borg support policy
 
-Borg targets `agent-borg==3.3.19` as the next immutable package; production PyPI latest remains 3.3.18, so exact-version PyPI fresh-install/stdio MCP proof for 3.3.19 is not green yet. Controlled first-10 beta is currently **NO-GO** until package/source provenance, served-runtime freshness, release-governance, ops/watchdog, docs-claim, and evidence-intake guardrails are green. GitHub `main` release governance is enforced. Broad public self-serve, 100-user rollout, served remote MCP, and measured lift are not claimed until row-derived external evidence passes.
+`agent-borg==3.3.20` is published and is the latest release on PyPI; the served runtime is current at 3.3.20. Controlled first-10 beta is currently **NO-GO** (zero external users) until served-runtime freshness, ops/watchdog, release-governance, docs-claim, and evidence-intake gate snapshots are re-captured green. GitHub `main` release governance is enforced. Broad public self-serve, 100-user rollout, served remote MCP, and measured lift are not claimed until row-derived external evidence passes.
 
 ## Supported path
 
-- Target package path: `agent-borg==3.3.19` from PyPI after merge/tag/CI and upload; first-10 invites remain paused until package proof, served-runtime freshness, and external-evidence guardrails are green.
+- Package path: `agent-borg==3.3.20` from PyPI (latest published release); first-10 invites remain paused until served-runtime freshness and external-evidence guardrails are green.
 - First command: `borg rescue "<redacted real error>" --short`.
 - MCP path: `borg-mcp` over stdio from a local client.
 - Evidence intake: `.github/ISSUE_TEMPLATE/first-10-evidence.yml`.

@@ -1,6 +1,6 @@
 # Borg First-10 Beta Readiness Contract
 
-**Status:** controlled first-10 public-package beta is **NO-GO right now**. `agent-borg==3.3.19` local/source canary proof is green, but production PyPI fresh-install/stdio MCP proof is not green yet and GitHub `main` release governance is enforced, but package/source provenance, served-runtime freshness, ops/watchdog proof, and evidence-intake guardrails must all be green before inviting controlled testers. External first-10 row count is zero.
+**Status:** controlled first-10 public-package beta is **NO-GO right now** (zero external users). `agent-borg==3.3.20` is published and is the latest release on PyPI, the served runtime is current at 3.3.20, and GitHub `main` release governance is enforced; served-runtime freshness, ops/watchdog proof, and evidence-intake gate snapshots must all be re-captured green before inviting controlled testers. External first-10 row count is zero.
 Public self-serve stays NO-GO until row-derived first-10 external-user evidence passes.
 
 **Success metric:** At least 6 of the first 10 users get one relevant ACTION/STOP/VERIFY moment without maintainer handholding, and every miss is recorded as NO_CONFIDENT_MATCH or explicit negative feedback instead of being hidden.
