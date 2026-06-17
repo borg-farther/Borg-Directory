@@ -34,21 +34,41 @@ _ERROR_KEYWORDS: List[Tuple[str, str]] = [
     ("circular", "circular_dependency"),
     ("dependency cycle", "circular_dependency"),
     ("InvalidMoveError", "circular_dependency"),
+    # Infinite recursion is a self-referential cycle; the pack phrasing is
+    # "recursive" but real errors say "recursion"/"maximum recursion depth".
+    # baseline_50 C3.
+    ("RecursionError", "circular_dependency"),
+    ("maximum recursion depth", "circular_dependency"),
     ("makemigrations", "migration_state_desync"),
     ("migrate", "migration_state_desync"),
     ("no such table", "migration_state_desync"),
     ("table already exists", "migration_state_desync"),
     ("applied migrations", "migration_state_desync"),
+    ("InconsistentMigrationHistory", "migration_state_desync"),  # baseline_50 A3
     # Django models / DB
     ("FOREIGN KEY constraint failed", "missing_foreign_key"),
     ("IntegrityError", "missing_foreign_key"),
     ("no such column", "schema_drift"),
-    ("table has no column", "schema_drift"),
+    # interpolation-tolerant: real errors read "table <name> has no column named <col>",
+    # so the bare "has no column" substring catches them (was "table has no column").
+    ("has no column", "schema_drift"),
+    # Missing-module phrasings are placed ABOVE the Django-config block so a wrapped
+    # "ImproperlyConfigured: Error loading X module: No module named 'X'" routes to
+    # missing_dependency, not configuration_error. baseline_50 J3. (ImportError stays
+    # below import_cycle so true circular imports still win.)
+    ("ModuleNotFoundError", "missing_dependency"),
+    ("No module named", "missing_dependency"),
+    ("DistributionNotFound", "missing_dependency"),  # pkg_resources: required dist absent; baseline_50 H2
     # Django config
     ("ImproperlyConfigured", "configuration_error"),
     ("SECRET_KEY", "configuration_error"),
     ("ALLOWED_HOSTS", "configuration_error"),
     ("DATABASE_URL", "configuration_error"),
+    # Postgres DB-auth misconfig surfaces as a bare OperationalError (there is no
+    # generic OperationalError trigger anymore); match the specific auth phrasings.
+    # baseline_50 J4.
+    ("fe_sendauth", "configuration_error"),
+    ("no password supplied", "configuration_error"),
     # Python types
     ("NoneType", "null_pointer_chain"),
     ("'NoneType'", "null_pointer_chain"),
@@ -62,22 +82,32 @@ _ERROR_KEYWORDS: List[Tuple[str, str]] = [
     ("permission denied", "permission_denied"),
     ("EACCES", "permission_denied"),
     ("EPERM", "permission_denied"),
+    # A read-only mount is an access/permission failure with no "permission denied"
+    # substring. baseline_50 H3.
+    ("Read-only file system", "permission_denied"),
+    ("EROFS", "permission_denied"),
     # Concurrency
-    ("dictionary changed size during iteration", "race_condition"),
+    ("changed size during iteration", "race_condition"),  # generalised beyond dict (set/list); baseline_50 K1
     ("TimeoutError", "timeout_hang"),
     ("timed out", "timeout_hang"),
-    ("Connection refused", "timeout_hang"),
+    # ("Connection refused", "timeout_hang") REMOVED — ECONNREFUSED (port closed /
+    # service down) is NOT a timeout/hang and has no correct pack. Routing it to
+    # timeout_hang was a false-confident match (baseline_50 D3, K3); with no correct
+    # class it must ABSTAIN (no_confident_match) instead of guessing.
     ("Connection timed out", "timeout_hang"),
     ("GatewayTimeout", "timeout_hang"),
-    # Missing dependencies
-    ("ModuleNotFoundError", "missing_dependency"),
-    ("No module named", "missing_dependency"),
+    # Missing dependencies (module-not-found phrasings handled earlier, above the
+    # Django-config block; ImportError stays here, below import_cycle).
     ("ImportError", "missing_dependency"),
     # Type errors
     ("TypeError", "type_mismatch"),
     ("mypy", "type_mismatch"),
     # Schema drift
-    ("OperationalError", "schema_drift"),
+    # ("OperationalError", "schema_drift") REMOVED — a bare OperationalError is generic
+    # (duplicate table, DB auth failure, locked DB, connection failure) and blanket-routing
+    # it to schema_drift was a false-confident trap (baseline_50 A1, J4, K2; also D3).
+    # schema_drift now fires ONLY on the specific column/schema substrings above
+    # ("no such column", "has no column"); any other OperationalError ABSTAINS.
     ("SyncError", "schema_drift"),
     # NOTE: v3.2.2 — the bare ("Error", "schema_drift") fallback was removed.
     # It was a generic substring trap that routed every error containing the
@@ -197,6 +227,20 @@ def _detect_language_quick(error_message: str) -> Optional[str]:
 # Phase 1 will migrate these into per-pack `anti_signatures` frontmatter
 # (ARCHITECTURE_SPEC.md §4.2 / §8.1). Until then, the dict lives here next
 # to _ERROR_KEYWORDS so the patch is a pure classifier change.
+#
+# A renamed/removed symbol — `cannot import name 'X' from 'module.path'` — is NOT a
+# circular import. True Python cycles (3.5+) read "from partially initialized module
+# 'X' (most likely due to a circular import)", so the quoted-module form WITHOUT that
+# marker is a deprecation/version mismatch with no pack yet. This anti_signature
+# suppresses BOTH import_cycle AND the missing_dependency fallback (the bare ImportError
+# keyword) for that form, so it ABSTAINS instead of confidently mislabeling.
+# baseline_50 B6 (force_text), G7 (ugettext). It does NOT match the "partially
+# initialized module" cycle phrasing (B6/e0009 stay import_cycle).
+_RENAMED_SYMBOL_IMPORT = _re.compile(
+    r"cannot import name\s+['\"]?[A-Za-z_]\w*['\"]?\s+from\s+['\"][\w.]+['\"]",
+    _re.IGNORECASE,
+)
+
 _ANTI_SIGNATURES: Dict[str, List["_re.Pattern[str]"]] = {
     "circular_dependency": [
         # Corpus row e0009 — Python's canonical "partially initialized
@@ -242,6 +286,14 @@ _ANTI_SIGNATURES: Dict[str, List["_re.Pattern[str]"]] = {
         # Does NOT match any Python fixture (no Python fixture contains
         # the literal string "import cycle not allowed").
         _re.compile(r"import cycle not allowed", _re.IGNORECASE),
+        # Renamed/removed symbol (e.g. force_text, ugettext) — not a cycle. Abstain.
+        _RENAMED_SYMBOL_IMPORT,
+    ],
+    "missing_dependency": [
+        # Block the bare-ImportError fallback for renamed/removed symbols so
+        # `cannot import name 'X' from 'module'` ABSTAINS instead of being mislabeled
+        # missing_dependency (the module IS installed; the symbol was renamed/removed).
+        _RENAMED_SYMBOL_IMPORT,
     ],
     "timeout_hang": [
         # Corpus row e0157 — K8s readiness/liveness/startup probe failures
@@ -374,6 +426,39 @@ def get_cache() -> Dict[str, Dict[str, Any]]:
 # Core functions
 # -----------------------------------------------------------------------
 
+# Regex triggers for fixed phrasings that interpolate an identifier between the
+# anchor words, so a plain substring cannot catch them. Checked AFTER the
+# substring table (only fire when nothing else matched). Run against the
+# normalised, lowercased view.
+_ERROR_REGEX_KEYWORDS: List[Tuple["_re.Pattern[str]", str]] = [
+    # Re-applied migration: "table <name> already exists" / "column <name> of
+    # relation <name> already exists" (sqlite + Postgres). baseline_50 A1, F4.
+    (
+        _re.compile(r"\b(?:table|column|relation|constraint|index|sequence|type)\b.*\balready exists\b"),
+        "migration_state_desync",
+    ),
+    # Postgres missing column: "column <name> does not exist" (sqlite says
+    # "no such column", already covered). Anchored on "column" so Django's
+    # "...matching query does not exist" (DoesNotExist, out of scope) does NOT match.
+    # baseline_50 F3.
+    (_re.compile(r"\bcolumn\b.*\bdoes not exist\b"), "schema_drift"),
+]
+
+
+def _normalize_for_matching(error_message: str) -> str:
+    """Quote-stripped, whitespace-collapsed, lowercased view for keyword/regex matching.
+
+    Driver errors interpolate quoted identifiers into otherwise fixed phrasings
+    (`table "blog_post" already exists`). Dropping the quote CHARACTERS (keeping the
+    content, so `'NoneType'` still matches the NoneType keyword) and collapsing
+    whitespace lets the fixed-phrase triggers fire regardless of identifier names.
+    Callers keep the ORIGINAL message for the language guard and anti_signatures,
+    which intentionally key on quoting.
+    """
+    no_quotes = error_message.replace('"', " ").replace("'", " ").replace("`", " ")
+    return _re.sub(r"\s+", " ", no_quotes).strip().lower()
+
+
 def classify_error(error_message: str) -> Optional[str]:
     """
     Classify an error message string into a problem_class.
@@ -402,9 +487,12 @@ def classify_error(error_message: str) -> Optional[str]:
     # Phase 0 language guard — refuse to answer non-Python errors.
     if _detect_language_quick(error_message) is not None:
         return None
-    lower = error_message.lower()
+    # Normalised view: quote chars dropped, whitespace collapsed, lowercased — so
+    # fixed-phrase keywords fire even when driver errors interpolate quoted
+    # identifiers. The ORIGINAL message is kept for the anti_signature checks.
+    norm = _normalize_for_matching(error_message)
     for keyword, problem_class in _ERROR_KEYWORDS:
-        if keyword.lower() in lower:
+        if keyword.lower() in norm:
             # v3.2.3 anti_signature gate — if a class-specific regex
             # matches the (case-preserved) text, suppress this keyword
             # and keep scanning. Returns None at the end if nothing
@@ -412,6 +500,12 @@ def classify_error(error_message: str) -> Optional[str]:
             # UnknownMatch block as before.
             if _anti_signature_blocks(error_message, problem_class):
                 continue
+            return problem_class
+    # Regex pass — fixed DB phrasings with an interpolated identifier between the
+    # anchor words ("table <name> already exists", "column <name> does not exist").
+    # Only reached when no plain-substring keyword matched.
+    for pattern, problem_class in _ERROR_REGEX_KEYWORDS:
+        if pattern.search(norm) and not _anti_signature_blocks(error_message, problem_class):
             return problem_class
     return None
 
