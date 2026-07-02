@@ -805,6 +805,14 @@ TOOLS: List[Dict[str, Any]] = [
         "inputSchema": {"type": "object", "properties": {}},
     },
     {
+        "name": "borg_capable_agent_stack",
+        "description": (
+            "Machine-readable minimum capable host-agent stack: capable base model, structured outputs, "
+            "local RAG, persistent memory, real tools, tight system prompt, and a fixed eval loop."
+        ),
+        "inputSchema": {"type": "object", "properties": {}},
+    },
+    {
         "name": "borg_runtime_fingerprint",
         "description": (
             "Report the exact loaded Borg MCP runtime path, source hashes, BORG_HOME, process id, "
@@ -2346,6 +2354,15 @@ def borg_first_10() -> str:
         return json.dumps({"success": False, "error": str(e), "type": type(e).__name__})
 
 
+def borg_capable_agent_stack() -> str:
+    """Return the minimum capable host-agent stack contract as JSON."""
+    try:
+        from borg.core.capable_agent_stack import capable_agent_stack_packet
+        return json.dumps(capable_agent_stack_packet(), ensure_ascii=False)
+    except Exception as e:
+        return json.dumps({"success": False, "error": str(e), "type": type(e).__name__})
+
+
 def borg_runtime_fingerprint() -> str:
     """Return exact loaded runtime paths/hashes plus a confidence-gate canary."""
     try:
@@ -3775,6 +3792,9 @@ def _call_tool_impl(name: str, arguments: Dict[str, Any]) -> str:
 
     elif name == "borg_first_10":
         return borg_first_10()
+
+    elif name == "borg_capable_agent_stack":
+        return borg_capable_agent_stack()
 
     elif name == "borg_runtime_fingerprint":
         return borg_runtime_fingerprint()

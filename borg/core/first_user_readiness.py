@@ -163,6 +163,8 @@ FIRST_10_GATES: List[ReadinessGate] = [
 
 def first_10_readiness_packet() -> Dict[str, Any]:
     """Return the full machine-readable first-10 readiness contract."""
+    from borg.core.capable_agent_stack import capable_agent_stack_packet
+
     return {
         "success": True,
         "status": "first_10_beta_contract",
@@ -170,6 +172,7 @@ def first_10_readiness_packet() -> Dict[str, Any]:
         "priming_paragraph": PRIMING_PARAGRAPH,
         "mcp_first_call": MCP_FIRST_CALL,
         "supported_mixes": list(SUPPORTED_FIRST_USER_MIXES),
+        "minimum_capable_agent_stack": capable_agent_stack_packet(),
         "gates": [gate.to_dict() for gate in FIRST_10_GATES],
         "smoke_commands": [
             "python3 -m pip install agent-borg",
@@ -177,6 +180,7 @@ def first_10_readiness_packet() -> Dict[str, Any]:
             "borg-doctor --json",
             "borg rescue 'ModuleNotFoundError: No module named flask' --json",
             "borg search 'django migration table already exists'",
+            "borg agent-stack --json",
             "borg setup-claude --scope user --verify --fix",
             "borg first-10 --json",
             "borg collective summary --json",
@@ -208,6 +212,7 @@ def first_10_readiness_packet() -> Dict[str, Any]:
 def render_first_10_readiness_markdown() -> str:
     """Render the contract for docs/CLI."""
     packet = first_10_readiness_packet()
+    stack = packet["minimum_capable_agent_stack"]
     lines = [
         "# Borg First-10 Beta Readiness Contract",
         "",
@@ -234,6 +239,14 @@ def render_first_10_readiness_markdown() -> str:
         *[f"- {mix}" for mix in packet["supported_mixes"]],
         "",
         "For every mix: install Borg where tools execute, prime the agent/human to call Borg before technical fixes, and record helpful/not-helpful/no-match outcomes.",
+        "",
+        "## Minimum capable agent host stack",
+        "",
+        "Borg helps most when the host is not crippled. Before blaming retrieval, harden the host baseline:",
+        "",
+        *[f"- **{lever['title']}** — {lever['why_it_matters']}" for lever in stack["levers"]],
+        "",
+        f"Machine-readable checklist: `{stack['commands']['inspect']}`",
         "",
         "## Binary gates",
         "",

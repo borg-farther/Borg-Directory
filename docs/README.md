@@ -16,6 +16,8 @@ belong under [`archive/`](archive/) and are not current product claims.
 - [`ONBOARDING.md`](ONBOARDING.md) — deterministic Claude onboarding gates
 - [`20260514_FIRST_10_USER_INVITE_PACKET.md`](20260514_FIRST_10_USER_INVITE_PACKET.md) — controlled first-10 tester invite and evidence-capture script
 - [`FIRST_10_BETA_READINESS.md`](FIRST_10_BETA_READINESS.md) — first-10 beta contract
+- [`MINIMUM_CAPABLE_AGENT_STACK.md`](MINIMUM_CAPABLE_AGENT_STACK.md) — free/local host-agent baseline: model, JSON schema, RAG, memory, tools, prompt, evals
+- [`../DESIGN.md`](../DESIGN.md) — canonical visual identity token spec for docs, dashboards, and coding agents
 - [`READINESS.md`](READINESS.md) — current readiness status and honest launch boundary
 - [`ROADMAP.md`](ROADMAP.md) — current roadmap and intentionally-not-claimed boundaries
 - [`20260522_BORG_PRODUCTION_DAY_ONE_HARDENING_PLAN.md`](20260522_BORG_PRODUCTION_DAY_ONE_HARDENING_PLAN.md) — hard-gated production/day-one hardening plan and proof checklist

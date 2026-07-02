@@ -5,6 +5,7 @@
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <title>borg — Stop burning tokens on solved problems</title>
   <style>
+    /* Canonical visual tokens live in /DESIGN.md. */
     *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
 
     :root {
@@ -120,9 +121,9 @@
     }
     .btn-primary {
       background: var(--accent);
-      color: #fff;
+      color: var(--bg);
     }
-    .btn-primary:hover { background: #79b8ff; text-decoration: none; }
+    .btn-primary:hover { background: #79b8ff; color: var(--bg); text-decoration: none; }
     .btn-secondary {
       background: var(--surface2);
       color: var(--text);
@@ -260,7 +261,7 @@
       padding: 0 18px 18px;
     }
     .platform.open .platform-code { display: block; }
-    .platform.open .platform-toggle { background: var(--accent); color: #fff; border-color: var(--accent); }
+    .platform.open .platform-toggle { background: var(--accent); color: var(--bg); border-color: var(--accent); }
     .code-block {
       background: var(--bg);
       border: 1px solid var(--border);

@@ -66,6 +66,8 @@ How:
 
 Details: [`docs/MCP_SETUP.md`](https://github.com/borg-farther/Borg-Directory/blob/main/docs/MCP_SETUP.md).
 
+Minimum capable host stack: Borg helps more when the host itself is not crippled. Before blaming retrieval, make sure the host has a capable model, structured outputs, local docs/RAG, persistent memory, real tools, a tight system prompt, and a fixed eval loop. Inspect the machine-readable checklist with `borg agent-stack --json`, and see [`docs/MINIMUM_CAPABLE_AGENT_STACK.md`](https://github.com/borg-farther/Borg-Directory/blob/main/docs/MINIMUM_CAPABLE_AGENT_STACK.md).
+
 ---
 
 ## 1. Install `agent-borg`
@@ -238,6 +240,7 @@ pytest -q 2>&1 | borg rescue --json
 borg search "django migration table already exists"
 borg try systematic-debugging
 borg apply systematic-debugging --task "Fix Django migration table already exists error"
+borg agent-stack --json
 borg first-10 --json
 borg status                # running tally: how often Borg fired and matched (by tier + source)
 ```
@@ -358,6 +361,7 @@ Why: agents often do not discover optional tools unless explicitly primed.
 - PyPI latest/fresh-install/stdio MCP proof for `agent-borg==3.3.19` is not green yet for the current source revision. Controlled first-10 testers must **not** be invited until package proof, served-runtime freshness, ops/watchdog, docs-claim, and evidence intake are green. Current cap: 0; broad public self-serve remains evidence-gated after first-10.
 - Self-service ops guardrails are present: bad-answer intake, install/MCP support intake, first-10 evidence intake, support/SLA, rollback/comms dry-run, and watchdog workflow.
 - First-10 beta contract is published: [`docs/FIRST_10_BETA_READINESS.md`](https://github.com/borg-farther/Borg-Directory/blob/main/docs/FIRST_10_BETA_READINESS.md).
+- Minimum capable host-agent stack contract is published: [`docs/MINIMUM_CAPABLE_AGENT_STACK.md`](https://github.com/borg-farther/Borg-Directory/blob/main/docs/MINIMUM_CAPABLE_AGENT_STACK.md).
 
 Do **not** route this into controlled first-10, broad public self-serve, or 100 real users yet. Invite **0** controlled testers until served-runtime freshness is green and the first-10 evidence contract is ready to capture consented external-user rows; after those gates pass, the first-10 evidence contract may cap a consented cohort at 10. `python eval/public_self_serve_launch_gate.py` must still keep broad public self-serve blocked until real first-10 evidence passes.
 

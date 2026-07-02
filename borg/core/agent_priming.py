@@ -510,6 +510,9 @@ def build_agent_priming_candidate(host: str = "generic") -> dict[str, Any]:
     """Return a host-specific priming artifact for maintainer review/export."""
     normalized = _normalize_host(host)
     label = _HOST_LABELS[normalized]
+    from borg.core.capable_agent_stack import capable_agent_stack_packet
+
+    stack_packet = capable_agent_stack_packet()
     prompt = (
         f"Borg interaction rule for {label}:\n"
         "- At the start of technical debug/test/review/deploy work, call `borg_observe` once with the exact task and tech context.\n"
@@ -518,6 +521,7 @@ def build_agent_priming_candidate(host: str = "generic") -> dict[str, Any]:
         "- Follow Borg's `ACTION`, avoid `STOP`, then rerun the exact `VERIFY` command/test.\n"
         "- after VERIFY, call `borg_record_outcome` with the intervention_id, outcome, helpful, verified, and verification evidence so Borg learns.\n"
         "- Surface fallback states by exact code instead of hiding degraded mode: `OUTCOME_NOT_RECORDED`, `SEMANTIC_SEARCH_LEXICAL_FALLBACK`, `MCP_UNAVAILABLE_USE_CLI`, and `LOCAL_SEED_NOT_COLLECTIVE_PROOF`.\n"
+        "- Do not let the host be the bottleneck: use a capable pinned model, JSON-schema outputs when possible, local docs/RAG, persistent memory, real tools, a tight system prompt, and a fixed eval loop. See `borg agent-stack --json`.\n"
         "- Borg guidance is advisory until verified; never claim first-10 lift, public lift, or global promotion from this local priming block.\n"
     )
     score = score_agent_priming(prompt)
@@ -533,6 +537,8 @@ def build_agent_priming_candidate(host: str = "generic") -> dict[str, Any]:
             "weak_match": "NO_CONFIDENT_MATCH",
             "after_verify": "borg_record_outcome",
         },
+        "minimum_capable_agent_stack_command": stack_packet["commands"]["inspect"],
+        "capability_baseline_ids": [lever["id"] for lever in stack_packet["levers"]],
         "visible_fallback_contract": {
             "NO_CONFIDENT_MATCH": "say NO_CONFIDENT_MATCH plainly; proceed without attributing the fix to Borg",
             "OUTCOME_NOT_RECORDED": "rerun VERIFY, then call borg_record_outcome",

@@ -20,6 +20,7 @@ ALLOWED_ROOT_FILES = {
     "AGENTS.md",
     "CHANGELOG.md",
     "CLAUDE.md",
+    "DESIGN.md",
     "Dockerfile",
     "index.json",
     "LICENSE",

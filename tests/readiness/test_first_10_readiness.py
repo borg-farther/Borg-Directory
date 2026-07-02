@@ -43,9 +43,14 @@ def test_first_10_packet_contains_install_mcp_feedback_and_priming():
     assert "python3 -m pip install agent-borg" in commands
     assert "borg-doctor --json" in commands
     assert "borg rescue" in commands
+    assert "borg agent-stack --json" in commands
     assert "borg setup-claude --scope user --verify --fix" in commands
     assert "borg first-10 --json" in commands
     assert "borg collective summary --json" in commands
+    stack = packet["minimum_capable_agent_stack"]
+    assert stack["status"] == "minimum_capable_agent_stack"
+    assert len(stack["levers"]) == 7
+    assert stack["commands"]["inspect"] == "borg agent-stack --json"
     assert "borg_rescue" in packet["priming_paragraph"]
     assert "borg_observe" in packet["priming_paragraph"]
     assert "borg_record_outcome" in packet["priming_paragraph"]
@@ -80,6 +85,8 @@ def test_first_10_markdown_is_human_readable_and_not_theatre():
     assert "NO_CONFIDENT_MATCH" in md
     assert "ACTION/STOP/VERIFY" in md
     assert "Supported first-user mixes" in md
+    assert "Minimum capable agent host stack" in md
+    assert "borg agent-stack --json" in md
     assert "ChatGPT/OpenAI" in md
     assert "Hermes" in md
     assert "vanity" not in md.lower() or "test count" in md.lower()
@@ -144,6 +151,7 @@ def test_docs_link_first_10_security_and_truthful_limitations():
     security = (ROOT / "docs" / "SECURITY_HARDENING_BASELINE.md").read_text(encoding="utf-8")
 
     assert "FIRST_10_BETA_READINESS.md" in readme
+    assert "MINIMUM_CAPABLE_AGENT_STACK.md" in readme
     assert "Measured external agent success lift" in readme
     assert "Not yet claimed" in readme
     assert "Security/privacy/prompt-injection surface" in readme
@@ -164,12 +172,19 @@ def test_cli_parser_exposes_first_10_command_by_source_contract():
 def test_mcp_exposes_first_10_contract():
     tool_names = {tool["name"] for tool in mcp_server.TOOLS}
     assert "borg_first_10" in tool_names
+    assert "borg_capable_agent_stack" in tool_names
 
     raw = mcp_server.call_tool("borg_first_10", {})
     data = json.loads(raw)
     assert data["success"] is True
     assert data["status"] == "first_10_beta_contract"
     assert len(data["gates"]) == 7
+
+    stack_raw = mcp_server.call_tool("borg_capable_agent_stack", {})
+    stack = json.loads(stack_raw)
+    assert stack["success"] is True
+    assert stack["status"] == "minimum_capable_agent_stack"
+    assert len(stack["levers"]) == 7
 
 
 def _first_10_value_row(
