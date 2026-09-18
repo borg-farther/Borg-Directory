@@ -10,7 +10,7 @@
 - Classifier precision and recall: removed generic `OperationalError` and connection-refused traps that produced confident misroutes, added specific database/auth/permission/recursion signatures, and abstains on renamed-symbol imports rather than inventing a cause.
 - Learning integrity: arbitrary downstream tool calls no longer manufacture `read`/`applied`/`helped` feedback; helpfulness requires an explicit verified outcome receipt.
 - Release isolation: CI now force-installs the built wheel from a clean directory and verifies package origin, version, runtime fingerprint, bundled seeds, CLI entry points, and MCP stdio before merge; `wheel-smoke` is an exact required governance check.
-- Value measurement: added an isolated three-arm GPT trial with hidden graders, immutable treatment data, treatment-compliance receipts, cache-aware token accounting, and optional pre-LLM prefetch delivery. The first valid eight-task tool-delivery pilot was null at a solve-rate ceiling and is retained as negative evidence rather than marketed as lift.
+- Value measurement: added isolated GPT trials with hidden graders, immutable treatment data, treatment-compliance receipts, cache-aware token accounting, and pre-LLM prefetch delivery. The first valid eight-task tool-delivery pilot was null at a solve-rate ceiling. A preregistered reused-task mechanism study then kept all four arms at 8/8 while seeded prefetch versus a mandatory seeded tool turn reduced median paired calls by 1 (95% bootstrap CI `[-2, 0]`) and wall time by 4.307 seconds (CI `[-16.319, 0.341]`); its 195-token non-cache reduction had a wide CI `[-6777.5, 2990]`. These are directional delivery results, not evidence of general Borg effectiveness.
 
 ## 3.3.20 — 2026-06-12
 

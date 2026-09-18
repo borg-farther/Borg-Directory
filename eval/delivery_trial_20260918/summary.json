@@ -1,0 +1,271 @@
+{
+  "all_runs_valid": true,
+  "claim_boundary": "Eight reused tasks can establish an engineering delivery improvement, not general Borg effectiveness. Product-value claims still require held-out powered replication and first-10 external-user outcomes.",
+  "fingerprints": {
+    "dirty_diff_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+    "git_head": "f63c4a227253d6fb11a763c32d7d09c4a73091f8",
+    "immutable_runtime_snapshot_sha256": "6e07c457982562781518a61051d4dacc3ce252658243088d73fd8bfabaf639c3",
+    "model": {
+      "max_turns": 7,
+      "name": "gpt-5.6-sol",
+      "provider": "openai-codex",
+      "runner": "Hermes one-shot safe mode"
+    },
+    "preregistration_sha256": "06730a84babcb1afe4070743ebfad7e790a8ae2de7967da66220e8020d9bc988",
+    "taskset_sha256": "205c9ebf2316093cbb3fd20e6609803ec03ece74133ead63b338df571a2c86c4"
+  },
+  "generated_at_utc": "2026-09-18T16:41:45.690204+00:00",
+  "n_runs_expected": 32,
+  "n_runs_observed": 32,
+  "n_tasks": 8,
+  "per_condition": {
+    "P0_prefetch_empty": {
+      "median_api_calls": 7.5,
+      "median_cache_read_tokens": 56192.0,
+      "median_estimated_cost_usd": 0.0,
+      "median_non_cache_tokens": 12218.0,
+      "median_retrieval_seconds": 0.033308000000000004,
+      "median_total_tokens": 69514.5,
+      "median_wall_seconds": 57.4695,
+      "n": 8,
+      "solve_rate": 1.0,
+      "solved": 8,
+      "total_borg_invocations": 8,
+      "valid": 8
+    },
+    "P1_prefetch_seeded": {
+      "median_api_calls": 8.0,
+      "median_cache_read_tokens": 60544.0,
+      "median_estimated_cost_usd": 0.0,
+      "median_non_cache_tokens": 17261.5,
+      "median_retrieval_seconds": 0.005943,
+      "median_total_tokens": 78098.5,
+      "median_wall_seconds": 61.673,
+      "n": 8,
+      "solve_rate": 1.0,
+      "solved": 8,
+      "total_borg_invocations": 8,
+      "valid": 8
+    },
+    "T0_tool_empty": {
+      "median_api_calls": 9.0,
+      "median_cache_read_tokens": 70464.0,
+      "median_estimated_cost_usd": 0.0,
+      "median_non_cache_tokens": 13032.0,
+      "median_retrieval_seconds": 0.0,
+      "median_total_tokens": 84991.5,
+      "median_wall_seconds": 65.208,
+      "n": 8,
+      "solve_rate": 1.0,
+      "solved": 8,
+      "total_borg_invocations": 8,
+      "valid": 8
+    },
+    "T1_tool_seeded": {
+      "median_api_calls": 9.5,
+      "median_cache_read_tokens": 72128.0,
+      "median_estimated_cost_usd": 0.0,
+      "median_non_cache_tokens": 20477.5,
+      "median_retrieval_seconds": 0.0,
+      "median_total_tokens": 92756.5,
+      "median_wall_seconds": 67.496,
+      "n": 8,
+      "solve_rate": 1.0,
+      "solved": 8,
+      "total_borg_invocations": 8,
+      "valid": 8
+    }
+  },
+  "primary_seeded_prefetch_minus_tool": {
+    "delta_definition": "right minus left; negative favors prefetch",
+    "left": "T1_tool_seeded",
+    "metrics": {
+      "api_calls": {
+        "median_paired_delta": -1.0,
+        "median_paired_delta_ci95": [
+          -2.0,
+          0.0
+        ],
+        "median_paired_percent_change": -10.555555555555555,
+        "n_pairs": 8,
+        "prefetch_lower": 5,
+        "tie": 2,
+        "tool_lower": 1
+      },
+      "cache_read_tokens": {
+        "median_paired_delta": -5632.0,
+        "median_paired_delta_ci95": [
+          -19328.0,
+          5504.0
+        ],
+        "median_paired_percent_change": -7.617350163719179,
+        "n_pairs": 8,
+        "prefetch_lower": 5,
+        "tie": 0,
+        "tool_lower": 3
+      },
+      "estimated_cost_usd": {
+        "median_paired_delta": 0.0,
+        "median_paired_delta_ci95": [
+          0.0,
+          0.0
+        ],
+        "median_paired_percent_change": null,
+        "n_pairs": 8,
+        "prefetch_lower": 0,
+        "tie": 8,
+        "tool_lower": 0
+      },
+      "non_cache_tokens": {
+        "median_paired_delta": -195.0,
+        "median_paired_delta_ci95": [
+          -6777.5,
+          2990.0
+        ],
+        "median_paired_percent_change": -1.1538892059899832,
+        "n_pairs": 8,
+        "prefetch_lower": 4,
+        "tie": 0,
+        "tool_lower": 4
+      },
+      "retrieval_seconds": {
+        "median_paired_delta": 0.005943,
+        "median_paired_delta_ci95": [
+          0.003808,
+          0.00627
+        ],
+        "median_paired_percent_change": null,
+        "n_pairs": 8,
+        "prefetch_lower": 0,
+        "tie": 0,
+        "tool_lower": 8
+      },
+      "total_tokens": {
+        "median_paired_delta": -6794.0,
+        "median_paired_delta_ci95": [
+          -19843.0,
+          3998.0
+        ],
+        "median_paired_percent_change": -7.547619493265635,
+        "n_pairs": 8,
+        "prefetch_lower": 5,
+        "tie": 0,
+        "tool_lower": 3
+      },
+      "wall_seconds": {
+        "median_paired_delta": -4.306999999999995,
+        "median_paired_delta_ci95": [
+          -16.318999999999996,
+          0.3410000000000011
+        ],
+        "median_paired_percent_change": -6.581204535817637,
+        "n_pairs": 8,
+        "prefetch_lower": 6,
+        "tie": 0,
+        "tool_lower": 2
+      }
+    },
+    "n_both_solved_pairs": 8,
+    "n_complete_pairs": 8,
+    "negative_transfer_tasks": [],
+    "right": "P1_prefetch_seeded"
+  },
+  "schema_version": 1,
+  "secondary_empty_prefetch_minus_tool": {
+    "delta_definition": "right minus left; negative favors prefetch",
+    "left": "T0_tool_empty",
+    "metrics": {
+      "api_calls": {
+        "median_paired_delta": -2.0,
+        "median_paired_delta_ci95": [
+          -3.0,
+          -1.0
+        ],
+        "median_paired_percent_change": -21.11111111111111,
+        "n_pairs": 8,
+        "prefetch_lower": 7,
+        "tie": 1,
+        "tool_lower": 0
+      },
+      "cache_read_tokens": {
+        "median_paired_delta": -12096.0,
+        "median_paired_delta_ci95": [
+          -23808.0,
+          -6400.0
+        ],
+        "median_paired_percent_change": -17.58663409527133,
+        "n_pairs": 8,
+        "prefetch_lower": 8,
+        "tie": 0,
+        "tool_lower": 0
+      },
+      "estimated_cost_usd": {
+        "median_paired_delta": 0.0,
+        "median_paired_delta_ci95": [
+          0.0,
+          0.0
+        ],
+        "median_paired_percent_change": null,
+        "n_pairs": 8,
+        "prefetch_lower": 0,
+        "tie": 8,
+        "tool_lower": 0
+      },
+      "non_cache_tokens": {
+        "median_paired_delta": -1755.0,
+        "median_paired_delta_ci95": [
+          -6859.0,
+          938.0
+        ],
+        "median_paired_percent_change": -14.458597771523078,
+        "n_pairs": 8,
+        "prefetch_lower": 6,
+        "tie": 0,
+        "tool_lower": 2
+      },
+      "retrieval_seconds": {
+        "median_paired_delta": 0.033308000000000004,
+        "median_paired_delta_ci95": [
+          0.030622,
+          0.083081
+        ],
+        "median_paired_percent_change": null,
+        "n_pairs": 8,
+        "prefetch_lower": 0,
+        "tie": 0,
+        "tool_lower": 8
+      },
+      "total_tokens": {
+        "median_paired_delta": -17284.0,
+        "median_paired_delta_ci95": [
+          -26146.0,
+          -7082.0
+        ],
+        "median_paired_percent_change": -20.200685397642403,
+        "n_pairs": 8,
+        "prefetch_lower": 7,
+        "tie": 0,
+        "tool_lower": 1
+      },
+      "wall_seconds": {
+        "median_paired_delta": -6.813500000000001,
+        "median_paired_delta_ci95": [
+          -11.995000000000001,
+          -4.042000000000002
+        ],
+        "median_paired_percent_change": -10.777183238001296,
+        "n_pairs": 8,
+        "prefetch_lower": 7,
+        "tie": 0,
+        "tool_lower": 1
+      }
+    },
+    "n_both_solved_pairs": 8,
+    "n_complete_pairs": 8,
+    "negative_transfer_tasks": [],
+    "right": "P0_prefetch_empty"
+  },
+  "token_accounting": "total_tokens includes provider-reported cache reads; non_cache_tokens is input_tokens + output_tokens. Reasoning tokens are not added separately because provider usage counts them inside output tokens.",
+  "trial_status": "completed",
+  "verdict": "DIRECTIONAL_MECHANISM_IMPROVEMENT"
+}
