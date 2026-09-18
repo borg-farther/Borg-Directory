@@ -2,8 +2,8 @@
   "blockers": [
     "PyPI latest/fresh-install package evidence is not green: same-version PyPI upload predates current source revision",
     "PyPI latest/fresh-install package evidence is not green: fresh install + MCP stdio canary is not green",
-    "served runtime borg_version '3.3.18' != source version '3.3.19'",
-    "served runtime source_version '3.3.18' != source version '3.3.19'",
+    "served runtime borg_version '3.3.18' != source version '3.3.21'",
+    "served runtime source_version '3.3.18' != source version '3.3.21'",
     "first-10 external-user evidence has not passed: verified=0/10, real_users=0/10, installs=0/8, useful=0/6, critical_incidents=0/0"
   ],
   "first_10_external_evidence": {
@@ -37,12 +37,12 @@
     "exists": true,
     "failed_count": 0,
     "failures": [],
-    "generated_at_utc": "2026-06-10T13:10:20Z",
+    "generated_at_utc": "2026-09-18T14:27:38Z",
     "passed": true,
-    "passed_count": 28
+    "passed_count": 26
   },
   "gate_type": "real_user_rollout",
-  "generated_at_utc": "2026-06-10T13:19:55.705877+00:00",
+  "generated_at_utc": "2026-09-18T16:31:54.079623+00:00",
   "important_distinction": "load/readiness snapshots are synthetic/logical users; this gate controls real external-user rollout",
   "infrastructure_ready_for_100": false,
   "load_gates": {
@@ -50,11 +50,11 @@
       "duration_seconds": 30.0,
       "exists": true,
       "latency_ms": {
-        "avg": 0.5717460285540273,
-        "max": 64.04542201198637,
-        "p50": 0.5534699885174632,
-        "p95": 0.7257168937940149,
-        "p99": 0.8770521578844632
+        "avg": 0.9976464309165178,
+        "max": 9.484246373176575,
+        "p50": 0.9860293939709663,
+        "p95": 1.317520067095756,
+        "p99": 1.9241905771195884
       },
       "passed": true,
       "success_rate": 1.0,
@@ -64,11 +64,11 @@
       "duration_seconds": 30.0,
       "exists": true,
       "latency_ms": {
-        "avg": 0.5554104919716634,
-        "max": 2.4680219939909875,
-        "p50": 0.5447750154417008,
-        "p95": 0.6964495056308806,
-        "p99": 0.7314639177639038
+        "avg": 0.9468894661104816,
+        "max": 3.1584482640028,
+        "p50": 0.9582098573446274,
+        "p95": 1.1239005252718925,
+        "p99": 1.1847499758005142
       },
       "passed": true,
       "success_rate": 1.0,
@@ -86,31 +86,31 @@
     "passed": false,
     "pypi_fresh_install_and_mcp_stdio": {
       "exists": true,
-      "expected_version": "3.3.19",
+      "expected_version": "3.3.21",
       "failed_count": 1,
       "failures": [
         "pip_install_agent_borg"
       ],
       "freshness": {
-        "age_hours": 0.17040878833333334,
+        "age_hours": 0.013028301944444445,
         "failure_kind": null,
         "max_age_hours": 24.0,
         "passed": true
       },
-      "generated_at_utc": "2026-06-10T13:09:41Z",
+      "generated_at_utc": "2026-09-18T16:31:06Z",
       "mcp_server_info": null,
       "mcp_stdio_canary_passed": false,
       "passed": false,
       "path": "eval/pypi_fresh_install_snapshot.json",
-      "version": "3.3.19"
+      "version": "3.3.21"
     },
     "pypi_latest": {
       "banned_keywords_present": [],
       "description_content_type": "text/markdown",
-      "description_length": 15626,
+      "description_length": 17229,
       "description_stale_copy": [],
       "expected_summary": "Failure memory CLI and MCP server for AI coding agents",
-      "expected_version": "3.3.19",
+      "expected_version": "3.3.21",
       "keyword_missing": false,
       "keywords": [
         "agent-tools",
@@ -119,7 +119,7 @@
         "failure-memory",
         "mcp"
       ],
-      "latest_version": "3.3.18",
+      "latest_version": "3.3.20",
       "package": "agent-borg",
       "passed": false,
       "project_urls": {
@@ -129,7 +129,7 @@
         "Repository": "https://github.com/borg-farther/Borg-Directory"
       },
       "requires_dist": [
-        "pyyaml>=6.0",
+        "pyyaml<7,>=6.0",
         "sentence-transformers>=2.2.0; extra == \"semantic\"",
         "numpy>=1.24.0; extra == \"semantic\"",
         "scikit-learn>=1.3.0; extra == \"semantic\"",
@@ -152,42 +152,19 @@
       ],
       "source_upload_alignment": {
         "alignment_basis": "current_source_revision",
-        "current_source_commit_time_utc": "2026-06-05T22:53:58+00:00",
+        "current_source_commit_time_utc": "2026-09-18T16:27:51+00:00",
         "detail": "PyPI release upload predates current source revision or package reference for at least one release file; publish a new immutable version before claiming package proof is current.",
         "dirty_source": true,
         "failure_kind": "same_version_pypi_upload_predates_source_revision",
-        "latest_release_upload_time_utc": "2026-06-03T20:19:08.726312+00:00",
+        "latest_release_upload_time_utc": "2026-06-12T13:46:19.381783+00:00",
         "non_package_changed_paths_since_reference": [],
         "non_package_dirty_paths": [
-          ".github/ISSUE_TEMPLATE/bad-answer.yml",
-          ".github/ISSUE_TEMPLATE/first-10-evidence.yml",
-          ".github/ISSUE_TEMPLATE/install-mcp-support.yml",
-          "AGENTS.md",
-          "SUPPORT.md",
-          "deploy/docker/Dockerfile.borg",
-          "deploy/smithery/smithery.yaml",
-          "docs/20260514_FIRST_10_USER_INVITE_PACKET.md",
-          "docs/20260514_PUBLIC_SELF_SERVE_LAUNCH_CLOSURE_PLAN.md",
           "docs/20260517_BORG_100_REAL_USER_READINESS.md",
-          "docs/20260522_BORG_PRODUCTION_DAY_ONE_HARDENING_PLAN.md",
-          "docs/20260526_7_USER_CONTROLLED_LAUNCH_AND_100_USER_STAGE_GATES.md",
           "docs/BORG_PROOF_DASHBOARD.html",
           "docs/BORG_PROOF_DASHBOARD.md",
-          "docs/CHANNELS_AND_INSTALL_METHODS.md",
           "docs/COLD_START_TRUST_HARDENING.md",
-          "docs/FIRST_10_BETA_READINESS.md",
-          "docs/FIRST_10_EVIDENCE_INTAKE.md",
-          "docs/LIVE_MCP_SELF_SERVE_CANARY.md",
           "docs/PUBLIC_SELF_SERVE_LAUNCH_GO_NO_GO.md",
-          "docs/READINESS.md",
-          "docs/README.md",
-          "docs/ROADMAP.md",
           "docs/SELF_SERVICE_OPS_READINESS_REPORT.md",
-          "docs/TRYING_BORG.md",
-          "docs/VALUE_COMMUNICATION_DASHBOARD.html",
-          "docs/VALUE_COMMUNICATION_DASHBOARD.md",
-          "docs/index.html",
-          "docs/landing-page/index.html",
           "docs/public/impact/impact.json",
           "docs/public/proof-dashboard/index.html",
           "docs/public/status.json",
@@ -195,56 +172,36 @@
           "docs/status.json",
           "eval/borg_proof_dashboard.json",
           "eval/cold_start_trust_gate_snapshot.json",
-          "eval/first_user_release_gate_snapshot.json",
           "eval/gate_run_snapshot.json",
           "eval/load_1000_snapshot.json",
           "eval/load_100_snapshot.json",
           "eval/load_10_snapshot.json",
-          "eval/ops_readiness_watchdog_post_dashboard_check.json",
           "eval/ops_readiness_watchdog_snapshot.json",
-          "eval/public_self_serve_launch_gate.py",
           "eval/public_self_serve_launch_gate_snapshot.json",
           "eval/pypi_fresh_install_snapshot.json",
           "eval/real_user_rollout_gate_snapshot.json",
           "eval/release_governance_snapshot.json",
           "eval/rollback_comms_drill_snapshot.json",
           "eval/self_service_ops_gate_snapshot.json",
-          "eval/served_runtime_fingerprint_snapshot.json",
-          "eval/tests/test_borg_proof_dashboard.py",
-          "eval/tests/test_production_inventory_board.py",
-          "eval/tests/test_real_user_rollout_gate.py",
-          "eval/uat_scoreboard_snapshot.json",
-          "llms.txt",
-          "scripts/borg_proof_dashboard_lint.py",
-          "scripts/build_borg_proof_dashboard.py",
-          "tests/cli/test_cli.py",
-          "tests/packaging/test_distribution_readiness.py",
-          "tests/packaging/test_public_presentation_contract.py",
-          "tests/readiness/test_public_self_serve_launch_gate.py"
+          "eval/uat_scoreboard_snapshot.json"
         ],
-        "oldest_release_upload_time_utc": "2026-06-03T20:19:07.209583+00:00",
+        "oldest_release_upload_time_utc": "2026-06-12T13:46:17.553357+00:00",
         "package_changed_paths_since_reference": [],
         "package_dirty": true,
-        "package_dirty_paths": [
-          "README.md",
-          "borg/__init__.py",
-          "borg/cli.py",
-          "borg/cli/install.py",
-          "pyproject.toml"
-        ],
-        "package_reference": "v3.3.19",
+        "package_dirty_paths": [],
+        "package_reference": "v3.3.21",
         "package_reference_ancestor_of_head": null,
         "package_reference_available": false,
         "package_reference_commit_time_utc": null,
-        "package_reference_error": "Command '['git', 'rev-parse', '--verify', 'refs/tags/v3.3.19^{commit}']' returned non-zero exit status 128.",
+        "package_reference_error": "Command '['git', 'rev-parse', '--verify', 'refs/tags/v3.3.21^{commit}']' returned non-zero exit status 128.",
         "package_reference_revision": null,
         "passed": false,
         "release_file_count": 2,
-        "source_commit_time_utc": "2026-06-05T22:53:58+00:00",
-        "source_revision": "966889e89878e1a7172229ed8aa71211c2ef2564+dirty",
+        "source_commit_time_utc": "2026-09-18T16:27:51+00:00",
+        "source_revision": "082f206051f223a9aba70473573c61d73a8b59f8+dirty",
         "stale_release_files": [
-          "agent_borg-3.3.18-py3-none-any.whl",
-          "agent_borg-3.3.18.tar.gz"
+          "agent_borg-3.3.20-py3-none-any.whl",
+          "agent_borg-3.3.20.tar.gz"
         ],
         "worktree_dirty": true
       },
@@ -258,8 +215,8 @@
   "ready_for_10_controlled_beta": false,
   "release_controls_gate": {
     "blockers": [
-      "served runtime borg_version '3.3.18' != source version '3.3.19'",
-      "served runtime source_version '3.3.18' != source version '3.3.19'"
+      "served runtime borg_version '3.3.18' != source version '3.3.21'",
+      "served runtime source_version '3.3.18' != source version '3.3.21'"
     ],
     "passed": false,
     "release_governance": {
@@ -270,17 +227,22 @@
       "codeowners_error_count": 0,
       "codeowners_errors": [],
       "codeowners_errors_checked": true,
+      "codeowners_review_policy_required": false,
       "codeowners_review_required": true,
       "dismiss_stale_reviews": true,
       "enforce_admins": true,
+      "last_push_approval_policy_required": false,
+      "minimum_approvals_required": 0,
       "passed": true,
       "protected": true,
+      "pull_requests_required": true,
       "require_last_push_approval": true,
       "required_approving_review_count": 1,
       "required_checks_expected": [
         "test (3.10)",
         "test (3.11)",
         "test (3.12)",
+        "wheel-smoke",
         "dependency-audit",
         "policy-check",
         "secret-scan",
@@ -297,20 +259,22 @@
         "static-security",
         "test (3.10)",
         "test (3.11)",
-        "test (3.12)"
+        "test (3.12)",
+        "wheel-smoke"
       ],
       "required_conversation_resolution": true,
       "schema_version": 1,
       "snapshot": "eval/release_governance_snapshot.json",
       "source": "github_api",
+      "stale_review_dismissal_policy_required": false,
       "strict_required_status_checks": true
     },
     "served_runtime_freshness": {
       "blockers": [
-        "served runtime borg_version '3.3.18' != source version '3.3.19'",
-        "served runtime source_version '3.3.18' != source version '3.3.19'"
+        "served runtime borg_version '3.3.18' != source version '3.3.21'",
+        "served runtime source_version '3.3.18' != source version '3.3.21'"
       ],
-      "expected_version": "3.3.19",
+      "expected_version": "3.3.21",
       "passed": false,
       "schema_version": 1,
       "snapshot": "eval/served_runtime_fingerprint_snapshot.json",
@@ -339,10 +303,10 @@
   },
   "self_service_ops_gate": {
     "blockers": [],
-    "generated_at_utc": "2026-06-10T13:19:55.705466+00:00",
+    "generated_at_utc": "2026-09-18T16:31:54.079194+00:00",
     "ops_readiness_watchdog": {
       "blockers": [],
-      "generated_at_utc": "2026-06-10T13:19:52.704158+00:00",
+      "generated_at_utc": "2026-09-18T16:31:51.302954+00:00",
       "passed": true,
       "snapshot": "eval/ops_readiness_watchdog_snapshot.json",
       "truth_policy": "Watchdog passing means controlled first-10 ops proof is fresh and internally consistent. Broad public self-serve still requires row-derived first-10 external-user evidence."
@@ -353,7 +317,7 @@
   },
   "version": {
     "passed": true,
-    "project_version": "3.3.19",
-    "runtime_version": "3.3.19"
+    "project_version": "3.3.21",
+    "runtime_version": "3.3.21"
   }
 }

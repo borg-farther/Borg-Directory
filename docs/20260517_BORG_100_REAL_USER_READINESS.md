@@ -1,6 +1,6 @@
 # Borg 100 real-user readiness
 
-Generated: 2026-06-10T13:19:55.705877+00:00
+Generated: 2026-09-18T16:31:54.079623+00:00
 
 100 real-user verdict: **NO-GO**
 Max recommended real users now: **0**
@@ -33,8 +33,10 @@ Real-user rollout requires first-10 external evidence before expanding to 100.
 
 ## Blockers
 
-- served-runtime proof for source candidate 3.3.21 is not green; an operator-supervised fingerprint must match before the channel is current
-- ops/watchdog, release-governance, and rollback/comms gate snapshots must be re-captured green
+- PyPI latest/fresh-install package evidence is not green: same-version PyPI upload predates current source revision
+- PyPI latest/fresh-install package evidence is not green: fresh install + MCP stdio canary is not green
+- served runtime borg_version '3.3.18' != source version '3.3.21'
+- served runtime source_version '3.3.18' != source version '3.3.21'
 - first-10 external-user evidence has not passed: verified=0/10, real_users=0/10, installs=0/8, useful=0/6, critical_incidents=0/0
 
 ## Required action to unlock 100 real users

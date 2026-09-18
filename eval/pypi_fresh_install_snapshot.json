@@ -1,22 +1,22 @@
 {
-  "generated_at_utc": "2026-06-10T13:09:41Z",
+  "generated_at_utc": "2026-09-18T16:31:06Z",
   "install_source": "pypi",
   "mcp_stdio_canary": {
     "detail": "not run because PyPI install failed",
-    "expected_version": "3.3.19",
+    "expected_version": "3.3.21",
     "passed": false
   },
   "package": "agent-borg",
   "results": [
     {
       "command": [
-        "/root/.hermes/hermes-agent/venv/bin/python",
+        "/usr/bin/python3.12",
         "-m",
         "venv",
-        "/tmp/borg-pypi-fresh-2_4r4sh8"
+        "/tmp/borg-pypi-fresh-7iu9vx36"
       ],
       "detail": "exit=0",
-      "duration_s": 3.802,
+      "duration_s": 3.672,
       "name": "fresh_venv_create",
       "passed": true,
       "returncode": 0,
@@ -25,25 +25,25 @@
     },
     {
       "command": [
-        "/tmp/borg-pypi-fresh-2_4r4sh8/bin/pip",
+        "/tmp/borg-pypi-fresh-7iu9vx36/bin/pip",
         "install",
         "--isolated",
         "--disable-pip-version-check",
         "--no-cache-dir",
         "--index-url",
         "https://pypi.org/simple",
-        "agent-borg==3.3.19"
+        "agent-borg==3.3.21"
       ],
       "detail": "exit=1",
-      "duration_s": 0.634,
+      "duration_s": 0.618,
       "name": "pip_install_agent_borg",
       "passed": false,
       "returncode": 1,
-      "stderr": "ERROR: Could not find a version that satisfies the requirement agent-borg==3.3.19 (from versions: 2.2.0, 2.2.1, 2.2.2, 2.3.0, 2.3.1, 2.5.0, 2.5.1, 2.5.2, 2.7.1, 3.0.0, 3.1.0, 3.1.1, 3.1.2, 3.1.3, 3.2.0, 3.2.1, 3.2.2, 3.2.3, 3.2.4, 3.3.0, 3.3.2, 3.3.3, 3.3.4, 3.3.5, 3.3.6, 3.3.7, 3.3.8, 3.3.9, 3.3.10, 3.3.11, 3.3.12, 3.3.13, 3.3.14, 3.3.15, 3.3.16, 3.3.17, 3.3.18)\nERROR: No matching distribution found for agent-borg==3.3.19\n",
+      "stderr": "ERROR: Could not find a version that satisfies the requirement agent-borg==3.3.21 (from versions: 2.2.0, 2.2.1, 2.2.2, 2.3.0, 2.3.1, 2.5.0, 2.5.1, 2.5.2, 2.7.1, 3.0.0, 3.1.0, 3.1.1, 3.1.2, 3.1.3, 3.2.0, 3.2.1, 3.2.2, 3.2.3, 3.2.4, 3.3.0, 3.3.2, 3.3.3, 3.3.4, 3.3.5, 3.3.6, 3.3.7, 3.3.8, 3.3.9, 3.3.10, 3.3.11, 3.3.12, 3.3.13, 3.3.14, 3.3.15, 3.3.16, 3.3.17, 3.3.18, 3.3.19, 3.3.20)\nERROR: No matching distribution found for agent-borg==3.3.21\n",
       "stdout": ""
     }
   ],
   "schema_version": 1,
   "success": false,
-  "version": "3.3.19"
+  "version": "3.3.21"
 }
