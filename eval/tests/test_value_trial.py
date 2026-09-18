@@ -79,12 +79,19 @@ def test_prefetch_no_match_is_invisible_and_seeded_context_is_advisory(tmp_path)
     assert "verify with tests" in seeded
 
 
-def test_hermes_command_pins_turn_budget_and_oneshot_usage_export(tmp_path):
+def test_hermes_command_pins_turn_budget_and_oneshot_usage_export(tmp_path, monkeypatch):
     usage_path = tmp_path / "usage.json"
+    bin_dir = tmp_path / "venv" / "bin"
+    bin_dir.mkdir(parents=True)
+    hermes_executable = bin_dir / "hermes"
+    hermes_python = bin_dir / "python3"
+    hermes_executable.write_text("", encoding="utf-8")
+    hermes_python.write_text("", encoding="utf-8")
+    monkeypatch.setattr("eval.run_value_trial.shutil.which", lambda command: str(hermes_executable))
 
     command = build_hermes_command("fix it", usage_path, 7)
 
-    assert command[0].endswith("/venv/bin/python3")
+    assert command[0] == str(hermes_python.resolve())
     assert command[1] == "-c"
     assert "['max_turns'] = 7" in command[2]
     assert "os.path.realpath(os.getcwd())" in command[2]
