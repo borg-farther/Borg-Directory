@@ -5,12 +5,12 @@ description: |
   Bash or shell command fails with "Permission denied" error.
   Usually occurs when running scripts or accessing files without execute/read permissions.
 solution: |
-  1. Check file permissions: ls -la <file>
-  2. Add execute permission: chmod +x <script.sh>
-  3. For directories: chmod +x <directory>
-  4. Check ownership: ls -ln <file>
-  5. Run as appropriate user: sudo <command>
-  6. For SSH keys: chmod 600 ~/.ssh/id_rsa
+  1. Inspect the exact path, owner, mode, ACLs, and parent traversal permissions before changing anything.
+  2. For a trusted script you own that is intended to execute, add only the owner execute bit: chmod u+x -- <script.sh>
+  3. Rerun the exact command as the intended non-root user.
+  4. For directories, diagnose traversal separately; execute on a directory means traversal, not script execution.
+  5. For SSH private keys, verify ownership first and use mode 600 only when that exact file is the denied resource.
+  6. Never use chmod 777, blanket sudo, or blind chown as a generic permission fix.
 source_url: https://www.gnu.org/software/bash/manual/
 tier: SEED
 tags:

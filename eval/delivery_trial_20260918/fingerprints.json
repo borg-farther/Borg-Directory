@@ -1,0 +1,13 @@
+{
+  "dirty_diff_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+  "git_head": "f63c4a227253d6fb11a763c32d7d09c4a73091f8",
+  "immutable_runtime_snapshot_sha256": "6e07c457982562781518a61051d4dacc3ce252658243088d73fd8bfabaf639c3",
+  "model": {
+    "max_turns": 7,
+    "name": "gpt-5.6-sol",
+    "provider": "openai-codex",
+    "runner": "Hermes one-shot safe mode"
+  },
+  "preregistration_sha256": "06730a84babcb1afe4070743ebfad7e790a8ae2de7967da66220e8020d9bc988",
+  "taskset_sha256": "205c9ebf2316093cbb3fd20e6609803ec03ece74133ead63b338df571a2c86c4"
+}

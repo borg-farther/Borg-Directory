@@ -1,14 +1,47 @@
 from __future__ import annotations
 
 import json
+from datetime import datetime, timedelta, timezone
 from pathlib import Path
+
+import pytest
 
 from eval import self_service_ops_gate as gate
 
 ROOT = Path(__file__).resolve().parents[2]
+DRILL_SNAPSHOT = ROOT / "eval" / "rollback_comms_drill_snapshot.json"
 
 
-def test_self_service_ops_gate_script_and_artifacts_are_present() -> None:
+@pytest.fixture
+def fresh_ops_clock(monkeypatch):
+    """Make the committed rollback-drill snapshot read as fresh, deterministically.
+
+    The gate's only wall-clock dependency is the rollback-drill freshness check
+    (``_age_hours`` -> ``datetime.now``). Asserting *live* freshness inside the
+    unit suite turned the ``test`` CI job into a daily time-bomb: the committed
+    snapshot ages past the 24h gate ~24h after it is regenerated, so the suite
+    went red on wall-clock alone. Live freshness is the scheduled
+    self-service-watchdog's job (it calls these same gates with the real clock);
+    the unit suite must verify gate *logic*, not what time it is.
+
+    We freeze the clock to one hour after the committed snapshot's own
+    ``generated_at_utc`` -- always inside the 24h window, whatever that stamp is
+    -- and leave every other check (and the watchdog) untouched.
+    """
+    generated = datetime.fromisoformat(
+        json.loads(DRILL_SNAPSHOT.read_text(encoding="utf-8"))["generated_at_utc"].replace("Z", "+00:00")
+    )
+    frozen = generated + timedelta(hours=1)
+
+    class _FrozenDateTime(datetime):
+        @classmethod
+        def now(cls, tz=None):
+            return frozen.astimezone(tz) if tz else frozen
+
+    monkeypatch.setattr(gate, "datetime", _FrozenDateTime)
+
+
+def test_self_service_ops_gate_script_and_artifacts_are_present(fresh_ops_clock) -> None:
     snapshot = gate.compile_gate()
 
     assert snapshot["gate_type"] == "self_service_ops_readiness"
@@ -22,11 +55,15 @@ def test_self_service_ops_gate_script_and_artifacts_are_present() -> None:
     assert snapshot["checks"]["static_files"]["codeowners"]["contains_banned_owner"] is False
     assert snapshot["checks"]["static_files"]["watchdog_workflow"]["passed"] is True
     workflow_text = (ROOT / ".github" / "workflows" / "self-service-watchdog.yml").read_text(encoding="utf-8")
+    assert "BORG_GOVERNANCE_TOKEN: ${{ secrets.BORG_GOVERNANCE_TOKEN }}" in workflow_text
     assert "--max-snapshot-age-hours 24" in workflow_text
     assert "--max-snapshot-age-hours 168" not in workflow_text
     assert "python eval/run_pypi_fresh_install_canary.py" in workflow_text
     assert "python eval/cold_start_trust_gate.py" in workflow_text
     assert "python eval/release_governance_gate.py --output eval/release_governance_snapshot.json" in workflow_text
+    assert "rc_governance" not in workflow_text
+    governance_command = "python eval/release_governance_gate.py --output eval/release_governance_snapshot.json"
+    assert "set +e" not in workflow_text[max(0, workflow_text.index(governance_command) - 220):workflow_text.index(governance_command)]
     assert "python eval/real_user_rollout_gate.py" in workflow_text
     assert "python scripts/build_borg_proof_dashboard.py" in workflow_text
     assert workflow_text.index("python eval/run_pypi_fresh_install_canary.py") < workflow_text.index("python eval/cold_start_trust_gate.py")
@@ -99,7 +136,43 @@ def test_issue_templates_capture_recovery_critical_fields() -> None:
     assert templates["install_mcp_support"]["missing_fields"] == []
 
 
-def test_self_service_ops_gate_cli_writes_machine_snapshot(tmp_path, monkeypatch, capsys) -> None:
+def test_rollback_drill_freshness_logic_is_age_based(tmp_path: Path) -> None:
+    """Freshness logic is still verified -- hermetically, with controlled ages.
+
+    This is what the time-bomb assertion used to cover, expressed without
+    depending on the real age of the committed snapshot. The live check still
+    runs (with the real clock) in the scheduled watchdog.
+    """
+    base = {
+        "passed": True,
+        "dry_run_only": True,
+        "steps": [
+            {"name": name, "passed": True}
+            for name in (
+                "pause_first_10_invites",
+                "pypi_bad_release_response",
+                "served_mcp_operator_rollback",
+                "bad_guidance_disable_path",
+                "public_status_update",
+                "user_notification_template",
+            )
+        ],
+    }
+
+    fresh = tmp_path / "fresh.json"
+    fresh.write_text(json.dumps({**base, "generated_at_utc": (datetime.now(timezone.utc) - timedelta(hours=1)).isoformat()}), encoding="utf-8")
+    fresh_result = gate._rollback_drill_check(fresh)
+    assert fresh_result["fresh"] is True
+    assert fresh_result["passed"] is True
+
+    stale = tmp_path / "stale.json"
+    stale.write_text(json.dumps({**base, "generated_at_utc": (datetime.now(timezone.utc) - timedelta(hours=100)).isoformat()}), encoding="utf-8")
+    stale_result = gate._rollback_drill_check(stale)
+    assert stale_result["fresh"] is False
+    assert stale_result["passed"] is False
+
+
+def test_self_service_ops_gate_cli_writes_machine_snapshot(fresh_ops_clock, tmp_path, monkeypatch, capsys) -> None:
     snapshot_path = tmp_path / "self_service_ops_gate_snapshot.json"
     report_path = tmp_path / "SELF_SERVICE_OPS_READINESS_REPORT.md"
     monkeypatch.setattr(gate, "SNAPSHOT", snapshot_path)

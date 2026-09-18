@@ -5,10 +5,11 @@ The gate intentionally separates two facts:
 1. repository source/tests may be green, and
 2. GitHub branch/release controls are actually enforced server-side.
 
-It fails closed when `main` is unprotected, exact required status checks are
-absent, CODEOWNERS review is not enforced, CODEOWNERS owners are invalid, or
-high-risk bypasses such as force-push/deletion allowances are enabled. It does
-not mutate GitHub settings.
+It fails closed when `main` is unprotected, pull requests are not required,
+exact status checks are absent, CODEOWNERS owners are invalid, or high-risk
+bypasses such as force-push/deletion allowances are enabled. Approval policy is
+configurable so a single-maintainer repository can require PRs and checks
+without imposing an impossible self-approval rule. It does not mutate GitHub.
 """
 from __future__ import annotations
 
@@ -33,6 +34,7 @@ DEFAULT_REQUIRED_CHECKS = [
     "test (3.10)",
     "test (3.11)",
     "test (3.12)",
+    "wheel-smoke",
     "dependency-audit",
     "policy-check",
     "secret-scan",
@@ -113,8 +115,14 @@ def evaluate_branch_payload(
     required_checks: list[str] | None = None,
     codeowners_errors: list[Any] | None = None,
     require_codeowners_validation: bool = False,
+    minimum_approvals: int = 0,
+    require_code_owner_reviews: bool = False,
+    require_stale_review_dismissal: bool = False,
+    require_last_push_approval: bool = False,
 ) -> dict[str, Any]:
     required_checks = required_checks or DEFAULT_REQUIRED_CHECKS
+    if minimum_approvals < 0:
+        raise ValueError("minimum_approvals must be >= 0")
     blockers: list[str] = []
 
     protection = _protection_from_payload(payload)
@@ -142,15 +150,21 @@ def evaluate_branch_payload(
     if protected is True and required_status.get("strict") is not True:
         blockers.append("branch protection required status checks are not strict")
 
-    required_reviews = protection.get("required_pull_request_reviews") or {}
-    if protected is True and required_reviews.get("require_code_owner_reviews") is not True:
+    required_reviews_raw = protection.get("required_pull_request_reviews")
+    pull_requests_required = isinstance(required_reviews_raw, dict)
+    required_reviews = required_reviews_raw if pull_requests_required else {}
+    if protected is True and not pull_requests_required:
+        blockers.append("branch protection does not require pull requests")
+    if protected is True and require_code_owner_reviews and required_reviews.get("require_code_owner_reviews") is not True:
         blockers.append("branch protection does not require CODEOWNERS review")
-    approving_reviews = required_reviews.get("required_approving_review_count")
-    if protected is True and not (isinstance(approving_reviews, int) and approving_reviews >= 1):
-        blockers.append("branch protection requires fewer than 1 approving review")
-    if protected is True and required_reviews.get("dismiss_stale_reviews") is not True:
+    approving_reviews = required_reviews.get("required_approving_review_count", 0) if pull_requests_required else None
+    if protected is True and pull_requests_required and not (
+        isinstance(approving_reviews, int) and approving_reviews >= minimum_approvals
+    ):
+        blockers.append(f"branch protection requires fewer than {minimum_approvals} approving reviews")
+    if protected is True and require_stale_review_dismissal and required_reviews.get("dismiss_stale_reviews") is not True:
         blockers.append("branch protection does not dismiss stale reviews")
-    if protected is True and required_reviews.get("require_last_push_approval") is not True:
+    if protected is True and require_last_push_approval and required_reviews.get("require_last_push_approval") is not True:
         blockers.append("branch protection does not require last-push approval")
 
     if protected is True and _enabled(protection.get("enforce_admins")) is not True:
@@ -186,6 +200,11 @@ def evaluate_branch_payload(
         "required_checks_observed": sorted(observed),
         "required_checks_expected": required_checks,
         "strict_required_status_checks": required_status.get("strict"),
+        "pull_requests_required": pull_requests_required,
+        "minimum_approvals_required": minimum_approvals,
+        "codeowners_review_policy_required": require_code_owner_reviews,
+        "stale_review_dismissal_policy_required": require_stale_review_dismissal,
+        "last_push_approval_policy_required": require_last_push_approval,
         "codeowners_review_required": required_reviews.get("require_code_owner_reviews"),
         "required_approving_review_count": approving_reviews,
         "dismiss_stale_reviews": required_reviews.get("dismiss_stale_reviews"),
@@ -204,7 +223,9 @@ def evaluate_branch_payload(
 def _github_env_token_candidates() -> list[str]:
     """Return environment token candidates without logging or persisting secrets."""
     candidates: list[str] = []
-    for name in ("GITHUB_TOKEN", "GH_TOKEN"):
+    # The watchdog's dedicated least-privilege secret must win over GitHub's
+    # automatic token, which cannot read branch-protection Administration data.
+    for name in ("BORG_GOVERNANCE_TOKEN", "GITHUB_TOKEN", "GH_TOKEN"):
         token = os.environ.get(name)
         if token and token not in candidates:
             candidates.append(token)
@@ -242,7 +263,7 @@ def _github_cli_token_candidate() -> str | None:
 # check red. These are transient: retry with backoff, honoring Retry-After /
 # x-ratelimit-reset when GitHub provides them. 401 is NOT retried — it means
 # "wrong token" and the caller's token-candidate fallthrough must run instead.
-_RETRYABLE_HTTP_CODES = {403, 429, 500, 502, 503, 504}
+_RETRYABLE_HTTP_CODES = {429, 500, 502, 503, 504}
 _MAX_FETCH_ATTEMPTS = 4
 _MAX_RETRY_DELAY_SECONDS = 60.0
 
@@ -262,6 +283,17 @@ def _retry_delay_seconds(exc: urllib.error.HTTPError, attempt: int) -> float:
     return min(float(2**attempt), _MAX_RETRY_DELAY_SECONDS)
 
 
+def _is_retryable_http_error(exc: urllib.error.HTTPError) -> bool:
+    if exc.code in _RETRYABLE_HTTP_CODES:
+        return True
+    if exc.code != 403:
+        return False
+    headers = getattr(exc, "headers", None)
+    if headers is None:
+        return False
+    return bool(headers.get("Retry-After")) or str(headers.get("x-ratelimit-remaining") or "").strip() == "0"
+
+
 def _urlopen_json_with_retry(request: urllib.request.Request) -> dict[str, Any]:
     """GET JSON with bounded retry/backoff on transient GitHub failures."""
     for attempt in range(1, _MAX_FETCH_ATTEMPTS + 1):
@@ -269,7 +301,7 @@ def _urlopen_json_with_retry(request: urllib.request.Request) -> dict[str, Any]:
             with urllib.request.urlopen(request, timeout=20) as response:  # nosec B310 - fixed GitHub API host
                 return json.loads(response.read().decode("utf-8"))
         except urllib.error.HTTPError as exc:
-            if exc.code in _RETRYABLE_HTTP_CODES and attempt < _MAX_FETCH_ATTEMPTS:
+            if _is_retryable_http_error(exc) and attempt < _MAX_FETCH_ATTEMPTS:
                 time.sleep(_retry_delay_seconds(exc, attempt))
                 continue
             raise
@@ -358,7 +390,21 @@ def main(argv: list[str] | None = None) -> int:
     parser.add_argument("--snapshot", help="Use a saved GitHub branch/protection API payload instead of fetching live")
     parser.add_argument("--output", help="Write the evaluated governance snapshot JSON to this path")
     parser.add_argument("--required-check", action="append", dest="required_checks")
+    parser.add_argument("--minimum-approvals", type=int, default=1)
+    parser.add_argument("--require-code-owner-reviews", action="store_true")
+    parser.add_argument(
+        "--require-stale-review-dismissal",
+        action=argparse.BooleanOptionalAction,
+        default=True,
+    )
+    parser.add_argument(
+        "--require-last-push-approval",
+        action=argparse.BooleanOptionalAction,
+        default=True,
+    )
     args = parser.parse_args(argv)
+    if args.minimum_approvals < 0:
+        parser.error("--minimum-approvals must be >= 0")
 
     codeowners_errors: list[Any] | None = None
     require_codeowners_validation = False
@@ -378,20 +424,36 @@ def main(argv: list[str] | None = None) -> int:
             required_checks=args.required_checks or DEFAULT_REQUIRED_CHECKS,
             codeowners_errors=codeowners_errors,
             require_codeowners_validation=require_codeowners_validation,
+            minimum_approvals=args.minimum_approvals,
+            require_code_owner_reviews=args.require_code_owner_reviews,
+            require_stale_review_dismissal=args.require_stale_review_dismissal,
+            require_last_push_approval=args.require_last_push_approval,
         )
     except Exception as exc:
         # Still write a fresh, explicit failure snapshot when the live GitHub
         # fetch or snapshot parse fails. Otherwise downstream gates can keep
         # consuming a stale prior release_governance_snapshot.json and mask the
         # fact that governance evidence was unavailable.
+        evidence_error = str(exc)
+        if isinstance(exc, urllib.error.HTTPError) and exc.code == 403:
+            evidence_error = (
+                "GitHub branch-protection evidence requires a token with repository "
+                "Administration: read; configure BORG_GOVERNANCE_TOKEN for the watchdog "
+                "instead of the automatic GITHUB_TOKEN"
+            )
         result = {
             "schema_version": 1,
             "passed": False,
-            "blockers": [f"release governance evidence unavailable: {exc}"],
+            "blockers": [f"release governance evidence unavailable: {evidence_error}"],
             "protected": None,
             "required_checks_observed": [],
             "required_checks_expected": args.required_checks or DEFAULT_REQUIRED_CHECKS,
             "strict_required_status_checks": None,
+            "pull_requests_required": None,
+            "minimum_approvals_required": args.minimum_approvals,
+            "codeowners_review_policy_required": args.require_code_owner_reviews,
+            "stale_review_dismissal_policy_required": args.require_stale_review_dismissal,
+            "last_push_approval_policy_required": args.require_last_push_approval,
             "codeowners_review_required": None,
             "required_approving_review_count": None,
             "dismiss_stale_reviews": None,

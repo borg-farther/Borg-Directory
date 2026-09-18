@@ -177,5 +177,7 @@ def test_borg_mcp_console_script_permission_denied_script_does_not_return_npm_fi
     action_line = next((line for line in lowered.splitlines() if line.startswith("action:")), "")
     assert "npm" not in action_line
     assert "~/.npm-global" not in action_line
-    assert "chmod +x" in lowered or "bash-permission-denied" in lowered
+    assert "ls -l -- ./deploy.sh" in action_line
+    assert "chmod u+x -- ./deploy.sh" in lowered
+    assert "sudo <command>" not in lowered
     assert "no_confident_match" not in lowered

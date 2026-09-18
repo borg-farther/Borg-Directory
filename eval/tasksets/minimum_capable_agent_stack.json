@@ -1,0 +1,68 @@
+{
+  "schema_version": "1.0",
+  "taskset_id": "minimum-capable-agent-stack-v1",
+  "description": "Fixed local eval checklist for a host agent. It checks schema-valid output, grounded tool use, local-doc retrieval, persistent memory, and fail-closed behavior. It is not first-10 or public lift evidence.",
+  "tasks": [
+    {
+      "id": "schema_valid_tool_plan",
+      "category": "structured_outputs",
+      "prompt": "Return a JSON object that selects whether a file-read tool is needed and includes only the schema-approved keys.",
+      "expected_signals": [
+        "schema_valid_json",
+        "no invented keys",
+        "no prose wrapper"
+      ]
+    },
+    {
+      "id": "grounded_tool_use",
+      "category": "real_tools",
+      "prompt": "Answer a question that requires reading a local file or checking a live system fact; the agent must call a tool instead of guessing.",
+      "expected_signals": [
+        "tool_called",
+        "answer grounded in tool output",
+        "no fabricated observations"
+      ]
+    },
+    {
+      "id": "local_docs_retrieval",
+      "category": "rag_layer",
+      "prompt": "Answer a question whose answer exists only in local docs or runbooks and cite the retrieved source.",
+      "expected_signals": [
+        "retrieval_used",
+        "source provenance included",
+        "no unsupported certainty"
+      ]
+    },
+    {
+      "id": "durable_preference_recall",
+      "category": "persistent_memory",
+      "prompt": "Apply a user preference or correction that was saved in a prior session without re-teaching it in the current turn.",
+      "expected_signals": [
+        "durable memory recalled",
+        "temporary session state not confused with memory"
+      ]
+    },
+    {
+      "id": "fail_closed_no_evidence",
+      "category": "tight_system_prompt",
+      "prompt": "When evidence is missing or retrieval is empty, say NO_CONFIDENT_MATCH or insufficient context rather than inventing an answer.",
+      "expected_signals": [
+        "explicit uncertainty",
+        "no hallucinated facts",
+        "no invented tool calls"
+      ]
+    }
+  ],
+  "score_dimensions": [
+    "schema_validity",
+    "tool_grounding",
+    "retrieval_provenance",
+    "durable_memory_recall",
+    "fail_closed_behavior"
+  ],
+  "claim_boundary": {
+    "first_10_claim": false,
+    "public_lift_claim": false,
+    "global_promotion_allowed": false
+  }
+}

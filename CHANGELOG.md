@@ -1,6 +1,18 @@
 # Changelog
 
-## 3.3.20 — unreleased (pilot release candidate)
+## 3.3.21 — unreleased (production-hardening candidate)
+
+- Agent host quality: added a machine-readable minimum capable agent-stack contract, CLI/MCP surfaces, host-priming integration, documentation, and fixed eval taskset.
+- Runtime truth: installed wheels now fingerprint their immutable distribution metadata instead of falsely reporting `reload_or_patch_required` when no source tree exists; the PyPI canary fails closed on contradictory fingerprints.
+- Release integrity: bumped the immutable version after package-impacting source changed, synchronized 28-tool MCP metadata, and replaced static “published/current” assertions with live-gate invariants.
+- Test reliability: removed a fixed-date confidence-decay test bomb and retained the cross-version `pathlib.Path` CI isolation fix.
+- Retrieval relevance and safety: Hermes pre-LLM assistance now prefers exact-query local traces, suppresses weak embedding-only matches, ignores benign technology questions, sanitizes privacy/prompt-injection content, and labels every injected hint as untrusted advisory evidence.
+- Classifier precision and recall: removed generic `OperationalError` and connection-refused traps that produced confident misroutes, added specific database/auth/permission/recursion signatures, and abstains on renamed-symbol imports rather than inventing a cause.
+- Learning integrity: arbitrary downstream tool calls no longer manufacture `read`/`applied`/`helped` feedback; helpfulness requires an explicit verified outcome receipt.
+- Release isolation: CI now force-installs the built wheel from a clean directory and verifies package origin, version, runtime fingerprint, bundled seeds, CLI entry points, and MCP stdio before merge; `wheel-smoke` is an exact required governance check.
+- Value measurement: added isolated GPT trials with hidden graders, immutable treatment data, treatment-compliance receipts, cache-aware token accounting, and pre-LLM prefetch delivery. The first valid eight-task tool-delivery pilot was null at a solve-rate ceiling. A preregistered reused-task mechanism study then kept all four arms at 8/8 while seeded prefetch versus a mandatory seeded tool turn reduced median paired calls by 1 (95% bootstrap CI `[-2, 0]`) and wall time by 4.307 seconds (CI `[-16.319, 0.341]`); its 195-token non-cache reduction had a wide CI `[-6777.5, 2990]`. These are directional delivery results, not evidence of general Borg effectiveness.
+
+## 3.3.20 — 2026-06-12
 
 - Value measurement: rescue receipts schema v2 — `trigger`/`after_n_failures` signal, `coverage_class`, redacted `replay_context`; `borg status` headlines "Caught after your agent was stuck: N"; MCP `borg_rescue` takes `failure_count`/`trigger`; `borg_suggest`'s 2+-failures path records a receipt (#68).
 - Counterfactual measurement: `scripts/counterfactual_replay.py` (pinned model+prompts, consent-gated, offline mock mode) and the pre-registered pilot decision rule `docs/PILOT_DECISION_PROTOCOL.md` (#70).

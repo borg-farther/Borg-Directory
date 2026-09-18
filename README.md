@@ -13,7 +13,7 @@ Give Borg an error, traceback, failed test, install problem, config failure, or 
 - **MCP server command:** `borg-mcp`
 - **Canonical repo:** https://github.com/borg-farther/Borg-Directory
 
-**Status:** `agent-borg==3.3.20` is the target source/local release candidate for the current source line. A `3.3.19` wheel is the latest on PyPI (published 2026-06-10); exact-version PyPI fresh-install/stdio MCP proof for 3.3.20 is not green yet. Controlled first-10 beta remains **NO-GO** until package/source provenance, served-runtime freshness, release-governance, ops/watchdog, docs-claim, and evidence-intake guardrails are green. Broad public self-serve launch, 100-user rollout, served/remote MCP, and measured external lift are **not claimed** until row-derived external-user evidence passes.
+**Status:** the source line is `agent-borg==3.3.21`. This static document does not claim that source, PyPI, and the served runtime are current merely because their version strings match; the live PyPI fresh-install, runtime-fingerprint, governance, watchdog, and source-revision gates decide that. Controlled first-10 beta is **NO-GO** with a real-user cap of 0 until those gates are green and consented evidence intake is ready. Broad public self-serve launch, 100-user rollout, served/remote MCP, and measured external lift are **not claimed** until row-derived external-user evidence passes.
 
 ## Try Borg in 60 seconds
 
@@ -65,6 +65,8 @@ How:
 3. Restart the agent and ask: `what MCP tools do you have from Borg?`
 
 Details: [`docs/MCP_SETUP.md`](https://github.com/borg-farther/Borg-Directory/blob/main/docs/MCP_SETUP.md).
+
+Minimum capable host stack: Borg helps more when the host itself is not crippled. Before blaming retrieval, make sure the host has a capable model, structured outputs, local docs/RAG, persistent memory, real tools, a tight system prompt, and a fixed eval loop. Inspect the machine-readable checklist with `borg agent-stack --json`, and see [`docs/MINIMUM_CAPABLE_AGENT_STACK.md`](https://github.com/borg-farther/Borg-Directory/blob/main/docs/MINIMUM_CAPABLE_AGENT_STACK.md).
 
 ---
 
@@ -238,6 +240,7 @@ pytest -q 2>&1 | borg rescue --json
 borg search "django migration table already exists"
 borg try systematic-debugging
 borg apply systematic-debugging --task "Fix Django migration table already exists error"
+borg agent-stack --json
 borg first-10 --json
 borg status                # running tally: how often Borg fired and matched (by tier + source)
 ```
@@ -349,15 +352,16 @@ Why: agents often do not discover optional tools unless explicitly primed.
 
 ## 5. What is ready now
 
-`agent-borg==3.3.19` is the target source/package line; a `3.3.19` wheel is now the latest on PyPI (superseding 3.3.18), but exact-version PyPI runtime proof for the current source is not current yet. Release governance is enforced on GitHub `main` with exact required checks and CODEOWNERS review. Served-runtime freshness and first-10 external-user evidence remain separate blockers.
+`agent-borg==3.3.21` is the source release candidate. It is **not** claimed current on PyPI or in the served runtime until exact-version fresh-install, runtime-fingerprint, governance, watchdog, docs-claim, and source-revision gates pass. Static version strings are not proof.
 
-- Install, CLI, Python API, generated-rules/OpenClaw export, and stdio MCP entrypoints pass from the local/source release-candidate path; exact-version PyPI runtime proof for the published `agent-borg==3.3.19` is not recorded green yet.
+- Install, CLI, Python API, generated-rules/OpenClaw export, and stdio MCP entrypoints are exercised by the local/source first-user gate; exact-version PyPI proof remains a separate gate.
 - First-user rescue path returns ACTION / STOP / VERIFY or `NO_CONFIDENT_MATCH`.
-- Security/privacy/prompt-injection surface: PASS in CI/local gates.
+- Security/privacy/prompt-injection surface is covered by CI/local gates.
 - Generated rules and OpenClaw export are covered by first-user/package gates.
-- PyPI latest/fresh-install/stdio MCP proof for `agent-borg==3.3.19` is not green yet for the current source revision. Controlled first-10 testers must **not** be invited until package proof, served-runtime freshness, ops/watchdog, docs-claim, and evidence intake are green. Current cap: 0; broad public self-serve remains evidence-gated after first-10.
+- Controlled first-10 testers must **not** be invited until all release-control gates are green. Current cap: 0; broad public self-serve remains evidence-gated after first-10.
 - Self-service ops guardrails are present: bad-answer intake, install/MCP support intake, first-10 evidence intake, support/SLA, rollback/comms dry-run, and watchdog workflow.
 - First-10 beta contract is published: [`docs/FIRST_10_BETA_READINESS.md`](https://github.com/borg-farther/Borg-Directory/blob/main/docs/FIRST_10_BETA_READINESS.md).
+- Minimum capable host-agent stack contract is published: [`docs/MINIMUM_CAPABLE_AGENT_STACK.md`](https://github.com/borg-farther/Borg-Directory/blob/main/docs/MINIMUM_CAPABLE_AGENT_STACK.md).
 
 Do **not** route this into controlled first-10, broad public self-serve, or 100 real users yet. Invite **0** controlled testers until served-runtime freshness is green and the first-10 evidence contract is ready to capture consented external-user rows; after those gates pass, the first-10 evidence contract may cap a consented cohort at 10. `python eval/public_self_serve_launch_gate.py` must still keep broad public self-serve blocked until real first-10 evidence passes.
 

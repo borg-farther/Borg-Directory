@@ -1,6 +1,6 @@
 # Borg First-10 Beta Readiness Contract
 
-**Status:** controlled first-10 public-package beta is **NO-GO right now**. `agent-borg==3.3.19` local/source canary proof is green, but production PyPI fresh-install/stdio MCP proof is not green yet and GitHub `main` release governance is enforced, but package/source provenance, served-runtime freshness, ops/watchdog proof, and evidence-intake guardrails must all be green before inviting controlled testers. External first-10 row count is zero.
+**Status:** controlled first-10 public-package beta is **NO-GO right now** (zero external users; cap 0). The source line is `agent-borg==3.3.21`; exact-version PyPI, served-runtime, governance, watchdog, and evidence-intake gates must all pass independently before inviting controlled testers. Static prose never substitutes for those live proofs. External first-10 row count is zero.
 Public self-serve stays NO-GO until row-derived first-10 external-user evidence passes.
 
 **Success metric:** At least 6 of the first 10 users get one relevant ACTION/STOP/VERIFY moment without maintainer handholding, and every miss is recorded as NO_CONFIDENT_MATCH or explicit negative feedback instead of being hidden.
@@ -31,6 +31,7 @@ borg version
 borg-doctor --json
 borg rescue 'ModuleNotFoundError: No module named flask' --json
 borg search 'django migration table already exists'
+borg agent-stack --json
 borg setup-claude --scope user --verify --fix
 borg first-10 --json
 borg collective summary --json
@@ -57,6 +58,20 @@ A passing smoke path proves the public package entrypoints exist, the rescue pac
 - Chat app with no MCP/tool execution: run `borg rescue` / `borg search` outside the chat and paste the `ACTION / STOP / VERIFY` packet back, or route through an MCP-capable host.
 
 For every mix, the invariant is the same: install Borg on the machine that executes tools, prime the agent/human to call Borg before technical fixes, and record helpful/not-helpful/no-match outcomes.
+
+## Minimum capable agent host stack
+
+Borg helps most when the host is not crippled. Before blaming retrieval, harden the host baseline:
+
+- **Capable base model** — Model quality is the biggest single lever. A weak default model wastes every downstream improvement.
+- **Structured outputs** — JSON-schema output contracts sharply reduce hallucinated tool calls, broken parsing, and glue-code drift.
+- **RAG over your own docs** — Even a small local knowledge base beats guessing from stale priors when the answer already exists in your docs, specs, or runbooks.
+- **Persistent memory** — An agent that forgets user preferences, corrections, and prior decisions every turn barely compounds.
+- **Real tools, not just chat** — Without tools, the agent cannot ground itself against the real world and becomes a chatbot wearing an operator costume.
+- **Tight system prompt** — Clear role, constraints, output shape, and failure behavior fix more bugs than most libraries.
+- **Eval loop** — Without a fixed eval set, every tweak is vibes. With one, you can tell whether a change helped, regressed, or only moved style around.
+
+Machine-readable checklist: `borg agent-stack --json`
 
 ## The seven gates
 

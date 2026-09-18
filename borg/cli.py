@@ -11,6 +11,7 @@ Usage:
     borg feedback <session_id> — generate feedback from session
     borg debug <error>        — get structured guidance for an error
     borg rescue <error>       — agent-ready rescue packet: ACTION / STOP / VERIFY / receipt
+    borg agent-stack          — minimum capable host-agent stack contract
     borg generate <pack>      — export pack to .cursorrules / .clinerules / CLAUDE.md / .windsurfrules
     borg list                 — list local packs
     borg autopilot            — guided Hermes setup (install MCP + skill + auto-suggest)
@@ -669,6 +670,21 @@ def _cmd_agent_priming(args: argparse.Namespace) -> int:
         return 1
 
 
+def _cmd_agent_stack(args: argparse.Namespace) -> int:
+    """Print the minimum capable host-agent stack contract."""
+    from borg.core.capable_agent_stack import (
+        capable_agent_stack_packet,
+        render_capable_agent_stack_markdown,
+    )
+
+    packet = capable_agent_stack_packet()
+    if getattr(args, "json", False):
+        print(json.dumps(packet, indent=2, sort_keys=True, ensure_ascii=False))
+    else:
+        print(render_capable_agent_stack_markdown())
+    return 0
+
+
 def _cmd_start(args: argparse.Namespace) -> int:
     """Interactive onboarding — get value from borg in 30 seconds."""
     print()
@@ -705,6 +721,7 @@ def _cmd_start(args: argparse.Namespace) -> int:
     print()
     print("  - Run again anytime:   borg rescue 'your error'")
     print("  - Browse workflows:    borg search debugging")
+    print("  - Harden the host:     borg agent-stack --json")
     print("  - Export for Cursor:   borg generate systematic-debugging --format cursorrules")
     print("  - Export for Claude:   borg setup-claude")
     print("  - After VERIFY:        call borg_record_outcome with outcome/helpful/verified evidence")
@@ -2392,6 +2409,7 @@ def main() -> int:
                                   Export a debugging workflow for Cursor
   borg setup-claude              Configure borg MCP for Claude Code
   borg setup-cursor              Configure borg MCP for Cursor
+  borg agent-stack --json        Print the minimum capable host-agent stack contract
   borg first-10 --json           Print first-user beta gates and smoke path
   borg collective summary --json Show outcome-grounded contribution ledger status
   borg optimize-pack systematic-debugging --taskset eval/tasksets/systematic_debugging_selection.json --local-only
@@ -2592,6 +2610,15 @@ def main() -> int:
     p.add_argument("--manifest", default=None, help="Install manifest path; default is BORG_HOME/agent-priming/<host>/manifest.json")
     p.add_argument("--json", action="store_true", help="Output machine-readable priming artifact or install result")
     p.set_defaults(func=_cmd_agent_priming)
+
+    # borg agent-stack — minimum capable host-agent stack
+    p = sub.add_parser("agent-stack", help="Print the minimum capable host-agent stack contract",
+        formatter_class=argparse.RawDescriptionHelpFormatter,
+        epilog="""Examples:
+  borg agent-stack
+  borg agent-stack --json""")
+    p.add_argument("--json", action="store_true", help="Output machine-readable stack contract")
+    p.set_defaults(func=_cmd_agent_stack)
 
     # borg first-10 — print first-user beta readiness contract
     p = sub.add_parser("first-10", help="Print first-user beta readiness gates and smoke path",

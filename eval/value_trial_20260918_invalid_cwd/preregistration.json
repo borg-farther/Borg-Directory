@@ -1,0 +1,168 @@
+{
+  "schema_version": 1,
+  "preregistered_at_utc": "2026-09-18T14:36:00Z",
+  "status": "preregistered_before_first_run",
+  "model": {
+    "provider": "openai-codex",
+    "name": "gpt-5.6-sol",
+    "runner": "Hermes one-shot safe mode",
+    "toolsets": ["terminal", "file"]
+  },
+  "conditions": {
+    "C0_no_borg": "No Borg tool or guidance is exposed.",
+    "C1_borg_empty": "The Borg tool scaffold is exposed, bundled seeds are disabled, and the trace database is empty.",
+    "C2_borg_seeded": "The identical Borg tool scaffold is exposed, bundled seeds are disabled, and the trace database contains task-relevant validated traces."
+  },
+  "primary_contrast": "C2_borg_seeded minus C1_borg_empty solve-rate risk difference",
+  "secondary_contrasts": [
+    "C1_borg_empty minus C0_no_borg scaffold effect",
+    "C2_borg_seeded minus C0_no_borg total product effect"
+  ],
+  "primary_metric": "hidden_grader_pass",
+  "secondary_metrics": [
+    "public_tests_pass",
+    "wall_seconds",
+    "input_tokens",
+    "output_tokens",
+    "total_tokens",
+    "api_calls",
+    "borg_invocations",
+    "test_files_unchanged"
+  ],
+  "validity_rules": [
+    "Every C1/C2 run must invoke the Borg tool at least once or the run is invalid.",
+    "A run cannot pass if public test files were modified.",
+    "Hidden grader source is created only after the model process exits.",
+    "Crashes, timeouts, and invalid runs remain in the denominator and are never silently dropped.",
+    "C1 and C2 use identical prompts and tool code; only trace database contents differ.",
+    "Bundled Borg seed packs are disabled in C1 and C2 to isolate learned-memory value."
+  ],
+  "decision_rule": {
+    "pilot_scope": true,
+    "positive_directional_signal": "C2 solve rate exceeds C1 with zero critical negative transfer.",
+    "confirmatory_gate": "Do not claim proven lift from this pilot; require a powered replication whose confidence interval for C2-C1 excludes zero.",
+    "negative_transfer": "C2 fails a task passed by both C0 and C1, or provides guidance that causes unsafe test modification."
+  },
+  "tasks": [
+    {
+      "id": "retry_after_http_date",
+      "prompt": "The retry helper accepts Retry-After delta-seconds but treats a standards-compliant HTTP-date as zero, causing immediate retry storms. Make retry_delay(value, now_epoch) support both forms and clamp past dates to zero. Do not edit tests.",
+      "query_hint": "Retry-After HTTP-date parser immediate retry storm",
+      "seed": {
+        "root_cause": "Retry-After permits either integer delta-seconds or an RFC 7231 HTTP-date, but the parser only attempted int conversion.",
+        "approach": "Parse integers first; otherwise use email.utils.parsedate_to_datetime, normalize naive dates to UTC, subtract now_epoch, and clamp the result at zero. Invalid values should return zero.",
+        "dead_end": "Do not use datetime.fromisoformat because HTTP-date is RFC 2822-style, not ISO 8601."
+      },
+      "files": {
+        "retry.py": "def retry_delay(value, now_epoch):\n    try:\n        return max(0, int(value))\n    except (TypeError, ValueError):\n        return 0\n",
+        "tests/test_retry.py": "import unittest\nfrom retry import retry_delay\n\nclass RetryTests(unittest.TestCase):\n    def test_delta_seconds(self):\n        self.assertEqual(retry_delay('120', 0), 120)\n    def test_invalid(self):\n        self.assertEqual(retry_delay('not-a-date', 0), 0)\n\nif __name__ == '__main__':\n    unittest.main()\n"
+      },
+      "hidden_test": "from datetime import datetime, timezone, timedelta\nfrom email.utils import format_datetime\nfrom retry import retry_delay\nnow=datetime(2026,9,18,12,0,0,tzinfo=timezone.utc)\nfuture=format_datetime(now+timedelta(seconds=90), usegmt=True)\npast=format_datetime(now-timedelta(seconds=30), usegmt=True)\nassert retry_delay(future, now.timestamp()) == 90, retry_delay(future, now.timestamp())\nassert retry_delay(past, now.timestamp()) == 0\n"
+    },
+    {
+      "id": "partial_frame_reads",
+      "prompt": "read_frame(stream) works with BytesIO but corrupts frames on sockets because read(n) may return fewer than n bytes. Make it read exactly the 4-byte network-order length prefix and exactly the payload, raising EOFError on truncation. Do not edit tests.",
+      "query_hint": "length-prefixed frame partial socket reads recv_exact network byte order",
+      "seed": {
+        "root_cause": "The implementation assumes one read(n) returns n bytes; socket/file-like streams may legally return short chunks.",
+        "approach": "Implement a read_exact loop that accumulates until n bytes or raises EOFError; use it for the 4-byte header and payload, and decode the length as unsigned big-endian network order.",
+        "dead_end": "Do not retry only once or pad missing bytes; both silently corrupt framing."
+      },
+      "files": {
+        "framing.py": "def read_frame(stream):\n    header = stream.read(4)\n    if len(header) != 4:\n        raise EOFError('truncated header')\n    size = int.from_bytes(header, 'big')\n    payload = stream.read(size)\n    if len(payload) != size:\n        raise EOFError('truncated payload')\n    return payload\n",
+        "tests/test_framing.py": "import io, unittest\nfrom framing import read_frame\n\nclass FrameTests(unittest.TestCase):\n    def test_bytes_io(self):\n        self.assertEqual(read_frame(io.BytesIO(b'\\x00\\x00\\x00\\x03abc')), b'abc')\n\nif __name__ == '__main__':\n    unittest.main()\n"
+      },
+      "hidden_test": "from framing import read_frame\nclass Chunky:\n    def __init__(self, data): self.data=bytearray(data)\n    def read(self, n):\n        if not self.data: return b''\n        take=min(1,n,len(self.data)); out=bytes(self.data[:take]); del self.data[:take]; return out\nassert read_frame(Chunky(b'\\x00\\x00\\x00\\x05hello')) == b'hello'\ntry:\n    read_frame(Chunky(b'\\x00\\x00\\x00\\x05hey'))\nexcept EOFError:\n    pass\nelse:\n    raise AssertionError('truncated payload accepted')\n"
+    },
+    {
+      "id": "path_prefix_escape",
+      "prompt": "resolve_under(root, candidate) rejects ../ escapes but still accepts a sibling directory whose name merely starts with the root name (for example /tmp/app_evil beside /tmp/app). Fix containment robustly after path resolution. Do not edit tests.",
+      "query_hint": "path containment sibling prefix traversal startswith resolve",
+      "seed": {
+        "root_cause": "String startswith is not a path-boundary check, so /tmp/app_evil is treated as inside /tmp/app.",
+        "approach": "Resolve root and candidate with pathlib, then require candidate.is_relative_to(root) (or compare parents on older Python); reject otherwise.",
+        "dead_end": "Do not append a slash and keep string-prefix logic; symlinks and platform path semantics remain error-prone."
+      },
+      "files": {
+        "pathsafe.py": "from pathlib import Path\n\ndef resolve_under(root, candidate):\n    root = Path(root).resolve()\n    resolved = (root / candidate).resolve()\n    if not str(resolved).startswith(str(root)):\n        raise ValueError('path escapes root')\n    return resolved\n",
+        "tests/test_paths.py": "import tempfile, unittest\nfrom pathlib import Path\nfrom pathsafe import resolve_under\n\nclass PathTests(unittest.TestCase):\n    def test_inside(self):\n        with tempfile.TemporaryDirectory() as d:\n            self.assertEqual(resolve_under(d, 'a.txt'), Path(d).resolve() / 'a.txt')\n    def test_parent_escape(self):\n        with tempfile.TemporaryDirectory() as d:\n            with self.assertRaises(ValueError): resolve_under(d, '../outside')\n\nif __name__ == '__main__':\n    unittest.main()\n"
+      },
+      "hidden_test": "import tempfile\nfrom pathlib import Path\nfrom pathsafe import resolve_under\nwith tempfile.TemporaryDirectory() as parent:\n    root=Path(parent)/'app'; evil=Path(parent)/'app_evil'; root.mkdir(); evil.mkdir()\n    try:\n        resolve_under(root, '../app_evil/secret')\n    except ValueError:\n        pass\n    else:\n        raise AssertionError('sibling prefix escape accepted')\n"
+    },
+    {
+      "id": "transaction_ownership",
+      "prompt": "add_entry() appears to work, but callers cannot roll back a larger transaction because the helper commits internally. Preserve caller transaction ownership while keeping inserts visible to the connection. Do not edit tests.",
+      "query_hint": "sqlite helper internal commit breaks caller rollback transaction ownership",
+      "seed": {
+        "root_cause": "The low-level helper calls connection.commit(), prematurely committing the caller's transaction.",
+        "approach": "Remove the internal commit. Let the service/transaction boundary commit or roll back; an insert is already visible on the same connection before commit.",
+        "dead_end": "Do not start a nested transaction or reconnect inside the helper."
+      },
+      "files": {
+        "ledger.py": "def add_entry(conn, amount):\n    conn.execute('insert into entries(amount) values (?)', (amount,))\n    conn.commit()\n",
+        "tests/test_ledger.py": "import sqlite3, unittest\nfrom ledger import add_entry\n\nclass LedgerTests(unittest.TestCase):\n    def test_insert_visible(self):\n        c=sqlite3.connect(':memory:'); c.execute('create table entries(amount integer)')\n        add_entry(c, 7)\n        self.assertEqual(c.execute('select amount from entries').fetchall(), [(7,)])\n\nif __name__ == '__main__':\n    unittest.main()\n"
+      },
+      "hidden_test": "import sqlite3\nfrom ledger import add_entry\nc=sqlite3.connect(':memory:'); c.execute('create table entries(amount integer)'); c.commit()\nc.execute('begin'); add_entry(c, 9); c.rollback()\nassert c.execute('select * from entries').fetchall() == [], 'helper committed caller transaction'\n"
+    },
+    {
+      "id": "stable_mapping_cache_key",
+      "prompt": "make_key(endpoint, params) produces cache misses for semantically identical nested mappings inserted in a different key order. Make the key deterministic without changing list order. Do not edit tests.",
+      "query_hint": "deterministic cache key nested mapping dictionary insertion order canonical json",
+      "seed": {
+        "root_cause": "str(dict) preserves insertion order, so equivalent mappings can serialize differently.",
+        "approach": "Use canonical JSON serialization with sort_keys=True and compact separators; preserve array/list order and include the endpoint separately.",
+        "dead_end": "Do not sort the top-level items only; nested dictionaries would remain unstable."
+      },
+      "files": {
+        "cachekey.py": "def make_key(endpoint, params):\n    return endpoint + ':' + str(params)\n",
+        "tests/test_cachekey.py": "import unittest\nfrom cachekey import make_key\n\nclass CacheKeyTests(unittest.TestCase):\n    def test_repeatable(self):\n        p={'a': 1, 'b': [2, 3]}\n        self.assertEqual(make_key('/v1', p), make_key('/v1', p))\n    def test_endpoint_matters(self):\n        self.assertNotEqual(make_key('/a', {'x':1}), make_key('/b', {'x':1}))\n\nif __name__ == '__main__':\n    unittest.main()\n"
+      },
+      "hidden_test": "from cachekey import make_key\na={'outer': {'x': 1, 'y': 2}, 'items': [3,2,1]}\nb={'items': [3,2,1], 'outer': {'y': 2, 'x': 1}}\nassert make_key('/v1', a) == make_key('/v1', b), (make_key('/v1',a), make_key('/v1',b))\nc={'items': [1,2,3], 'outer': {'x':1,'y':2}}\nassert make_key('/v1', a) != make_key('/v1', c), 'list order was lost'\n"
+    },
+    {
+      "id": "async_cancellation",
+      "prompt": "run_once(step) intentionally converts ordinary step failures into 'retry', but it also swallows task cancellation so shutdown hangs. Preserve ordinary retry behavior while allowing asyncio cancellation to propagate. Do not edit tests.",
+      "query_hint": "asyncio CancelledError swallowed BaseException shutdown retry",
+      "seed": {
+        "root_cause": "Catching BaseException catches asyncio.CancelledError, which should propagate as a control-flow signal.",
+        "approach": "Catch Exception instead of BaseException (or explicitly re-raise CancelledError before the retry handler).",
+        "dead_end": "Do not return a cancellation sentinel; callers awaiting the task require CancelledError propagation."
+      },
+      "files": {
+        "worker.py": "async def run_once(step):\n    try:\n        await step()\n        return 'ok'\n    except BaseException:\n        return 'retry'\n",
+        "tests/test_worker.py": "import asyncio, unittest\nfrom worker import run_once\n\nclass WorkerTests(unittest.IsolatedAsyncioTestCase):\n    async def test_success(self):\n        async def ok(): return None\n        self.assertEqual(await run_once(ok), 'ok')\n    async def test_ordinary_failure_retries(self):\n        async def bad(): raise ValueError('temporary')\n        self.assertEqual(await run_once(bad), 'retry')\n\nif __name__ == '__main__':\n    unittest.main()\n"
+      },
+      "hidden_test": "import asyncio\nfrom worker import run_once\nasync def main():\n    started=asyncio.Event()\n    async def blocked(): started.set(); await asyncio.sleep(60)\n    task=asyncio.create_task(run_once(blocked)); await started.wait(); task.cancel()\n    try:\n        await task\n    except asyncio.CancelledError:\n        return\n    raise AssertionError('cancellation was swallowed')\nasyncio.run(main())\n"
+    },
+    {
+      "id": "unicode_identity",
+      "prompt": "UserRegistry allows duplicate usernames that are Unicode compatibility/case equivalents and look identical to users. Canonicalize consistently for register, contains, and get while preserving the original display name. Do not edit tests.",
+      "query_hint": "unicode username identity NFKC casefold duplicate canonicalization",
+      "seed": {
+        "root_cause": "Raw strings are used as identity keys; visually equivalent Unicode forms and case variants produce different keys.",
+        "approach": "Create one canonical-key helper using unicodedata.normalize('NFKC', name).casefold(); use it for every lookup/write while storing the original display name in the value.",
+        "dead_end": "Do not use lower() alone; it is neither Unicode compatibility normalization nor full caseless matching."
+      },
+      "files": {
+        "users.py": "class UserRegistry:\n    def __init__(self): self._users={}\n    def register(self, name):\n        if name in self._users: raise ValueError('duplicate')\n        self._users[name]={'display_name': name}\n    def __contains__(self, name): return name in self._users\n    def get(self, name): return self._users[name]\n",
+        "tests/test_users.py": "import unittest\nfrom users import UserRegistry\n\nclass UserTests(unittest.TestCase):\n    def test_basic(self):\n        r=UserRegistry(); r.register('Alice')\n        self.assertIn('Alice', r); self.assertEqual(r.get('Alice')['display_name'], 'Alice')\n    def test_exact_duplicate(self):\n        r=UserRegistry(); r.register('Alice')\n        with self.assertRaises(ValueError): r.register('Alice')\n\nif __name__ == '__main__':\n    unittest.main()\n"
+      },
+      "hidden_test": "from users import UserRegistry\nr=UserRegistry(); r.register('Ａlice')\nassert 'alice' in r\nassert r.get('ALICE')['display_name'] == 'Ａlice'\ntry:\n    r.register('Alice')\nexcept ValueError:\n    pass\nelse:\n    raise AssertionError('compatibility/case duplicate accepted')\n"
+    },
+    {
+      "id": "canonical_signature",
+      "prompt": "HMAC signatures verify locally but fail across services when equivalent JSON objects use different dictionary insertion order or whitespace. Make signing canonical and deterministic for JSON-compatible payloads. Do not edit tests.",
+      "query_hint": "HMAC JSON signature dictionary order canonical serialization sort keys separators",
+      "seed": {
+        "root_cause": "The HMAC input uses default json.dumps output, which depends on mapping insertion order and includes noncanonical whitespace.",
+        "approach": "Centralize canonical encoding with json.dumps(sort_keys=True, separators=(',', ':'), ensure_ascii=False).encode('utf-8') and use it in sign and verify; keep compare_digest.",
+        "dead_end": "Do not sort only the outer dict or compare decoded JSON after signing; signatures must cover identical canonical bytes."
+      },
+      "files": {
+        "signing.py": "import hashlib, hmac, json\n\ndef _bytes(payload):\n    return json.dumps(payload).encode('utf-8')\n\ndef sign(key, payload):\n    return hmac.new(key, _bytes(payload), hashlib.sha256).hexdigest()\n\ndef verify(key, payload, signature):\n    return hmac.compare_digest(sign(key, payload), signature)\n",
+        "tests/test_signing.py": "import unittest\nfrom signing import sign, verify\n\nclass SigningTests(unittest.TestCase):\n    def test_roundtrip(self):\n        key=b'k'; payload={'a':1,'b':2}\n        self.assertTrue(verify(key,payload,sign(key,payload)))\n    def test_change_fails(self):\n        key=b'k'; sig=sign(key,{'a':1})\n        self.assertFalse(verify(key,{'a':2},sig))\n\nif __name__ == '__main__':\n    unittest.main()\n"
+      },
+      "hidden_test": "from signing import sign, verify\nkey=b'secret'\na={'outer': {'x':1,'y':'é'}, 'items':[1,2]}\nb={'items':[1,2], 'outer': {'y':'é','x':1}}\nsig=sign(key,a)\nassert verify(key,b,sig), (sig, sign(key,b))\nassert sign(key,a) == sign(key,b)\n"
+    }
+  ]
+}
