@@ -33,7 +33,7 @@ Real-user rollout requires first-10 external evidence before expanding to 100.
 
 ## Blockers
 
-- served-runtime freshness snapshot is pending re-capture at 3.3.20 (the served runtime is current at 3.3.20; the fingerprint snapshot must be re-captured green)
+- served-runtime proof for source candidate 3.3.21 is not green; an operator-supervised fingerprint must match before the channel is current
 - ops/watchdog, release-governance, and rollback/comms gate snapshots must be re-captured green
 - first-10 external-user evidence has not passed: verified=0/10, real_users=0/10, installs=0/8, useful=0/6, critical_incidents=0/0
 

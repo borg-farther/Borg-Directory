@@ -186,7 +186,7 @@ def _trace_text(trace: dict[str, Any]) -> str:
     values: list[str] = []
     for key in (
         "causal_intervention", "approach_summary", "root_cause",
-        "errors_encountered", "error_patterns", "task", "title",
+        "errors_encountered", "error_patterns", "task", "task_description", "title",
         "problem", "summary", "files_modified", "key_files",
     ):
         value = trace.get(key)

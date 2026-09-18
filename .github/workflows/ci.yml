@@ -42,3 +42,17 @@ jobs:
       - name: Run public-readiness fail-closed tests
         run: |
           python -m pytest eval/tests/test_real_user_rollout_gate.py tests/readiness/test_public_self_serve_launch_gate.py --tb=short -q
+
+  wheel-smoke:
+    # Editable installs cannot prove that the published wheel contains its data
+    # files or that entry points resolve outside the checkout. Exercise the real
+    # wheel from a clean cwd before any release can merge.
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - name: Set up Python 3.12
+        uses: actions/setup-python@v5
+        with:
+          python-version: "3.12"
+      - name: Build and smoke the isolated wheel
+        run: bash scripts/wheel_smoke.sh

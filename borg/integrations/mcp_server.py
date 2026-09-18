@@ -340,8 +340,14 @@ def _attach_human_comms(result: Dict[str, Any], *, session_id: str) -> Dict[str,
                     user_message = "Borg surfaced a rescue path; verify before claiming value."
             state["first_hit_shown"] = True
         elif matched:
-            # Weak match: visible caution, but do not consume the first-hit badge.
-            user_message = "Borg found a weak hint. Treating it cautiously."
+            # Weak/seed-only match: still surface it and count STOP material,
+            # but do not consume the verified first-hit badge.
+            state["matched_lookups"] = int(state.get("matched_lookups", 0) or 0) + 1
+            state["stop_items_surfaced"] = int(state.get("stop_items_surfaced", 0) or 0) + dead_ends
+            if confidence == "seed-only":
+                user_message = _single_line_text(str(result.get("human_summary") or ""))
+            if not user_message:
+                user_message = "Borg found a weak hint. Treating it cautiously."
 
         session_message = _session_line(state)
         snapshot = dict(state)
@@ -2520,6 +2526,8 @@ def borg_observe(task: str = "", context: str = "", context_dict: dict = None, p
         logger.debug(f"borg_observe: negative traces failed: {e}")
 
     # Pack guidance
+    matched_pack_solution = ""
+    pack_matches = []
     try:
         try:
             _raw_search = _search_module.borg_search(task[:100], mode="text")
@@ -2540,7 +2548,20 @@ def borg_observe(task: str = "", context: str = "", context_dict: dict = None, p
         if pack_matches:
             best_pack = pack_matches[0]
             solution = best_pack.get('solution', '').strip()
+            if 'permission' in str(best_pack.get('name') or '').lower():
+                try:
+                    from borg.core.rescue import _script_permission_guidance
+
+                    script_guidance = _script_permission_guidance(query)
+                    if script_guidance:
+                        solution = '\n'.join(
+                            f"{index}. {item}"
+                            for index, item in enumerate(script_guidance["action"], start=1)
+                        )
+                except Exception:
+                    pass
             if solution:
+                matched_pack_solution = solution
                 section = [f"PACK GUIDANCE ({best_pack.get('name', 'unknown')})"]
                 section.append(solution[:400])
                 raw_detail_parts.append('\n'.join(section))
@@ -2554,6 +2575,13 @@ def borg_observe(task: str = "", context: str = "", context_dict: dict = None, p
     # ---- Build confidence header ----
     raw_detail_text = '\n'.join(raw_detail_parts)
     header = _build_confidence_header(tech, task)
+    if not positive_traces and locals().get('pack_matches'):
+        header = (
+            "BORG [SYNTHETIC ONLY]\n"
+            "Real traces: 0 | Synthetic matches: 1\n"
+            "Matched bundled seed guidance; no collective outcome proof.\n"
+            + "─" * 50
+        )
 
     # ---- Attempt LLM synthesis ----
     synthesis = None
@@ -2598,7 +2626,7 @@ def borg_observe(task: str = "", context: str = "", context_dict: dict = None, p
         # Synthetic/seed-only guidance still needs the first-user contract to be
         # action-first.  Keep it explicitly tied to the matched pack so it is not
         # mistaken for real-trace evidence.
-        _pack_solution = (pack_matches[0].get('solution') or '').strip()
+        _pack_solution = (matched_pack_solution or pack_matches[0].get('solution') or '').strip()
         _pack_first_step = next((ln.strip() for ln in _pack_solution.splitlines() if ln.strip()), '')
         if _pack_first_step:
             out.append(f"ACTION: from matched seed pack, {_pack_first_step[:120]}")

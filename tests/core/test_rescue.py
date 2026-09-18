@@ -17,6 +17,9 @@ def test_rescue_returns_agent_contract_for_known_error():
     assert result.action
     assert result.stop
     assert result.verify
+    assert result.confidence == "seed-only"
+    assert result.evidence["verified_outcome_count"] == 0
+    assert result.evidence["success_count"] == 0
     assert "ACTION:" in result.agent_instruction
     assert "STOP:" in result.agent_instruction
     assert "VERIFY:" in result.agent_instruction
@@ -41,15 +44,25 @@ def test_missing_dependency_rescue_maps_common_import_to_distribution_name():
 
     assert result.success is True
     assert result.problem_class == "missing_dependency"
-    assert any("pip install PyYAML" in action for action in result.action)
-    assert "pip install PyYAML" in result.agent_instruction
+    assert any("python -m pip install PyYAML" in action for action in result.action)
+    assert "python -m pip install PyYAML" in result.agent_instruction
 
 
 def test_missing_dependency_rescue_uses_import_name_when_mapping_unknown():
     result = rescue("ModuleNotFoundError: No module named flask", source="test", show_guidance=False)
 
     assert result.success is True
-    assert any("pip install flask" in action for action in result.action)
+    assert any("python -m pip install flask" in action for action in result.action)
+
+
+def test_seed_guidance_never_claims_verified_success_counters():
+    result = rescue("ModuleNotFoundError: No module named flask", source="test", show_guidance=True)
+
+    assert result.confidence == "seed-only"
+    assert result.evidence["verified_outcome_count"] == 0
+    assert "42/45 successes" not in result.guidance
+    assert "verified outcome receipts: 0" in result.guidance
+    assert "zero verified outcome receipts" in result.human_summary
 
 
 def test_rescue_fails_closed_on_unknown_or_non_python_error():
@@ -83,6 +96,20 @@ def test_render_rescue_text_has_visible_human_value_sections():
     assert "HUMAN RECEIPT" in text
     assert "VALUE RECEIPT" in text
     assert "measured savings: not yet measured" in text
+
+
+def test_script_permission_denied_uses_execute_specific_safe_guidance():
+    result = rescue("bash: ./deploy.sh: Permission denied", source="test", show_guidance=False)
+
+    rendered = "\n".join(result.action + result.stop + result.verify).lower()
+    assert result.success is True
+    assert result.problem_class == "permission_denied"
+    assert "ls -l -- ./deploy.sh" in result.action[0]
+    assert "chmod u+x -- ./deploy.sh" in rendered
+    assert "test -x ./deploy.sh" in rendered
+    assert "chmod 644" not in "\n".join(result.action).lower()
+    assert "chmod 777" not in "\n".join(result.action).lower()
+    assert "sudo" not in "\n".join(result.action).lower()
 
 
 def test_mcp_borg_rescue_returns_json_contract():

@@ -1,0 +1,52 @@
+{
+  "schema_version": 1,
+  "artifact": "eval/delivery_trial_preregistration.json",
+  "preregistered_at_utc": "2026-09-18T16:04:04Z",
+  "status": "preregistered_before_first_delivery_trial_model_run",
+  "purpose": "Mechanism study: isolate whether pre-LLM prefetch removes the extra model/tool turn imposed by mandatory Borg lookup. This is not an independent solve-rate replication because it reuses the frozen v2 taskset.",
+  "source_taskset": "eval/value_trial_taskset_v2.json",
+  "source_taskset_sha256": "205c9ebf2316093cbb3fd20e6609803ec03ece74133ead63b338df571a2c86c4",
+  "task_ids": [
+    "contextvar_cross_request_leak",
+    "factory_registry_recursive_deadlock",
+    "tenant_cache_scope_collision",
+    "sqlite_helper_rolls_back_caller_work",
+    "duplicate_json_policy_keys",
+    "conflicting_content_length_headers",
+    "nested_defaults_mutated_between_loads",
+    "bound_method_unsubscribe_leak"
+  ],
+  "model": {
+    "provider": "openai-codex",
+    "name": "gpt-5.6-sol",
+    "runner": "Hermes one-shot safe mode",
+    "max_turns": 7
+  },
+  "conditions": {
+    "T0_tool_empty": "Agent must invoke the Borg tool; the isolated trace database is empty.",
+    "T1_tool_seeded": "Agent must invoke the Borg tool; the isolated trace database contains the preregistered relevant trace.",
+    "P0_prefetch_empty": "The harness performs retrieval before the first model call; a no-match result injects no context.",
+    "P1_prefetch_seeded": "The harness performs retrieval before the first model call and injects the identical matched advisory as untrusted context."
+  },
+  "primary_contrast": "P1_prefetch_seeded minus T1_tool_seeded among pairs solved by both conditions",
+  "primary_metrics": [
+    "api_calls",
+    "non_cache_tokens",
+    "wall_seconds"
+  ],
+  "secondary_contrast": "P0_prefetch_empty minus T0_tool_empty",
+  "integrity_rules": [
+    "All four conditions use the same frozen task fixtures, hidden graders, model, provider, turn budget, and Borg retrieval code.",
+    "The only seeded-arm manipulation is delivery timing: mandatory terminal tool turn versus pre-first-call context.",
+    "No-match prefetch is invisible to the model; it injects no no-match framing text beyond the same control sentence used for no prior guidance.",
+    "Every memory condition must have exactly one auditable lookup invocation or it is invalid.",
+    "Hidden graders are materialized only after the model exits; test modifications fail the run.",
+    "Crashes, timeouts, invalid runs, and turn-budget exhaustion remain in solve-rate denominators.",
+    "Provider cache-read tokens are reported separately; non_cache_tokens equals input_tokens plus output_tokens."
+  ],
+  "decision_rule": {
+    "mechanism_improved_directionally": "P1 has no solve-rate negative transfer versus T1 and has lower median paired API calls plus lower median paired non-cache tokens among pairs solved by both.",
+    "mechanism_regressed": "P1 fails any task passed by T1, emits invalid treatment evidence, or has higher median paired API calls.",
+    "claim_boundary": "Eight reused tasks can establish an engineering delivery improvement, not general Borg effectiveness. Product-value claims still require held-out powered replication and first-10 external-user outcomes."
+  }
+}

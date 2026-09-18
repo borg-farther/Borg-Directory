@@ -1,7 +1,7 @@
 #!/bin/bash
 # Post-release cold smoke against the PUBLISHED PyPI wheel.
 #
-#   bash scripts/cold_smoke_pypi.sh 3.3.20
+#   bash scripts/cold_smoke_pypi.sh 3.3.21
 #
 # Spins a fresh python:3.12-slim container and runs DAY1_USER_KIT.md's
 # "minutes 0-10" verbatim: pipx install agent-borg==<version>, the README
@@ -12,7 +12,7 @@
 # Run this AFTER the tag's wheel lands on PyPI, before sending any invite.
 set -euo pipefail
 
-VERSION="${1:?usage: bash scripts/cold_smoke_pypi.sh <published-version, e.g. 3.3.20>}"
+VERSION="${1:?usage: bash scripts/cold_smoke_pypi.sh <published-version, e.g. 3.3.21>}"
 IMAGE="${COLD_SMOKE_IMAGE:-python:3.12-slim}"
 
 docker run --rm -i "$IMAGE" bash -s "$VERSION" <<'INNER'

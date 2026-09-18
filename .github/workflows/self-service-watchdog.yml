@@ -17,6 +17,10 @@ jobs:
       actions: read
     env:
       GITHUB_TOKEN: ${{ github.token }}
+      # github.token may read workflow/check data but cannot read branch
+      # protection in this workflow context. Configure this repository secret
+      # with read-only Administration + Actions metadata access.
+      BORG_GOVERNANCE_TOKEN: ${{ secrets.BORG_GOVERNANCE_TOKEN }}
     steps:
       - uses: actions/checkout@v4
         with:
@@ -42,13 +46,10 @@ jobs:
             echo "PyPI canary failed; continuing so public/readiness gates can fail closed with the fresh snapshot."
           fi
           python eval/cold_start_trust_gate.py
-          set +e
+          # Governance is a release-control invariant, not an allowed public-
+          # launch blocker. Fail this required check immediately if live,
+          # auditable branch-protection evidence is unavailable or noncompliant.
           python eval/release_governance_gate.py --output eval/release_governance_snapshot.json
-          rc_governance=$?
-          set -e
-          if [ "$rc_governance" -ne 0 ]; then
-            echo "Release governance gate failed; continuing so public/readiness gates can fail closed with the fresh snapshot."
-          fi
 
       - name: Regenerate fail-closed readiness snapshots
         run: |

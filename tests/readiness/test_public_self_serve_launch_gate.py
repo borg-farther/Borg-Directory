@@ -186,6 +186,7 @@ def _release_governance_payload(*, protected: bool = True) -> dict:
         "test (3.10)",
         "test (3.11)",
         "test (3.12)",
+        "wheel-smoke",
         "dependency-audit",
         "policy-check",
         "secret-scan",
@@ -1498,12 +1499,22 @@ def test_pypi_fresh_install_canary_fails_closed_when_release_not_on_pypi(monkeyp
     assert snapshot["mcp_stdio_canary"]["detail"] == "not run because PyPI install failed"
 
 
-def test_pypi_mcp_canary_accepts_installed_package_runtime_fingerprint(monkeypatch) -> None:
+def test_pypi_mcp_canary_accepts_installed_package_runtime_fingerprint(monkeypatch, tmp_path) -> None:
+    borg_mcp = tmp_path / "venv" / "bin" / "borg-mcp"
+    install_root = tmp_path / "venv" / "lib" / "python3.12" / "site-packages"
     fingerprint_payload = {
         "success": True,
         "borg_version": "9.9.9",
-        "source_version": None,
-        "version_matches_source": False,
+        "source_version": "9.9.9",
+        "source_version_basis": "installed_distribution",
+        "version_matches_source": True,
+        "reload_status": "loaded_code_matches_source_behavior",
+        "modules": {
+            "borg": {"path": str(install_root / "borg" / "__init__.py")},
+            "borg.core.confidence_gate": {"path": str(install_root / "borg" / "core" / "confidence_gate.py")},
+            "borg.core.runtime_fingerprint": {"path": str(install_root / "borg" / "core" / "runtime_fingerprint.py")},
+            "borg.integrations.mcp_server": {"path": str(install_root / "borg" / "integrations" / "mcp_server.py")},
+        },
         "loaded_function_hashes": {
             "borg.core.confidence_gate.trace_match_is_confident": {"sha256": "abc"},
             "borg.integrations.mcp_server.borg_observe": {"sha256": "def"},
@@ -1527,12 +1538,22 @@ def test_pypi_mcp_canary_accepts_installed_package_runtime_fingerprint(monkeypat
 
     monkeypatch.setattr(canary, "run_cmd", fake_run_cmd)
 
-    result = canary.mcp_stdio_canary(Path("/tmp/borg-mcp"), {}, "9.9.9")
+    result = canary.mcp_stdio_canary(borg_mcp, {}, "9.9.9")
 
     assert result["passed"] is True
     assert result["fingerprint_signal"] is True
     assert result["server_info"] == {"name": "borg-mcp-server", "version": "9.9.9"}
     assert result["fingerprint_summary"]["borg_version"] == "9.9.9"
-    assert result["fingerprint_summary"]["source_version"] is None
-    assert result["fingerprint_summary"]["version_matches_source"] is False
-    assert result["fingerprint_summary"]["reload_status"] is None
+    assert result["fingerprint_summary"]["source_version"] == "9.9.9"
+    assert result["fingerprint_summary"]["source_version_basis"] == "installed_distribution"
+    assert result["fingerprint_summary"]["version_matches_source"] is True
+    assert result["fingerprint_summary"]["reload_status"] == "loaded_code_matches_source_behavior"
+
+    fingerprint_payload["version_matches_source"] = False
+    responses[-1] = {"jsonrpc": "2.0", "id": 4, "result": {"content": [{"text": json.dumps(fingerprint_payload)}]}}
+    stdout = "\n".join(json.dumps(response) for response in responses) + "\n"
+
+    mismatch = canary.mcp_stdio_canary(borg_mcp, {}, "9.9.9")
+
+    assert mismatch["passed"] is False
+    assert mismatch["fingerprint_signal"] is False

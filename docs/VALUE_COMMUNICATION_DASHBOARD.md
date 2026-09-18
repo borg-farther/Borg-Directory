@@ -1,8 +1,8 @@
 # borg value communication dashboard
 
 ## operator benefits (validated internally)
-- first visible value path for controlled beta after release gates: `pipx install agent-borg==3.3.20` -> `borg rescue "<redacted error>"` -> ACTION / STOP / VERIFY
-- controlled package beta path: **NO-GO right now** (zero external users) — `agent-borg==3.3.20` is published and is the latest release on PyPI, and the served runtime is current at 3.3.20
+- first visible value path for controlled beta after release gates: `pipx install agent-borg==3.3.21` -> `borg rescue "<redacted error>"` -> ACTION / STOP / VERIFY
+- controlled package beta path: **NO-GO right now** (zero external users; cap 0) — `agent-borg==3.3.21` is the source candidate and exact-version PyPI/served-runtime proof is not green
 - local/synthetic gate status: first-user release gate and logical load gates are green in current artifacts; synthetic users are not external-user evidence
 - external-user proof status: **not proven yet**; verified external users remain `0`
 - measured savings status: **0 measured rows, 0.0 net minutes saved, 0 net tokens saved**; savings are not claimed until consented external-user rows include before/after measurements
@@ -20,7 +20,7 @@
 - supervised local first-user path: GO in current artifacts
 - public self-serve launch: **NO-GO until first-10 row-derived external evidence passes**
 - 100 real-user rollout: **NO-GO until 10 external users, >=8 installs, >=6 useful rescues, and 0 critical incidents**
-- decision: `agent-borg==3.3.20` is published and is the latest release on PyPI and the served runtime is current at 3.3.20; controlled first-10 beta remains NO-GO until served-runtime freshness, release-governance, ops/watchdog, docs-claim, and evidence-intake gate snapshots are re-captured green; no broad self-serve, served remote MCP, 100-user, measured-savings, or frontier-better-than claim
+- decision: source candidate `agent-borg==3.3.21` is not an approved public package/runtime channel; controlled first-10 beta remains NO-GO until all release-control gates pass; no broad self-serve, served remote MCP, 100-user, measured-savings, or frontier-better-than claim
 
 ## evidence
 - `eval/public_self_serve_launch_gate_snapshot.json`

@@ -2,11 +2,19 @@
 
 ## Current verdict
 
-- Controlled first-10 beta: **NO-GO right now** (zero external users). `agent-borg==3.3.20` is published and is the latest release on PyPI, and the served runtime is current at 3.3.20. GitHub `main` release governance is enforced. Served-runtime freshness, ops/watchdog proof, docs-claim, and evidence-intake gate snapshots must all be re-captured green before inviting controlled testers. External first-10 row count is still zero.
+- Controlled first-10 beta: **NO-GO right now** (zero external users; cap 0). The source line is `agent-borg==3.3.21`, but source, PyPI, served-runtime, governance, watchdog, docs-claim, and evidence-intake gates must independently agree before inviting controlled testers. Version-string equality alone is not release proof. External first-10 row count is still zero.
 - Public waitlist / narrow beta: **0 testers may proceed** until those controlled-beta infrastructure and guardrail gates are green; then the first-10 evidence contract caps the cohort at 10.
 - Public self-serve launch: **NO-GO until first-10 external-user evidence passes** (10 verified external users, >=8 installs, >=6 useful rescues, 0 critical incidents).
 
 ## What passed for source/local package infrastructure
+
+The scheduled readiness workflow requires the repository secret
+`BORG_GOVERNANCE_TOKEN`: a read-only fine-grained GitHub token with access to
+repository Administration metadata (branch protection/rulesets) and Actions
+metadata. The workflow's default `github.token` remains the fallback for public
+metadata, but a 403 without a rate-limit header is treated as a permissions
+failure and is not retried. Missing or under-scoped governance credentials must
+fail the release-governance gate closed rather than report a false release GO.
 
 - Public install path exists: `python3 -m pip install agent-borg`.
 - CLI entrypoints exist: `borg`, `borg-mcp`, `borg-doctor`.
@@ -14,7 +22,7 @@
 - First-10 contract exists: [`FIRST_10_BETA_READINESS.md`](FIRST_10_BETA_READINESS.md).
 - Security/privacy/prompt-injection surface has a baseline and CI gates.
 - GitHub CI/security gates are part of the release proof chain. PR branches still need their own green checks and post-merge `main` proof refresh before branch-specific source changes are claimed on `main`.
-- Local first-user gate is current for `agent-borg==3.3.20`, including generated rules, OpenClaw export, stdio MCP, CLI, and Python API; `agent-borg==3.3.20` is published on PyPI as the latest release. Served-runtime freshness snapshot re-capture and first-10 external-user evidence remain the current release-control blockers.
+- The local first-user gate covers `agent-borg==3.3.21`, including generated rules, OpenClaw export, stdio MCP, CLI, and Python API. Local proof does not substitute for an exact-version PyPI fresh-install canary or served-runtime fingerprint. First-10 external-user evidence remains mandatory after infrastructure gates turn green.
 
 ## What is not proven
 

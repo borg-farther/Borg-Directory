@@ -47,6 +47,7 @@ _CONFIDENCE_HUMAN = {
     "tested": "tested",
     "observed": "reported working",
     "inferred": "unverified",
+    "seed-only": "unverified seed guidance",
     "suggested": "reported working",
 }
 
@@ -82,6 +83,16 @@ def rescue_human_summary(
     """The one line a human must see when a rescue fires."""
     if status == "matched":
         klass = humanize_problem_class(problem_class)
+        if (confidence or "").strip().lower() == "seed-only":
+            if failure_count >= 2:
+                return _clamp(
+                    f"🛟 Borg: your agent was stuck ({failure_count} failed attempts) — "
+                    f"bundled seed guidance for {klass}; zero verified receipts."
+                )
+            return _clamp(
+                f"🛟 Borg: bundled seed guidance for this {klass} error; "
+                "zero verified outcome receipts."
+            )
         trust = humanize_confidence(confidence)
         if failure_count >= 2:
             line = (

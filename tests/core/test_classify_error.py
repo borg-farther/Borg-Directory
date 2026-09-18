@@ -90,7 +90,6 @@ def test_generic_error_substring_no_longer_poisons(err):
 PYTHON_REGRESSION_FIXTURES = [
     # (input, expected_problem_class)
     ("ModuleNotFoundError: No module named 'cv2'", "missing_dependency"),
-    ("ImportError: cannot import name 'foo' from 'bar'", "import_cycle"),
     ("django.db.utils.OperationalError: no such column: app_user.email", "schema_drift"),
     ("django.db.utils.IntegrityError: FOREIGN KEY constraint failed", "missing_foreign_key"),
     ("ImproperlyConfigured: SECRET_KEY must not be empty", "configuration_error"),
@@ -184,12 +183,14 @@ def test_problem_classes_unchanged():
 # answer (e0009 flips to import_cycle) or None (all the others, since the
 # correct class does not have a pack yet).
 #
-# e0005 (ImportError: cannot import name 'soft_unicode' from 'markupsafe')
-# is intentionally NOT in this list because its text is textually
-# indistinguishable from the existing Python PYTHON_REGRESSION_FIXTURES
-# row ("ImportError: cannot import name 'foo' from 'bar'" → import_cycle).
-# See v323_fc_analysis.md §e0005 residual for the explanation. Phase 2
-# confidence scoring + unique_to_class signals will fix it.
+# Renamed/removed-symbol imports — `cannot import name 'X' from 'module'` WITHOUT the
+# "partially initialized module … most likely due to a circular import" marker (e.g.
+# force_text, ugettext, soft_unicode from markupsafe) — now correctly ABSTAIN via the
+# _RENAMED_SYMBOL_IMPORT anti_signature, which suppresses both import_cycle and the bare
+# ImportError missing_dependency fallback. The generic `'foo' from 'bar'` row below is the
+# canonical example (it moved here from PYTHON_REGRESSION_FIXTURES when its correct answer
+# became None). Only the explicit "partially initialized module" cycle phrasing (e0009)
+# still classifies as import_cycle.
 
 ANTI_SIGNATURE_TARGETS = [
     # (id, text, v3.2.2_wrong_prediction, v3.2.3_expected)
@@ -199,6 +200,15 @@ ANTI_SIGNATURE_TARGETS = [
         "'app.models' (most likely due to a circular import)",
         "circular_dependency",
         "import_cycle",
+    ),
+    (
+        # Renamed/removed-symbol form (no "partially initialized module" marker). Was a
+        # v3.2.2 false-confident import_cycle; the _RENAMED_SYMBOL_IMPORT anti_signature now
+        # makes it ABSTAIN. Moved here from PYTHON_REGRESSION_FIXTURES.
+        "renamed_symbol",
+        "ImportError: cannot import name 'foo' from 'bar'",
+        "import_cycle",
+        None,
     ),
     (
         "e0036",
@@ -261,7 +271,7 @@ def test_anti_signature_blocks_corpus_row(
 
 @pytest.mark.parametrize("err,expected", PYTHON_REGRESSION_FIXTURES)
 def test_anti_signatures_do_not_break_python_fixtures(err, expected):
-    """v3.2.3 belt+suspenders: none of the 10 Python fixtures match ANY
+    """v3.2.3 belt+suspenders: none of the 9 Python fixtures match ANY
     anti_signature. This is orthogonal to test_python_django_recall_unchanged
     above — that test checks the end-to-end classify_error() result; this
     test walks the anti_signature dict directly to prove the regexes are

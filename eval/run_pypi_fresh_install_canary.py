@@ -77,6 +77,36 @@ def run_cmd(name: str, cmd: list[str], *, env: dict[str, str] | None = None, cwd
     )
 
 
+def artifact_module_isolation(fingerprint: dict[str, Any], borg_mcp: Path) -> dict[str, Any]:
+    expected_root = borg_mcp.resolve().parent.parent
+    modules = fingerprint.get("modules") or {}
+    required = {
+        "borg",
+        "borg.core.confidence_gate",
+        "borg.core.runtime_fingerprint",
+        "borg.integrations.mcp_server",
+    }
+    observed: dict[str, str] = {}
+    outside: dict[str, str] = {}
+    missing = []
+    for name in sorted(required):
+        raw_path = (modules.get(name) or {}).get("path")
+        if not raw_path:
+            missing.append(name)
+            continue
+        resolved = Path(raw_path).resolve()
+        observed[name] = str(resolved)
+        if not resolved.is_relative_to(expected_root):
+            outside[name] = str(resolved)
+    return {
+        "passed": not missing and not outside,
+        "expected_install_root": str(expected_root),
+        "observed_module_paths": observed,
+        "missing_modules": missing,
+        "outside_install_root": outside,
+    }
+
+
 def mcp_stdio_canary(borg_mcp: Path, env: dict[str, str], expected_version: str) -> dict[str, Any]:
     requests = [
         {"jsonrpc": "2.0", "id": 1, "method": "initialize", "params": {}},
@@ -138,10 +168,12 @@ def mcp_stdio_canary(borg_mcp: Path, env: dict[str, str], expected_version: str)
     loaded_hashes = fingerprint_payload.get("loaded_function_hashes") or {}
     observe_canary = fingerprint_payload.get("observe_behavior_canary") or {}
     confidence_canary = fingerprint_payload.get("confidence_gate_canary") or {}
+    artifact_isolation = artifact_module_isolation(fingerprint_payload, borg_mcp)
     fingerprint_summary = {
         "success": fingerprint_payload.get("success"),
         "borg_version": fingerprint_payload.get("borg_version"),
         "source_version": fingerprint_payload.get("source_version"),
+        "source_version_basis": fingerprint_payload.get("source_version_basis"),
         "version_matches_source": fingerprint_payload.get("version_matches_source"),
         "reload_status": fingerprint_payload.get("reload_status"),
         "confidence_gate_canary_passed": confidence_canary.get("passed"),
@@ -153,15 +185,21 @@ def mcp_stdio_canary(borg_mcp: Path, env: dict[str, str], expected_version: str)
             ]
             if loaded_hashes.get(key)
         ),
+        "artifact_isolation": artifact_isolation,
     }
     fingerprint_signal = (
         fingerprint_payload.get("success") is True
         and fingerprint_payload.get("borg_version") == expected_version
+        and fingerprint_payload.get("source_version") == expected_version
+        and fingerprint_payload.get("source_version_basis") == "installed_distribution"
+        and fingerprint_payload.get("version_matches_source") is True
+        and fingerprint_payload.get("reload_status") == "loaded_code_matches_source_behavior"
         and bool(loaded_hashes.get("borg.core.confidence_gate.trace_match_is_confident"))
         and bool(loaded_hashes.get("borg.integrations.mcp_server.borg_observe"))
         and observe_canary.get("passed") is True
         and observe_canary.get("meta_prompt_failed_closed") is True
         and confidence_canary.get("passed") is True
+        and artifact_isolation["passed"] is True
     )
     passed = (
         result.passed

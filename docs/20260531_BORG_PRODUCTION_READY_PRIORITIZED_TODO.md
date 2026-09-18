@@ -184,6 +184,7 @@ Required work:
    - `test (3.10)`
    - `test (3.11)`
    - `test (3.12)`
+   - `wheel-smoke`
    - `dependency-audit`
    - `policy-check`
    - `secret-scan`

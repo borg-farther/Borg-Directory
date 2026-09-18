@@ -65,7 +65,7 @@ They are retained for provenance, but they are not current product claims or fir
 
 ## Current truth
 
-- Controlled first-10 public-package beta: NO-GO right now (zero external users). `agent-borg==3.3.20` is published and is the latest release on PyPI, and the served runtime is current at 3.3.20. GitHub `main` release governance is enforced. Cap is 0 until served-runtime freshness, release-governance, ops/watchdog, docs-claim, and evidence-intake gate snapshots are re-captured green.
+- Controlled first-10 public-package beta: NO-GO right now (zero external users; cap 0). `agent-borg==3.3.21` is the source candidate; exact-version package, served-runtime, governance, watchdog, docs-claim, and evidence-intake gates must independently pass before any invite.
 - Public self-serve launch: not yet; requires real external-user evidence.
 - Agent-level success lift at statistical confidence: not yet proven.
 - Internal max-value collective intelligence loop primitives: GO; external lift still requires first-10 rows.

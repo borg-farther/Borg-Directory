@@ -142,7 +142,7 @@
       ],
       "name": "agent-borg",
       "type": "application",
-      "version": "3.3.20"
+      "version": "3.3.21"
     },
     "properties": [
       {

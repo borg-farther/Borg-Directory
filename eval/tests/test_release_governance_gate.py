@@ -63,6 +63,22 @@ def test_github_get_json_uses_token_when_available(monkeypatch) -> None:
     assert captured["timeout"] == 20
 
 
+def test_github_get_json_prefers_dedicated_governance_token(monkeypatch) -> None:
+    captured = {}
+
+    def fake_urlopen(request, timeout):
+        captured["authorization"] = request.get_header("Authorization")
+        return _FakeGitHubResponse()
+
+    monkeypatch.setenv("BORG_GOVERNANCE_TOKEN", "least-privilege-admin-read")
+    monkeypatch.setenv("GITHUB_TOKEN", "automatic-actions-token")
+    monkeypatch.setenv("GH_TOKEN", "interactive-token")
+    monkeypatch.setattr(release_governance_gate.urllib.request, "urlopen", fake_urlopen)
+
+    assert release_governance_gate._github_get_json("repos/borg-farther/Borg-Directory") == {"ok": True}
+    assert captured["authorization"] == "Bearer least-privilege-admin-read"
+
+
 def test_github_get_json_retries_gh_token_after_stale_env_token(monkeypatch) -> None:
     calls: list[str | None] = []
     gh_env: dict[str, str] = {}
@@ -109,7 +125,7 @@ def test_github_get_json_retries_transient_403_then_succeeds(monkeypatch) -> Non
     def fake_urlopen(request, timeout):
         attempts.append(request.full_url)
         if len(attempts) < 3:
-            raise _http_error(403)
+            raise _http_error(403, {"Retry-After": "2"})
         return _FakeGitHubResponse()
 
     monkeypatch.setenv("GITHUB_TOKEN", "test-token")
@@ -118,7 +134,7 @@ def test_github_get_json_retries_transient_403_then_succeeds(monkeypatch) -> Non
 
     assert release_governance_gate._github_get_json("repos/o/r/branches/main") == {"ok": True}
     assert len(attempts) == 3
-    assert sleeps == [2.0, 4.0]  # exponential backoff
+    assert sleeps == [2.0, 2.0]
 
 
 def test_github_get_json_honors_retry_after_header(monkeypatch) -> None:
@@ -144,7 +160,7 @@ def test_github_get_json_403_exhausts_retries_then_raises(monkeypatch) -> None:
 
     def fake_urlopen(request, timeout):
         attempts.append(1)
-        raise _http_error(403)
+        raise _http_error(403, {"Retry-After": "1"})
 
     monkeypatch.setenv("GITHUB_TOKEN", "test-token")
     monkeypatch.setattr(release_governance_gate.urllib.request, "urlopen", fake_urlopen)
@@ -156,6 +172,30 @@ def test_github_get_json_403_exhausts_retries_then_raises(monkeypatch) -> None:
     except urllib.error.HTTPError as exc:
         assert exc.code == 403
     assert len(attempts) == release_governance_gate._MAX_FETCH_ATTEMPTS
+
+
+def test_github_get_json_permission_403_is_not_retried(monkeypatch) -> None:
+    attempts = []
+
+    def fake_urlopen(request, timeout):
+        attempts.append(1)
+        raise _http_error(403)
+
+    monkeypatch.setenv("GITHUB_TOKEN", "under-scoped-actions-token")
+    monkeypatch.setattr(release_governance_gate.urllib.request, "urlopen", fake_urlopen)
+    monkeypatch.setattr(release_governance_gate.shutil, "which", lambda name: None)
+    monkeypatch.setattr(
+        release_governance_gate.time,
+        "sleep",
+        lambda _s: (_ for _ in ()).throw(AssertionError("permission 403 must not back off")),
+    )
+
+    try:
+        release_governance_gate._github_get_json("repos/o/r/branches/main/protection")
+        raise AssertionError("expected HTTPError")
+    except urllib.error.HTTPError as exc:
+        assert exc.code == 403
+    assert attempts == [1]
 
 
 def test_github_get_json_401_is_not_retried_token_fallthrough_preserved(monkeypatch) -> None:
@@ -198,7 +238,7 @@ def test_release_governance_gate_fails_closed_when_protection_details_missing() 
     joined = "\n".join(result["blockers"])
     assert "details are missing" in joined
     assert "missing required checks" in joined
-    assert "CODEOWNERS" in joined
+    assert "does not require pull requests" in joined
 
 
 def test_release_governance_gate_passes_protected_branch_with_exact_checks_reviews_and_codeowners() -> None:
@@ -212,6 +252,35 @@ def test_release_governance_gate_passes_protected_branch_with_exact_checks_revie
     assert result["blockers"] == []
     assert result["required_checks_observed"] == sorted(release_governance_gate.DEFAULT_REQUIRED_CHECKS)
     assert result["codeowners_errors_checked"] is True
+
+
+def test_release_governance_gate_accepts_pr_only_policy_for_single_maintainer() -> None:
+    payload = _hard_protection_payload()
+    reviews = payload["protection"]["required_pull_request_reviews"]
+    reviews["require_code_owner_reviews"] = False
+    reviews["required_approving_review_count"] = 0
+    reviews["dismiss_stale_reviews"] = False
+    reviews["require_last_push_approval"] = False
+
+    result = release_governance_gate.evaluate_branch_payload(
+        payload,
+        codeowners_errors=[],
+        require_codeowners_validation=True,
+    )
+
+    assert result["passed"] is True
+    assert result["pull_requests_required"] is True
+    assert result["minimum_approvals_required"] == 0
+
+
+def test_release_governance_gate_rejects_missing_pr_requirement() -> None:
+    payload = _hard_protection_payload()
+    payload["protection"]["required_pull_request_reviews"] = None
+
+    result = release_governance_gate.evaluate_branch_payload(payload)
+
+    assert result["passed"] is False
+    assert "branch protection does not require pull requests" in result["blockers"]
 
 
 def test_release_governance_gate_accepts_github_enabled_object_shapes() -> None:
@@ -315,6 +384,10 @@ def test_release_governance_gate_fails_missing_hardening_switches() -> None:
         payload,
         codeowners_errors=[],
         require_codeowners_validation=True,
+        minimum_approvals=1,
+        require_code_owner_reviews=True,
+        require_stale_review_dismissal=True,
+        require_last_push_approval=True,
     )
 
     joined = "\n".join(result["blockers"])
@@ -370,6 +443,29 @@ def test_release_governance_gate_cli_writes_evaluated_snapshot(tmp_path) -> None
     assert evaluated["passed"] is True
     assert evaluated["source"] == "snapshot"
     assert evaluated["generated_at_utc"]
+
+
+def test_release_governance_gate_cli_defaults_to_one_fresh_last_push_approval(tmp_path) -> None:  # type: ignore[no-untyped-def]
+    snapshot_input = tmp_path / "raw_branch.json"
+    snapshot_output = tmp_path / "evaluated_release_governance.json"
+    payload = _hard_protection_payload()
+    reviews = payload["protection"]["required_pull_request_reviews"]
+    reviews["required_approving_review_count"] = 0
+    reviews["dismiss_stale_reviews"] = False
+    reviews["require_last_push_approval"] = False
+    payload["codeowners_errors"] = []
+    snapshot_input.write_text(json.dumps(payload), encoding="utf-8")
+
+    rc = release_governance_gate.main(["--snapshot", str(snapshot_input), "--output", str(snapshot_output)])
+
+    assert rc == 1
+    evaluated = json.loads(snapshot_output.read_text(encoding="utf-8"))
+    assert evaluated["minimum_approvals_required"] == 1
+    assert evaluated["stale_review_dismissal_policy_required"] is True
+    assert evaluated["last_push_approval_policy_required"] is True
+    assert "branch protection requires fewer than 1 approving reviews" in evaluated["blockers"]
+    assert "branch protection does not dismiss stale reviews" in evaluated["blockers"]
+    assert "branch protection does not require last-push approval" in evaluated["blockers"]
 
 
 def test_release_governance_gate_cli_snapshot_requires_codeowners_validation_proof(tmp_path) -> None:  # type: ignore[no-untyped-def]

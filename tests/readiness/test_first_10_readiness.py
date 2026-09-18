@@ -139,8 +139,10 @@ def test_rescue_json_contract_exposes_confidence_evidence_and_receipt():
     assert data["action"]
     assert data["stop"]
     assert data["verify"]
-    assert data["confidence"] in {"tested", "observed", "inferred", "unknown"}
-    assert "source" in data["evidence"]
+    assert data["confidence"] == "seed-only"
+    assert data["evidence"]["source"] == "seed_pack"
+    assert data["evidence"]["verified_outcome_count"] == 0
+    assert "zero verified outcome receipts" in data["human_summary"]
     assert data["human_receipt"]
     assert data["automation_policy"]["fail_closed"] is True
 

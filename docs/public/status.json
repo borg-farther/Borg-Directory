@@ -71,7 +71,7 @@
   "served_runtime_freshness_gate": "FAIL",
   "source": "docs/public/status.json",
   "source_revision": "84a35c069d28e118431665b163c8307db43c2c72+dirty",
-  "source_version_consistency": "pyproject=3.3.20 runtime=3.3.20",
+  "source_version_consistency": "pyproject=3.3.21 runtime=3.3.21",
   "state": "NO-GO public self-serve; source/local release-candidate only",
   "status": "NO-GO",
   "updated_at": "2026-06-15T20:40:47Z",

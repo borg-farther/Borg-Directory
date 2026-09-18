@@ -176,39 +176,29 @@ def test_current_docs_preserve_same_version_artifact_drift_truth() -> None:
             assert phrase not in text, f"{path} still contains stale/unsupported phrase: {phrase}"
 
     current_version = tomllib.loads(read("pyproject.toml"))["project"]["version"]
-    # Post-publish truth: agent-borg==<current> is published and latest on PyPI, and the served
-    # runtime is current at that version. The pre-publish "release candidate / proof not green yet /
-    # fingerprint stale" framing is now false and must be gone.
-    assert (
-        f"`agent-borg=={current_version}` is published and is the latest release on PyPI"
-        in watched["README.md"]
-    ), "README must state the published/latest PyPI release at the pyproject version"
-    assert f"the served runtime is current at {current_version}" in watched["README.md"]
+    # Release truth is stage-invariant: static docs identify the source line and
+    # defer package/runtime currentness to live gates. This remains accurate both
+    # before and after an upload, so release docs never need a same-version edit.
+    assert f"source line is `agent-borg=={current_version}`" in watched["README.md"]
+    assert "live PyPI fresh-install" in watched["README.md"]
+    assert "Static version strings are not proof" in watched["README.md"]
     assert "Broad public self-serve launch, 100-user rollout, served/remote MCP, and measured external lift are **not claimed**" in watched["README.md"]
-    for stale in (
-        "source/local release candidate",
-        "is not green yet",
-        "production PyPI latest remains",
-        "production PyPI latest is",
+    for unsupported in (
+        f"`agent-borg=={current_version}` is published and is the latest release on PyPI",
+        f"the served runtime is current at {current_version}",
+        f"`agent-borg=={current_version}` is published on PyPI as the latest release",
     ):
-        assert stale not in watched["README.md"], f"README still carries pre-publish wording: {stale}"
+        assert unsupported not in watched["README.md"], f"README contains an unverified release-state claim: {unsupported}"
 
-    # READINESS keeps the still-true NO-GO posture (controlled beta + public self-serve) but drops the
-    # pre-publish package/runtime claims now that 3.3.20 is published and the served runtime is current.
     assert "Controlled first-10 beta: **NO-GO right now**" in watched["docs/READINESS.md"]
-    assert (
-        f"`agent-borg=={current_version}` is published and is the latest release on PyPI"
-        in watched["docs/READINESS.md"]
-    )
-    assert f"the served runtime is current at {current_version}" in watched["docs/READINESS.md"]
-    assert "GitHub `main` release governance is enforced" in watched["docs/READINESS.md"]
+    assert f"source line is `agent-borg=={current_version}`" in watched["docs/READINESS.md"]
+    assert "Version-string equality alone is not release proof" in watched["docs/READINESS.md"]
     assert "Public self-serve launch: **NO-GO until first-10 external-user evidence passes**" in watched["docs/READINESS.md"]
-    for stale in (
-        "source/local release candidate",
-        "is not green yet",
-        "served runtime fingerprint is stale",
+    for unsupported in (
+        f"`agent-borg=={current_version}` is published and is the latest release on PyPI",
+        f"the served runtime is current at {current_version}",
     ):
-        assert stale not in watched["docs/READINESS.md"], f"READINESS still carries pre-publish wording: {stale}"
+        assert unsupported not in watched["docs/READINESS.md"], f"READINESS contains an unverified release-state claim: {unsupported}"
 
     # The generated go/no-go report keeps public self-serve NO-GO (zero external users); this holds
     # regardless of the operator's category-C gate-snapshot re-capture.
@@ -394,6 +384,7 @@ def test_non_current_public_docs_are_bannered_or_operator_scoped() -> None:
         "TRYING_BORG.md",
         "MCP_SETUP.md",
         "CHANNELS_AND_INSTALL_METHODS.md",
+        "MINIMUM_CAPABLE_AGENT_STACK.md",
         "ONBOARDING.md",
         "20260514_FIRST_10_USER_INVITE_PACKET.md",
         "FIRST_10_BETA_READINESS.md",

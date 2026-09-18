@@ -5,8 +5,8 @@
 <h1>Borg value communication dashboard</h1>
 <h2>Operator benefits validated internally</h2>
 <ul>
-<li>First visible value path for controlled beta after release gates: <code>pipx install agent-borg==3.3.20</code> -&gt; <code>borg rescue "&lt;redacted error&gt;"</code> -&gt; ACTION / STOP / VERIFY.</li>
-<li>Controlled package beta path: <strong>NO-GO right now</strong> (zero external users) — <code>agent-borg==3.3.20</code> is published and is the latest release on PyPI, and the served runtime is current at 3.3.20.</li>
+<li>First visible value path for controlled beta after release gates: <code>pipx install agent-borg==3.3.21</code> -&gt; <code>borg rescue "&lt;redacted error&gt;"</code> -&gt; ACTION / STOP / VERIFY.</li>
+<li>Controlled package beta path: <strong>NO-GO right now</strong> (zero external users; cap 0) — <code>agent-borg==3.3.21</code> is the source candidate and exact-version PyPI/served-runtime proof is not green.</li>
 <li>Local/synthetic gate status: first-user release gate and logical load gates are green in current artifacts; synthetic users are not external-user evidence.</li>
 <li>External-user proof status: <strong>not proven yet</strong>; verified external users remain <code>0</code>.</li>
 <li>Measured savings status: <strong>0 measured rows, 0.0 net minutes saved, 0 net tokens saved</strong>; savings are not claimed until consented external-user rows include before/after measurements.</li>
@@ -26,7 +26,7 @@
 <li>Supervised local first-user path: GO in current artifacts.</li>
 <li>Public self-serve launch: <strong>NO-GO until first-10 row-derived external evidence passes</strong>.</li>
 <li>100 real-user rollout: <strong>NO-GO until 10 external users, &gt;=8 installs, &gt;=6 useful rescues, and 0 critical incidents</strong>.</li>
-<li>Decision: <code>agent-borg==3.3.20</code> is published and is the latest release on PyPI and the served runtime is current at 3.3.20; controlled first-10 beta remains NO-GO until served-runtime freshness, release-governance, ops/watchdog, docs-claim, and evidence-intake gate snapshots are re-captured green; no broad self-serve, served remote MCP, 100-user, measured-savings, or frontier-better-than claim.</li>
+<li>Decision: source candidate <code>agent-borg==3.3.21</code> is not an approved public package/runtime channel; controlled first-10 beta remains NO-GO until all release-control gates pass; no broad self-serve, served remote MCP, 100-user, measured-savings, or frontier-better-than claim.</li>
 </ul>
 <h2>Evidence</h2>
 <ul>

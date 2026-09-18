@@ -7,7 +7,7 @@ This is the canonical Borg product repo. Borg is failure memory for AI coding ag
 - Package users install: `agent-borg`
 - Commands users run: `borg`, `borg-mcp`, `borg-doctor`
 - Day-one value path: `pipx install agent-borg` then `borg rescue "<real error>" --short`.
-- Current rollout boundary: `agent-borg==3.3.20` is published and is the latest release on PyPI; the served runtime is current at 3.3.20. Controlled first-10 beta remains **NO-GO** (zero external users) until served-runtime freshness, ops/watchdog, release-governance, docs-claim, and evidence-intake gate snapshots are re-captured green. GitHub `main` release governance is enforced. Broad public self-serve launch, 100-user rollout, served/remote MCP, and measured external lift are not claimed until row-derived external evidence passes.
+- Current rollout boundary: `agent-borg==3.3.21` is the source candidate, not a claim that PyPI or the served runtime is current. Controlled first-10 beta remains **NO-GO** (zero external users; cap 0) until exact-version package, runtime, watchdog, governance, docs-claim, and evidence-intake gates independently pass. Broad public self-serve launch, 100-user rollout, served/remote MCP, and measured external lift are not claimed until row-derived external-user evidence passes.
 
 ## Before editing
 

@@ -1,7 +1,7 @@
 # Borg public self-serve launch go/no-go
 
 Generated: 2026-06-11T19:57:13.499754+00:00
-Source version: `3.3.20`
+Source version: `3.3.21`
 
 Public self-serve launch: **NO-GO**
 Controlled first-10 beta infrastructure: **NO-GO**
@@ -29,8 +29,8 @@ Public self-serve is GO only after PyPI/fresh-install/MCP/docs/cold-start-trust/
 
 - PyPI latest metadata is stale: same-version release upload predates current source revision
 - PyPI fresh-install + MCP stdio canary snapshot is missing or failing
-- served runtime borg_version '3.3.18' != source version '3.3.20'
-- served runtime source_version '3.3.18' != source version '3.3.20'
+- served runtime borg_version '3.3.18' != source version '3.3.21'
+- served runtime source_version '3.3.18' != source version '3.3.21'
 - public docs/claim guard found stale install pins or unsupported launch/value claims
 - first-10 external-user evidence has not passed: verified=0/10, real_users=0/10, installs=0/8, useful=0/6, critical_incidents=0/0
 

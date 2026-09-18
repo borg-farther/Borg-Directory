@@ -14,8 +14,9 @@ import marshal
 import os
 import sys
 import time
+from importlib.metadata import PackageNotFoundError, version as distribution_version
 from pathlib import Path
-from typing import Any, Dict, Optional
+from typing import Any, Dict, Optional, Tuple
 
 
 STALE_GUIDANCE_CANARY_TASK = """Continue production readiness review and implementation.
@@ -46,22 +47,42 @@ META_TRUST_CONTEXT = "public self-service first-answer trust gate"
 BANNED_META_TOKENS = ("pack guidance", "django", "migrate", "migration", "chmod", "permission denied", "apk", "apt-get", "npm")
 
 
-def _source_version() -> Optional[str]:
+def _version_probe() -> Tuple[Optional[str], str]:
+    """Return the runtime's immutable version reference and its provenance.
+
+    Source checkouts carry ``pyproject.toml``. Installed wheels do not, so their
+    authoritative reference is the installed distribution metadata. Treating a
+    normal wheel as stale merely because it has no source tree made clean PyPI
+    canaries report ``reload_or_patch_required``.
+    """
     try:
         import tomllib  # type: ignore[attr-defined]
     except Exception:  # pragma: no cover - Python <3.11 fallback
         try:
             import tomli as tomllib  # type: ignore[no-redef]
         except Exception:
-            return None
+            tomllib = None  # type: ignore[assignment]
     try:
         root = Path(__file__).resolve().parents[2]
         pyproject = root / "pyproject.toml"
-        if not pyproject.exists():
-            return None
-        return tomllib.loads(pyproject.read_text(encoding="utf-8")).get("project", {}).get("version")
+        if pyproject.exists() and tomllib is not None:
+            source_version = tomllib.loads(pyproject.read_text(encoding="utf-8")).get("project", {}).get("version")
+            if source_version:
+                return str(source_version), "pyproject"
     except Exception:
-        return None
+        pass
+
+    try:
+        return distribution_version("agent-borg"), "installed_distribution"
+    except PackageNotFoundError:
+        return None, "unavailable"
+    except Exception:
+        return None, "unavailable"
+
+
+def _source_version() -> Optional[str]:
+    """Backward-compatible scalar accessor for callers that need only version."""
+    return _version_probe()[0]
 
 
 def _function_code_hash(module_name: str, function_name: str) -> Dict[str, Any]:
@@ -242,7 +263,7 @@ def runtime_fingerprint() -> Dict[str, Any]:
 
     canary = _confidence_gate_canary()
     observe_canary = _observe_behavior_canary()
-    source_version = _source_version()
+    source_version, source_version_basis = _version_probe()
     try:
         from borg.core.dirs import get_paths_summary
         paths = get_paths_summary()
@@ -261,6 +282,7 @@ def runtime_fingerprint() -> Dict[str, Any]:
         "paths": paths,
         "borg_version": borg_version,
         "source_version": source_version,
+        "source_version_basis": source_version_basis,
         "version_matches_source": bool(source_version and borg_version == source_version),
         "modules": {
             "borg": _file_info(borg_file),

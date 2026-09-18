@@ -55,11 +55,15 @@ def test_self_service_ops_gate_script_and_artifacts_are_present(fresh_ops_clock)
     assert snapshot["checks"]["static_files"]["codeowners"]["contains_banned_owner"] is False
     assert snapshot["checks"]["static_files"]["watchdog_workflow"]["passed"] is True
     workflow_text = (ROOT / ".github" / "workflows" / "self-service-watchdog.yml").read_text(encoding="utf-8")
+    assert "BORG_GOVERNANCE_TOKEN: ${{ secrets.BORG_GOVERNANCE_TOKEN }}" in workflow_text
     assert "--max-snapshot-age-hours 24" in workflow_text
     assert "--max-snapshot-age-hours 168" not in workflow_text
     assert "python eval/run_pypi_fresh_install_canary.py" in workflow_text
     assert "python eval/cold_start_trust_gate.py" in workflow_text
     assert "python eval/release_governance_gate.py --output eval/release_governance_snapshot.json" in workflow_text
+    assert "rc_governance" not in workflow_text
+    governance_command = "python eval/release_governance_gate.py --output eval/release_governance_snapshot.json"
+    assert "set +e" not in workflow_text[max(0, workflow_text.index(governance_command) - 220):workflow_text.index(governance_command)]
     assert "python eval/real_user_rollout_gate.py" in workflow_text
     assert "python scripts/build_borg_proof_dashboard.py" in workflow_text
     assert workflow_text.index("python eval/run_pypi_fresh_install_canary.py") < workflow_text.index("python eval/cold_start_trust_gate.py")

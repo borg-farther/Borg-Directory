@@ -1,0 +1,239 @@
+{
+  "claim_boundary": "This pilot has a solve-rate ceiling: every arm solved every task, so it provides no evidence of solve-rate lift. Efficiency findings are directional secondary metrics only. Proven value requires a harder powered preregistered replication whose primary C2-C1 confidence interval excludes zero.",
+  "fingerprints": {
+    "dirty_diff_sha256": "005f4e1d80ca5c0c61b073f9c6aa68603b691c8aec88b0d54b767c9a629e3dd1",
+    "git_head": "3cc30d8da99480860e6c9e19ce4754f85ea3c3fc",
+    "immutable_runtime_snapshot_sha256": "fe6f3b0145e59bfe166a104c621a1033d19523c34acd6301e48755e987e3480b",
+    "source_version": "3.3.21",
+    "taskset_sha256": "205c9ebf2316093cbb3fd20e6609803ec03ece74133ead63b338df571a2c86c4",
+    "wheel_sha256": "f8dbb49b2ae6163f15f16db77374c1b76643366cf81def4a7a015f909e46f928"
+  },
+  "generated_at_utc": "2026-09-18T15:49:20.600706+00:00",
+  "harness_command_rejections": 0,
+  "model": {
+    "max_turns": 7,
+    "name": "gpt-5.6-sol",
+    "provider": "openai-codex",
+    "runner": "Hermes one-shot safe mode",
+    "toolsets": [
+      "terminal",
+      "file"
+    ]
+  },
+  "n_runs_expected": 24,
+  "n_runs_observed": 24,
+  "n_tasks": 8,
+  "negative_transfer_tasks": [],
+  "paired_contrasts": {
+    "C1_borg_empty_minus_C0_no_borg": {
+      "bootstrap_ci95": [
+        0.0,
+        0.0
+      ],
+      "discordant_left_fail_right_pass": 0,
+      "discordant_left_pass_right_fail": 0,
+      "mcnemar_exact_two_sided_p": 1.0,
+      "n_pairs": 8,
+      "risk_difference": 0.0
+    },
+    "C2_borg_seeded_minus_C0_no_borg": {
+      "bootstrap_ci95": [
+        0.0,
+        0.0
+      ],
+      "discordant_left_fail_right_pass": 0,
+      "discordant_left_pass_right_fail": 0,
+      "mcnemar_exact_two_sided_p": 1.0,
+      "n_pairs": 8,
+      "risk_difference": 0.0
+    },
+    "C2_borg_seeded_minus_C1_borg_empty": {
+      "bootstrap_ci95": [
+        0.0,
+        0.0
+      ],
+      "discordant_left_fail_right_pass": 0,
+      "discordant_left_pass_right_fail": 0,
+      "mcnemar_exact_two_sided_p": 1.0,
+      "n_pairs": 8,
+      "risk_difference": 0.0
+    }
+  },
+  "paired_efficiency": {
+    "C1_borg_empty_minus_C0_no_borg": {
+      "eligibility": "metric comparisons include only task pairs solved by both conditions",
+      "metrics": {
+        "api_calls": {
+          "left_lower_better": 7,
+          "median_paired_delta": 1.5,
+          "median_paired_delta_ci95": [
+            1.0,
+            3.0
+          ],
+          "median_paired_percent_change": 20.833333333333336,
+          "n_pairs": 8,
+          "right_lower_better": 0,
+          "tie": 1
+        },
+        "total_tokens": {
+          "left_lower_better": 8,
+          "median_paired_delta": 17620.0,
+          "median_paired_delta_ci95": [
+            6762.0,
+            25990.0
+          ],
+          "median_paired_percent_change": 24.997532666550107,
+          "n_pairs": 8,
+          "right_lower_better": 0,
+          "tie": 0
+        },
+        "wall_seconds": {
+          "left_lower_better": 5,
+          "median_paired_delta": 6.837500000000006,
+          "median_paired_delta_ci95": [
+            -14.085999999999999,
+            11.787999999999997
+          ],
+          "median_paired_percent_change": 12.99782514603041,
+          "n_pairs": 8,
+          "right_lower_better": 3,
+          "tie": 0
+        }
+      },
+      "n_both_solved_pairs": 8,
+      "n_complete_pairs": 8
+    },
+    "C2_borg_seeded_minus_C0_no_borg": {
+      "eligibility": "metric comparisons include only task pairs solved by both conditions",
+      "metrics": {
+        "api_calls": {
+          "left_lower_better": 6,
+          "median_paired_delta": 2.0,
+          "median_paired_delta_ci95": [
+            0.0,
+            4.0
+          ],
+          "median_paired_percent_change": 27.678571428571427,
+          "n_pairs": 8,
+          "right_lower_better": 1,
+          "tie": 1
+        },
+        "total_tokens": {
+          "left_lower_better": 7,
+          "median_paired_delta": 19129.0,
+          "median_paired_delta_ci95": [
+            1833.0,
+            40533.0
+          ],
+          "median_paired_percent_change": 30.107145336799938,
+          "n_pairs": 8,
+          "right_lower_better": 1,
+          "tie": 0
+        },
+        "wall_seconds": {
+          "left_lower_better": 5,
+          "median_paired_delta": 9.200500000000002,
+          "median_paired_delta_ci95": [
+            -12.464999999999996,
+            42.959
+          ],
+          "median_paired_percent_change": 15.657173874644815,
+          "n_pairs": 8,
+          "right_lower_better": 3,
+          "tie": 0
+        }
+      },
+      "n_both_solved_pairs": 8,
+      "n_complete_pairs": 8
+    },
+    "C2_borg_seeded_minus_C1_borg_empty": {
+      "eligibility": "metric comparisons include only task pairs solved by both conditions",
+      "metrics": {
+        "api_calls": {
+          "left_lower_better": 4,
+          "median_paired_delta": 1.0,
+          "median_paired_delta_ci95": [
+            -3.0,
+            3.0
+          ],
+          "median_paired_percent_change": 11.11111111111111,
+          "n_pairs": 8,
+          "right_lower_better": 2,
+          "tie": 2
+        },
+        "total_tokens": {
+          "left_lower_better": 5,
+          "median_paired_delta": 10892.5,
+          "median_paired_delta_ci95": [
+            -26892.0,
+            31701.0
+          ],
+          "median_paired_percent_change": 12.649628541182116,
+          "n_pairs": 8,
+          "right_lower_better": 3,
+          "tie": 0
+        },
+        "wall_seconds": {
+          "left_lower_better": 5,
+          "median_paired_delta": 8.959500000000002,
+          "median_paired_delta_ci95": [
+            -12.097999999999999,
+            51.341
+          ],
+          "median_paired_percent_change": 12.782541958656667,
+          "n_pairs": 8,
+          "right_lower_better": 3,
+          "tie": 0
+        }
+      },
+      "n_both_solved_pairs": 8,
+      "n_complete_pairs": 8
+    }
+  },
+  "per_condition": {
+    "C0_no_borg": {
+      "median_api_calls": 7.5,
+      "median_total_tokens": 67412.5,
+      "median_wall_seconds": 62.355999999999995,
+      "n": 8,
+      "solve_rate": 1.0,
+      "solved": 8,
+      "total_borg_invocations": 0,
+      "valid": 8
+    },
+    "C1_borg_empty": {
+      "median_api_calls": 9.0,
+      "median_total_tokens": 87987.0,
+      "median_wall_seconds": 69.7295,
+      "n": 8,
+      "solve_rate": 1.0,
+      "solved": 8,
+      "total_borg_invocations": 8,
+      "valid": 8
+    },
+    "C2_borg_seeded": {
+      "median_api_calls": 9.5,
+      "median_total_tokens": 87115.0,
+      "median_wall_seconds": 73.82849999999999,
+      "n": 8,
+      "solve_rate": 1.0,
+      "solved": 8,
+      "total_borg_invocations": 8,
+      "valid": 8
+    }
+  },
+  "preregistration": "eval/value_trial_taskset_v2.json",
+  "primary_contrast": {
+    "bootstrap_ci95": [
+      0.0,
+      0.0
+    ],
+    "discordant_left_fail_right_pass": 0,
+    "discordant_left_pass_right_fail": 0,
+    "mcnemar_exact_two_sided_p": 1.0,
+    "n_pairs": 8,
+    "risk_difference": 0.0
+  },
+  "schema_version": 2,
+  "trial_status": "completed"
+}
