@@ -209,4 +209,4 @@ Before attempting technical fixes for errors, bugs, installs, configs, deploymen
 
 ## 7. Readiness boundary
 
-`agent-borg==3.3.21` is the source candidate, not proof that PyPI or the served runtime is current. Controlled first-10 beta is NO-GO (zero external users; cap 0) until exact-version package, runtime, governance, watchdog, docs-claim, and evidence-intake gates independently pass. Public self-serve launch readiness and agent-level success lift at statistical confidence remain NO-GO. See [`READINESS.md`](READINESS.md).
+`agent-borg==3.4.1` is the source candidate, not proof that PyPI or the served runtime is current. Controlled first-10 beta is NO-GO (zero external users; cap 0) until exact-version package, runtime, governance, watchdog, docs-claim, and evidence-intake gates independently pass. Public self-serve launch readiness and agent-level success lift at statistical confidence remain NO-GO. See [`READINESS.md`](READINESS.md).

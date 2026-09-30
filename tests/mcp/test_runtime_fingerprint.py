@@ -14,10 +14,13 @@ def test_runtime_fingerprint_has_loaded_paths_and_hashes():
     assert fp["modules"]["borg.integrations.mcp_server"]["sha256"]
     assert fp["modules"]["borg.core.confidence_gate"]["path"]
     assert fp["modules"]["borg.core.confidence_gate"]["sha256"]
+    assert fp["modules"]["borg.core.epistemic_guardrail"]["path"]
+    assert fp["modules"]["borg.core.epistemic_guardrail"]["sha256"]
     assert fp["source_version"] == fp["borg_version"]
     assert fp["source_version_basis"] in {"pyproject", "installed_distribution"}
     assert fp["version_matches_source"] is True
     assert fp["loaded_function_hashes"]["borg.integrations.mcp_server.borg_observe"]["sha256"]
+    assert fp["loaded_function_hashes"]["borg.core.epistemic_guardrail.deliberate"]["sha256"]
 
 
 def test_runtime_fingerprint_confidence_gate_canary_passes():
@@ -35,6 +38,12 @@ def test_runtime_fingerprint_confidence_gate_canary_passes():
     assert observe["permission_prompt_specific"] is True
     assert "NO_CONFIDENT_MATCH" in observe["meta_excerpt"] or "NO CONFIDENT MATCH" in observe["meta_excerpt"]
     assert "npm" not in next((line for line in observe["permission_excerpt"].lower().splitlines() if line.startswith("action:")), "")
+    epistemic = fp["epistemic_guardrail_canary"]
+    assert epistemic["passed"] is True
+    assert epistemic["side_effect_safe"] is True
+    assert epistemic["mode_selected"] == "deep"
+    assert epistemic["decision"] == "block_pending_verification"
+    assert epistemic["unsupported_claims"] == ["release-safe"]
     assert fp["reload_status"] == "loaded_code_matches_source_behavior"
 
 
@@ -62,5 +71,7 @@ def test_mcp_tool_schema_and_dispatch_include_runtime_fingerprint():
     assert parsed["success"] is True
     assert parsed["confidence_gate_canary"]["passed"] is True
     assert parsed["observe_behavior_canary"]["passed"] is True
+    assert parsed["epistemic_guardrail_canary"]["passed"] is True
     assert parsed["version_matches_source"] is True
     assert parsed["modules"]["borg.integrations.mcp_server"]["path"]
+    assert parsed["modules"]["borg.core.epistemic_guardrail"]["path"]

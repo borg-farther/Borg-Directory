@@ -1,14 +1,14 @@
 # Borg channels and install methods
 
-**Version target:** `agent-borg==3.3.21`
-**Last updated:** 2026-06-11
+**Version target:** `agent-borg==3.4.1`
+**Last updated:** 2026-09-30
 **Scope:** what a GitHub/PyPI visitor can use today, what is only a local/dev path, and what must stay blocked until separate evidence exists.
 
 ## Executive truth
 
-The source release candidate is `agent-borg==3.3.21`; controlled first-10 beta is **NO-GO** with cap 0. A channel is current only when the live gate proves that its resolved package version equals the source version and that the fresh-install, stdio MCP, generated-rules, OpenClaw, served-runtime, governance, and watchdog checks pass. Static documentation never promotes a channel. The eventual first-user path is:
+The source release candidate is `agent-borg==3.4.1`; controlled first-10 beta is **NO-GO** with cap 0. A channel is current only when the live gate proves that its resolved package version equals the source version and that the fresh-install, stdio MCP, generated-rules, OpenClaw, served-runtime, governance, and watchdog checks pass. Static documentation never promotes a channel. The eventual first-user path is:
 
-1. `pipx install agent-borg==3.3.21` only after the exact version exists on PyPI and its gate is green
+1. `pipx install agent-borg==3.4.1` only after the exact version exists on PyPI and its gate is green
 2. `borg rescue "ModuleNotFoundError: No module named flask" --short`
 3. for MCP clients, configure local stdio command `borg-mcp`
 
@@ -18,8 +18,8 @@ Do not invite controlled first-10 users until every release-control gate is gree
 
 | Channel / mix | User command or config | Gate | Current claim |
 |---|---|---:|---|
-| PyPI CLI via pipx | `pipx install agent-borg==3.3.21`; `borg rescue ...` | `eval/run_pypi_fresh_install_canary.py --version 3.3.21` | BLOCKED until that exact immutable version exists on PyPI and the full canary passes; no first-10 invite |
-| PyPI in active Python env | `python -m pip install agent-borg==3.3.21` | same PyPI canary plus `borg-doctor --json` | BLOCKED until exact-version package/runtime proof is green |
+| PyPI CLI via pipx | `pipx install agent-borg==3.4.1`; `borg rescue ...` | `eval/run_pypi_fresh_install_canary.py --version 3.4.1` | BLOCKED until that exact immutable version exists on PyPI and the full canary passes; no first-10 invite |
+| PyPI in active Python env | `python -m pip install agent-borg==3.4.1` | same PyPI canary plus `borg-doctor --json` | BLOCKED until exact-version package/runtime proof is green |
 | GitHub direct install | `python -m pip install git+https://github.com/borg-farther/Borg-Directory.git@main` | channel smoke / source local gate | GO for contributors only after `origin/main` has the release commit and CI is green; not public-package proof |
 | Local clone/editable | `git clone ...`; `python -m pip install -e .` | `eval/run_first_user_release_gate.py` and targeted first-user tests | GO for contributors/dev verification, not normal users |
 | CLI rescue/search/try | `borg rescue`, `borg search`, `borg try` | first-user release gate + exact-version PyPI canary | Source/local path is testable; production channel remains blocked until the PyPI gate agrees |

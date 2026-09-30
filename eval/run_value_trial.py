@@ -651,9 +651,9 @@ def main() -> int:
             raise SystemExit(f"preflight failed for {task['id']}: {row}")
     write_json(out / "preflight.json", preflight)
 
-    wheel = ROOT / "dist" / "agent_borg-3.3.21-py3-none-any.whl"
+    wheel = ROOT / "dist" / "agent_borg-3.4.1-py3-none-any.whl"
     fingerprints = {
-        "source_version": "3.3.21",
+        "source_version": "3.4.1",
         "git_head": subprocess.check_output(["git", "rev-parse", "HEAD"], cwd=ROOT, text=True).strip(),
         "dirty_diff_sha256": tracked_diff_hash(),
         "immutable_runtime_snapshot_sha256": tree_hash(snapshot_root),

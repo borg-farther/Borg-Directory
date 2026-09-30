@@ -31,7 +31,7 @@ from eval import release_governance_gate, self_service_ops_gate, served_runtime_
 
 SNAPSHOT = ROOT / "eval" / "public_self_serve_launch_gate_snapshot.json"
 REPORT = ROOT / "docs" / "PUBLIC_SELF_SERVE_LAUNCH_GO_NO_GO.md"
-EXPECTED_PYPI_SUMMARY = "Failure memory CLI and MCP server for AI coding agents"
+EXPECTED_PYPI_SUMMARY = "Failure memory and epistemic guardrails for AI agents"
 REQUIRED_PYPI_KEYWORD = "failure-memory"
 BANNED_PYPI_KEYWORDS = {"collective-memory"}
 BANNED_PYPI_COPY = [
@@ -526,7 +526,19 @@ def pypi_latest_check(expected_version: str, *, fetch_network: bool = True, pypi
     stale_copy = [snippet for snippet in BANNED_PYPI_COPY if snippet in summary]
     keyword_missing = REQUIRED_PYPI_KEYWORD not in keywords
     banned_keywords_present = sorted(keywords & BANNED_PYPI_KEYWORDS)
-    source_upload_alignment = source_upload_alignment_check(pypi_data)
+    if latest == expected_version:
+        source_upload_alignment = source_upload_alignment_check(pypi_data)
+    else:
+        source_upload_alignment = {
+            "passed": False,
+            "failure_kind": "latest_version_mismatch",
+            "expected_version": expected_version,
+            "latest_version": latest,
+            "detail": (
+                f"PyPI latest is agent-borg=={latest}; expected immutable candidate "
+                f"agent-borg=={expected_version}."
+            ),
+        }
     passed = (
         latest == expected_version
         and not url_missing
@@ -1179,7 +1191,12 @@ def compile_gate(
         blockers.append("first-user local release gate snapshot is missing or failing")
     if not pypi_latest["passed"]:
         alignment = pypi_latest.get("source_upload_alignment") or {}
-        if pypi_latest.get("description_stale_copy"):
+        if alignment.get("failure_kind") == "latest_version_mismatch":
+            blockers.append(
+                f"PyPI latest is agent-borg=={pypi_latest.get('latest_version')}; "
+                f"expected agent-borg=={pypi_latest.get('expected_version')}"
+            )
+        elif pypi_latest.get("description_stale_copy"):
             blockers.append("PyPI project description/long-description contains stale release-status copy")
         elif alignment.get("failure_kind") == "same_version_pypi_upload_predates_source_revision":
             blockers.append("PyPI latest metadata is stale: same-version release upload predates current source revision")

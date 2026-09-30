@@ -1,6 +1,15 @@
 # Changelog
 
-## 3.3.21 — unreleased (production-hardening candidate)
+## 3.4.1 — unreleased (epistemic-guardrail release candidate)
+
+- Product boundary: keeps the host model as the thinker while Borg acts as memory with standards—retrieved memory is advisory, never authorization.
+- Epistemic guardrail: adds selective standard/deep deliberation, evidence tiers, unsupported-claim and contradiction detection, prompt-injection suppression, explicit stop conditions, and complete verification plans.
+- Public surfaces: adds the shared `borg.deliberate(...)` Python API, `borg deliberate` CLI command, and `borg_deliberate` stdio MCP tool with intervention-linked outcome capture.
+- Fail-closed review: consequential claims without structured evidence remain blocked pending verification; retrieval degradation and no-match states are explicit rather than presented as confidence.
+- Evaluation and documentation: adds a frozen deterministic contract corpus, adversarial regression coverage, architecture/security/usage documentation, and claim guards that preserve the external-evidence boundary.
+- Release boundary: this source candidate is not a PyPI or served-runtime claim; controlled first-10 and broad public self-service remain gated independently.
+
+## 3.3.21 — 2026-09-18
 
 - Agent host quality: added a machine-readable minimum capable agent-stack contract, CLI/MCP surfaces, host-priming integration, documentation, and fixed eval taskset.
 - Runtime truth: installed wheels now fingerprint their immutable distribution metadata instead of falsely reporting `reload_or_patch_required` when no source tree exists; the PyPI canary fails closed on contradictory fingerprints.

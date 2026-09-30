@@ -2,7 +2,7 @@
 
 ## Current verdict
 
-- Controlled first-10 beta: **NO-GO right now** (zero external users; cap 0). The source line is `agent-borg==3.3.21`, but source, PyPI, served-runtime, governance, watchdog, docs-claim, and evidence-intake gates must independently agree before inviting controlled testers. Version-string equality alone is not release proof. External first-10 row count is still zero.
+- Controlled first-10 beta: **NO-GO right now** (zero external users; cap 0). The source line is `agent-borg==3.4.1`, but source, PyPI, served-runtime, governance, watchdog, docs-claim, and evidence-intake gates must independently agree before inviting controlled testers. Version-string equality alone is not release proof. External first-10 row count is still zero.
 - Public waitlist / narrow beta: **0 testers may proceed** until those controlled-beta infrastructure and guardrail gates are green; then the first-10 evidence contract caps the cohort at 10.
 - Public self-serve launch: **NO-GO until first-10 external-user evidence passes** (10 verified external users, >=8 installs, >=6 useful rescues, 0 critical incidents).
 
@@ -22,7 +22,7 @@ fail the release-governance gate closed rather than report a false release GO.
 - First-10 contract exists: [`FIRST_10_BETA_READINESS.md`](FIRST_10_BETA_READINESS.md).
 - Security/privacy/prompt-injection surface has a baseline and CI gates.
 - GitHub CI/security gates are part of the release proof chain. PR branches still need their own green checks and post-merge `main` proof refresh before branch-specific source changes are claimed on `main`.
-- The local first-user gate covers `agent-borg==3.3.21`, including generated rules, OpenClaw export, stdio MCP, CLI, and Python API. Local proof does not substitute for an exact-version PyPI fresh-install canary or served-runtime fingerprint. First-10 external-user evidence remains mandatory after infrastructure gates turn green.
+- The local first-user gate covers `agent-borg==3.4.1`, including generated rules, OpenClaw export, stdio MCP, CLI, and Python API. Local proof does not substitute for an exact-version PyPI fresh-install canary or served-runtime fingerprint. First-10 external-user evidence remains mandatory after infrastructure gates turn green.
 
 ## What is not proven
 

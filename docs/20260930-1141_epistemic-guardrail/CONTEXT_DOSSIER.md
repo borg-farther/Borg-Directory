@@ -3,7 +3,7 @@
 > **Historical/internal — not current product documentation.** This is a dated research dossier; use `docs/EPISTEMIC_GUARDRAIL.md` for the current contract.
 
 Captured: 2026-09-30T11:41:05Z
-Branch: `feature/epistemic-guardrail-3.4.0`
+Branch: `feature/epistemic-guardrail-3.4.1`
 Base: `4832dfe9af614c722cb0ea80f7628679c893bd35` (`agent-borg` 3.3.21 release commit)
 
 ## 1. Product question

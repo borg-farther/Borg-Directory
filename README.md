@@ -24,7 +24,7 @@ Borg does **not** request, expose, or store private chain-of-thought. Memory is 
 - **MCP server command:** `borg-mcp`
 - **Canonical repo:** https://github.com/borg-farther/Borg-Directory
 
-**Status:** the source line is `agent-borg==3.3.21`; the epistemic-guardrail work is unreleased until the full regression, build, fresh-install, governance, and exact-version approval gates pass. A matching version string alone does not prove PyPI or a served runtime is current; the live PyPI fresh-install, runtime-fingerprint, governance, watchdog, and source-revision gates decide that. Controlled first-10 beta is **NO-GO** with a real-user cap of 0 until those gates are green and consented evidence intake is ready. Broad public self-serve launch, 100-user rollout, served/remote MCP, and measured external lift are **not claimed** until row-derived external-user evidence passes.
+**Status:** the source line is `agent-borg==3.4.1`; this release candidate is not available from PyPI until the protected PR, merge, tag, CI, and explicit production-upload gates pass. A matching version string alone does not prove PyPI or a served runtime is current; the live PyPI fresh-install, runtime-fingerprint, governance, watchdog, and source-revision gates decide that. Controlled first-10 beta is **NO-GO** with a real-user cap of 0 until the release controls are green and consented evidence intake is ready. Broad public self-serve launch, 100-user rollout, served/remote MCP, and measured external lift are **not claimed** until row-derived external-user evidence passes.
 
 ## Try Borg in 60 seconds
 
@@ -393,7 +393,7 @@ Why: agents often do not discover optional tools unless explicitly primed.
 
 ## 5. What is ready now
 
-`agent-borg==3.3.21` is the source release candidate. It is **not** claimed current on PyPI or in the served runtime until exact-version fresh-install, runtime-fingerprint, governance, watchdog, docs-claim, and source-revision gates pass. Static version strings are not proof.
+`agent-borg==3.4.1` is the source release candidate. It is **not** claimed current on PyPI or in the served runtime until exact-version fresh-install, runtime-fingerprint, governance, watchdog, docs-claim, and source-revision gates pass. Static version strings are not proof.
 
 - Install, CLI, Python API, generated-rules/OpenClaw export, and stdio MCP entrypoints are exercised by the local/source first-user gate; exact-version PyPI proof remains a separate gate.
 - First-user rescue path returns ACTION / STOP / VERIFY or `NO_CONFIDENT_MATCH`.

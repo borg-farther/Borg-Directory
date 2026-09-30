@@ -746,6 +746,9 @@ def test_pypi_latest_check_requires_source_version_and_urls(monkeypatch) -> None
         pypi_data={"package": "agent-borg", "version": "9.9.8", "project_urls": {}},
     )
     assert stale["passed"] is False
+    assert stale["source_upload_alignment"]["failure_kind"] == "latest_version_mismatch"
+    assert stale["source_upload_alignment"]["latest_version"] == "9.9.8"
+    assert stale["source_upload_alignment"]["expected_version"] == "9.9.9"
 
 
 def test_pypi_latest_check_fails_when_description_contains_stale_release_status(monkeypatch) -> None:
@@ -1512,11 +1515,13 @@ def test_pypi_mcp_canary_accepts_installed_package_runtime_fingerprint(monkeypat
         "modules": {
             "borg": {"path": str(install_root / "borg" / "__init__.py")},
             "borg.core.confidence_gate": {"path": str(install_root / "borg" / "core" / "confidence_gate.py")},
+            "borg.core.epistemic_guardrail": {"path": str(install_root / "borg" / "core" / "epistemic_guardrail.py")},
             "borg.core.runtime_fingerprint": {"path": str(install_root / "borg" / "core" / "runtime_fingerprint.py")},
             "borg.integrations.mcp_server": {"path": str(install_root / "borg" / "integrations" / "mcp_server.py")},
         },
         "loaded_function_hashes": {
             "borg.core.confidence_gate.trace_match_is_confident": {"sha256": "abc"},
+            "borg.core.epistemic_guardrail.deliberate": {"sha256": "ghi"},
             "borg.integrations.mcp_server.borg_observe": {"sha256": "def"},
         },
         "observe_behavior_canary": {
@@ -1524,12 +1529,22 @@ def test_pypi_mcp_canary_accepts_installed_package_runtime_fingerprint(monkeypat
             "meta_prompt_failed_closed": True,
         },
         "confidence_gate_canary": {"passed": True},
+        "epistemic_guardrail_canary": {"passed": True},
+    }
+    deliberate_payload = {
+        "success": True,
+        "epistemic_packet": {
+            "mode_selected": "deep",
+            "decision": "block_pending_verification",
+            "unsupported_claims": ["release-safe"],
+        },
     }
     responses = [
         {"jsonrpc": "2.0", "id": 1, "result": {"serverInfo": {"name": "borg-mcp-server", "version": "9.9.9"}}},
-        {"jsonrpc": "2.0", "id": 2, "result": {"tools": [{"name": "error_lookup"}, {"name": "borg_runtime_fingerprint"}, {"name": "borg_observe"}]}},
+        {"jsonrpc": "2.0", "id": 2, "result": {"tools": [{"name": "error_lookup"}, {"name": "borg_runtime_fingerprint"}, {"name": "borg_observe"}, {"name": "borg_deliberate"}]}},
         {"jsonrpc": "2.0", "id": 3, "result": {"content": [{"text": "ACTION\nSTOP\nVERIFY"}]}},
         {"jsonrpc": "2.0", "id": 4, "result": {"content": [{"text": json.dumps(fingerprint_payload)}]}},
+        {"jsonrpc": "2.0", "id": 5, "result": {"content": [{"text": json.dumps(deliberate_payload)}]}},
     ]
     stdout = "\n".join(json.dumps(response) for response in responses) + "\n"
 
@@ -1542,6 +1557,7 @@ def test_pypi_mcp_canary_accepts_installed_package_runtime_fingerprint(monkeypat
 
     assert result["passed"] is True
     assert result["fingerprint_signal"] is True
+    assert result["deliberate_signal"] is True
     assert result["server_info"] == {"name": "borg-mcp-server", "version": "9.9.9"}
     assert result["fingerprint_summary"]["borg_version"] == "9.9.9"
     assert result["fingerprint_summary"]["source_version"] == "9.9.9"
@@ -1550,7 +1566,7 @@ def test_pypi_mcp_canary_accepts_installed_package_runtime_fingerprint(monkeypat
     assert result["fingerprint_summary"]["reload_status"] == "loaded_code_matches_source_behavior"
 
     fingerprint_payload["version_matches_source"] = False
-    responses[-1] = {"jsonrpc": "2.0", "id": 4, "result": {"content": [{"text": json.dumps(fingerprint_payload)}]}}
+    responses[3] = {"jsonrpc": "2.0", "id": 4, "result": {"content": [{"text": json.dumps(fingerprint_payload)}]}}
     stdout = "\n".join(json.dumps(response) for response in responses) + "\n"
 
     mismatch = canary.mcp_stdio_canary(borg_mcp, {}, "9.9.9")

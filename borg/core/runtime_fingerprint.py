@@ -248,11 +248,57 @@ def _observe_behavior_canary() -> Dict[str, Any]:
         return {"passed": False, "error": str(exc), "type": type(exc).__name__}
 
 
+def _epistemic_guardrail_canary() -> Dict[str, Any]:
+    """Prove the loaded guardrail fails closed for an unsupported release claim.
+
+    An explicit empty memory set keeps this deterministic and free of retrieval,
+    persistence, network, or model side effects.
+    """
+    try:
+        from borg.core.epistemic_guardrail import deliberate
+
+        packet = deliberate(
+            "approve production release",
+            mode="auto",
+            stage="review",
+            risk_level="high",
+            claims=[
+                {
+                    "id": "release-safe",
+                    "text": "The production release is safe",
+                    "material": True,
+                }
+            ],
+            memory_items=[],
+        )
+        categories = {step.get("category") for step in packet.verification_plan}
+        required_categories = {"scope", "independent_evidence", "decisive_test", "disconfirm"}
+        passed = (
+            packet.mode_selected == "deep"
+            and packet.decision == "block_pending_verification"
+            and packet.memory_status == "no_confident_match"
+            and list(packet.unsupported_claims) == ["release-safe"]
+            and required_categories.issubset(categories)
+        )
+        return {
+            "passed": passed,
+            "side_effect_safe": True,
+            "mode_selected": packet.mode_selected,
+            "decision": packet.decision,
+            "memory_status": packet.memory_status,
+            "unsupported_claims": list(packet.unsupported_claims),
+            "verification_categories": sorted(str(category) for category in categories if category),
+        }
+    except Exception as exc:
+        return {"passed": False, "error": str(exc), "type": type(exc).__name__}
+
+
 def runtime_fingerprint() -> Dict[str, Any]:
     """Return a machine-readable fingerprint of the loaded Borg runtime."""
     borg_file = _module_file("borg")
     mcp_file = _module_file("borg.integrations.mcp_server")
     confidence_file = _module_file("borg.core.confidence_gate")
+    epistemic_file = _module_file("borg.core.epistemic_guardrail")
     runtime_file = _module_file("borg.core.runtime_fingerprint")
 
     try:
@@ -263,6 +309,7 @@ def runtime_fingerprint() -> Dict[str, Any]:
 
     canary = _confidence_gate_canary()
     observe_canary = _observe_behavior_canary()
+    epistemic_canary = _epistemic_guardrail_canary()
     source_version, source_version_basis = _version_probe()
     try:
         from borg.core.dirs import get_paths_summary
@@ -288,6 +335,7 @@ def runtime_fingerprint() -> Dict[str, Any]:
             "borg": _file_info(borg_file),
             "borg.integrations.mcp_server": _file_info(mcp_file),
             "borg.core.confidence_gate": _file_info(confidence_file),
+            "borg.core.epistemic_guardrail": _file_info(epistemic_file),
             "borg.core.runtime_fingerprint": _file_info(runtime_file),
         },
         "sys_path_head": sys.path[:8],
@@ -295,10 +343,12 @@ def runtime_fingerprint() -> Dict[str, Any]:
             "borg.integrations.mcp_server.borg_observe": _function_code_hash("borg.integrations.mcp_server", "borg_observe"),
             "borg.integrations.mcp_server._detect_technology": _function_code_hash("borg.integrations.mcp_server", "_detect_technology"),
             "borg.core.confidence_gate.trace_match_is_confident": _function_code_hash("borg.core.confidence_gate", "trace_match_is_confident"),
+            "borg.core.epistemic_guardrail.deliberate": _function_code_hash("borg.core.epistemic_guardrail", "deliberate"),
         },
         "confidence_gate_canary": canary,
         "observe_behavior_canary": observe_canary,
-        "reload_status": "loaded_code_matches_source_behavior" if canary.get("passed") and observe_canary.get("passed") and bool(source_version and borg_version == source_version) else "reload_or_patch_required",
+        "epistemic_guardrail_canary": epistemic_canary,
+        "reload_status": "loaded_code_matches_source_behavior" if canary.get("passed") and observe_canary.get("passed") and epistemic_canary.get("passed") and bool(source_version and borg_version == source_version) else "reload_or_patch_required",
     }
 
 

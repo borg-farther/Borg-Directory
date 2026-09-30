@@ -66,7 +66,7 @@ They are retained for provenance, but they are not current product claims or fir
 
 ## Current truth
 
-- Controlled first-10 public-package beta: NO-GO right now (zero external users; cap 0). `agent-borg==3.3.21` is the source candidate; exact-version package, served-runtime, governance, watchdog, docs-claim, and evidence-intake gates must independently pass before any invite.
+- Controlled first-10 public-package beta: NO-GO right now (zero external users; cap 0). `agent-borg==3.4.1` is the source candidate; exact-version package, served-runtime, governance, watchdog, docs-claim, and evidence-intake gates must independently pass before any invite.
 - Public self-serve launch: not yet; requires real external-user evidence.
 - Agent-level success lift at statistical confidence: not yet proven.
 - Internal max-value collective intelligence loop primitives: GO; external lift still requires first-10 rows.

@@ -19,7 +19,7 @@ Consequential-work path:
 3. Bind the observed result to the returned intervention with `borg_record_outcome`.
 
 Current rollout boundary:
-- Controlled first-10 public-package beta is closed right now (zero external users; cap 0). The source line is agent-borg==3.3.21. Exact-version PyPI, served-runtime, release-governance, ops/watchdog, docs-claim, and evidence-intake gates must independently agree before any invite; version strings or static prose are not proof.
+- Controlled first-10 public-package beta is closed right now (zero external users; cap 0). The source line is agent-borg==3.4.1. Exact-version PyPI, served-runtime, release-governance, ops/watchdog, docs-claim, and evidence-intake gates must independently agree before any invite; version strings or static prose are not proof.
 - Do not claim public self-serve launch, 100 real users, served remote MCP, or measured external lift until row-derived external-user evidence passes.
 
 Useful docs:

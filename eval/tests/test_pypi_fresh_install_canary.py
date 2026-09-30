@@ -6,6 +6,7 @@ from eval.run_pypi_fresh_install_canary import artifact_module_isolation
 REQUIRED_MODULES = {
     "borg",
     "borg.core.confidence_gate",
+    "borg.core.epistemic_guardrail",
     "borg.core.runtime_fingerprint",
     "borg.integrations.mcp_server",
 }

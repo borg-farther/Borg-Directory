@@ -26,7 +26,7 @@ from typing import Any
 
 ROOT = Path(__file__).resolve().parents[1]
 SNAPSHOT = ROOT / "eval" / "pypi_fresh_install_snapshot.json"
-EXPECTED_SUMMARY = "Failure memory CLI and MCP server for AI coding agents"
+EXPECTED_SUMMARY = "Failure memory and epistemic guardrails for AI agents"
 BANNED_PUBLIC_COPY = [
     "Collective memory MCP server",
     "Semantic reasoning cache",
@@ -83,6 +83,7 @@ def artifact_module_isolation(fingerprint: dict[str, Any], borg_mcp: Path) -> di
     required = {
         "borg",
         "borg.core.confidence_gate",
+        "borg.core.epistemic_guardrail",
         "borg.core.runtime_fingerprint",
         "borg.integrations.mcp_server",
     }
@@ -126,6 +127,27 @@ def mcp_stdio_canary(borg_mcp: Path, env: dict[str, str], expected_version: str)
             "method": "tools/call",
             "params": {"name": "borg_runtime_fingerprint", "arguments": {}},
         },
+        {
+            "jsonrpc": "2.0",
+            "id": 5,
+            "method": "tools/call",
+            "params": {
+                "name": "borg_deliberate",
+                "arguments": {
+                    "task": "approve production release",
+                    "stage": "review",
+                    "risk_level": "high",
+                    "claims": [
+                        {
+                            "id": "release-safe",
+                            "text": "The production release is safe",
+                            "material": True,
+                        }
+                    ],
+                    "record_intervention": False,
+                },
+            },
+        },
     ]
     input_text = "\n".join(json.dumps(req) for req in requests) + "\n"
     result = run_cmd("mcp_stdio_jsonrpc", [str(borg_mcp)], env=env, timeout=180, input_text=input_text)
@@ -164,10 +186,21 @@ def mcp_stdio_canary(borg_mcp: Path, env: dict[str, str], expected_version: str)
     except json.JSONDecodeError:
         fingerprint_payload = {}
 
+    deliberate_payload: dict[str, Any] = {}
+    deliberate_resp = by_id.get(5) or {}
+    try:
+        deliberate_text = deliberate_resp["result"]["content"][0]["text"]
+        decoded = json.loads(deliberate_text)
+        if isinstance(decoded, dict):
+            deliberate_payload = decoded
+    except (KeyError, IndexError, TypeError, json.JSONDecodeError):
+        deliberate_payload = {}
+
     server_info = ((by_id.get(1) or {}).get("result") or {}).get("serverInfo") or {}
     loaded_hashes = fingerprint_payload.get("loaded_function_hashes") or {}
     observe_canary = fingerprint_payload.get("observe_behavior_canary") or {}
     confidence_canary = fingerprint_payload.get("confidence_gate_canary") or {}
+    epistemic_canary = fingerprint_payload.get("epistemic_guardrail_canary") or {}
     artifact_isolation = artifact_module_isolation(fingerprint_payload, borg_mcp)
     fingerprint_summary = {
         "success": fingerprint_payload.get("success"),
@@ -181,12 +214,21 @@ def mcp_stdio_canary(borg_mcp: Path, env: dict[str, str], expected_version: str)
         "loaded_function_hashes_present": sorted(
             key for key in [
                 "borg.core.confidence_gate.trace_match_is_confident",
+                "borg.core.epistemic_guardrail.deliberate",
                 "borg.integrations.mcp_server.borg_observe",
             ]
             if loaded_hashes.get(key)
         ),
         "artifact_isolation": artifact_isolation,
+        "epistemic_guardrail_canary_passed": epistemic_canary.get("passed"),
     }
+    packet = deliberate_payload.get("epistemic_packet") or {}
+    deliberate_signal = (
+        deliberate_payload.get("success") is True
+        and packet.get("mode_selected") == "deep"
+        and packet.get("decision") == "block_pending_verification"
+        and packet.get("unsupported_claims") == ["release-safe"]
+    )
     fingerprint_signal = (
         fingerprint_payload.get("success") is True
         and fingerprint_payload.get("borg_version") == expected_version
@@ -195,23 +237,27 @@ def mcp_stdio_canary(borg_mcp: Path, env: dict[str, str], expected_version: str)
         and fingerprint_payload.get("version_matches_source") is True
         and fingerprint_payload.get("reload_status") == "loaded_code_matches_source_behavior"
         and bool(loaded_hashes.get("borg.core.confidence_gate.trace_match_is_confident"))
+        and bool(loaded_hashes.get("borg.core.epistemic_guardrail.deliberate"))
         and bool(loaded_hashes.get("borg.integrations.mcp_server.borg_observe"))
         and observe_canary.get("passed") is True
         and observe_canary.get("meta_prompt_failed_closed") is True
         and confidence_canary.get("passed") is True
+        and epistemic_canary.get("passed") is True
         and artifact_isolation["passed"] is True
     )
     passed = (
         result.passed
         and not parse_errors
-        and set(by_id) >= {1, 2, 3, 4}
+        and set(by_id) >= {1, 2, 3, 4, 5}
         and server_info.get("name") == "borg-mcp-server"
         and server_info.get("version") == expected_version
         and "error_lookup" in tool_names
+        and "borg_deliberate" in tool_names
         and "ACTION" in alias_text
         and "STOP" in alias_text
         and "VERIFY" in alias_text
         and fingerprint_signal
+        and deliberate_signal
     )
     return {
         "passed": passed,
@@ -219,12 +265,18 @@ def mcp_stdio_canary(borg_mcp: Path, env: dict[str, str], expected_version: str)
         "response_count": len(responses),
         "parse_errors": parse_errors,
         "tool_count": len(tool_names),
-        "required_tools_present": sorted(set(tool_names) & {"error_lookup", "borg_runtime_fingerprint", "borg_rescue", "borg_observe"}),
+        "required_tools_present": sorted(set(tool_names) & {"error_lookup", "borg_runtime_fingerprint", "borg_rescue", "borg_observe", "borg_deliberate"}),
         "server_info": server_info,
         "expected_version": expected_version,
         "alias_value_signal": all(token in alias_text for token in ["ACTION", "STOP", "VERIFY"]),
         "fingerprint_signal": fingerprint_signal,
         "fingerprint_summary": fingerprint_summary,
+        "deliberate_signal": deliberate_signal,
+        "deliberate_summary": {
+            "mode_selected": packet.get("mode_selected"),
+            "decision": packet.get("decision"),
+            "unsupported_claims": packet.get("unsupported_claims"),
+        },
     }
 
 
@@ -281,6 +333,11 @@ def run_canary(version: str) -> dict[str, Any]:
             ("borg_version", [str(borg), "--version"], [version]),
             ("borg_help", [str(borg), "--help"], ["failure memory for AI coding agents", "borg rescue", "borg start"]),
             ("borg_rescue_json", [str(borg), "rescue", "ModuleNotFoundError: No module named flask", "--json"], ["agent_instruction", "human_receipt", "ACTION", "STOP", "VERIFY"]),
+            (
+                "borg_deliberate_json",
+                [str(borg), "deliberate", "plan a production database migration", "--no-record", "--json"],
+                ['"mode_selected": "deep"', '"verification_plan"', '"memory_status"'],
+            ),
             ("borg_doctor_json", [str(doctor), "--json"], ["runtime", "checks"]),
             (
                 "borg_generate_systematic_debugging_rules",
@@ -294,8 +351,8 @@ def run_canary(version: str) -> dict[str, Any]:
             ),
             (
                 "python_api_check",
-                [str(py), "-c", "import borg, json; r=borg.check('ModuleNotFoundError: No module named flask', top_k=1); print(json.dumps({'version': borg.__version__, 'result_type': type(r).__name__, 'count': len(r), 'file': borg.__file__}))"],
-                [version, '"result_type": "list"'],
+                [str(py), "-c", "import borg, json; r=borg.check('ModuleNotFoundError: No module named flask', top_k=1); p=borg.deliberate('plan a production database migration', mode='auto'); print(json.dumps({'version': borg.__version__, 'result_type': type(r).__name__, 'count': len(r), 'file': borg.__file__, 'deliberate_mode': p.mode_selected, 'deliberate_decision': p.decision}))"],
+                [version, '"result_type": "list"', '"deliberate_mode": "deep"'],
             ),
         ]
         if install_ok:
