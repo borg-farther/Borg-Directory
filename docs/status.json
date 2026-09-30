@@ -4,7 +4,7 @@
       "No Borg analytics export proving active contributors or consumers was found.",
       "No first-10-user scoreboard with real outcomes exists yet.",
       "Ops readiness/watchdog plus served-runtime and release-governance gates must stay green; any P0/P1 bad-answer, privacy, support, stale-proof, stale-runtime, or branch-protection failure pauses controlled beta invites.",
-      "100-real-user gate remains blocked: ['PyPI latest/fresh-install package evidence is not green: same-version PyPI upload predates current source revision', 'PyPI latest/fresh-install package evidence is not green: fresh install + MCP stdio canary is not green', \"served runtime borg_version '3.3.18' != source version '3.3.21'\", \"served runtime source_version '3.3.18' != source version '3.3.21'\", 'first-10 external-user evidence has not passed: verified=0/10, real_users=0/10, installs=0/8, useful=0/6, critical_incidents=0/0']",
+      "100-real-user gate remains blocked: ['PyPI latest/fresh-install package evidence is not green: latest metadata does not match source version', 'PyPI latest/fresh-install package evidence is not green: fresh install + MCP stdio canary is not green', \"served runtime borg_version '3.3.18' != source version '3.4.1'\", \"served runtime source_version '3.3.18' != source version '3.4.1'\", 'first-10 external-user evidence has not passed: verified=0/10, real_users=0/10, installs=0/8, useful=0/6, critical_incidents=0/0']",
       "Served/runtime freshness must be proven from eval/served_runtime_fingerprint_snapshot.json; source/fresh-process green is not live cutover proof.",
       "Release governance must be proven from eval/release_governance_snapshot.json; missing/unprotected branch details block release readiness."
     ],
@@ -70,10 +70,10 @@
   "self_service_ops_gate": "PASS",
   "served_runtime_freshness_gate": "FAIL",
   "source": "docs/public/status.json",
-  "source_revision": "082f206051f223a9aba70473573c61d73a8b59f8+dirty",
-  "source_version_consistency": "pyproject=3.3.21 runtime=3.3.21",
+  "source_revision": "5631a6cdd1d3887e87b4313fbc5d4fbc9f1d8c7c+dirty",
+  "source_version_consistency": "pyproject=3.4.1 runtime=3.4.1",
   "state": "NO-GO public self-serve; source/local release-candidate only",
   "status": "NO-GO",
-  "updated_at": "2026-09-18T16:31:56Z",
+  "updated_at": "2026-09-30T14:51:56Z",
   "verified_external_users": 0
 }
