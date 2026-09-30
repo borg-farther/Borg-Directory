@@ -37,12 +37,12 @@
     "exists": true,
     "failed_count": 0,
     "failures": [],
-    "generated_at_utc": "2026-09-30T14:43:42Z",
+    "generated_at_utc": "2026-09-30T15:10:10Z",
     "passed": true,
-    "passed_count": 30
+    "passed_count": 28
   },
   "gate_type": "real_user_rollout",
-  "generated_at_utc": "2026-09-30T14:51:53.897170+00:00",
+  "generated_at_utc": "2026-09-30T15:12:40.488340+00:00",
   "important_distinction": "load/readiness snapshots are synthetic/logical users; this gate controls real external-user rollout",
   "infrastructure_ready_for_100": false,
   "load_gates": {
@@ -92,12 +92,12 @@
         "pip_install_agent_borg"
       ],
       "freshness": {
-        "age_hours": 0.12548230527777776,
+        "age_hours": 0.014216018888888888,
         "failure_kind": null,
         "max_age_hours": 24.0,
         "passed": true
       },
-      "generated_at_utc": "2026-09-30T14:44:21Z",
+      "generated_at_utc": "2026-09-30T15:11:48Z",
       "mcp_server_info": null,
       "mcp_stdio_canary_passed": false,
       "passed": false,
@@ -255,10 +255,10 @@
   },
   "self_service_ops_gate": {
     "blockers": [],
-    "generated_at_utc": "2026-09-30T14:51:53.896801+00:00",
+    "generated_at_utc": "2026-09-30T15:12:40.487903+00:00",
     "ops_readiness_watchdog": {
       "blockers": [],
-      "generated_at_utc": "2026-09-30T14:51:36.225383+00:00",
+      "generated_at_utc": "2026-09-30T15:12:20.774991+00:00",
       "passed": true,
       "snapshot": "eval/ops_readiness_watchdog_snapshot.json",
       "truth_policy": "Watchdog passing means controlled first-10 ops proof is fresh and internally consistent. Broad public self-serve still requires row-derived first-10 external-user evidence."

@@ -12,7 +12,7 @@
       "exists": true,
       "failed_count": 0,
       "failures": [],
-      "generated_at_utc": "2026-09-30T14:44:11.046123+00:00",
+      "generated_at_utc": "2026-09-30T15:11:21.289434+00:00",
       "has_bad_answer_feedback_path": true,
       "missing_required_checks": [],
       "observed_check_count": 7,
@@ -109,14 +109,14 @@
       "exists": true,
       "failed_count": 0,
       "failures": [],
-      "generated_at_utc": "2026-09-30T14:43:42Z",
+      "generated_at_utc": "2026-09-30T15:10:10Z",
       "passed": true,
-      "passed_count": 30,
+      "passed_count": 28,
       "path": "eval/first_user_release_gate_snapshot.json"
     },
     "ops_readiness_watchdog": {
       "blockers": [],
-      "generated_at_utc": "2026-09-30T14:51:36.225383+00:00",
+      "generated_at_utc": "2026-09-30T15:12:20.774991+00:00",
       "passed": true,
       "snapshot": "eval/ops_readiness_watchdog_snapshot.json",
       "truth_policy": "Watchdog passing means controlled first-10 ops proof is fresh and internally consistent. Broad public self-serve still requires row-derived first-10 external-user evidence."
@@ -134,12 +134,12 @@
         "pip_install_agent_borg"
       ],
       "freshness": {
-        "age_hours": 0.12504512666666667,
+        "age_hours": 0.013698840277777777,
         "failure_kind": null,
         "max_age_hours": 24.0,
         "passed": true
       },
-      "generated_at_utc": "2026-09-30T14:44:21Z",
+      "generated_at_utc": "2026-09-30T15:11:48Z",
       "mcp_server_info": null,
       "mcp_stdio_canary_passed": false,
       "passed": false,
@@ -256,7 +256,7 @@
     },
     "self_service_ops_readiness": {
       "blockers": [],
-      "generated_at_utc": "2026-09-30T14:51:52.381486+00:00",
+      "generated_at_utc": "2026-09-30T15:12:38.783905+00:00",
       "passed": true,
       "report": "docs/SELF_SERVICE_OPS_READINESS_REPORT.md",
       "rollout_policy": "Ops readiness is necessary but not sufficient for controlled first-10; package provenance, served-runtime freshness, release governance, ops/watchdog freshness, and first-10 guardrails must also pass. broad public self-serve still requires row-derived first-10 external evidence.",
@@ -281,7 +281,7 @@
       }
     }
   },
-  "generated_at_utc": "2026-09-30T14:51:52.575466+00:00",
+  "generated_at_utc": "2026-09-30T15:12:38.938977+00:00",
   "max_recommended_real_users_now": 0,
   "ready_for_controlled_first_10_beta": false,
   "ready_for_public_self_serve_launch": false,
