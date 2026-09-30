@@ -49,7 +49,7 @@ jobs:
           # Governance is a release-control invariant, not an allowed public-
           # launch blocker. Fail this required check immediately if live,
           # auditable branch-protection evidence is unavailable or noncompliant.
-          python eval/release_governance_gate.py --output eval/release_governance_snapshot.json
+          python eval/release_governance_gate.py --output eval/release_governance_snapshot.json --require-code-owner-reviews
 
       - name: Regenerate fail-closed readiness snapshots
         run: |

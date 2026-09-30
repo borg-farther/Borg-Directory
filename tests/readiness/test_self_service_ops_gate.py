@@ -61,6 +61,7 @@ def test_self_service_ops_gate_script_and_artifacts_are_present(fresh_ops_clock)
     assert "python eval/run_pypi_fresh_install_canary.py" in workflow_text
     assert "python eval/cold_start_trust_gate.py" in workflow_text
     assert "python eval/release_governance_gate.py --output eval/release_governance_snapshot.json" in workflow_text
+    assert "--require-code-owner-reviews" in workflow_text
     assert "rc_governance" not in workflow_text
     governance_command = "python eval/release_governance_gate.py --output eval/release_governance_snapshot.json"
     assert "set +e" not in workflow_text[max(0, workflow_text.index(governance_command) - 220):workflow_text.index(governance_command)]
