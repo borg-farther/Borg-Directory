@@ -605,6 +605,25 @@ def test_docs_claim_guard_allows_honest_stale_pypi_latest_before_next_release(tm
     assert result["violations"] == []
 
 
+def test_docs_claim_guard_allows_explicit_pypi_latest_mismatch_before_release(tmp_path: Path, monkeypatch) -> None:
+    monkeypatch.setattr(gate, "ROOT", tmp_path)
+    doc = tmp_path / "README.md"
+    doc.write_text(
+        "PyPI latest is agent-borg==3.3.21; expected agent-borg==3.4.1.\n",
+        encoding="utf-8",
+    )
+
+    result = gate.docs_claim_guard(
+        [Path("README.md")],
+        "3.4.1",
+        public_evidence_ready=False,
+        package_evidence_ready=False,
+    )
+
+    assert result["passed"] is True
+    assert result["violations"] == []
+
+
 def test_docs_claim_guard_blocks_stale_pypi_latest_after_package_evidence_is_green(tmp_path: Path, monkeypatch) -> None:
     monkeypatch.setattr(gate, "ROOT", tmp_path)
     doc = tmp_path / "README.md"

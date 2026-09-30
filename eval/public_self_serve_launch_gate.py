@@ -676,6 +676,7 @@ def _honest_stale_agent_borg_reference(text: str, match: re.Match[str], expected
         "proof is stale",
         "not proven current",
         "superseded",
+        "pypi latest is",
     ]
     target_terms = [
         f"agent-borg=={expected_version}",
