@@ -70,9 +70,9 @@
     {
       "claim_derived": "100-real-user gate=False; max_recommended_real_users=0; blockers=['PyPI latest/fresh-install package evidence is not green: latest metadata does not match source version', 'PyPI latest/fresh-install package evidence is not green: fresh install + MCP stdio canary is not green', \"served runtime borg_version '3.3.18' != source version '3.4.1'\", \"served runtime source_version '3.3.18' != source version '3.4.1'\", 'first-10 external-user evidence has not passed: verified=0/10, real_users=0/10, installs=0/8, useful=0/6, critical_incidents=0/0']",
       "exists": true,
-      "freshness_timestamp": "2026-09-30T15:12:40.488340+00:00",
+      "freshness_timestamp": "2026-09-30T15:15:44.079328+00:00",
       "path": "eval/real_user_rollout_gate_snapshot.json",
-      "sha256": "3f1d86baf3f8802d10a88b76aaf30b43de8da5a57540a8594a59a8fd50721403"
+      "sha256": "26e5a49f76bdf5cdcc0d86a4cb85387ca05b66cc6e3703a0c5e0a9c15d1d0ee3"
     },
     {
       "claim_derived": "first-10 row evidence users=0; measured_savings={'rows_with_measured_value': 0, 'dead_ends_avoided_confirmed': 0, 'net_minutes_saved': 0.0, 'positive_minutes_saved': 0.0, 'negative_minutes_cost': 0.0, 'net_tokens_saved': 0, 'positive_tokens_saved': 0, 'negative_tokens_cost': 0, 'counterfactual_basis_counts': {}}; gate=BLOCKED",
@@ -84,9 +84,9 @@
     {
       "claim_derived": "public self-serve gate=False; max_recommended_real_users=0; blockers=['PyPI latest is agent-borg==3.3.21; expected agent-borg==3.4.1', 'PyPI fresh-install + MCP stdio canary snapshot is missing or failing', \"served runtime borg_version '3.3.18' != source version '3.4.1'\", \"served runtime source_version '3.3.18' != source version '3.4.1'\", 'first-10 external-user evidence has not passed: verified=0/10, real_users=0/10, installs=0/8, useful=0/6, critical_incidents=0/0']",
       "exists": true,
-      "freshness_timestamp": "2026-09-30T15:12:38.938977+00:00",
+      "freshness_timestamp": "2026-09-30T15:15:42.591268+00:00",
       "path": "eval/public_self_serve_launch_gate_snapshot.json",
-      "sha256": "f7a2e90ee6c77cf53d4a7f0a640d70256eeceff829e9ea4ca62334c7b3df9d4b"
+      "sha256": "49ddf3ff9d2e05a1dd9ef59ce06535bf52399365693b1aad06e46700240eeea6"
     },
     {
       "claim_derived": "cold-start trust gate=True; blockers=[]",
@@ -98,16 +98,16 @@
     {
       "claim_derived": "self-service ops gate=True; blockers=[]",
       "exists": true,
-      "freshness_timestamp": "2026-09-30T15:12:43.691848+00:00",
+      "freshness_timestamp": "2026-09-30T15:15:47.288548+00:00",
       "path": "eval/self_service_ops_gate_snapshot.json",
       "sha256": "36f2e40c4936faa6fecc8c783dae6d6f8b56970c40c52b4301899f5588bbd559"
     },
     {
       "claim_derived": "ops readiness watchdog=True; blocker details live in eval/ops_readiness_watchdog_snapshot.json",
       "exists": true,
-      "freshness_timestamp": "2026-09-30T15:12:43.486710+00:00",
+      "freshness_timestamp": "2026-09-30T15:15:47.108303+00:00",
       "path": "eval/ops_readiness_watchdog_snapshot.json",
-      "sha256": "e1d28642e0782876e53c7a31320bbf96aead57362b295b21a442e8f15f635b24"
+      "sha256": "96f00aedee0b7216923e595acf0938554f429e72837adabb6bf42f8303f2be48"
     },
     {
       "claim_derived": "rollback/comms drill=True; dry_run_only=True",
@@ -361,7 +361,7 @@
       }
     ]
   },
-  "generated_at_utc": "2026-09-30T15:12:43Z",
+  "generated_at_utc": "2026-09-30T15:15:47Z",
   "metrics": {
     "active_contributors_consumers": {
       "honesty_label": "MISSING_BORG_ANALYTICS_ARTIFACT",
@@ -533,7 +533,7 @@
     "Before any public claim, replace logical-user load evidence with real external-user evidence or clearly label the distinction."
   ],
   "repo": "https://github.com/borg-farther/Borg-Directory",
-  "source_revision": "9c3511b2d666474b89c5eb1bc9908f09846a8e8b+dirty",
+  "source_revision": "04126e57d01adbf3e3a58dacb4e492658d63d338+dirty",
   "top_verdict": {
     "broad_public_launch": {
       "verdict": "NO-GO",

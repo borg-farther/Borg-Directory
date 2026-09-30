@@ -42,7 +42,7 @@
     "passed_count": 28
   },
   "gate_type": "real_user_rollout",
-  "generated_at_utc": "2026-09-30T15:12:40.488340+00:00",
+  "generated_at_utc": "2026-09-30T15:15:44.079328+00:00",
   "important_distinction": "load/readiness snapshots are synthetic/logical users; this gate controls real external-user rollout",
   "infrastructure_ready_for_100": false,
   "load_gates": {
@@ -92,7 +92,7 @@
         "pip_install_agent_borg"
       ],
       "freshness": {
-        "age_hours": 0.014216018888888888,
+        "age_hours": 0.06521313222222222,
         "failure_kind": null,
         "max_age_hours": 24.0,
         "passed": true
@@ -255,10 +255,10 @@
   },
   "self_service_ops_gate": {
     "blockers": [],
-    "generated_at_utc": "2026-09-30T15:12:40.487903+00:00",
+    "generated_at_utc": "2026-09-30T15:15:44.078981+00:00",
     "ops_readiness_watchdog": {
       "blockers": [],
-      "generated_at_utc": "2026-09-30T15:12:20.774991+00:00",
+      "generated_at_utc": "2026-09-30T15:15:40.847279+00:00",
       "passed": true,
       "snapshot": "eval/ops_readiness_watchdog_snapshot.json",
       "truth_policy": "Watchdog passing means controlled first-10 ops proof is fresh and internally consistent. Broad public self-serve still requires row-derived first-10 external-user evidence."

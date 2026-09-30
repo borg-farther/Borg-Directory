@@ -46,11 +46,11 @@
       }
     },
     "public_json_dashboard_consistency": {
-      "dashboard_generated_at_utc": "2026-09-30T15:12:17Z",
-      "dashboard_source_revision": "9c3511b2d666474b89c5eb1bc9908f09846a8e8b+dirty",
+      "dashboard_generated_at_utc": "2026-09-30T15:15:37Z",
+      "dashboard_source_revision": "04126e57d01adbf3e3a58dacb4e492658d63d338+dirty",
       "passed": true,
-      "status_source_revision": "9c3511b2d666474b89c5eb1bc9908f09846a8e8b+dirty",
-      "status_updated_at": "2026-09-30T15:12:17Z"
+      "status_source_revision": "04126e57d01adbf3e3a58dacb4e492658d63d338+dirty",
+      "status_updated_at": "2026-09-30T15:15:37Z"
     },
     "public_status_consistency": {
       "controlled_status_ok": false,
@@ -98,67 +98,67 @@
     "snapshot_freshness": {
       "items": {
         "borg_proof_dashboard": {
-          "age_hours": 0.007350808611111111,
+          "age_hours": 0.002801099722222222,
           "allowed_stale_reason": null,
           "passed": true,
           "raw_freshness_passed": true
         },
         "cold_start_trust_gate_snapshot": {
-          "age_hours": 0.022825965,
+          "age_hours": 0.07383181166666666,
           "allowed_stale_reason": null,
           "passed": true,
           "raw_freshness_passed": true
         },
         "public_impact_json": {
-          "age_hours": 0.007350811111111111,
+          "age_hours": 0.002801102222222222,
           "allowed_stale_reason": null,
           "passed": true,
           "raw_freshness_passed": true
         },
         "public_self_serve_launch_gate_snapshot": {
-          "age_hours": 0.0012566433333333334,
+          "age_hours": 0.0012479652777777777,
           "allowed_stale_reason": null,
           "passed": true,
           "raw_freshness_passed": true
         },
         "public_status_json": {
-          "age_hours": 0.007350809444444445,
+          "age_hours": 0.0028011008333333337,
           "allowed_stale_reason": null,
           "passed": true,
           "raw_freshness_passed": true
         },
         "public_value_json": {
-          "age_hours": 0.007350810277777778,
+          "age_hours": 0.002801101388888889,
           "allowed_stale_reason": null,
           "passed": true,
           "raw_freshness_passed": true
         },
         "pypi_fresh_install_snapshot": {
-          "age_hours": 0.015406362222222223,
+          "age_hours": 0.0664122088888889,
           "allowed_stale_reason": null,
           "passed": true,
           "raw_freshness_passed": true
         },
         "real_user_rollout_gate_snapshot": {
-          "age_hours": 0.0008262727777777777,
+          "age_hours": 0.0008346225,
           "allowed_stale_reason": null,
           "passed": true,
           "raw_freshness_passed": true
         },
         "release_governance_snapshot": {
-          "age_hours": 0.02172936138888889,
+          "age_hours": 0.07273520805555556,
           "allowed_stale_reason": null,
           "passed": true,
           "raw_freshness_passed": true
         },
         "rollback_comms_drill_snapshot": {
-          "age_hours": 0.017072309722222224,
+          "age_hours": 0.06807815666666667,
           "allowed_stale_reason": null,
           "passed": true,
           "raw_freshness_passed": true
         },
         "self_service_ops_gate_snapshot": {
-          "age_hours": 0.012063873888888889,
+          "age_hours": 0.06306972055555556,
           "allowed_stale_reason": null,
           "passed": true,
           "raw_freshness_passed": true
@@ -168,10 +168,10 @@
     },
     "source_revision_honesty": {
       "git_clean": false,
-      "head": "9c3511b2d666474b89c5eb1bc9908f09846a8e8b",
+      "head": "04126e57d01adbf3e3a58dacb4e492658d63d338",
       "passed": true,
       "policy": "Committed dashboards may be generated from a dirty tree and must mark +dirty; clean-tree status endpoints should match HEAD or a dirty ancestor used to generate committed proof artifacts.",
-      "source_revision": "9c3511b2d666474b89c5eb1bc9908f09846a8e8b+dirty"
+      "source_revision": "04126e57d01adbf3e3a58dacb4e492658d63d338+dirty"
     },
     "watchdog_workflow": {
       "exists": true,
@@ -302,7 +302,7 @@
     }
   },
   "gate_type": "ops_readiness_watchdog",
-  "generated_at_utc": "2026-09-30T15:12:43.486710+00:00",
+  "generated_at_utc": "2026-09-30T15:15:47.108303+00:00",
   "max_recommended_real_users_now": 0,
   "passed": true,
   "ready_for_controlled_first_10_beta": false,

@@ -116,7 +116,7 @@
     },
     "ops_readiness_watchdog": {
       "blockers": [],
-      "generated_at_utc": "2026-09-30T15:12:20.774991+00:00",
+      "generated_at_utc": "2026-09-30T15:15:40.847279+00:00",
       "passed": true,
       "snapshot": "eval/ops_readiness_watchdog_snapshot.json",
       "truth_policy": "Watchdog passing means controlled first-10 ops proof is fresh and internally consistent. Broad public self-serve still requires row-derived first-10 external-user evidence."
@@ -134,7 +134,7 @@
         "pip_install_agent_borg"
       ],
       "freshness": {
-        "age_hours": 0.013698840277777777,
+        "age_hours": 0.06472726777777778,
         "failure_kind": null,
         "max_age_hours": 24.0,
         "passed": true
@@ -256,7 +256,7 @@
     },
     "self_service_ops_readiness": {
       "blockers": [],
-      "generated_at_utc": "2026-09-30T15:12:38.783905+00:00",
+      "generated_at_utc": "2026-09-30T15:15:42.407428+00:00",
       "passed": true,
       "report": "docs/SELF_SERVICE_OPS_READINESS_REPORT.md",
       "rollout_policy": "Ops readiness is necessary but not sufficient for controlled first-10; package provenance, served-runtime freshness, release governance, ops/watchdog freshness, and first-10 guardrails must also pass. broad public self-serve still requires row-derived first-10 external evidence.",
@@ -281,7 +281,7 @@
       }
     }
   },
-  "generated_at_utc": "2026-09-30T15:12:38.938977+00:00",
+  "generated_at_utc": "2026-09-30T15:15:42.591268+00:00",
   "max_recommended_real_users_now": 0,
   "ready_for_controlled_first_10_beta": false,
   "ready_for_public_self_serve_launch": false,
