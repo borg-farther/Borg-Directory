@@ -1,19 +1,30 @@
-# Borg — failure memory for AI coding agents
+# Borg — memory with standards for AI agents
 
-Borg is a local CLI and MCP server that helps coding agents avoid repeating known debugging dead ends.
-Give Borg an error, traceback, failed test, install problem, config failure, or deployment failure; it returns a short rescue packet:
+Borg keeps its proven core — **failure memory for AI coding agents** — and adds a local CLI/MCP evidence-control layer for capable AI agents. The host model remains the thinker; Borg stops weak or conflicting recollections from masquerading as proof, exposes unsupported claims and assumptions, and requires verification before consequential action.
+
+For a concrete error, traceback, failed test, install problem, config failure, or deployment failure, Borg returns a short rescue packet:
 
 - `ACTION` — the next thing to try
 - `STOP` — a dead end to avoid
 - `VERIFY` — the exact command or test to rerun
 - `CONFIDENCE` — tested / observed / inferred, or `NO_CONFIDENT_MATCH`
 
+For consequential, high-risk, repeated-failure, or explicitly deep work, `borg deliberate` returns one bounded epistemic packet:
+
+- selective `standard` or `deep` activation — easy work does not get a ceremonial checklist
+- private/local experience and verified cross-agent outcomes kept in separate evidence tiers
+- unsupported claims, dangling evidence references, assumptions, and memory contradictions
+- prompt-injection suppression and explicit `STOP` conditions
+- a complete verification plan and an intervention id for `borg_record_outcome`
+
+Borg does **not** request, expose, or store private chain-of-thought. Memory is always advisory; similarity never authorizes action.
+
 - **Install package:** `agent-borg`
 - **Installed CLI:** `borg`
 - **MCP server command:** `borg-mcp`
 - **Canonical repo:** https://github.com/borg-farther/Borg-Directory
 
-**Status:** the source line is `agent-borg==3.3.21`. This static document does not claim that source, PyPI, and the served runtime are current merely because their version strings match; the live PyPI fresh-install, runtime-fingerprint, governance, watchdog, and source-revision gates decide that. Controlled first-10 beta is **NO-GO** with a real-user cap of 0 until those gates are green and consented evidence intake is ready. Broad public self-serve launch, 100-user rollout, served/remote MCP, and measured external lift are **not claimed** until row-derived external-user evidence passes.
+**Status:** the source line is `agent-borg==3.3.21`; the epistemic-guardrail work is unreleased until the full regression, build, fresh-install, governance, and exact-version approval gates pass. A matching version string alone does not prove PyPI or a served runtime is current; the live PyPI fresh-install, runtime-fingerprint, governance, watchdog, and source-revision gates decide that. Controlled first-10 beta is **NO-GO** with a real-user cap of 0 until those gates are green and consented evidence intake is ready. Broad public self-serve launch, 100-user rollout, served/remote MCP, and measured external lift are **not claimed** until row-derived external-user evidence passes.
 
 ## Try Borg in 60 seconds
 
@@ -47,6 +58,36 @@ When your agent uses Borg over MCP, it is instructed to relay that same
 > **Install-name note:** Borg is the product name, and `borg` is the command after install. The Python package to install is **`agent-borg`**.
 >
 > Use `pipx install agent-borg` or `python3 -m pip install agent-borg`. Do **not** use `pip install borg`, `brew install borgbackup`, `apt install borgbackup`, `apt-get install borgbackup`, `dnf install borgbackup`, or `pacman -S borg`; those install unrelated Borg/BorgBackup software and will not provide Borg's AI-agent MCP tools.
+
+### Preflight or review consequential work
+
+```bash
+# Auto selects deep mode because this is production/migration work.
+borg deliberate "plan a production database migration" --json
+
+# Review a material claim. Exit code 2 means verification is still blocking action.
+borg deliberate "approve production release" \
+  --stage review --risk high \
+  --claims-json '[{"id":"tests-pass","text":"The full regression suite passes","evidence_refs":["ci-run"]}]' \
+  --evidence-json '[{"id":"ci-run","type":"test_result","source":"ci://run/123","summary":"exit 0","verified":true}]' \
+  --json
+```
+
+The same core contract is available in Python:
+
+```python
+import borg
+
+packet = borg.deliberate(
+    "review a production release",
+    mode="deep",
+    risk_level="high",
+)
+print(packet.decision)
+print(packet.to_dict()["verification_plan"])
+```
+
+Over stdio MCP, use `borg_deliberate`. It records a privacy-redacted local intervention and returns its `intervention_id`; after running the verification plan, close the exact loop with `borg_record_outcome`. See [`docs/EPISTEMIC_GUARDRAIL.md`](docs/EPISTEMIC_GUARDRAIL.md).
 
 ## For people running AI agents
 

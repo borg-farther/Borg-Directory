@@ -1,19 +1,20 @@
 ---
 name: borg
-description: "Use when your agent has a concrete error, failed test, install/config/deploy failure, or repeated debugging loop and needs ACTION / STOP / VERIFY guidance with explicit confidence. NOT for simple/obvious fixes."
+description: "Use for concrete failures or consequential/high-risk/deep work that needs advisory memory, explicit evidence boundaries, and verification. NOT for simple/obvious fixes."
 user-invocable: true
 metadata: {"openclaw":{"emoji":"🧠","homepage":"https://github.com/borg-farther/Borg-Directory","always":false}}
 ---
 
-# Borg — failure memory for AI coding agents
+# Borg — failure memory and epistemic guardrails for AI agents
 
-Stop repeating debugging dead ends your agent can avoid.
+Stop repeating debugging dead ends your agent can avoid. For consequential work, keep memory advisory, expose unsupported claims and contradictions, and require verification before action. Borg does not request private chain-of-thought.
 
 ## When to Use
 
 - Your agent hit a blocker and is going in circles (3+ failed attempts)
 - You need a structured approach to debugging, testing, code review, or planning
 - You want confidence-labeled rescue guidance or workflow structure for a similar problem
+- You are planning/reviewing production, security, release, migration, destructive, financial, legal, or explicitly deep work
 
 ## When NOT to Use
 
@@ -22,6 +23,8 @@ Stop repeating debugging dead ends your agent can avoid.
 - Creative or open-ended tasks with no "right approach"
 
 ## How to Use
+
+If the host also exposes `borg-mcp`, use `borg_rescue` for an exact failure and `borg_deliberate` for consequential/deep preflight or review. Honor `block_pending_verification`, execute the bounded verification plan, and close the returned intervention with `borg_record_outcome` only after observing the result. Similarity never authorizes action.
 
 ### Step 1: Find the right pack
 

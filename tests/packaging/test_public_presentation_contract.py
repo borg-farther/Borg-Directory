@@ -405,6 +405,7 @@ def test_non_current_public_docs_are_bannered_or_operator_scoped() -> None:
         "PILOT_CONSENT_FORM.md",
         "COLD_START_TRUST_HARDENING.md",
         "SECURITY_HARDENING_BASELINE.md",
+        "EPISTEMIC_GUARDRAIL.md",
         "PRIVACY_MODEL.md",
         "PROMPT_INJECTION_THREAT_MODEL.md",
         "TRUST_AND_PROMOTION.md",

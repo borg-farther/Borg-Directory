@@ -1,6 +1,6 @@
 # Borg
 
-Borg is failure memory for AI coding agents.
+Borg is failure memory for AI coding agents and an evidence-control layer for consequential work. The host model remains the thinker; Borg keeps memory advisory, exposes unsupported claims and contradictions, and requires verification before action.
 
 Canonical repo: https://github.com/borg-farther/Borg-Directory
 Install package: agent-borg
@@ -12,6 +12,11 @@ Day-one value path:
 1. pipx install agent-borg
 2. borg rescue "ModuleNotFoundError: No module named flask" --short
 3. Expect ACTION / STOP / VERIFY / CONFIDENCE, or NO_CONFIDENT_MATCH.
+
+Consequential-work path:
+1. borg deliberate "review a production release" --mode auto --json
+2. Honor `block_pending_verification`; run the bounded verification plan.
+3. Bind the observed result to the returned intervention with `borg_record_outcome`.
 
 Current rollout boundary:
 - Controlled first-10 public-package beta is closed right now (zero external users; cap 0). The source line is agent-borg==3.3.21. Exact-version PyPI, served-runtime, release-governance, ops/watchdog, docs-claim, and evidence-intake gates must independently agree before any invite; version strings or static prose are not proof.

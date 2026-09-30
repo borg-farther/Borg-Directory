@@ -35,7 +35,7 @@ _HOST_LABELS = {
     "hermes": "Hermes Agent",
     "generic": "generic agent",
 }
-_REQUIRED_TERMS = ("borg_observe", "error_lookup", "NO_CONFIDENT_MATCH", "borg_record_outcome", "VERIFY")
+_REQUIRED_TERMS = ("borg_observe", "borg_deliberate", "error_lookup", "NO_CONFIDENT_MATCH", "borg_record_outcome", "VERIFY")
 _FLAG_OVERCLAIM_RE = re.compile(r"(?i)([\"']?(first[_-]?10[_-]?claim|global[_-]?promotion[_-]?allowed|public[_-]?lift[_-]?claim)[\"']?\s*[:=]\s*(true|yes|1))")
 _NATURAL_OVERCLAIM_RE = re.compile(r"(?i)(borg\s+(has\s+)?(proven|verified|achieved)\s+first[-_\s]?10\s+lift|public\s+lift\s+(is\s+)?(proven|verified|achieved)|global\s+promotion\s+(is\s+)?(approved|allowed|ready))")
 _UNSAFE_TRUST_RE = re.compile(r"(?i)(always\s+trust\s+borg|skip\s+verify|do\s+not\s+verify|ignore\s+verification)")
@@ -517,6 +517,8 @@ def build_agent_priming_candidate(host: str = "generic") -> dict[str, Any]:
         f"Borg interaction rule for {label}:\n"
         "- At the start of technical debug/test/review/deploy work, call `borg_observe` once with the exact task and tech context.\n"
         "- When there is a concrete error, failing command, stack trace, or repeated failure, call `error_lookup` / `borg_rescue` with the exact text before changing code.\n"
+        "- For consequential, high-risk, explicitly deep, or repeatedly failing work, call `borg_deliberate` at preflight; before acting, call it again at review with structured material claims and evidence references. Honor `block_pending_verification`.\n"
+        "- Treat the epistemic packet as decision control, not chain-of-thought: keep memory advisory, expose assumptions/contradictions, and complete its bounded verification plan.\n"
         "- If Borg returns `NO_CONFIDENT_MATCH`, say that plainly; do not blend weak retrieval into the answer or pretend Borg helped.\n"
         "- Follow Borg's `ACTION`, avoid `STOP`, then rerun the exact `VERIFY` command/test.\n"
         "- after VERIFY, call `borg_record_outcome` with the intervention_id, outcome, helpful, verified, and verification evidence so Borg learns.\n"
@@ -534,6 +536,7 @@ def build_agent_priming_candidate(host: str = "generic") -> dict[str, Any]:
         "call_rules": {
             "task_start_debug_test_review": "borg_observe",
             "concrete_error": "error_lookup",
+            "consequential_or_deep_work": "borg_deliberate",
             "weak_match": "NO_CONFIDENT_MATCH",
             "after_verify": "borg_record_outcome",
         },

@@ -735,16 +735,16 @@ def generate_bridge_skill(packs: list) -> str:
     # Frontmatter (YAML)
     lines.append("---")
     lines.append("name: borg")
-    lines.append("description: \"Use when your agent is stuck in a loop on a concrete error, failed test, install/config/deploy failure, or non-trivial review/planning task. Borg provides confidence-labeled failure-memory guidance and workflow structure. NOT for simple/obvious fixes.\"")
+    lines.append("description: \"Use for concrete failures or consequential/high-risk/deep work that needs advisory memory, explicit evidence boundaries, and verification. NOT for simple/obvious fixes.\"")
     lines.append("user-invocable: true")
     lines.append("metadata: {\"openclaw\":{\"emoji\":\"🧠\",\"homepage\":\"https://github.com/borg-farther/Borg-Directory\",\"always\":false}}")
     lines.append("---")
     lines.append("")
     
     # Title
-    lines.append("# Borg — failure memory for AI coding agents")
+    lines.append("# Borg — failure memory and epistemic guardrails for AI agents")
     lines.append("")
-    lines.append("Stop repeating debugging dead ends your agent can avoid.")
+    lines.append("Stop repeating debugging dead ends your agent can avoid. For consequential work, keep memory advisory, expose unsupported claims and contradictions, and require verification before action. Borg does not request private chain-of-thought.")
     lines.append("")
     
     # When to Use
@@ -753,6 +753,7 @@ def generate_bridge_skill(packs: list) -> str:
     lines.append("- Your agent hit a blocker and is going in circles (3+ failed attempts)")
     lines.append("- You need a structured approach to debugging, testing, code review, or planning")
     lines.append("- You want a structured workflow with explicit confidence and verification steps")
+    lines.append("- You are planning/reviewing production, security, release, migration, destructive, financial, legal, or explicitly deep work")
     lines.append("")
     
     # When NOT to Use
@@ -765,6 +766,8 @@ def generate_bridge_skill(packs: list) -> str:
     
     # How to Use
     lines.append("## How to Use")
+    lines.append("")
+    lines.append("If the host exposes `borg-mcp`, use `borg_rescue` for exact failures and `borg_deliberate` for consequential/deep preflight or review. Honor `block_pending_verification`; similarity never authorizes action.")
     lines.append("")
     lines.append("### Step 1: Find the right pack")
     lines.append("")

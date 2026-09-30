@@ -37,6 +37,7 @@ belong under [`archive/`](archive/) and are not current product claims.
 - [`20260531_BORG_PRODUCTION_INVENTORY_BOARD.md`](20260531_BORG_PRODUCTION_INVENTORY_BOARD.md) — generated production inventory board with current proof lanes and blockers
 - [`VALUE_COMMUNICATION_DASHBOARD.md`](VALUE_COMMUNICATION_DASHBOARD.md) — value communication dashboard with verified-vs-unproven labels
 - [`../eval/public_self_serve_launch_gate_snapshot.json`](../eval/public_self_serve_launch_gate_snapshot.json) — machine-readable public self-serve launch gate snapshot
+- [`EPISTEMIC_GUARDRAIL.md`](EPISTEMIC_GUARDRAIL.md) — selective deep mode, evidence tiers, claim/contradiction audit, verification, and outcome capture
 - [`SECURITY_HARDENING_BASELINE.md`](SECURITY_HARDENING_BASELINE.md) — security gate summary
 - [`../eval/security_hardening_baseline.json`](../eval/security_hardening_baseline.json) — machine-readable security baseline
 - [`PRIVACY_MODEL.md`](PRIVACY_MODEL.md) — privacy model

@@ -874,6 +874,44 @@ TOOLS: List[Dict[str, Any]] = [
         },
     },
     {
+        "name": "borg_deliberate",
+        "description": (
+            "Evidence-first preflight/review for consequential agent work. The host model remains the thinker; "
+            "Borg retrieves advisory memory, exposes unsupported claims and contradictions, selects standard or "
+            "deep mode deterministically, and returns a bounded verification plan. Never returns private chain-of-thought. "
+            "Use stage='preflight' before work and stage='review' with structured claims/evidence before consequential action. "
+            "The response records a local intervention id for borg_record_outcome after independent verification."
+        ),
+        "inputSchema": {
+            "type": "object",
+            "properties": {
+                "task": {"type": "string", "description": "Task or decision to preflight/review."},
+                "context": {"type": "string", "description": "Optional constraints and current evidence."},
+                "mode": {"type": "string", "enum": ["auto", "standard", "deep"], "default": "auto"},
+                "stage": {"type": "string", "enum": ["preflight", "review"], "default": "preflight"},
+                "draft": {"type": "string", "description": "Optional draft under review; material claims must also be structured."},
+                "claims": {
+                    "type": "array",
+                    "description": "Structured claims with id, text, material, and evidence_refs.",
+                    "items": {"type": "object"},
+                },
+                "assumptions": {"type": "array", "items": {"type": "string"}},
+                "evidence": {
+                    "type": "array",
+                    "description": "Evidence artifacts with id/type/source/summary/locator/verified.",
+                    "items": {"type": "object"},
+                },
+                "verification_steps": {"type": "array", "items": {"type": "object"}},
+                "failure_count": {"type": "integer", "minimum": 0, "default": 0},
+                "risk_level": {"type": "string", "enum": ["", "low", "medium", "high", "critical"], "default": ""},
+                "memory_limit": {"type": "integer", "minimum": 0, "maximum": 20, "default": 5},
+                "agent_id": {"type": "string", "default": "default"},
+                "session_id": {"type": "string", "description": "Optional local session binding for the intervention receipt."},
+            },
+            "required": ["task"],
+        },
+    },
+    {
         "name": "borg_convert",
         "description": (
             "Convert a SKILL.md, CLAUDE.md, or .cursorrules file into a borg workflow pack. "
@@ -3099,6 +3137,89 @@ def _collective_match_advisory(match: dict) -> dict:
     }
 
 
+def borg_deliberate(
+    task: str = "",
+    context: str = "",
+    mode: str = "auto",
+    stage: str = "preflight",
+    draft: str = "",
+    claims: Optional[List[Dict[str, Any]]] = None,
+    assumptions: Optional[List[str]] = None,
+    evidence: Optional[List[Dict[str, Any]]] = None,
+    verification_steps: Optional[List[Dict[str, Any]]] = None,
+    failure_count: int = 0,
+    risk_level: str = "",
+    memory_limit: int = 5,
+    agent_id: str = "default",
+    session_id: str = "",
+) -> str:
+    """Return and locally receipt one evidence-first deliberation packet."""
+    try:
+        from borg.core.epistemic_guardrail import deliberate, render_epistemic_text
+
+        packet = deliberate(
+            task,
+            context=context,
+            mode=mode,
+            stage=stage,
+            draft=draft,
+            claims=claims,
+            assumptions=assumptions,
+            evidence=evidence,
+            verification_steps=verification_steps,
+            failure_count=failure_count,
+            risk_level=risk_level,
+            memory_limit=memory_limit,
+        )
+        data = packet.to_dict()
+        capture = dict(data.get("outcome_capture") or {})
+        if packet.status == "ok":
+            try:
+                from borg.core.collective_learning import CollectiveLearningStore
+
+                source_refs = [
+                    str(item.get("source_id"))
+                    for item in data.get("memory_items", [])
+                    if item.get("source_id")
+                ]
+                row = CollectiveLearningStore().record_intervention(
+                    source_tool="borg_deliberate",
+                    task_text=task,
+                    context=context,
+                    guidance=data,
+                    agent_id=agent_id,
+                    session_id=session_id,
+                    source_refs=source_refs,
+                )
+                capture.update(
+                    {
+                        "status": "recorded_local",
+                        "intervention_id": row["intervention_id"],
+                        "cluster_id": row["cluster_id"],
+                    }
+                )
+            except Exception as exc:
+                capture.update(
+                    {
+                        "status": "recording_unavailable",
+                        "error_type": type(exc).__name__,
+                    }
+                )
+        data["outcome_capture"] = capture
+        return json.dumps(
+            {
+                "success": packet.status == "ok",
+                "epistemic_packet": data,
+                "text": render_epistemic_text(packet),
+            },
+            ensure_ascii=False,
+        )
+    except (KeyboardInterrupt, SystemExit):
+        raise
+    except (TypeError, ValueError, OSError, json.JSONDecodeError) as exc:
+        return json.dumps({"success": False, "error": str(exc), "type": type(exc).__name__})
+
+
 def borg_collective_retrieve(query: str = "", limit: int = 5) -> str:
     """Return unified scored collective memory for a task/error query."""
     try:
@@ -3733,7 +3854,7 @@ def call_tool(name: str, arguments: Dict[str, Any]) -> str:
                 signal.signal(signal.SIGALRM, old_handler)
 
         # Feed tool call into trace capture (skip borg internal tools to avoid noise)
-        if name not in ("borg_search", "borg_observe", "borg_rescue", "error_lookup", "borg_suggest", "borg_feedback", "borg_publish"):
+        if name not in ("borg_search", "borg_observe", "borg_deliberate", "borg_rescue", "error_lookup", "borg_suggest", "borg_feedback", "borg_publish"):
             _feed_trace_capture(name, arguments, result)
 
         return result
@@ -3954,6 +4075,24 @@ def _call_tool_impl(name: str, arguments: Dict[str, Any]) -> str:
             context=arguments.get("context", ""),
             context_dict=arguments.get("context_dict"),
             project_path=arguments.get("project_path"),
+        )
+
+    elif name == "borg_deliberate":
+        return borg_deliberate(
+            task=arguments.get("task", ""),
+            context=arguments.get("context", ""),
+            mode=arguments.get("mode", "auto"),
+            stage=arguments.get("stage", "preflight"),
+            draft=arguments.get("draft", ""),
+            claims=arguments.get("claims"),
+            assumptions=arguments.get("assumptions"),
+            evidence=arguments.get("evidence"),
+            verification_steps=arguments.get("verification_steps"),
+            failure_count=arguments.get("failure_count", 0),
+            risk_level=arguments.get("risk_level", ""),
+            memory_limit=arguments.get("memory_limit", 5),
+            agent_id=arguments.get("agent_id", "default"),
+            session_id=_human_session_key(arguments),
         )
 
     elif name == "borg_dashboard":

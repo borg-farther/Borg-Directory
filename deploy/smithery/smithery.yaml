@@ -39,7 +39,7 @@ longDescription: |
   local/private store.
   
   Features:
-  - 28 built-in MCP tools for failure memory, rescue, feedback, runtime fingerprinting, and readiness-safe diagnostics
+  - 29 built-in MCP tools for failure memory, epistemic guardrails, rescue, feedback, runtime fingerprinting, and readiness-safe diagnostics
   - Search local/trusted failure-memory records and workflow packs
   - Retrieve source-scoped solution patterns and approaches
   - Avoid known dead-end approaches without claiming measured savings until first-10 evidence exists
@@ -108,8 +108,9 @@ serverInfo: |
     "version": "3.3.21"
   }
 
-# Tools exposed by this MCP server (28 total; authoritative list is discovered from borg-mcp tools/list):
+# Tools exposed by this MCP server (29 total; authoritative list is discovered from borg-mcp tools/list):
 # - borg_rescue / error_lookup: ACTION / STOP / VERIFY rescue for concrete failures
+# - borg_deliberate: evidence-first preflight/review with selective deep mode and claim verification
 # - borg_observe / borg_recall / borg_record_failure: task-start guidance and durable learning memory
 # - borg_feedback / borg_apply / borg_search / borg_pull / borg_try / borg_generate / borg_convert: workflow-pack operations
 # - borg_runtime_fingerprint: version/path/hash/canary proof for stale-runtime detection
@@ -144,8 +145,8 @@ metadata: |
   {
     "language": "Python",
     "license": "MIT",
-    "mcpTools": 28,
-    "description": "Local-first failure memory MCP server for ACTION / STOP / VERIFY guidance"
+    "mcpTools": 29,
+    "description": "Local-first failure memory and epistemic guardrail MCP server with ACTION / STOP / VERIFY guidance"
   }
 
 # ===========================================================

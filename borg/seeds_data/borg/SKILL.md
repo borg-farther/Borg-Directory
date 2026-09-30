@@ -1,6 +1,6 @@
 ---
 name: borg
-description: Failure memory for AI coding agents. Use when you have a concrete error, failed test, install/config/deploy failure, or repeated debugging loop and want ACTION / STOP / VERIFY guidance with explicit confidence. Not for simple tasks that need no structure.
+description: Failure memory and epistemic guardrails for AI agents. Use for concrete failures or consequential/high-risk/deep work that needs evidence, contradiction, and verification control. Not for simple tasks that need no structure.
 compatibility: "Requires the borg MCP server or CLI. Install with the package name: pip install agent-borg. Configure your agent to run the MCP server command: borg-mcp."
 metadata:
   borg:
@@ -10,9 +10,9 @@ metadata:
     registry: borg://registry
 ---
 
-# Borg — Failure Memory for AI Coding Agents
+# Borg — Failure Memory and Epistemic Guardrails
 
-Borg helps agents check prior rescue guidance before repeating known debugging dead ends. When there is no confident match, it should return `NO_CONFIDENT_MATCH` instead of forcing advice.
+Borg helps agents check prior rescue guidance before repeating known debugging dead ends. For consequential work it also produces a bounded epistemic packet: memory stays advisory, assumptions and unsupported claims are visible, contradictions stop confident copying, and verification controls action. When there is no confident match, it returns `NO_CONFIDENT_MATCH` instead of forcing advice. It never requests private chain-of-thought.
 
 ## What is Borg?
 
@@ -33,6 +33,8 @@ Apply this skill when ANY of the following are true:
 - **No relevant context** — working in an unfamiliar domain without a mental model
 - **Test failures** — unclear how to approach recovery after test failures
 - **Code review confusion** — unsure what to look for or how to prioritize findings
+- **Consequential work** — production, security, release, migration, destructive, financial, legal, or otherwise high-risk action
+- **Explicit deep review** — the user asks for adversarial/deep analysis, or material claims need evidence before action
 
 ## How to Use
 
@@ -59,6 +61,17 @@ borg rescue "<exact error or failing command output>"
 ```
 
 Use `borg_observe(task="<task>", context="<tech stack>")` for broader task-start guidance when there is not yet a concrete failure. Use pack search/apply only after rescue/observe or when you deliberately need a workflow pack.
+
+### Step 0b: Consequential-Work Preflight and Review
+
+For production/high-risk/deep work, call the shared epistemic core before work and again before action:
+
+```text
+Tool: borg_deliberate
+Args: task="<exact task>", mode="auto", stage="preflight", risk_level="<optional risk>"
+```
+
+At review, submit structured material `claims`, `evidence`, and `verification_steps`. Honor `block_pending_verification`; similarity or remembered success never authorizes action. After real verification, bind the observed result to the returned intervention with `borg_record_outcome`.
 
 ### Step 1: Search for a Relevant Pack
 
@@ -108,6 +121,8 @@ Borg records the outcome so future agents benefit from your session.
 | `error_lookup` | Plain-English rescue alias for concrete failures | `input` |
 | `borg_rescue` | Canonical ACTION / STOP / VERIFY rescue packet | `input` |
 | `borg_observe` | Proactive guidance at task start | `task`, `context` |
+| `borg_deliberate` | Consequential/deep preflight or evidence review | `task`, `mode`, `stage`, `claims`, `evidence` |
+| `borg_record_outcome` | Close the exact intervention after verification | `intervention_id`, `outcome`, `helpful`, `verified` |
 | `borg_try` | Preview a pack before applying | `uri` |
 | `borg_apply` | Start / advance / complete a pack session | `action`, `pack_name`, `session_id` |
 | `borg_suggest` | Get pack suggestions after failures | `context`, `failure_count` |
@@ -120,6 +135,7 @@ Borg records the outcome so future agents benefit from your session.
 3. **Trust the phases** — the order matters; don't skip to "the solution" phase
 4. **Report failures** — when a pack doesn't work, that feedback improves it for the next agent
 5. **Don't use Borg for trivial fixes** — Borg is for problems that benefit from structured approaches
+6. **Memory is advisory** — retrieval rank, local traces, and seed guidance never replace direct verification
 
 ## How Borg Works
 
@@ -149,6 +165,9 @@ Borg stores **workflow packs** in a searchable registry. Each pack contains:
 ```bash
 # Concrete error rescue first
 borg rescue "<exact error or failing command output>"
+
+# Consequential/high-risk/deep preflight or review
+borg deliberate "<exact task>" --mode auto --json
 
 # Search for packs
 borg search <keywords>

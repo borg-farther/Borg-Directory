@@ -105,6 +105,16 @@ CONFIDENCE: ...
 
 If Borg has no confident match, it should say `NO_CONFIDENT_MATCH` instead of forcing unrelated advice.
 
+### Consequential/high-risk/deep work
+
+Use the shared epistemic guardrail for production, security, release, migration, destructive, or explicitly deep work:
+
+```bash
+borg deliberate "review the production release" --mode auto --stage preflight --json
+```
+
+MCP equivalent: `borg_deliberate(task="review the production release", mode="auto", stage="preflight")`. Before acting, call it at `stage="review"` with structured material claims and evidence. Memory is advisory, `retrieval_degraded` is not `NO_CONFIDENT_MATCH`, similarity never authorizes action, and `block_pending_verification` must be honored. Borg requests decision artifacts, not private chain-of-thought.
+
 ## 3. Search and pack workflow
 
 ```bash
@@ -155,7 +165,7 @@ Then ask Claude Code:
 what MCP tools do you have from Borg?
 ```
 
-Expected: Claude lists Borg tools such as `error_lookup`, `borg_rescue`, `borg_observe`, and `borg_search`, or `/mcp list` shows a `borg` server.
+Expected: Claude lists Borg tools such as `error_lookup`, `borg_rescue`, `borg_observe`, `borg_deliberate`, and `borg_search`, or `/mcp list` shows a `borg` server.
 
 Hermes Agent, OpenClaw, and generic MCP clients: use [`MCP_SETUP.md`](MCP_SETUP.md).
 

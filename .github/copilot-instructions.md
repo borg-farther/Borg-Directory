@@ -1,6 +1,6 @@
 # Copilot instructions for Borg
 
-Borg is failure memory for AI coding agents.
+Borg is failure memory for AI coding agents and an epistemic guardrail for consequential work. Use `borg rescue` for concrete failures and `borg deliberate` for production/high-risk/deep preflight or review. Memory is advisory; verification controls action.
 
 ## Product identity
 
@@ -8,6 +8,7 @@ Borg is failure memory for AI coding agents.
 - Package users install: `agent-borg`
 - Commands users run: `borg`, `borg-mcp`, `borg-doctor`
 - Day-one path: `pipx install agent-borg` then `borg rescue "<real error>" --short`
+- Consequential-work path: `borg deliberate "<production/high-risk/deep task>" --mode auto --json`; honor `block_pending_verification` and record only verified outcomes.
 
 ## Public claims boundary
 

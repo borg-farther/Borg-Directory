@@ -43,7 +43,7 @@ user-invocable: true
 metadata: {{"openclaw":{{"emoji":"{emoji}","homepage":"https://github.com/borg-farther/Borg-Directory","always":false}}}}
 ---
 
-# Borg — failure memory for AI coding agents
+# Borg — failure memory and epistemic guardrails for AI agents
 
 {body}
 ---
@@ -252,21 +252,21 @@ def generate_bridge_skill(packs: List[dict], output_dir: Optional[Path] = None) 
 
     # Build description (max 1024 chars)
     description = (
-        "When your agent is stuck in a loop on a concrete error, failed test, install/config/deploy failure, "
-        "or non-trivial review/planning task. Borg provides confidence-labeled failure-memory guidance and "
-        "workflow structure with explicit verification steps. NOT for simple tasks that need no structure."
+        "Use for concrete failures or consequential/high-risk/deep work that needs advisory memory, explicit "
+        "evidence boundaries, and verification. NOT for simple tasks that need no structure."
     )
 
     # Build body
     body_parts = []
 
-    body_parts.append("Stop repeating debugging dead ends your agent can avoid.\n")
+    body_parts.append("Stop repeating debugging dead ends your agent can avoid. For consequential work, keep memory advisory, expose unsupported claims and contradictions, and require verification before action. Borg does not request private chain-of-thought.\n")
 
     # When to Use
     body_parts.append("## When to Use\n")
     body_parts.append("- Your agent hit a blocker and is going in circles (3+ failed attempts)\n")
     body_parts.append("- You need a structured approach to debugging, testing, code review, or planning\n")
     body_parts.append("- You want a structured workflow with explicit confidence and verification steps\n")
+    body_parts.append("- You are planning/reviewing production, security, release, migration, destructive, financial, legal, or explicitly deep work\n")
 
     # When NOT to Use
     body_parts.append("## When NOT to Use\n")
@@ -276,6 +276,7 @@ def generate_bridge_skill(packs: List[dict], output_dir: Optional[Path] = None) 
 
     # How to Use
     body_parts.append("## How to Use\n")
+    body_parts.append("If the host exposes `borg-mcp`, use `borg_rescue` for exact failures and `borg_deliberate` for consequential/deep preflight or review. Honor `block_pending_verification`; similarity never authorizes action.\n")
     body_parts.append("### Step 1: Find the right pack\n")
     body_parts.append("Read the pack index to find relevant approaches:\n")
     body_parts.append("```\nread references/pack-index.md\n```\n")

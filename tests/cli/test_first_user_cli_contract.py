@@ -119,16 +119,17 @@ def test_rescue_human_receipt_uses_product_language():
     assert err == ""
 
 
-def test_start_onboarding_uses_cache_layer_language(monkeypatch):
-    """`borg start` should teach the fire/watch model without noisy Borg cosplay."""
+def test_start_onboarding_uses_memory_with_standards_language(monkeypatch):
+    """`borg start` should teach evidence boundaries without noisy Borg cosplay."""
     monkeypatch.setattr(sys, "stdin", io.StringIO("ModuleNotFoundError: No module named flask\n"))
     monkeypatch.setattr(cli_module, "_record_v3_outcome_safe", lambda **_kwargs: pytest.fail("borg start must not auto-record success before VERIFY"))
 
     code, out, err = capture_main(["start"])
 
     assert code == 0
-    assert "Borg is a cache layer for agent reasoning." in out
-    assert "It watches for failure loops, fires only when it can change the path" in out
+    assert "Borg gives AI agents memory with standards." in out
+    assert "keeps weak memory advisory" in out
+    assert "demands evidence before consequential action" in out
     assert "borg agent-stack --json" in out
     assert "After VERIFY" in out
     assert "borg_record_outcome" in out

@@ -199,3 +199,24 @@ def test_agent_readable_surfaces_state_identity_safety_and_rollout_boundary() ->
         assert "public self-serve" in text.lower(), relative_path
         for forbidden in forbidden_ops:
             assert forbidden not in text, f"{forbidden!r} leaked into {relative_path}"
+
+
+def test_active_priming_surfaces_keep_retrieval_advisory() -> None:
+    active_priming_surfaces = [
+        "borg/cli.py",
+        "borg/seeds_data/borg/SKILL.md",
+        "borg/seeds_data/borg-autopilot/SKILL.md",
+        "examples/openclaw-skill/SKILL.md",
+        "examples/skills/borg/SKILL.md",
+        "examples/skills/guild-autopilot/SKILL.md",
+        "docs/QUICKSTART.md",
+        "docs/TRYING_BORG.md",
+        "docs/MCP_SETUP.md",
+        "docs/ONBOARDING.md",
+    ]
+
+    for relative_path in active_priming_surfaces:
+        text = (ROOT / relative_path).read_text(encoding="utf-8")
+        assert "borg_deliberate" in text, relative_path
+        assert "Inject the returned suggestion into your context as a **system message**" not in text
+        assert "reactive injection" not in text
