@@ -880,7 +880,8 @@ TOOLS: List[Dict[str, Any]] = [
             "Borg retrieves advisory memory, exposes unsupported claims and contradictions, selects standard or "
             "deep mode deterministically, and returns a bounded verification plan. Never returns private chain-of-thought. "
             "Use stage='preflight' before work and stage='review' with structured claims/evidence before consequential action. "
-            "The response records a local intervention id for borg_record_outcome after independent verification."
+            "By default the response records a local intervention id for borg_record_outcome after independent verification; "
+            "set record_intervention=false for side-effect-free probes."
         ),
         "inputSchema": {
             "type": "object",
@@ -907,6 +908,11 @@ TOOLS: List[Dict[str, Any]] = [
                 "memory_limit": {"type": "integer", "minimum": 0, "maximum": 20, "default": 5},
                 "agent_id": {"type": "string", "default": "default"},
                 "session_id": {"type": "string", "description": "Optional local session binding for the intervention receipt."},
+                "record_intervention": {
+                    "type": "boolean",
+                    "default": True,
+                    "description": "Write a local intervention receipt. Set false for side-effect-free probes.",
+                },
             },
             "required": ["task"],
         },
@@ -3152,8 +3158,9 @@ def borg_deliberate(
     memory_limit: int = 5,
     agent_id: str = "default",
     session_id: str = "",
+    record_intervention: bool = True,
 ) -> str:
-    """Return and locally receipt one evidence-first deliberation packet."""
+    """Return one evidence-first deliberation packet and optionally receipt it locally."""
     try:
         from borg.core.epistemic_guardrail import deliberate, render_epistemic_text
 
@@ -3173,7 +3180,7 @@ def borg_deliberate(
         )
         data = packet.to_dict()
         capture = dict(data.get("outcome_capture") or {})
-        if packet.status == "ok":
+        if packet.status == "ok" and record_intervention:
             try:
                 from borg.core.collective_learning import CollectiveLearningStore
 
@@ -3205,6 +3212,8 @@ def borg_deliberate(
                         "error_type": type(exc).__name__,
                     }
                 )
+        elif packet.status == "ok":
+            capture["status"] = "not_recorded_by_request"
         data["outcome_capture"] = capture
         return json.dumps(
             {
@@ -4093,6 +4102,7 @@ def _call_tool_impl(name: str, arguments: Dict[str, Any]) -> str:
             memory_limit=arguments.get("memory_limit", 5),
             agent_id=arguments.get("agent_id", "default"),
             session_id=_human_session_key(arguments),
+            record_intervention=arguments.get("record_intervention", True),
         )
 
     elif name == "borg_dashboard":

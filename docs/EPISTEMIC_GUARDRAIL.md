@@ -70,7 +70,7 @@ The CLI exits `2` for `block_pending_verification`, `1` for invalid input, and `
 
 ### 3. Close the loop
 
-CLI and MCP adapters store a privacy-redacted local intervention and return its `intervention_id`. After executing the verification plan, call `borg_record_outcome` with that exact id and the observed result.
+CLI and MCP adapters store a privacy-redacted local intervention by default and return its `intervention_id`. After executing the verification plan, call `borg_record_outcome` with that exact id and the observed result. Side-effect-free probes can disable this with CLI `--no-record` or MCP `record_intervention: false`.
 
 A verified outcome is not automatically shareable collective proof. Existing signed-receipt, trusted-tenant, verification-output, quorum, privacy, prompt-injection, revocation, and promotion gates still apply.
 
@@ -183,13 +183,13 @@ print(packet.decision)
 print(packet.to_dict())
 ```
 
-The public Python API is read-only by default. CLI and MCP adapters add local intervention recording.
+The public Python API is read-only by default. CLI and MCP adapters add local intervention recording by default, with explicit no-record modes for probes.
 
 ## MCP API
 
 Tool: `borg_deliberate`
 
-Inputs mirror the Python core except for `memory_items`, which is deliberately not exposed. The response contains:
+Inputs mirror the Python core except for `memory_items`, which is deliberately not exposed. `record_intervention` defaults to `true`; set it to `false` for a side-effect-free call. The response contains:
 
 ```json
 {
@@ -199,7 +199,7 @@ Inputs mirror the Python core except for `memory_items`, which is deliberately n
 }
 ```
 
-The packet's `outcome_capture` includes a locally recorded `intervention_id` when the local store is available. If recording degrades, the packet remains usable but reports `recording_unavailable`; it must not pretend the learning loop closed.
+The packet's `outcome_capture` includes a locally recorded `intervention_id` when recording is enabled and the local store is available. If recording degrades, the packet remains usable but reports `recording_unavailable`; if disabled, it reports `not_recorded_by_request` without an intervention id. Neither state may pretend the learning loop closed.
 
 ## Packet schema summary
 

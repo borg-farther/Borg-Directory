@@ -223,11 +223,14 @@ def mcp_stdio_canary(borg_mcp: Path, env: dict[str, str], expected_version: str)
         "epistemic_guardrail_canary_passed": epistemic_canary.get("passed"),
     }
     packet = deliberate_payload.get("epistemic_packet") or {}
+    outcome_capture = packet.get("outcome_capture") or {}
     deliberate_signal = (
         deliberate_payload.get("success") is True
         and packet.get("mode_selected") == "deep"
         and packet.get("decision") == "block_pending_verification"
         and packet.get("unsupported_claims") == ["release-safe"]
+        and outcome_capture.get("status") == "not_recorded_by_request"
+        and not outcome_capture.get("intervention_id")
     )
     fingerprint_signal = (
         fingerprint_payload.get("success") is True
@@ -276,6 +279,7 @@ def mcp_stdio_canary(borg_mcp: Path, env: dict[str, str], expected_version: str)
             "mode_selected": packet.get("mode_selected"),
             "decision": packet.get("decision"),
             "unsupported_claims": packet.get("unsupported_claims"),
+            "recording_status": outcome_capture.get("status"),
         },
     }
 

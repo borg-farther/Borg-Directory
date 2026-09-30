@@ -1586,6 +1586,7 @@ def test_pypi_mcp_canary_accepts_installed_package_runtime_fingerprint(monkeypat
             "mode_selected": "deep",
             "decision": "block_pending_verification",
             "unsupported_claims": ["release-safe"],
+            "outcome_capture": {"status": "not_recorded_by_request"},
         },
     }
     responses = [

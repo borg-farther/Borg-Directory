@@ -19,6 +19,7 @@ def test_mcp_schema_exposes_bounded_deliberation_contract() -> None:
     assert schema["properties"]["stage"]["enum"] == ["preflight", "review"]
     assert "memory_items" not in schema["properties"]
     assert "session_id" in schema["properties"]
+    assert schema["properties"]["record_intervention"]["default"] is True
     assert "chain-of-thought" in tool["description"]
 
 
@@ -41,6 +42,23 @@ def test_mcp_deliberate_records_intervention_and_returns_packet(tmp_path, monkey
     assert packet["outcome_capture"]["intervention_id"].startswith("intervention-sha256:")
     assert packet["outcome_capture"]["cluster_id"]
     assert "NO_CONFIDENT_MATCH" in payload["text"]
+
+
+def test_mcp_deliberate_can_skip_intervention_receipt(tmp_path, monkeypatch) -> None:
+    borg_home = tmp_path / "borg-home"
+    monkeypatch.setenv("BORG_HOME", str(borg_home))
+    monkeypatch.setattr(epistemic_guardrail, "_default_memory_provider", no_memory)
+
+    raw = mcp_server.borg_deliberate(
+        task="probe the clean-wheel MCP contract",
+        mode="deep",
+        record_intervention=False,
+    )
+    packet = json.loads(raw)["epistemic_packet"]
+
+    assert packet["outcome_capture"]["status"] == "not_recorded_by_request"
+    assert "intervention_id" not in packet["outcome_capture"]
+    assert not borg_home.exists()
 
 
 def test_mcp_high_risk_unsupported_claim_blocks(tmp_path, monkeypatch) -> None:
@@ -75,6 +93,24 @@ def test_dispatch_routes_all_structured_inputs(tmp_path, monkeypatch) -> None:
     assert packet["decision"] == "proceed"
     assert packet["claims"][0]["support_status"] == "verified_evidence_present"
     assert packet["outcome_capture"]["intervention_id"]
+
+
+def test_dispatch_routes_side_effect_free_deliberation(tmp_path, monkeypatch) -> None:
+    borg_home = tmp_path / "borg-home"
+    monkeypatch.setenv("BORG_HOME", str(borg_home))
+    monkeypatch.setattr(epistemic_guardrail, "_default_memory_provider", no_memory)
+    raw = mcp_server._call_tool_impl(
+        "borg_deliberate",
+        {
+            "task": "probe clean-wheel MCP",
+            "record_intervention": False,
+            "_hermes_session_id": "hermes-session-2",
+        },
+    )
+    packet = json.loads(raw)["epistemic_packet"]
+    assert packet["outcome_capture"]["status"] == "not_recorded_by_request"
+    assert "intervention_id" not in packet["outcome_capture"]
+    assert not borg_home.exists()
 
 
 def test_python_api_and_mcp_share_core_semantics(tmp_path, monkeypatch) -> None:

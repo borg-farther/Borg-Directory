@@ -87,7 +87,7 @@ print(packet.decision)
 print(packet.to_dict()["verification_plan"])
 ```
 
-Over stdio MCP, use `borg_deliberate`. It records a privacy-redacted local intervention and returns its `intervention_id`; after running the verification plan, close the exact loop with `borg_record_outcome`. See [`docs/EPISTEMIC_GUARDRAIL.md`](docs/EPISTEMIC_GUARDRAIL.md).
+Over stdio MCP, use `borg_deliberate`. By default it records a privacy-redacted local intervention and returns its `intervention_id`; after running the verification plan, close the exact loop with `borg_record_outcome`. For side-effect-free probes, pass `record_intervention: false`; the packet then reports `outcome_capture.status=not_recorded_by_request` and no intervention id. See [`docs/EPISTEMIC_GUARDRAIL.md`](docs/EPISTEMIC_GUARDRAIL.md).
 
 ## For people running AI agents
 
