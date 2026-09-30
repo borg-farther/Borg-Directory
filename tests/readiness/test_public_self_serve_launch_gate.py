@@ -1328,8 +1328,38 @@ def test_release_governance_check_prefers_live_github_over_stale_snapshot(tmp_pa
 
     assert live["passed"] is True
     assert live["source"] == "github_api"
+    assert live["minimum_approvals_required"] == 1
+    assert live["codeowners_review_policy_required"] is True
+    assert live["stale_review_dismissal_policy_required"] is True
+    assert live["last_push_approval_policy_required"] is True
     assert snapshot["passed"] is False
     assert snapshot["source"] == "snapshot"
+
+
+def test_release_governance_live_check_enforces_review_policy(tmp_path: Path, monkeypatch) -> None:
+    monkeypatch.setattr(gate, "ROOT", tmp_path)
+    (tmp_path / "eval").mkdir()
+    payload = _release_governance_payload(protected=True)
+    payload["protection"]["required_pull_request_reviews"] = {
+        "require_code_owner_reviews": False,
+        "required_approving_review_count": 0,
+        "dismiss_stale_reviews": False,
+        "require_last_push_approval": False,
+    }
+    monkeypatch.setattr(gate.release_governance_gate, "fetch_live_branch_payload", lambda repo, branch: payload)
+    monkeypatch.setattr(gate.release_governance_gate, "fetch_codeowners_errors", lambda repo, ref=None: [])
+
+    result = gate.release_governance_check(fetch_network=True)
+
+    assert result["passed"] is False
+    assert result["minimum_approvals_required"] == 1
+    assert result["codeowners_review_policy_required"] is True
+    assert result["stale_review_dismissal_policy_required"] is True
+    assert result["last_push_approval_policy_required"] is True
+    assert any("approving review" in blocker for blocker in result["blockers"])
+    assert any("CODEOWNER" in blocker for blocker in result["blockers"])
+    assert any("stale" in blocker.lower() for blocker in result["blockers"])
+    assert any("last-push" in blocker.lower() for blocker in result["blockers"])
 
 
 def test_release_governance_check_accepts_evaluated_snapshot_without_double_evaluating(tmp_path: Path, monkeypatch) -> None:

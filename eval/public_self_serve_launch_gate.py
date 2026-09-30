@@ -1122,6 +1122,10 @@ def release_governance_check(*, fetch_network: bool = True, max_snapshot_age_hou
             payload,
             codeowners_errors=codeowners_errors,
             require_codeowners_validation=True,
+            minimum_approvals=1,
+            require_code_owner_reviews=True,
+            require_stale_review_dismissal=True,
+            require_last_push_approval=True,
         )
         for field in ["generated_at_utc", "repo", "branch"]:
             if field in payload:
