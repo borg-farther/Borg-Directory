@@ -1,4 +1,4 @@
-"""Borg — failure memory for AI coding agents.
+"""Borg — failure memory and epistemic guardrails for AI agents.
 
 The top-level :func:`check` helper is intentionally tiny, but it must be real:
 it is the first API many agents try after ``import borg``.  Returning an empty
@@ -12,7 +12,9 @@ from __future__ import annotations
 import json
 import re
 from pathlib import Path
-from typing import Any
+from typing import Any, Mapping, Optional, Sequence
+
+from borg.core.epistemic_guardrail import EpistemicPacket, deliberate as _deliberate
 
 def _version_from_source_pyproject() -> str | None:
     """Return the source-tree version when running from a checkout."""
@@ -37,7 +39,7 @@ else:
 
         __version__ = _pkg_version("agent-borg")
     except (ImportError, PackageNotFoundError):
-        __version__ = "3.3.20"  # fallback only when package metadata is unavailable
+        __version__ = "3.4.1"  # fallback only when package metadata is unavailable
 
 
 def check(context: str, constraints: dict | None = None, top_k: int = 3) -> list[dict[str, Any]]:
@@ -90,3 +92,45 @@ def check(context: str, constraints: dict | None = None, top_k: int = 3) -> list
         return confident[: max(0, int(top_k))]
     except Exception:
         return []
+
+
+def deliberate(
+    task: str,
+    *,
+    context: str = "",
+    mode: str = "auto",
+    stage: str = "preflight",
+    draft: str = "",
+    claims: Optional[Sequence[Mapping[str, Any]]] = None,
+    assumptions: Optional[Sequence[str]] = None,
+    evidence: Optional[Sequence[Mapping[str, Any]]] = None,
+    verification_steps: Optional[Sequence[Mapping[str, Any]]] = None,
+    failure_count: int = 0,
+    risk_level: str = "",
+    memory_limit: int = 5,
+) -> EpistemicPacket:
+    """Return Borg's evidence-first preflight/review packet.
+
+    The host model remains the reasoner. Borg retrieves local and
+    outcome-grounded memory, keeps every memory item advisory, exposes
+    contradictions and unsupported claims, and requires independent
+    verification for consequential work. It never requests or stores private
+    chain-of-thought.
+    """
+    return _deliberate(
+        task,
+        context=context,
+        mode=mode,
+        stage=stage,
+        draft=draft,
+        claims=claims,
+        assumptions=assumptions,
+        evidence=evidence,
+        verification_steps=verification_steps,
+        failure_count=failure_count,
+        risk_level=risk_level,
+        memory_limit=memory_limit,
+    )
+
+
+__all__ = ["EpistemicPacket", "__version__", "check", "deliberate"]

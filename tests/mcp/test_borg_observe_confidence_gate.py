@@ -105,9 +105,11 @@ def test_concrete_permission_denied_can_still_return_bash_permission_guidance(mo
     )
 
     assert "PACK GUIDANCE (bash-permission-denied)" in result
-    assert "Use chmod +x" in result
-    assert "NO_CONFIDENT_MATCH" not in result
-
+    assert "ls -l -- ./deploy.sh" in result
+    assert "chmod u+x -- ./deploy.sh" in result
+    assert "sudo <command>" not in result
+    assert "Real traces: 0" in result
+    assert "SYNTHETIC ONLY" in result
 
 def test_guidance_safety_suppresses_no_confident_match():
     guidance = """

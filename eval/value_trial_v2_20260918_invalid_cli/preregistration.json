@@ -1,0 +1,187 @@
+{
+  "schema_version": 2,
+  "artifact": "eval/value_trial_taskset_v2.json",
+  "preregistered_at_utc": "2026-09-18T15:20:00Z",
+  "status": "preregistered_before_first_model_run",
+  "model": {
+    "provider": "openai-codex",
+    "name": "gpt-5.6-sol",
+    "runner": "Hermes one-shot safe mode",
+    "toolsets": [
+      "terminal",
+      "file"
+    ],
+    "max_turns": 7
+  },
+  "conditions": {
+    "C0_no_borg": "No Borg tool or guidance is exposed.",
+    "C1_borg_empty": "The Borg tool scaffold is exposed, bundled seeds are disabled, and the trace database is empty.",
+    "C2_borg_seeded": "The identical Borg tool scaffold is exposed, bundled seeds are disabled, and the trace database contains task-relevant validated traces."
+  },
+  "primary_contrast": "C2_borg_seeded minus C1_borg_empty solve-rate risk difference",
+  "secondary_contrasts": [
+    "C1_borg_empty minus C0_no_borg scaffold effect",
+    "C2_borg_seeded minus C0_no_borg total product effect"
+  ],
+  "primary_metric": "hidden_grader_pass within seven model turns with public tests unchanged",
+  "secondary_metrics": [
+    "public_tests_pass",
+    "wall_seconds",
+    "input_tokens",
+    "output_tokens",
+    "total_tokens",
+    "api_calls",
+    "borg_invocations",
+    "test_files_unchanged"
+  ],
+  "validity_rules": [
+    "Every C1/C2 run must invoke the Borg tool at least once or the run is invalid.",
+    "All conditions receive only the same symptom prompt; diagnostic query_hint text is never rendered to the agent.",
+    "A run cannot pass if public test files were modified.",
+    "Hidden grader source is created only after the model process exits.",
+    "Crashes, timeouts, turn-budget exhaustion, and invalid runs remain in the denominator.",
+    "C1 and C2 use identical prompts and tool code; only immutable trace database contents differ.",
+    "Bundled Borg seed packs and remote retrieval are disabled in C1 and C2."
+  ],
+  "decision_rule": {
+    "pilot_scope": true,
+    "positive_directional_signal": "C2 solve rate exceeds C1 with zero critical negative transfer.",
+    "confirmatory_gate": "Do not claim proven lift from eight tasks; require a powered held-out replication whose C2-C1 confidence interval excludes zero.",
+    "negative_transfer": "C2 fails a task passed by both C0 and C1, modifies tests, or applies unsafe guidance."
+  },
+  "v1_correction": "V1 exposed diagnostic query_hint text in both Borg-arm prompts and had a 100% solve-rate ceiling. V2 uses symptom-only tool queries, multi-file bugs, and a preregistered seven-turn budget.",
+  "tasks": [
+    {
+      "id": "contextvar_cross_request_leak",
+      "prompt": "Under concurrent requests, audit tags occasionally contain another request's ID. Sequential requests look correct. Find and fix the isolation failure without changing the public API or tests.",
+      "query_hint": "concurrent requests audit tags wrong request id while sequential requests pass",
+      "seed": {
+        "root_cause": "A ContextVar uses one mutable dict as its default; mutating the object returned by get() does not create a task-local binding, so concurrent contexts share it.",
+        "approach": "Create a fresh dict binding at each request boundary with ContextVar.set(), retain the token, and reset(token) in finally. Keep tag mutation inside that per-request dict.",
+        "dead_end": "Calling dict.clear() at request exit does not establish isolation and can erase another request’s shared tags."
+      },
+      "files": {
+        "request_state.py": "from contextvars import ContextVar\n\n_tags = ContextVar('request_tags', default={})\n\ndef put_tag(key, value):\n    _tags.get()[key] = value\n\ndef snapshot():\n    return dict(_tags.get())\n\ndef clear():\n    _tags.get().clear()\n",
+        "pipeline.py": "from request_state import put_tag, clear\n\nasync def run_request(request_id, handler):\n    put_tag('request_id', request_id)\n    try:\n        return await handler()\n    finally:\n        clear()\n",
+        "tests/test_pipeline.py": "import asyncio, unittest\nfrom pipeline import run_request\nfrom request_state import snapshot\n\nclass PipelineTests(unittest.IsolatedAsyncioTestCase):\n    async def test_serial_request(self):\n        async def handler(): return snapshot()\n        self.assertEqual((await run_request('r-1', handler))['request_id'], 'r-1')\n\nif __name__ == '__main__': unittest.main()\n"
+      },
+      "hidden_test": "import asyncio\nfrom pipeline import run_request\nfrom request_state import snapshot\nasync def main():\n    a_ready=asyncio.Event(); b_ready=asyncio.Event()\n    async def a_handler():\n        a_ready.set(); await b_ready.wait(); await asyncio.sleep(0); return snapshot()\n    async def b_handler():\n        b_ready.set(); await a_ready.wait(); await asyncio.sleep(0); return snapshot()\n    a,b=await asyncio.gather(run_request('request-A',a_handler),run_request('request-B',b_handler))\n    assert a.get('request_id') == 'request-A', (a,b)\n    assert b.get('request_id') == 'request-B', (a,b)\nasyncio.run(main())\n"
+    },
+    {
+      "id": "factory_registry_recursive_deadlock",
+      "prompt": "The first request for the composed renderer hangs forever, while the basic renderer and all startup checks pass. Repair the registry lifecycle without weakening concurrent initialization safety.",
+      "query_hint": "composed renderer first request hangs basic renderer works concurrent initialization",
+      "seed": {
+        "root_cause": "Registry.get holds a non-reentrant threading.Lock while invoking a factory; the composed factory recursively calls get for its dependency and deadlocks on the same thread.",
+        "approach": "Use a reentrant lock for recursive same-thread dependency construction, while retaining the lock around one-time instance creation.",
+        "dead_end": "Removing locking entirely fixes the hang but allows duplicate singleton construction under concurrent callers."
+      },
+      "files": {
+        "registry.py": "import threading\n\n_lock = threading.Lock()\n_factories = {}\n_instances = {}\n\ndef register(name, factory):\n    _factories[name] = factory\n\ndef get(name):\n    with _lock:\n        if name not in _instances:\n            _instances[name] = _factories[name]()\n        return _instances[name]\n",
+        "plugins.py": "from registry import register, get\n\nclass BasicRenderer:\n    def render(self, value): return f'basic:{value}'\n\nclass ComposedRenderer:\n    def __init__(self, base): self.base = base\n    def render(self, value): return f'composed[{self.base.render(value)}]'\n\ndef install():\n    register('basic', BasicRenderer)\n    register('composed', lambda: ComposedRenderer(get('basic')))\n",
+        "service.py": "from registry import get\nfrom plugins import install\ninstall()\n\ndef render(kind, value):\n    return get(kind).render(value)\n",
+        "tests/test_service.py": "import unittest\nfrom service import render\n\nclass ServiceTests(unittest.TestCase):\n    def test_basic(self): self.assertEqual(render('basic','x'),'basic:x')\n\nif __name__ == '__main__': unittest.main()\n"
+      },
+      "hidden_test": "import threading\nfrom service import render\nresult=[]; error=[]\ndef target():\n    try: result.append(render('composed','x'))\n    except BaseException as exc: error.append(exc)\nt=threading.Thread(target=target,daemon=True); t.start(); t.join(1.5)\nassert not t.is_alive(), 'composed renderer deadlocked during recursive dependency construction'\nassert not error, error\nassert result == ['composed[basic:x]'], result\n"
+    },
+    {
+      "id": "tenant_cache_scope_collision",
+      "prompt": "A small number of API responses contain data from another tenant, but only when both tenants request the same resource with the same parameters. Fix the cache boundary and preserve deterministic keys.",
+      "query_hint": "same resource parameters cross tenant cached response leak",
+      "seed": {
+        "root_cause": "The response cache key canonicalizes endpoint and params but omits tenant identity, so equivalent requests from different tenants collide.",
+        "approach": "Include tenant identity as a distinct, unambiguous component of the canonical cache key and update every read/write call site consistently.",
+        "dead_end": "Clearing the global cache between requests hides the leak in serial tests but does not provide tenant isolation under concurrency."
+      },
+      "files": {
+        "cache.py": "import json\n_store = {}\n\ndef make_key(endpoint, params):\n    return endpoint + ':' + json.dumps(params, sort_keys=True, separators=(',', ':'))\n\ndef get(key): return _store.get(key)\ndef put(key, value): _store[key] = value\ndef clear(): _store.clear()\n",
+        "client.py": "import cache\n\ndef fetch(transport, tenant, endpoint, params):\n    key = cache.make_key(endpoint, params)\n    hit = cache.get(key)\n    if hit is not None:\n        return hit\n    value = transport(tenant, endpoint, params)\n    cache.put(key, value)\n    return value\n",
+        "tests/test_client.py": "import unittest, cache\nfrom client import fetch\n\nclass ClientTests(unittest.TestCase):\n    def setUp(self): cache.clear()\n    def test_repeat_request_is_cached(self):\n        calls=[]\n        def tx(t,e,p): calls.append(1); return {'tenant':t,'endpoint':e}\n        self.assertEqual(fetch(tx,'a','/one',{'x':1}),fetch(tx,'a','/one',{'x':1}))\n        self.assertEqual(len(calls),1)\n\nif __name__ == '__main__': unittest.main()\n"
+      },
+      "hidden_test": "import cache\nfrom client import fetch\ncache.clear(); calls=[]\ndef tx(tenant, endpoint, params):\n    calls.append(tenant); return {'tenant':tenant,'payload':params}\na=fetch(tx,'tenant-A','/balance',{'asset':'USD'})\nb=fetch(tx,'tenant-B','/balance',{'asset':'USD'})\nassert a['tenant']=='tenant-A'\nassert b['tenant']=='tenant-B', (a,b,calls)\nassert calls == ['tenant-A','tenant-B'], calls\n"
+    },
+    {
+      "id": "sqlite_helper_rolls_back_caller_work",
+      "prompt": "When an existing recipient is encountered, an unrelated audit row written earlier in the caller transaction silently disappears. New-recipient flows are fine. Preserve idempotency and caller transaction ownership.",
+      "query_hint": "existing recipient causes earlier unrelated audit row disappear transaction",
+      "seed": {
+        "root_cause": "ensure_recipient catches a uniqueness error and calls connection.rollback(), rolling back the caller’s entire transaction including unrelated prior writes.",
+        "approach": "Make the insert idempotent without a connection-wide rollback, for example INSERT OR IGNORE followed by SELECT, or isolate the attempted insert in a savepoint.",
+        "dead_end": "Committing before ensure_recipient preserves the audit row but destroys atomicity and caller transaction ownership."
+      },
+      "files": {
+        "database.py": "import sqlite3\n\ndef connect():\n    conn=sqlite3.connect(':memory:')\n    conn.execute('create table recipients(name text unique)')\n    conn.execute('create table audit(event text)')\n    conn.commit(); return conn\n",
+        "recipients.py": "import sqlite3\n\ndef ensure_recipient(conn, name):\n    try:\n        conn.execute('insert into recipients(name) values (?)',(name,))\n    except sqlite3.IntegrityError:\n        conn.rollback()\n    return conn.execute('select name from recipients where name=?',(name,)).fetchone()[0]\n",
+        "service.py": "from recipients import ensure_recipient\n\ndef record_and_resolve(conn, event, recipient):\n    conn.execute('insert into audit(event) values (?)',(event,))\n    return ensure_recipient(conn, recipient)\n",
+        "tests/test_recipients.py": "import unittest\nfrom database import connect\nfrom recipients import ensure_recipient\n\nclass RecipientTests(unittest.TestCase):\n    def test_new_and_existing_are_idempotent(self):\n        c=connect(); self.assertEqual(ensure_recipient(c,'alice'),'alice'); c.commit()\n        self.assertEqual(ensure_recipient(c,'alice'),'alice')\n        self.assertEqual(c.execute('select count(*) from recipients').fetchone()[0],1)\n\nif __name__ == '__main__': unittest.main()\n"
+      },
+      "hidden_test": "from database import connect\nfrom recipients import ensure_recipient\nfrom service import record_and_resolve\nc=connect(); ensure_recipient(c,'alice'); c.commit()\nc.execute('begin'); assert record_and_resolve(c,'payment-seen','alice')=='alice'; c.commit()\nassert c.execute('select event from audit').fetchall()==[('payment-seen',)], 'helper rolled back caller audit write'\n"
+    },
+    {
+      "id": "duplicate_json_policy_keys",
+      "prompt": "Two services disagree about authorization for a small set of syntactically valid JSON requests. Ordinary payloads behave correctly. Make decoding fail closed when one object can be interpreted with competing security values.",
+      "query_hint": "valid json authorization services disagree competing security values in one object",
+      "seed": {
+        "root_cause": "json.loads silently keeps the last occurrence of duplicate object keys, while another service/policy layer may keep the first; duplicate role keys create parser differential authorization.",
+        "approach": "Decode with an object_pairs_hook that rejects duplicate keys at every object nesting level before policy evaluation.",
+        "dead_end": "Checking for duplicate substrings in raw JSON is not syntax-aware and misses escapes/nesting while producing false positives."
+      },
+      "files": {
+        "codec.py": "import json\n\ndef decode_payload(raw):\n    value=json.loads(raw)\n    if not isinstance(value,dict): raise ValueError('object required')\n    return value\n",
+        "policy.py": "def allowed(payload):\n    return payload.get('role') == 'admin' and payload.get('action') == 'export'\n",
+        "api.py": "from codec import decode_payload\nfrom policy import allowed\n\ndef authorize(raw): return allowed(decode_payload(raw))\n",
+        "tests/test_api.py": "import unittest\nfrom api import authorize\n\nclass ApiTests(unittest.TestCase):\n    def test_admin_export(self): self.assertTrue(authorize('{\"role\":\"admin\",\"action\":\"export\"}'))\n    def test_user_denied(self): self.assertFalse(authorize('{\"role\":\"user\",\"action\":\"export\"}'))\n\nif __name__ == '__main__': unittest.main()\n"
+      },
+      "hidden_test": "from api import authorize\nfrom codec import decode_payload\nfor raw in ['{\"role\":\"user\",\"role\":\"admin\",\"action\":\"export\"}','{\"meta\":{\"role\":\"user\",\"role\":\"admin\"},\"action\":\"read\"}']:\n    try: decode_payload(raw)\n    except ValueError: pass\n    else: raise AssertionError('duplicate security key accepted: '+raw)\ntry: authorize('{\"role\":\"user\",\"role\":\"admin\",\"action\":\"export\"}')\nexcept ValueError: pass\nelse: raise AssertionError('ambiguous authorization payload did not fail closed')\n"
+    },
+    {
+      "id": "conflicting_content_length_headers",
+      "prompt": "A proxy chain occasionally desynchronizes request bodies when more than one gateway touches the length metadata. Normal single-gateway requests work. Harden header parsing without changing its dictionary return contract.",
+      "query_hint": "proxy chain occasional request body desynchronization multiple gateways length metadata",
+      "seed": {
+        "root_cause": "The header parser overwrites duplicate Content-Length fields in a dict, so conflicting values are silently accepted and upstream/downstream components can frame different body lengths.",
+        "approach": "Track duplicate Content-Length values while parsing; allow a duplicate only when its normalized decimal value is identical, and reject conflicts or invalid forms before returning the dictionary.",
+        "dead_end": "Keeping only the first or last Content-Length merely chooses one parser interpretation and leaves request smuggling possible."
+      },
+      "files": {
+        "headers.py": "def parse_headers(lines):\n    result={}\n    for line in lines:\n        name,value=line.split(':',1)\n        result[name.strip().lower()]=value.strip()\n    return result\n",
+        "framing.py": "from headers import parse_headers\n\ndef body_length(lines):\n    headers=parse_headers(lines)\n    return int(headers.get('content-length','0'))\n",
+        "tests/test_headers.py": "import unittest\nfrom headers import parse_headers\nfrom framing import body_length\n\nclass HeaderTests(unittest.TestCase):\n    def test_single_length(self):\n        self.assertEqual(parse_headers(['Content-Length: 4'])['content-length'],'4')\n        self.assertEqual(body_length(['Content-Length: 4']),4)\n\nif __name__ == '__main__': unittest.main()\n"
+      },
+      "hidden_test": "from headers import parse_headers\nfrom framing import body_length\nassert body_length(['Content-Length: 4','content-length: 4']) == 4\nfor lines in [ ['Content-Length: 4','Content-Length: 9'], ['Content-Length: 04','Content-Length: 4x'] ]:\n    try: parse_headers(lines)\n    except ValueError: pass\n    else: raise AssertionError('conflicting/invalid duplicate Content-Length accepted: '+repr(lines))\n"
+    },
+    {
+      "id": "nested_defaults_mutated_between_loads",
+      "prompt": "One configuration load changes the defaults seen by later, unrelated loads in the same process. Fresh processes and flat settings are unaffected. Make each load independent while preserving nested override behavior.",
+      "query_hint": "configuration load changes defaults for later unrelated load same process nested settings",
+      "seed": {
+        "root_cause": "The loader makes only a shallow copy of DEFAULTS, then updates a nested dictionary in place; the nested object is shared with the module-level defaults across calls.",
+        "approach": "Deep-copy the defaults (or construct new nested mappings) before applying overrides so no returned config aliases mutable default state.",
+        "dead_end": "Copying only the override dictionary does not break the nested alias from the shallow-copied defaults."
+      },
+      "files": {
+        "defaults.py": "DEFAULTS={'retry':{'attempts':3,'backoff':1.0},'features':{'audit':True}}\n",
+        "loader.py": "from defaults import DEFAULTS\n\ndef load_config(overrides=None):\n    merged=dict(DEFAULTS)\n    overrides=overrides or {}\n    for section, values in overrides.items():\n        if isinstance(values,dict) and isinstance(merged.get(section),dict):\n            merged[section].update(values)\n        else:\n            merged[section]=values\n    return merged\n",
+        "service.py": "from loader import load_config\n\ndef retry_attempts(overrides=None): return load_config(overrides)['retry']['attempts']\n",
+        "tests/test_loader.py": "import unittest\nfrom loader import load_config\n\nclass LoaderTests(unittest.TestCase):\n    def test_nested_override(self):\n        cfg=load_config({'retry':{'attempts':5}})\n        self.assertEqual(cfg['retry']['attempts'],5); self.assertEqual(cfg['retry']['backoff'],1.0)\n\nif __name__ == '__main__': unittest.main()\n"
+      },
+      "hidden_test": "from defaults import DEFAULTS\nfrom loader import load_config\nfirst=load_config({'retry':{'attempts':99},'features':{'audit':False}})\nsecond=load_config()\nassert first['retry']['attempts']==99\nassert second['retry']=={'attempts':3,'backoff':1.0}, second\nassert second['features']=={'audit':True}, second\nassert DEFAULTS=={'retry':{'attempts':3,'backoff':1.0},'features':{'audit':True}}, DEFAULTS\nassert first['retry'] is not second['retry']\n"
+    },
+    {
+      "id": "bound_method_unsubscribe_leak",
+      "prompt": "Closed sessions sometimes continue receiving events and remain alive, even though stop() ran successfully. Plain function subscribers unsubscribe correctly. Fix subscriber identity handling without dropping other listeners.",
+      "query_hint": "closed object sessions still receive events plain function subscribers unsubscribe correctly",
+      "seed": {
+        "root_cause": "Each access to an instance bound method creates a distinct method object; EventBus.unsubscribe compares callbacks with `is`, so self.on_event at stop is not identical to the object stored at start.",
+        "approach": "Use stable callback equality or a canonical identity key based on bound method __self__ and __func__, and remove only matching subscriptions.",
+        "dead_end": "Clearing the entire callback list removes unrelated listeners and turns a leak into lost event delivery."
+      },
+      "files": {
+        "eventbus.py": "class EventBus:\n    def __init__(self): self._callbacks=[]\n    def subscribe(self, callback): self._callbacks.append(callback)\n    def unsubscribe(self, callback):\n        self._callbacks=[item for item in self._callbacks if item is not callback]\n    def emit(self, value):\n        for callback in list(self._callbacks): callback(value)\n    def subscriber_count(self): return len(self._callbacks)\n",
+        "session.py": "class Session:\n    def __init__(self,bus): self.bus=bus; self.received=[]\n    def on_event(self,value): self.received.append(value)\n    def start(self): self.bus.subscribe(self.on_event)\n    def stop(self): self.bus.unsubscribe(self.on_event)\n",
+        "tests/test_eventbus.py": "import unittest\nfrom eventbus import EventBus\n\nclass BusTests(unittest.TestCase):\n    def test_plain_function_unsubscribes(self):\n        bus=EventBus(); seen=[]\n        def callback(v): seen.append(v)\n        bus.subscribe(callback); bus.emit(1); bus.unsubscribe(callback); bus.emit(2)\n        self.assertEqual(seen,[1])\n\nif __name__ == '__main__': unittest.main()\n"
+      },
+      "hidden_test": "import gc, weakref\nfrom eventbus import EventBus\nfrom session import Session\nbus=EventBus(); other=[]\ndef keep(v): other.append(v)\nbus.subscribe(keep)\ns=Session(bus); s.start(); bus.emit('before'); assert s.received==['before']\ns.stop(); bus.emit('after'); assert s.received==['before'], s.received\nassert other==['before','after']; assert bus.subscriber_count()==1\nref=weakref.ref(s); del s; gc.collect(); assert ref() is None, 'stopped session retained by event bus'\n"
+    }
+  ]
+}

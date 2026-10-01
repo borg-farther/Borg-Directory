@@ -119,9 +119,10 @@ def test_error_lookup_json_rpc_call_returns_text_content_packet():
     assert "structuredContent" in resp["result"]
     # Firing visibility (E-014): user_message carries the human_summary
     # moment-line — the channel clients actually surface to the human.
-    assert resp["result"]["user_message"].startswith("🛟 Borg: found a known fix")
+    assert resp["result"]["user_message"].startswith("🛟 Borg: bundled seed guidance")
+    assert "zero verified outcome receipts" in resp["result"]["user_message"]
     assert "proven" not in resp["result"]["user_message"].lower()
-    assert resp["result"]["structuredContent"]["borg_human"]["first_hit"] is True
+    assert resp["result"]["structuredContent"]["borg_human"]["first_hit"] is False
 
 
 def _assert_renderer_safe(line: str):
@@ -142,9 +143,10 @@ def test_error_lookup_human_badge_fires_once_per_session():
     first = json.loads(mcp_server.call_tool("error_lookup", args))
     second = json.loads(mcp_server.call_tool("error_lookup", args))
 
-    assert first["user_message"].startswith("🛟 Borg: found a known fix for this missing dependency error")
+    assert first["user_message"].startswith("🛟 Borg: bundled seed guidance for this missing dependency error")
+    assert "zero verified outcome receipts" in first["user_message"]
     assert "proven" not in first["user_message"].lower()
-    assert first["borg_human"]["first_hit"] is True
+    assert first["borg_human"]["first_hit"] is False
     assert "dead_ends_avoided" not in first["borg_human"]["state"]
     assert first["borg_human"]["state"]["stop_items_surfaced"] == 3
     # E-014 push rule: EVERY hit pushes the moment-line (was first-hit-only,

@@ -217,6 +217,7 @@ def run_gate(args: argparse.Namespace) -> int:
         py = venv_dir / "bin" / "python"
         pip = venv_dir / "bin" / "pip"
         borg = venv_dir / "bin" / "borg"
+        borg_mcp = venv_dir / "bin" / "borg-mcp"
         doctor = venv_dir / "bin" / "borg-doctor"
 
         res = _run([sys.executable, "-m", "venv", str(venv_dir)], timeout=120)
@@ -261,6 +262,12 @@ def run_gate(args: argparse.Namespace) -> int:
             ("borg_help", [str(borg), "--help"], None, ["borg rescue", "borg start"]),
             ("borg_rescue_text", [str(borg), "rescue", "ModuleNotFoundError: No module named flask", "--short"], None, ["ACTION", "STOP", "VERIFY"]),
             ("borg_rescue_json", [str(borg), "rescue", "ModuleNotFoundError: No module named flask", "--json"], None, ["agent_instruction", "human_receipt"]),
+            (
+                "borg_deliberate_json",
+                [str(borg), "deliberate", "plan a production database migration", "--no-record", "--json"],
+                None,
+                ['"mode_selected": "deep"', '"verification_plan"', '"memory_status"'],
+            ),
             ("borg_doctor_json", [str(doctor), "--json"], None, ["runtime", "checks"]),
             ("borg_try_bare", [str(borg), "try", "systematic-debugging"], None, ["Pack:"]),
             ("borg_try_borg_uri", [str(borg), "try", "borg://hermes/systematic-debugging"], None, ["Pack:"]),
@@ -304,11 +311,38 @@ def run_gate(args: argparse.Namespace) -> int:
                 res.detail = "public command returned expected value signal"
             results.append(res)
 
+        # Stdio MCP surface: reuse the production PyPI canary contract against
+        # this local wheel so borg_deliberate, runtime fingerprinting, and the
+        # installed-module isolation boundary are release-gated before upload.
+        try:
+            try:
+                # Prefer the sibling file beside this gate. Importing the
+                # package-qualified name first can resolve an editable install
+                # from another checkout and silently test stale canary logic.
+                from run_pypi_fresh_install_canary import mcp_stdio_canary
+            except ModuleNotFoundError:
+                from eval.run_pypi_fresh_install_canary import mcp_stdio_canary
+
+            expected_version = version_meta.group(1) if version_meta else ""
+            mcp_canary = mcp_stdio_canary(borg_mcp, env, expected_version)
+            _append(
+                results,
+                "mcp_stdio_epistemic_canary",
+                bool(mcp_canary.get("passed")),
+                "initialize/tools/rescue/fingerprint/deliberate passed"
+                if mcp_canary.get("passed")
+                else "installed stdio MCP release canary failed",
+                stdout=json.dumps(mcp_canary, indent=2, sort_keys=True),
+            )
+        except Exception as exc:
+            _append(results, "mcp_stdio_epistemic_canary", False, f"canary exception: {type(exc).__name__}: {exc}")
+
         # Import API surface: catches wheel packaging omissions masked by editable installs.
         api_code = (
             "import borg, json; "
             "r=borg.check('ModuleNotFoundError: No module named flask', top_k=1); "
-            "print(json.dumps({'version': borg.__version__, 'borg_file': borg.__file__, 'result_type': type(r).__name__, 'count': len(r)}))"
+            "p=borg.deliberate('plan a production database migration', mode='auto'); "
+            "print(json.dumps({'version': borg.__version__, 'borg_file': borg.__file__, 'result_type': type(r).__name__, 'count': len(r), 'deliberate_mode': p.mode_selected, 'deliberate_decision': p.decision}))"
         )
         res = _run([str(py), "-c", api_code], cwd=isolated_user_home, env=env, timeout=120)
         res.name = "public_import_api_check"
@@ -318,11 +352,16 @@ def run_gate(args: argparse.Namespace) -> int:
             except Exception:
                 payload = {}
             borg_file = str(payload.get("borg_file") or "")
-            if payload.get("result_type") == "list" and borg_file and not Path(borg_file).resolve().is_relative_to(ROOT):
-                res.detail = "borg.check returned list from installed wheel without checkout import leakage"
+            if (
+                payload.get("result_type") == "list"
+                and payload.get("deliberate_mode") == "deep"
+                and borg_file
+                and not Path(borg_file).resolve().is_relative_to(ROOT)
+            ):
+                res.detail = "borg.check and borg.deliberate passed from installed wheel without checkout import leakage"
             else:
                 res.passed = False
-                res.detail = "borg.check failed, did not return list, or imported from checkout instead of installed wheel"
+                res.detail = "borg.check/deliberate failed, returned wrong shape/mode, or imported from checkout instead of installed wheel"
         else:
             res.passed = False
             res.detail = "borg.check failed or did not return list"

@@ -1,14 +1,17 @@
 # Borg Privacy Model
 
-**Rev:** 20260503-0846
+**Rev:** 20260930-1141
 
 Borg is failure memory for AI coding agents. It does not upload raw agent conversations, raw traces, tool outputs, source files, screenshots, or environment variables by default. Any shared failure-memory path is opt-in and accepts only signed, sanitized, revocable learning atoms.
+
+Its epistemic guardrail adds local decision controls for consequential work. It does not request or upload private chain-of-thought.
 
 ## Data zones
 
 | Zone | Data | Default | Sharing |
 |---|---|---|---|
 | Local raw trace | task text, tool metadata, local paths, errors | local-only | never directly shared |
+| Local epistemic packet/intervention | bounded task/context, claims, evidence summaries, assumptions, memory references, decision and verification plan | local-only | never direct shared proof |
 | Local atom | sanitized lesson distilled from trace | local-only | opt-in export only |
 | Org atom | signed sanitized atom scoped to tenant/org | off by default | opt-in |
 | Global candidate | signed sanitized atom eligible for quorum | off by default | requires policy + quorum |
@@ -48,6 +51,12 @@ Shared memory accepts only `LearningAtom` envelopes containing:
 - prompt-injection instructions;
 - unsigned shared atoms;
 - revoked atoms.
+
+## Epistemic-packet minimization
+
+`borg_deliberate` requests decision-relevant artifacts only: task/context, structured material claims, evidence references/summaries, assumptions, verification steps, and an optional draft. It never requests private chain-of-thought. The returned `packet_id` binds a SHA-256 digest of the draft rather than persisting the draft in the packet. Intervention recording passes bounded packet data through the existing privacy redactor; outcome promotion still requires the signed, sanitized learning-atom path.
+
+Retrieved memory is untrusted advisory data. Prompt-injection findings suppress unsafe memory before packet emission, and priming surfaces forbid injecting retrieved text as system/developer instructions.
 
 ## Controls
 

@@ -1,0 +1,58 @@
+[
+  {
+    "empty_status": "no_confident_match",
+    "hidden_baseline_fail": true,
+    "public_baseline_pass": true,
+    "seeded_status": "matched_verified_memory",
+    "task_id": "contextvar_cross_request_leak"
+  },
+  {
+    "empty_status": "no_confident_match",
+    "hidden_baseline_fail": true,
+    "public_baseline_pass": true,
+    "seeded_status": "matched_verified_memory",
+    "task_id": "factory_registry_recursive_deadlock"
+  },
+  {
+    "empty_status": "no_confident_match",
+    "hidden_baseline_fail": true,
+    "public_baseline_pass": true,
+    "seeded_status": "matched_verified_memory",
+    "task_id": "tenant_cache_scope_collision"
+  },
+  {
+    "empty_status": "no_confident_match",
+    "hidden_baseline_fail": true,
+    "public_baseline_pass": true,
+    "seeded_status": "matched_verified_memory",
+    "task_id": "sqlite_helper_rolls_back_caller_work"
+  },
+  {
+    "empty_status": "no_confident_match",
+    "hidden_baseline_fail": true,
+    "public_baseline_pass": true,
+    "seeded_status": "matched_verified_memory",
+    "task_id": "duplicate_json_policy_keys"
+  },
+  {
+    "empty_status": "no_confident_match",
+    "hidden_baseline_fail": true,
+    "public_baseline_pass": true,
+    "seeded_status": "matched_verified_memory",
+    "task_id": "conflicting_content_length_headers"
+  },
+  {
+    "empty_status": "no_confident_match",
+    "hidden_baseline_fail": true,
+    "public_baseline_pass": true,
+    "seeded_status": "matched_verified_memory",
+    "task_id": "nested_defaults_mutated_between_loads"
+  },
+  {
+    "empty_status": "no_confident_match",
+    "hidden_baseline_fail": true,
+    "public_baseline_pass": true,
+    "seeded_status": "matched_verified_memory",
+    "task_id": "bound_method_unsubscribe_leak"
+  }
+]

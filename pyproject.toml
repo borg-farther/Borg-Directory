@@ -4,15 +4,15 @@ build-backend = "setuptools.build_meta"
 
 [project]
 name = "agent-borg"
-version = "3.3.20"
-description = "Failure memory CLI and MCP server for AI coding agents"
+version = "3.4.1"
+description = "Failure memory and epistemic guardrails for AI agents"
 readme = "README.md"
 requires-python = ">=3.10"
 license = "MIT"
 authors = [
   { name = "Borg contributors" }
 ]
-keywords = ["mcp", "ai-agents", "debugging", "agent-tools", "failure-memory"]
+keywords = ["mcp", "ai-agents", "debugging", "agent-tools", "failure-memory", "epistemic-guardrails", "agent-memory"]
 classifiers = [
   "Development Status :: 4 - Beta",
   "Intended Audience :: Developers",

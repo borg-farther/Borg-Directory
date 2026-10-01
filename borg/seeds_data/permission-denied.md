@@ -18,29 +18,27 @@ root_cause:
   explanation: The OS denied access to a resource because the process user does not
     have the required permissions on that resource.
 investigation_trail:
-- file: django/contrib/admin/templatetags/admin_modify.py
+- file: <denied-path>
   position: FIRST
-  what: Admin templatetags show_save_as_new — check permission checks for save actions
-  grep_pattern: permission|has_add_permission|save_as
+  what: Identify the exact denied operation, process user, owner/group, mode bits, ACLs, and parent-directory traversal permissions before mutating anything
+  grep_pattern: permission denied|EACCES|EPERM|read-only file system
 resolution_sequence:
-- action: chmod
-  command: chmod 644 file (owner rw, others r) or 600 for secrets
-  why: Principle of least privilege — give only what is needed
-- action: chown
-  command: chown user:group file
-  why: Changes ownership so the process user can access the file
-- action: add_to_group
-  command: usermod -aG group user
-  why: Adds the user to a group that has access to the resource
-- action: docker_user
-  command: Ensure Dockerfile USER matches the file owner, or run docker with --user
-    flag
-  why: Docker containers run as root unless USER is explicitly set
+- action: inspect_identity_and_path
+  command: id && ls -ld -- <denied-path> && namei -l -- <denied-path>
+  why: Distinguishes missing execute/read/write bits from wrong ownership, parent traversal, read-only mounts, ACLs, and policy controls
+- action: reproduce_as_intended_user
+  command: rerun the exact failing command as the intended non-root process user
+  why: Confirms which operation and identity are actually denied before choosing a fix
+- action: apply_minimum_targeted_change
+  command: change only the required owner/group/mode/ACL or mount policy after the diagnosis identifies it
+  why: The safe repair depends on whether the denied operation is read, write, execute, directory traversal, or a read-only mount
 anti_patterns:
 - action: chmod 777
   why_fails: Security risk — gives everyone full access
 - action: Running as root
   why_fails: Security risk — creates files owned by root
+- action: Blind chmod 644 or chown
+  why_fails: Can remove required execute permission or corrupt ownership without identifying the denied operation
 - action: Disabling SELinux or AppArmor
   why_fails: Masks the permission problem and creates security risks
 evidence:

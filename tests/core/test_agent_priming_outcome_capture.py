@@ -15,6 +15,7 @@ def test_agent_priming_candidate_is_host_specific_and_closes_outcome_loop():
     assert candidate["global_promotion_allowed"] is False
     prompt = candidate["prompt"]
     assert "borg_observe" in prompt
+    assert "borg_deliberate" in prompt
     assert "error_lookup" in prompt
     assert "NO_CONFIDENT_MATCH" in prompt
     assert "borg_record_outcome" in prompt
@@ -29,7 +30,23 @@ def test_agent_priming_candidate_is_host_specific_and_closes_outcome_loop():
         assert code in prompt
     assert candidate["call_rules"]["concrete_error"] == "error_lookup"
     assert candidate["call_rules"]["task_start_debug_test_review"] == "borg_observe"
+    assert candidate["call_rules"]["consequential_or_deep_work"] == "borg_deliberate"
     assert candidate["call_rules"]["after_verify"] == "borg_record_outcome"
+    assert candidate["minimum_capable_agent_stack_command"] == "borg agent-stack --json"
+    assert candidate["capability_baseline_ids"] == [
+        "capable_base_model",
+        "structured_outputs",
+        "rag_layer",
+        "persistent_memory",
+        "real_tools",
+        "tight_system_prompt",
+        "eval_loop",
+    ]
+    lowered_prompt = prompt.lower()
+    assert "capable pinned model" in lowered_prompt
+    assert "json-schema outputs" in lowered_prompt
+    assert "persistent memory" in lowered_prompt
+    assert "fixed eval loop" in lowered_prompt
     fallback_contract = candidate["visible_fallback_contract"]
     for code in (
         "OUTCOME_NOT_RECORDED",

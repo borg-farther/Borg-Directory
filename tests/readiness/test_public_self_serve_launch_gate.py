@@ -186,6 +186,7 @@ def _release_governance_payload(*, protected: bool = True) -> dict:
         "test (3.10)",
         "test (3.11)",
         "test (3.12)",
+        "wheel-smoke",
         "dependency-audit",
         "policy-check",
         "secret-scan",
@@ -604,6 +605,25 @@ def test_docs_claim_guard_allows_honest_stale_pypi_latest_before_next_release(tm
     assert result["violations"] == []
 
 
+def test_docs_claim_guard_allows_explicit_pypi_latest_mismatch_before_release(tmp_path: Path, monkeypatch) -> None:
+    monkeypatch.setattr(gate, "ROOT", tmp_path)
+    doc = tmp_path / "README.md"
+    doc.write_text(
+        "PyPI latest is agent-borg==3.3.21; expected agent-borg==3.4.1.\n",
+        encoding="utf-8",
+    )
+
+    result = gate.docs_claim_guard(
+        [Path("README.md")],
+        "3.4.1",
+        public_evidence_ready=False,
+        package_evidence_ready=False,
+    )
+
+    assert result["passed"] is True
+    assert result["violations"] == []
+
+
 def test_docs_claim_guard_blocks_stale_pypi_latest_after_package_evidence_is_green(tmp_path: Path, monkeypatch) -> None:
     monkeypatch.setattr(gate, "ROOT", tmp_path)
     doc = tmp_path / "README.md"
@@ -745,6 +765,9 @@ def test_pypi_latest_check_requires_source_version_and_urls(monkeypatch) -> None
         pypi_data={"package": "agent-borg", "version": "9.9.8", "project_urls": {}},
     )
     assert stale["passed"] is False
+    assert stale["source_upload_alignment"]["failure_kind"] == "latest_version_mismatch"
+    assert stale["source_upload_alignment"]["latest_version"] == "9.9.8"
+    assert stale["source_upload_alignment"]["expected_version"] == "9.9.9"
 
 
 def test_pypi_latest_check_fails_when_description_contains_stale_release_status(monkeypatch) -> None:
@@ -1324,8 +1347,38 @@ def test_release_governance_check_prefers_live_github_over_stale_snapshot(tmp_pa
 
     assert live["passed"] is True
     assert live["source"] == "github_api"
+    assert live["minimum_approvals_required"] == 1
+    assert live["codeowners_review_policy_required"] is True
+    assert live["stale_review_dismissal_policy_required"] is True
+    assert live["last_push_approval_policy_required"] is True
     assert snapshot["passed"] is False
     assert snapshot["source"] == "snapshot"
+
+
+def test_release_governance_live_check_enforces_review_policy(tmp_path: Path, monkeypatch) -> None:
+    monkeypatch.setattr(gate, "ROOT", tmp_path)
+    (tmp_path / "eval").mkdir()
+    payload = _release_governance_payload(protected=True)
+    payload["protection"]["required_pull_request_reviews"] = {
+        "require_code_owner_reviews": False,
+        "required_approving_review_count": 0,
+        "dismiss_stale_reviews": False,
+        "require_last_push_approval": False,
+    }
+    monkeypatch.setattr(gate.release_governance_gate, "fetch_live_branch_payload", lambda repo, branch: payload)
+    monkeypatch.setattr(gate.release_governance_gate, "fetch_codeowners_errors", lambda repo, ref=None: [])
+
+    result = gate.release_governance_check(fetch_network=True)
+
+    assert result["passed"] is False
+    assert result["minimum_approvals_required"] == 1
+    assert result["codeowners_review_policy_required"] is True
+    assert result["stale_review_dismissal_policy_required"] is True
+    assert result["last_push_approval_policy_required"] is True
+    assert any("approving review" in blocker for blocker in result["blockers"])
+    assert any("CODEOWNER" in blocker for blocker in result["blockers"])
+    assert any("stale" in blocker.lower() for blocker in result["blockers"])
+    assert any("last-push" in blocker.lower() for blocker in result["blockers"])
 
 
 def test_release_governance_check_accepts_evaluated_snapshot_without_double_evaluating(tmp_path: Path, monkeypatch) -> None:
@@ -1498,14 +1551,26 @@ def test_pypi_fresh_install_canary_fails_closed_when_release_not_on_pypi(monkeyp
     assert snapshot["mcp_stdio_canary"]["detail"] == "not run because PyPI install failed"
 
 
-def test_pypi_mcp_canary_accepts_installed_package_runtime_fingerprint(monkeypatch) -> None:
+def test_pypi_mcp_canary_accepts_installed_package_runtime_fingerprint(monkeypatch, tmp_path) -> None:
+    borg_mcp = tmp_path / "venv" / "bin" / "borg-mcp"
+    install_root = tmp_path / "venv" / "lib" / "python3.12" / "site-packages"
     fingerprint_payload = {
         "success": True,
         "borg_version": "9.9.9",
-        "source_version": None,
-        "version_matches_source": False,
+        "source_version": "9.9.9",
+        "source_version_basis": "installed_distribution",
+        "version_matches_source": True,
+        "reload_status": "loaded_code_matches_source_behavior",
+        "modules": {
+            "borg": {"path": str(install_root / "borg" / "__init__.py")},
+            "borg.core.confidence_gate": {"path": str(install_root / "borg" / "core" / "confidence_gate.py")},
+            "borg.core.epistemic_guardrail": {"path": str(install_root / "borg" / "core" / "epistemic_guardrail.py")},
+            "borg.core.runtime_fingerprint": {"path": str(install_root / "borg" / "core" / "runtime_fingerprint.py")},
+            "borg.integrations.mcp_server": {"path": str(install_root / "borg" / "integrations" / "mcp_server.py")},
+        },
         "loaded_function_hashes": {
             "borg.core.confidence_gate.trace_match_is_confident": {"sha256": "abc"},
+            "borg.core.epistemic_guardrail.deliberate": {"sha256": "ghi"},
             "borg.integrations.mcp_server.borg_observe": {"sha256": "def"},
         },
         "observe_behavior_canary": {
@@ -1513,12 +1578,23 @@ def test_pypi_mcp_canary_accepts_installed_package_runtime_fingerprint(monkeypat
             "meta_prompt_failed_closed": True,
         },
         "confidence_gate_canary": {"passed": True},
+        "epistemic_guardrail_canary": {"passed": True},
+    }
+    deliberate_payload = {
+        "success": True,
+        "epistemic_packet": {
+            "mode_selected": "deep",
+            "decision": "block_pending_verification",
+            "unsupported_claims": ["release-safe"],
+            "outcome_capture": {"status": "not_recorded_by_request"},
+        },
     }
     responses = [
         {"jsonrpc": "2.0", "id": 1, "result": {"serverInfo": {"name": "borg-mcp-server", "version": "9.9.9"}}},
-        {"jsonrpc": "2.0", "id": 2, "result": {"tools": [{"name": "error_lookup"}, {"name": "borg_runtime_fingerprint"}, {"name": "borg_observe"}]}},
+        {"jsonrpc": "2.0", "id": 2, "result": {"tools": [{"name": "error_lookup"}, {"name": "borg_runtime_fingerprint"}, {"name": "borg_observe"}, {"name": "borg_deliberate"}]}},
         {"jsonrpc": "2.0", "id": 3, "result": {"content": [{"text": "ACTION\nSTOP\nVERIFY"}]}},
         {"jsonrpc": "2.0", "id": 4, "result": {"content": [{"text": json.dumps(fingerprint_payload)}]}},
+        {"jsonrpc": "2.0", "id": 5, "result": {"content": [{"text": json.dumps(deliberate_payload)}]}},
     ]
     stdout = "\n".join(json.dumps(response) for response in responses) + "\n"
 
@@ -1527,12 +1603,23 @@ def test_pypi_mcp_canary_accepts_installed_package_runtime_fingerprint(monkeypat
 
     monkeypatch.setattr(canary, "run_cmd", fake_run_cmd)
 
-    result = canary.mcp_stdio_canary(Path("/tmp/borg-mcp"), {}, "9.9.9")
+    result = canary.mcp_stdio_canary(borg_mcp, {}, "9.9.9")
 
     assert result["passed"] is True
     assert result["fingerprint_signal"] is True
+    assert result["deliberate_signal"] is True
     assert result["server_info"] == {"name": "borg-mcp-server", "version": "9.9.9"}
     assert result["fingerprint_summary"]["borg_version"] == "9.9.9"
-    assert result["fingerprint_summary"]["source_version"] is None
-    assert result["fingerprint_summary"]["version_matches_source"] is False
-    assert result["fingerprint_summary"]["reload_status"] is None
+    assert result["fingerprint_summary"]["source_version"] == "9.9.9"
+    assert result["fingerprint_summary"]["source_version_basis"] == "installed_distribution"
+    assert result["fingerprint_summary"]["version_matches_source"] is True
+    assert result["fingerprint_summary"]["reload_status"] == "loaded_code_matches_source_behavior"
+
+    fingerprint_payload["version_matches_source"] = False
+    responses[3] = {"jsonrpc": "2.0", "id": 4, "result": {"content": [{"text": json.dumps(fingerprint_payload)}]}}
+    stdout = "\n".join(json.dumps(response) for response in responses) + "\n"
+
+    mismatch = canary.mcp_stdio_canary(borg_mcp, {}, "9.9.9")
+
+    assert mismatch["passed"] is False
+    assert mismatch["fingerprint_signal"] is False

@@ -7,12 +7,11 @@
   "ready_for_100_real_users": false,
   "real_user_rollout": {
     "blockers": [
-      "PyPI latest/fresh-install package evidence is not green: latest metadata does not match source version",
+      "PyPI latest/fresh-install package evidence is not green: same-version PyPI upload predates current source revision",
       "PyPI latest/fresh-install package evidence is not green: fresh install + MCP stdio canary is not green",
-      "static_files.rollback_drill_snapshot is not ready: {'path': 'eval/rollback_comms_drill_snapshot.json', 'exists': True, 'generated_at_utc': '2026-06-07T20:01:19.709480+00:00', 'age_hours': 45.54662731194444, 'max_age_hours': 24.0, 'passed': False, 'missing_steps': [], 'failed_steps': [], 'dry_run_only': True, 'fresh': False}",
-      "snapshot_freshness failed: {'passed': False, 'items': {'public_self_serve_launch_gate_snapshot': {'age_hours': 95.5017057375, 'passed': False, 'raw_freshness_passed': False, 'allowed_stale_reason': None}, 'pypi_fresh_install_snapshot': {'age_hours': 0.04332701722222222, 'passed': True, 'raw_freshness_passed': True, 'allowed_stale_reason': None}, 'cold_start_trust_gate_snapshot': {'age_hours': 0.02680268861111111, 'passed': True, 'raw_freshness_passed': True, 'allowed_stale_reason': None}, 'borg_proof_dashboard': {'age_hours': 0.0008270188888888889, 'passed': True, 'raw_freshness_passed': True, 'allowed_stale_reason': None}, 'public_status_json': {'age_hours': 0.0008270197222222223, 'passed': True, 'raw_freshness_passed': True, 'allowed_stale_reason': None}, 'public_value_json': {'age_hours': 0.0008270205555555556, 'passed': True, 'raw_freshness_passed': True, 'allowed_stale_reason': None}, 'public_impact_json': {'age_hours': 0.000827021111111111, 'passed': True, 'raw_freshness_passed': True, 'allowed_stale_reason': None}, 'real_user_rollout_gate_snapshot': {'age_hours': 0.00079957, 'passed': True, 'raw_freshness_passed': True, 'allowed_stale_reason': None}, 'release_governance_snapshot': {'age_hours': 0.045177387222222226, 'passed': True, 'raw_freshness_passed': True, 'allowed_stale_reason': None}, 'self_service_ops_gate_snapshot': {'age_hours': 0.03310661638888889, 'passed': True, 'raw_freshness_passed': True, 'allowed_stale_reason': None}, 'rollback_comms_drill_snapshot': {'age_hours': 0.03312994833333333, 'passed': True, 'raw_freshness_passed': True, 'allowed_stale_reason': None}}}",
-      "public_gate_live_matches_snapshot failed: {'passed': False, 'snapshot': {'source_version': '3.3.18', 'ready_for_controlled_first_10_beta': False, 'ready_for_public_self_serve_launch': False, 'max_recommended_real_users_now': 0, 'blockers': [\"served runtime borg_version '3.3.14' != source version '3.3.18'\", \"served runtime source_version '3.3.15' != source version '3.3.18'\", 'served runtime version_matches_source is not true', 'served runtime reload_status is not loaded_code_matches_source_behavior', 'first-10 external-user evidence has not passed: verified=0/10, real_users=0/10, installs=0/8, useful=0/6, critical_incidents=0/0']}, 'live': {'source_version': '3.3.18', 'ready_for_controlled_first_10_beta': False, 'ready_for_public_self_serve_launch': False, 'max_recommended_real_users_now': 0, 'blockers': ['package-impacting source/metadata changed after the immutable package reference tag', 'first-10 external-user evidence has not passed: verified=0/10, real_users=0/10, installs=0/8, useful=0/6, critical_incidents=0/0']}}",
-      "public_status_consistency failed: {'passed': False, 'status_state': 'NO-GO public self-serve; public package proof green, release controls blocked', 'controlled_verdict': 'NO-GO', 'max_recommended_real_users_now': 0, 'verified_external_users': 0, 'release_controls_gate': 'PASS', 'release_control_detail_failed': True, 'controlled_status_ok': False, 'pre_package_status_ok': False, 'release_control_blocked_status_ok': False}",
+      "served runtime borg_version '3.3.18' != source version '3.3.21'",
+      "served runtime source_version '3.3.18' != source version '3.3.21'",
+      "static_files.rollback_drill_snapshot is not ready: {'path': 'eval/rollback_comms_drill_snapshot.json', 'exists': True, 'generated_at_utc': '2026-06-12T10:31:42.115976+00:00', 'age_hours': 2357.9780644441666, 'max_age_hours': 24.0, 'passed': False, 'missing_steps': [], 'failed_steps': [], 'dry_run_only': True, 'fresh': False}",
       "first-10 external-user evidence has not passed: verified=0/10, real_users=0/10, installs=0/8, useful=0/6, critical_incidents=0/0"
     ],
     "infrastructure_ready_for_100": false,
@@ -27,7 +26,7 @@
   "steps": [
     {
       "cmd": [
-        "/root/.hermes/hermes-agent/venv/bin/python",
+        "/usr/bin/python3.12",
         "-m",
         "pytest",
         "-q",
@@ -37,13 +36,13 @@
       ],
       "name": "version_distribution_tests",
       "rc": 0,
-      "started": "2026-06-09T17:32:11.045505+00:00",
+      "started": "2026-09-18T16:28:24.357764+00:00",
       "stderr": "",
-      "stdout": "..........                                                               [100%]\n10 passed in 0.07s\n"
+      "stdout": "...........                                                              [100%]\n11 passed in 0.09s\n"
     },
     {
       "cmd": [
-        "/root/.hermes/hermes-agent/venv/bin/python",
+        "/usr/bin/python3.12",
         "-m",
         "pytest",
         "-q",
@@ -60,46 +59,46 @@
       ],
       "name": "atom_security_tests",
       "rc": 0,
-      "started": "2026-06-09T17:32:11.709237+00:00",
+      "started": "2026-09-18T16:28:24.893480+00:00",
       "stderr": "",
-      "stdout": "........................................................................ [ 70%]\n..............................                                           [100%]\n102 passed in 0.53s\n"
+      "stdout": "........................................................................ [ 68%]\n.................................                                        [100%]\n105 passed in 0.57s\n"
     },
     {
       "cmd": [
-        "/root/.hermes/hermes-agent/venv/bin/python",
+        "/usr/bin/python3.12",
         "scripts/security_gate_check.py"
       ],
       "name": "security_gate",
       "rc": 0,
-      "started": "2026-06-09T17:32:12.856458+00:00",
+      "started": "2026-09-18T16:28:26.155776+00:00",
       "stderr": "",
       "stdout": "PASS: Borg security hardening policy gate\n"
     },
     {
       "cmd": [
-        "/root/.hermes/hermes-agent/venv/bin/python",
+        "/usr/bin/python3.12",
         "eval/cold_start_trust_gate.py"
       ],
       "name": "cold_start_trust_gate",
       "rc": 0,
-      "started": "2026-06-09T17:32:12.941858+00:00",
+      "started": "2026-09-18T16:28:26.249169+00:00",
       "stderr": "",
-      "stdout": "{\n  \"bad_answer_feedback_path\": {\n    \"agent_mcp_durable_path\": \"call borg_record_failure(error_pattern, pack_id, phase, approach, outcome='failure') when the bad path is concrete\",\n    \"cli_durable_path\": \"run borg feedback-v3 --pack <pack> --success no --notes <redacted summary>\",\n    \"human_path\": \"open .github/ISSUE_TEMPLATE/bad-answer.yml or submit redacted first-10 evidence via .github/ISSUE_TEMPLATE/first-10-evidence.yml\"\n  },\n  \"blockers\": [],\n  \"checks\": [\n    {\n      \"name\": \"meta_permission_mentions_are_not_permission_tasks\",\n      \"passed\": true\n    },\n    {\n      \"name\": \"meta_django_mentions_do_not_set_django_tech\",\n      \"passed\": true\n    },\n    {\n      \"name\": \"high_similarity_meta_only_trace_rejected\",\n      \"passed\": true\n    },\n    {\n      \"name\": \"irrelevant_real_trace_only_guidance_not_injectable\",\n      \"passed\": true\n    },\n    {\n      \"name\": \"concrete_permission_signal_still_allowed\",\n      \"passed\": true\n    },\n    {\n      \"blockers\": [],\n      \"name\": \"stdio_meta_trust_prompt_fails_closed\",\n      \"passed\": true,\n      \"stderr_tail\": \"borg-mcp-server v3.3.18 ready (stdio transport)\\n\",\n      \"text_excerpt\": \"ACTION: proceed with normal debugging for this task; Borg has no proven cache hit.\\n\\nSTOP: do not force a weak or unrelated pack onto this task.\\n\\nVERIFY: collect the exact failing command/output and rerun borg_observe or borg_rescue only if new evidence appears.\\n\\nCONFIDENCE: BORG [NO CONFIDENT MATCH] -- no relevant traces, synthetic hits, or pack matches.\\n\\nNO_CONFIDENT_MATCH: No confident Borg match for this task.\\nBorg found no relevant real traces, synthetic hits, or exact pack class match.\\nProceed with normal reasoning; do not treat Borg as evidence for this task.\\nAfter resolving: record concrete bad/good paths with borg_record_failure(...) or borg feedback-v3 when useful.\"\n    },\n    {\n      \"name\": \"stdio_concrete_permission_prompt_gets_specific_guidance\",\n      \"passed\": true,\n      \"stderr_tail\": \"borg-mcp-server v3.3.18 ready (stdio transport)\\n\",\n      \"text_excerpt\": \"ACTION: from matched seed pack, 1. Check file permissions: ls -la <file>\\n\\nVERIFY: execute the pack's first checkpoint, then rerun the exact failing command\\n\\nSTOP: do not use chmod 777 or blanket sudo; identify the exact file, owner, and minimum required permission.\\n\\nCONFIDENCE: Real traces: 0 | Synthetic: 0 | BORG [SYNTHETIC ONLY]\\n\\n------------------------------------------------------------\\nWHAT FAILED (7 prior sessions)\\n   Skip these approaches:\\n   \\u2022 1 agent tried: Ran sudo pip install to fix permission error on system packages\\n     Why it failed: DEAD END: sudo pip breaks system Python and future pip installs\\n   \\u2022 1 agent tried: Ran sudo npm install -g to fix permission denied error on global package\\n     Why it failed: DEAD END: sudo npm creates root-owned files in /usr/lib/node_modules breaking all future npm operati\\n   \\u2022 1 agent tried: Added sudo to the failing command in the workflow step\\n     Why it failed: DEAD END: github-actions runner already runs as appropriate user, sudo causes authentication failure\\nPACK GUIDANCE (bash-permission-denied)\\n1. Check file permissions: ls -la <file>\\n2. Add execute permission: chmod +x <script.sh>\\n3. For directories: chmod +x <directory>\\n4\"\n    }\n  ],\n  \"gate_type\": \"cold_start_trust_hardening\",\n  \"generated_at_utc\": \"2026-06-09T17:32:32.958513+00:00\",\n  \"passed\": true,\n  \"schema_version\": 1,\n  \"trust_policy\": \"Borg must fail closed with NO_CONFIDENT_MATCH for meta/product/readiness prompts, must not inject unrelated framework guidance, and must preserve concrete error guidance for exact failures.\"\n}\n"
+      "stdout": "{\n  \"bad_answer_feedback_path\": {\n    \"agent_mcp_durable_path\": \"call borg_record_failure(error_pattern, pack_id, phase, approach, outcome='failure') when the bad path is concrete\",\n    \"cli_durable_path\": \"run borg feedback-v3 --pack <pack> --success no --notes <redacted summary>\",\n    \"human_path\": \"open .github/ISSUE_TEMPLATE/bad-answer.yml or submit redacted first-10 evidence via .github/ISSUE_TEMPLATE/first-10-evidence.yml\"\n  },\n  \"blockers\": [],\n  \"checks\": [\n    {\n      \"name\": \"meta_permission_mentions_are_not_permission_tasks\",\n      \"passed\": true\n    },\n    {\n      \"name\": \"meta_django_mentions_do_not_set_django_tech\",\n      \"passed\": true\n    },\n    {\n      \"name\": \"high_similarity_meta_only_trace_rejected\",\n      \"passed\": true\n    },\n    {\n      \"name\": \"irrelevant_real_trace_only_guidance_not_injectable\",\n      \"passed\": true\n    },\n    {\n      \"name\": \"concrete_permission_signal_still_allowed\",\n      \"passed\": true\n    },\n    {\n      \"blockers\": [],\n      \"name\": \"stdio_meta_trust_prompt_fails_closed\",\n      \"passed\": true,\n      \"stderr_tail\": \"borg-mcp-server v3.3.21 ready (stdio transport)\\n\",\n      \"text_excerpt\": \"ACTION: proceed with normal debugging for this task; Borg has no proven cache hit.\\n\\nSTOP: do not force a weak or unrelated pack onto this task.\\n\\nVERIFY: collect the exact failing command/output and rerun borg_observe or borg_rescue only if new evidence appears.\\n\\nCONFIDENCE: BORG [NO CONFIDENT MATCH] -- no relevant traces, synthetic hits, or pack matches.\\n\\nNO_CONFIDENT_MATCH: No confident Borg match for this task.\\nBorg found no relevant real traces, synthetic hits, or exact pack class match.\\nProceed with normal reasoning; do not treat Borg as evidence for this task.\\nAfter resolving: record concrete bad/good paths with borg_record_failure(...) or borg feedback-v3 when useful.\"\n    },\n    {\n      \"name\": \"stdio_concrete_permission_prompt_gets_specific_guidance\",\n      \"passed\": true,\n      \"stderr_tail\": \"borg-mcp-server v3.3.21 ready (stdio transport)\\n\",\n      \"text_excerpt\": \"ACTION: from matched seed pack, 1. inspect the script and parent-path permissions \\u2014 run/check: ls -l -- ./deploy.sh && namei -l -- ./deploy.sh\\n\\nVERIFY: execute the pack's first checkpoint, then rerun the exact failing command\\n\\nSTOP: do not use chmod 777 or blanket sudo; identify the exact file, owner, and minimum required permission.\\n\\nCONFIDENCE: Real traces: 0 | Synthetic matches: 1 | BORG [SYNTHETIC ONLY]\\n\\n------------------------------------------------------------\\nPACK GUIDANCE (bash-permission-denied)\\n1. inspect the script and parent-path permissions \\u2014 run/check: ls -l -- ./deploy.sh && namei -l -- ./deploy.sh\\n2. if the script is trusted, owned by you, and intended to execute, add only the owner execute bit \\u2014 run/check: chmod u+x -- ./deploy.sh\\n3. rerun the exact command \\u2014 run/check: ./deploy.sh\\n------------------------------------------------------------\"\n    }\n  ],\n  \"gate_type\": \"cold_start_trust_hardening\",\n  \"generated_at_utc\": \"2026-09-18T16:28:49.311357+00:00\",\n  \"passed\": true,\n  \"schema_version\": 1,\n  \"trust_policy\": \"Borg must fail closed with NO_CONFIDENT_MATCH for meta/product/readiness prompts, must not inject unrelated framework guidance, and must preserve concrete error guidance for exact failures.\"\n}\n"
     },
     {
       "cmd": [
-        "/root/.hermes/hermes-agent/venv/bin/python",
+        "/usr/bin/python3.12",
         "scripts/run_atom_fixture_corpus.py"
       ],
       "name": "atom_fixture_corpus",
       "rc": 0,
-      "started": "2026-06-09T17:32:34.370986+00:00",
+      "started": "2026-09-18T16:28:50.777022+00:00",
       "stderr": "",
       "stdout": "{\n  \"success\": true,\n  \"total\": 10,\n  \"failed\": []\n}\n"
     },
     {
       "cmd": [
-        "/root/.hermes/hermes-agent/venv/bin/python",
+        "/usr/bin/python3.12",
         "eval/load_soak.py",
         "--users",
         "10",
@@ -108,13 +107,13 @@
       ],
       "name": "load_10",
       "rc": 0,
-      "started": "2026-06-09T17:32:34.484563+00:00",
+      "started": "2026-09-18T16:28:50.883400+00:00",
       "stderr": "",
-      "stdout": "{\n  \"concurrency_model\": \"asyncio_logical_users\",\n  \"duration_seconds\": 30.0,\n  \"failures\": 0,\n  \"latency_ms\": {\n    \"avg\": 0.5717460285540273,\n    \"max\": 64.04542201198637,\n    \"p50\": 0.5534699885174632,\n    \"p95\": 0.7257168937940149,\n    \"p99\": 0.8770521578844632\n  },\n  \"operation\": \"learning_atom_retrieval_firewall_privacy_prompt_scan\",\n  \"passed\": true,\n  \"per_user_min_requests\": 5171,\n  \"requests_per_second\": 1723.9666666666667,\n  \"sample_failures\": [],\n  \"success_rate\": 1.0,\n  \"successes\": 51719,\n  \"thresholds\": {\n    \"min_requests_per_user\": 1.0,\n    \"p95_ms_max\": 2000.0,\n    \"p99_ms_max\": 4000.0,\n    \"success_rate_min\": 0.95\n  },\n  \"timestamp\": \"2026-06-09T17:33:04.587187+00:00\",\n  \"total_requests\": 51719,\n  \"users\": 10\n}\n"
+      "stdout": "{\n  \"concurrency_model\": \"asyncio_logical_users\",\n  \"duration_seconds\": 30.0,\n  \"failures\": 0,\n  \"latency_ms\": {\n    \"avg\": 0.9976464309165178,\n    \"max\": 9.484246373176575,\n    \"p50\": 0.9860293939709663,\n    \"p95\": 1.317520067095756,\n    \"p99\": 1.9241905771195884\n  },\n  \"operation\": \"learning_atom_retrieval_firewall_privacy_prompt_scan\",\n  \"passed\": true,\n  \"per_user_min_requests\": 2973,\n  \"requests_per_second\": 991.0666666666667,\n  \"sample_failures\": [],\n  \"success_rate\": 1.0,\n  \"successes\": 29732,\n  \"thresholds\": {\n    \"min_requests_per_user\": 1.0,\n    \"p95_ms_max\": 2000.0,\n    \"p99_ms_max\": 4000.0,\n    \"success_rate_min\": 0.95\n  },\n  \"timestamp\": \"2026-09-18T16:29:20.981008+00:00\",\n  \"total_requests\": 29732,\n  \"users\": 10\n}\n"
     },
     {
       "cmd": [
-        "/root/.hermes/hermes-agent/venv/bin/python",
+        "/usr/bin/python3.12",
         "eval/load_soak.py",
         "--users",
         "100",
@@ -123,13 +122,13 @@
       ],
       "name": "load_100",
       "rc": 0,
-      "started": "2026-06-09T17:33:04.606977+00:00",
+      "started": "2026-09-18T16:29:21.000925+00:00",
       "stderr": "",
-      "stdout": "{\n  \"concurrency_model\": \"asyncio_logical_users\",\n  \"duration_seconds\": 30.0,\n  \"failures\": 0,\n  \"latency_ms\": {\n    \"avg\": 0.5554104919716634,\n    \"max\": 2.4680219939909875,\n    \"p50\": 0.5447750154417008,\n    \"p95\": 0.6964495056308806,\n    \"p99\": 0.7314639177639038\n  },\n  \"operation\": \"learning_atom_retrieval_firewall_privacy_prompt_scan\",\n  \"passed\": true,\n  \"per_user_min_requests\": 524,\n  \"requests_per_second\": 1747.4,\n  \"sample_failures\": [],\n  \"success_rate\": 1.0,\n  \"successes\": 52422,\n  \"thresholds\": {\n    \"min_requests_per_user\": 1.0,\n    \"p95_ms_max\": 1000.0,\n    \"p99_ms_max\": 3000.0,\n    \"success_rate_min\": 0.95\n  },\n  \"timestamp\": \"2026-06-09T17:33:34.709090+00:00\",\n  \"total_requests\": 52422,\n  \"users\": 100\n}\n"
+      "stdout": "{\n  \"concurrency_model\": \"asyncio_logical_users\",\n  \"duration_seconds\": 30.0,\n  \"failures\": 0,\n  \"latency_ms\": {\n    \"avg\": 0.9468894661104816,\n    \"max\": 3.1584482640028,\n    \"p50\": 0.9582098573446274,\n    \"p95\": 1.1239005252718925,\n    \"p99\": 1.1847499758005142\n  },\n  \"operation\": \"learning_atom_retrieval_firewall_privacy_prompt_scan\",\n  \"passed\": true,\n  \"per_user_min_requests\": 310,\n  \"requests_per_second\": 1034.3666666666666,\n  \"sample_failures\": [],\n  \"success_rate\": 1.0,\n  \"successes\": 31031,\n  \"thresholds\": {\n    \"min_requests_per_user\": 1.0,\n    \"p95_ms_max\": 1000.0,\n    \"p99_ms_max\": 3000.0,\n    \"success_rate_min\": 0.95\n  },\n  \"timestamp\": \"2026-09-18T16:29:51.118895+00:00\",\n  \"total_requests\": 31031,\n  \"users\": 100\n}\n"
     },
     {
       "cmd": [
-        "/root/.hermes/hermes-agent/venv/bin/python",
+        "/usr/bin/python3.12",
         "eval/load_soak.py",
         "--users",
         "1000",
@@ -138,13 +137,13 @@
       ],
       "name": "load_1000",
       "rc": 0,
-      "started": "2026-06-09T17:33:34.728226+00:00",
+      "started": "2026-09-18T16:29:51.143909+00:00",
       "stderr": "",
-      "stdout": "{\n  \"concurrency_model\": \"asyncio_logical_users\",\n  \"duration_seconds\": 30.0,\n  \"failures\": 0,\n  \"latency_ms\": {\n    \"avg\": 0.5972250030843871,\n    \"max\": 6.851042970083654,\n    \"p50\": 0.5858100485056639,\n    \"p95\": 0.7386569748632609,\n    \"p99\": 0.9478506701998413\n  },\n  \"operation\": \"learning_atom_retrieval_firewall_privacy_prompt_scan\",\n  \"passed\": true,\n  \"per_user_min_requests\": 48,\n  \"requests_per_second\": 1621.2333333333333,\n  \"sample_failures\": [],\n  \"success_rate\": 1.0,\n  \"successes\": 48637,\n  \"thresholds\": {\n    \"min_requests_per_user\": 1.0,\n    \"p95_ms_max\": 500.0,\n    \"p99_ms_max\": 1500.0,\n    \"success_rate_min\": 0.99\n  },\n  \"timestamp\": \"2026-06-09T17:34:04.881828+00:00\",\n  \"total_requests\": 48637,\n  \"users\": 1000\n}\n"
+      "stdout": "{\n  \"concurrency_model\": \"asyncio_logical_users\",\n  \"duration_seconds\": 30.0,\n  \"failures\": 0,\n  \"latency_ms\": {\n    \"avg\": 1.1291613857447236,\n    \"max\": 22.102003917098045,\n    \"p50\": 1.0223612189292908,\n    \"p95\": 1.683654636144638,\n    \"p99\": 5.0628274679184235\n  },\n  \"operation\": \"learning_atom_retrieval_firewall_privacy_prompt_scan\",\n  \"passed\": true,\n  \"per_user_min_requests\": 25,\n  \"requests_per_second\": 861.5,\n  \"sample_failures\": [],\n  \"success_rate\": 1.0,\n  \"successes\": 25845,\n  \"thresholds\": {\n    \"min_requests_per_user\": 1.0,\n    \"p95_ms_max\": 500.0,\n    \"p99_ms_max\": 1500.0,\n    \"success_rate_min\": 0.99\n  },\n  \"timestamp\": \"2026-09-18T16:30:21.293987+00:00\",\n  \"total_requests\": 25845,\n  \"users\": 1000\n}\n"
     },
     {
       "cmd": [
-        "/root/.hermes/hermes-agent/venv/bin/python",
+        "/usr/bin/python3.12",
         "-m",
         "pytest",
         "-q",
@@ -152,46 +151,46 @@
       ],
       "name": "readiness_1000_tests",
       "rc": 0,
-      "started": "2026-06-09T17:34:04.905464+00:00",
+      "started": "2026-09-18T16:30:21.316926+00:00",
       "stderr": "",
-      "stdout": "........                                                                 [100%]\n8 passed in 0.02s\n"
+      "stdout": "........                                                                 [100%]\n8 passed in 0.03s\n"
     },
     {
       "cmd": [
-        "/root/.hermes/hermes-agent/venv/bin/python",
+        "/usr/bin/python3.12",
         "eval/real_user_rollout_gate.py"
       ],
       "name": "real_user_rollout_gate",
       "rc": 1,
-      "started": "2026-06-09T17:34:05.599405+00:00",
+      "started": "2026-09-18T16:30:21.768117+00:00",
       "stderr": "",
-      "stdout": "{\n  \"ready_for_10_controlled_beta\": false,\n  \"release_controls_ready\": true,\n  \"self_service_ops_ready\": false,\n  \"infrastructure_ready_for_100\": false,\n  \"ready_for_100_real_users\": false,\n  \"max_recommended_real_users_now\": 0,\n  \"blockers\": [\n    \"PyPI latest/fresh-install package evidence is not green: latest metadata does not match source version\",\n    \"PyPI latest/fresh-install package evidence is not green: fresh install + MCP stdio canary is not green\",\n    \"static_files.rollback_drill_snapshot is not ready: {'path': 'eval/rollback_comms_drill_snapshot.json', 'exists': True, 'generated_at_utc': '2026-06-07T20:01:19.709480+00:00', 'age_hours': 45.54662731194444, 'max_age_hours': 24.0, 'passed': False, 'missing_steps': [], 'failed_steps': [], 'dry_run_only': True, 'fresh': False}\",\n    \"snapshot_freshness failed: {'passed': False, 'items': {'public_self_serve_launch_gate_snapshot': {'age_hours': 95.5017057375, 'passed': False, 'raw_freshness_passed': False, 'allowed_stale_reason': None}, 'pypi_fresh_install_snapshot': {'age_hours': 0.04332701722222222, 'passed': True, 'raw_freshness_passed': True, 'allowed_stale_reason': None}, 'cold_start_trust_gate_snapshot': {'age_hours': 0.02680268861111111, 'passed': True, 'raw_freshness_passed': True, 'allowed_stale_reason': None}, 'borg_proof_dashboard': {'age_hours': 0.0008270188888888889, 'passed': True, 'raw_freshness_passed': True, 'allowed_stale_reason': None}, 'public_status_json': {'age_hours': 0.0008270197222222223, 'passed': True, 'raw_freshness_passed': True, 'allowed_stale_reason': None}, 'public_value_json': {'age_hours': 0.0008270205555555556, 'passed': True, 'raw_freshness_passed': True, 'allowed_stale_reason': None}, 'public_impact_json': {'age_hours': 0.000827021111111111, 'passed': True, 'raw_freshness_passed': True, 'allowed_stale_reason': None}, 'real_user_rollout_gate_snapshot': {'age_hours': 0.00079957, 'passed': True, 'raw_freshness_passed': True, 'allowed_stale_reason': None}, 'release_governance_snapshot': {'age_hours': 0.045177387222222226, 'passed': True, 'raw_freshness_passed': True, 'allowed_stale_reason': None}, 'self_service_ops_gate_snapshot': {'age_hours': 0.03310661638888889, 'passed': True, 'raw_freshness_passed': True, 'allowed_stale_reason': None}, 'rollback_comms_drill_snapshot': {'age_hours': 0.03312994833333333, 'passed': True, 'raw_freshness_passed': True, 'allowed_stale_reason': None}}}\",\n    \"public_gate_live_matches_snapshot failed: {'passed': False, 'snapshot': {'source_version': '3.3.18', 'ready_for_controlled_first_10_beta': False, 'ready_for_public_self_serve_launch': False, 'max_recommended_real_users_now': 0, 'blockers': [\\\"served runtime borg_version '3.3.14' != source version '3.3.18'\\\", \\\"served runtime source_version '3.3.15' != source version '3.3.18'\\\", 'served runtime version_matches_source is not true', 'served runtime reload_status is not loaded_code_matches_source_behavior', 'first-10 external-user evidence has not passed: verified=0/10, real_users=0/10, installs=0/8, useful=0/6, critical_incidents=0/0']}, 'live': {'source_version': '3.3.18', 'ready_for_controlled_first_10_beta': False, 'ready_for_public_self_serve_launch': False, 'max_recommended_real_users_now': 0, 'blockers': ['package-impacting source/metadata changed after the immutable package reference tag', 'first-10 external-user evidence has not passed: verified=0/10, real_users=0/10, installs=0/8, useful=0/6, critical_incidents=0/0']}}\",\n    \"public_status_consistency failed: {'passed': False, 'status_state': 'NO-GO public self-serve; public package proof green, release controls blocked', 'controlled_verdict': 'NO-GO', 'max_recommended_real_users_now': 0, 'verified_external_users': 0, 'release_controls_gate': 'PASS', 'release_control_detail_failed': True, 'controlled_status_ok': False, 'pre_package_status_ok': False, 'release_control_blocked_status_ok': False}\",\n    \"first-10 external-user evidence has not passed: verified=0/10, real_users=0/10, installs=0/8, useful=0/6, critical_incidents=0/0\"\n  ],\n  \"snapshot\": \"eval/real_user_rollout_gate_snapshot.json\",\n  \"report\": \"docs/20260517_BORG_100_REAL_USER_READINESS.md\",\n  \"wrote_artifacts\": true\n}\n"
+      "stdout": "{\n  \"ready_for_10_controlled_beta\": false,\n  \"release_controls_ready\": false,\n  \"self_service_ops_ready\": false,\n  \"infrastructure_ready_for_100\": false,\n  \"ready_for_100_real_users\": false,\n  \"max_recommended_real_users_now\": 0,\n  \"blockers\": [\n    \"PyPI latest/fresh-install package evidence is not green: same-version PyPI upload predates current source revision\",\n    \"PyPI latest/fresh-install package evidence is not green: fresh install + MCP stdio canary is not green\",\n    \"served runtime borg_version '3.3.18' != source version '3.3.21'\",\n    \"served runtime source_version '3.3.18' != source version '3.3.21'\",\n    \"static_files.rollback_drill_snapshot is not ready: {'path': 'eval/rollback_comms_drill_snapshot.json', 'exists': True, 'generated_at_utc': '2026-06-12T10:31:42.115976+00:00', 'age_hours': 2357.9780644441666, 'max_age_hours': 24.0, 'passed': False, 'missing_steps': [], 'failed_steps': [], 'dry_run_only': True, 'fresh': False}\",\n    \"first-10 external-user evidence has not passed: verified=0/10, real_users=0/10, installs=0/8, useful=0/6, critical_incidents=0/0\"\n  ],\n  \"snapshot\": \"eval/real_user_rollout_gate_snapshot.json\",\n  \"report\": \"docs/20260517_BORG_100_REAL_USER_READINESS.md\",\n  \"wrote_artifacts\": true\n}\n"
     },
     {
       "cmd": [
-        "/root/.hermes/hermes-agent/venv/bin/python",
+        "/usr/bin/python3.12",
         "eval/uat_scoreboard.py",
         "--synthetic-only"
       ],
       "name": "scoreboard_final",
       "rc": 0,
-      "started": "2026-06-09T17:34:07.590646+00:00",
+      "started": "2026-09-18T16:30:23.170537+00:00",
       "stderr": "",
       "stdout": "/root/hermes-workspace/borg/PROJECT_STATUS.md\n/root/hermes-workspace/borg/eval/uat_scoreboard_snapshot.json\n"
     },
     {
       "cmd": [
-        "/root/.hermes/hermes-agent/venv/bin/python",
+        "/usr/bin/python3.12",
         "eval/uat_scoreboard.py",
         "--synthetic-only"
       ],
       "name": "scoreboard_after_decision",
       "rc": 0,
-      "started": "2026-06-09T17:34:07.644798+00:00",
+      "started": "2026-09-18T16:30:23.235982+00:00",
       "stderr": "",
       "stdout": "/root/hermes-workspace/borg/PROJECT_STATUS.md\n/root/hermes-workspace/borg/eval/uat_scoreboard_snapshot.json\n"
     }
   ],
   "synthetic_load_all_pass": true,
-  "timestamp": "2026-06-09T17:34:07.643844+00:00"
+  "timestamp": "2026-09-18T16:30:23.234842+00:00"
 }

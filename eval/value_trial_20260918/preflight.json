@@ -1,0 +1,58 @@
+[
+  {
+    "empty_status": "no_confident_match",
+    "hidden_baseline_fail": true,
+    "public_baseline_pass": true,
+    "seeded_status": "matched_verified_memory",
+    "task_id": "retry_after_http_date"
+  },
+  {
+    "empty_status": "no_confident_match",
+    "hidden_baseline_fail": true,
+    "public_baseline_pass": true,
+    "seeded_status": "matched_verified_memory",
+    "task_id": "partial_frame_reads"
+  },
+  {
+    "empty_status": "no_confident_match",
+    "hidden_baseline_fail": true,
+    "public_baseline_pass": true,
+    "seeded_status": "matched_verified_memory",
+    "task_id": "path_prefix_escape"
+  },
+  {
+    "empty_status": "no_confident_match",
+    "hidden_baseline_fail": true,
+    "public_baseline_pass": true,
+    "seeded_status": "matched_verified_memory",
+    "task_id": "transaction_ownership"
+  },
+  {
+    "empty_status": "no_confident_match",
+    "hidden_baseline_fail": true,
+    "public_baseline_pass": true,
+    "seeded_status": "matched_verified_memory",
+    "task_id": "stable_mapping_cache_key"
+  },
+  {
+    "empty_status": "no_confident_match",
+    "hidden_baseline_fail": true,
+    "public_baseline_pass": true,
+    "seeded_status": "matched_verified_memory",
+    "task_id": "async_cancellation"
+  },
+  {
+    "empty_status": "no_confident_match",
+    "hidden_baseline_fail": true,
+    "public_baseline_pass": true,
+    "seeded_status": "matched_verified_memory",
+    "task_id": "unicode_identity"
+  },
+  {
+    "empty_status": "no_confident_match",
+    "hidden_baseline_fail": true,
+    "public_baseline_pass": true,
+    "seeded_status": "matched_verified_memory",
+    "task_id": "canonical_signature"
+  }
+]

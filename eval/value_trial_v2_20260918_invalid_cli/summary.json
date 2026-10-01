@@ -1,0 +1,211 @@
+{
+  "claim_boundary": "Directional pilot only. Proven lift requires a powered preregistered replication with the C2-C1 confidence interval excluding zero.",
+  "fingerprints": {
+    "dirty_diff_sha256": "005f4e1d80ca5c0c61b073f9c6aa68603b691c8aec88b0d54b767c9a629e3dd1",
+    "git_head": "3cc30d8da99480860e6c9e19ce4754f85ea3c3fc",
+    "immutable_runtime_snapshot_sha256": "fe6f3b0145e59bfe166a104c621a1033d19523c34acd6301e48755e987e3480b",
+    "source_version": "3.3.21",
+    "taskset_sha256": "205c9ebf2316093cbb3fd20e6609803ec03ece74133ead63b338df571a2c86c4",
+    "wheel_sha256": "f8dbb49b2ae6163f15f16db77374c1b76643366cf81def4a7a015f909e46f928"
+  },
+  "generated_at_utc": "2026-09-18T15:25:39.564509+00:00",
+  "model": {
+    "max_turns": 7,
+    "name": "gpt-5.6-sol",
+    "provider": "openai-codex",
+    "runner": "Hermes one-shot safe mode",
+    "toolsets": [
+      "terminal",
+      "file"
+    ]
+  },
+  "n_runs_expected": 24,
+  "n_runs_observed": 24,
+  "n_tasks": 8,
+  "negative_transfer_tasks": [],
+  "paired_contrasts": {
+    "C1_borg_empty_minus_C0_no_borg": {
+      "bootstrap_ci95": [
+        0.0,
+        0.0
+      ],
+      "discordant_left_fail_right_pass": 0,
+      "discordant_left_pass_right_fail": 0,
+      "mcnemar_exact_two_sided_p": 1.0,
+      "n_pairs": 8,
+      "risk_difference": 0.0
+    },
+    "C2_borg_seeded_minus_C0_no_borg": {
+      "bootstrap_ci95": [
+        0.0,
+        0.0
+      ],
+      "discordant_left_fail_right_pass": 0,
+      "discordant_left_pass_right_fail": 0,
+      "mcnemar_exact_two_sided_p": 1.0,
+      "n_pairs": 8,
+      "risk_difference": 0.0
+    },
+    "C2_borg_seeded_minus_C1_borg_empty": {
+      "bootstrap_ci95": [
+        0.0,
+        0.0
+      ],
+      "discordant_left_fail_right_pass": 0,
+      "discordant_left_pass_right_fail": 0,
+      "mcnemar_exact_two_sided_p": 1.0,
+      "n_pairs": 8,
+      "risk_difference": 0.0
+    }
+  },
+  "paired_efficiency": {
+    "C1_borg_empty_minus_C0_no_borg": {
+      "eligibility": "metric comparisons include only task pairs solved by both conditions",
+      "metrics": {
+        "api_calls": {
+          "left_lower_better": 0,
+          "median_paired_delta": null,
+          "median_paired_delta_ci95": null,
+          "median_paired_percent_change": null,
+          "n_pairs": 0,
+          "right_lower_better": 0,
+          "tie": 0
+        },
+        "total_tokens": {
+          "left_lower_better": 0,
+          "median_paired_delta": null,
+          "median_paired_delta_ci95": null,
+          "median_paired_percent_change": null,
+          "n_pairs": 0,
+          "right_lower_better": 0,
+          "tie": 0
+        },
+        "wall_seconds": {
+          "left_lower_better": 0,
+          "median_paired_delta": null,
+          "median_paired_delta_ci95": null,
+          "median_paired_percent_change": null,
+          "n_pairs": 0,
+          "right_lower_better": 0,
+          "tie": 0
+        }
+      },
+      "n_both_solved_pairs": 0,
+      "n_complete_pairs": 8
+    },
+    "C2_borg_seeded_minus_C0_no_borg": {
+      "eligibility": "metric comparisons include only task pairs solved by both conditions",
+      "metrics": {
+        "api_calls": {
+          "left_lower_better": 0,
+          "median_paired_delta": null,
+          "median_paired_delta_ci95": null,
+          "median_paired_percent_change": null,
+          "n_pairs": 0,
+          "right_lower_better": 0,
+          "tie": 0
+        },
+        "total_tokens": {
+          "left_lower_better": 0,
+          "median_paired_delta": null,
+          "median_paired_delta_ci95": null,
+          "median_paired_percent_change": null,
+          "n_pairs": 0,
+          "right_lower_better": 0,
+          "tie": 0
+        },
+        "wall_seconds": {
+          "left_lower_better": 0,
+          "median_paired_delta": null,
+          "median_paired_delta_ci95": null,
+          "median_paired_percent_change": null,
+          "n_pairs": 0,
+          "right_lower_better": 0,
+          "tie": 0
+        }
+      },
+      "n_both_solved_pairs": 0,
+      "n_complete_pairs": 8
+    },
+    "C2_borg_seeded_minus_C1_borg_empty": {
+      "eligibility": "metric comparisons include only task pairs solved by both conditions",
+      "metrics": {
+        "api_calls": {
+          "left_lower_better": 0,
+          "median_paired_delta": null,
+          "median_paired_delta_ci95": null,
+          "median_paired_percent_change": null,
+          "n_pairs": 0,
+          "right_lower_better": 0,
+          "tie": 0
+        },
+        "total_tokens": {
+          "left_lower_better": 0,
+          "median_paired_delta": null,
+          "median_paired_delta_ci95": null,
+          "median_paired_percent_change": null,
+          "n_pairs": 0,
+          "right_lower_better": 0,
+          "tie": 0
+        },
+        "wall_seconds": {
+          "left_lower_better": 0,
+          "median_paired_delta": null,
+          "median_paired_delta_ci95": null,
+          "median_paired_percent_change": null,
+          "n_pairs": 0,
+          "right_lower_better": 0,
+          "tie": 0
+        }
+      },
+      "n_both_solved_pairs": 0,
+      "n_complete_pairs": 8
+    }
+  },
+  "per_condition": {
+    "C0_no_borg": {
+      "median_api_calls": null,
+      "median_total_tokens": null,
+      "median_wall_seconds": 0.9405,
+      "n": 8,
+      "solve_rate": 0.0,
+      "solved": 0,
+      "total_borg_invocations": 0,
+      "valid": 8
+    },
+    "C1_borg_empty": {
+      "median_api_calls": null,
+      "median_total_tokens": null,
+      "median_wall_seconds": 0.937,
+      "n": 8,
+      "solve_rate": 0.0,
+      "solved": 0,
+      "total_borg_invocations": 0,
+      "valid": 0
+    },
+    "C2_borg_seeded": {
+      "median_api_calls": null,
+      "median_total_tokens": null,
+      "median_wall_seconds": 0.942,
+      "n": 8,
+      "solve_rate": 0.0,
+      "solved": 0,
+      "total_borg_invocations": 0,
+      "valid": 0
+    }
+  },
+  "preregistration": "eval/value_trial_taskset_v2.json",
+  "primary_contrast": {
+    "bootstrap_ci95": [
+      0.0,
+      0.0
+    ],
+    "discordant_left_fail_right_pass": 0,
+    "discordant_left_pass_right_fail": 0,
+    "mcnemar_exact_two_sided_p": 1.0,
+    "n_pairs": 8,
+    "risk_difference": 0.0
+  },
+  "schema_version": 2,
+  "trial_status": "completed"
+}

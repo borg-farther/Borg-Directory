@@ -16,6 +16,7 @@ from __future__ import annotations
 
 from dataclasses import dataclass, asdict
 import re
+import shlex
 from typing import Any, Dict, List, Optional
 
 from borg.core.human_language import RELAY_INSTRUCTION, rescue_human_summary
@@ -90,23 +91,57 @@ def _missing_dependency_hint(error_text: str) -> Optional[Dict[str, str]]:
 
 
 def _specialize_missing_dependency_actions(error_text: str, actions: List[str], limit: int = 3) -> List[str]:
-    """Replace generic `package-name` guidance with a copy-pasteable install hint."""
+    """Replace generic package advice with interpreter-bound safe guidance."""
     hint = _missing_dependency_hint(error_text)
     if not hint:
         return actions
 
     module = hint["module"]
     distribution = hint["distribution"]
-    specialized = [
-        f"install the distribution for import `{module}` — run/check: pip install {distribution}"
-    ]
-    for action in actions:
-        concrete = action.replace("<package-name>", distribution).replace("package-name", distribution)
-        if concrete not in specialized:
-            specialized.append(concrete)
-        if len(specialized) >= limit:
-            break
-    return specialized
+    return [
+        (
+            f"confirm the intended project interpreter, then install the distribution for import `{module}` "
+            f"with that interpreter — run/check: python -m pip --version && python -m pip install {distribution}"
+        ),
+        f"verify the import resolves from that same interpreter — run/check: python -c \"import {module}; print({module}.__file__)\"",
+        "rerun the exact command that produced the missing-module error",
+    ][:limit]
+
+
+_EXECUTABLE_PERMISSION_RE = re.compile(
+    r"(?:^|\s)(\./[^\s:]+)(?::)?\s+Permission\s+denied\b",
+    re.IGNORECASE,
+)
+
+
+def _script_permission_guidance(error_text: str) -> Optional[Dict[str, List[str]]]:
+    """Return diagnosis-first guidance for `./script: Permission denied`.
+
+    Generic file-mode advice is unsafe here: ``chmod 644`` removes execute
+    permission, while broad ``sudo``/``chown`` can damage ownership. The exact
+    script path lets us give a narrow, conditional owner-execute fix.
+    """
+    match = _EXECUTABLE_PERMISSION_RE.search(error_text or "")
+    if not match:
+        return None
+    script = match.group(1)
+    quoted = shlex.quote(script)
+    return {
+        "action": [
+            f"inspect the script and parent-path permissions — run/check: ls -l -- {quoted} && namei -l -- {quoted}",
+            f"if the script is trusted, owned by you, and intended to execute, add only the owner execute bit — run/check: chmod u+x -- {quoted}",
+            f"rerun the exact command — run/check: {quoted}",
+        ],
+        "stop": [
+            "chmod 644 on the script — fails because it leaves the execute bit unset",
+            "chmod 777 or blanket sudo — unsafe because it grants excessive access or creates root-owned files",
+            "changing ownership before checking the current owner and parent-directory permissions",
+        ],
+        "verify": [
+            f"test -x {quoted} && {quoted}",
+            "confirm the script now runs as the intended non-root user",
+        ],
+    }
 
 
 def _extract_actions(pack: Dict[str, Any], limit: int = 3) -> List[str]:
@@ -187,6 +222,16 @@ def _evidence(pack: Optional[Dict[str, Any]]) -> Dict[str, Any]:
     evidence = pack.get("evidence", {}) if isinstance(pack, dict) else {}
     if not isinstance(evidence, dict):
         evidence = {}
+    provenance = pack.get("provenance") if isinstance(pack, dict) else None
+    if isinstance(provenance, str) and "seed pack" in provenance.lower():
+        return {
+            "success_count": 0,
+            "failure_count": 0,
+            "uses": 0,
+            "success_rate": None,
+            "verified_outcome_count": 0,
+            "source": "seed_pack",
+        }
     return {
         "success_count": int(evidence.get("success_count", 0) or 0),
         "failure_count": int(evidence.get("failure_count", 0) or 0),
@@ -202,6 +247,8 @@ def _confidence_from_evidence(pack: Optional[Dict[str, Any]]) -> str:
     provenance = pack.get("provenance", {}) if isinstance(pack, dict) else {}
     if isinstance(provenance, dict) and provenance.get("confidence"):
         return str(provenance.get("confidence"))
+    if isinstance(provenance, str) and "seed pack" in provenance.lower():
+        return "seed-only"
     ev = _evidence(pack)
     successes = ev.get("success_count", 0)
     failures = ev.get("failure_count", 0)
@@ -210,7 +257,7 @@ def _confidence_from_evidence(pack: Optional[Dict[str, Any]]) -> str:
         return "tested"
     if total > 0:
         return "observed"
-    return "inferred"
+    return "seed-only"
 
 
 def _fallback_state(code: str, message: str, *, severity: str = "info", next_step: str = "") -> Dict[str, Any]:
@@ -411,6 +458,12 @@ def rescue(task_or_error: str, *, source: str = "cli", show_guidance: bool = Tru
         actions = _specialize_missing_dependency_actions(text, actions)
     stops = _extract_stops(pack)
     verify = _extract_verify(pack)
+    if problem_class == "permission_denied":
+        script_guidance = _script_permission_guidance(text)
+        if script_guidance:
+            actions = script_guidance["action"]
+            stops = script_guidance["stop"]
+            verify = script_guidance["verify"]
     confidence = _confidence_from_evidence(pack)
     ev = _evidence(pack)
     guidance = debug_error(text, show_evidence=show_guidance) if show_guidance else ""

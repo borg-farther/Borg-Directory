@@ -1,0 +1,8 @@
+{
+  "dirty_diff_sha256": "7edc65ac61a8c388f0c0d0e4666b0c584f31d07c5e33e46c2efed4134676a3ef",
+  "git_head": "3cc30d8da99480860e6c9e19ce4754f85ea3c3fc",
+  "immutable_runtime_snapshot_sha256": "fe6f3b0145e59bfe166a104c621a1033d19523c34acd6301e48755e987e3480b",
+  "source_version": "3.3.21",
+  "taskset_sha256": "3be86410be19b8825a2eb8540cb1d552c569497271bcb75a75c0babcfb134de0",
+  "wheel_sha256": "f8dbb49b2ae6163f15f16db77374c1b76643366cf81def4a7a015f909e46f928"
+}

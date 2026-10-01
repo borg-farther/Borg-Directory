@@ -130,6 +130,7 @@ class TestToolsList:
             "borg_reputation",
             "borg_analytics",
             "borg_dojo",
+            "borg_capable_agent_stack",
         ]
         for name in expected:
             assert name in tool_names, f"{name} not in {tool_names}"
@@ -160,9 +161,10 @@ class TestToolsList:
         # S5 (mcp_server.py decomposition) is likely to change the count again.
         req = minimal_request("tools/list", {}, req_id=4)
         resp = mcp_module.handle_request(req)
-        # Range assertion: tolerates slice (b) WIP add and any further additions
-        # before S5 lands, while still catching mass tool-list regression.
-        assert 22 <= len(resp["result"]["tools"]) <= 27
+        # Range assertion: tolerate deliberate additions while still catching a
+        # mass tool-list regression. The canonical exact count is checked by the
+        # Smithery/public-presentation contract.
+        assert 22 <= len(resp["result"]["tools"]) <= 32
 
 
 # ============================================================================

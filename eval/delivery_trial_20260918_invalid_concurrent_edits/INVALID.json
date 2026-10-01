@@ -1,0 +1,4 @@
+{
+  "status": "invalid_parent_workspace_contamination",
+  "task_id": "factory_registry_recursive_deadlock"
+}

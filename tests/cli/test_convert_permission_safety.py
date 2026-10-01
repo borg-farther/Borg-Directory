@@ -29,22 +29,37 @@ def test_safe_dir_exists_swallows_eacces():
 
 
 def test_convert_all_survives_forbidden_fallback_dir(tmp_path, monkeypatch, capsys):
-    # Simulate the published-wheel-on-user-machine condition: every probe of
-    # the hardcoded /root/... fallback raises EACCES (as it does for any
-    # non-root user). convert --all must still succeed from bundled seeds.
+    # Simulate the published-wheel-on-user-machine condition: the hardcoded
+    # maintainer-pack fallback (/root/hermes-workspace/guild-packs, 0700 and
+    # absent off the dev VPS) raises EACCES on every probe. convert --all must
+    # still succeed from bundled seeds.
+    #
+    # Patch the Path.exists/is_dir *methods*, NOT the pathlib.Path class.
+    # Replacing the class (the old approach) breaks CPython's Path.__new__
+    # subclass dispatch -- its `if cls is Path` identity check compares against
+    # the swapped module global, so the real Path no longer redirects to
+    # PosixPath. On Python <3.12 the base Path then lacks `_flavour`, and
+    # pytest's own failure reporter (`Path(os.getcwd())`) crashes with an
+    # INTERNALERROR that aborts the whole session and masks every other failure.
+    # Patching methods keeps Path construction intact and faithfully models the
+    # D-018 EACCES condition. The prefix is the guild-packs fallback only, so it
+    # no longer collides with the bundled-package path resolved in borg.cli.
     import pathlib as _pathlib
 
-    real_path_cls = _pathlib.Path
+    forbidden_prefix = "/root/hermes-workspace/guild-packs"
+    real_exists = _pathlib.Path.exists
+    real_is_dir = _pathlib.Path.is_dir
 
-    def fake_path(*args, **kwargs):
-        if args and str(args[0]).startswith("/root/hermes-workspace"):
-            return _ForbiddenPath()
-        return real_path_cls(*args, **kwargs)
+    def _deny_under_forbidden(real_method):
+        def _probe(self, *args, **kwargs):
+            if str(self).startswith(forbidden_prefix):
+                raise PermissionError(13, "Permission denied")
+            return real_method(self, *args, **kwargs)
+        return _probe
 
     monkeypatch.setenv("BORG_HOME", str(tmp_path / "home"))
-    # borg.cli does `import pathlib` at function scope, so patch the module
-    # global; the fake delegates everything except the forbidden prefix.
-    monkeypatch.setattr(_pathlib, "Path", fake_path)
+    monkeypatch.setattr(_pathlib.Path, "exists", _deny_under_forbidden(real_exists))
+    monkeypatch.setattr(_pathlib.Path, "is_dir", _deny_under_forbidden(real_is_dir))
     monkeypatch.setattr(sys, "argv", [
         "borg", "convert", ".", "--format", "openclaw", "--all",
         "--output", str(tmp_path / "openclaw"),

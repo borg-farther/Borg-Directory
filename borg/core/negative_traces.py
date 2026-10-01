@@ -29,7 +29,17 @@ def find_negative_traces(task: str, error: str = '', db_path: str = None, top_k:
             min_similarity=0.2, outcome_filter='failure'
         )
         if results:
-            return results
+            # A semantic score alone cannot authorize STOP advice. Broad error
+            # classes such as "permission denied" previously surfaced npm
+            # dead ends for an unrelated executable-script failure. Require the
+            # same concrete lexical overlap used for positive trace injection.
+            from borg.core.confidence_gate import trace_match_is_confident
+
+            query = f"{task} {error}".strip()
+            return [
+                trace for trace in results
+                if trace_match_is_confident(trace, min_similarity=0.2, query=query)
+            ][:top_k]
     except Exception:
         pass
 
@@ -37,7 +47,10 @@ def find_negative_traces(task: str, error: str = '', db_path: str = None, top_k:
     try:
         db = sqlite3.connect(db_path, timeout=10)
         db.row_factory = sqlite3.Row
-        words = [w.lower() for w in task.split() if len(w) > 4][:3]
+        from borg.core.confidence_gate import normalize_query_for_matching
+
+        cleaned_query = normalize_query_for_matching(f"{task} {error}")
+        words = [w.lower() for w in cleaned_query.split() if len(w) > 4][:3]
         if not words:
             db.close()
             return []
@@ -49,7 +62,13 @@ def find_negative_traces(task: str, error: str = '', db_path: str = None, top_k:
             [f'%{w}%' for w in words] + [top_k]
         ).fetchall()
         db.close()
-        return [dict(r) for r in rows]
+        from borg.core.confidence_gate import trace_match_is_confident
+
+        query = f"{task} {error}".strip()
+        return [
+            trace for trace in (dict(r) for r in rows)
+            if trace_match_is_confident(trace, min_similarity=0.0, query=query)
+        ][:top_k]
     except Exception as e:
         logger.debug(f"negative_traces: keyword fallback failed: {e}")
     return []

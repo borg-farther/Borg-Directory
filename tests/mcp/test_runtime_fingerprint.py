@@ -1,5 +1,6 @@
 import json
 
+from borg.core import runtime_fingerprint as runtime_fingerprint_module
 from borg.core.runtime_fingerprint import runtime_fingerprint, runtime_fingerprint_json
 from borg.integrations import mcp_server
 
@@ -13,9 +14,13 @@ def test_runtime_fingerprint_has_loaded_paths_and_hashes():
     assert fp["modules"]["borg.integrations.mcp_server"]["sha256"]
     assert fp["modules"]["borg.core.confidence_gate"]["path"]
     assert fp["modules"]["borg.core.confidence_gate"]["sha256"]
+    assert fp["modules"]["borg.core.epistemic_guardrail"]["path"]
+    assert fp["modules"]["borg.core.epistemic_guardrail"]["sha256"]
     assert fp["source_version"] == fp["borg_version"]
+    assert fp["source_version_basis"] in {"pyproject", "installed_distribution"}
     assert fp["version_matches_source"] is True
     assert fp["loaded_function_hashes"]["borg.integrations.mcp_server.borg_observe"]["sha256"]
+    assert fp["loaded_function_hashes"]["borg.core.epistemic_guardrail.deliberate"]["sha256"]
 
 
 def test_runtime_fingerprint_confidence_gate_canary_passes():
@@ -33,6 +38,12 @@ def test_runtime_fingerprint_confidence_gate_canary_passes():
     assert observe["permission_prompt_specific"] is True
     assert "NO_CONFIDENT_MATCH" in observe["meta_excerpt"] or "NO CONFIDENT MATCH" in observe["meta_excerpt"]
     assert "npm" not in next((line for line in observe["permission_excerpt"].lower().splitlines() if line.startswith("action:")), "")
+    epistemic = fp["epistemic_guardrail_canary"]
+    assert epistemic["passed"] is True
+    assert epistemic["side_effect_safe"] is True
+    assert epistemic["mode_selected"] == "deep"
+    assert epistemic["decision"] == "block_pending_verification"
+    assert epistemic["unsupported_claims"] == ["release-safe"]
     assert fp["reload_status"] == "loaded_code_matches_source_behavior"
 
 
@@ -40,6 +51,16 @@ def test_runtime_fingerprint_json_round_trips():
     parsed = json.loads(runtime_fingerprint_json())
     assert parsed["success"] is True
     assert parsed["schema_version"] == 1
+
+
+def test_version_probe_uses_installed_distribution_when_source_tree_is_absent(monkeypatch, tmp_path):
+    fake_module = tmp_path / "site-packages" / "borg" / "core" / "runtime_fingerprint.py"
+    fake_module.parent.mkdir(parents=True)
+    fake_module.write_text("# installed wheel\n", encoding="utf-8")
+    monkeypatch.setattr(runtime_fingerprint_module, "__file__", str(fake_module))
+    monkeypatch.setattr(runtime_fingerprint_module, "distribution_version", lambda name: "9.9.9")
+
+    assert runtime_fingerprint_module._version_probe() == ("9.9.9", "installed_distribution")
 
 
 def test_mcp_tool_schema_and_dispatch_include_runtime_fingerprint():
@@ -50,5 +71,7 @@ def test_mcp_tool_schema_and_dispatch_include_runtime_fingerprint():
     assert parsed["success"] is True
     assert parsed["confidence_gate_canary"]["passed"] is True
     assert parsed["observe_behavior_canary"]["passed"] is True
+    assert parsed["epistemic_guardrail_canary"]["passed"] is True
     assert parsed["version_matches_source"] is True
     assert parsed["modules"]["borg.integrations.mcp_server"]["path"]
+    assert parsed["modules"]["borg.core.epistemic_guardrail"]["path"]

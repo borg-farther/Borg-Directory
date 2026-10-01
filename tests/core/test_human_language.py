@@ -93,7 +93,7 @@ def test_rescue_packet_carries_human_summary_and_relay_instruction():
     from borg.core.rescue import rescue
 
     result = rescue("ModuleNotFoundError: No module named flask", source="test", show_guidance=False)
-    assert result.human_summary.startswith("🛟 Borg: found a known fix")
+    assert result.human_summary.startswith("🛟 Borg: bundled seed guidance")
     assert RELAY_INSTRUCTION in result.agent_instruction
     assert result.human_summary in result.agent_instruction  # relayable in-band
     # The defeating instruction from the E-014 audit must be gone.
@@ -114,7 +114,7 @@ def test_cli_rescue_prints_moment_line_first(tmp_path, monkeypatch, capsys):
     monkeypatch.setattr(sys, "argv", ["borg", "rescue", "ModuleNotFoundError: No module named flask", "--short"])
     main()
     out = capsys.readouterr().out
-    assert out.splitlines()[0].startswith("🛟 Borg: found a known fix")
+    assert out.splitlines()[0].startswith("🛟 Borg: bundled seed guidance")
 
 
 def test_status_reads_as_receipt(tmp_path, monkeypatch, capsys):

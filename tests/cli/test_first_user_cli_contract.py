@@ -119,16 +119,18 @@ def test_rescue_human_receipt_uses_product_language():
     assert err == ""
 
 
-def test_start_onboarding_uses_cache_layer_language(monkeypatch):
-    """`borg start` should teach the fire/watch model without noisy Borg cosplay."""
+def test_start_onboarding_uses_memory_with_standards_language(monkeypatch):
+    """`borg start` should teach evidence boundaries without noisy Borg cosplay."""
     monkeypatch.setattr(sys, "stdin", io.StringIO("ModuleNotFoundError: No module named flask\n"))
     monkeypatch.setattr(cli_module, "_record_v3_outcome_safe", lambda **_kwargs: pytest.fail("borg start must not auto-record success before VERIFY"))
 
     code, out, err = capture_main(["start"])
 
     assert code == 0
-    assert "Borg is a cache layer for agent reasoning." in out
-    assert "It watches for failure loops, fires only when it can change the path" in out
+    assert "Borg gives AI agents memory with standards." in out
+    assert "keeps weak memory advisory" in out
+    assert "demands evidence before consequential action" in out
+    assert "borg agent-stack --json" in out
     assert "After VERIFY" in out
     assert "borg_record_outcome" in out
     assert "--success " + "yes" not in out
@@ -146,6 +148,25 @@ def test_feedback_v3_help_is_verification_caveated():
     assert "after VERIFY" in out
     assert "borg_record_outcome" in out
     assert "--success " + "yes" not in out
+    assert err == ""
+
+
+def test_agent_stack_cli_emits_machine_readable_contract():
+    code, out, err = capture_main(["agent-stack", "--json"])
+
+    assert code == 0
+    data = json.loads(out)
+    assert data["status"] == "minimum_capable_agent_stack"
+    assert data["commands"]["inspect"] == "borg agent-stack --json"
+    assert [lever["id"] for lever in data["levers"]] == [
+        "capable_base_model",
+        "structured_outputs",
+        "rag_layer",
+        "persistent_memory",
+        "real_tools",
+        "tight_system_prompt",
+        "eval_loop",
+    ]
     assert err == ""
 
 

@@ -13,6 +13,7 @@ Covers:
 
 import json
 import sys
+from datetime import datetime, timezone
 from pathlib import Path
 from unittest.mock import patch, MagicMock
 
@@ -1253,7 +1254,8 @@ provenance:
         import borg.core.search as search_module
         monkeypatch.setattr(search_module, "BORG_DIR", fake_guild)
 
-        fresh_pack_yaml = """
+        fresh_created = datetime.now(timezone.utc).isoformat().replace("+00:00", "Z")
+        fresh_pack_yaml = f"""
 type: workflow_pack
 version: '1.0.0'
 id: guild://test/fresh-try
@@ -1269,7 +1271,7 @@ phases:
 escalation_rules: []
 provenance:
   author: Author
-  created: '2026-03-01T00:00:00Z'
+  created: '{fresh_created}'
   confidence: tested
   evidence: Evidence
   failure_cases:

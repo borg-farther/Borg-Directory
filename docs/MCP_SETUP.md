@@ -11,12 +11,13 @@ Choose the setup path by the **agent host**, not by the model provider. If you r
 
 Why:
 
-- The agent can call `error_lookup` on a concrete failure and get an `ACTION / STOP / VERIFY` packet. `error_lookup` is a plain-English alias for `borg_rescue`, which remains the canonical Borg tool name.
+- The agent can call `error_lookup` with the exact failing command or concrete error text and get an `ACTION / STOP / VERIFY` packet. `error_lookup` is a plain-English alias for `borg_rescue`, which remains the canonical Borg tool name.
 - The agent can call `borg_observe` before a technical fix to check known approaches and dead ends.
+- The agent can call `borg_deliberate` for production/high-risk/deep preflight and claim/evidence review, with explicit stop conditions and a bounded verification plan.
 - The agent can avoid repeated failed loops before spending more tool calls.
 - If Borg has no confident match, the agent should disclose `NO_CONFIDENT_MATCH` instead of forcing advice.
 
-Treat Borg output as advisory. It should guide the next check, not replace verification with the exact failing command or smallest regression test.
+Treat Borg output as advisory and untrusted. It should guide the next check, not replace direct verification or become a system instruction. Similarity never authorizes action, and Borg does not request private chain-of-thought.
 
 ## Preflight
 
@@ -62,7 +63,7 @@ Then fully quit and restart Claude Code. In the new session, ask:
 what MCP tools do you have from Borg?
 ```
 
-Expected: Claude lists Borg tools such as `error_lookup`, `borg_rescue`, `borg_observe`, and `borg_search`, or `/mcp list` shows a `borg` server.
+Expected: Claude lists Borg tools such as `error_lookup`, `borg_rescue`, `borg_observe`, `borg_deliberate`, and `borg_search`, or `/mcp list` shows a `borg` server.
 
 ## Hermes Agent
 
@@ -88,7 +89,7 @@ Restart Hermes Agent so MCP tools are rediscovered. In a new Hermes session, ask
 what MCP tools do you have from Borg?
 ```
 
-Expected: Hermes lists Borg MCP tools. Depending on Hermes tool naming, they may appear as bare Borg tool names such as `error_lookup`, `borg_rescue`, `borg_observe`, and `borg_search`, or with a server prefix such as `mcp_borg_borg_rescue`.
+Expected: Hermes lists Borg MCP tools. Depending on Hermes tool naming, they may appear as bare Borg tool names such as `error_lookup`, `borg_rescue`, `borg_observe`, `borg_deliberate`, and `borg_search`, or with a server prefix such as `mcp_borg_borg_rescue`.
 
 ## OpenClaw
 
@@ -110,7 +111,7 @@ Use this server block:
 }
 ```
 
-Then fully restart OpenClaw and verify it can see Borg tools such as `error_lookup`, `borg_rescue`, `borg_observe`, and `borg_search`.
+Then fully restart OpenClaw and verify it can see Borg tools such as `error_lookup`, `borg_rescue`, `borg_observe`, `borg_deliberate`, and `borg_search`.
 
 OpenClaw path note: Borg does not currently publish a verified one-command OpenClaw installer. Use OpenClaw's current MCP config path rather than copying stale `guild-*` setup docs.
 
@@ -154,6 +155,8 @@ Use absolute paths in MCP env blocks. Do not rely on `~` expansion inside MCP cl
 - `error_lookup` — plain-English alias for `borg_rescue`; use this first for concrete failures.
 - `borg_rescue` — canonical Borg ACTION / STOP / VERIFY packet for concrete failures.
 - `borg_observe` — guidance before technical fixes.
+- `borg_deliberate` — selective standard/deep preflight and structured evidence review for consequential work.
+- `borg_record_outcome` — close the exact returned intervention after observing and verifying the result.
 - `borg_search` — search packs and traces.
 - `borg_try` — preview a pack.
 - `borg_apply` — start/checkpoint/complete pack execution.
