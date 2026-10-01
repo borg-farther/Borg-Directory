@@ -40,11 +40,16 @@ def test_first_10_packet_contains_install_mcp_feedback_and_priming():
     packet = first_10_readiness_packet()
     commands = "\n".join(packet["smoke_commands"])
 
-    assert "python3 -m pip install agent-borg" in commands
+    assert "python3 -m pip install agent-borg==" in commands
     assert "borg-doctor --json" in commands
     assert "borg rescue" in commands
+    assert "BORGFIRST10_UNKNOWN_CONTROL_v1" in commands
     assert "borg agent-stack --json" in commands
     assert "borg setup-claude --scope user --verify --fix" in commands
+    assert packet["study_protocol"]["protocol_id"] == "borg-rescue-first10-v1"
+    assert packet["study_protocol"]["artifact"].startswith("agent-borg==")
+    assert packet["study_protocol"]["unknown_control_expected_status"] == "no_confident_match"
+    assert packet["study_protocol"]["failed_installs_remain_in_denominator"] is True
     assert "borg first-10 --json" in commands
     assert "borg collective summary --json" in commands
     stack = packet["minimum_capable_agent_stack"]
@@ -163,6 +168,37 @@ def test_docs_link_first_10_security_and_truthful_limitations():
     assert "do not paste API keys" in first_10
 
 
+def test_first_10_issue_form_captures_verification_safety_and_outcome_without_self_url() -> None:
+    form = (ROOT / ".github" / "ISSUE_TEMPLATE" / "first-10-evidence.yml").read_text(encoding="utf-8")
+    for field_id in [
+        "artifact-version",
+        "task-was-real-current-failure",
+        "verification-status",
+        "verification-evidence-redacted",
+        "maintainer-help-before-first-value",
+        "unknown-control-status",
+        "false-confident-match",
+        "harmful-guidance",
+        "outcome-capture-method",
+        "outcome-evidence-id",
+    ]:
+        assert f"id: {field_id}" in form
+    assert "BORGFIRST10_UNKNOWN_CONTROL_v1" in form
+    assert "id: external-user-evidence-uri" not in form
+    assert "issue URL becomes the external evidence URI" in form
+
+
+def test_preregistered_protocol_documents_denominator_and_hard_stops() -> None:
+    protocol = (ROOT / "docs" / "FIRST_10_RESCUE_PROTOCOL.md").read_text(encoding="utf-8")
+
+    assert "ENROLLMENT CLOSED" in protocol
+    assert "Failed installs and unsuccessful rescues remain in the denominator" in protocol
+    assert "BORGFIRST10_UNKNOWN_CONTROL_v1" in protocol
+    assert "Pause enrollment on the first" in protocol
+    assert "verified_useful_rescues + remaining_slots < 6" in protocol
+    assert "no causal lift" in protocol
+
+
 def test_cli_parser_exposes_first_10_command_by_source_contract():
     cli = (ROOT / "borg" / "cli.py").read_text(encoding="utf-8")
 
@@ -200,22 +236,37 @@ def _first_10_value_row(
 ) -> dict[str, object]:
     row: dict[str, object] = {
         "user_id_pseudonym": f"external-user-{idx:02d}",
-        "external_user_evidence_uri": f"https://evidence.borg-farther.org/first-10/{idx}",
+        "enrollment_index": idx,
+        "external_user_evidence_uri": f"https://github.com/borg-farther/Borg-Directory/issues/{idx}",
+        "maintainer_validation_status": "verified",
+        "maintainer_validation_evidence_uri": f"https://github.com/borg-farther/Borg-Directory/issues/{idx}#issuecomment-validated",
         "consent_confirmed": True,
+        "artifact_version": "9.9.9",
         "install_method": "pipx install agent-borg==9.9.9",
         "install_success": True,
+        "task_was_real_current_failure": True,
         "time_to_first_rescue_minutes": 4,
         "rescue_input_redacted": "ModuleNotFoundError: No module named flask",
         "rescue_returned_action_stop_verify": True,
         "rescue_useful": True,
+        "guidance_relevant": True,
+        "verification_status": "passed",
+        "verification_evidence_redacted": "pytest target passed",
+        "maintainer_help_before_first_value": False,
         "mcp_setup_attempted": True,
         "mcp_setup_success": True,
+        "unknown_control_input_id": "unknown-control-v1",
+        "unknown_control_status": "no_confident_match",
         "no_confident_match_when_unknown": True,
+        "false_confident_match": False,
+        "harmful_guidance": False,
         "blocker_category": "none",
         "blocker_notes_redacted": "none",
         "privacy_security_incident": False,
         "repeat_use_within_7_days": idx <= 2,
         "outcome_recorded": True,
+        "outcome_capture_method": "github_evidence_issue",
+        "outcome_evidence_id": f"issue-{idx}",
         "savings_counterfactual_basis": "randomized_control" if confirmed else "unknown",
         "dead_end_avoided_confirmed": confirmed,
         "user_confirmed_value": confirmed,
@@ -233,7 +284,18 @@ def _first_10_value_row(
 
 def _first_10_value_scoreboard(rows: list[dict[str, object]]) -> dict[str, object]:
     data: dict[str, object] = {
-        "schema_version": 1,
+        "schema_version": 2,
+        "protocol": {
+            "protocol_id": "borg-rescue-first10-v1",
+            "status": "complete" if len(rows) == 10 else ("enrollment_open" if not rows else "in_progress"),
+            "enrollment_open": len(rows) < 10,
+            "unknown_control": {
+                "id": "unknown-control-v1",
+                "input": "BORGFIRST10_UNKNOWN_CONTROL_v1: ZXQ-9199 proprietary scheduler quantum flux fault",
+                "expected_status": "no_confident_match",
+            },
+            "artifact": {"package": "agent-borg", "version": "9.9.9", "wheel_sha256": "a" * 64},
+        },
         "truth_policy": {
             "simulated_users_count_as_real": False,
             "internal_sessions_count_as_real": False,

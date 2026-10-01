@@ -1,76 +1,119 @@
-# Borg first-10 evidence intake
+# First-10 Evidence Intake
 
-This is the public intake contract for controlled first-10 beta evidence. It is intentionally stricter than a testimonial: public self-serve requires row-derived, consented, external-user evidence.
+Authoritative protocol: [`FIRST_10_RESCUE_PROTOCOL.md`](FIRST_10_RESCUE_PROTOCOL.md)
 
-## Intake path
+Machine scoreboard: `eval/first_10_user_scoreboard.json`
 
-1. Tester installs the exact current approved package: `pipx install agent-borg==3.4.1` after the PyPI fresh-install/MCP canary for that exact version is re-captured green.
-2. Tester runs one real redacted rescue: `borg rescue "<real redacted error>" --short`.
-3. Tester optionally attempts local stdio MCP setup with `borg-mcp`.
-4. Tester opens `.github/ISSUE_TEMPLATE/first-10-evidence.yml` and fills one row.
-5. Maintainer validates redaction, consent, and row shape.
-6. Maintainer appends the normalized row to `eval/first_10_user_scoreboard.json`.
-7. Maintainer runs:
-   - `python eval/first_10_evidence.py --input eval/first_10_user_scoreboard.json --write`
-   - `python eval/public_self_serve_launch_gate.py`
-   - `python eval/real_user_rollout_gate.py`
-   - `python scripts/build_borg_proof_dashboard.py`
+Issue form: `.github/ISSUE_TEMPLATE/first-10-evidence.yml`
 
-## Required fields
+## Enrollment rule
 
-The GitHub issue form must map to these row fields:
+Do not recruit or accept participants while the scoreboard says `protocol.enrollment_open: false`. Before opening, lock one PyPI version and its wheel SHA-256.
+
+## Intake sequence
+
+1. Before installation, assign the consenting participant the next immutable `enrollment_index` slot (1–10) and pseudonym. Never reuse a slot.
+2. Participant submits the issue form after attempting the frozen protocol.
+3. Use the submitted issue URL as `external_user_evidence_uri`; never ask a participant to predict their own issue URL.
+4. Verify consent, external-user status, uniqueness, artifact version, redaction, command evidence, and field completeness. Post a redacted maintainer validation note and retain its HTTPS URI.
+5. Transcribe one row without changing the participant’s reported outcome. Set `maintainer_validation_status` to `verified` only after step 4; rejected/pending rows cannot count.
+6. Keep lifecycle state synchronized before writing derived counts: after slot 1 set `protocol.status: in_progress`; after slot 10 set `protocol.status: complete` and `protocol.enrollment_open: false`. `complete` records cohort closure, not a passing verdict.
+7. Run:
+
+   ```bash
+   python eval/first_10_evidence.py --write
+   python eval/first_10_evidence.py --check
+   ```
+
+8. Review derived blockers. Editable totals are not evidence.
+9. Pause enrollment immediately if any row reports a false-confident unknown control, harmful guidance, a critical privacy/security incident, or an unredacted secret.
+
+## Required row fields
+
+### Identity and consent
 
 - `user_id_pseudonym`
+- `enrollment_index`
 - `external_user_evidence_uri`
+- `maintainer_validation_status`
+- `maintainer_validation_evidence_uri`
 - `consent_confirmed`
-- `install_method`
+- `task_was_real_current_failure`
+
+### Immutable artifact and install
+
+- `artifact_version`
+- `install_method` containing `agent-borg==<artifact_version>`
 - `install_success`
 - `time_to_first_rescue_minutes`
+
+Failed installs remain valid rows and remain in the denominator.
+
+### Real rescue result
+
 - `rescue_input_redacted`
 - `rescue_returned_action_stop_verify`
 - `rescue_useful`
-- `mcp_setup_attempted`
-- `mcp_setup_success`
+- `guidance_relevant`
+- `verification_status`: `passed`, `failed`, or `not_reached`
+- `verification_evidence_redacted`
+- `maintainer_help_before_first_value`
+
+A useful rescue counts only when verification passed and no maintainer help occurred before value.
+
+### Safety control
+
+- `unknown_control_input_id`: `unknown-control-v1`
+- `unknown_control_status`: `no_confident_match`, `false_confident_match`, or `not_run_install_failed`
 - `no_confident_match_when_unknown`
+- `false_confident_match`
+- `harmful_guidance`
+- `privacy_security_incident`
+
+Every successful install must run the control. The explicit boolean fields must agree with `unknown_control_status`.
+
+### Outcome evidence
+
+- `outcome_recorded`
+- `outcome_capture_method`: `borg_record_outcome`, `borg_feedback_v3`, `github_evidence_issue`, or `not_reached`
+- `outcome_evidence_id`
 - `blocker_category`
 - `blocker_notes_redacted`
-- `privacy_security_incident`
 - `repeat_use_within_7_days`
-- `outcome_recorded`
-- `baseline_minutes_without_borg`
-- `actual_minutes_with_borg`
-- `net_minutes_saved`
-- `baseline_tokens_without_borg`
-- `actual_tokens_with_borg`
-- `net_tokens_saved`
-- `savings_counterfactual_basis`
-- `dead_end_avoided_confirmed`
-- `user_confirmed_value`
 
-## Counting rules
+### Optional descriptive value measurement
 
-A row counts only when:
+- before/after minutes and/or tokens;
+- `savings_counterfactual_basis`;
+- `dead_end_avoided_confirmed`;
+- `user_confirmed_value`.
 
-- the tester is external, not a maintainer/internal agent/synthetic load user;
-- consent is confirmed;
-- evidence URI is HTTPS and secret-free;
-- the row is redacted and does not contain credentials;
-- duplicate pseudonyms are rejected;
-- aggregate counters in the scoreboard match row-derived counts.
+Savings do not count without a stated counterfactual basis and paired before/after values. Descriptive savings are not a causal-lift claim.
 
-## Thresholds
+## Validation behavior
 
-Public self-serve remains NO-GO until rows prove:
+`eval/first_10_evidence.py` rejects:
 
-- 10 verified external users;
-- at least 8 install successes;
-- at least 6 useful rescue moments;
-- 0 critical privacy/security incidents.
+- internal, maintainer, synthetic, or simulated rows;
+- duplicate pseudonyms, enrollment slots, participant evidence URIs, or maintainer-validation evidence URIs;
+- placeholder/non-HTTPS evidence links;
+- secrets in any string field;
+- artifact drift or unpinned installs;
+- missing verification evidence;
+- inconsistent safety-control fields;
+- missing outcome evidence;
+- forged aggregate counts.
 
-## Value/savings claims
+Raw unsuccessful rows remain; only invalid or unsafe-to-publish data is quarantined, with the exclusion reason retained.
 
-Measured savings are not claimed until the same row-derived first-10 evidence includes before/after time or token fields. Maintainer estimates, synthetic load, and aggregate-only edits do not count.
+## Binary thresholds
 
-## If a row reports a bad first answer
+- 10 valid unique external users;
+- at least 8 successful installs;
+- at least 6 verified useful rescues before maintainer help;
+- safety-control passes equal all successful installs and number at least 8;
+- zero false-confident controls;
+- zero harmful guidance events;
+- zero critical privacy/security incidents.
 
-Open `.github/ISSUE_TEMPLATE/bad-answer.yml` and record the bad guidance. Agents should use the shipped MCP/CLI path `borg_record_failure(...)` or `borg feedback-v3 ...` for durable learning. Do not rely on nonexistent helper names.
+Until every condition passes, the machine verdict remains `BLOCKED`.

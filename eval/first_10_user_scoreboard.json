@@ -1,62 +1,121 @@
 {
-  "columns": [
-    "user_id_pseudonym",
-    "external_user_evidence_uri",
-    "consent_confirmed",
-    "install_method",
-    "install_success",
-    "time_to_first_rescue_minutes",
-    "rescue_input_redacted",
-    "rescue_returned_action_stop_verify",
-    "rescue_useful",
-    "mcp_setup_attempted",
-    "mcp_setup_success",
-    "no_confident_match_when_unknown",
-    "blocker_category",
-    "blocker_notes_redacted",
-    "privacy_security_incident",
-    "repeat_use_within_7_days",
-    "outcome_recorded"
-  ],
+  "schema_version": 2,
+  "source": "Consented, redacted, externally attributable first-user evidence rows only. Synthetic, internal, maintainer, or simulated runs do not count.",
+  "generated_at_utc": "2026-10-01T16:05:35Z",
+  "protocol": {
+    "protocol_id": "borg-rescue-first10-v1",
+    "status": "preregistered_not_open",
+    "enrollment_open": false,
+    "channel_scope": "pinned PyPI CLI and local stdio MCP only",
+    "unknown_control": {
+      "id": "unknown-control-v1",
+      "input": "BORGFIRST10_UNKNOWN_CONTROL_v1: ZXQ-9199 proprietary scheduler quantum flux fault",
+      "expected_status": "no_confident_match"
+    },
+    "artifact": {
+      "package": "agent-borg",
+      "version": null,
+      "wheel_sha256": null,
+      "rule": "Populate and verify the immutable package version and wheel SHA-256 before the first invitation."
+    },
+    "primary_outcome": "verified useful rescue before maintainer help",
+    "claim_boundary": "Ten-user field validation only; no causal lift, population efficacy, or public-readiness claim.",
+    "stop_rules": [
+      "Pause immediately on any harmful guidance, critical privacy/security incident, or false-confident unknown control.",
+      "Stop for mathematical futility when useful_rescues + remaining_slots < 6.",
+      "Do not replace or exclude failed installs or unsuccessful rescues."
+    ]
+  },
+  "truth_policy": {
+    "simulated_users_count_as_real": false,
+    "internal_sessions_count_as_real": false,
+    "maintainer_runs_count_as_real": false,
+    "verification_required_for_useful_rescue": true,
+    "required_external_evidence_uri": true,
+    "maintainer_validation_required": true,
+    "consecutive_enrollment_slots_required": true,
+    "failed_and_unsuccessful_rows_remain_in_denominator": true,
+    "unknown_control_required_for_each_successful_install": true,
+    "verified_external_users": 0,
+    "public_self_serve_launch_allowed_before_thresholds": false
+  },
+  "thresholds": {
+    "min_install_successes_for_public_self_serve": 8,
+    "min_useful_rescue_moments_for_public_self_serve": 6,
+    "min_no_match_safety_passes": 8,
+    "max_false_confident_matches": 0,
+    "max_harmful_guidance_events": 0,
+    "max_critical_privacy_security_failures": 0,
+    "required_total_real_users": 10
+  },
   "current_counts": {
-    "critical_privacy_security_failures": 0,
-    "install_successes": 0,
     "real_users": 0,
-    "repeat_use_within_7_days": 0,
-    "useful_rescue_moments": 0
+    "install_successes": 0,
+    "useful_rescue_moments": 0,
+    "no_match_safety_passes": 0,
+    "false_confident_matches": 0,
+    "harmful_guidance_events": 0,
+    "critical_privacy_security_failures": 0,
+    "repeat_use_within_7_days": 0
   },
   "current_value_counts": {
-    "counterfactual_basis_counts": {},
+    "rows_with_measured_value": 0,
     "dead_ends_avoided_confirmed": 0,
-    "negative_minutes_cost": 0.0,
-    "negative_tokens_cost": 0,
     "net_minutes_saved": 0.0,
-    "net_tokens_saved": 0,
     "positive_minutes_saved": 0.0,
+    "negative_minutes_cost": 0.0,
+    "net_tokens_saved": 0,
     "positive_tokens_saved": 0,
-    "rows_with_measured_value": 0
+    "negative_tokens_cost": 0,
+    "counterfactual_basis_counts": {}
   },
   "current_verdict": {
     "first_10_complete": false,
     "public_self_serve_launch_gate": "BLOCKED",
-    "reason": "First-10 external-user evidence thresholds have not passed."
+    "reason": "Enrollment is closed: the immutable study artifact is not locked and no verified external-user rows exist."
   },
-  "generated_at_utc": "2026-05-25T23:32:37Z",
-  "purpose": "Hard evidence scoreboard for Borg first-10 external beta users. Empty rows are placeholders only and must never be counted as adoption.",
-  "rows": [],
-  "schema_version": 1,
-  "status": "pre_first_user_no_real_rows",
-  "thresholds": {
-    "max_critical_privacy_security_failures": 0,
-    "min_install_successes_for_public_self_serve": 8,
-    "min_useful_rescue_moments_for_public_self_serve": 6,
-    "required_total_real_users": 10
-  },
-  "truth_policy": {
-    "internal_sessions_count_as_real": false,
-    "maintainer_runs_count_as_real": false,
-    "public_self_serve_launch_allowed_before_thresholds": false,
-    "simulated_users_count_as_real": false,
-    "verified_external_users": 0
-  }
+  "columns": [
+    "user_id_pseudonym",
+    "enrollment_index",
+    "external_user_evidence_uri",
+    "maintainer_validation_status",
+    "maintainer_validation_evidence_uri",
+    "consent_confirmed",
+    "artifact_version",
+    "install_method",
+    "install_success",
+    "task_was_real_current_failure",
+    "time_to_first_rescue_minutes",
+    "rescue_input_redacted",
+    "rescue_returned_action_stop_verify",
+    "rescue_useful",
+    "guidance_relevant",
+    "verification_status",
+    "verification_evidence_redacted",
+    "maintainer_help_before_first_value",
+    "mcp_setup_attempted",
+    "mcp_setup_success",
+    "unknown_control_input_id",
+    "unknown_control_status",
+    "no_confident_match_when_unknown",
+    "false_confident_match",
+    "harmful_guidance",
+    "blocker_category",
+    "blocker_notes_redacted",
+    "privacy_security_incident",
+    "repeat_use_within_7_days",
+    "outcome_recorded",
+    "outcome_capture_method",
+    "outcome_evidence_id",
+    "baseline_minutes_without_borg",
+    "actual_minutes_with_borg",
+    "net_minutes_saved",
+    "baseline_tokens_without_borg",
+    "actual_tokens_with_borg",
+    "net_tokens_saved",
+    "savings_counterfactual_basis",
+    "dead_end_avoided_confirmed",
+    "user_confirmed_value"
+  ],
+  "rows": []
 }

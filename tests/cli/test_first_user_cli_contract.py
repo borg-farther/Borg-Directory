@@ -11,6 +11,7 @@ import json
 import re
 import subprocess
 import sys
+from pathlib import Path
 
 import pytest
 
@@ -81,6 +82,52 @@ def test_borg_doctor_console_entrypoint_exists_and_delegates(monkeypatch, capsys
     payload = json.loads(out)
     assert code == 0
     assert payload["success"] is True
+    assert {check["name"] for check in payload["checks"]} >= {
+        "borg_observe_isolated",
+        "borg_rate_isolated",
+    }
+
+
+def test_borg_doctor_feedback_probe_never_writes_to_active_borg_home(monkeypatch, tmp_path):
+    from borg.cli import doctor
+    from borg.integrations import mcp_server
+
+    active_home = tmp_path / "active-user-home"
+    observed_homes: list[Path] = []
+    rated_homes: list[Path] = []
+    monkeypatch.setenv("BORG_HOME", str(active_home))
+    monkeypatch.setenv("BORG_DIR", str(active_home / "guild"))
+    outer_token = mcp_server._last_shown_trace_id.set("real-user-prior-trace")
+
+    def fake_observe(*, task, context):
+        assert task
+        assert context == "doctor-isolated-probe"
+        observed_homes.append(Path(doctor.os.environ["BORG_HOME"]))
+        mcp_server._last_shown_trace_id.set("synthetic-doctor-trace")
+        return "ACTION: isolated probe\nCONFIDENCE: BORG [TEST]"
+
+    def fake_rate(*, helpful):
+        assert helpful is True
+        assert mcp_server._last_shown_trace_id.get() == "synthetic-doctor-trace"
+        rated_homes.append(Path(doctor.os.environ["BORG_HOME"]))
+        return "BORG: Feedback recorded"
+
+    monkeypatch.setattr("borg.integrations.mcp_server.borg_observe", fake_observe)
+    monkeypatch.setattr("borg.integrations.mcp_server.borg_rate", fake_rate)
+
+    try:
+        result = doctor._isolated_observe_rate_probe()
+
+        assert result["observe_passed"] is True
+        assert result["rate_passed"] is True
+        assert observed_homes == rated_homes
+        assert observed_homes[0] != active_home
+        assert not observed_homes[0].exists()
+        assert doctor.os.environ["BORG_HOME"] == str(active_home)
+        assert doctor.os.environ["BORG_DIR"] == str(active_home / "guild")
+        assert mcp_server._last_shown_trace_id.get() == "real-user-prior-trace"
+    finally:
+        mcp_server._last_shown_trace_id.reset(outer_token)
 
 
 def test_borg_doctor_defaults_to_canonical_borg_dir(monkeypatch, tmp_path):

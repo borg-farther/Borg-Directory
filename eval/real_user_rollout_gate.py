@@ -164,6 +164,8 @@ def _first_10_evidence() -> dict[str, Any]:
             "real_users": 0,
             "install_successes": 0,
             "useful_rescue_moments": 0,
+            "false_confident_matches": 0,
+            "harmful_guidance_events": 0,
             "critical_privacy_security_failures": 0,
             "required_total_real_users": 10,
             "required_install_successes": 8,
@@ -172,6 +174,8 @@ def _first_10_evidence() -> dict[str, Any]:
             "scoreboard_gate": None,
             "scoreboard_reason": "scoreboard missing",
             "row_count": 0,
+            "schema_valid": False,
+            "protocol": {"ready": False, "status": "", "enrollment_open": False, "reasons": ["scoreboard missing"]},
             "invalid_rows": [],
             "stored_consistency": {"passed": False, "mismatches": [{"field": "file", "expected": "present", "actual": "missing"}]},
             "passed": False,
@@ -192,6 +196,8 @@ def _first_10_evidence() -> dict[str, Any]:
         "real_users": derived["real_users"],
         "install_successes": derived["install_successes"],
         "useful_rescue_moments": derived["useful_rescue_moments"],
+        "false_confident_matches": derived["false_confident_matches"],
+        "harmful_guidance_events": derived["harmful_guidance_events"],
         "critical_privacy_security_failures": derived["critical_privacy_security_failures"],
         "required_total_real_users": thresholds["required_total_real_users"],
         "required_install_successes": thresholds["required_install_successes"],
@@ -200,6 +206,9 @@ def _first_10_evidence() -> dict[str, Any]:
         "scoreboard_gate": verdict.get("public_self_serve_launch_gate"),
         "scoreboard_reason": verdict.get("reason"),
         "row_count": evidence["row_count"],
+        "schema_valid": evidence["schema_valid"],
+        "protocol": evidence["protocol"],
+        "cohort_sequence_valid": evidence["cohort_sequence_valid"],
         "counted_external_rows": evidence["counted_external_rows"],
         "invalid_rows": evidence["invalid_rows"],
         "stored_consistency": evidence["stored_consistency"],
@@ -224,13 +233,39 @@ def compile_rollout_gate(*, require_ops_watchdog: bool = True) -> dict[str, Any]
         first_user["passed"],
         load_10["passed"],
     ])
-    no_first_10_privacy_security_incidents = int(first_10.get("critical_privacy_security_failures") or 0) == 0
+    first_10_safety_pause_clear = all([
+        int(first_10.get("critical_privacy_security_failures") or 0) == 0,
+        int(first_10.get("false_confident_matches") or 0) == 0,
+        int(first_10.get("harmful_guidance_events") or 0) == 0,
+    ])
+    first_10_protocol = first_10.get("protocol") or {}
+    first_10_integrity_ready = bool(
+        first_10_protocol.get("ready")
+        and first_10.get("schema_valid")
+        and first_10.get("cohort_sequence_valid")
+        and first_10.get("stored_consistency", {}).get("passed")
+    )
+    remaining_slots = max(int(first_10.get("required_total_real_users") or 10) - int(first_10.get("row_count") or 0), 0)
+    first_10_futile = int(first_10.get("useful_rescue_moments") or 0) + remaining_slots < int(
+        first_10.get("required_useful_rescue_moments") or 6
+    )
+    enrollment_can_continue = bool(
+        first_10.get("passed")
+        or (
+            first_10_protocol.get("status") in {"enrollment_open", "in_progress"}
+            and first_10_protocol.get("enrollment_open") is True
+            and int(first_10.get("row_count") or 0) < int(first_10.get("required_total_real_users") or 10)
+            and not first_10_futile
+        )
+    )
     ready_for_10_controlled_beta = bool(
         local_infra_ready_for_10
         and package["passed"]
         and release_controls["passed"]
         and ops["passed"]
-        and no_first_10_privacy_security_incidents
+        and first_10_integrity_ready
+        and first_10_safety_pause_clear
+        and enrollment_can_continue
     )
     infrastructure_ready_for_100 = bool(ready_for_10_controlled_beta and load_100["passed"])
     ready_for_100_real_users = infrastructure_ready_for_100 and first_10["passed"]
@@ -257,11 +292,19 @@ def compile_rollout_gate(*, require_ops_watchdog: bool = True) -> dict[str, Any]
         blockers.extend(release_controls.get("blockers") or ["release controls are not green"])
     if not ops["passed"]:
         blockers.extend(ops.get("blockers") or ["self-service ops readiness gate is not green"])
-    if not no_first_10_privacy_security_incidents:
+    if not first_10_integrity_ready:
+        blockers.append("controlled first-10 beta is closed because the frozen protocol or row-level evidence integrity gate is not green")
+    if not first_10_safety_pause_clear:
         blockers.append(
-            "controlled first-10 beta is paused because first-10 evidence reports "
-            f"{first_10['critical_privacy_security_failures']} privacy/security incident(s)"
+            "controlled first-10 beta is paused because evidence reports "
+            f"harmful guidance events={first_10.get('harmful_guidance_events', 0)}, "
+            f"false-confident matches={first_10.get('false_confident_matches', 0)}, "
+            f"privacy/security incidents={first_10.get('critical_privacy_security_failures', 0)}"
         )
+    if first_10_futile:
+        blockers.append("controlled first-10 beta hit the preregistered futility stop")
+    if not enrollment_can_continue and not first_10.get("passed") and not first_10_futile:
+        blockers.append("controlled first-10 beta enrollment is not open or has no remaining slots")
     if not first_10["passed"]:
         row_blockers = first_10.get("row_level_blockers") or []
         if row_blockers:
@@ -290,7 +333,11 @@ def compile_rollout_gate(*, require_ops_watchdog: bool = True) -> dict[str, Any]
         "first_10_external_evidence": first_10,
         "local_infrastructure_ready_for_10": local_infra_ready_for_10,
         "ready_for_10_controlled_beta": ready_for_10_controlled_beta,
-        "first_10_privacy_security_incident_pause_clear": no_first_10_privacy_security_incidents,
+        "first_10_privacy_security_incident_pause_clear": int(first_10.get("critical_privacy_security_failures") or 0) == 0,
+        "first_10_safety_pause_clear": first_10_safety_pause_clear,
+        "first_10_integrity_ready": first_10_integrity_ready,
+        "first_10_futility_stop": first_10_futile,
+        "first_10_remaining_slots": remaining_slots,
         "infrastructure_ready_for_100": infrastructure_ready_for_100,
         "ready_for_100_real_users": ready_for_100_real_users,
         "max_recommended_real_users_now": max_recommended_real_users_now,

@@ -10,6 +10,7 @@ import json
 import os
 import sqlite3
 import sys
+import tempfile
 from pathlib import Path
 from typing import Any
 
@@ -51,6 +52,44 @@ def runtime_fingerprint() -> dict[str, Any]:
     }
 
 
+def _isolated_observe_rate_probe() -> dict[str, Any]:
+    """Exercise observe/rate in disposable state, never in the user's evidence DB.
+
+    Doctor used to call ``borg_rate(helpful=True)`` against the active
+    ``BORG_HOME``.  That made a health check look like positive user feedback
+    and polluted the very evidence Borg is supposed to measure.  The write path
+    is still tested here, but only inside a temporary Borg home that is deleted
+    before returning.
+    """
+
+    from borg.integrations import mcp_server
+
+    original = {name: os.environ.get(name) for name in ("BORG_HOME", "BORG_DIR")}
+    trace_context_token = mcp_server._last_shown_trace_id.set(None)
+    try:
+        with tempfile.TemporaryDirectory(prefix="borg-doctor-probe-") as temp_home:
+            os.environ["BORG_HOME"] = temp_home
+            os.environ["BORG_DIR"] = str(Path(temp_home) / "guild")
+            observed = mcp_server.borg_observe(task="Django migration error", context="doctor-isolated-probe")
+            action = next((line for line in observed.split("\n") if line.startswith("ACTION:")), None)
+            confidence = next((line for line in observed.split("\n") if "BORG [" in line), "")
+            rated = mcp_server.borg_rate(helpful=True)
+            return {
+                "observe_passed": bool(action),
+                "observe_detail": (action or "NO ACTION")[:120] + (f" | {confidence}" if confidence else ""),
+                "rate_passed": "recorded" in rated.lower(),
+                "rate_detail": rated[:120],
+                "isolated": True,
+            }
+    finally:
+        mcp_server._last_shown_trace_id.reset(trace_context_token)
+        for name, value in original.items():
+            if value is None:
+                os.environ.pop(name, None)
+            else:
+                os.environ[name] = value
+
+
 def run(json_mode: bool = False) -> int:
     borg_home = get_borg_home()
     ok = True
@@ -65,8 +104,11 @@ def run(json_mode: bool = False) -> int:
     db_path = get_trace_db_path()
     if not db_path.exists() or _sqlite_count(db_path, "traces") in (None, 0):
         try:
-            from borg.integrations.mcp_server import borg_observe as _bo
-            _bo(task="Docker apt-get install fails", context="")
+            from borg.core.seed_loader import ensure_seeded
+
+            db_path.parent.mkdir(parents=True, exist_ok=True)
+            if not ensure_seeded(str(db_path)) and _sqlite_count(db_path, "traces") in (None, 0):
+                raise RuntimeError("bundled collective seed did not create trace rows")
         except Exception as exc:
             record("seed_traces", False, f"seeding failed: {exc}")
     trace_count = _sqlite_count(db_path, "traces")
@@ -74,21 +116,12 @@ def run(json_mode: bool = False) -> int:
 
     try:
         sys.path.insert(0, str(Path(__file__).parent.parent.parent))
-        from borg.integrations.mcp_server import borg_observe
-        result = borg_observe(task="Docker apt-get package not found", context="")
-        action = next((line for line in result.split("\n") if line.startswith("ACTION:")), None)
-        conf = next((line for line in result.split("\n") if "BORG [" in line), "")
-        record("borg_observe", bool(action), (action or "NO ACTION")[:120] + (f" | {conf}" if conf else ""))
+        probe = _isolated_observe_rate_probe()
+        record("borg_observe_isolated", bool(probe["observe_passed"]), str(probe["observe_detail"]))
+        record("borg_rate_isolated", bool(probe["rate_passed"]), str(probe["rate_detail"]))
     except Exception as exc:
-        record("borg_observe", False, str(exc))
-
-    try:
-        from borg.integrations.mcp_server import borg_observe, borg_rate
-        borg_observe(task="Django migration error", context="")
-        rate = borg_rate(helpful=True)
-        record("borg_rate", "recorded" in rate.lower(), rate[:120])
-    except Exception as exc:
-        record("borg_rate", False, str(exc))
+        record("borg_observe_isolated", False, str(exc))
+        record("borg_rate_isolated", False, str(exc))
 
     try:
         import select

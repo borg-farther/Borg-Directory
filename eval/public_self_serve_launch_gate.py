@@ -593,12 +593,21 @@ def pypi_fresh_install_check(path: Path, expected_version: str, *, max_snapshot_
         return {"passed": False, "exists": False, "path": str(path.relative_to(ROOT)) if path.is_relative_to(ROOT) else str(path), "error": "missing PyPI fresh-install snapshot"}
     results = data.get("results") or []
     failures = [item.get("name") for item in results if not item.get("passed")]
+    result_names = {str(item.get("name")) for item in results if isinstance(item, dict) and item.get("name")}
+    required_first_10_results = {
+        "borg_first_10_protocol_json",
+        "borg_unknown_control_json",
+        "borg_doctor_json",
+        "borg_rescue_json",
+    }
+    missing_first_10_results = sorted(required_first_10_results - result_names)
     mcp = data.get("mcp_stdio_canary") or {}
     freshness = _freshness_check(data.get("generated_at_utc"), max_snapshot_age_hours)
     passed = (
         bool(data.get("success"))
         and data.get("version") == expected_version
         and not failures
+        and not missing_first_10_results
         and bool(mcp.get("passed"))
         and bool(freshness["passed"])
     )
@@ -611,6 +620,7 @@ def pypi_fresh_install_check(path: Path, expected_version: str, *, max_snapshot_
         "expected_version": expected_version,
         "failed_count": len(failures),
         "failures": failures,
+        "missing_first_10_results": missing_first_10_results,
         "mcp_stdio_canary_passed": bool(mcp.get("passed")),
         "mcp_server_info": mcp.get("server_info"),
         "freshness": freshness,

@@ -388,6 +388,8 @@ def test_non_current_public_docs_are_bannered_or_operator_scoped() -> None:
         "ONBOARDING.md",
         "20260514_FIRST_10_USER_INVITE_PACKET.md",
         "FIRST_10_BETA_READINESS.md",
+        "FIRST_10_RESCUE_PROTOCOL.md",
+        "FIRST_10_ADVERSARIAL_AUDIT.md",
         "READINESS.md",
         "ROADMAP.md",
         "20260522_BORG_PRODUCTION_DAY_ONE_HARDENING_PLAN.md",

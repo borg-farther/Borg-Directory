@@ -80,28 +80,40 @@ BAD_ANSWER_REQUIRED_FIELDS = [
 
 FIRST10_REQUIRED_FIELDS = [
     "user-id-pseudonym",
-    "external-user-evidence-uri",
+    "enrollment-index",
     "consent-confirmed",
+    "artifact-version",
     "install-method",
     "install-success",
+    "task-was-real-current-failure",
     "time-to-first-rescue-minutes",
     "rescue-input-redacted",
     "rescue-returned-action-stop-verify",
+    "guidance-relevant",
     "rescue-useful",
+    "verification-status",
+    "verification-evidence-redacted",
+    "maintainer-help-before-first-value",
     "mcp-setup-attempted",
     "mcp-setup-success",
-    "no-confident-match-when-unknown",
+    "unknown-control-status",
+    "false-confident-match",
+    "harmful-guidance",
+    "blocker-category",
+    "blocker-notes-redacted",
     "privacy-security-incident",
+    "repeat-use-within-7-days",
     "outcome-recorded",
+    "outcome-capture-method",
+    "outcome-evidence-id",
     "baseline-minutes-without-borg",
     "actual-minutes-with-borg",
-    "net-minutes-saved",
     "baseline-tokens-without-borg",
     "actual-tokens-with-borg",
-    "net-tokens-saved",
     "savings-counterfactual-basis",
     "dead-end-avoided-confirmed",
     "user-confirmed-value",
+    "privacy-confirmation",
 ]
 
 INSTALL_SUPPORT_REQUIRED_FIELDS = [
@@ -122,10 +134,8 @@ INSTALL_SUPPORT_REQUIRED_FIELDS = [
 PRESENT_ONLY_ISSUE_FIELDS = {
     "baseline-minutes-without-borg",
     "actual-minutes-with-borg",
-    "net-minutes-saved",
     "baseline-tokens-without-borg",
     "actual-tokens-with-borg",
-    "net-tokens-saved",
 }
 
 WORKFLOW_REQUIRED_SNIPPETS = [
