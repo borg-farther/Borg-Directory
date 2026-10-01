@@ -1,6 +1,6 @@
 # Changelog
 
-## 3.4.1 — unreleased (epistemic-guardrail release candidate)
+## 3.4.1 — 2026-10-01
 
 - Product boundary: keeps the host model as the thinker while Borg acts as memory with standards—retrieved memory is advisory, never authorization.
 - Epistemic guardrail: adds selective standard/deep deliberation, evidence tiers, unsupported-claim and contradiction detection, prompt-injection suppression, explicit stop conditions, and complete verification plans.
@@ -8,7 +8,7 @@
 - Side-effect control: CLI `--no-record` and MCP `record_intervention: false` provide explicit no-write probes; the clean-wheel MCP canary verifies no intervention id is produced.
 - Fail-closed review: consequential claims without structured evidence remain blocked pending verification; retrieval degradation and no-match states are explicit rather than presented as confidence.
 - Evaluation and documentation: adds a frozen deterministic contract corpus, adversarial regression coverage, architecture/security/usage documentation, and claim guards that preserve the external-evidence boundary.
-- Release boundary: this source candidate is not a PyPI or served-runtime claim; controlled first-10 and broad public self-service remain gated independently.
+- Release boundary: package publication does not prove served-runtime freshness or external-user readiness; controlled first-10 and broad public self-service remain gated independently.
 
 ## 3.3.21 — 2026-09-18
 
