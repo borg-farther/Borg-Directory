@@ -1,5 +1,7 @@
 # Borg evidence-gate shadow experiment — preregistered protocol
 
+> **Historical/internal — not current product documentation.** Operator research artifact; not a runtime-safety claim.
+
 **Protocol:** `borg-evidence-gate-shadow-atbench-v1`  
 **Preregistered:** `2026-10-01T14:16:36Z`  
 **Machine contract:** `eval/tasksets/evidence_gate_shadow_protocol_v1.json`

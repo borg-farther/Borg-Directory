@@ -1,5 +1,7 @@
 # Evidence gates and consequential-agent guardrails — 2026 landscape
 
+> **Historical/internal — not current product documentation.** Operator research artifact; not a public product capability claim.
+
 ## Executive synthesis
 
 "AI guardrail" is not one product category. It spans at least five enforcement layers:
