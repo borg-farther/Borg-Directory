@@ -156,6 +156,7 @@ def test_watchdog_allows_only_first_10_external_evidence_as_public_blocker() -> 
             "served runtime borg_version '3.3.14' != source version '3.3.15'",
             "main branch is not protected",
             "CODEOWNERS validation has errors: 11",
+            "protocol: protocol artifact version is not locked",
             "first-10 external-user evidence has not passed",
         ],
         "release_controls_or_first_10_evidence",
@@ -171,6 +172,9 @@ def test_watchdog_accepts_unreleased_package_source_as_explicit_zero_user_stage(
         "blockers": [
             "package-impacting source/metadata changed after the immutable package reference tag",
             "served runtime borg_version '3.3.18' != source version '3.4.1'",
+            "protocol: protocol status does not permit enrollment or completed evidence",
+            "protocol: protocol artifact version is not locked",
+            "protocol: protocol artifact wheel_sha256 is not locked",
             "first-10 external-user evidence has not passed: verified=0/10",
         ],
     }
@@ -181,6 +185,9 @@ def test_watchdog_accepts_unreleased_package_source_as_explicit_zero_user_stage(
         "blockers": [
             "PyPI latest/fresh-install package evidence is not green: latest metadata does not match source version",
             "served runtime borg_version '3.3.18' != source version '3.4.1'",
+            "protocol: protocol status does not permit enrollment or completed evidence",
+            "protocol: protocol artifact version is not locked",
+            "protocol: protocol artifact wheel_sha256 is not locked",
             "first-10 external-user evidence has not passed: verified=0/10",
         ],
     }

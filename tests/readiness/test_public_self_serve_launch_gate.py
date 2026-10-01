@@ -647,6 +647,50 @@ def test_docs_claim_guard_rejects_controlled_beta_gated_on_completed_first_10_ro
     assert any(v["kind"] == "controlled beta incorrectly gated on completed first-10 evidence" for v in result["violations"])
 
 
+def test_docs_claim_guard_does_not_combine_sibling_minified_html_claims(tmp_path: Path, monkeypatch) -> None:
+    monkeypatch.setattr(gate, "ROOT", tmp_path)
+    doc = tmp_path / "docs" / "BORG_PROOF_DASHBOARD.html"
+    doc.parent.mkdir()
+    doc.write_text(
+        "<ul><li>Controlled first-10 beta remains NO-GO until package and release-control gates pass.</li>"
+        "<li>No first-10 row-derived external-user evidence exists yet.</li></ul>\n",
+        encoding="utf-8",
+    )
+
+    result = gate.docs_claim_guard(
+        [Path("docs/BORG_PROOF_DASHBOARD.html")],
+        "9.9.9",
+        public_evidence_ready=False,
+        package_evidence_ready=False,
+    )
+
+    assert result["passed"] is True
+    assert result["violations"] == []
+
+
+def test_docs_claim_guard_keeps_inline_html_inside_one_claim(tmp_path: Path, monkeypatch) -> None:
+    monkeypatch.setattr(gate, "ROOT", tmp_path)
+    doc = tmp_path / "README.html"
+    doc.write_text(
+        "<p>Controlled <strong>first-10</strong> beta remains NO-GO until "
+        "first-10 external-user evidence gates are green.</p>\n",
+        encoding="utf-8",
+    )
+
+    result = gate.docs_claim_guard(
+        [Path("README.html")],
+        "9.9.9",
+        public_evidence_ready=False,
+        package_evidence_ready=True,
+    )
+
+    assert result["passed"] is False
+    assert any(
+        violation["kind"] == "controlled beta incorrectly gated on completed first-10 evidence"
+        for violation in result["violations"]
+    )
+
+
 def test_docs_claim_guard_blocks_broader_stale_package_blockers_after_canary(tmp_path: Path, monkeypatch) -> None:
     monkeypatch.setattr(gate, "ROOT", tmp_path)
     doc = tmp_path / "docs" / "README.md"

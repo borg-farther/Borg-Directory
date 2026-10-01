@@ -286,7 +286,12 @@ def _public_blockers_are_allowed(blockers: list[Any], allowed_key: str) -> bool:
 
 def _is_first_10_blocker(blocker: str) -> bool:
     lower = blocker.lower()
-    return "first-10" in lower or "verified=" in lower or "external-user evidence" in lower
+    return (
+        "first-10" in lower
+        or "verified=" in lower
+        or "external-user evidence" in lower
+        or "protocol: protocol " in lower
+    )
 
 
 def _is_package_release_blocker(blocker: str) -> bool:

@@ -9,6 +9,7 @@ and docs/claim consistency. It returns nonzero until those are all true.
 from __future__ import annotations
 
 import argparse
+import html
 import json
 import re
 import subprocess
@@ -695,6 +696,32 @@ def _honest_stale_agent_borg_reference(text: str, match: re.Match[str], expected
     return any(term in lower_line for term in truth_terms) and any(term.lower() in lower_line for term in target_terms)
 
 
+_HTML_CLAIM_BOUNDARY = re.compile(
+    r"(?i)</?(?:article|div|h[1-6]|li|ol|p|pre|section|table|tbody|td|tfoot|th|thead|tr|ul)\b[^>]*>"
+)
+
+
+def _claim_fragments(line_text: str) -> list[str]:
+    """Return logical claim fragments without conflating minified HTML cells.
+
+    Generated dashboards intentionally keep compact HTML, so one physical line
+    can contain several unrelated list items or table cells. Claim guards must
+    evaluate each block-level fragment independently; otherwise words from two
+    sibling items can combine into a claim that no reader-facing fragment makes.
+    Inline markup remains within a fragment and is stripped after splitting so
+    phrases such as ``controlled <strong>first-10</strong> beta`` still match.
+    """
+
+    if not _HTML_CLAIM_BOUNDARY.search(line_text):
+        return [line_text]
+    fragments: list[str] = []
+    for raw in _HTML_CLAIM_BOUNDARY.split(line_text):
+        plain = html.unescape(re.sub(r"<[^>]+>", "", raw)).strip()
+        if plain:
+            fragments.append(plain)
+    return fragments
+
+
 def docs_claim_guard(
     paths: list[Path],
     expected_version: str,
@@ -771,27 +798,28 @@ def docs_claim_guard(
                     violations.append({"path": str(rel), "line": line, "kind": label, "detail": match.group(0)[:180]})
 
             for line_number, line_text in enumerate(text.splitlines(), start=1):
-                lower = line_text.lower()
-                gates_controlled_beta_on_completed_first_10 = (
-                    "controlled first-10" in lower
-                    and re.search(r"(?i)\b(no-go|blocked|not ready|cap is 0|capped at 0)\b", line_text)
-                    and re.search(r"(?i)\b(until|pending|only after|before)\b", line_text)
-                    and (
-                        "first-10 external-user evidence" in lower
-                        or "first-10 external user evidence" in lower
-                        or "first-10 row-derived" in lower
-                        or "row-derived first-10" in lower
-                        or "external-user evidence gates are green" in lower
-                        or "external evidence gates are green" in lower
+                for claim_text in _claim_fragments(line_text):
+                    lower = claim_text.lower()
+                    gates_controlled_beta_on_completed_first_10 = (
+                        "controlled first-10" in lower
+                        and re.search(r"(?i)\b(no-go|blocked|not ready|cap is 0|capped at 0)\b", claim_text)
+                        and re.search(r"(?i)\b(until|pending|only after|before)\b", claim_text)
+                        and (
+                            "first-10 external-user evidence" in lower
+                            or "first-10 external user evidence" in lower
+                            or "first-10 row-derived" in lower
+                            or "row-derived first-10" in lower
+                            or "external-user evidence gates are green" in lower
+                            or "external evidence gates are green" in lower
+                        )
                     )
-                )
-                if gates_controlled_beta_on_completed_first_10:
-                    violations.append({
-                        "path": str(rel),
-                        "line": line_number,
-                        "kind": "controlled beta incorrectly gated on completed first-10 evidence",
-                        "detail": line_text[:180],
-                    })
+                    if gates_controlled_beta_on_completed_first_10:
+                        violations.append({
+                            "path": str(rel),
+                            "line": line_number,
+                            "kind": "controlled beta incorrectly gated on completed first-10 evidence",
+                            "detail": claim_text[:180],
+                        })
 
         if not package_evidence_ready:
             blocked_package_claims = [
