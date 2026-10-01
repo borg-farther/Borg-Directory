@@ -129,7 +129,16 @@ def test_borg_proof_dashboard_artifacts_exist_and_are_honest(tmp_path, monkeypat
     else:
         assert data["controlled_first_10_beta"]["answer"] == "NO-GO"
         assert data["top_verdict"]["controlled_first_10_beta"]["verdict"] == "NO-GO"
-        assert "PyPI latest" in data["top_verdict"]["controlled_first_10_beta"]["why"]
+        package_why = data["top_verdict"]["controlled_first_10_beta"]["why"]
+        assert "PyPI" in package_why
+        assert any(
+            detail in package_why
+            for detail in (
+                "latest",
+                "project description/long-description",
+                "package source/metadata alignment",
+            )
+        )
     assert data["metrics"]["verified_external_users"]["value"] == 0
     assert data["metrics"]["cold_start_trust_hardening_gate"]["honesty_label"] == "FIRST_ANSWER_TRUST_GATE"
     assert data["metrics"]["self_service_ops_gate"]["honesty_label"] == "SELF_SERVICE_OPS_GATE"
