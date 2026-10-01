@@ -19,6 +19,9 @@ def test_accepts_current_package_source_and_runtime_fail_closed_state() -> None:
                 "package-impacting source/metadata changed after the immutable package reference tag",
                 "served runtime borg_version '3.3.18' != source version '3.4.1'",
                 "served runtime source_version '3.3.18' != source version '3.4.1'",
+                "protocol: protocol status does not permit enrollment or completed evidence",
+                "protocol: protocol artifact version is not locked",
+                "protocol: protocol artifact wheel_sha256 is not locked",
                 "first-10 external-user evidence has not passed: verified=0/10",
             ]
         )
