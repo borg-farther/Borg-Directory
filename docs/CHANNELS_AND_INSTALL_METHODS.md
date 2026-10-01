@@ -65,4 +65,5 @@ For stdio MCP, the canary must prove:
 
 ## Anti-drift rule
 
-If GitHub source, PyPI latest, README status, proof dashboard, Smithery metadata, and the first-user canaries do not all agree on the same version, the channel is **not current**. Fix the code/docs/proof artifacts or label the channel as blocked; do not silently rely on “latest”.
+These surfaces must agree on one version: GitHub source, PyPI latest, README status, proof dashboard, Smithery metadata, and the first-user canaries.
+Resolve any disagreement before calling a channel current. Fix the code/docs/proof artifacts or label the channel accurately; do not silently rely on “latest”.

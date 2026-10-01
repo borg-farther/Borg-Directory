@@ -2,14 +2,12 @@
   "blockers": [],
   "checks": {
     "cold_start_trust_current": {
-      "generated_at_utc": "2026-09-30T15:11:21.289434+00:00",
+      "generated_at_utc": "2026-10-01T13:06:40.676463+00:00",
       "passed": true
     },
     "public_blockers_allowed": {
       "allow_public_blocker": "release_controls_or_first_10_evidence",
       "blockers": [
-        "PyPI latest is agent-borg==3.3.21; expected agent-borg==3.4.1",
-        "PyPI fresh-install + MCP stdio canary snapshot is missing or failing",
         "served runtime borg_version '3.3.18' != source version '3.4.1'",
         "served runtime source_version '3.3.18' != source version '3.4.1'",
         "first-10 external-user evidence has not passed: verified=0/10, real_users=0/10, installs=0/8, useful=0/6, critical_incidents=0/0"
@@ -19,8 +17,6 @@
     "public_gate_live_matches_snapshot": {
       "live": {
         "blockers": [
-          "PyPI latest is agent-borg==3.3.21; expected agent-borg==3.4.1",
-          "PyPI fresh-install + MCP stdio canary snapshot is missing or failing",
           "served runtime borg_version '3.3.18' != source version '3.4.1'",
           "served runtime source_version '3.3.18' != source version '3.4.1'",
           "first-10 external-user evidence has not passed: verified=0/10, real_users=0/10, installs=0/8, useful=0/6, critical_incidents=0/0"
@@ -33,8 +29,6 @@
       "passed": true,
       "snapshot": {
         "blockers": [
-          "PyPI latest is agent-borg==3.3.21; expected agent-borg==3.4.1",
-          "PyPI fresh-install + MCP stdio canary snapshot is missing or failing",
           "served runtime borg_version '3.3.18' != source version '3.4.1'",
           "served runtime source_version '3.3.18' != source version '3.4.1'",
           "first-10 external-user evidence has not passed: verified=0/10, real_users=0/10, installs=0/8, useful=0/6, critical_incidents=0/0"
@@ -46,38 +40,36 @@
       }
     },
     "public_json_dashboard_consistency": {
-      "dashboard_generated_at_utc": "2026-09-30T15:15:47Z",
-      "dashboard_source_revision": "04126e57d01adbf3e3a58dacb4e492658d63d338+dirty",
+      "dashboard_generated_at_utc": "2026-10-01T13:10:47Z",
+      "dashboard_source_revision": "36d6b8764f092ca2e9510fac51762be4f53f8f64+dirty",
       "passed": true,
-      "status_source_revision": "04126e57d01adbf3e3a58dacb4e492658d63d338+dirty",
-      "status_updated_at": "2026-09-30T15:15:47Z"
+      "status_source_revision": "36d6b8764f092ca2e9510fac51762be4f53f8f64+dirty",
+      "status_updated_at": "2026-10-01T13:10:47Z"
     },
     "public_status_consistency": {
       "controlled_status_ok": false,
       "controlled_verdict": "NO-GO",
       "max_recommended_real_users_now": 0,
       "passed": true,
-      "pre_package_status_ok": true,
-      "release_control_blocked_status_ok": false,
+      "pre_package_status_ok": false,
+      "release_control_blocked_status_ok": true,
       "release_control_detail_failed": true,
       "release_controls_gate": "FAIL",
-      "status_state": "NO-GO public self-serve; source/local release-candidate only",
+      "status_state": "NO-GO public self-serve; public package proof green, release controls blocked",
       "verified_external_users": 0
     },
     "pypi_fresh_current": {
       "expected_version": "3.4.1",
-      "generated_at_utc": "2026-09-30T15:11:48Z",
+      "generated_at_utc": "2026-10-01T13:06:18Z",
       "passed": true,
-      "pre_package_release_stage": true,
-      "pypi_current": false,
+      "pre_package_release_stage": false,
+      "pypi_current": true,
       "version": "3.4.1"
     },
     "real_user_rollout_consistency": {
       "controlled_package_stage": false,
       "live": {
         "blockers": [
-          "PyPI latest/fresh-install package evidence is not green: latest metadata does not match source version",
-          "PyPI latest/fresh-install package evidence is not green: fresh install + MCP stdio canary is not green",
           "served runtime borg_version '3.3.18' != source version '3.4.1'",
           "served runtime source_version '3.3.18' != source version '3.4.1'",
           "first-10 external-user evidence has not passed: verified=0/10, real_users=0/10, installs=0/8, useful=0/6, critical_incidents=0/0"
@@ -88,8 +80,8 @@
         "ready_for_10_controlled_beta": false
       },
       "passed": true,
-      "pre_package_release_stage": true,
-      "release_control_blocked_stage": false
+      "pre_package_release_stage": false,
+      "release_control_blocked_stage": true
     },
     "self_service_ops_gate": {
       "blockers": [],
@@ -98,67 +90,67 @@
     "snapshot_freshness": {
       "items": {
         "borg_proof_dashboard": {
-          "age_hours": 0.0009168508333333334,
+          "age_hours": 0.0011842355555555556,
           "allowed_stale_reason": null,
           "passed": true,
           "raw_freshness_passed": true
         },
         "cold_start_trust_gate_snapshot": {
-          "age_hours": 0.07472534055555556,
+          "age_hours": 0.06960743916666667,
           "allowed_stale_reason": null,
           "passed": true,
           "raw_freshness_passed": true
         },
         "public_impact_json": {
-          "age_hours": 0.0009168530555555555,
+          "age_hours": 0.0011842377777777778,
           "allowed_stale_reason": null,
           "passed": true,
           "raw_freshness_passed": true
         },
         "public_self_serve_launch_gate_snapshot": {
-          "age_hours": 0.002141493611111111,
+          "age_hours": 0.0022303572222222225,
           "allowed_stale_reason": null,
           "passed": true,
           "raw_freshness_passed": true
         },
         "public_status_json": {
-          "age_hours": 0.0009168516666666667,
+          "age_hours": 0.001184236388888889,
           "allowed_stale_reason": null,
           "passed": true,
           "raw_freshness_passed": true
         },
         "public_value_json": {
-          "age_hours": 0.0009168522222222222,
+          "age_hours": 0.0011842372222222223,
           "allowed_stale_reason": null,
           "passed": true,
           "raw_freshness_passed": true
         },
         "pypi_fresh_install_snapshot": {
-          "age_hours": 0.06730573777777778,
+          "age_hours": 0.07590645583333333,
           "allowed_stale_reason": null,
           "passed": true,
           "raw_freshness_passed": true
         },
         "real_user_rollout_gate_snapshot": {
-          "age_hours": 0.0017281511111111112,
+          "age_hours": 0.0018680427777777778,
           "allowed_stale_reason": null,
           "passed": true,
           "raw_freshness_passed": true
         },
         "release_governance_snapshot": {
-          "age_hours": 0.07362873666666667,
+          "age_hours": 0.06895106166666667,
           "allowed_stale_reason": null,
           "passed": true,
           "raw_freshness_passed": true
         },
         "rollback_comms_drill_snapshot": {
-          "age_hours": 0.06897168527777778,
+          "age_hours": 0.06893296944444445,
           "allowed_stale_reason": null,
           "passed": true,
           "raw_freshness_passed": true
         },
         "self_service_ops_gate_snapshot": {
-          "age_hours": 0.06396324916666667,
+          "age_hours": 0.06890555805555555,
           "allowed_stale_reason": null,
           "passed": true,
           "raw_freshness_passed": true
@@ -168,10 +160,10 @@
     },
     "source_revision_honesty": {
       "git_clean": false,
-      "head": "04126e57d01adbf3e3a58dacb4e492658d63d338",
+      "head": "36d6b8764f092ca2e9510fac51762be4f53f8f64",
       "passed": true,
       "policy": "Committed dashboards may be generated from a dirty tree and must mark +dirty; clean-tree status endpoints should match HEAD or a dirty ancestor used to generate committed proof artifacts.",
-      "source_revision": "04126e57d01adbf3e3a58dacb4e492658d63d338+dirty"
+      "source_revision": "36d6b8764f092ca2e9510fac51762be4f53f8f64+dirty"
     },
     "watchdog_workflow": {
       "exists": true,
@@ -302,7 +294,7 @@
     }
   },
   "gate_type": "ops_readiness_watchdog",
-  "generated_at_utc": "2026-09-30T15:15:50.325666+00:00",
+  "generated_at_utc": "2026-10-01T13:10:51.289216+00:00",
   "max_recommended_real_users_now": 0,
   "passed": true,
   "ready_for_controlled_first_10_beta": false,
