@@ -10,6 +10,8 @@ from __future__ import annotations
 from dataclasses import asdict, dataclass
 from typing import Any, Dict, List
 
+from borg import __version__
+
 
 @dataclass(frozen=True)
 class ReadinessGate:
@@ -26,9 +28,10 @@ class ReadinessGate:
 
 
 FIRST_10_SUCCESS_METRIC = (
-    "At least 6 of the first 10 users get one relevant ACTION/STOP/VERIFY "
-    "moment without maintainer handholding, and every miss is recorded as "
-    "NO_CONFIDENT_MATCH or explicit negative feedback instead of being hidden."
+    "Retain all 10 external outcomes; at least 8 installs must succeed, at least 6 of the first 10 "
+    "users must get a relevant verification-passed ACTION/STOP/VERIFY rescue before maintainer help, "
+    "every successful install must return NO_CONFIDENT_MATCH for the frozen unknown control, and "
+    "harmful, false-confident, and critical privacy/security events must remain zero."
 )
 
 PRIMING_PARAGRAPH = (
@@ -173,12 +176,30 @@ def first_10_readiness_packet() -> Dict[str, Any]:
         "mcp_first_call": MCP_FIRST_CALL,
         "supported_mixes": list(SUPPORTED_FIRST_USER_MIXES),
         "minimum_capable_agent_stack": capable_agent_stack_packet(),
+        "study_protocol": {
+            "protocol_id": "borg-rescue-first10-v1",
+            "artifact": f"agent-borg=={__version__}",
+            "scope": "pinned PyPI CLI and local stdio MCP only",
+            "primary_outcome": "verification-passed useful rescue before maintainer help",
+            "unknown_control_id": "unknown-control-v1",
+            "unknown_control_input": "BORGFIRST10_UNKNOWN_CONTROL_v1: ZXQ-9199 proprietary scheduler quantum flux fault",
+            "unknown_control_expected_status": "no_confident_match",
+            "failed_installs_remain_in_denominator": True,
+            "stop_rules": [
+                "pause on the first harmful guidance event",
+                "pause on the first critical privacy/security incident",
+                "pause on the first false-confident unknown control",
+                "stop when useful_rescues + remaining_slots < 6",
+            ],
+            "claim_boundary": "field validation only; no causal lift or public-readiness claim",
+        },
         "gates": [gate.to_dict() for gate in FIRST_10_GATES],
         "smoke_commands": [
-            "python3 -m pip install agent-borg",
+            f"python3 -m pip install agent-borg=={__version__}",
             "borg version",
             "borg-doctor --json",
             "borg rescue 'ModuleNotFoundError: No module named flask' --json",
+            "borg rescue 'BORGFIRST10_UNKNOWN_CONTROL_v1: ZXQ-9199 proprietary scheduler quantum flux fault' --json",
             "borg search 'django migration table already exists'",
             "borg agent-stack --json",
             "borg setup-claude --scope user --verify --fix",
@@ -187,12 +208,24 @@ def first_10_readiness_packet() -> Dict[str, Any]:
         ],
         "feedback_fields": [
             "tester_id",
+            "enrollment_index",
             "task_id",
             "intervention_id",
             "outcome_receipt_id",
             "contribution_event_id",
+            "external_user_evidence_uri",
+            "maintainer_validation_status",
+            "maintainer_validation_evidence_uri",
+            "artifact_version",
+            "task_was_real_current_failure",
             "did_borg_return_action_stop_verify",
             "was_guidance_relevant",
+            "verification_status",
+            "verification_evidence_redacted",
+            "maintainer_help_before_first_value",
+            "unknown_control_status",
+            "false_confident_match",
+            "harmful_guidance",
             "did_it_prevent_a_dead_end",
             "helpful_true_false",
             "exact_no_match_or_miss_reason",
@@ -229,6 +262,15 @@ def render_first_10_readiness_markdown() -> str:
         "```bash",
         *packet["smoke_commands"],
         "```",
+        "",
+        "## Frozen study protocol",
+        "",
+        f"- Protocol: `{packet['study_protocol']['protocol_id']}`",
+        f"- Artifact: `{packet['study_protocol']['artifact']}`",
+        f"- Primary outcome: {packet['study_protocol']['primary_outcome']}",
+        f"- Claim boundary: {packet['study_protocol']['claim_boundary']}",
+        f"- Unknown control: `{packet['study_protocol']['unknown_control_input']}` must return `{packet['study_protocol']['unknown_control_expected_status']}`.",
+        *[f"- STOP: {rule}" for rule in packet["study_protocol"]["stop_rules"]],
         "",
         "## MCP first call",
         "",
@@ -267,8 +309,8 @@ def render_first_10_readiness_markdown() -> str:
         "",
         "## GO / NO-GO after 10 users",
         "",
-        "GO only if >=6/10 users record a relevant ACTION/STOP/VERIFY moment without maintainer handholding and all security/install P0s remain closed.",
-        "NO-GO if Borg frequently returns unrelated guidance, hides weak confidence, or needs maintainer explanation to be useful.",
+        "GO only if all 10 external rows are retained, >=8 installs pass, >=6 verified rescues pass before maintainer help, every successful install passes the unknown control, and harmful/false-confident/privacy incidents remain zero.",
+        "PAUSE immediately on the first harmful response, critical privacy/security incident, or false-confident unknown control. NO-GO on mathematical futility or an unresolved safety pause.",
         "",
     ])
     return "\n".join(lines)

@@ -403,6 +403,7 @@ Why: agents often do not discover optional tools unless explicitly primed.
 - Controlled first-10 testers must **not** be invited until all release-control gates are green. Current cap: 0; broad public self-serve remains evidence-gated after first-10.
 - Self-service ops guardrails are present: bad-answer intake, install/MCP support intake, first-10 evidence intake, support/SLA, rollback/comms dry-run, and watchdog workflow.
 - First-10 beta contract is published: [`docs/FIRST_10_BETA_READINESS.md`](https://github.com/borg-farther/Borg-Directory/blob/main/docs/FIRST_10_BETA_READINESS.md).
+- The preregistered rescue-study protocol and hard stop rules are published: [`docs/FIRST_10_RESCUE_PROTOCOL.md`](https://github.com/borg-farther/Borg-Directory/blob/main/docs/FIRST_10_RESCUE_PROTOCOL.md).
 - Minimum capable host-agent stack contract is published: [`docs/MINIMUM_CAPABLE_AGENT_STACK.md`](https://github.com/borg-farther/Borg-Directory/blob/main/docs/MINIMUM_CAPABLE_AGENT_STACK.md).
 
 Do **not** route this into controlled first-10, broad public self-serve, or 100 real users yet. Invite **0** controlled testers until served-runtime freshness is green and the first-10 evidence contract is ready to capture consented external-user rows; after those gates pass, the first-10 evidence contract may cap a consented cohort at 10. `python eval/public_self_serve_launch_gate.py` must still keep broad public self-serve blocked until real first-10 evidence passes.

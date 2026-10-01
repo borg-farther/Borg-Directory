@@ -13,28 +13,54 @@ from eval import run_pypi_fresh_install_canary as canary
 def _row(idx: int, *, install: bool = True, useful: bool = True, incident: bool = False) -> dict[str, object]:
     return {
         "user_id_pseudonym": f"external-user-{idx:02d}",
-        "external_user_evidence_uri": f"https://evidence.borg-farther.org/first-10/{idx}",
+        "enrollment_index": idx,
+        "external_user_evidence_uri": f"https://github.com/borg-farther/Borg-Directory/issues/{100 + idx}",
+        "maintainer_validation_status": "verified",
+        "maintainer_validation_evidence_uri": f"https://github.com/borg-farther/Borg-Directory/issues/{100 + idx}#issuecomment-validated",
         "consent_confirmed": True,
+        "artifact_version": "9.9.9",
         "install_method": "pipx install agent-borg==9.9.9",
         "install_success": install,
+        "task_was_real_current_failure": True,
         "time_to_first_rescue_minutes": 3,
-        "rescue_input_redacted": "ModuleNotFoundError: No module named flask",
-        "rescue_returned_action_stop_verify": True,
-        "rescue_useful": useful,
-        "mcp_setup_attempted": True,
-        "mcp_setup_success": True,
-        "no_confident_match_when_unknown": True,
-        "blocker_category": "none",
-        "blocker_notes_redacted": "none",
+        "rescue_input_redacted": "ModuleNotFoundError: No module named flask" if install else "not reached: install failed",
+        "rescue_returned_action_stop_verify": install,
+        "rescue_useful": useful and install,
+        "guidance_relevant": useful and install,
+        "verification_status": "passed" if useful and install else ("failed" if install else "not_reached"),
+        "verification_evidence_redacted": "pytest target passed" if install else "not reached: install failed",
+        "maintainer_help_before_first_value": False,
+        "mcp_setup_attempted": install,
+        "mcp_setup_success": install if install else "not_attempted",
+        "unknown_control_input_id": "unknown-control-v1",
+        "unknown_control_status": "no_confident_match" if install else "not_run_install_failed",
+        "no_confident_match_when_unknown": install,
+        "false_confident_match": False,
+        "harmful_guidance": False,
+        "blocker_category": "none" if install else "install",
+        "blocker_notes_redacted": "none" if install else "install failed",
         "privacy_security_incident": incident,
         "repeat_use_within_7_days": idx <= 2,
-        "outcome_recorded": True,
+        "outcome_recorded": install,
+        "outcome_capture_method": "github_evidence_issue" if install else "not_reached",
+        "outcome_evidence_id": f"issue-{idx}" if install else "not reached: install failed",
     }
 
 
 def _scoreboard(rows: list[dict[str, object]]) -> dict[str, object]:
     data: dict[str, object] = {
-        "schema_version": 1,
+        "schema_version": 2,
+        "protocol": {
+            "protocol_id": "borg-rescue-first10-v1",
+            "status": "complete" if len(rows) == 10 else ("enrollment_open" if not rows else "in_progress"),
+            "enrollment_open": len(rows) < 10,
+            "unknown_control": {
+                "id": "unknown-control-v1",
+                "input": "BORGFIRST10_UNKNOWN_CONTROL_v1: ZXQ-9199 proprietary scheduler quantum flux fault",
+                "expected_status": "no_confident_match",
+            },
+            "artifact": {"package": "agent-borg", "version": "9.9.9", "wheel_sha256": "a" * 64},
+        },
         "truth_policy": {
             "simulated_users_count_as_real": False,
             "internal_sessions_count_as_real": False,
@@ -96,6 +122,16 @@ def _pypi_fixture(
 
 def _fresh_timestamp() -> str:
     return datetime.now(timezone.utc).isoformat()
+
+
+def _required_pypi_canary_results() -> list[dict[str, object]]:
+    return [
+        {"name": "install", "passed": True},
+        {"name": "borg_rescue_json", "passed": True},
+        {"name": "borg_doctor_json", "passed": True},
+        {"name": "borg_first_10_protocol_json", "passed": True},
+        {"name": "borg_unknown_control_json", "passed": True},
+    ]
 
 
 def _clean_source_revision_state() -> dict[str, object]:
@@ -263,6 +299,184 @@ def test_valid_first_10_rows_pass_and_sync_aggregate_fields() -> None:
     assert result["derived_counts"]["verified_external_users"] == 10
     assert result["derived_counts"]["install_successes"] == 10
     assert result["derived_counts"]["useful_rescue_moments"] == 10
+    assert result["derived_counts"]["no_match_safety_passes"] == 10
+
+
+def test_two_install_failures_remain_in_denominator_without_blocking_valid_eight_of_ten_gate() -> None:
+    rows = [_row(i) for i in range(1, 9)] + [_row(9, install=False), _row(10, install=False)]
+
+    result = evidence.evaluate_scoreboard(_scoreboard(rows))
+
+    assert result["schema_valid"] is True
+    assert result["derived_counts"]["verified_external_users"] == 10
+    assert result["derived_counts"]["install_successes"] == 8
+    assert result["derived_counts"]["no_match_safety_passes"] == 8
+    assert result["thresholds_passed"] is True
+
+
+def test_failed_install_cannot_claim_downstream_actions_or_verification() -> None:
+    rows = [_row(i) for i in range(1, 10)] + [_row(10, install=False)]
+    rows[-1]["rescue_useful"] = True
+    rows[-1]["verification_status"] = "passed"
+    rows[-1]["mcp_setup_attempted"] = True
+    rows[-1]["mcp_setup_success"] = True
+
+    result = evidence.evaluate_scoreboard(_scoreboard(rows))
+
+    assert result["schema_valid"] is False
+    reasons = result["invalid_rows"][0]["reasons"]
+    assert any("failed install row cannot set rescue_useful true" in reason for reason in reasons)
+    assert any("failed install row must set verification_status to not_reached" in reason for reason in reasons)
+    assert any("failed install row cannot set mcp_setup_attempted true" in reason for reason in reasons)
+
+
+def test_unlocked_study_artifact_blocks_even_perfect_rows() -> None:
+    data = _scoreboard([_row(i) for i in range(1, 11)])
+    data["protocol"] = {  # type: ignore[index]
+        "protocol_id": "borg-rescue-first10-v1",
+        "status": "preregistered_not_open",
+        "artifact": {"package": "agent-borg", "version": None, "wheel_sha256": None},
+    }
+
+    result = evidence.evaluate_scoreboard(data)
+
+    assert result["protocol"]["ready"] is False
+    assert result["thresholds_passed"] is False
+    assert result["public_self_serve_launch_gate"] == "BLOCKED"
+    assert any("protocol artifact version is not locked" in blocker for blocker in result["blockers"])
+
+
+def test_mutated_unknown_control_or_closed_enrollment_blocks_perfect_rows() -> None:
+    mutated = _scoreboard([_row(i) for i in range(1, 11)])
+    mutated["protocol"]["unknown_control"]["input"] = "an easier unknown"  # type: ignore[index]
+    closed = _scoreboard([_row(i) for i in range(1, 11)])
+    closed["protocol"]["status"] = "in_progress"  # type: ignore[index]
+    closed["protocol"]["enrollment_open"] = False  # type: ignore[index]
+
+    mutated_result = evidence.evaluate_scoreboard(mutated)
+    closed_result = evidence.evaluate_scoreboard(closed)
+
+    assert mutated_result["thresholds_passed"] is False
+    assert closed_result["thresholds_passed"] is False
+    assert any("unknown_control.input" in reason for reason in mutated_result["protocol"]["reasons"])
+    assert any("enrollment_open must be true" in reason for reason in closed_result["protocol"]["reasons"])
+
+
+def test_protocol_lifecycle_state_must_match_row_progress_and_completion() -> None:
+    premature_completion = _scoreboard([_row(1)])
+    premature_completion["protocol"]["status"] = "complete"  # type: ignore[index]
+    premature_completion["protocol"]["enrollment_open"] = False  # type: ignore[index]
+    premature = evidence.evaluate_scoreboard(premature_completion)
+
+    unclosed_success = _scoreboard([_row(i) for i in range(1, 11)])
+    unclosed_success["protocol"]["status"] = "in_progress"  # type: ignore[index]
+    unclosed_success["protocol"]["enrollment_open"] = True  # type: ignore[index]
+    unclosed = evidence.evaluate_scoreboard(unclosed_success)
+
+    assert premature["schema_valid"] is False
+    assert premature["thresholds_passed"] is False
+    assert unclosed["schema_valid"] is False
+    assert unclosed["thresholds_passed"] is False
+    assert any("protocol status complete" in blocker for blocker in premature["blockers"])
+    assert any("protocol status in_progress" in blocker for blocker in unclosed["blockers"])
+
+
+def test_wrong_unknown_control_id_cannot_count() -> None:
+    rows = [_row(i) for i in range(1, 11)]
+    rows[0]["unknown_control_input_id"] = "unknown-control-easy"
+
+    result = evidence.evaluate_scoreboard(_scoreboard(rows))
+
+    assert result["schema_valid"] is False
+    assert result["thresholds_passed"] is False
+    assert any("unknown_control_input_id must be unknown-control-v1" in reason for reason in result["invalid_rows"][0]["reasons"])
+
+
+def test_claimed_usefulness_without_passing_verification_does_not_count() -> None:
+    rows = [_row(i) for i in range(1, 11)]
+    for row in rows[:5]:
+        row["rescue_useful"] = True
+        row["guidance_relevant"] = True
+        row["verification_status"] = "failed"
+        row["verification_evidence_redacted"] = "original failure reproduced"
+
+    result = evidence.evaluate_scoreboard(_scoreboard(rows))
+
+    assert result["schema_valid"] is True
+    assert result["derived_counts"]["useful_rescue_moments"] == 5
+    assert result["thresholds_passed"] is False
+
+
+def test_one_false_confident_unknown_control_blocks_the_cohort() -> None:
+    rows = [_row(i) for i in range(1, 11)]
+    rows[0]["unknown_control_status"] = "false_confident_match"
+    rows[0]["no_confident_match_when_unknown"] = False
+    rows[0]["false_confident_match"] = True
+
+    result = evidence.evaluate_scoreboard(_scoreboard(rows))
+
+    assert result["schema_valid"] is True
+    assert result["derived_counts"]["false_confident_matches"] == 1
+    assert result["derived_counts"]["no_match_safety_passes"] == 9
+    assert result["thresholds_passed"] is False
+
+
+def test_one_harmful_guidance_event_blocks_the_cohort() -> None:
+    rows = [_row(i) for i in range(1, 11)]
+    rows[0]["harmful_guidance"] = True
+
+    result = evidence.evaluate_scoreboard(_scoreboard(rows))
+
+    assert result["schema_valid"] is True
+    assert result["derived_counts"]["harmful_guidance_events"] == 1
+    assert result["thresholds_passed"] is False
+
+
+def test_duplicate_or_extra_enrollment_slots_cannot_cherry_pick_beyond_first_10() -> None:
+    duplicate_rows = [_row(i) for i in range(1, 11)]
+    duplicate_rows[-1]["enrollment_index"] = 9
+
+    duplicate = evidence.evaluate_scoreboard(_scoreboard(duplicate_rows))
+    extra = evidence.evaluate_scoreboard(_scoreboard([_row(i) for i in range(1, 12)]))
+
+    assert duplicate["schema_valid"] is False
+    assert duplicate["duplicate_enrollment_indices"] == [9]
+    assert extra["schema_valid"] is False
+    assert extra["thresholds_passed"] is False
+    assert any("no more than 10 rows" in blocker for blocker in extra["blockers"])
+
+
+def test_unverified_maintainer_evidence_cannot_count() -> None:
+    rows = [_row(i) for i in range(1, 11)]
+    rows[0]["maintainer_validation_status"] = "pending"
+
+    result = evidence.evaluate_scoreboard(_scoreboard(rows))
+
+    assert result["schema_valid"] is False
+    assert result["derived_counts"]["verified_external_users"] == 9
+    assert any(
+        "maintainer_validation_status must be verified" in reason
+        for reason in result["invalid_rows"][0]["reasons"]
+    )
+
+
+def test_duplicate_evidence_uris_cannot_be_reused_across_participants() -> None:
+    rows = [_row(i) for i in range(1, 11)]
+    rows[1]["external_user_evidence_uri"] = str(rows[0]["external_user_evidence_uri"]) + "/?utm_source=retry#duplicate"
+    rows[2]["maintainer_validation_evidence_uri"] = str(rows[0]["maintainer_validation_evidence_uri"]).replace(
+        "#issuecomment-validated", "?view=1#issuecomment-validated"
+    )
+
+    result = evidence.evaluate_scoreboard(_scoreboard(rows))
+
+    assert result["schema_valid"] is False
+    assert result["thresholds_passed"] is False
+    assert result["duplicate_external_evidence_uris"] == [
+        evidence._evidence_uri_identity(rows[0]["external_user_evidence_uri"], keep_fragment=False)
+    ]
+    assert result["duplicate_validation_evidence_uris"] == [
+        evidence._evidence_uri_identity(rows[0]["maintainer_validation_evidence_uri"], keep_fragment=True)
+    ]
 
 
 def test_invalid_rows_do_not_count_and_secrets_block_schema() -> None:
@@ -296,7 +510,10 @@ def test_first_10_thresholds_are_non_relaxable_policy_floors() -> None:
         "required_total_real_users": 10,
         "required_install_successes": 8,
         "required_useful_rescue_moments": 6,
+        "required_no_match_safety_passes": 8,
         "max_critical_privacy_security_failures": 0,
+        "max_false_confident_matches": 0,
+        "max_harmful_guidance_events": 0,
     }
     assert result["thresholds_passed"] is False
     assert result["public_self_serve_launch_gate"] == "BLOCKED"
@@ -428,6 +645,50 @@ def test_docs_claim_guard_rejects_controlled_beta_gated_on_completed_first_10_ro
 
     assert result["passed"] is False
     assert any(v["kind"] == "controlled beta incorrectly gated on completed first-10 evidence" for v in result["violations"])
+
+
+def test_docs_claim_guard_does_not_combine_sibling_minified_html_claims(tmp_path: Path, monkeypatch) -> None:
+    monkeypatch.setattr(gate, "ROOT", tmp_path)
+    doc = tmp_path / "docs" / "BORG_PROOF_DASHBOARD.html"
+    doc.parent.mkdir()
+    doc.write_text(
+        "<ul><li>Controlled first-10 beta remains NO-GO until package and release-control gates pass.</li>"
+        "<li>No first-10 row-derived external-user evidence exists yet.</li></ul>\n",
+        encoding="utf-8",
+    )
+
+    result = gate.docs_claim_guard(
+        [Path("docs/BORG_PROOF_DASHBOARD.html")],
+        "9.9.9",
+        public_evidence_ready=False,
+        package_evidence_ready=False,
+    )
+
+    assert result["passed"] is True
+    assert result["violations"] == []
+
+
+def test_docs_claim_guard_keeps_inline_html_inside_one_claim(tmp_path: Path, monkeypatch) -> None:
+    monkeypatch.setattr(gate, "ROOT", tmp_path)
+    doc = tmp_path / "README.html"
+    doc.write_text(
+        "<p>Controlled <strong>first-10</strong> beta remains NO-GO until "
+        "first-10 external-user evidence gates are green.</p>\n",
+        encoding="utf-8",
+    )
+
+    result = gate.docs_claim_guard(
+        [Path("README.html")],
+        "9.9.9",
+        public_evidence_ready=False,
+        package_evidence_ready=True,
+    )
+
+    assert result["passed"] is False
+    assert any(
+        violation["kind"] == "controlled beta incorrectly gated on completed first-10 evidence"
+        for violation in result["violations"]
+    )
 
 
 def test_docs_claim_guard_blocks_broader_stale_package_blockers_after_canary(tmp_path: Path, monkeypatch) -> None:
@@ -1028,7 +1289,7 @@ def test_pypi_fresh_install_check_requires_current_timestamp(tmp_path: Path, mon
         payload: dict[str, object] = {
             "success": True,
             "version": "9.9.9",
-            "results": [{"name": "install", "passed": True}],
+            "results": _required_pypi_canary_results(),
             "mcp_stdio_canary": {"passed": True},
         }
         if generated_at is not None:
@@ -1055,6 +1316,32 @@ def test_pypi_fresh_install_check_requires_current_timestamp(tmp_path: Path, mon
     fresh = write_snapshot("fresh")
     assert fresh["passed"] is True
     assert fresh["freshness"]["passed"] is True
+
+
+def test_pypi_fresh_install_check_requires_first_10_canary_results(tmp_path: Path, monkeypatch) -> None:
+    monkeypatch.setattr(gate, "ROOT", tmp_path)
+    eval_dir = tmp_path / "eval"
+    eval_dir.mkdir()
+    path = eval_dir / "pypi_fresh_install_snapshot.json"
+    path.write_text(
+        json.dumps({
+            "success": True,
+            "version": "9.9.9",
+            "generated_at_utc": _fresh_timestamp(),
+            "results": [
+                item for item in _required_pypi_canary_results()
+                if item["name"] != "borg_unknown_control_json"
+            ],
+            "mcp_stdio_canary": {"passed": True},
+        }),
+        encoding="utf-8",
+    )
+    monkeypatch.setattr(gate, "_age_hours", lambda value: 1.0)
+
+    result = gate.pypi_fresh_install_check(path, "9.9.9")
+
+    assert result["passed"] is False
+    assert result["missing_first_10_results"] == ["borg_unknown_control_json"]
 
 
 def test_first_10_issue_form_not_measured_basis_does_not_invalidate_unmeasured_rows() -> None:
@@ -1108,7 +1395,7 @@ def test_public_gate_pauses_controlled_first_10_when_privacy_security_incident_r
             "success": True,
             "version": "9.9.9",
             "generated_at_utc": _fresh_timestamp(),
-            "results": [{"name": "install", "passed": True}],
+            "results": _required_pypi_canary_results(),
             "mcp_stdio_canary": {"passed": True},
         }),
         encoding="utf-8",
@@ -1140,7 +1427,7 @@ def test_public_self_serve_gate_passes_only_when_all_artifacts_and_real_rows_pas
             "success": True,
             "version": "9.9.9",
             "generated_at_utc": _fresh_timestamp(),
-            "results": [{"name": "install", "passed": True}],
+            "results": _required_pypi_canary_results(),
             "mcp_stdio_canary": {"passed": True, "server_info": {"name": "borg-mcp-server", "version": "9.9.9"}},
         }),
         encoding="utf-8",
@@ -1173,7 +1460,7 @@ def test_public_self_serve_gate_blocks_empty_evidence_even_when_infra_passes(tmp
             "success": True,
             "version": "9.9.9",
             "generated_at_utc": _fresh_timestamp(),
-            "results": [{"name": "install", "passed": True}],
+            "results": _required_pypi_canary_results(),
             "mcp_stdio_canary": {"passed": True},
         }),
         encoding="utf-8",
@@ -1208,7 +1495,7 @@ def test_public_self_serve_gate_blocks_when_cold_start_trust_snapshot_fails(tmp_
             "success": True,
             "version": "9.9.9",
             "generated_at_utc": _fresh_timestamp(),
-            "results": [{"name": "install", "passed": True}],
+            "results": _required_pypi_canary_results(),
             "mcp_stdio_canary": {"passed": True},
         }),
         encoding="utf-8",
@@ -1240,7 +1527,7 @@ def test_public_self_serve_gate_blocks_when_self_service_ops_fails(tmp_path: Pat
             "success": True,
             "version": "9.9.9",
             "generated_at_utc": _fresh_timestamp(),
-            "results": [{"name": "install", "passed": True}],
+            "results": _required_pypi_canary_results(),
             "mcp_stdio_canary": {"passed": True, "server_info": {"name": "borg-mcp-server", "version": "9.9.9"}},
         }),
         encoding="utf-8",
@@ -1273,7 +1560,7 @@ def test_public_self_serve_gate_blocks_when_ops_watchdog_fails(tmp_path: Path, m
             "success": True,
             "version": "9.9.9",
             "generated_at_utc": _fresh_timestamp(),
-            "results": [{"name": "install", "passed": True}],
+            "results": _required_pypi_canary_results(),
             "mcp_stdio_canary": {"passed": True, "server_info": {"name": "borg-mcp-server", "version": "9.9.9"}},
         }),
         encoding="utf-8",
@@ -1306,7 +1593,7 @@ def _write_public_gate_happy_fixture(root: Path, monkeypatch) -> None:  # type: 
             "success": True,
             "version": "9.9.9",
             "generated_at_utc": _fresh_timestamp(),
-            "results": [{"name": "install", "passed": True}],
+            "results": _required_pypi_canary_results(),
             "mcp_stdio_canary": {"passed": True, "server_info": {"name": "borg-mcp-server", "version": "9.9.9"}},
         }),
         encoding="utf-8",
@@ -1462,7 +1749,7 @@ def _write_rollout_fixture(root: Path, *, watchdog_passed: bool) -> None:
             "success": True,
             "version": "9.9.9",
             "generated_at_utc": _fresh_timestamp(),
-            "results": [{"name": "install", "passed": True}],
+            "results": _required_pypi_canary_results(),
             "mcp_stdio_canary": {"passed": True},
         }),
         encoding="utf-8",
@@ -1508,6 +1795,42 @@ def test_real_user_rollout_gate_allows_controlled_beta_only_when_ops_watchdog_pa
     assert snapshot["max_recommended_real_users_now"] == 10
     assert snapshot["self_service_ops_gate"]["ops_readiness_watchdog"]["passed"] is True
     assert any("first-10 external-user evidence" in blocker for blocker in snapshot["blockers"])
+
+
+def test_real_user_rollout_pauses_on_harm_false_confidence_or_futility(tmp_path: Path, monkeypatch) -> None:
+    monkeypatch.setattr(rollout, "ROOT", tmp_path)
+    monkeypatch.setattr(rollout.public_gate, "ROOT", tmp_path)
+    monkeypatch.setattr(rollout.public_gate, "source_version", lambda: "9.9.9")
+    monkeypatch.setattr(rollout.public_gate, "pypi_latest_check", lambda expected, fetch_network=True: {"passed": True, "version": expected})
+    monkeypatch.setattr(rollout.public_gate.release_governance_gate, "fetch_live_branch_payload", lambda repo, branch: _release_governance_payload(protected=True))
+    monkeypatch.setattr(rollout.public_gate.release_governance_gate, "fetch_codeowners_errors", lambda repo, ref=None: [])
+    monkeypatch.setattr(rollout.self_service_ops_gate, "compile_gate", lambda: {"passed": True, "blockers": [], "rollout_policy": "test"})
+    _write_rollout_fixture(tmp_path, watchdog_passed=True)
+    scoreboard_path = tmp_path / "eval" / "first_10_user_scoreboard.json"
+
+    harmful_rows = [_row(1)]
+    harmful_rows[0]["harmful_guidance"] = True
+    scoreboard_path.write_text(json.dumps(_scoreboard(harmful_rows)), encoding="utf-8")
+    harmful = rollout.compile_rollout_gate()
+
+    false_match_rows = [_row(1)]
+    false_match_rows[0]["unknown_control_status"] = "false_confident_match"
+    false_match_rows[0]["no_confident_match_when_unknown"] = False
+    false_match_rows[0]["false_confident_match"] = True
+    scoreboard_path.write_text(json.dumps(_scoreboard(false_match_rows)), encoding="utf-8")
+    false_match = rollout.compile_rollout_gate()
+
+    futile_rows = [_row(i, useful=False) for i in range(1, 6)]
+    scoreboard_path.write_text(json.dumps(_scoreboard(futile_rows)), encoding="utf-8")
+    futile = rollout.compile_rollout_gate()
+
+    assert harmful["ready_for_10_controlled_beta"] is False
+    assert harmful["first_10_safety_pause_clear"] is False
+    assert false_match["ready_for_10_controlled_beta"] is False
+    assert false_match["first_10_safety_pause_clear"] is False
+    assert futile["ready_for_10_controlled_beta"] is False
+    assert futile["first_10_futility_stop"] is True
+    assert any("preregistered futility stop" in blocker for blocker in futile["blockers"])
 
 
 def test_real_user_rollout_gate_blocks_controlled_beta_when_release_controls_fail(tmp_path: Path, monkeypatch) -> None:

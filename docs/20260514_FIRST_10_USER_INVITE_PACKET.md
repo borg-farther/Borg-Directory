@@ -1,61 +1,76 @@
-# Borg first-10 user invite packet
+# First-10 Borg Rescue Invite Packet
 
-Generated: 2026-05-14T18:25:05Z
-Rev: 2026-09-18T00:00:00Z — source candidate `agent-borg==3.4.1` is **not yet an approved first-10 package**, and this packet is **not sendable right now**. Send only after exact-version PyPI, served-runtime, governance, watchdog, docs-claim, and evidence-intake gates all pass.
+**Status: DO NOT SEND — enrollment is closed.**
 
-## Exact invite message
+This packet becomes usable only when `eval/first_10_user_scoreboard.json` contains a verified immutable artifact and `protocol.enrollment_open: true`.
 
-Hi — we are preparing a small consented Borg beta for the first 10 external users after served-runtime freshness and evidence-intake gates pass. Borg is an error/debugging assistant that returns ACTION / STOP / VERIFY guidance from local/public project traces. Would you be willing to try one install and one real debugging query when the gate opens, then send redacted feedback? Please do not paste secrets, tokens, proprietary code, private customer data, or confidential logs.
+Authoritative protocol: [`FIRST_10_RESCUE_PROTOCOL.md`](FIRST_10_RESCUE_PROTOCOL.md)
 
-## Install commands
+## Invite message template
 
-STOP gate: these commands are for the controlled first-10 beta only. Do **not** send them while the current cap is 0. Do **not** send them if served-runtime freshness fails, if `python eval/run_pypi_fresh_install_canary.py --version 3.4.1` regresses, or if more than 10 real external users would be invited before the first-10 evidence gate passes.
+> We are running a tightly controlled 10-person field validation of Borg Rescue. Your preassigned immutable enrollment slot is `<ENROLLMENT_INDEX>` and your pseudonym is `<PSEUDONYM>`; copy both into the evidence form. Bring one real technical failure you are already trying to solve. Install one pinned package, run Borg before maintainer help, verify the result with your original failing command or smallest test, and run one fixed unknown-input safety control. Failed installs and unsuccessful rescues still count; we are measuring honestly, not collecting testimonials. Do not paste secrets or private identifiers. This is not a claim that Borg improves all AI-agent work.
 
-Preferred isolated install:
+Replace `<LOCKED_VERSION>`, `<ENROLLMENT_INDEX>`, and `<PSEUDONYM>` only with the values locked or assigned before the invitation.
+
+## Participant path
 
 ```bash
-python -m pip install --user pipx
-python -m pipx ensurepath
-pipx install agent-borg==3.4.1
+pipx install agent-borg==<LOCKED_VERSION>
 borg --version
-borg rescue "paste a REDACTED real error here"
+borg-doctor --json
+borg rescue "<redacted real current error>" --json
+borg rescue "BORGFIRST10_UNKNOWN_CONTROL_v1: ZXQ-9199 proprietary scheduler quantum flux fault" --json
 ```
 
-Fallback if pipx is unavailable:
+Expected safety-control result:
 
-```bash
-python -m venv /tmp/borg-beta-venv
-/tmp/borg-beta-venv/bin/python -m pip install agent-borg==3.4.1
-/tmp/borg-beta-venv/bin/borg --version
-/tmp/borg-beta-venv/bin/borg rescue "paste a REDACTED real error here"
+```text
+status: no_confident_match
 ```
 
-Source-branch install is only for maintainer-approved pre-release testing, not the default first-10 path.
+Then:
 
-## Consent and privacy warning
+1. Apply only guidance relevant to the real failure.
+2. Rerun the original failing command or smallest regression test.
+3. Record the redacted command/procedure and result.
+4. Record whether maintainer help occurred before Borg first provided value.
+5. Submit the **First-10 rescue evidence row** issue form.
 
-By participating, the user consents to have redacted outcome metadata recorded for launch readiness. Do not collect raw secrets, credentials, private keys, customer data, or unreduced proprietary logs. Store only pseudonymous user id, install outcome, redacted error category, whether advice was useful, and whether any privacy/security incident occurred.
+The submitted issue URL is the external evidence URI. Participants are not required to know that URL before submitting.
 
-## Feedback fields to collect
+## What counts
 
-- user_id_pseudonym
-- external_user_evidence_uri
-- consent_confirmed
-- install_method
-- install_success
-- time_to_first_rescue_minutes
-- rescue_input_redacted
-- rescue_returned_action_stop_verify
-- rescue_useful
-- mcp_setup_attempted
-- mcp_setup_success
-- no_confident_match_when_unknown
-- blocker_category
-- blocker_notes_redacted
-- privacy_security_incident
-- repeat_use_within_7_days
-- outcome_recorded
+A useful outcome counts only when the guidance was relevant, verification passed, evidence was recorded, and no maintainer help occurred before first value.
 
-## Scoreboard update instructions
+A failed install, miss, irrelevant answer, failed verification, or `NO_CONFIDENT_MATCH` on the real task remains in the evidence. Nobody is replaced because of an unfavorable result.
 
-Update `eval/first_10_user_scoreboard.json` only after a real external user provides consent and hard evidence. Keep `truth_policy.verified_external_users=0` until evidence exists. Never add fake rows. Public self-serve remains blocked until 10 real external users are verified with at least 8 install successes, at least 6 useful rescue moments, and 0 critical privacy/security failures.
+## Immediate safety escalation
+
+Stop and submit the row without continuing if Borg:
+
+- returns confident guidance for the fixed unknown control;
+- suggests a potentially destructive or unsafe action;
+- exposes or requests secrets/private data;
+- cannot be verified safely.
+
+Maintainers pause all further enrollment on the first such event.
+
+## Maintainer acceptance checklist
+
+- [ ] Cohort was open before this invitation.
+- [ ] Participant is external and unique.
+- [ ] Immutable enrollment slot was assigned before installation and no slot was reused.
+- [ ] Consent is explicit.
+- [ ] Artifact version matches the scoreboard exactly.
+- [ ] Evidence issue is HTTPS and secret-free.
+- [ ] Maintainer validation note is posted and its HTTPS URI is stored.
+- [ ] Failed outcomes were retained.
+- [ ] Unknown control was run for every successful install.
+- [ ] Verification evidence supports any claimed useful rescue.
+- [ ] Maintainer help timing is recorded.
+- [ ] Outcome/receipt evidence is recorded.
+- [ ] Scoreboard was regenerated, not manually totaled.
+
+## Claim boundary
+
+The completed cohort can establish only whether this pinned Borg Rescue artifact crossed its preregistered 10-user field-validation gates. It cannot establish causal lift, broad model improvement, network effects, or public self-serve readiness by itself.

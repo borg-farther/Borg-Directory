@@ -3,7 +3,9 @@
 **Status:** controlled first-10 public-package beta is **NO-GO right now** (zero external users; cap 0). The source line is `agent-borg==3.4.1`; exact-version PyPI, served-runtime, governance, watchdog, and evidence-intake gates must all pass independently before inviting controlled testers. Static prose never substitutes for those live proofs. External first-10 row count is zero.
 Public self-serve stays NO-GO until row-derived first-10 external-user evidence passes.
 
-**Success metric:** At least 6 of the first 10 users get one relevant ACTION/STOP/VERIFY moment without maintainer handholding, and every miss is recorded as NO_CONFIDENT_MATCH or explicit negative feedback instead of being hidden.
+**Success metric:** Retain all 10 external-user outcomes; require at least 8 installs, at least 6 verification-passed useful rescues before maintainer help, a `NO_CONFIDENT_MATCH` safety-control pass for every successful install, and zero harmful, false-confident, or critical privacy/security events.
+
+The frozen denominator, artifact, control, and stop rules are authoritative in [`FIRST_10_RESCUE_PROTOCOL.md`](FIRST_10_RESCUE_PROTOCOL.md).
 
 ## Product promise
 
@@ -26,10 +28,11 @@ Run this before handing Borg to a tester, after the current release version is p
 Install package `agent-borg`; it provides `borg`, `borg-mcp`, and `borg-doctor`. Do **not** use `pip install borg`, `brew install borgbackup`, `apt install borgbackup`, `apt-get install borgbackup`, `dnf install borgbackup`, or `pacman -S borg`; those are unrelated.
 
 ```bash
-python3 -m pip install agent-borg
+python3 -m pip install agent-borg==<LOCKED_VERSION>
 borg version
 borg-doctor --json
 borg rescue 'ModuleNotFoundError: No module named flask' --json
+borg rescue 'BORGFIRST10_UNKNOWN_CONTROL_v1: ZXQ-9199 proprietary scheduler quantum flux fault' --json
 borg search 'django migration table already exists'
 borg agent-stack --json
 borg setup-claude --scope user --verify --fix
@@ -181,7 +184,7 @@ Send each tester this:
    Package name is `agent-borg`; command after install is `borg`. Do **not** install `borg` or `borgbackup`.
    
    ```bash
-   python3 -m pip install agent-borg
+   python3 -m pip install agent-borg==<LOCKED_VERSION>
    borg version
    borg-doctor --json
    ```
@@ -217,16 +220,12 @@ Send each tester this:
 
 ## GO / NO-GO after 10 users
 
-GO only if:
+PASS only if all preregistered gates pass:
 
-- at least 6/10 testers record one relevant `ACTION / STOP / VERIFY` moment;
-- no P0 install/MCP/security issue remains open;
-- unrelated guidance is rare and classified as a bug with a regression test;
-- every tester can explain what Borg did in one sentence.
+- 10/10 unique external outcomes retained, including failures;
+- at least 8/10 installs succeed;
+- at least 6/10 rescues are relevant, useful, and verification-passed before maintainer help;
+- every successful install returns `NO_CONFIDENT_MATCH` for the frozen unknown control;
+- harmful guidance, false-confident controls, and critical privacy/security incidents remain zero.
 
-NO-GO if:
-
-- Borg frequently returns unrelated guidance;
-- confidence is ambiguous;
-- testers need maintainer explanation before the tool is useful;
-- the docs overclaim what the product has proven.
+PAUSE immediately on the first safety-control failure, harmful response, critical privacy/security incident, or secret leak. NO-GO on an unresolved pause or mathematical futility.

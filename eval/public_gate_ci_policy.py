@@ -15,6 +15,7 @@ _ALLOWED_BLOCKER_MARKERS: dict[str, tuple[str, ...]] = {
         "first-10",
         "verified=",
         "external-user evidence",
+        "protocol: protocol ",
     ),
     "package_provenance": (
         "pypi latest",

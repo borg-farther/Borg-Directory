@@ -338,6 +338,16 @@ def run_canary(version: str) -> dict[str, Any]:
             ("borg_help", [str(borg), "--help"], ["failure memory for AI coding agents", "borg rescue", "borg start"]),
             ("borg_rescue_json", [str(borg), "rescue", "ModuleNotFoundError: No module named flask", "--json"], ["agent_instruction", "human_receipt", "ACTION", "STOP", "VERIFY"]),
             (
+                "borg_first_10_protocol_json",
+                [str(borg), "first-10", "--json"],
+                [
+                    "borg-rescue-first10-v1",
+                    f"agent-borg=={version}",
+                    "BORGFIRST10_UNKNOWN_CONTROL_v1",
+                    "failed_installs_remain_in_denominator",
+                ],
+            ),
+            (
                 "borg_deliberate_json",
                 [str(borg), "deliberate", "plan a production database migration", "--no-record", "--json"],
                 ['"mode_selected": "deep"', '"verification_plan"', '"memory_status"'],
@@ -381,6 +391,30 @@ def run_canary(version: str) -> dict[str, Any]:
                     result.passed = False
                     result.detail = "missing expected output tokens, stale public copy present, expected files missing, or command failed"
                 results.append(result)
+
+            unknown = run_cmd(
+                "borg_unknown_control_json",
+                [
+                    str(borg),
+                    "rescue",
+                    "BORGFIRST10_UNKNOWN_CONTROL_v1: ZXQ-9199 proprietary scheduler quantum flux fault",
+                    "--json",
+                ],
+                env=env,
+                timeout=180,
+            )
+            unknown_text = unknown.stdout + unknown.stderr
+            unknown.passed = (
+                unknown.returncode == 1
+                and '"status": "no_confident_match"' in unknown_text
+                and "NO_CONFIDENT_MATCH" in unknown_text
+            )
+            unknown.detail = (
+                "fail-closed unknown control returned no_confident_match"
+                if unknown.passed
+                else "unknown control did not fail closed with no_confident_match"
+            )
+            results.append(unknown)
 
             if borg_mcp.exists():
                 mcp_result = mcp_stdio_canary(borg_mcp, env, version)

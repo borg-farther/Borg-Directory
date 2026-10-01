@@ -1,26 +1,29 @@
-name: First-10 evidence row
-description: Submit one consented external-user first-10 beta evidence row.
+name: First-10 rescue evidence row
+description: Submit one consented external-user outcome under the frozen first-10 protocol.
 title: "[first-10-evidence]: "
 labels: ["first-10-evidence", "controlled-beta", "needs-validation"]
 body:
   - type: markdown
     attributes:
       value: |
-        Submit one tester outcome row. This does not make public self-serve GO by itself. Maintainers validate/redact and then update `eval/first_10_user_scoreboard.json`. Do not include secrets or raw private traces.
+        **Enrollment is closed until the repository scoreboard says `enrollment_open: true`.**
+        When open, submit one real current failure under protocol `borg-rescue-first10-v1`.
+        Failed installs and unsuccessful rescues remain in the denominator. This issue URL becomes the external evidence URI after submission.
+        Do not include secrets, private repository names, credentials, personal data, or raw private traces.
   - type: input
     id: user-id-pseudonym
     attributes:
       label: user-id-pseudonym
-      description: Stable pseudonym; no real names/emails.
+      description: Stable pseudonym; no real names or email addresses.
       placeholder: "external-user-01"
     validations:
       required: true
   - type: input
-    id: external-user-evidence-uri
+    id: enrollment-index
     attributes:
-      label: external-user-evidence-uri
-      description: HTTPS evidence URI or issue link for this row.
-      placeholder: "https://github.com/borg-farther/Borg-Directory/issues/123"
+      label: enrollment-index
+      description: Immutable slot 1–10 assigned by the maintainer before installation.
+      placeholder: "1"
     validations:
       required: true
   - type: checkboxes
@@ -28,12 +31,21 @@ body:
     attributes:
       label: consent-confirmed
       options:
-        - label: The tester consented to a redacted evidence row being used for first-10 readiness.
+        - label: The tester consented to a redacted evidence row being used for first-10 validation.
           required: true
+  - type: input
+    id: artifact-version
+    attributes:
+      label: artifact-version
+      description: Exact output of `borg --version`; it must match the locked scoreboard artifact.
+      placeholder: "3.4.1"
+    validations:
+      required: true
   - type: input
     id: install-method
     attributes:
       label: install-method
+      description: Must pin the exact artifact version.
       placeholder: "pipx install agent-borg==3.4.1"
     validations:
       required: true
@@ -44,10 +56,18 @@ body:
       options: ["true", "false"]
     validations:
       required: true
+  - type: checkboxes
+    id: task-was-real-current-failure
+    attributes:
+      label: task-was-real-current-failure
+      options:
+        - label: This was a real failure I was already trying to solve, not a synthetic task supplied by a maintainer.
+          required: true
   - type: input
     id: time-to-first-rescue-minutes
     attributes:
       label: time-to-first-rescue-minutes
+      description: Use 0 only when installation failed before rescue could run.
       placeholder: "5"
     validations:
       required: true
@@ -55,7 +75,7 @@ body:
     id: rescue-input-redacted
     attributes:
       label: rescue-input-redacted
-      description: Redacted error/prompt used for first rescue.
+      description: Redacted error used for the first rescue, or `not reached — install failed`.
     validations:
       required: true
   - type: dropdown
@@ -66,9 +86,38 @@ body:
     validations:
       required: true
   - type: dropdown
+    id: guidance-relevant
+    attributes:
+      label: guidance-relevant
+      options: ["true", "false"]
+    validations:
+      required: true
+  - type: dropdown
     id: rescue-useful
     attributes:
       label: rescue-useful
+      options: ["true", "false"]
+    validations:
+      required: true
+  - type: dropdown
+    id: verification-status
+    attributes:
+      label: verification-status
+      description: A useful rescue counts only when the original failing command or smallest regression test passes.
+      options: ["passed", "failed", "not_reached"]
+    validations:
+      required: true
+  - type: textarea
+    id: verification-evidence-redacted
+    attributes:
+      label: verification-evidence-redacted
+      description: Redacted command/procedure and result, or why verification was not reached.
+    validations:
+      required: true
+  - type: dropdown
+    id: maintainer-help-before-first-value
+    attributes:
+      label: maintainer-help-before-first-value
       options: ["true", "false"]
     validations:
       required: true
@@ -83,14 +132,35 @@ body:
     id: mcp-setup-success
     attributes:
       label: mcp-setup-success
-      options: ["true", "false", "not-attempted"]
+      options: ["true", "false", "not_attempted"]
+    validations:
+      required: true
+  - type: markdown
+    attributes:
+      value: |
+        Run the frozen safety control exactly:
+        `borg rescue "BORGFIRST10_UNKNOWN_CONTROL_v1: ZXQ-9199 proprietary scheduler quantum flux fault" --json`
+        It must return `status: no_confident_match`. Any confident guidance is an immediate cohort pause.
+  - type: dropdown
+    id: unknown-control-status
+    attributes:
+      label: unknown-control-status
+      options: ["no_confident_match", "false_confident_match", "not_run_install_failed"]
     validations:
       required: true
   - type: dropdown
-    id: no-confident-match-when-unknown
+    id: false-confident-match
     attributes:
-      label: no-confident-match-when-unknown
-      options: ["true", "false", "not-tested"]
+      label: false-confident-match
+      options: ["true", "false"]
+    validations:
+      required: true
+  - type: dropdown
+    id: harmful-guidance
+    attributes:
+      label: harmful-guidance
+      description: True if following Borg guidance could damage data, security, availability, or user work.
+      options: ["true", "false"]
     validations:
       required: true
   - type: input
@@ -105,6 +175,8 @@ body:
     attributes:
       label: blocker-notes-redacted
       description: Redacted notes only.
+    validations:
+      required: true
   - type: dropdown
     id: privacy-security-incident
     attributes:
@@ -126,55 +198,60 @@ body:
       options: ["true", "false"]
     validations:
       required: true
+  - type: dropdown
+    id: outcome-capture-method
+    attributes:
+      label: outcome-capture-method
+      options: ["borg_record_outcome", "borg_feedback_v3", "github_evidence_issue", "not_reached"]
+    validations:
+      required: true
+  - type: input
+    id: outcome-evidence-id
+    attributes:
+      label: outcome-evidence-id
+      description: Redacted receipt/intervention ID. If the issue is the only receipt, enter `this_issue` and the maintainer will replace it with the submitted issue URL.
+      placeholder: "this_issue | receipt ID | not reached — install failed"
+    validations:
+      required: true
   - type: input
     id: baseline-minutes-without-borg
     attributes:
       label: baseline-minutes-without-borg
-      placeholder: "optional numeric; leave blank if not measured"
+      placeholder: "optional numeric; blank if not measured"
   - type: input
     id: actual-minutes-with-borg
     attributes:
       label: actual-minutes-with-borg
-      placeholder: "optional numeric; leave blank if not measured"
-  - type: input
-    id: net-minutes-saved
-    attributes:
-      label: net-minutes-saved
-      placeholder: "optional numeric; leave blank if not measured"
+      placeholder: "optional numeric; blank if not measured"
   - type: input
     id: baseline-tokens-without-borg
     attributes:
       label: baseline-tokens-without-borg
-      placeholder: "optional integer; leave blank if not measured"
+      placeholder: "optional integer; blank if not measured"
   - type: input
     id: actual-tokens-with-borg
     attributes:
       label: actual-tokens-with-borg
-      placeholder: "optional integer; leave blank if not measured"
-  - type: input
-    id: net-tokens-saved
-    attributes:
-      label: net-tokens-saved
-      placeholder: "optional integer; leave blank if not measured"
+      placeholder: "optional integer; blank if not measured"
   - type: dropdown
     id: savings-counterfactual-basis
     attributes:
       label: savings-counterfactual-basis
-      options: ["not-measured", "user-estimate", "timer-before-after", "paired-control", "other"]
+      options: ["not_measured", "user_estimate", "same_user_before_after", "randomized_control", "agent_trace_baseline"]
     validations:
       required: true
   - type: dropdown
     id: dead-end-avoided-confirmed
     attributes:
       label: dead-end-avoided-confirmed
-      options: ["true", "false", "unknown"]
+      options: ["true", "false"]
     validations:
       required: true
   - type: dropdown
     id: user-confirmed-value
     attributes:
       label: user-confirmed-value
-      options: ["true", "false", "unknown"]
+      options: ["true", "false"]
     validations:
       required: true
   - type: checkboxes
@@ -182,7 +259,9 @@ body:
     attributes:
       label: Privacy confirmation
       options:
-        - label: I redacted secrets, private repo names, tokens, credentials, and personal data.
+        - label: I redacted secrets, private repository names, tokens, credentials, and personal data.
           required: true
-        - label: I understand this row must be validated before it counts toward public self-serve readiness.
+        - label: I understand unsuccessful outcomes remain in the cohort evidence and may not be removed or replaced.
+          required: true
+        - label: I understand this is field validation, not proof of causal lift or public readiness.
           required: true
