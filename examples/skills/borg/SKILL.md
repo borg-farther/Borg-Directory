@@ -1,6 +1,6 @@
 ---
 name: borg
-description: Failure memory and epistemic guardrails for AI agents. Use for concrete failures or consequential/high-risk/deep work that needs evidence, contradiction, and verification control. Not for simple tasks that need no structure.
+description: Failure memory and advisory epistemic review for AI agents. Use for concrete failures or consequential/high-risk/deep work that needs evidence-reference and contradiction checks. Not for simple tasks that need no structure.
 compatibility: "Requires the borg MCP server or CLI. Install with the package name: pip install agent-borg. Configure your agent to run the MCP server command: borg-mcp."
 metadata:
   borg:
@@ -10,9 +10,9 @@ metadata:
     registry: borg://registry
 ---
 
-# Borg — Failure Memory and Epistemic Guardrails
+# Borg — Failure Memory and Advisory Epistemic Review
 
-Borg helps agents check prior rescue guidance before repeating known debugging dead ends. For consequential work it also produces a bounded epistemic packet: memory stays advisory, assumptions and unsupported claims are visible, contradictions stop confident copying, and verification controls action. When there is no confident match, it returns `NO_CONFIDENT_MATCH` instead of forcing advice. It never requests private chain-of-thought.
+Borg helps agents check prior rescue guidance before repeating known debugging dead ends. For consequential work it also produces a bounded advisory packet: memory stays advisory, missing evidence references and caller-attested verification gaps are visible, and contradictions discourage confident copying. The host must independently establish entailment, authorization, and enforcement. When there is no confident match, Borg returns `NO_CONFIDENT_MATCH` instead of forcing advice. It never requests private chain-of-thought.
 
 ## What is Borg?
 

@@ -7,7 +7,7 @@ This file only adds Claude-Code-specific notes that aren't in AGENTS.md.
 
 ## Identity
 
-Borg is failure memory for AI coding agents and an epistemic guardrail for consequential work. Users install `agent-borg` and run `borg`, `borg-mcp`, and `borg-doctor` from the canonical repo `borg-farther/Borg-Directory`. Concrete failures use `borg rescue`; production/high-risk/deep review uses `borg deliberate`, with all memory advisory and verification required before action. Current public boundary: first-10 controlled beta; do not claim public self-serve launch until row-derived external-user evidence passes.
+Borg is failure memory for AI coding agents plus an advisory epistemic-review packet. Users install `agent-borg` and run `borg`, `borg-mcp`, and `borg-doctor` from the canonical repo `borg-farther/Borg-Directory`. Concrete failures use `borg rescue`; production/high-risk/deep review may use `borg deliberate`, but caller attestations are not semantic proof and the host—not Borg—must independently verify and enforce action controls. Current public boundary: first-10 controlled beta; do not claim public self-serve launch until row-derived external-user evidence passes.
 
 Commits must be authored as borg-farther <admin@borg.directory>.
 A pre-commit hook enforces this. Install it once after cloning:

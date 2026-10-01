@@ -1,13 +1,13 @@
 # Borg repo guidance for AI agents
 
-This is the canonical Borg product repo. Borg is failure memory for AI coding agents and an epistemic guardrail for consequential work. The host model remains the thinker; Borg keeps memory advisory, exposes unsupported claims and contradictions, and requires verification before action.
+This is the canonical Borg product repo. Borg is failure memory for AI coding agents plus an advisory epistemic-review packet. The host model remains the thinker; Borg keeps memory advisory and exposes missing evidence references, caller-attested verification gaps, unsafe retrieved memory, and contradictions. It does **not** establish semantic entailment or authorization, intercept tools, or enforce action; hosts retain those controls.
 
 - Canonical local path: `/root/hermes-workspace/borg`
 - Canonical GitHub repo: `https://github.com/borg-farther/Borg-Directory`
 - Package users install: `agent-borg`
 - Commands users run: `borg`, `borg-mcp`, `borg-doctor`
 - Day-one value path: `pipx install agent-borg` then `borg rescue "<real error>" --short`.
-- Consequential-work path: `borg deliberate "<production/high-risk/deep task>" --mode auto --json`; honor `block_pending_verification` and close the intervention with `borg_record_outcome` after real verification.
+- Consequential-work path: `borg deliberate "<production/high-risk/deep task>" --mode auto --json`; treat `block_pending_verification` as an advisory stop signal, enforce it in the host, and close the intervention with `borg_record_outcome` after independent verification.
 - Current rollout boundary: `agent-borg==3.4.1` is the source candidate, not a claim that PyPI or the served runtime is current. Controlled first-10 beta remains **NO-GO** (zero external users; cap 0) until exact-version package, runtime, watchdog, governance, docs-claim, and evidence-intake gates independently pass. Broad public self-serve launch, 100-user rollout, served/remote MCP, and measured external lift are not claimed until row-derived external-user evidence passes.
 
 ## Before editing

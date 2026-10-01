@@ -5,9 +5,9 @@ user-invocable: true
 metadata: {"openclaw":{"emoji":"🧠","homepage":"https://github.com/borg-farther/Borg-Directory","always":false}}
 ---
 
-# Borg — failure memory and epistemic guardrails for AI agents
+# Borg — failure memory and advisory epistemic review for AI agents
 
-Stop repeating debugging dead ends your agent can avoid. For consequential work, keep memory advisory, expose unsupported claims and contradictions, and require verification before action. Borg does not request private chain-of-thought.
+Stop repeating debugging dead ends your agent can avoid. For consequential work, keep memory advisory and expose missing evidence references, caller-attested verification gaps, and contradictions. The host must independently verify and enforce any action; Borg is not a tool interceptor or authorization boundary. Borg does not request private chain-of-thought.
 
 ## When to Use
 
