@@ -37,7 +37,7 @@ belong under [`archive/`](archive/) and are not current product claims.
 - [`20260531_BORG_PRODUCTION_INVENTORY_BOARD.md`](20260531_BORG_PRODUCTION_INVENTORY_BOARD.md) — generated production inventory board with current proof lanes and blockers
 - [`VALUE_COMMUNICATION_DASHBOARD.md`](VALUE_COMMUNICATION_DASHBOARD.md) — value communication dashboard with verified-vs-unproven labels
 - [`../eval/public_self_serve_launch_gate_snapshot.json`](../eval/public_self_serve_launch_gate_snapshot.json) — machine-readable public self-serve launch gate snapshot
-- [`EPISTEMIC_GUARDRAIL.md`](EPISTEMIC_GUARDRAIL.md) — selective deep mode, evidence tiers, claim/contradiction audit, verification, and outcome capture
+- [`EPISTEMIC_GUARDRAIL.md`](EPISTEMIC_GUARDRAIL.md) — advisory selective-deep packet, evidence-reference and contradiction audit, explicit runtime-enforcement boundary, and outcome capture
 - [`SECURITY_HARDENING_BASELINE.md`](SECURITY_HARDENING_BASELINE.md) — security gate summary
 - [`../eval/security_hardening_baseline.json`](../eval/security_hardening_baseline.json) — machine-readable security baseline
 - [`PRIVACY_MODEL.md`](PRIVACY_MODEL.md) — privacy model
@@ -60,6 +60,10 @@ They are retained for provenance, but they are not current product claims or fir
 ## Current internal/operator docs
 
 - [`CANONICAL_REPO.md`](CANONICAL_REPO.md) — canonical repo and no-loss preservation policy for operators; not a first-user product guide
+- [`EVIDENCE_GATE_SHADOW_PROTOCOL.md`](EVIDENCE_GATE_SHADOW_PROTOCOL.md) — immutable preregistered C0/C1/C2/C3 protocol
+- [`EVIDENCE_GATE_SHADOW_RESULTS.md`](EVIDENCE_GATE_SHADOW_RESULTS.md) — generated 299-case `NO_GO_STOP` result
+- [`EVIDENCE_GATE_SHADOW_AUDIT.md`](EVIDENCE_GATE_SHADOW_AUDIT.md) — independent recomputation, mechanism diagnosis, and permanent claim boundary
+- [`research/EVIDENCE_GATE_LANDSCAPE_2026.md`](research/EVIDENCE_GATE_LANDSCAPE_2026.md) — primary-source guardrail/evidence-gate landscape used before the experiment
 - [`20260529_SKILLOPT_BORG_PACK_OPTIMIZER_PRD.md`](20260529_SKILLOPT_BORG_PACK_OPTIMIZER_PRD.md) — internal implementation-ready PRD for the local-only SkillOpt-inspired pack optimizer; not a public lift claim
 - [`20260529_SKILLOPT_BORG_PACK_OPTIMIZER_IMPLEMENTATION.md`](20260529_SKILLOPT_BORG_PACK_OPTIMIZER_IMPLEMENTATION.md) — internal implementation report and verification contract; first-10/public lift claims remain false
 - [`20260529_SKILLOPT_BORG_RESCUE_INTERACTION_LOOP.md`](20260529_SKILLOPT_BORG_RESCUE_INTERACTION_LOOP.md) — internal implementation report for rescue-packet eval, rejected-edit memory, agent priming, outcome capture, and review packets; not a public lift claim
@@ -70,3 +74,4 @@ They are retained for provenance, but they are not current product claims or fir
 - Public self-serve launch: not yet; requires real external-user evidence.
 - Agent-level success lift at statistical confidence: not yet proven.
 - Internal max-value collective intelligence loop primitives: GO; external lift still requires first-10 rows.
+- Runtime evidence-gate proposition: **NO-GO** for the current mechanism after the preregistered held-out ATBench experiment; `borg deliberate` remains advisory only.

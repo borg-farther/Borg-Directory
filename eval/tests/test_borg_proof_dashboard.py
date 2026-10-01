@@ -5,9 +5,56 @@ import hashlib
 import re
 from pathlib import Path
 
+from eval import public_self_serve_launch_gate as public_gate
 from scripts import build_borg_proof_dashboard as dashboard
 
 ROOT = Path(__file__).resolve().parents[2]
+
+
+def test_released_package_install_status_does_not_overclaim_current_source(tmp_path, monkeypatch):
+    model = {
+        "generated_at_utc": "2026-10-01T00:00:00+00:00",
+        "repo": "https://github.com/borg-farther/Borg-Directory",
+        "source_revision": "a" * 40,
+        "top_verdict": {
+            "controlled_first_10_beta": {"verdict": "NO-GO", "why": "package source is not released"},
+            "broad_public_launch": {"verdict": "NO-GO", "why": "first-10 evidence has not passed"},
+            "local_release_candidate": {"verdict": "NO-GO", "why": "not relevant to public proof"},
+        },
+        "blockers": {
+            "controlled_first_10_beta": [
+                "package-impacting source/metadata changed after the immutable package reference tag"
+            ]
+        },
+        "metrics": {
+            "source_version_consistency": {"value": "3.4.1"},
+            "pypi_package_current_gate": {"value": "FAIL"},
+            "pypi_fresh_install_canary": {"value": "PASS"},
+            "max_recommended_real_users_now": {"value": 0},
+            "verified_external_users": {"value": 0},
+            "measured_savings": {"value": {}},
+        },
+    }
+
+    status, value, _ = dashboard.build_public_payloads(model)
+
+    assert status["state"] == "NO-GO public self-serve; released package installs, current source proof blocked"
+    assert "last released package installs successfully" in value["detail"]
+    assert "current source has package-impacting changes" in value["detail"]
+    assert "runtime canary green" not in json.dumps(status).lower()
+
+    doc = tmp_path / "docs" / "public" / "status.json"
+    doc.parent.mkdir(parents=True)
+    doc.write_text(json.dumps(status, indent=2), encoding="utf-8")
+    monkeypatch.setattr(public_gate, "ROOT", tmp_path)
+    claims = public_gate.docs_claim_guard(
+        [Path("docs/public/status.json")],
+        "3.4.1",
+        public_evidence_ready=False,
+        package_evidence_ready=False,
+    )
+
+    assert claims["passed"] is True, claims["violations"]
 
 
 def test_borg_proof_dashboard_artifacts_exist_and_are_honest(tmp_path, monkeypatch):
@@ -82,7 +129,16 @@ def test_borg_proof_dashboard_artifacts_exist_and_are_honest(tmp_path, monkeypat
     else:
         assert data["controlled_first_10_beta"]["answer"] == "NO-GO"
         assert data["top_verdict"]["controlled_first_10_beta"]["verdict"] == "NO-GO"
-        assert "PyPI latest" in data["top_verdict"]["controlled_first_10_beta"]["why"]
+        package_why = data["top_verdict"]["controlled_first_10_beta"]["why"]
+        assert "PyPI" in package_why
+        assert any(
+            detail in package_why
+            for detail in (
+                "latest",
+                "project description/long-description",
+                "package source/metadata alignment",
+            )
+        )
     assert data["metrics"]["verified_external_users"]["value"] == 0
     assert data["metrics"]["cold_start_trust_hardening_gate"]["honesty_label"] == "FIRST_ANSWER_TRUST_GATE"
     assert data["metrics"]["self_service_ops_gate"]["honesty_label"] == "SELF_SERVICE_OPS_GATE"
@@ -139,6 +195,7 @@ def test_borg_proof_dashboard_artifacts_exist_and_are_honest(tmp_path, monkeypat
             "NO-GO public self-serve; source/local release-candidate only",
             "NO-GO public self-serve; public package proof green, release controls blocked",
             "NO-GO public self-serve; PyPI runtime canary green, package metadata stale",
+            "NO-GO public self-serve; released package installs, current source proof blocked",
         }
         if data["metrics"]["pypi_package_current_gate"]["value"] == "PASS":
             assert "public package proof green" in status["state"]
@@ -146,6 +203,7 @@ def test_borg_proof_dashboard_artifacts_exist_and_are_honest(tmp_path, monkeypat
             assert (
                 "source/local release-candidate only" in status["state"]
                 or "PyPI runtime canary green, package metadata stale" in status["state"]
+                or "released package installs, current source proof blocked" in status["state"]
             )
     assert "ACTION / STOP / VERIFY" in value["headline"]
     assert "measured_savings" in value
@@ -226,10 +284,10 @@ def test_public_payload_does_not_call_package_green_when_pypi_latest_alignment_f
 
     status, value, _impact = dashboard.build_public_payloads(model)
 
-    assert status["state"] == "NO-GO public self-serve; PyPI runtime canary green, package metadata stale"
+    assert status["state"] == "NO-GO public self-serve; released package installs, current source proof blocked"
     assert "public package proof green" not in status["state"]
-    assert "fresh PyPI install/runtime canary passes" in value["detail"]
-    assert "metadata/source alignment is not current proof" in value["detail"]
+    assert "last released package installs successfully" in value["detail"]
+    assert "package/source alignment is not current proof" in value["detail"]
 
 
 def _minimal_dashboard_files(pypi_snapshot: dict[str, object]) -> dict[str, dict[str, object]]:

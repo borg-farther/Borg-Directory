@@ -1,6 +1,6 @@
 # Borg — memory with standards for AI agents
 
-Borg keeps its proven core — **failure memory for AI coding agents** — and adds a local CLI/MCP evidence-control layer for capable AI agents. The host model remains the thinker; Borg stops weak or conflicting recollections from masquerading as proof, exposes unsupported claims and assumptions, and requires verification before consequential action.
+Borg keeps its proven core — **failure memory for AI coding agents** — and adds a local CLI/MCP advisory evidence-review packet. The host model remains the thinker; Borg stops weak or conflicting recollections from masquerading as proof and exposes missing evidence references, caller-attested verification gaps, assumptions, and contradictions. The host must independently establish semantic entailment, authorization, and enforcement.
 
 For a concrete error, traceback, failed test, install problem, config failure, or deployment failure, Borg returns a short rescue packet:
 
@@ -17,7 +17,7 @@ For consequential, high-risk, repeated-failure, or explicitly deep work, `borg d
 - prompt-injection suppression and explicit `STOP` conditions
 - a complete verification plan and an intervention id for `borg_record_outcome`
 
-Borg does **not** request, expose, or store private chain-of-thought. Memory is always advisory; similarity never authorizes action.
+Borg does **not** request, expose, or store private chain-of-thought. Memory is always advisory; similarity never authorizes action. The preregistered ATBench shadow experiment returned **NO-GO** for runtime evidence-gate use: Borg does not intercept tools, authenticate caller-supplied evidence, or prove that referenced evidence entails a claim. See [`docs/EVIDENCE_GATE_SHADOW_RESULTS.md`](docs/EVIDENCE_GATE_SHADOW_RESULTS.md).
 
 - **Install package:** `agent-borg`
 - **Installed CLI:** `borg`
@@ -65,7 +65,8 @@ When your agent uses Borg over MCP, it is instructed to relay that same
 # Auto selects deep mode because this is production/migration work.
 borg deliberate "plan a production database migration" --json
 
-# Review a material claim. Exit code 2 means verification is still blocking action.
+# Review a material claim. Exit code 2 is an advisory stop signal from this CLI;
+# the host must independently enforce it before any external action.
 borg deliberate "approve production release" \
   --stage review --risk high \
   --claims-json '[{"id":"tests-pass","text":"The full regression suite passes","evidence_refs":["ci-run"]}]' \
@@ -87,7 +88,7 @@ print(packet.decision)
 print(packet.to_dict()["verification_plan"])
 ```
 
-Over stdio MCP, use `borg_deliberate`. By default it records a privacy-redacted local intervention and returns its `intervention_id`; after running the verification plan, close the exact loop with `borg_record_outcome`. For side-effect-free probes, pass `record_intervention: false`; the packet then reports `outcome_capture.status=not_recorded_by_request` and no intervention id. See [`docs/EPISTEMIC_GUARDRAIL.md`](docs/EPISTEMIC_GUARDRAIL.md).
+Over stdio MCP, use `borg_deliberate`. By default it records a privacy-redacted local intervention and returns its `intervention_id`; after running the verification plan, close the exact loop with `borg_record_outcome`. For side-effect-free probes, pass `record_intervention: false`; the packet then reports `outcome_capture.status=not_recorded_by_request` and no intervention id. This is an advisory packet, not runtime interposition. See [`docs/EPISTEMIC_GUARDRAIL.md`](docs/EPISTEMIC_GUARDRAIL.md) and the [`NO_GO_STOP` shadow result](docs/EVIDENCE_GATE_SHADOW_AUDIT.md).
 
 ## For people running AI agents
 

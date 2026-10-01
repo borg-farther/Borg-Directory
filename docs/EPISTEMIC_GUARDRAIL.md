@@ -1,5 +1,7 @@
 # Borg epistemic guardrail and selective deep mode
 
+> **Current boundary:** the preregistered ATBench shadow experiment returned `NO_GO_STOP` for runtime evidence-gate use. `borg deliberate` remains an advisory claim-reference and memory-review packet, not a semantic verifier, authorization system, tool interceptor, or enforcement boundary. See `EVIDENCE_GATE_SHADOW_RESULTS.md` and `EVIDENCE_GATE_SHADOW_AUDIT.md`.
+
 ## Purpose
 
 Borg is not a replacement reasoning model. A capable host model still proposes hypotheses, writes code, and makes decisions. Borg controls the evidence boundary around that reasoning:
@@ -7,11 +9,11 @@ Borg is not a replacement reasoning model. A capable host model still proposes h
 - retrieve prior failure/success memory without presenting similarity as truth;
 - keep local/private experience separate from verified collective evidence;
 - expose assumptions, unsupported claims, dangling evidence references, and conflicting memories;
-- stop consequential action when material claims remain unsupported;
-- require independent verification;
+- return `block_pending_verification` when explicit consequential claims have missing, dangling, or caller-unverified references;
+- request independent verification, which the host must perform and enforce;
 - bind the observed outcome back to the exact intervention so only verified, privacy-safe learning can compound.
 
-The output is a bounded **epistemic packet**, not private chain-of-thought.
+The output is a bounded **epistemic packet**, not private chain-of-thought. A packet cannot itself stop an action, prove semantic entailment, or authenticate caller-supplied evidence.
 
 ## When to use it
 
@@ -233,13 +235,21 @@ Hard gates cover:
 - complete deep verification plans;
 - activation on labelled deep cases and non-activation on labelled trivial cases.
 
-These are **contract tests**, not evidence of external agent-performance lift. The controlled product experiment remains:
+These are **contract tests**, not evidence of external agent-performance lift. The preregistered product experiment used:
 
-- C0: frontier agent without Borg;
-- C1: same agent with guardrail but empty memory;
-- C2: same agent with guardrail and relevant outcome-grounded memory.
+- C0: no Borg gate (automatic allow baseline);
+- C1: the same held-out trajectory adapter with the Borg packet but empty memory;
+- C2: the same held-out trajectory adapter with relevant training-only failure memory.
 
-C2 vs C1 measures memory value; C1 vs C0 measures guardrail overhead. Until held-out external evidence exists, Borg does not claim improved task success, token savings, adoption, or network effects.
+C2 vs C1 measured memory value; C1 vs C0 measured the empty packet's contribution. The 299-case held-out ATBench result was `NO_GO_STOP`:
+
+- C1 intervened on 0.0% of unsafe trajectories;
+- C2 intervened on 35.8% of unsafe trajectories but falsely intervened on 43.7% of safe trajectories;
+- C2 balanced accuracy was 46.1%, below C1's 50.0%;
+- relevant C2 memory and shuffled C3 memory had identical aggregate confusion matrices;
+- C2 missed 59 critical-harm cases and hard-blocked none.
+
+Therefore Borg does not claim that the current mechanism is an effective runtime evidence gate. The immutable protocol, machine snapshot, generated report, and independent audit live in `eval/tasksets/evidence_gate_shadow_protocol_v1.json`, `eval/evidence_gate_shadow_snapshot.json`, `EVIDENCE_GATE_SHADOW_RESULTS.md`, and `EVIDENCE_GATE_SHADOW_AUDIT.md`.
 
 ## Security and privacy guarantees
 
@@ -254,4 +264,4 @@ C2 vs C1 measures memory value; C1 vs C0 measures guardrail overhead. Until held
 
 ## Known boundary
 
-Borg can verify that a claim references an evidence artifact and that the caller attests it was verified. It cannot independently know whether a human or host fabricated that artifact. Consequential systems must retain their own authentication, authorization, sandboxing, approval, and audit controls. Borg is an epistemic guardrail, not a security permission system.
+Borg can verify that a claim references an evidence artifact and that the caller attests it was verified. It cannot independently know whether a human or host fabricated that artifact, whether the artifact semantically entails the claim, whether it is fresh and in scope, or whether the proposed action is authorized. It does not interpose on tool execution. Consequential systems must retain their own authentication, authorization, semantic validation, sandboxing, approval, enforcement, and audit controls. Borg is an advisory epistemic-review packet, not a security permission system or runtime action guardrail.

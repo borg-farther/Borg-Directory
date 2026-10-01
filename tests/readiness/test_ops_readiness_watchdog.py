@@ -163,6 +163,34 @@ def test_watchdog_allows_only_first_10_external_evidence_as_public_blocker() -> 
     assert watchdog._public_blockers_are_allowed(["self-service ops readiness gate is missing"], "release_controls_or_first_10_evidence") is False
 
 
+def test_watchdog_accepts_unreleased_package_source_as_explicit_zero_user_stage() -> None:
+    public = {
+        "ready_for_controlled_first_10_beta": False,
+        "ready_for_public_self_serve_launch": False,
+        "max_recommended_real_users_now": 0,
+        "blockers": [
+            "package-impacting source/metadata changed after the immutable package reference tag",
+            "served runtime borg_version '3.3.18' != source version '3.4.1'",
+            "first-10 external-user evidence has not passed: verified=0/10",
+        ],
+    }
+    real = {
+        "ready_for_10_controlled_beta": False,
+        "ready_for_100_real_users": False,
+        "max_recommended_real_users_now": 0,
+        "blockers": [
+            "PyPI latest/fresh-install package evidence is not green: latest metadata does not match source version",
+            "served runtime borg_version '3.3.18' != source version '3.4.1'",
+            "first-10 external-user evidence has not passed: verified=0/10",
+        ],
+    }
+
+    assert watchdog._is_pre_package_release_stage(public, real, pypi_current=False) is True
+    assert watchdog._public_blockers_are_allowed(
+        public["blockers"], "release_controls_or_first_10_evidence"
+    ) is True
+
+
 def test_source_revision_honesty_accepts_dirty_ancestor_in_clean_pr_checkout(monkeypatch) -> None:
     base = "a" * 40
     head = "b" * 40
@@ -690,12 +718,8 @@ def test_workflow_public_gate_guard_requires_each_blocker_to_be_allowed() -> Non
     text = (watchdog.ROOT / ".github" / "workflows" / "self-service-watchdog.yml").read_text(encoding="utf-8")
     assert "python eval/run_pypi_fresh_install_canary.py" in text
     assert "continuing so public/readiness gates can fail closed with the fresh snapshot" in text
-    assert "allowed_public_blockers = all(" in text
-    assert "pypi project description" in text
-    assert "long-description" in text
-    assert "package metadata" in text
-    assert "metadata_stale_blocked" in text
-    assert "assert (controlled_package or pre_publish or release_controls_blocked or metadata_stale_blocked) and allowed_public_blockers" in text
+    assert "python eval/public_gate_ci_policy.py /tmp/public_gate.json" in text
+    assert "tests/readiness/test_public_gate_ci_policy.py" in text
     assert "python scripts/build_borg_proof_dashboard.py" in text
     assert "python scripts/borg_proof_dashboard_lint.py" in text
 

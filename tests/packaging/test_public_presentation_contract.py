@@ -475,11 +475,13 @@ def test_public_live_dashboard_json_endpoints_exist_and_no_go_is_badge_red() -> 
             "public package proof green, release controls blocked" in status["state"]
             or "source/local release-candidate only" in status["state"]
             or "PyPI runtime canary green, package metadata stale" in status["state"]
+            or "released package installs, current source proof blocked" in status["state"]
         )
         if dashboard_payload["metrics"]["pypi_package_current_gate"]["value"] == "FAIL":
             assert status["state"] in {
                 "NO-GO public self-serve; source/local release-candidate only",
                 "NO-GO public self-serve; PyPI runtime canary green, package metadata stale",
+                "NO-GO public self-serve; released package installs, current source proof blocked",
             }
             assert "package gates" not in value["headline"].lower()
     assert status["verified_external_users"] == 0

@@ -516,6 +516,7 @@ def compile_watchdog(*, max_snapshot_age_hours: float = 24.0, allow_public_block
         status.get("state") in {
             "NO-GO public self-serve; source/local release-candidate only",
             "NO-GO public self-serve; PyPI runtime canary green, package metadata stale",
+            "NO-GO public self-serve; released package installs, current source proof blocked",
         }
         and (status.get("controlled_first_10_beta") or {}).get("verdict") == "NO-GO"
         and status.get("max_recommended_real_users_now") == 0

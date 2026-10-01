@@ -680,6 +680,10 @@ def build_public_payloads(model: dict) -> tuple[dict, dict, dict]:
     pypi_fresh_green = metrics.get("pypi_fresh_install_canary", {}).get("value") == "PASS"
     flat_blockers = [str(item) for items in blockers.values() for item in (items if isinstance(items, list) else [items])]
     pypi_metadata_stale = any("description" in item.lower() or "long-description" in item.lower() or "metadata" in item.lower() for item in flat_blockers)
+    package_source_unreleased = any(
+        "package-impacting source" in item.lower() or "package source changed" in item.lower()
+        for item in flat_blockers
+    )
     if broad_is_green:
         public_state = "GO public self-serve"
         value_detail = "Public self-serve launch gate is green with row-derived external-user evidence."
@@ -690,11 +694,18 @@ def build_public_payloads(model: dict) -> tuple[dict, dict, dict]:
         public_state = "NO-GO public self-serve; public package proof green, release controls blocked"
         value_detail = "Public-package controlled beta remains blocked until the failing release-control and ops gates pass; PyPI/package proof is green, but served-runtime freshness, release governance, rollback/self-service ops, watchdog, docs guard, and privacy/security gates must all stay green before invites."
     elif pypi_fresh_green and not package_path_green:
-        public_state = "NO-GO public self-serve; PyPI runtime canary green, package metadata stale"
-        if pypi_metadata_stale:
-            value_detail = "Public-package controlled beta remains blocked: fresh PyPI install/runtime canary passes, but PyPI package metadata/description is not current proof."
+        # A fresh install proves only the last immutable release.  It does not
+        # prove that package-impacting changes made after that release are
+        # published.  Keep the status explicitly scoped so the generated public
+        # document cannot claim the current source's runtime/package proof is
+        # green and then trip the claim guard on its own output.
+        public_state = "NO-GO public self-serve; released package installs, current source proof blocked"
+        if package_source_unreleased:
+            value_detail = "Public-package controlled beta remains blocked: the last released package installs successfully, but the current source has package-impacting changes after that immutable release."
+        elif pypi_metadata_stale:
+            value_detail = "Public-package controlled beta remains blocked: the last released package installs successfully, but its metadata/description is not current proof for this source revision."
         else:
-            value_detail = "Public-package controlled beta remains blocked: fresh PyPI install/runtime canary passes, but PyPI metadata/source alignment is not current proof."
+            value_detail = "Public-package controlled beta remains blocked: the last released package installs successfully, but package/source alignment is not current proof for this source revision."
     else:
         public_state = "NO-GO public self-serve; source/local release-candidate only"
         value_detail = "Public-package controlled beta remains blocked until package, release-control, and ops gates pass; PyPI/fresh-install proof is not yet current for the source version."
