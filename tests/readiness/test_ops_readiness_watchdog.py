@@ -163,6 +163,34 @@ def test_watchdog_allows_only_first_10_external_evidence_as_public_blocker() -> 
     assert watchdog._public_blockers_are_allowed(["self-service ops readiness gate is missing"], "release_controls_or_first_10_evidence") is False
 
 
+def test_watchdog_accepts_unreleased_package_source_as_explicit_zero_user_stage() -> None:
+    public = {
+        "ready_for_controlled_first_10_beta": False,
+        "ready_for_public_self_serve_launch": False,
+        "max_recommended_real_users_now": 0,
+        "blockers": [
+            "package-impacting source/metadata changed after the immutable package reference tag",
+            "served runtime borg_version '3.3.18' != source version '3.4.1'",
+            "first-10 external-user evidence has not passed: verified=0/10",
+        ],
+    }
+    real = {
+        "ready_for_10_controlled_beta": False,
+        "ready_for_100_real_users": False,
+        "max_recommended_real_users_now": 0,
+        "blockers": [
+            "PyPI latest/fresh-install package evidence is not green: latest metadata does not match source version",
+            "served runtime borg_version '3.3.18' != source version '3.4.1'",
+            "first-10 external-user evidence has not passed: verified=0/10",
+        ],
+    }
+
+    assert watchdog._is_pre_package_release_stage(public, real, pypi_current=False) is True
+    assert watchdog._public_blockers_are_allowed(
+        public["blockers"], "release_controls_or_first_10_evidence"
+    ) is True
+
+
 def test_source_revision_honesty_accepts_dirty_ancestor_in_clean_pr_checkout(monkeypatch) -> None:
     base = "a" * 40
     head = "b" * 40
