@@ -1,7 +1,7 @@
 {
   "schema_version": 2,
   "source": "Consented, redacted, externally attributable first-user evidence rows only. Synthetic, internal, maintainer, or simulated runs do not count.",
-  "generated_at_utc": "2026-10-01T16:05:35Z",
+  "generated_at_utc": "2026-10-02T09:13:03Z",
   "protocol": {
     "protocol_id": "borg-rescue-first10-v1",
     "status": "preregistered_not_open",
@@ -14,8 +14,8 @@
     },
     "artifact": {
       "package": "agent-borg",
-      "version": null,
-      "wheel_sha256": null,
+      "version": "3.4.2",
+      "wheel_sha256": "a4ca14f4b43116b21bf9a735ae8479ae65ea3517d9562416c7f847c18ebec8e1",
       "rule": "Populate and verify the immutable package version and wheel SHA-256 before the first invitation."
     },
     "primary_outcome": "verified useful rescue before maintainer help",
@@ -72,7 +72,7 @@
   "current_verdict": {
     "first_10_complete": false,
     "public_self_serve_launch_gate": "BLOCKED",
-    "reason": "Enrollment is closed: the immutable study artifact is not locked and no verified external-user rows exist."
+    "reason": "Enrollment is closed: the immutable study artifact is locked; release-control gates must pass before enrollment opens."
   },
   "columns": [
     "user_id_pseudonym",

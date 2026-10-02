@@ -1,6 +1,6 @@
 # Borg public self-serve launch go/no-go
 
-Generated: 2026-10-02T09:01:56.826907+00:00
+Generated: 2026-10-02T09:15:42.776911+00:00
 Source version: `3.4.2`
 
 Public self-serve launch: **NO-GO**
@@ -14,8 +14,8 @@ Public self-serve is GO only after PyPI/fresh-install/MCP/docs/cold-start-trust/
 ## Gate results
 
 - `first_user_release`: `PASS`
-- `pypi_latest`: `FAIL`
-- `pypi_fresh_install_and_mcp_stdio`: `FAIL`
+- `pypi_latest`: `PASS`
+- `pypi_fresh_install_and_mcp_stdio`: `PASS`
 - `cold_start_trust_hardening`: `PASS`
 - `served_runtime_freshness`: `FAIL`
 - `release_governance`: `PASS`
@@ -27,13 +27,9 @@ Public self-serve is GO only after PyPI/fresh-install/MCP/docs/cold-start-trust/
 
 ## Blockers
 
-- PyPI latest is agent-borg==3.4.1; expected agent-borg==3.4.2
-- PyPI fresh-install + MCP stdio canary snapshot is missing or failing
 - served runtime borg_version '3.3.18' != source version '3.4.2'
 - served runtime source_version '3.3.18' != source version '3.4.2'
 - protocol: protocol status does not permit enrollment or completed evidence
-- protocol: protocol artifact version is not locked
-- protocol: protocol artifact wheel_sha256 is not locked
 - first-10 external-user evidence has not passed: verified=0/10, real_users=0/10, installs=0/8, useful=0/6, no_match_controls=0/8 (must equal installs=0), false_confident_matches=0/0, harmful_guidance=0/0, critical_incidents=0/0
 
 ## Evidence artifacts

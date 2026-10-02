@@ -2,19 +2,15 @@
   "blockers": [],
   "checks": {
     "cold_start_trust_current": {
-      "generated_at_utc": "2026-10-02T08:59:33.546639+00:00",
+      "generated_at_utc": "2026-10-02T09:13:47.400315+00:00",
       "passed": true
     },
     "public_blockers_allowed": {
       "allow_public_blocker": "release_controls_or_first_10_evidence",
       "blockers": [
-        "PyPI latest is agent-borg==3.4.1; expected agent-borg==3.4.2",
-        "PyPI fresh-install + MCP stdio canary snapshot is missing or failing",
         "served runtime borg_version '3.3.18' != source version '3.4.2'",
         "served runtime source_version '3.3.18' != source version '3.4.2'",
         "protocol: protocol status does not permit enrollment or completed evidence",
-        "protocol: protocol artifact version is not locked",
-        "protocol: protocol artifact wheel_sha256 is not locked",
         "first-10 external-user evidence has not passed: verified=0/10, real_users=0/10, installs=0/8, useful=0/6, no_match_controls=0/8 (must equal installs=0), false_confident_matches=0/0, harmful_guidance=0/0, critical_incidents=0/0"
       ],
       "passed": true
@@ -22,13 +18,9 @@
     "public_gate_live_matches_snapshot": {
       "live": {
         "blockers": [
-          "PyPI latest is agent-borg==3.4.1; expected agent-borg==3.4.2",
-          "PyPI fresh-install + MCP stdio canary snapshot is missing or failing",
           "served runtime borg_version '3.3.18' != source version '3.4.2'",
           "served runtime source_version '3.3.18' != source version '3.4.2'",
           "protocol: protocol status does not permit enrollment or completed evidence",
-          "protocol: protocol artifact version is not locked",
-          "protocol: protocol artifact wheel_sha256 is not locked",
           "first-10 external-user evidence has not passed: verified=0/10, real_users=0/10, installs=0/8, useful=0/6, no_match_controls=0/8 (must equal installs=0), false_confident_matches=0/0, harmful_guidance=0/0, critical_incidents=0/0"
         ],
         "max_recommended_real_users_now": 0,
@@ -39,13 +31,9 @@
       "passed": true,
       "snapshot": {
         "blockers": [
-          "PyPI latest is agent-borg==3.4.1; expected agent-borg==3.4.2",
-          "PyPI fresh-install + MCP stdio canary snapshot is missing or failing",
           "served runtime borg_version '3.3.18' != source version '3.4.2'",
           "served runtime source_version '3.3.18' != source version '3.4.2'",
           "protocol: protocol status does not permit enrollment or completed evidence",
-          "protocol: protocol artifact version is not locked",
-          "protocol: protocol artifact wheel_sha256 is not locked",
           "first-10 external-user evidence has not passed: verified=0/10, real_users=0/10, installs=0/8, useful=0/6, no_match_controls=0/8 (must equal installs=0), false_confident_matches=0/0, harmful_guidance=0/0, critical_incidents=0/0"
         ],
         "max_recommended_real_users_now": 0,
@@ -55,45 +43,41 @@
       }
     },
     "public_json_dashboard_consistency": {
-      "dashboard_generated_at_utc": "2026-10-02T09:01:07Z",
-      "dashboard_source_revision": "8038f108f0d8be526406cab2cf16bfb3bcd364e4+dirty",
+      "dashboard_generated_at_utc": "2026-10-02T09:14:37Z",
+      "dashboard_source_revision": "84794561007ed331be568110dcfb0d5cd58162f2+dirty",
       "passed": true,
-      "status_source_revision": "8038f108f0d8be526406cab2cf16bfb3bcd364e4+dirty",
-      "status_updated_at": "2026-10-02T09:01:07Z"
+      "status_source_revision": "84794561007ed331be568110dcfb0d5cd58162f2+dirty",
+      "status_updated_at": "2026-10-02T09:14:37Z"
     },
     "public_status_consistency": {
       "controlled_status_ok": false,
       "controlled_verdict": "NO-GO",
       "max_recommended_real_users_now": 0,
       "passed": true,
-      "pre_package_status_ok": true,
-      "release_control_blocked_status_ok": false,
+      "pre_package_status_ok": false,
+      "release_control_blocked_status_ok": true,
       "release_control_detail_failed": true,
       "release_controls_gate": "FAIL",
-      "status_state": "NO-GO public self-serve; source/local release-candidate only",
+      "status_state": "NO-GO public self-serve; public package proof green, release controls blocked",
       "verified_external_users": 0
     },
     "pypi_fresh_current": {
       "expected_version": "3.4.2",
-      "generated_at_utc": "2026-10-02T08:41:19Z",
+      "generated_at_utc": "2026-10-02T09:13:31Z",
       "passed": true,
-      "pre_package_release_stage": true,
-      "pypi_current": false,
+      "pre_package_release_stage": false,
+      "pypi_current": true,
       "version": "3.4.2"
     },
     "real_user_rollout_consistency": {
       "controlled_package_stage": false,
       "live": {
         "blockers": [
-          "PyPI latest/fresh-install package evidence is not green: latest metadata does not match source version",
-          "PyPI latest/fresh-install package evidence is not green: fresh install + MCP stdio canary is not green",
           "served runtime borg_version '3.3.18' != source version '3.4.2'",
           "served runtime source_version '3.3.18' != source version '3.4.2'",
           "controlled first-10 beta is closed because the frozen protocol or row-level evidence integrity gate is not green",
           "controlled first-10 beta enrollment is not open or has no remaining slots",
           "protocol: protocol status does not permit enrollment or completed evidence",
-          "protocol: protocol artifact version is not locked",
-          "protocol: protocol artifact wheel_sha256 is not locked",
           "first-10 external-user evidence has not passed: verified=0/10, real_users=0/10, installs=0/8, useful=0/6, no_match_controls=0/8 (must equal installs=0), false_confident_matches=0/0, harmful_guidance=0/0, critical_incidents=0/0",
           "first-10 external-user evidence has not passed: verified=0/10, real_users=0/10, installs=0/8, useful=0/6, critical_incidents=0/0"
         ],
@@ -103,8 +87,8 @@
         "ready_for_10_controlled_beta": false
       },
       "passed": true,
-      "pre_package_release_stage": true,
-      "release_control_blocked_stage": false
+      "pre_package_release_stage": false,
+      "release_control_blocked_stage": true
     },
     "self_service_ops_gate": {
       "blockers": [],
@@ -113,67 +97,67 @@
     "snapshot_freshness": {
       "items": {
         "borg_proof_dashboard": {
-          "age_hours": 0.014851285555555555,
+          "age_hours": 0.01964136111111111,
           "allowed_stale_reason": null,
           "passed": true,
           "raw_freshness_passed": true
         },
         "cold_start_trust_gate_snapshot": {
-          "age_hours": 0.040810551666666674,
+          "age_hours": 0.03341905055555556,
           "allowed_stale_reason": null,
           "passed": true,
           "raw_freshness_passed": true
         },
         "public_impact_json": {
-          "age_hours": 0.014851287500000001,
+          "age_hours": 0.019641363888888888,
           "allowed_stale_reason": null,
           "passed": true,
           "raw_freshness_passed": true
         },
         "public_self_serve_launch_gate_snapshot": {
-          "age_hours": 0.0010104727777777778,
+          "age_hours": 0.0013699916666666666,
           "allowed_stale_reason": null,
           "passed": true,
           "raw_freshness_passed": true
         },
         "public_status_json": {
-          "age_hours": 0.014851286388888888,
+          "age_hours": 0.019641361944444446,
           "allowed_stale_reason": null,
           "passed": true,
           "raw_freshness_passed": true
         },
         "public_value_json": {
-          "age_hours": 0.014851286944444445,
+          "age_hours": 0.01964136277777778,
           "allowed_stale_reason": null,
           "passed": true,
           "raw_freshness_passed": true
         },
         "pypi_fresh_install_snapshot": {
-          "age_hours": 0.34485128388888886,
+          "age_hours": 0.0379746925,
           "allowed_stale_reason": null,
           "passed": true,
           "raw_freshness_passed": true
         },
         "real_user_rollout_gate_snapshot": {
-          "age_hours": 0.0007032772222222223,
+          "age_hours": 0.0010072675,
           "allowed_stale_reason": null,
           "passed": true,
           "raw_freshness_passed": true
         },
         "release_governance_snapshot": {
-          "age_hours": 0.045469831111111116,
+          "age_hours": 0.03313178916666667,
           "allowed_stale_reason": null,
           "passed": true,
           "raw_freshness_passed": true
         },
         "rollback_comms_drill_snapshot": {
-          "age_hours": 0.04078237388888888,
+          "age_hours": 0.03311470777777778,
           "allowed_stale_reason": null,
           "passed": true,
           "raw_freshness_passed": true
         },
         "self_service_ops_gate_snapshot": {
-          "age_hours": 0.040752807499999995,
+          "age_hours": 0.03308916361111111,
           "allowed_stale_reason": null,
           "passed": true,
           "raw_freshness_passed": true
@@ -183,10 +167,10 @@
     },
     "source_revision_honesty": {
       "git_clean": false,
-      "head": "8038f108f0d8be526406cab2cf16bfb3bcd364e4",
+      "head": "84794561007ed331be568110dcfb0d5cd58162f2",
       "passed": true,
       "policy": "Committed dashboards may be generated from a dirty tree and must mark +dirty; clean-tree status endpoints should match HEAD or a dirty ancestor used to generate committed proof artifacts.",
-      "source_revision": "8038f108f0d8be526406cab2cf16bfb3bcd364e4+dirty"
+      "source_revision": "84794561007ed331be568110dcfb0d5cd58162f2+dirty"
     },
     "watchdog_workflow": {
       "exists": true,
@@ -317,7 +301,7 @@
     }
   },
   "gate_type": "ops_readiness_watchdog",
-  "generated_at_utc": "2026-10-02T09:02:00.526153+00:00",
+  "generated_at_utc": "2026-10-02T09:15:47.741585+00:00",
   "max_recommended_real_users_now": 0,
   "passed": true,
   "ready_for_controlled_first_10_beta": false,

@@ -19,6 +19,11 @@ Before the first invitation, the scoreboard must contain:
 - `protocol.status: enrollment_open`;
 - `protocol.enrollment_open: true`.
 
+Locked artifact (enrollment remains closed pending all release-control gates):
+
+- version: `agent-borg==3.4.2`;
+- PyPI wheel SHA-256: `a4ca14f4b43116b21bf9a735ae8479ae65ea3517d9562416c7f847c18ebec8e1`.
+
 Lifecycle is fail-closed: `enrollment_open` requires zero rows; after the first retained attempt set `status: in_progress`; after the tenth retained attempt set `status: complete` and `enrollment_open: false`. `complete` means data collection ended—it does not mean the outcome gates passed.
 
 Every row must use that exact version. Artifact changes after the first participant invalidate continuation; start a new protocol instead.
@@ -38,7 +43,7 @@ Every row must use that exact version. Artifact changes after the first particip
 3. Install the exact locked artifact:
 
    ```bash
-   pipx install agent-borg==X.Y.Z
+   pipx install agent-borg==3.4.2
    ```
 
 4. Record install success and elapsed minutes. If installation fails, record the failure and stop; the row still counts toward the 10-user denominator.
