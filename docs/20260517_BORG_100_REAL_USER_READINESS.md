@@ -1,6 +1,6 @@
 # Borg 100 real-user readiness
 
-Generated: 2026-09-30T15:15:44.079328+00:00
+Generated: 2026-10-02T09:01:57.932848+00:00
 
 100 real-user verdict: **NO-GO**
 Max recommended real users now: **0**
@@ -29,14 +29,20 @@ Real-user rollout requires first-10 external evidence before expanding to 100.
 - useful_rescue_moments: `0`
 - critical_privacy_security_failures: `0`
 - scoreboard_gate: `BLOCKED`
-- scoreboard_reason: `First-10 external-user evidence thresholds have not passed.`
+- scoreboard_reason: `Enrollment is closed: the immutable study artifact is not locked and no verified external-user rows exist.`
 
 ## Blockers
 
 - PyPI latest/fresh-install package evidence is not green: latest metadata does not match source version
 - PyPI latest/fresh-install package evidence is not green: fresh install + MCP stdio canary is not green
-- served runtime borg_version '3.3.18' != source version '3.4.1'
-- served runtime source_version '3.3.18' != source version '3.4.1'
+- served runtime borg_version '3.3.18' != source version '3.4.2'
+- served runtime source_version '3.3.18' != source version '3.4.2'
+- controlled first-10 beta is closed because the frozen protocol or row-level evidence integrity gate is not green
+- controlled first-10 beta enrollment is not open or has no remaining slots
+- protocol: protocol status does not permit enrollment or completed evidence
+- protocol: protocol artifact version is not locked
+- protocol: protocol artifact wheel_sha256 is not locked
+- first-10 external-user evidence has not passed: verified=0/10, real_users=0/10, installs=0/8, useful=0/6, no_match_controls=0/8 (must equal installs=0), false_confident_matches=0/0, harmful_guidance=0/0, critical_incidents=0/0
 - first-10 external-user evidence has not passed: verified=0/10, real_users=0/10, installs=0/8, useful=0/6, critical_incidents=0/0
 
 ## Required action to unlock 100 real users

@@ -1,6 +1,6 @@
 # Borg First-10 Beta Readiness Contract
 
-**Status:** controlled first-10 public-package beta is **NO-GO right now** (zero external users; cap 0). The source line is `agent-borg==3.4.1`; exact-version PyPI, served-runtime, governance, watchdog, and evidence-intake gates must all pass independently before inviting controlled testers. Static prose never substitutes for those live proofs. External first-10 row count is zero.
+**Status:** controlled first-10 public-package beta is **NO-GO right now** (zero external users; cap 0). The source line is `agent-borg==3.4.2`; exact-version PyPI, served-runtime, governance, watchdog, and evidence-intake gates must all pass independently before inviting controlled testers. Static prose never substitutes for those live proofs. External first-10 row count is zero.
 Public self-serve stays NO-GO until row-derived first-10 external-user evidence passes.
 
 **Success metric:** Retain all 10 external-user outcomes; require at least 8 installs, at least 6 verification-passed useful rescues before maintainer help, a `NO_CONFIDENT_MATCH` safety-control pass for every successful install, and zero harmful, false-confident, or critical privacy/security events.
