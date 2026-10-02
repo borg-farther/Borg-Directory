@@ -1,14 +1,10 @@
 {
   "blockers": [
-    "PyPI latest/fresh-install package evidence is not green: latest metadata does not match source version",
-    "PyPI latest/fresh-install package evidence is not green: fresh install + MCP stdio canary is not green",
     "served runtime borg_version '3.3.18' != source version '3.4.2'",
     "served runtime source_version '3.3.18' != source version '3.4.2'",
     "controlled first-10 beta is closed because the frozen protocol or row-level evidence integrity gate is not green",
     "controlled first-10 beta enrollment is not open or has no remaining slots",
     "protocol: protocol status does not permit enrollment or completed evidence",
-    "protocol: protocol artifact version is not locked",
-    "protocol: protocol artifact wheel_sha256 is not locked",
     "first-10 external-user evidence has not passed: verified=0/10, real_users=0/10, installs=0/8, useful=0/6, no_match_controls=0/8 (must equal installs=0), false_confident_matches=0/0, harmful_guidance=0/0, critical_incidents=0/0",
     "first-10 external-user evidence has not passed: verified=0/10, real_users=0/10, installs=0/8, useful=0/6, critical_incidents=0/0"
   ],
@@ -24,13 +20,11 @@
     "max_critical_privacy_security_failures": 0,
     "passed": false,
     "protocol": {
-      "artifact_version": "",
+      "artifact_version": "3.4.2",
       "enrollment_open": false,
       "ready": false,
       "reasons": [
-        "protocol status does not permit enrollment or completed evidence",
-        "protocol artifact version is not locked",
-        "protocol artifact wheel_sha256 is not locked"
+        "protocol status does not permit enrollment or completed evidence"
       ],
       "status": "preregistered_not_open"
     },
@@ -41,13 +35,11 @@
     "row_count": 0,
     "row_level_blockers": [
       "protocol: protocol status does not permit enrollment or completed evidence",
-      "protocol: protocol artifact version is not locked",
-      "protocol: protocol artifact wheel_sha256 is not locked",
       "first-10 external-user evidence has not passed: verified=0/10, real_users=0/10, installs=0/8, useful=0/6, no_match_controls=0/8 (must equal installs=0), false_confident_matches=0/0, harmful_guidance=0/0, critical_incidents=0/0"
     ],
     "schema_valid": true,
     "scoreboard_gate": "BLOCKED",
-    "scoreboard_reason": "Enrollment is closed: the immutable study artifact is not locked and no verified external-user rows exist.",
+    "scoreboard_reason": "Enrollment is closed: the immutable study artifact is locked; release-control gates must pass before enrollment opens.",
     "stored_consistency": {
       "expected_gate": "BLOCKED",
       "mismatches": [],
@@ -70,7 +62,7 @@
     "passed_count": 28
   },
   "gate_type": "real_user_rollout",
-  "generated_at_utc": "2026-10-02T09:01:57.932848+00:00",
+  "generated_at_utc": "2026-10-02T09:15:44.082760+00:00",
   "important_distinction": "load/readiness snapshots are synthetic/logical users; this gate controls real external-user rollout",
   "infrastructure_ready_for_100": false,
   "load_gates": {
@@ -107,41 +99,34 @@
   "max_recommended_real_users_now": 0,
   "no_fake_user_policy": "Do not mark first-10 complete or 100-real-user ready without consented external evidence rows.",
   "public_package_gate": {
-    "blockers": [
-      "PyPI latest/fresh-install package evidence is not green: latest metadata does not match source version",
-      "PyPI latest/fresh-install package evidence is not green: fresh install + MCP stdio canary is not green"
-    ],
-    "passed": false,
+    "blockers": [],
+    "passed": true,
     "pypi_fresh_install_and_mcp_stdio": {
       "exists": true,
       "expected_version": "3.4.2",
-      "failed_count": 1,
-      "failures": [
-        "pip_install_agent_borg"
-      ],
+      "failed_count": 0,
+      "failures": [],
       "freshness": {
-        "age_hours": 0.34387976666666664,
+        "age_hours": 0.03668477888888889,
         "failure_kind": null,
         "max_age_hours": 24.0,
         "passed": true
       },
-      "generated_at_utc": "2026-10-02T08:41:19Z",
-      "mcp_server_info": null,
-      "mcp_stdio_canary_passed": false,
-      "missing_first_10_results": [
-        "borg_doctor_json",
-        "borg_first_10_protocol_json",
-        "borg_rescue_json",
-        "borg_unknown_control_json"
-      ],
-      "passed": false,
+      "generated_at_utc": "2026-10-02T09:13:31Z",
+      "mcp_server_info": {
+        "name": "borg-mcp-server",
+        "version": "3.4.2"
+      },
+      "mcp_stdio_canary_passed": true,
+      "missing_first_10_results": [],
+      "passed": true,
       "path": "eval/pypi_fresh_install_snapshot.json",
       "version": "3.4.2"
     },
     "pypi_latest": {
       "banned_keywords_present": [],
       "description_content_type": "text/markdown",
-      "description_length": 19816,
+      "description_length": 20602,
       "description_stale_copy": [],
       "expected_summary": "Failure memory and epistemic guardrails for AI agents",
       "expected_version": "3.4.2",
@@ -155,9 +140,9 @@
         "failure-memory",
         "mcp"
       ],
-      "latest_version": "3.4.1",
+      "latest_version": "3.4.2",
       "package": "agent-borg",
-      "passed": false,
+      "passed": true,
       "project_urls": {
         "Documentation": "https://github.com/borg-farther/Borg-Directory#readme",
         "Homepage": "https://github.com/borg-farther/Borg-Directory",
@@ -187,11 +172,54 @@
         "uvicorn>=0.27; extra == \"all\""
       ],
       "source_upload_alignment": {
-        "detail": "PyPI latest is agent-borg==3.4.1; expected immutable candidate agent-borg==3.4.2.",
-        "expected_version": "3.4.2",
-        "failure_kind": "latest_version_mismatch",
-        "latest_version": "3.4.1",
-        "passed": false
+        "alignment_basis": "package_reference",
+        "current_source_commit_time_utc": "2026-10-02T10:09:48+01:00",
+        "detail": "Every PyPI release file upload is not older than the package reference, and no package-impacting source is dirty or changed after that reference.",
+        "dirty_source": true,
+        "failure_kind": null,
+        "latest_release_upload_time_utc": "2026-10-02T09:11:37.059893+00:00",
+        "non_package_changed_paths_since_reference": [],
+        "non_package_dirty_paths": [
+          "docs/20260517_BORG_100_REAL_USER_READINESS.md",
+          "docs/BORG_PROOF_DASHBOARD.html",
+          "docs/BORG_PROOF_DASHBOARD.md",
+          "docs/CHANNELS_AND_INSTALL_METHODS.md",
+          "docs/COLD_START_TRUST_HARDENING.md",
+          "docs/FIRST_10_RESCUE_PROTOCOL.md",
+          "docs/PUBLIC_SELF_SERVE_LAUNCH_GO_NO_GO.md",
+          "docs/SELF_SERVICE_OPS_READINESS_REPORT.md",
+          "docs/public/impact/impact.json",
+          "docs/public/proof-dashboard/index.html",
+          "docs/public/status.json",
+          "docs/public/value.json",
+          "docs/status.json",
+          "eval/borg_proof_dashboard.json",
+          "eval/cold_start_trust_gate_snapshot.json",
+          "eval/first_10_user_scoreboard.json",
+          "eval/ops_readiness_watchdog_snapshot.json",
+          "eval/public_self_serve_launch_gate_snapshot.json",
+          "eval/pypi_fresh_install_snapshot.json",
+          "eval/real_user_rollout_gate_snapshot.json",
+          "eval/release_governance_snapshot.json",
+          "eval/rollback_comms_drill_snapshot.json",
+          "eval/self_service_ops_gate_snapshot.json"
+        ],
+        "oldest_release_upload_time_utc": "2026-10-02T09:11:35.557800+00:00",
+        "package_changed_paths_since_reference": [],
+        "package_dirty": false,
+        "package_dirty_paths": [],
+        "package_reference": "v3.4.2",
+        "package_reference_ancestor_of_head": true,
+        "package_reference_available": true,
+        "package_reference_commit_time_utc": "2026-10-02T10:09:48+01:00",
+        "package_reference_error": null,
+        "package_reference_revision": "84794561007ed331be568110dcfb0d5cd58162f2",
+        "passed": true,
+        "release_file_count": 2,
+        "source_commit_time_utc": "2026-10-02T09:09:48+00:00",
+        "source_revision": "84794561007ed331be568110dcfb0d5cd58162f2+dirty",
+        "stale_release_files": [],
+        "worktree_dirty": true
       },
       "stale_copy": [],
       "summary": "Failure memory and epistemic guardrails for AI agents",
@@ -291,10 +319,10 @@
   },
   "self_service_ops_gate": {
     "blockers": [],
-    "generated_at_utc": "2026-10-02T09:01:57.932066+00:00",
+    "generated_at_utc": "2026-10-02T09:15:44.082152+00:00",
     "ops_readiness_watchdog": {
       "blockers": [],
-      "generated_at_utc": "2026-10-02T09:01:55.583720+00:00",
+      "generated_at_utc": "2026-10-02T09:15:41.233084+00:00",
       "passed": true,
       "snapshot": "eval/ops_readiness_watchdog_snapshot.json",
       "truth_policy": "Watchdog passing means controlled first-10 ops proof is fresh and internally consistent. Broad public self-serve still requires row-derived first-10 external-user evidence."
