@@ -1,5 +1,13 @@
 # Changelog
 
+## 3.4.2 — 2026-10-02
+
+- First-10 protocol: freezes one prospective 10-user Borg Rescue study with an immutable PyPI artifact, consecutive enrollment slots, retained failures, a fixed unknown-input control, and preregistered binary completion and futility rules.
+- Evidence integrity: derives all readiness counts from consented row-level evidence; rejects duplicate or placeholder evidence, artifact drift, cherry-picking, missing independent verification, inconsistent safety controls, secrets, and forged aggregates.
+- Safety and operations: pauses enrollment on harmful guidance, false-confident unknown-control responses, critical privacy/security incidents, or secret leakage; release, public-launch, and watchdog gates fail closed when protocol state is invalid.
+- First-user workflow: ships the invitation packet, evidence-intake contract, GitHub issue form, maintainer-validation path, CLI readiness output, and clean-user canary coverage needed to operate the cohort consistently.
+- Release boundary: publishing 3.4.2 enables only the controlled first-10 package gate after exact-version canaries and proof artifacts pass; it does not establish public self-service, served-runtime freshness, causal lift, or measured external value.
+
 ## 3.4.1 — 2026-10-01
 
 - Product boundary: keeps the host model as the thinker while Borg acts as memory with standards—retrieved memory is advisory, never authorization.

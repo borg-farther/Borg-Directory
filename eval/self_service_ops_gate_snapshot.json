@@ -25,7 +25,7 @@
       },
       "first_10_intake": {
         "exists": true,
-        "minimum_bytes": 2883,
+        "minimum_bytes": 4584,
         "missing_phrases": [],
         "passed": true,
         "path": "docs/FIRST_10_EVIDENCE_INTAKE.md"
@@ -117,12 +117,12 @@
         "required_owner": "@borg-farther"
       },
       "rollback_drill_snapshot": {
-        "age_hours": 0.005008313888888889,
+        "age_hours": 2.940416666666667e-05,
         "dry_run_only": true,
         "exists": true,
         "failed_steps": [],
         "fresh": true,
-        "generated_at_utc": "2026-09-30T15:11:42.002611+00:00",
+        "generated_at_utc": "2026-10-02T08:59:33.648108+00:00",
         "max_age_hours": 24.0,
         "missing_steps": [],
         "passed": true,
@@ -137,7 +137,7 @@
     }
   },
   "gate_type": "self_service_ops_readiness",
-  "generated_at_utc": "2026-09-30T15:12:00.032979+00:00",
+  "generated_at_utc": "2026-10-02T08:59:33.754546+00:00",
   "passed": true,
   "rollout_policy": "Ops readiness is necessary but not sufficient for controlled first-10; package provenance, served-runtime freshness, release governance, ops/watchdog freshness, and first-10 guardrails must also pass. broad public self-serve still requires row-derived first-10 external evidence.",
   "schema_version": 1

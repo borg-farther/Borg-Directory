@@ -1,10 +1,13 @@
 {
   "blockers": [
-    "PyPI latest is agent-borg==3.3.21; expected agent-borg==3.4.1",
+    "PyPI latest is agent-borg==3.4.1; expected agent-borg==3.4.2",
     "PyPI fresh-install + MCP stdio canary snapshot is missing or failing",
-    "served runtime borg_version '3.3.18' != source version '3.4.1'",
-    "served runtime source_version '3.3.18' != source version '3.4.1'",
-    "first-10 external-user evidence has not passed: verified=0/10, real_users=0/10, installs=0/8, useful=0/6, critical_incidents=0/0"
+    "served runtime borg_version '3.3.18' != source version '3.4.2'",
+    "served runtime source_version '3.3.18' != source version '3.4.2'",
+    "protocol: protocol status does not permit enrollment or completed evidence",
+    "protocol: protocol artifact version is not locked",
+    "protocol: protocol artifact wheel_sha256 is not locked",
+    "first-10 external-user evidence has not passed: verified=0/10, real_users=0/10, installs=0/8, useful=0/6, no_match_controls=0/8 (must equal installs=0), false_confident_matches=0/0, harmful_guidance=0/0, critical_incidents=0/0"
   ],
   "gate_type": "public_self_serve_launch",
   "gates": {
@@ -12,7 +15,7 @@
       "exists": true,
       "failed_count": 0,
       "failures": [],
-      "generated_at_utc": "2026-09-30T15:11:21.289434+00:00",
+      "generated_at_utc": "2026-10-02T08:59:33.546639+00:00",
       "has_bad_answer_feedback_path": true,
       "missing_required_checks": [],
       "observed_check_count": 7,
@@ -77,12 +80,18 @@
     },
     "first_10_external_evidence": {
       "blockers": [
-        "first-10 external-user evidence has not passed: verified=0/10, real_users=0/10, installs=0/8, useful=0/6, critical_incidents=0/0"
+        "protocol: protocol status does not permit enrollment or completed evidence",
+        "protocol: protocol artifact version is not locked",
+        "protocol: protocol artifact wheel_sha256 is not locked",
+        "first-10 external-user evidence has not passed: verified=0/10, real_users=0/10, installs=0/8, useful=0/6, no_match_controls=0/8 (must equal installs=0), false_confident_matches=0/0, harmful_guidance=0/0, critical_incidents=0/0"
       ],
       "counted_external_rows": 0,
       "derived_counts": {
         "critical_privacy_security_failures": 0,
+        "false_confident_matches": 0,
+        "harmful_guidance_events": 0,
         "install_successes": 0,
+        "no_match_safety_passes": 0,
         "real_users": 0,
         "repeat_use_within_7_days": 0,
         "useful_rescue_moments": 0,
@@ -100,7 +109,10 @@
       },
       "thresholds": {
         "max_critical_privacy_security_failures": 0,
+        "max_false_confident_matches": 0,
+        "max_harmful_guidance_events": 0,
         "required_install_successes": 8,
+        "required_no_match_safety_passes": 8,
         "required_total_real_users": 10,
         "required_useful_rescue_moments": 6
       }
@@ -109,14 +121,14 @@
       "exists": true,
       "failed_count": 0,
       "failures": [],
-      "generated_at_utc": "2026-09-30T15:10:10Z",
+      "generated_at_utc": "2026-10-02T08:40:48Z",
       "passed": true,
       "passed_count": 28,
       "path": "eval/first_user_release_gate_snapshot.json"
     },
     "ops_readiness_watchdog": {
       "blockers": [],
-      "generated_at_utc": "2026-09-30T15:15:40.847279+00:00",
+      "generated_at_utc": "2026-10-02T09:01:55.583720+00:00",
       "passed": true,
       "snapshot": "eval/ops_readiness_watchdog_snapshot.json",
       "truth_policy": "Watchdog passing means controlled first-10 ops proof is fresh and internally consistent. Broad public self-serve still requires row-derived first-10 external-user evidence."
@@ -128,40 +140,48 @@
     },
     "pypi_fresh_install_and_mcp_stdio": {
       "exists": true,
-      "expected_version": "3.4.1",
+      "expected_version": "3.4.2",
       "failed_count": 1,
       "failures": [
         "pip_install_agent_borg"
       ],
       "freshness": {
-        "age_hours": 0.06472726777777778,
+        "age_hours": 0.3435356127777778,
         "failure_kind": null,
         "max_age_hours": 24.0,
         "passed": true
       },
-      "generated_at_utc": "2026-09-30T15:11:48Z",
+      "generated_at_utc": "2026-10-02T08:41:19Z",
       "mcp_server_info": null,
       "mcp_stdio_canary_passed": false,
+      "missing_first_10_results": [
+        "borg_doctor_json",
+        "borg_first_10_protocol_json",
+        "borg_rescue_json",
+        "borg_unknown_control_json"
+      ],
       "passed": false,
       "path": "eval/pypi_fresh_install_snapshot.json",
-      "version": "3.4.1"
+      "version": "3.4.2"
     },
     "pypi_latest": {
       "banned_keywords_present": [],
       "description_content_type": "text/markdown",
-      "description_length": 17583,
+      "description_length": 19816,
       "description_stale_copy": [],
       "expected_summary": "Failure memory and epistemic guardrails for AI agents",
-      "expected_version": "3.4.1",
+      "expected_version": "3.4.2",
       "keyword_missing": false,
       "keywords": [
+        "agent-memory",
         "agent-tools",
         "ai-agents",
         "debugging",
+        "epistemic-guardrails",
         "failure-memory",
         "mcp"
       ],
-      "latest_version": "3.3.21",
+      "latest_version": "3.4.1",
       "package": "agent-borg",
       "passed": false,
       "project_urls": {
@@ -193,14 +213,14 @@
         "uvicorn>=0.27; extra == \"all\""
       ],
       "source_upload_alignment": {
-        "detail": "PyPI latest is agent-borg==3.3.21; expected immutable candidate agent-borg==3.4.1.",
-        "expected_version": "3.4.1",
+        "detail": "PyPI latest is agent-borg==3.4.1; expected immutable candidate agent-borg==3.4.2.",
+        "expected_version": "3.4.2",
         "failure_kind": "latest_version_mismatch",
-        "latest_version": "3.3.21",
+        "latest_version": "3.4.1",
         "passed": false
       },
       "stale_copy": [],
-      "summary": "Failure memory CLI and MCP server for AI coding agents",
+      "summary": "Failure memory and epistemic guardrails for AI agents",
       "url_mismatches": {},
       "url_missing": []
     },
@@ -256,7 +276,7 @@
     },
     "self_service_ops_readiness": {
       "blockers": [],
-      "generated_at_utc": "2026-09-30T15:15:42.407428+00:00",
+      "generated_at_utc": "2026-10-02T09:01:56.674223+00:00",
       "passed": true,
       "report": "docs/SELF_SERVICE_OPS_READINESS_REPORT.md",
       "rollout_policy": "Ops readiness is necessary but not sufficient for controlled first-10; package provenance, served-runtime freshness, release governance, ops/watchdog freshness, and first-10 guardrails must also pass. broad public self-serve still requires row-derived first-10 external evidence.",
@@ -264,10 +284,10 @@
     },
     "served_runtime_freshness": {
       "blockers": [
-        "served runtime borg_version '3.3.18' != source version '3.4.1'",
-        "served runtime source_version '3.3.18' != source version '3.4.1'"
+        "served runtime borg_version '3.3.18' != source version '3.4.2'",
+        "served runtime source_version '3.3.18' != source version '3.4.2'"
       ],
-      "expected_version": "3.4.1",
+      "expected_version": "3.4.2",
       "passed": false,
       "schema_version": 1,
       "snapshot": "eval/served_runtime_fingerprint_snapshot.json",
@@ -281,11 +301,11 @@
       }
     }
   },
-  "generated_at_utc": "2026-09-30T15:15:42.591268+00:00",
+  "generated_at_utc": "2026-10-02T09:01:56.826907+00:00",
   "max_recommended_real_users_now": 0,
   "ready_for_controlled_first_10_beta": false,
   "ready_for_public_self_serve_launch": false,
   "schema_version": 1,
-  "source_version": "3.4.1",
+  "source_version": "3.4.2",
   "truth_policy": "Public self-serve is GO only after PyPI/fresh-install/MCP/docs/cold-start-trust/served-runtime/release-governance/self-service-ops/watchdog gates pass AND row-derived first-10 external-user evidence passes. Synthetic users and aggregate-only edits never count."
 }

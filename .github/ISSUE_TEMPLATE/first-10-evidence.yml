@@ -38,7 +38,7 @@ body:
     attributes:
       label: artifact-version
       description: Exact output of `borg --version`; it must match the locked scoreboard artifact.
-      placeholder: "3.4.1"
+      placeholder: "3.4.2"
     validations:
       required: true
   - type: input
@@ -46,7 +46,7 @@ body:
     attributes:
       label: install-method
       description: Must pin the exact artifact version.
-      placeholder: "pipx install agent-borg==3.4.1"
+      placeholder: "pipx install agent-borg==3.4.2"
     validations:
       required: true
   - type: dropdown

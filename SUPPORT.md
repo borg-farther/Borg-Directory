@@ -1,6 +1,6 @@
 # Borg support policy
 
-The source line is `agent-borg==3.4.1`. Controlled first-10 beta is currently **NO-GO** (zero external users; cap 0) until exact-version PyPI, served-runtime, ops/watchdog, release-governance, docs-claim, and evidence-intake gates independently pass. Version strings and static prose are not release proof. Broad public self-serve, 100-user rollout, served remote MCP, and measured lift are not claimed until row-derived external evidence passes.
+The source line is `agent-borg==3.4.2`. Controlled first-10 beta is currently **NO-GO** (zero external users; cap 0) until exact-version PyPI, served-runtime, ops/watchdog, release-governance, docs-claim, and evidence-intake gates independently pass. Version strings and static prose are not release proof. Broad public self-serve, 100-user rollout, served remote MCP, and measured lift are not claimed until row-derived external evidence passes.
 
 ## Supported path
 
